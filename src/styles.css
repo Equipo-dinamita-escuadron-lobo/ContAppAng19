@@ -1,3 +1,215 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Open Sans */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/OpenSans/OpenSans-Regular.woff2') format('woff2');
+}
+/* Open Sans Bold */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/OpenSans/OpenSans-Bold.woff2') format('woff2');
+}
+/* Open Sans SemiBold */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/OpenSans/OpenSans-SemiBold.woff2') format('woff2');
+}
+/* Titillium Web */
+@font-face {
+  font-family: 'Titillium Web';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/TitilliumWeb/titillium-web-v18-latin-regular.woff2') format('woff2');
+}
+/* Titillium Web Bold */
+@font-face {
+  font-family: 'Titillium Web';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/TitilliumWeb/titillium-web-v18-latin-700.woff2') format('woff2');
+}
+/* Titillium Web SemiBold */
+@font-face {
+  font-family: 'Titillium Web';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/TitilliumWeb/titillium-web-v18-latin-600.woff2') format('woff2');
+}
+
 @import "tailwindcss";
 @plugin "tailwindcss-primeui";
+
+
+@theme {
+  /* Color | Principales */
+  --color-primary: #000066;
+  --color-light: #5056AC;
+  --color-dark: #07184A;
+  --color-secondary: #9D0311;
+  --color-secondary-light: #DB141C;
+  --color-secondary-dark: #690007;
+
+  /* Color | Destacados */
+  --color-error: #FF6D0A;
+  --color-tertiary: #1D72D3;
+  --color-security: #E0E0FF;
+  --color-accessibility: #249300;
+  --color-neutral-hover: #F6F6F6;
+  --color-neutral-text: #690007;
+
+  /* Color | Complementarios */
+  --color-complementary-purple: #4C19AF;
+  --color-complementary-blue: #002A9E;
+  --color-complementary-blue-light: #0051C6;
+  --color-complementary-cyan: #16A8E1;
+  --color-complementary-teal: #04B2B5;
+  --color-complementary-green: #249337;
+  --color-complementary-olive-green: #8CBB22;
+  --color-complementary-red: #E52724;
+  --color-complementary-orange: #EC6C1F;
+  --color-complementary-gold: #F8AE15;
+
+  /* Color | Paletas tonales | Color primario */
+  --color-primary-0: #000000;
+  --color-primary-10: #030567;
+  --color-primary-20: #1E257B;
+  --color-primary-25: #2B3186;
+  --color-primary-30: #373D92;
+  --color-primary-35: #43499F;
+  --color-primary-40: #5056AB;
+  --color-primary-50: #6970C7;
+  --color-primary-60: #828AE3;
+  --color-primary-70: #9DA3FE;
+  --color-primary-80: #BEC2FF;
+  --color-primary-90: #E0E0FF;
+  --color-primary-95: #F2EFFF;
+  --color-primary-98: #FBF8FF;
+  --color-primary-99: #FFFBFF;
+  --color-primary-100: #FFFFFF;
+
+  /* Color | Paletas tonales | Color secundario */
+  --color-secondary-10: #420003;
+  --color-secondary-20: #690007;
+  --color-secondary-25: #7C0109;
+  --color-secondary-30: #92010E;
+  --color-secondary-35: #A60E17;
+  --color-secondary-40: #B82021;
+  --color-secondary-50: #DB3A35;
+  --color-secondary-60: #FF554C;
+  --color-secondary-70: #FE897F;
+  --color-secondary-80: #FFB4AB;
+  --color-secondary-90: #FFDAD6;
+  --color-secondary-95: #FFEDEA;
+  --color-secondary-98: #FFF8F7;
+
+  /*Color | Paletas tonales |Color terciario*/
+  --color-tertiary-10: #001B3D;
+  --color-tertiary-20: #003062;
+  --color-tertiary-25: #013B76;
+  --color-tertiary-30: #01468B;
+  --color-tertiary-35: #0053A0;
+  --color-tertiary-40: #005DB5;
+  --color-tertiary-50: #2577D8;
+  --color-tertiary-60: #4991F4;
+  --color-tertiary-70: #78ACFF;
+  --color-tertiary-80: #A9C8FF;
+  --color-tertiary-90: #D6E2FF;
+  --color-tertiary-95: #ECF0FF;
+  --color-tertiary-98: #F9F9FE;
+
+  /* Color | Paletas tonales | Colores neutros*/
+  --color-neutral-10: #1B1B23;
+  --color-neutral-20: #303038;
+  --color-neutral-25: #3B3B43;
+  --color-neutral-30: #46464F;
+  --color-neutral-35: #52515B;
+  --color-neutral-40: #5E5D67;
+  --color-neutral-50: #928F9A;
+  --color-neutral-60: #ADAAB4;
+  --color-neutral-70: #C8C5D0;
+  --color-neutral-80: #E4E1EC;
+  --color-neutral-90: #F2EFFA;
+  --color-neutral-95: #FBF8FF;
+  --color-neutral-98: #FFFBFF;
+
+  /* Color | Paletas tonales | Color de Error */
+  --color-neutral-5: #240A00;
+  --color-neutral-10: #361000;
+  --color-neutral-15: #461800;
+  --color-neutral-20: #561F01;
+  --color-neutral-25: #682700;
+  --color-neutral-30: #793100;
+  --color-neutral-35: #8D3800;
+  --color-neutral-40: #A04200;
+  --color-neutral-50: #C85200;
+  --color-neutral-60: #F26500;
+  --color-neutral-70: #FF8C52;
+  --color-neutral-80: #FEB693;
+  --color-neutral-90: #FFDBCC;
+  --color-neutral-95: #FFEDE6;
+  --color-neutral-98: #FFF8F6;
+
+  /* Botones | Clasificación */
+  --color-button-primary: var(--color-primary);
+  --color-button-primary-hover: var(--color-light);
+  --color-button-primary-pressed: var(--color-primary-60);
+  --color-button-primary-disabled: var(--color-neutral-70);
+
+  /* Botón secundario */
+  --color-button-secondary: #5056AC00;
+  --color-button-secondary-hover: #5056AC33;
+  --color-button-secondary-pressed: #828AE380;
+  --color-button-secondary-disabled: var(--color-neutral-70);
+
+  /* Botón terciario */
+  --color-button-tertiary: #5056AC00;
+  --color-button-tertiary-hover: #5056AC33;
+  --color-button-tertiary-pressed: #828AE380;
+  --color-button-tertiary-disabled: var(--color-neutral-70);
+
+  /* Botón Sidebar */
+  --color-button-sidebar: var(--color-primary);
+  --color-button-sidebar-hover: var(--color-primary-60);
+  --color-button-sidebar-selected: var(--color-light);
+
+  /* Notificaciones | Confirmación */
+  --color-notification-success-container: #D8EFD1;
+  --color-notification-success-border: var(--color-complementary-green);
+  --color-notification-success-title: var(--color-complementary-green);
+  --color-notification-success-text: #103717;
+
+  /* Notificación | Informativo */
+  --color-notification-info-container: #D6E2FF;
+  --color-notification-info-border: var(--color-tertiary-35);
+  --color-notification-info-title: var(--color-tertiary-35);
+  --color-notification-info-text: var(--color-tertiary-20);
+
+  /* Notificación | Error */
+  --color-notification-error-container: #FFDBCC;
+  --color-notification-error-border: var(--color-neutral-35);
+  --color-notification-error-title: var(--color-neutral-35);
+  --color-notification-error-text: var(--color-neutral-10);
+  /* Notificación | Seguridad */
+  --color-notification-security-container: var(--color-security);
+  --color-notification-security-border: var(--color-primary-30);
+  --color-notification-security-title: var(--color-primary-30);
+  --color-notification-security-text: var(--color-primary-20);
+
+  --font-family-sans: "Open Sans", sans-serif;
+  --font-family-titillium: "Titillium Web", sans-serif;
+
+  --spacing: 1px;
+}
