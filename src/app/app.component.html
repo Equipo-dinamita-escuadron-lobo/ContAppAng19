@@ -1,1 +1,21 @@
-<router-outlet></router-outlet>
+<div class="flex h-screen">
+  <!-- Sidebar -->
+  <aside class="w-300 bg-gray-100 border-r">
+    <!-- Aquí va el contenido del menú lateral -->
+  </aside>
+
+  <!-- Contenedor principal -->
+  <div class="flex flex-col flex-1">
+    <!-- Header -->
+    <header class="h-60 bg-white border-b shadow px-4 flex items-center">
+      <!-- Aquí va el contenido del header -->
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="flex-1 overflow-y-auto my-30 px-16">
+      <div class="w-full max-w-7xl mx-auto lg:w-[90%]">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>

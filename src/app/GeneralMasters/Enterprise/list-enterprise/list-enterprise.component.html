@@ -1,0 +1,61 @@
+<div class="p-6 space-y-4 bg-white">
+  <!-- Breadcrumb -->
+  <p class="font-family-sans font-normal text-sm/26 text-breadcrumb">
+    Inicio  <span class="text-secondary font-semibold" >&gt; </span> <span class=" font-semibold">Listado de empresas</span>
+  </p>
+
+  <!-- Título -->
+  <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+    Listado de empresas
+  </h1>
+  <p class="font-family-sans font-normal text-xs/21 ">Elija una empresa para acceder a sus funcionalidades</p>
+
+  <!-- Filtros y Buscador -->
+  <div class="flex items-center justify-between flex-wrap gap-6">
+    <div class="flex items-center gap-6 flex-wrap">
+      <!-- Buscador -->
+      <div class="flex items-center px-12 py-4 bg-neutral-90 rounded-full shadow w-180">
+        <input
+          type="text"
+          placeholder="Buscar..."
+          class="ml-2 w-full bg-transparent outline-none text-sm placeholder-neutral-50 text-black"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="filterEnterprises()"
+        />
+      </div>
+
+      <!-- Filtro -->
+      <div class="px-4 py-2 bg-neutral-90 rounded-full shadow w-100">
+        <select
+          [(ngModel)]="selectedStatus"
+          (ngModelChange)="selectEnterpriseStatus()"
+          class="w-full bg-transparent outline-none text-sm text-black font-semibold placeholder-neutral-50"
+        >
+          <option value="active">Activas</option>
+          <option value="inactive">Inactivas</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Botón Agregar -->
+    <p-button label="Agregar" type="submit"></p-button>
+  </div>
+
+  <!-- Cards -->
+  <div class="bg-neutral-90 p-6 rounded-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+    <div *ngFor="let enterprise of filteredEnterprises" class="bg-white p-6 rounded-xl shadow text-center max-w-xs w-full">
+      <div class="w-80 h-80 mx-auto rounded-full bg-gray-200 mb-4"></div>
+      <h3 class="font-family-titillium font-semibold text-lg/22">{{ enterprise.name }}</h3>
+      <p class="font-family-sans font-normal text-xs/21 text-neutral-50 mb-4">NIT: {{ enterprise.nit }}</p>
+      <div class="flex items-center justify-center">
+        <a
+          [routerLink]="['/enterprise', enterprise.nit]"
+          (click)="saveSelectedEnterprise(enterprise)"
+        >
+          <p-button label="Seleccionar" class="w-full"></p-button>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>

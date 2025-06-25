@@ -50,6 +50,10 @@
 
 @import "tailwindcss";
 
+body {
+  font-family: 'Open Sans', sans-serif;
+}
+
 @theme {
   /* Color | Principales */
   --color-primary: #000066;
@@ -143,21 +147,21 @@
   --color-neutral-98: #FFFBFF;
 
   /* Color | Paletas tonales | Color de Error */
-  --color-neutral-5: #240A00;
-  --color-neutral-10: #361000;
-  --color-neutral-15: #461800;
-  --color-neutral-20: #561F01;
-  --color-neutral-25: #682700;
-  --color-neutral-30: #793100;
-  --color-neutral-35: #8D3800;
-  --color-neutral-40: #A04200;
-  --color-neutral-50: #C85200;
-  --color-neutral-60: #F26500;
-  --color-neutral-70: #FF8C52;
-  --color-neutral-80: #FEB693;
-  --color-neutral-90: #FFDBCC;
-  --color-neutral-95: #FFEDE6;
-  --color-neutral-98: #FFF8F6;
+  --color-error-5: #240A00;
+  --color-error-10: #361000;
+  --color-error-15: #461800;
+  --color-error-20: #561F01;
+  --color-error-25: #682700;
+  --color-error-30: #793100;
+  --color-error-35: #8D3800;
+  --color-error-40: #A04200;
+  --color-error-50: #C85200;
+  --color-error-60: #F26500;
+  --color-error-70: #FF8C52;
+  --color-error-80: #FEB693;
+  --color-error-90: #FFDBCC;
+  --color-error-95: #FFEDE6;
+  --color-error-98: #FFF8F6;
 
   /* Botones | Clasificación */
   --color-button-primary: var(--color-primary);
@@ -204,6 +208,8 @@
   --color-notification-security-border: var(--color-primary-30);
   --color-notification-security-title: var(--color-primary-30);
   --color-notification-security-text: var(--color-primary-20);
+  /* Extras */
+  --color-breadcrumb: #A7A6B0;
 
   --font-family-sans: "Open Sans", sans-serif;
   --font-family-titillium: "Titillium Web", sans-serif;
@@ -252,3 +258,5 @@
 .p-button.p-button-secondary:disabled {
   background-color: var(--color-button-secondary-disabled) !important;
 }
+
+
