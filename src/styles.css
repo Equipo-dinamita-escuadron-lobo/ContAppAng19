@@ -49,8 +49,6 @@
 }
 
 @import "tailwindcss";
-/*@plugin "tailwindcss-primeui";*/
-
 
 @theme {
   /* Color | Principales */
