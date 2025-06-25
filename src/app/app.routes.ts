@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { StyleGuideComponent } from './Shared/Components/style-guide/style-guide.component';
 import { LoginComponent } from './Core/auth/login/login.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
+import { hasRoleGuard } from './Core/Guards/has-role.guard';
+
 
 export const routes: Routes = [
 
@@ -15,7 +17,8 @@ export const routes: Routes = [
   },
   {
     path: 'enterprise/list',
-    component: ListEnterpriseComponent
+    component: ListEnterpriseComponent,
+    canActivate: [hasRoleGuard(['admin_realm'])]
   },
 
 ];
