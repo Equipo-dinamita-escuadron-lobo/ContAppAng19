@@ -49,6 +49,7 @@
 }
 
 @import "tailwindcss";
+@plugin "tailwindcss-primeui";
 
 body {
   font-family: 'Open Sans', sans-serif;
