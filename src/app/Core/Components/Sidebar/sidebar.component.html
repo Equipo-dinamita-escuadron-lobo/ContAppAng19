@@ -1,0 +1,50 @@
+<!-- Sidebar Container -->
+<div
+  class="flex flex-col h-screen bg-[var(--color-primary)] text-white sidebar-container font-sans font-bold"
+>
+  <!-- Navigation Menu -->
+  <nav class="flex-1 overflow-y-auto">
+    <ul class="space-y-0">
+      <li *ngFor="let item of menuItems" class="w-full">
+        <!-- Main Menu Item -->
+        <div
+          class="flex items-center justify-between px-6 py-4 cursor-pointer transition-all duration-200 hover:bg-[var(--color-light)]"
+          [class.bg-[var(--color-light)]]="item.active"
+          [class.bg-[var(--color-light)]]="item.expanded && !item.active"
+          (click)="toggleExpanded(item)"
+        >
+          <div class="flex items-center space-x-4">
+            <span class="material-symbols-outlined text-xl text-white">{{
+              item.icon
+            }}</span>
+            <span class="text-lg font-medium text-white">{{ item.label }}</span>
+          </div>
+
+          <!-- Expand/Collapse Arrow -->
+          <span
+            *ngIf="item.children"
+            class="material-symbols-outlined text-lg transition-transform duration-200 text-white"
+            [class.rotate-180]="item.expanded"
+          >
+            expand_more
+          </span>
+        </div>
+
+        <!-- Submenu Items -->
+        <div
+          *ngIf="item.children && item.expanded"
+          class="bg-[--color-complementary-blue]"
+        >
+          <div
+            *ngFor="let child of item.children"
+            class="text-right justify-end flex items-center space-x-4 px-12 py-3 cursor-pointer transition-all duration-200 hover:bg-[var(--color-light)]"
+            [class.bg-[var(--color-light)]]="child.active"
+            (click)="navigateToRoute(child)"
+          >
+            <span class="text-md text-white">{{ child.label }}</span>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </nav>
+</div>

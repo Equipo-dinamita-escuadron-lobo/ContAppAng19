@@ -1,14 +1,9 @@
-<div class="flex h-screen">
-  <!-- Contenedor principal -->
-  <div class="flex flex-col flex-1">
-    <!-- Header -->
-    <header class="h-60 bg-white border-b shadow px-4 flex items-center">
-      <!-- Aquí va el contenido del header -->
-    </header>
-
-    <!-- Contenido principal -->
-    <main class="flex-1 overflow-y-auto my-30 px-16">
-      <div class="w-full max-w-7xl mx-auto lg:w-[90%]">
+<div class="flex h-screen bg-gray-100">
+  <div class="flex flex-1 flex-col">
+    <app-header></app-header>
+    <app-sidebar></app-sidebar>
+    <main class="flex-1 overflow-y-auto p-6 md:p-8">
+      <div class="mx-auto h-full w-full max-w-7xl">
         <router-outlet></router-outlet>
       </div>
     </main>

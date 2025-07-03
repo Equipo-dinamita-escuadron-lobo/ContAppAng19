@@ -1,0 +1,99 @@
+/* Estilos adicionales para el header */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  border-bottom: 1px solid #e5e7eb;
+  height: 90px; /* Altura aumentada para acomodar el logo de 70px */
+}
+
+/* Ajustes para el logo */
+.logo-container {
+  min-width: 200px;
+  background: var(--color-primary);
+}
+
+/* Estilos para el botón dropdown del usuario */
+.custom-dropdown-button .p-button {
+  color: var(--color-primary) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0.5rem !important;
+}
+
+.custom-dropdown-button .p-button:hover {
+  background: rgba(0, 0, 102, 0.1) !important;
+}
+
+.custom-dropdown-button .p-button .pi {
+  color: var(--color-primary) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  header {
+    height: auto;
+    min-height: 70px;
+  }
+
+  .logo-container {
+    min-width: 150px;
+  }
+
+  .logo-container img {
+    height: 50px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  header {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .logo-container {
+    min-width: 100%;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .user-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  .user-details {
+    text-align: left;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  .app-info {
+    margin-left: 0 !important;
+    text-align: center;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+  }
+
+  .logo-container {
+    min-width: 100%;
+    justify-content: center;
+  }
+
+  .user-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .user-details {
+    text-align: left;
+  }
+}

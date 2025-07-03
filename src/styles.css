@@ -1,168 +1,173 @@
 /* You can add global styles to this file, and also import other style files */
+@import "primeicons/primeicons.css";
+
 /* Open Sans */
 @font-face {
-  font-family: 'Open Sans';
+  font-family: "Open Sans";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/OpenSans/OpenSans-Regular.woff2') format('woff2');
+  src: url("/fonts/OpenSans/OpenSans-Regular.woff2") format("woff2");
 }
 /* Open Sans Bold */
 @font-face {
-  font-family: 'Open Sans';
+  font-family: "Open Sans";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('/fonts/OpenSans/OpenSans-Bold.woff2') format('woff2');
+  src: url("/fonts/OpenSans/OpenSans-Bold.woff2") format("woff2");
 }
 /* Open Sans SemiBold */
 @font-face {
-  font-family: 'Open Sans';
+  font-family: "Open Sans";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('/fonts/OpenSans/OpenSans-SemiBold.woff2') format('woff2');
+  src: url("/fonts/OpenSans/OpenSans-SemiBold.woff2") format("woff2");
 }
 /* Titillium Web */
 @font-face {
-  font-family: 'Titillium Web';
+  font-family: "Titillium Web";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/TitilliumWeb/titillium-web-v18-latin-regular.woff2') format('woff2');
+  src: url("/fonts/TitilliumWeb/titillium-web-v18-latin-regular.woff2")
+    format("woff2");
 }
 /* Titillium Web Bold */
 @font-face {
-  font-family: 'Titillium Web';
+  font-family: "Titillium Web";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('/fonts/TitilliumWeb/titillium-web-v18-latin-700.woff2') format('woff2');
+  src: url("/fonts/TitilliumWeb/titillium-web-v18-latin-700.woff2")
+    format("woff2");
 }
 /* Titillium Web SemiBold */
 @font-face {
-  font-family: 'Titillium Web';
+  font-family: "Titillium Web";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('/fonts/TitilliumWeb/titillium-web-v18-latin-600.woff2') format('woff2');
+  src: url("/fonts/TitilliumWeb/titillium-web-v18-latin-600.woff2")
+    format("woff2");
 }
 
 @import "tailwindcss";
 @plugin "tailwindcss-primeui";
 
 body {
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Open Sans", sans-serif;
 }
 
 @theme {
   /* Color | Principales */
   --color-primary: #000066;
-  --color-light: #5056AC;
-  --color-dark: #07184A;
-  --color-secondary: #9D0311;
-  --color-secondary-light: #DB141C;
+  --color-light: #5056ac;
+  --color-dark: #07184a;
+  --color-secondary: #9d0311;
+  --color-secondary-light: #db141c;
   --color-secondary-dark: #690007;
 
   /* Color | Destacados */
-  --color-error: #FF6D0A;
-  --color-tertiary: #1D72D3;
-  --color-security: #E0E0FF;
+  --color-error: #ff6d0a;
+  --color-tertiary: #1d72d3;
+  --color-security: #e0e0ff;
   --color-accessibility: #249300;
-  --color-neutral-hover: #F6F6F6;
+  --color-neutral-hover: #f6f6f6;
   --color-neutral-text: #690007;
 
   /* Color | Complementarios */
-  --color-complementary-purple: #4C19AF;
-  --color-complementary-blue: #002A9E;
-  --color-complementary-blue-light: #0051C6;
-  --color-complementary-cyan: #16A8E1;
-  --color-complementary-teal: #04B2B5;
+  --color-complementary-purple: #4c19af;
+  --color-complementary-blue: #002a9e;
+  --color-complementary-blue-light: #0051c6;
+  --color-complementary-cyan: #16a8e1;
+  --color-complementary-teal: #04b2b5;
   --color-complementary-green: #249337;
-  --color-complementary-olive-green: #8CBB22;
-  --color-complementary-red: #E52724;
-  --color-complementary-orange: #EC6C1F;
-  --color-complementary-gold: #F8AE15;
+  --color-complementary-olive-green: #8cbb22;
+  --color-complementary-red: #e52724;
+  --color-complementary-orange: #ec6c1f;
+  --color-complementary-gold: #f8ae15;
 
   /* Color | Paletas tonales | Color primario */
   --color-primary-0: #000000;
   --color-primary-10: #030567;
-  --color-primary-20: #1E257B;
-  --color-primary-25: #2B3186;
-  --color-primary-30: #373D92;
-  --color-primary-35: #43499F;
-  --color-primary-40: #5056AB;
-  --color-primary-50: #6970C7;
-  --color-primary-60: #828AE3;
-  --color-primary-70: #9DA3FE;
-  --color-primary-80: #BEC2FF;
-  --color-primary-90: #E0E0FF;
-  --color-primary-95: #F2EFFF;
-  --color-primary-98: #FBF8FF;
-  --color-primary-99: #FFFBFF;
-  --color-primary-100: #FFFFFF;
+  --color-primary-20: #1e257b;
+  --color-primary-25: #2b3186;
+  --color-primary-30: #373d92;
+  --color-primary-35: #43499f;
+  --color-primary-40: #5056ab;
+  --color-primary-50: #6970c7;
+  --color-primary-60: #828ae3;
+  --color-primary-70: #9da3fe;
+  --color-primary-80: #bec2ff;
+  --color-primary-90: #e0e0ff;
+  --color-primary-95: #f2efff;
+  --color-primary-98: #fbf8ff;
+  --color-primary-99: #fffbff;
+  --color-primary-100: #ffffff;
 
   /* Color | Paletas tonales | Color secundario */
   --color-secondary-10: #420003;
   --color-secondary-20: #690007;
-  --color-secondary-25: #7C0109;
-  --color-secondary-30: #92010E;
-  --color-secondary-35: #A60E17;
-  --color-secondary-40: #B82021;
-  --color-secondary-50: #DB3A35;
-  --color-secondary-60: #FF554C;
-  --color-secondary-70: #FE897F;
-  --color-secondary-80: #FFB4AB;
-  --color-secondary-90: #FFDAD6;
-  --color-secondary-95: #FFEDEA;
-  --color-secondary-98: #FFF8F7;
+  --color-secondary-25: #7c0109;
+  --color-secondary-30: #92010e;
+  --color-secondary-35: #a60e17;
+  --color-secondary-40: #b82021;
+  --color-secondary-50: #db3a35;
+  --color-secondary-60: #ff554c;
+  --color-secondary-70: #fe897f;
+  --color-secondary-80: #ffb4ab;
+  --color-secondary-90: #ffdad6;
+  --color-secondary-95: #ffedea;
+  --color-secondary-98: #fff8f7;
 
   /*Color | Paletas tonales |Color terciario*/
-  --color-tertiary-10: #001B3D;
+  --color-tertiary-10: #001b3d;
   --color-tertiary-20: #003062;
-  --color-tertiary-25: #013B76;
-  --color-tertiary-30: #01468B;
-  --color-tertiary-35: #0053A0;
-  --color-tertiary-40: #005DB5;
-  --color-tertiary-50: #2577D8;
-  --color-tertiary-60: #4991F4;
-  --color-tertiary-70: #78ACFF;
-  --color-tertiary-80: #A9C8FF;
-  --color-tertiary-90: #D6E2FF;
-  --color-tertiary-95: #ECF0FF;
-  --color-tertiary-98: #F9F9FE;
+  --color-tertiary-25: #013b76;
+  --color-tertiary-30: #01468b;
+  --color-tertiary-35: #0053a0;
+  --color-tertiary-40: #005db5;
+  --color-tertiary-50: #2577d8;
+  --color-tertiary-60: #4991f4;
+  --color-tertiary-70: #78acff;
+  --color-tertiary-80: #a9c8ff;
+  --color-tertiary-90: #d6e2ff;
+  --color-tertiary-95: #ecf0ff;
+  --color-tertiary-98: #f9f9fe;
 
   /* Color | Paletas tonales | Colores neutros*/
-  --color-neutral-10: #1B1B23;
+  --color-neutral-10: #1b1b23;
   --color-neutral-20: #303038;
-  --color-neutral-25: #3B3B43;
-  --color-neutral-30: #46464F;
-  --color-neutral-35: #52515B;
-  --color-neutral-40: #5E5D67;
-  --color-neutral-50: #928F9A;
-  --color-neutral-60: #ADAAB4;
-  --color-neutral-70: #C8C5D0;
-  --color-neutral-80: #E4E1EC;
-  --color-neutral-90: #F2EFFA;
-  --color-neutral-95: #FBF8FF;
-  --color-neutral-98: #FFFBFF;
+  --color-neutral-25: #3b3b43;
+  --color-neutral-30: #46464f;
+  --color-neutral-35: #52515b;
+  --color-neutral-40: #5e5d67;
+  --color-neutral-50: #928f9a;
+  --color-neutral-60: #adaab4;
+  --color-neutral-70: #c8c5d0;
+  --color-neutral-80: #e4e1ec;
+  --color-neutral-90: #f2effa;
+  --color-neutral-95: #fbf8ff;
+  --color-neutral-98: #fffbff;
 
   /* Color | Paletas tonales | Color de Error */
-  --color-error-5: #240A00;
+  --color-error-5: #240a00;
   --color-error-10: #361000;
   --color-error-15: #461800;
-  --color-error-20: #561F01;
+  --color-error-20: #561f01;
   --color-error-25: #682700;
   --color-error-30: #793100;
-  --color-error-35: #8D3800;
-  --color-error-40: #A04200;
-  --color-error-50: #C85200;
-  --color-error-60: #F26500;
-  --color-error-70: #FF8C52;
-  --color-error-80: #FEB693;
-  --color-error-90: #FFDBCC;
-  --color-error-95: #FFEDE6;
-  --color-error-98: #FFF8F6;
+  --color-error-35: #8d3800;
+  --color-error-40: #a04200;
+  --color-error-50: #c85200;
+  --color-error-60: #f26500;
+  --color-error-70: #ff8c52;
+  --color-error-80: #feb693;
+  --color-error-90: #ffdbcc;
+  --color-error-95: #ffede6;
+  --color-error-98: #fff8f6;
 
   /* Botones | Clasificación */
   --color-button-primary: var(--color-primary);
@@ -171,15 +176,15 @@ body {
   --color-button-primary-disabled: var(--color-neutral-70);
 
   /* Botón secundario */
-  --color-button-secondary: #5056AC00;
-  --color-button-secondary-hover: #5056AC33;
-  --color-button-secondary-pressed: #828AE380;
+  --color-button-secondary: #5056ac00;
+  --color-button-secondary-hover: #5056ac33;
+  --color-button-secondary-pressed: #828ae380;
   --color-button-secondary-disabled: var(--color-neutral-70);
 
   /* Botón terciario */
-  --color-button-tertiary: #5056AC00;
-  --color-button-tertiary-hover: #5056AC33;
-  --color-button-tertiary-pressed: #828AE380;
+  --color-button-tertiary: #5056ac00;
+  --color-button-tertiary-hover: #5056ac33;
+  --color-button-tertiary-pressed: #828ae380;
   --color-button-tertiary-disabled: var(--color-neutral-70);
 
   /* Botón Sidebar */
@@ -188,19 +193,19 @@ body {
   --color-button-sidebar-selected: var(--color-light);
 
   /* Notificaciones | Confirmación */
-  --color-notification-success-container: #D8EFD1;
+  --color-notification-success-container: #d8efd1;
   --color-notification-success-border: var(--color-complementary-green);
   --color-notification-success-title: var(--color-complementary-green);
   --color-notification-success-text: #103717;
 
   /* Notificación | Informativo */
-  --color-notification-info-container: #D6E2FF;
+  --color-notification-info-container: #d6e2ff;
   --color-notification-info-border: var(--color-tertiary-35);
   --color-notification-info-title: var(--color-tertiary-35);
   --color-notification-info-text: var(--color-tertiary-20);
 
   /* Notificación | Error */
-  --color-notification-error-container: #FFDBCC;
+  --color-notification-error-container: #ffdbcc;
   --color-notification-error-border: var(--color-neutral-35);
   --color-notification-error-title: var(--color-neutral-35);
   --color-notification-error-text: var(--color-neutral-10);
@@ -210,14 +215,13 @@ body {
   --color-notification-security-title: var(--color-primary-30);
   --color-notification-security-text: var(--color-primary-20);
   /* Extras */
-  --color-breadcrumb: #A7A6B0;
+  --color-breadcrumb: #a7a6b0;
 
   --font-family-sans: "Open Sans", sans-serif;
   --font-family-titillium: "Titillium Web", sans-serif;
 
   --spacing: 1px;
 }
-
 
 /* Botón principal */
 .p-button {
@@ -229,7 +233,7 @@ body {
 }
 
 .p-button-label {
-  font-family:  var(--font-family-sans) !important;
+  font-family: var(--font-family-sans) !important;
   font-weight: 600 !important;
   font-size: 14px !important;
 }
@@ -259,5 +263,3 @@ body {
 .p-button.p-button-secondary:disabled {
   background-color: var(--color-button-secondary-disabled) !important;
 }
-
-

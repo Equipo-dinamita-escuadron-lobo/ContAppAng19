@@ -1,0 +1,68 @@
+/* Estilos personalizados para el sidebar */
+.sidebar-container {
+  width: 250px;
+  min-width: 250px;
+  max-width: 250px;
+  transition: all 0.3s ease;
+}
+
+/* Animación para el expand/collapse */
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+/* Hover effects mejorados */
+.menu-item:hover {
+  transform: translateX(2px);
+}
+
+/* Scrollbar personalizado */
+nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+nav::-webkit-scrollbar-track {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+nav::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 2px;
+}
+
+nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+/* Efectos de focus para accesibilidad */
+.menu-item:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+/* Animación suave para submenus */
+.submenu-enter {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilos específicos para el diseño lineal */
+
+.sidebar-container ul li:last-child {
+  border-bottom: none;
+}
+
+/* Transiciones suaves */
+.sidebar-container div {
+  transition: background-color 0.2s ease;
+}

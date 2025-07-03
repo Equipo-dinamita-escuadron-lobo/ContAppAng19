@@ -1,0 +1,74 @@
+<header class="flex w-full shadow-md">
+  <!-- Sección azul con logo -->
+  <div
+    class="bg-[var(--color-primary)] flex items-center justify-center px-6 py-4 min-w-[250px]"
+  >
+    <img
+      src="/logo_unicauca.png"
+      alt="Universidad del Cauca"
+      class="h-[70px] w-auto object-contain"
+    />
+  </div>
+
+  <!-- Sección blanca con información -->
+  <div class="bg-white flex-1 flex items-center justify-between px-6 py-4">
+    <!-- Información del aplicativo y empresa -->
+    <div
+      class="ml-4 sm:ml-8 md:ml-16 lg:ml-20 xl:ml-40 flex flex-col justify-center"
+    >
+      <h1
+        class="text-lg sm:text-xl md:text-2xl font-bold leading-tight"
+        style="color: var(--color-primary)"
+      >
+        {{ applicationName }}
+      </h1>
+      <p
+        class="text-xs sm:text-sm text-gray-500 leading-tight mt-1"
+        style="color: var(--color-light)"
+      >
+        {{ companyName }}
+      </p>
+    </div>
+
+    <!-- Menú de usuario -->
+    <div class="flex items-center space-x-2 sm:space-x-4">
+      <span
+        class="hidden lg:block material-symbols-outlined mr-20 border-2 rounded-2xl"
+        style="color: var(--color-primary)"
+      >
+        person
+      </span>
+
+      <div class="text-left mr-4 sm:mr-8 md:mr-12 lg:mr-16 xl:mr-20">
+        <p
+          class="text-xs sm:text-sm font-medium leading-tight"
+          style="color: var(--color-primary)"
+        >
+          {{ userName }}
+        </p>
+        <p
+          class="text-xs leading-tight mt-1"
+          style="color: var(--color-primary)"
+        >
+          {{ userRole }}
+        </p>
+      </div>
+
+      <div class="flex items-center">
+        <button
+          class="ml-1 sm:ml-2 custom-dropdown-button mr-10"
+          (click)="userMenu.toggle($event)"
+        >
+          <span class="material-symbols-outlined"> arrow_drop_down </span>
+        </button>
+
+        <p-menu
+          #userMenu
+          [model]="userMenuItems"
+          [popup]="true"
+          styleClass="mt-2"
+        />
+      </div>
+    </div>
+  </div>
+</header>
