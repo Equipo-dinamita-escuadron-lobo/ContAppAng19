@@ -78,22 +78,7 @@ header {
 
 /* Responsive design */
 @media (max-width: 768px) {
-  header {
-    flex-direction: column;
-  }
-
-  .logo-container {
-    min-width: 100%;
-    justify-content: center;
-  }
-
-  .user-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .user-details {
-    text-align: left;
+  .hide-sm {
+    display: none !important;
   }
 }

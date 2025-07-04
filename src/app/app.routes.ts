@@ -3,22 +3,24 @@ import { StyleGuideComponent } from './Shared/Components/style-guide/style-guide
 import { LoginComponent } from './Core/auth/login/login.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
 import { hasRoleGuard } from './Core/Guards/has-role.guard';
-
+import { ThirdPartiesListComponent } from './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component';
 
 export const routes: Routes = [
-
   {
     path: 'style-guide',
-    component: StyleGuideComponent
+    component: StyleGuideComponent,
   },
   {
-    path:'login',
-    component: LoginComponent
+    path: 'login',
+    component: LoginComponent,
   },
   {
     path: 'enterprise/list',
     component: ListEnterpriseComponent,
-    canActivate: [hasRoleGuard(['admin_realm'])]
+    canActivate: [hasRoleGuard(['admin_realm'])],
   },
-
+  {
+    path: 'third-parties/list',
+    component: ThirdPartiesListComponent,
+  },
 ];

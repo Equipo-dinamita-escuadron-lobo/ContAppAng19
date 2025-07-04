@@ -1,5 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 @import "primeicons/primeicons.css";
+@import "tailwindcss";
+@plugin "tailwindcss-primeui";
 
 /* Open Sans */
 @font-face {
@@ -52,9 +54,6 @@
   src: url("/fonts/TitilliumWeb/titillium-web-v18-latin-600.woff2")
     format("woff2");
 }
-
-@import "tailwindcss";
-@plugin "tailwindcss-primeui";
 
 body {
   font-family: "Open Sans", sans-serif;

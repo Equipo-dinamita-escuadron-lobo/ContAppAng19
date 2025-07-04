@@ -1,50 +1,75 @@
-<!-- Sidebar Container -->
-<div
-  class="flex flex-col h-screen bg-[var(--color-primary)] text-white sidebar-container font-sans font-bold"
+<!-- Botón hamburguesa visible en md y menores -->
+<!-- Test version - try this Aun no funciona-->
+<button
+  class="block lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#000066] text-white rounded-md shadow"
+  (click)="toggleSidebar()"
 >
-  <!-- Navigation Menu -->
-  <nav class="flex-1 overflow-y-auto">
-    <ul class="space-y-0">
-      <li *ngFor="let item of menuItems" class="w-full">
-        <!-- Main Menu Item -->
-        <div
-          class="flex items-center justify-between px-6 py-4 cursor-pointer transition-all duration-200 hover:bg-[var(--color-light)]"
-          [class.bg-[var(--color-light)]]="item.active"
-          [class.bg-[var(--color-light)]]="item.expanded && !item.active"
-          (click)="toggleExpanded(item)"
+  <span class="material-symbols-outlined text-2xl">
+    {{ sidebarVisible ? "close" : "dehaze" }}
+  </span>
+</button>
+
+<!-- Sidebar -->
+<div
+  class="fixed lg:static z-50 top-0 left-0 h-screen bg-[var(--color-primary)] text-white font-['Open_Sans'] transition-transform duration-300"
+  [ngClass]="{
+    'w-[250px]': true,
+    'translate-x-0': sidebarVisible,
+    '-translate-x-full': !sidebarVisible,
+    'lg:translate-x-0': true
+  }"
+>
+  <div
+    class="bg-[var(--color-primary)] flex items-center justify-center px-6 py-4 min-w-[250px] mb-10"
+  >
+    <img
+      src="/logo_unicauca.png"
+      alt="Universidad del Cauca"
+      class="h-[70px] w-auto object-contain"
+    />
+  </div>
+  <hr class="border-t border-white opacity-50 mx-6 my-4" />
+  <p-panelMenu [model]="items" styleClass="w-full h-full custom-panel-menu">
+    <ng-template #item let-item>
+      <ng-container *ngIf="item.route; else urlRef">
+        <a
+          [routerLink]="item.route"
+          class="flex items-center px-4 py-2 hover:bg-[#5056ac] rounded transition-colors text-white"
         >
-          <div class="flex items-center space-x-4">
-            <span class="material-symbols-outlined text-xl text-white">{{
+          <span class="material-symbols-outlined text-white text-xl">
+            {{ item.icon }}</span
+          >
+          <span class="ml-3 text-white font-medium">{{ item.label }}</span>
+        </a>
+      </ng-container>
+
+      <ng-template #urlRef>
+        <a
+          *ngIf="item.url; else noLink"
+          [href]="item.url"
+          class="flex items-center px-4 py-2 hover:bg-[#5056ac] rounded transition-colors text-white"
+        >
+          <span class="material-symbols-outlined text-white text-xl">{{
+            item.icon
+          }}</span>
+          <span class="ml-3 text-white font-medium">{{ item.label }}</span>
+        </a>
+
+        <ng-template #noLink>
+          <span
+            class="flex items-center px-4 py-2 cursor-pointer hover:bg-[#5056ac] rounded transition-colors text-white"
+          >
+            <span class="material-symbols-outlined text-white text-xl">{{
               item.icon
             }}</span>
-            <span class="text-lg font-medium text-white">{{ item.label }}</span>
-          </div>
-
-          <!-- Expand/Collapse Arrow -->
-          <span
-            *ngIf="item.children"
-            class="material-symbols-outlined text-lg transition-transform duration-200 text-white"
-            [class.rotate-180]="item.expanded"
-          >
-            expand_more
+            <span class="ml-3 font-medium">{{ item.label }}</span>
+            <i
+              *ngIf="item.items"
+              class="pi pi-angle-down ml-auto text-white"
+            ></i>
           </span>
-        </div>
-
-        <!-- Submenu Items -->
-        <div
-          *ngIf="item.children && item.expanded"
-          class="bg-[--color-complementary-blue]"
-        >
-          <div
-            *ngFor="let child of item.children"
-            class="text-right justify-end flex items-center space-x-4 px-12 py-3 cursor-pointer transition-all duration-200 hover:bg-[var(--color-light)]"
-            [class.bg-[var(--color-light)]]="child.active"
-            (click)="navigateToRoute(child)"
-          >
-            <span class="text-md text-white">{{ child.label }}</span>
-          </div>
-        </div>
-      </li>
-    </ul>
-  </nav>
+        </ng-template>
+      </ng-template>
+    </ng-template>
+  </p-panelMenu>
 </div>
