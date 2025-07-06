@@ -7,9 +7,25 @@
 @font-face {
   font-family: "Open Sans";
   font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/OpenSans/OpenSans-Light.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: url("/fonts/OpenSans/OpenSans-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/OpenSans/OpenSans-SemiBold.woff2") format("woff2");
 }
 /* Open Sans Bold */
 @font-face {
@@ -20,13 +36,6 @@
   src: url("/fonts/OpenSans/OpenSans-Bold.woff2") format("woff2");
 }
 /* Open Sans SemiBold */
-@font-face {
-  font-family: "Open Sans";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("/fonts/OpenSans/OpenSans-SemiBold.woff2") format("woff2");
-}
 /* Titillium Web */
 @font-face {
   font-family: "Titillium Web";

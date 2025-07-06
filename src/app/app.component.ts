@@ -4,6 +4,7 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './Core/Components/Header/header.component';
 import { SideNavBarComponent } from './Core/Components/SideNavBar/side-nav-bar.component';
 import { FooterComponent } from './Core/Components/Footer/footer.component';
+import { BreadCrumbComponent } from './Shared/Components/bread-crumb/bread-crumb.component';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,7 @@ import { FooterComponent } from './Core/Components/Footer/footer.component';
     SideNavBarComponent,
     FooterComponent,
     CommonModule,
+    BreadCrumbComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',

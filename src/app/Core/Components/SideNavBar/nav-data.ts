@@ -12,7 +12,7 @@ export const navbarData: INavbarData[] = [
     label: 'Maestros Generales',
     items: [
       {
-        routeLink: '/third-parties/list',
+        routeLink: '/gen-masters/third-parties/list',
         icon: 'groups',
         label: 'Terceros',
       },

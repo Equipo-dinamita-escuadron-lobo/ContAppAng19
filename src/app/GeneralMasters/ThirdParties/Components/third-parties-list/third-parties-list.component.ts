@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +15,7 @@ import { ThirdPartyServiceService } from '../../Services/third-party-service.ser
 import { ThirdPartyConfigurationServiceService } from '../../Services/third-party-configuration-service.service';
 import { ePersonType } from '../../models/ePersonType';
 import { eThirdGender } from '../../models/eThirdGender';
+import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'app-third-parties-list',

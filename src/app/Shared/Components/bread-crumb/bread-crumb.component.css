@@ -1,0 +1,19 @@
+/* Agregar estos estilos en tu archivo component.css */
+
+:host ::ng-deep .p-breadcrumb {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-family: "Open Sans", sans-serif !important;
+}
+
+:host ::ng-deep .p-breadcrumb .p-breadcrumb-item {
+  font-size: 0.9rem !important;
+  color: var(--color-breadcrumb) !important;
+}
+
+:host ::ng-deep .p-breadcrumb .p-breadcrumb-separator {
+  color: var(--color-secondary) !important;
+  font-weight: 300 !important;
+  font-size: 14px !important;
+}

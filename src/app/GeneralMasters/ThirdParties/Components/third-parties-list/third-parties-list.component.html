@@ -1,216 +1,340 @@
 <div class="flex w-full h-full font-titillium">
-  <div class="w-full px-4">
-    <!-- Titulo y configuracion -->
-    <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Terceros</h1>
-        <p class="text-sm text-gray-600">
+  <div class="w-full px-4 sm:px-6 lg:px-8">
+    <!-- Header Section -->
+    <div
+      class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8"
+    >
+      <div class="flex-1">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          Terceros
+        </h1>
+        <p class="text-sm sm:text-base text-gray-600 max-w-3xl leading-relaxed">
           Aquí podrá crear, editar, cambiar el estado y ver los detalles de los
           terceros de su empresa
         </p>
       </div>
-      <p-button
-        icon="pi pi-cog"
-        class="p-button-rounded p-button-secondary"
-        (onClick)="openConfigTPModal()"
-        pTooltip="Configuración"
-      ></p-button>
-    </div>
-
-    <!-- Buscador y acciones -->
-    <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
-      <div class="w-full md:w-1/3">
-        <input
-          type="text"
-          pInputText
-          placeholder="Buscar"
-          (input)="applyFilter($event)"
-          class="w-full"
-          #input
-        />
-      </div>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex-shrink-0 self-start">
         <p-button
-          label="{{ showDetailTable ? 'Vista resumida' : 'Vista completa' }}"
-          (onClick)="showDetailTableFunction()"
-        ></p-button>
-        <p-button
-          label="Agregar"
-          (onClick)="redirectTo('/general/operations/third-parties/create')"
-        ></p-button>
-        <p-button label="PDF RUT" (onClick)="openCreatePDFRunt()"></p-button>
-
-        <!-- <app-third-create-pdf-rut
-          *ngIf="createPdfRUT"
-          (close)="closeCreatePDFRunt()"
-        ></app-third-create-pdf-rut> -->
-        <p-button label="Exportar" (onClick)="exportThirdsToExcel()"></p-button>
-        <p-fileUpload
-          name="excelFile"
-          mode="basic"
-          accept=".xlsx"
-          customUpload
-          (uploadHandler)="ReadExcel($event)"
-        ></p-fileUpload>
-        <p-button
-          label="Plantilla"
-          (onClick)="openModalDetailsImport()"
+          icon="pi pi-cog"
+          class="p-button-rounded p-button-outlined"
+          (onClick)="openConfigTPModal()"
+          pTooltip="Configuración"
+          tooltipPosition="left"
         ></p-button>
       </div>
     </div>
 
-    <!-- Tabla con filtros, búsqueda global y vista resumida/completa -->
-    <p-table
-      #dt
-      [value]="dataSource"
-      dataKey="thId"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      [globalFilterFields]="globalFilterFields"
-      [responsiveLayout]="'scroll'"
-    >
-      <ng-template pTemplate="caption">
-        <div class="flex justify-between items-center flex-wrap gap-4">
+    <!-- Actions Bar -->
+    <div class="mb-6">
+      <div
+        class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4 bg-white rounded-lg shadow-sm border border-gray-200"
+      >
+        <!-- Primary Actions -->
+        <div class="flex flex-wrap items-center gap-2">
+          <p-button
+            label="{{ showDetailTable ? 'Vista resumida' : 'Vista completa' }}"
+            icon="pi pi-eye"
+            class="p-button-outlined"
+            (onClick)="showDetailTableFunction()"
+            size="small"
+          ></p-button>
+          <p-button
+            label="Agregar"
+            icon="pi pi-plus"
+            class="p-button-success"
+            (onClick)="redirectTo('/general/operations/third-parties/create')"
+            size="small"
+          ></p-button>
+          <p-button
+            label="PDF RUT"
+            icon="pi pi-file-pdf"
+            class="p-button-outlined p-button-danger"
+            (onClick)="openCreatePDFRunt()"
+            size="small"
+          ></p-button>
+          <p-button
+            label="Exportar"
+            icon="pi pi-file-excel"
+            class="p-button-outlined p-button-help"
+            (onClick)="exportThirdsToExcel()"
+            size="small"
+          ></p-button>
+          <p-fileUpload
+            mode="basic"
+            chooseLabel="Importar"
+            [auto]="true"
+            customUpload="true"
+            (uploadHandler)="ReadExcel($event)"
+            accept=".xlsx"
+            class="p-button-outlined p-button-info"
+            size="small"
+          ></p-fileUpload>
+          <p-button
+            label="Plantilla"
+            icon="pi pi-download"
+            class="p-button-outlined"
+            (onClick)="openModalDetailsImport()"
+            size="small"
+          ></p-button>
+        </div>
+
+        <!-- Search Field -->
+        <!-- Search Field (usando p-iconfield para compatibilidad con PrimeNG 19) -->
+        <div class="w-full sm:w-auto">
           <div class="flex items-center gap-2">
             <p-button
-              label="{{
-                showDetailTable ? 'Vista resumida' : 'Vista completa'
-              }}"
-              icon="pi pi-eye"
-              (onClick)="showDetailTableFunction()"
+              icon="pi pi-filter-slash"
+              class="p-button-outlined p-button-sm"
+              label="Limpiar"
             ></p-button>
-            <p-button
-              label="Agregar"
-              icon="pi pi-plus"
-              (onClick)="redirectTo('/general/operations/third-parties/create')"
-            ></p-button>
-            <p-button
-              label="PDF RUT"
-              icon="pi pi-file-pdf"
-              (onClick)="openCreatePDFRunt()"
-            ></p-button>
-            <p-button
-              label="Exportar"
-              icon="pi pi-file-excel"
-              (onClick)="exportThirdsToExcel()"
-            ></p-button>
-            <p-fileUpload
-              mode="basic"
-              chooseLabel="Importar"
-              [auto]="true"
-              customUpload="true"
-              (uploadHandler)="ReadExcel($event)"
-              accept=".xlsx"
-            ></p-fileUpload>
-            <p-button
-              label="Plantilla"
-              icon="pi pi-download"
-              (onClick)="openModalDetailsImport()"
-            ></p-button>
+
+            <p-iconfield iconPosition="left" class="w-full sm:w-72">
+              <p-inputicon>
+                <i class="pi pi-search"></i>
+              </p-inputicon>
+              <input
+                pInputText
+                type="text"
+                placeholder="Buscar terceros..."
+                class="w-full"
+              />
+            </p-iconfield>
           </div>
-          <p-iconfield iconPosition="left" class="w-full md:w-1/4">
-            <p-inputicon>
-              <i class="pi pi-search"></i>
-            </p-inputicon>
-            <input
-              pInputText
-              type="text"
-              (input)="dt.filterGlobal($event.target, 'contains')"
-              placeholder="Buscar..."
-              class="w-full"
-            />
-          </p-iconfield>
         </div>
-      </ng-template>
+      </div>
+    </div>
 
-      <ng-template pTemplate="header">
-        <tr>
-          <th *ngIf="showDetailTable">Tipo Persona</th>
-          <th>Tipo(s) Tercero</th>
-          <th>Nombre/Razón Social</th>
-          <th>Tipo Id</th>
-          <th>Número Documento</th>
-          <th *ngIf="showDetailTable">Dígito Verificación</th>
-          <th>Correo</th>
-          <th *ngIf="showDetailTable">País</th>
-          <th *ngIf="showDetailTable">Departamento</th>
-          <th *ngIf="showDetailTable">Ciudad</th>
-          <th *ngIf="showDetailTable">Dirección</th>
-          <th *ngIf="showDetailTable">Teléfono</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </ng-template>
+    <!-- Table Container -->
+    <div
+      class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+    >
+      <p-table
+        #dt1
+        [value]="dataSource"
+        dataKey="thId"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50, 100]"
+        [globalFilterFields]="globalFilterFields"
+        [responsiveLayout]="'scroll'"
+        styleClass="p-datatable-sm"
+        [tableStyle]="{ 'min-width': '50rem' }"
+      >
+        <!-- Table Header -->
+        <ng-template pTemplate="header">
+          <tr>
+            <th *ngIf="showDetailTable" class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Tipo Persona</span>
+              </div>
+            </th>
+            <th class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Tipo(s) Tercero</span>
+              </div>
+            </th>
+            <th class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Nombre/Razón Social</span>
+              </div>
+            </th>
+            <th class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Tipo ID</span>
+              </div>
+            </th>
+            <th class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Número Documento</span>
+              </div>
+            </th>
+            <th *ngIf="showDetailTable" class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Dígito Verificación</span>
+              </div>
+            </th>
+            <th class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Correo</span>
+              </div>
+            </th>
+            <th *ngIf="showDetailTable" class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>País</span>
+              </div>
+            </th>
+            <th *ngIf="showDetailTable" class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Departamento</span>
+              </div>
+            </th>
+            <th *ngIf="showDetailTable" class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Ciudad</span>
+              </div>
+            </th>
+            <th *ngIf="showDetailTable" class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Dirección</span>
+              </div>
+            </th>
+            <th *ngIf="showDetailTable" class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Teléfono</span>
+              </div>
+            </th>
+            <th class="whitespace-nowrap">
+              <div class="flex items-center gap-2">
+                <span>Estado</span>
+              </div>
+            </th>
+            <th class="whitespace-nowrap text-center">
+              <div class="flex items-center justify-center gap-2">
+                <span>Acciones</span>
+              </div>
+            </th>
+          </tr>
+        </ng-template>
 
-      <ng-template pTemplate="body" let-third>
-        <tr>
-          <td *ngIf="showDetailTable">{{ third.personType }}</td>
-          <td>
-            <div *ngFor="let type of third.thirdTypes">
-              {{ type.thirdTypeName }}
-            </div>
-          </td>
-          <td>
-            {{
-              third.names
-                ? third.names + " " + third.lastNames
-                : third.socialReason
-            }}
-          </td>
-          <td>{{ third.typeId?.typeId }}</td>
-          <td>{{ third.idNumber }}</td>
-          <td *ngIf="showDetailTable">
-            {{ third.verificationNumber ?? "NO APLICA" }}
-          </td>
-          <td>{{ third.email }}</td>
-          <td *ngIf="showDetailTable">{{ third.country }}</td>
-          <td *ngIf="showDetailTable">{{ third.province }}</td>
-          <td *ngIf="showDetailTable">{{ third.city }}</td>
-          <td *ngIf="showDetailTable">{{ third.address }}</td>
-          <td *ngIf="showDetailTable">{{ third.phoneNumber }}</td>
-          <td>
-            <p-tag
-              [value]="third.state ? 'Activo' : 'Inactivo'"
-              [severity]="third.state ? 'success' : 'danger'"
-            ></p-tag>
-          </td>
-          <td>
-            <div class="flex gap-1">
-              <p-button
-                icon="pi pi-eye"
-                class="p-button-text"
-                (onClick)="openModalDetails(third.thId)"
-              ></p-button>
-              <p-button
-                icon="pi pi-pencil"
-                class="p-button-text"
-                (onClick)="redirectToEdit(third.thId)"
-              ></p-button>
-              <p-button
-                icon="pi pi-eye-slash"
-                *ngIf="third.state"
-                class="p-button-text text-red-600"
-                (onClick)="changeThirdPartieState(third.thId)"
-              ></p-button>
-              <p-button
-                icon="pi pi-eye"
-                *ngIf="!third.state"
-                class="p-button-text text-green-600"
-                (onClick)="changeThirdPartieState(third.thId)"
-              ></p-button>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
+        <!-- Table Body -->
+        <ng-template pTemplate="body" let-third>
+          <tr class="hover:bg-gray-50">
+            <td *ngIf="showDetailTable" class="whitespace-nowrap">
+              <span class="text-sm font-medium text-gray-900">
+                {{ third.personType }}
+              </span>
+            </td>
+            <td class="whitespace-nowrap">
+              <div class="flex flex-col gap-1">
+                <span
+                  *ngFor="let type of third.thirdTypes"
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                >
+                  {{ type.thirdTypeName }}
+                </span>
+              </div>
+            </td>
+            <td class="whitespace-nowrap">
+              <div class="flex flex-col">
+                <span class="text-sm font-medium text-gray-900">
+                  {{
+                    third.names
+                      ? third.names + " " + third.lastNames
+                      : third.socialReason
+                  }}
+                </span>
+              </div>
+            </td>
+            <td class="whitespace-nowrap">
+              <span class="text-sm text-gray-900">{{
+                third.typeId?.typeId
+              }}</span>
+            </td>
+            <td class="whitespace-nowrap">
+              <span class="text-sm font-mono text-gray-900">{{
+                third.idNumber
+              }}</span>
+            </td>
+            <td *ngIf="showDetailTable" class="whitespace-nowrap">
+              <span class="text-sm text-gray-900">
+                {{ third.verificationNumber ?? "NO APLICA" }}
+              </span>
+            </td>
+            <td class="whitespace-nowrap">
+              <span class="text-sm text-gray-900">{{ third.email }}</span>
+            </td>
+            <td *ngIf="showDetailTable" class="whitespace-nowrap">
+              <span class="text-sm text-gray-900">{{ third.country }}</span>
+            </td>
+            <td *ngIf="showDetailTable" class="whitespace-nowrap">
+              <span class="text-sm text-gray-900">{{ third.province }}</span>
+            </td>
+            <td *ngIf="showDetailTable" class="whitespace-nowrap">
+              <span class="text-sm text-gray-900">{{ third.city }}</span>
+            </td>
+            <td *ngIf="showDetailTable" class="whitespace-nowrap">
+              <span class="text-sm text-gray-900">{{ third.address }}</span>
+            </td>
+            <td *ngIf="showDetailTable" class="whitespace-nowrap">
+              <span class="text-sm text-gray-900">{{ third.phoneNumber }}</span>
+            </td>
+            <td class="whitespace-nowrap">
+              <p-tag
+                [value]="third.state ? 'Activo' : 'Inactivo'"
+                [severity]="third.state ? 'success' : 'danger'"
+                class="text-xs"
+              ></p-tag>
+            </td>
+            <td class="whitespace-nowrap">
+              <div class="flex items-center justify-center gap-1">
+                <p-button
+                  icon="pi pi-eye"
+                  class="p-button-text p-button-sm"
+                  (onClick)="openModalDetails(third.thId)"
+                  pTooltip="Ver detalles"
+                  tooltipPosition="top"
+                ></p-button>
+                <p-button
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm"
+                  (onClick)="redirectToEdit(third.thId)"
+                  pTooltip="Editar"
+                  tooltipPosition="top"
+                ></p-button>
+                <p-button
+                  icon="pi pi-eye-slash"
+                  *ngIf="third.state"
+                  class="p-button-text p-button-sm text-red-600"
+                  (onClick)="changeThirdPartieState(third.thId)"
+                  pTooltip="Desactivar"
+                  tooltipPosition="top"
+                ></p-button>
+                <p-button
+                  icon="pi pi-eye"
+                  *ngIf="!third.state"
+                  class="p-button-text p-button-sm text-green-600"
+                  (onClick)="changeThirdPartieState(third.thId)"
+                  pTooltip="Activar"
+                  tooltipPosition="top"
+                ></p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
 
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td [attr.colspan]="showDetailTable ? 14 : 7">
-            No se encontraron terceros.
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+        <!-- Empty State -->
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td
+              [attr.colspan]="showDetailTable ? 14 : 7"
+              class="text-center py-12"
+            >
+              <div class="flex flex-col items-center gap-4">
+                <div
+                  class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center"
+                ></div>
+                <div class="space-y-2">
+                  <h3 class="text-lg font-semibold text-gray-900 text-center">
+                    No hay terceros
+                    <i class="pi pi-users text-2xl text-gray-400"></i>
+                  </h3>
+                  <p class="text-sm text-gray-600 max-w-md">
+                    No se encontraron terceros que coincidan con su búsqueda.
+                  </p>
+                </div>
+                <p-button
+                  label="Agregar Tercero"
+                  icon="pi pi-plus"
+                  class="p-button-success"
+                  (onClick)="
+                    redirectTo('/general/operations/third-parties/create')
+                  "
+                ></p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
   </div>
 </div>
