@@ -2,7 +2,7 @@ import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './Core/Components/Header/header.component';
-import { SideNavBarComponent } from './Core/Components/side-nav-bar/side-nav-bar.component';
+import { SideNavBarComponent } from './Core/Components/SideNavBar/side-nav-bar.component';
 
 @Component({
   selector: 'app-root',
