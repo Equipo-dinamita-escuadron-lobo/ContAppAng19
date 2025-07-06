@@ -21,12 +21,20 @@
     class="flex flex-col flex-1 transition-all duration-300"
     [ngClass]="!collapsed ? 'lg:ml-[80px]' : 'lg:ml-[250px]'"
   >
+    <!-- Header -->
     <app-header></app-header>
 
-    <main class="flex-1 overflow-y-auto p-6 md:p-8 z-10 relative">
+    <!-- Main content area con altura calculada -->
+    <main
+      class="flex-1 overflow-y-auto p-6 md:p-8 z-10 relative"
+      style="height: calc(100vh - 80px - 80px)"
+    >
       <div class="mx-auto h-full w-full max-w-7xl">
         <router-outlet></router-outlet>
       </div>
     </main>
+
+    <!-- Footer fijo en la parte inferior -->
+    <app-footer class="flex-shrink-0"></app-footer>
   </div>
 </div>

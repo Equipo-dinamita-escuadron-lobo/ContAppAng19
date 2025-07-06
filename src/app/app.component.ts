@@ -3,11 +3,18 @@ import { CommonModule, NgClass } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './Core/Components/Header/header.component';
 import { SideNavBarComponent } from './Core/Components/SideNavBar/side-nav-bar.component';
+import { FooterComponent } from './Core/Components/Footer/footer.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, SideNavBarComponent, CommonModule],
+  imports: [
+    RouterOutlet,
+    HeaderComponent,
+    SideNavBarComponent,
+    FooterComponent,
+    CommonModule,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
