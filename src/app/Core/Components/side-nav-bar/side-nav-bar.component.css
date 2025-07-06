@@ -1,0 +1,255 @@
+.sidenav {
+  transition: all 0.5s ease;
+  position: fixed;
+  z-index: 1001; /* Mayor que el header para que esté encima */
+  top: 0;
+  left: 0;
+  width: 5rem;
+  height: 100vh;
+  box-shadow: 0.063rem 0 1.25rem 0 #8690a3;
+  display: flex;
+  flex-direction: column;
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    padding: 0.938rem 0.938rem 0 0.938rem;
+    width: 100%;
+    transition: all 0.3s ease;
+    position: relative;
+
+    &.justify-center {
+      justify-content: center;
+    }
+
+    &.justify-between {
+      justify-content: center;
+    }
+
+    .logo-button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .logo-img {
+        height: 70px;
+        width: auto;
+        object-fit: contain;
+      }
+    }
+
+    .btn-close {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background-color: transparent;
+      border: none;
+      color: #fff;
+      font-size: 24px;
+    }
+  }
+}
+
+.sidenav-collapsed {
+  width: 16.5625rem;
+}
+
+.logo-app {
+  filter: invert(100%) brightness(200%);
+}
+
+.sidenav-nav {
+  list-style: none;
+  padding: 0.938rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: calc(100% - 3.65rem);
+  cursor: pointer;
+
+  .sidenav-nav-item {
+    width: 100%;
+    margin-bottom: 0.625rem;
+
+    .sidenav-nav-link {
+      display: flex;
+      align-items: center;
+      height: 3rem;
+      color: #f3f3f3;
+      text-decoration: none;
+      border-radius: 0.625rem;
+      transition: all 0.3s ease;
+
+      .sidenav-link-icon {
+        font-size: 22px;
+        width: 2rem;
+        min-width: 2rem;
+        margin: 0 0.5rem;
+        text-align: center;
+      }
+
+      .sidenav-link-text {
+        margin-left: 1.5rem;
+      }
+    }
+
+    .sidenav-nav-link:hover {
+      background-color: #5056ac;
+      color: #fff;
+
+      .menu-collapse-icon {
+        color: #fff;
+      }
+    }
+  }
+}
+
+.active {
+  background-color: #5056ac !important;
+
+  .sidenav-link-icon,
+  .sidenav-link-text {
+    color: #fff !important;
+  }
+}
+
+.sidenav-nav-link.active .sidenav-link-icon {
+  color: #fff;
+}
+
+.menu-collapse-icon {
+  font-size: 24px;
+  width: 2rem;
+  min-width: 2rem;
+  margin: auto 0.5rem auto auto;
+  text-align: center;
+  color: #fff;
+}
+
+.sidenav-collapsed .sidenav-nav-link .menu-collapse-icon {
+  color: #fff;
+}
+
+.sidenav-collapsed .sidenav-nav-link.active .menu-collapse-icon {
+  color: #fff;
+}
+
+.sublevel-nav {
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+
+  .sublevel-nav-item {
+    .sublevel-nav-link {
+      display: flex;
+      align-items: center;
+      height: 3rem;
+      color: #5056ac;
+      text-decoration: none;
+      border-radius: 0.625rem;
+      transition: all 0.3s ease;
+      padding-left: 3rem;
+      margin-left: 0.5rem;
+
+      .sublevel-link-icon {
+        font-size: 16px !important;
+        width: 1.5rem !important;
+        min-width: 1.5rem !important;
+        margin: 0 0.5rem 0 0;
+        text-align: center;
+      }
+
+      .sublevel-link-text {
+        margin-left: 0.5rem;
+      }
+    }
+
+    .sublevel-nav-link:hover {
+      color: #f3f3f3;
+      background-color: rgba(80, 86, 172, 0.1);
+    }
+
+    .sublevel-nav-link.active {
+      background-color: #5056ac;
+      color: #fff;
+
+      .sublevel-link-icon {
+        color: #fff;
+        font-size: 16px !important;
+      }
+    }
+  }
+}
+
+/* SCROLLBAR */
+.scrollwrap {
+  overflow-y: auto;
+  visibility: hidden;
+  height: calc(100% - 3.65rem);
+}
+
+.sidenav-nav,
+.scrollwrap:hover,
+.scrollwrap:focus {
+  visibility: visible;
+}
+
+.scrollwrap_delayed {
+  transition: visibility 0.5s 0.2s;
+}
+
+.scrollwrap_delayed:hover {
+  transition: visibility 0.2s 0.2s;
+}
+
+.scrollrap::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollrap::-webkit-scrollbar-thumb {
+  background-color: #556268;
+  border-radius: 20px;
+}
+
+.scrollwrap {
+  scrollbar-width: thin;
+  scrollbar-color: #556268 transparent;
+}
+
+.floating-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: fadeIn 0.5s forwards;
+  transition: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.floating-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.floating-buttons button:hover {
+  background-color: #5056ac;
+  transform: scale(1.05);
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}

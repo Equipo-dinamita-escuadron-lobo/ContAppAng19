@@ -1,19 +1,17 @@
-/* Estilos adicionales para el header */
 header {
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 1000; /* Menor que el sidebar */
   border-bottom: 1px solid #e5e7eb;
-  height: 90px; /* Altura aumentada para acomodar el logo de 70px */
+  height: 90px;
+  width: 100%;
 }
 
-/* Ajustes para el logo */
 .logo-container {
   min-width: 200px;
   background: var(--color-primary);
 }
 
-/* Estilos para el botón dropdown del usuario */
 .custom-dropdown-button .p-button {
   color: var(--color-primary) !important;
   background: transparent !important;
@@ -29,11 +27,86 @@ header {
   color: var(--color-primary) !important;
 }
 
-/* Responsive design */
+/* =================
+   APP COMPONENT STYLES
+   ================= */
+.header {
+  height: 90px; /* Consistente con el header */
+  z-index: 50;
+  position: relative;
+}
+
+/* =================
+   RESPONSIVE DESIGN
+   ================= */
+
+/* Breakpoint personalizado para desktop real (más grande que iPad Pro) */
+@media (min-width: 1440px) {
+  .sidenav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001;
+  }
+
+  header {
+    z-index: 1000;
+  }
+
+  /* Ocultar botón hamburguesa en desktop */
+  .mobile-toggle-btn {
+    display: none !important;
+  }
+}
+
+/* Pantallas medianas y pequeñas (tablet y mobile) - Incluye iPad Pro */
+@media (max-width: 1439px) {
+  /* Mostrar botón hamburguesa en tablet/mobile */
+  .mobile-toggle-btn {
+    display: flex !important;
+  }
+
+  .sidenav {
+    position: fixed;
+    top: 90px; /* Debajo del header */
+    left: 0;
+    height: calc(100vh - 90px);
+    z-index: 999; /* Menor que el header */
+    transform: translateX(-100%); /* Oculto por defecto */
+    transition: transform 0.3s ease;
+  }
+
+  .sidenav.sidebar-visible {
+    transform: translateX(0); /* Mostrar cuando tenga la clase */
+  }
+
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 90px;
+  }
+
+  .main-content {
+    margin-top: 90px; /* Espacio para el header fijo */
+    margin-left: 0 !important; /* Sin margen izquierdo en tablet/mobile */
+  }
+}
+
 @media (max-width: 768px) {
   header {
-    height: auto;
-    min-height: 70px;
+    height: 70px;
+  }
+
+  .sidenav {
+    top: 70px;
+    height: calc(100vh - 70px);
+  }
+
+  .main-content {
+    margin-top: 70px;
   }
 
   .logo-container {
@@ -43,12 +116,17 @@ header {
   .logo-container img {
     height: 50px !important;
   }
+
+  .hide-sm {
+    display: none !important;
+  }
 }
 
 @media (max-width: 640px) {
   header {
     flex-direction: column;
     height: auto;
+    min-height: 70px;
   }
 
   .logo-container {
@@ -73,12 +151,5 @@ header {
   .app-info {
     margin-left: 0 !important;
     text-align: center;
-  }
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .hide-sm {
-    display: none !important;
   }
 }

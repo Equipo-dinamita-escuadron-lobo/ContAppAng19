@@ -1,0 +1,96 @@
+<div
+  class="sidenav bg-[var(--color-primary)] text-sm"
+  [ngClass]="collapsed ? 'sidenav-collapsed' : ''"
+>
+  <div
+    class="logo-container px-6 py-4 items-center"
+    [ngClass]="collapsed ? 'justify-center' : 'justify-between items-center'"
+  >
+    <button (click)="toggleCollapse()" class="logo-button">
+      <img
+        [src]="collapsed ? '/logo_unicauca.png' : '/logo_unicauca_sm.png'"
+        alt="Universidad del Cauca"
+        class="logo-img"
+      />
+    </button>
+
+    <button
+      *ngIf="collapsed"
+      class="btn-close absolute right-6"
+      @rotate
+      (click)="closeSidenav()"
+    >
+      <i class="material-symbols-outlined close-icon">close</i>
+    </button>
+  </div>
+
+  <div class="bg-[var(--color-primary)]"></div>
+  <hr class="border-t border-white opacity-50 mx-6 my-4" />
+  <div class="scrollwrap scrollwrap_delayed">
+    <ul class="sidenav-nav">
+      <li class="sidenav-nav-item" *ngFor="let item of navData">
+        <a
+          class="sidenav-nav-link"
+          *ngIf="item.items && item.items.length > 0"
+          (click)="handleClick(item)"
+          [ngClass]="getActiveClass(item)"
+        >
+          <span class="material-symbols-outlined sidenav-link-icon">{{
+            item.icon
+          }}</span>
+          <span class="sidenav-link-text" @fadeInOut *ngIf="collapsed">
+            {{ item.label }}
+          </span>
+          <i
+            *ngIf="item.items && collapsed"
+            class="menu-collapse-icon material-symbols-outlined"
+          >
+            {{ !item.expanded ? "chevron_forward" : "keyboard_arrow_down" }}
+          </i>
+        </a>
+        <a
+          class="sidenav-nav-link"
+          *ngIf="!item.items || (item.items && item.items.length === 0)"
+          [routerLink]="[item.routeLink]"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <span class="material-symbols-outlined sidenav-link-icon">{{
+            item.icon
+          }}</span>
+          <span class="sidenav-link-text" @fadeInOut *ngIf="collapsed">
+            {{ item.label }}
+          </span>
+        </a>
+        <div *ngIf="collapsed && item.items && item.items.length > 0">
+          <app-sublevel-menu
+            [data]="item"
+            [collapsed]="collapsed"
+            [expanded]="item.expanded"
+            [multiple]="multiple"
+          ></app-sublevel-menu>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <hr class="border-t border-white opacity-50 mx-6 my-4" />
+  <div class="floating-buttons mb-4 w-full" @fadeInOut>
+    <ul class="sidenav-nav text-sm">
+      <!-- Botón Regresar -->
+      <li class="sidenav-nav-item">
+        <button
+          class="sidenav-nav-link w-full"
+          [ngClass]="!collapsed ? 'justify-center' : ''"
+          (click)="goBack()"
+        >
+          <span class="material-symbols-outlined sidenav-link-icon">
+            keyboard_return
+          </span>
+          <span class="sidenav-link-text" @fadeInOut *ngIf="collapsed">
+            Regresar
+          </span>
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>

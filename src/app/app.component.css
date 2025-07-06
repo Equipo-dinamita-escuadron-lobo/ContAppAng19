@@ -1,0 +1,13 @@
+.header {
+  height: 4rem; /* o 64px */
+  z-index: 50;
+  position: relative;
+}
+@media (max-width: 1024px) {
+  .sidenav {
+    position: absolute !important;
+    top: 90px; /* Altura real del header */
+    height: calc(100vh - 90px);
+    z-index: 40;
+  }
+}
