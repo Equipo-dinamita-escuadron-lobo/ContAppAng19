@@ -24,7 +24,7 @@ export const navbarData: INavbarData[] = [
     ],
   },
   {
-    routeLink: 'TO DO',
+    routeLink: '/financial',
     icon: 'monetization_on',
     label: 'Financiero',
     items: [
@@ -56,12 +56,12 @@ export const navbarData: INavbarData[] = [
         label: 'Notas Contables',
       },
       {
-        routeLink: 'TO DO',
+        routeLink: '/financial/reports',
         icon: 'finance_mode',
         label: 'Reportes',
         items: [
           {
-            routeLink: 'TO DO',
+            routeLink: '/financial/reports/auxiliary-books/list',
             icon: 'book_5',
             label: 'Libros Auxiliares',
           },

@@ -105,9 +105,6 @@ export class SideNavBarComponent implements OnInit {
 
   goRoute(data: INavbarData) {
     return this.router.navigateByUrl(data.routeLink);
-    if (this.screenWidth <= 768) {
-      this.closeSidenav();
-    }
   }
 
   getActiveClass(data: INavbarData): string {

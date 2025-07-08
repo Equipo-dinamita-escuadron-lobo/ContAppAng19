@@ -103,7 +103,7 @@
     }
 
     .sidenav-nav-link:hover {
-      background-color: #5056ac;
+      background-color: #828ae3;
       color: #fff;
 
       .menu-collapse-icon {
@@ -244,7 +244,7 @@
 }
 
 .floating-buttons button:hover {
-  background-color: #5056ac;
+  background-color: #828ae3;
   transform: scale(1.05);
 }
 

@@ -29,6 +29,43 @@ export const routes: Routes = [
           },
         ],
       },
+      {
+        path: 'financial',
+        data: {
+          breadcrumb: 'Módulo Financiero',
+        },
+        children: [
+          {
+            path: 'reports',
+            data: {
+              breadcrumb: 'Reportes',
+            },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Reports/Components/main-view/main-view.component'
+                  ).then((m) => m.MainViewComponent),
+              },
+              {
+                path: 'auxiliary-books/list',
+                data: {
+                  breadcrumb: 'Libros Auxiliares',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Reports/auxiliary-books/Components/auxiliary-books-list/auxiliary-books-list.component'
+                  ).then((m) => m.AuxiliaryBooksListComponent),
+              },
+            ],
+          },
+        ],
+      },
     ],
   },
   {
