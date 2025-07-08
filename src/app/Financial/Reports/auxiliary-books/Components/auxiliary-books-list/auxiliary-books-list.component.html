@@ -1,0 +1,78 @@
+<!-- Componente de auxbooks Financieros -->
+<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <!-- Header Section -->
+  <div class="mb-6">
+    <div class="flex items-center gap-3 mb-3">
+      <span
+        class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
+      >
+        book_5
+      </span>
+      <h1
+        class="text-2xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+      >
+        Libros Auxiliares
+      </h1>
+    </div>
+
+    <!-- Container for paragraph and search bar -->
+    <div
+      class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6"
+    >
+      <p
+        class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl flex-1"
+      >
+        Aquí podrás visualizar y generar informes clave sobre el estado
+        financiero de la entidad. Consulta balances, estados de resultados y
+        otros reportes contables de forma detallada y estructurada.
+      </p>
+
+      <!-- Search Bar -->
+      <div class="flex-shrink-0 w-full sm:w-auto">
+        <div class="relative max-w-lg text-gray-400 hover:text-gray-600">
+          <input
+            type="text"
+            placeholder="Buscar Libro Auxiliar"
+            class="w-full pl-6 pr-12 py-3 border border-[var(--color-primary)] rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--color-light)] focus:border-transparent text-base bg-white"
+          />
+          <button
+            class="absolute right-3 top-1/2 transform -translate-y-1/2"
+            aria-label="Buscar"
+          >
+            <i class="pi pi-search text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="border-t-2 border-gray-400 opacity-50 mb-10 mt-10 w-full max-w-2xl sm:max-w-3xl md:max-w-4xl"
+    ></div>
+  </div>
+
+  <!-- auxbook Cards Section -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- auxbook Cards -->
+    <div
+      *ngFor="let auxbook of auxiliaryBooks"
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+      (click)="goTo(auxbook.route)"
+    >
+      <div class="flex items-start mb-4">
+        <div class="flex-1">
+          <h3
+            class="text-lg font-semibold text-[var(--color-primary)] mb-1 flex items-center"
+          >
+            <span class="material-symbols-outlined mr-10">
+              {{ auxbook.icon }}
+            </span>
+            {{ auxbook.name }}
+          </h3>
+          <p class="text-sm text-gray-500">
+            {{ auxbook.description }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

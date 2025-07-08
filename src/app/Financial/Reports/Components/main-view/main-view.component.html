@@ -1,0 +1,72 @@
+<!-- Componente de Reportes Financieros -->
+<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <!-- Header Section -->
+  <div class="mb-6">
+    <h1
+      class="text-2xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mb-3"
+    >
+      Reportes
+    </h1>
+
+    <!-- Container for paragraph and search bar -->
+    <div
+      class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6"
+    >
+      <p
+        class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl flex-1"
+      >
+        Aquí podrás visualizar y generar informes clave sobre el estado
+        financiero de la entidad. Consulta balances, estados de resultados y
+        otros reportes contables de forma detallada y estructurada.
+      </p>
+
+      <!-- Search Bar -->
+      <div class="flex-shrink-0">
+        <div class="relative max-w-lg">
+          <input
+            type="text"
+            placeholder="Buscar Reporte"
+            class="w-full pl-6 pr-12 py-3 border border-[var(--color-primary)] rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--color-light)] focus:border-transparent text-base bg-white"
+          />
+          <button
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            <i class="pi pi-search text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="border-t-2 border-gray-400 opacity-50 mb-10 mt-10 w-full max-w-2xl sm:max-w-3xl md:max-w-4xl"
+    ></div>
+  </div>
+
+  <!-- Report Cards Section -->
+  <div
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+  >
+    <!-- Report Cards -->
+    <div
+      *ngFor="let report of reports"
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer mr-5"
+      (click)="goTo(report.route)"
+    >
+      <div class="flex items-start mb-4">
+        <div class="flex-1">
+          <h3
+            class="text-lg font-semibold text-[var(--color-primary)] mb-1 flex items-center"
+          >
+            <span class="material-symbols-outlined m-0 p-0 mr-2">
+              {{ report.icon }}
+            </span>
+            {{ report.name }}
+          </h3>
+          <p class="text-sm text-gray-500">
+            {{ report.amount }} {{ report.type }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

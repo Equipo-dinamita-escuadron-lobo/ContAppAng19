@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { INavbarData, fadeInOut } from '../helper';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   animate,
   state,
@@ -52,7 +52,7 @@ export class SublevelMenuComponent implements OnInit {
   @Input() expanded: boolean | undefined;
   @Input() multiple: boolean = false;
 
-  constructor() {}
+  constructor(public router: Router) {}
 
   ngOnInit(): void {}
 
@@ -67,5 +67,10 @@ export class SublevelMenuComponent implements OnInit {
       }
     }
     item.expanded = !item.expanded;
+    this.goRoute(item);
+  }
+
+  goRoute(data: INavbarData) {
+    return this.router.navigateByUrl(data.routeLink);
   }
 }
