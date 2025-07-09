@@ -1,0 +1,15 @@
+.text-primary {
+  color: var(--color-primary);
+}
+.text-error {
+  color: var(--color-error);
+}
+.border-primary-40 {
+  border-color: var(--color-primary-40);
+}
+.font-family-titillium {
+  font-family: var(--font-family-titillium);
+}
+.font-family-sans {
+  font-family: var(--font-family-sans);
+}
