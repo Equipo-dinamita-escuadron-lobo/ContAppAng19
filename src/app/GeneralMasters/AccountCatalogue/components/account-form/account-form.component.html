@@ -30,42 +30,42 @@
         <div class="floating-label">{{currentLevelAccount}}</div>
     </div>
     <hr class="w-auto h-0.5 mx-auto my-4 bg-gray-100 border-0 rounded md:my-5 dark:bg-gray-700">
-    <h1 class="font-bold text-md mb-4">Datos Adicionales</h1>
+    <h1 class="section-title">Datos Adicionales</h1>
 
     <!-- component that defines the selector of the information of the nature of the account -->
     <!-- Naturaleza -->
     <div class="mb-4">
-        <label for="nature" class="block mb-1 font-semibold text-gray-700">
+        <label for="nature" class="label-title">
             Naturaleza
             <span *ngIf="!parent" class="text-red-500">*</span>
         </label>
         <p-dropdown inputId="nature" name="nature" [options]="listNature" optionLabel="name" optionValue="name"
             formControlName="selectedNatureType" [placeholder]="placeNatureType" [showClear]="false" [filter]="true"
-            filterBy="name" styleClass="xl:w-3/4 w-full">
+            filterBy="name" styleClass="dropdown-custom xl:w-3/4 w-full">
         </p-dropdown>
     </div>
 
     <!-- Estado Financiero -->
     <div class="mb-4">
-        <label for="financialState" class="block mb-1 font-semibold text-gray-700">
+        <label for="financialState" class="label-title">
             Estado Financiero
             <span *ngIf="!parent" class="text-red-500">*</span>
         </label>
         <p-dropdown inputId="financialState" name="financialState" [options]="listFinancialState" optionLabel="name"
             optionValue="name" formControlName="selectedFinancialStateType" [placeholder]="placeFinancialStateType"
-            [showClear]="false" [filter]="true" filterBy="name" styleClass="xl:w-3/4 w-full">
+            [showClear]="false" [filter]="true" filterBy="name" styleClass="dropdown-custom xl:w-3/4 w-full">
         </p-dropdown>
     </div>
 
     <!-- Clasificación -->
     <div class="mb-4">
-        <label for="classification" class="block mb-1 font-semibold text-gray-700">
+        <label for="classification" class="label-title">
             Clasificación
             <span *ngIf="!parent" class="text-red-500">*</span>
         </label>
         <p-dropdown inputId="classification" name="classification" [options]="listClasification" optionLabel="name"
             optionValue="name" formControlName="selectedClassificationType" [placeholder]="placeClassificationType"
-            [showClear]="false" [filter]="true" filterBy="name" styleClass="xl:w-3/4 w-full">
+            [showClear]="false" [filter]="true" filterBy="name" styleClass="dropdown-custom xl:w-3/4 w-full">  
         </p-dropdown>
     </div>
     <!-- section to show the save and cancel buttons -->

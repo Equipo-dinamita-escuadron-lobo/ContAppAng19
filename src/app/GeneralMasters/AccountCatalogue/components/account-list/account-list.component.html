@@ -20,10 +20,10 @@
                     <p-button label="Crear" type="submit" (click)="showFormAddNewClass()"></p-button>
                     <p-button label="Exportar" type="submit" (click)="exportAccountsToExcel()"></p-button>
 
-                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" chooseIcon="pi pi-upload"
-                        accept=".xlsx" [auto]="true" (onSelect)="onFileSelect($event)" class="p-button-primeng">
+                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" accept=".xlsx" [auto]="true"
+                        (onSelect)="onFileSelect($event)" class="p-button-primeng">
                     </p-fileUpload>
-                    <p-button label="Plantilla" icon="pi pi-file" (click)="openTemplateModal()"></p-button>
+                    <p-button label="Plantilla" (click)="openTemplateModal()"></p-button>
                 </div>
             </div>
 
@@ -569,15 +569,16 @@
         [style]="{ width: '50rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [maximizable]="true"
         (onHide)="closeTemplateModal()">
 
-        <div class="font-family-sans space-y-4">
-            <p class="text-base">
+
+        <div class="font-family-sans text-sm space-y-4">
+            <p>
                 Para importar el catálogo de cuentas, por favor, utilice un archivo de Excel (.xlsx) con el siguiente
                 formato y consideraciones.
             </p>
 
-            <h4 class="font-bold text-lg text-primary">Columnas Requeridas</h4>
+            <h4 class="font-bold text-base text-primary">Columnas Requeridas</h4>
             <p>El archivo debe contener las siguientes columnas en la primera fila:</p>
-            <ul class="list-disc list-inside bg-gray-50 p-4 rounded-md">
+            <ul class="list-disc list-inside  p-4 rounded-md">
                 <li><strong>Código</strong></li>
                 <li><strong>Nombre</strong></li>
                 <li><strong>Naturaleza</strong> (Débito o Crédito)</li>
@@ -585,65 +586,20 @@
                 <li><strong>Clasificación</strong></li>
             </ul>
 
-            <h4 class="font-bold text-lg text-primary">Consideraciones Importantes</h4>
-            <ul class="list-disc list-inside bg-gray-50 p-4 rounded-md space-y-2">
+            <h4 class="font-bold text-base text-primary">Consideraciones Importantes</h4>
+            <ul class="list-disc list-inside  p-4 rounded-md space-y-2">
                 <li>Asegúrese de que no haya filas completamente vacías entre los registros.</li>
                 <li>Todos los campos son obligatorios. Las filas con alguna celda vacía no serán importadas.</li>
                 <li>La jerarquía de las cuentas se creará automáticamente a partir de los códigos.</li>
             </ul>
-
-
-            <h4 class="font-bold text-lg text-primary">Ejemplo de Formato</h4>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left rtl:text-right text-gray-600">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Código</th>
-                            <th scope="col" class="px-6 py-3">Nombre</th>
-                            <th scope="col" class="px-6 py-3">Naturaleza</th>
-                            <th scope="col" class="px-6 py-3">Estado Financiero</th>
-                            <th scope="col" class="px-6 py-3">Clasificación</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="bg-white border-b">
-                            <td class="px-6 py-4 font-medium">1</td>
-                            <td class="px-6 py-4">Activo</td>
-                            <td class="px-6 py-4">Debito</td>
-                            <td class="px-6 py-4">Estado de situacion financiero</td>
-                            <td class="px-6 py-4">Corriente</td>
-                        </tr>
-                        <tr class="bg-white border-b">
-                            <td class="px-6 py-4 font-medium">11</td>
-                            <td class="px-6 py-4">Activo Corriente</td>
-                            <td class="px-6 py-4">Debito</td>
-                            <td class="px-6 py-4">Estado de situacion financiero</td>
-                            <td class="px-6 py-4">Corriente</td>
-                        </tr>
-                        <tr class="bg-white border-b">
-                            <td class="px-6 py-4 font-medium">1105</td>
-                            <td class="px-6 py-4">Caja</td>
-                            <td class="px-6 py-4">Debito</td>
-                            <td class="px-6 py-4">Estado de situacion financiero</td>
-                            <td class="px-6 py-4">Corriente</td>
-                        </tr>
-                        <tr class="bg-white">
-                            <td class="px-6 py-4 font-medium">110505</td>
-                            <td class="px-6 py-4">Caja General</td>
-                            <td class="px-6 py-4">Debito</td>
-                            <td class="px-6 py-4">Estado de situacion financiero</td>
-                            <td class="px-6 py-4">Corriente</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
 
 
         <ng-template pTemplate="footer">
             <div class="flex justify-center">
-                <a href="https://docs.google.com/spreadsheets/d/1U2EYlsvEwmmeF7-tpdb17g7I6PQUdf1V/export?format=xlsx" download="plantillaCatalogoCuentas.xlsx"
-                    pButton pRipple label="Descargar Plantilla" icon="pi pi-download" styleClass="p-button-success">
+                <a href="https://docs.google.com/spreadsheets/d/1U2EYlsvEwmmeF7-tpdb17g7I6PQUdf1V/export?format=xlsx"
+                    download="plantillaCatalogoCuentas.xlsx" pButton pRipple label="Descargar Plantilla"
+                    icon="pi pi-download" styleClass="p-button-success">
                 </a>
             </div>
         </ng-template>
