@@ -17,7 +17,7 @@ export const navbarData: INavbarData[] = [
         label: 'Terceros',
       },
       {
-        routeLink: 'TO DO',
+        routeLink: '/gen-masters/catalogue-accounts',
         icon: 'article',
         label: 'Catálogo de cuentas',
       },

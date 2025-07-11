@@ -1,0 +1,652 @@
+<div class="flex w-full h-full font-titillium">
+    <div class="m-10 w-full h-full font-medium  bg-white rounded-3xl p-10">
+
+
+        <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+            <div class="items-center mb-6">
+                <h1
+                    class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+                    Catálogo de cuentas</h1>
+                <p class="font-family-sans font-normal text-sm mt-2">Guía detallada del manejo financiero y
+                    transacciones
+                    económicas.</p>
+            </div>
+
+
+            <!-- Contenedor de botones con alineación y espaciado mejorados -->
+            <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+                <!-- Usamos 'gap' para espaciar los botones de forma consistente -->
+                <div class="flex flex-wrap gap-3">
+                    <p-button label="Crear" type="submit" (click)="showFormAddNewClass()"></p-button>
+                    <p-button label="Exportar" type="submit" (click)="exportAccountsToExcel()"></p-button>
+
+                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" chooseIcon="pi pi-upload"
+                        accept=".xlsx" [auto]="true" (onSelect)="onFileSelect($event)" class="p-button-primeng">
+                    </p-fileUpload>
+                    <p-button label="Plantilla" icon="pi pi-file" (click)="openTemplateModal()"></p-button>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div *ngIf="importedAccounts"
+            class="my-10 p-6 sm:p-8 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.06)] bg-white border border-gray-300 font-family-sans text-sm">
+
+            <div class="grid gap-6 sm:grid-cols-[1fr_auto] sm:gap-12 items-center">
+                <!-- Info -->
+                <div class="flex gap-5 text-[var(--color-primary)]">
+                    <div class="shrink-0">
+                        <svg class="h-20 w-20 mt-1" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                    </div>
+                    <div class="space-y-3">
+                        <p class="font-semibold">
+                            Se ha cargado un listado de cuentas desde su ordenador.
+                        </p>
+                        <p>
+                            Presione <strong>Guardar cambios</strong> para conservar la información o
+                            <strong>Restablecer</strong> para descartarla.
+                        </p>
+
+                        <!-- Advertencia -->
+                        <div
+                            class="flex gap-3 items-start text-[var(--color-error-60)] border-l-4 border-[var(--color-error-60)] pl-4">
+                            <p class="leading-snug">
+                                <strong>Advertencia:</strong> asegúrese de que cada cuenta tenga toda su información
+                                completa.
+                                Si falta algún dato, no se guardará.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="flex flex-wrap gap-3 justify-center sm:justify-end">
+                    <button (click)="cancelImportAccounts()"
+                        class="text-sm py-2.5 px-5 border-2 border-[var(--color-primary)] text-[var(--color-primary)] rounded-full transition duration-200 hover:bg-[var(--color-primary)] hover:text-white">
+                        Restablecer
+                    </button>
+                    <button (click)="saveImportAccounts()"
+                        class="text-sm py-2.5 px-5 border-2 border-[var(--color-primary)] text-[var(--color-primary)] rounded-full transition duration-200 hover:bg-[var(--color-primary)] hover:text-white">
+                        Guardar cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <form class="flex justify-center sm:justify-start sm:ml-8 mt-20">
+            <div
+                class="mb-16 -ml-7 flex w-full sm:w-2/6 rounded-md border-b-2 border-neutral-400  text-neutral-400 focus-within:border-primary focus-within:text-primary transition-colors duration-300">
+
+                <svg class="h-20 w-20 mx-2 text-inherit" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+
+                <input type="text" id="search" placeholder="Buscar cuenta (código/nombre)" name="filterEnterpriseList"
+                    [(ngModel)]="filterAccount"
+                    class="mb-1 w-10/12 bg-transparent font-family-sans font-normal text-sm  outline-none placeholder-neutral-400 text-inherit focus:text-primary" />
+            </div>
+        </form>
+
+
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 font-family-sans text-sm">
+            <div class="list-account overscroll-auto border-r-4 sm:border-blue-950 sm:mr-6 sm:p-3">
+                <div class="w-full flex text-blue-950">
+                    <div class=" w-1/2 border-b-2 border-blue-950 font-semibold">Código</div>
+                    <div class=" w-1/2 border-b-2 border-blue-950 font-semibold">Nombre de la cuenta</div>
+                </div>
+                <div class="w-full flex ">
+                    <!--list of class type accounts C:-->
+                    <ul class="w-full mt-3">
+                        <li class="list_class mb-2" *ngFor="let class of listAccounts | filterAccounts: filterAccount">
+                            <div class="w-full flex">
+                                <button
+                                    class="w-full  text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                    (click)="toggleSubAccounts(class);selectAccount(class);$event.stopPropagation()">
+                                    <div class=" code w-1/2 flex">
+                                        <svg class="h-16 w-16 mt-1 transform"
+                                            [ngClass]="{'text-transparent': !class.children, 'rotate-180': class.showSubAccounts}"
+                                            width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
+                                            stroke="currentColor" fill="none" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" />
+                                            <polyline points="6 9 12 15 18 9" />
+                                        </svg>
+                                        {{ class.code }}
+                                    </div>
+                                    <div class="name w-1/2">{{ class.description }}</div>
+                                </button>
+                            </div>
+                            <!--list of group type accounts C:-->
+
+                            <ul class="ml-12 mt-3" *ngIf="class.showSubAccounts">
+                                <li class="list-group mb-2" *ngFor="let group of class.children">
+                                    <div class="w-full flex">
+                                        <button
+                                            class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                            (click)="toggleSubAccounts(group);selectAccount(group);$event.stopPropagation()">
+                                            <div class="code w-1/2 flex">
+                                                <svg class="h-16 w-16 mt-1 transform"
+                                                    [ngClass]="{'text-white': !group.children || group.children.length === 0, 'rotate-180': group.showSubAccounts}"
+                                                    width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
+                                                    stroke="currentColor" fill="none" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" />
+                                                    <polyline points="6 9 12 15 18 9" />
+                                                </svg>
+                                                {{ group.code }}
+                                            </div>
+                                            <div class="name w-1/2 -ml-3">{{ group.description }}</div>
+                                        </button>
+                                    </div>
+                                    <!--list of account type accounts C:-->
+                                    <ul class="ml-12 mt-3" *ngIf="group.showSubAccounts">
+                                        <li class="list-account mb-2" *ngFor="let account of group.children">
+                                            <div class="w-full flex">
+                                                <button
+                                                    class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                                    (click)="toggleSubAccounts(account);selectAccount(account);$event.stopPropagation()">
+                                                    <div class="code w-1/2 flex">
+                                                        <svg class="h-16 w-16 mt-1 transform"
+                                                            [ngClass]="{'text-white': !account.children || account.children.length === 0, 'rotate-180': account.showSubAccounts}"
+                                                            width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
+                                                            stroke="currentColor" fill="none" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" />
+                                                            <polyline points="6 9 12 15 18 9" />
+                                                        </svg>
+                                                        {{ account.code }}
+                                                    </div>
+                                                    <div class="name w-1/2 -ml-6">{{ account.description }}</div>
+                                                </button>
+                                            </div>
+                                            <!--list of subAccount type accounts C:-->
+                                            <ul class="ml-12 mt-3" *ngIf="account.showSubAccounts">
+                                                <li class="list-sub-account mb-2"
+                                                    *ngFor="let subAccount of account.children">
+                                                    <div class="w-full flex">
+                                                        <button
+                                                            class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                                            hover:text-blue-900
+                                                            (click)="toggleSubAccounts(subAccount);selectAccount(subAccount);$event.stopPropagation()">
+                                                            <div class="code w-1/2 flex">
+                                                                <svg class="h-16 w-16 mt-1 transform"
+                                                                    [ngClass]="{'text-white': !subAccount.children || subAccount.children.length === 0, 'rotate-180': subAccount.showSubAccounts}"
+                                                                    width="24" height="24" viewBox="0 0 24 24"
+                                                                    stroke-width="1" stroke="currentColor" fill="none"
+                                                                    stroke-linejoin="round">
+                                                                    <path stroke="none" d="M0 0h24v24H0z" />
+                                                                    <polyline points="6 9 12 15 18 9" />
+                                                                </svg>
+                                                                {{ subAccount.code }}
+                                                            </div>
+                                                            <div class="name w-1/2 -ml-8">{{ subAccount.description }}
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                    <!--list of aux1 type accounts C:-->
+                                                    <ul class="ml-28 mt-3" *ngIf="subAccount.showSubAccounts">
+                                                        <li class="list-aux1 mb-2"
+                                                            *ngFor="let aux1 of subAccount.children">
+                                                            <div class="w-full flex">
+                                                                <button
+                                                                    class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                                                    (click)="toggleSubAccounts(aux1);selectAccount(aux1);$event.stopPropagation()">
+                                                                    <div class="code w-1/2 flex">
+                                                                        {{ aux1.code }}
+                                                                    </div>
+                                                                    <div class="name w-1/2 -ml-24">{{ aux1.description
+                                                                        }}
+                                                                    </div>
+                                                                </button>
+                                                            </div>
+                                                            <!--list of aux2 type accounts C:-->
+                                                            <ul class="ml-28 mt-3" *ngIf="aux1.showSubAccounts">
+                                                                <li class="list-aux2 mb-2"
+                                                                    *ngFor="let aux2 of aux1.children">
+                                                                    <div class="w-full flex">
+                                                                        <button
+                                                                            class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                                                            (click)="toggleSubAccounts(aux2);selectAccount(aux2);$event.stopPropagation()">
+                                                                            <div class="code w-1/2 flex">
+
+                                                                                {{ aux2.code }}
+                                                                            </div>
+                                                                            <div class="name w-1/2 -ml-12">{{
+                                                                                aux2.description
+                                                                                }}
+                                                                            </div>
+                                                                        </button>
+                                                                    </div>
+                                                                </li>
+                                                            </ul>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div *ngIf="!importedAccounts" class="create-account font-normal">
+                <form [formGroup]="accountForm">
+                    <div class="mb-4">
+                        <div style="position: relative;">
+                            <div *ngIf="accountForm.get('className') && showPrincipalForm"
+                                class="class account-section">
+                                <div class="w-full sm:w-auto">
+                                    <input type="text" id="classCode" formControlName="classCode" placeholder="Código"
+                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]=" inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)">
+                                </div>
+                                <div class="w-full sm:w-auto">
+                                    <input type="text" id="className" formControlName="className" placeholder="Nombre"
+                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)">
+                                </div>
+                                <div>
+                                    <div *ngIf="(accountForm.get('classCode')?.hasError('required') || accountForm.get('classCode')?.value === '') && (accountForm.get('classCode')?.dirty || accountForm.get('classCode')?.touched)"
+                                        class="error-message">* Código es obligatorio</div>
+                                    <div *ngIf="(accountForm.get('classCode')?.hasError('maxlength') || accountForm.get('classCode')?.hasError('minlength')) && (accountForm.get('classCode')?.dirty || accountForm.get('classCode')?.touched)"
+                                        class="error-message">Código solo debe tener un dígito</div>
+                                    <div *ngIf="accountForm.get('classCode')?.hasError('pattern') && (accountForm.get('classCode')?.dirty || accountForm.get('classCode')?.touched)"
+                                        class="error-message">Código inválido (solo números)</div>
+                                </div>
+                                <div>
+                                    <div *ngIf="(accountForm.get('className')?.hasError('required') || accountForm.get('className')?.value === '') && (accountForm.get('className')?.dirty || accountForm.get('className')?.touched)"
+                                        class="error-message">* Nombre es obligatorio</div>
+                                    <div *ngIf="accountForm.get('className')?.hasError('pattern') && (accountForm.get('className')?.dirty || accountForm.get('className')?.touched)"
+                                        class="error-message">Nombre inválido (solo letras)</div>
+                                </div>
+
+                                <div class="floating-label">Clase
+
+                                </div>
+                                <div *ngIf="!inputAccess.class && showButtonDelete"
+                                    style="position: absolute; right: -0.5rem; top: -0.5rem;">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar clase">
+                                        <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div *ngIf="addChild && currentLevelAccount === 'grupo'">
+                            <app-account-form [currentLevelAccount]="currentLevelAccount" [level]="1"
+                                (newAccount)="addNewAccount($event)" [parent]="accountSelected" (cancelar)="cancel()" />
+                        </div>
+
+                        <div style="position: relative;">
+                            <div *ngIf="accountForm.get('groupName') && showPrincipalForm" class="account-section">
+                                <div class="field-wrapper">
+                                    <label for="grupo" id="groupCode"
+                                        class="col-span-1 mr-4 mt-1">{{accountForm.get('groupCode')?.value}}</label>
+
+                                    <input type="text" formControlName="codeGroup" placeholder="Código"
+                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)">
+                                </div>
+                                <div class="w-full sm:w-auto">
+                                    <input type="text" formControlName="groupName" placeholder="Nombre"
+                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)">
+                                </div>
+                                <div>
+                                    <div *ngIf="(accountForm.get('codeGroup')?.hasError('required') || accountForm.get('codeGroup')?.value === '') && (accountForm.get('codeGroup')?.dirty || accountForm.get('codeGroup')?.touched)"
+                                        class="error-message">* Código es obligatorio</div>
+                                    <div *ngIf="(accountForm.get('codeGroup')?.hasError('maxlength') || accountForm.get('codeGroup')?.hasError('minlength')) && (accountForm.get('codeGroup')?.dirty || accountForm.get('codeGroup')?.touched)"
+                                        class="error-message">Código solo debe tener un dígito</div>
+                                    <div *ngIf="accountForm.get('codeGroup')?.hasError('pattern') && (accountForm.get('codeGroup')?.dirty || accountForm.get('codeGroup')?.touched)"
+                                        class="error-message">Código inválido (solo números)</div>
+                                </div>
+                                <div>
+                                    <div *ngIf="(accountForm.get('groupName')?.hasError('required') || accountForm.get('groupName')?.value === '') && (accountForm.get('groupName')?.dirty || accountForm.get('groupName')?.touched)"
+                                        class="error-message">* Nombre es obligatorio</div>
+                                    <div *ngIf="accountForm.get('groupName')?.hasError('pattern') && (accountForm.get('groupName')?.dirty || accountForm.get('groupName')?.touched)"
+                                        class="error-message">Nombre inválido (solo letras)</div>
+                                </div>
+                                <div class="floating-label">Grupo
+                                </div>
+                                <div *ngIf="!inputAccess.group && showButtonDelete"
+                                    style="position: absolute; right: -0.5rem; top: -0.5rem;">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar grupo">
+                                        <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div *ngIf="addChild && currentLevelAccount === 'cuenta'">
+                            <app-account-form [currentLevelAccount]="currentLevelAccount" [level]="2"
+                                (newAccount)="addNewAccount($event)" [parent]="accountSelected" (cancelar)="cancel()" />
+                        </div>
+
+                        <div style="position: relative;">
+                            <div *ngIf="accountForm.get('accountName') && showPrincipalForm"
+                                class="class account-section">
+                                <div class="field-wrapper">
+                                    <label for="cuenta"
+                                        class="col-span-1 mr-4 mt-1">{{accountForm.get('accountCode')?.value}}</label>
+                                    <input type="text" formControlName="codeAccount" placeholder="Código"
+                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)">
+                                </div>
+                                <div class="w-full sm:w-auto">
+                                    <input type="text" formControlName="accountName" placeholder="Nombre"
+                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)">
+                                </div>
+                                <div>
+                                    <div *ngIf="(accountForm.get('codeAccount')?.hasError('required') || accountForm.get('codeAccount')?.value === '') && (accountForm.get('codeAccount')?.dirty || accountForm.get('codeAccount')?.touched)"
+                                        class="error-message">* Código es obligatorio</div>
+                                    <div *ngIf="(accountForm.get('codeAccount')?.hasError('maxlength') || accountForm.get('codeAccount')?.hasError('minlength')) && (accountForm.get('codeAccount')?.dirty || accountForm.get('codeAccount')?.touched)"
+                                        class="error-message">Código debe tener dos dígitos</div>
+                                    <div *ngIf="accountForm.get('codeAccount')?.hasError('pattern') && (accountForm.get('codeAccount')?.dirty || accountForm.get('codeAccount')?.touched)"
+                                        class="error-message">Código inválido (solo números)</div>
+                                </div>
+                                <div>
+                                    <div *ngIf="(accountForm.get('accountName')?.hasError('required') || accountForm.get('accountName')?.value === '') && (accountForm.get('accountName')?.dirty || accountForm.get('accountName')?.touched)"
+                                        class="error-message">* Nombre es obligatorio</div>
+                                    <div *ngIf="accountForm.get('accountName')?.hasError('pattern') && (accountForm.get('accountName')?.dirty || accountForm.get('accountName')?.touched)"
+                                        class="error-message">Nombre inválido (solo letras)</div>
+                                </div>
+                                <div class="floating-label">Cuenta
+                                </div>
+                                <div *ngIf="!inputAccess.account && showButtonDelete"
+                                    style="position: absolute; right: -0.5rem; top: -0.5rem;">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar cuenta">
+                                        <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div *ngIf="addChild && currentLevelAccount === 'subcuenta'">
+                            <app-account-form [currentLevelAccount]="currentLevelAccount" [level]="2"
+                                (newAccount)="addNewAccount($event)" [parent]="accountSelected" (cancelar)="cancel()" />
+                        </div>
+
+                        <div style="position: relative;">
+                            <div *ngIf="accountForm.get('subAccountName') && showPrincipalForm"
+                                class="class account-section">
+                                <div class="field-wrapper">
+                                    <label for="subcuenta"
+                                        class="col-span-1 mr-4 mt-1">{{accountForm.get('subAccountCode')?.value}}</label>
+                                    <input type="text" formControlName="codeSubAccount" placeholder="Código"
+                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)">
+                                </div>
+                                <div class="w-full sm:w-auto">
+                                    <input type="text" formControlName="subAccountName" placeholder="Nombre"
+                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)">
+                                </div>
+                                <div>
+                                    <div *ngIf="(accountForm.get('codeSubAccount')?.hasError('required') || accountForm.get('codeSubAccount')?.value === '') && (accountForm.get('codeSubAccount')?.dirty || accountForm.get('codeSubAccount')?.touched)"
+                                        class="error-message">* Código es obligatorio</div>
+                                    <div *ngIf="(accountForm.get('codeSubAccount')?.hasError('maxlength') || accountForm.get('codeSubAccount')?.hasError('minlength')) && (accountForm.get('codeSubAccount')?.dirty || accountForm.get('codeSubAccount')?.touched)"
+                                        class="error-message">Código debe tener dos dígitos</div>
+                                    <div *ngIf="accountForm.get('codeSubAccount')?.hasError('pattern') && (accountForm.get('codeSubAccount')?.dirty || accountForm.get('codeSubAccount')?.touched)"
+                                        class="error-message">Código inválido (solo números)</div>
+                                </div>
+                                <div>
+                                    <div *ngIf="(accountForm.get('subAccountName')?.hasError('required') || accountForm.get('subAccountName')?.value === '') && (accountForm.get('subAccountName')?.dirty || accountForm.get('subAccountName')?.touched)"
+                                        class="error-message">* Nombre es obligatorio</div>
+                                    <div *ngIf="accountForm.get('subAccountName')?.hasError('pattern') && (accountForm.get('subAccountName')?.dirty || accountForm.get('subAccountName')?.touched)"
+                                        class="error-message">Nombre inválido (solo letras)</div>
+                                </div>
+                                <div class="floating-label">Subcuenta
+                                </div>
+                                <div *ngIf="!inputAccess.subAccount && showButtonDelete"
+                                    style="position: absolute; right: -0.5rem; top: -0.5rem;">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar subcuenta">
+                                        <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div *ngIf="addChild && currentLevelAccount === 'auxiliar'">
+                            <app-account-form [currentLevelAccount]="currentLevelAccount" [level]="2"
+                                (newAccount)="addNewAccount($event)" [parent]="accountSelected" (cancelar)="cancel()" />
+                        </div>
+
+                        <div style="position: relative;">
+                            <div *ngIf="accountForm.get('auxiliaryName') && showPrincipalForm"
+                                class="class account-section">
+                                <div>
+                                    <div class="field-wrapper">
+                                        <label for="auxiliar1"
+                                            class="col-span-1 mr-4 mt-1">{{accountForm.get('auxiliaryCode')?.value}}</label>
+                                        <input type="text" formControlName="codeAuxiliary" placeholder="Código"
+                                            class="input-base"
+                                            [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)">
+                                    </div>
+                                    <div class="w-full sm:w-auto">
+                                        <input type="text" formControlName="auxiliaryName" placeholder="Nombre"
+                                            class="input-base"
+                                            [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)">
+                                    </div>
+                                    <div>
+                                        <div *ngIf="(accountForm.get('codeAuxiliary')?.hasError('required') || accountForm.get('codeAuxiliary')?.value === '') && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
+                                            class="error-message">* Código es obligatorio</div>
+                                        <div *ngIf="(accountForm.get('codeAuxiliary')?.hasError('maxlength') || accountForm.get('codeAuxiliary')?.hasError('minlength')) && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
+                                            class="error-message">Código debe tener dos dígitos</div>
+                                        <div *ngIf="accountForm.get('codeAuxiliary')?.hasError('pattern') && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
+                                            class="error-message">Código inválido (solo números)</div>
+                                    </div>
+                                    <div>
+                                        <div *ngIf="(accountForm.get('auxiliaryName')?.hasError('required') || accountForm.get('auxiliaryName')?.value === '') && (accountForm.get('auxiliaryName')?.dirty || accountForm.get('auxiliaryName')?.touched)"
+                                            class="error-message">* Nombre es obligatorio</div>
+                                        <div *ngIf="accountForm.get('auxiliaryName')?.hasError('pattern') && (accountForm.get('auxiliaryName')?.dirty || accountForm.get('auxiliaryName')?.touched)"
+                                            class="error-message">Nombre inválido (solo letras)</div>
+                                    </div>
+                                    <div class="floating-label">
+                                        Auxiliar</div>
+                                    <div *ngIf="!inputAccess.auxiliary && showButtonDelete"
+                                        style="position: absolute; right: -0.5rem; top: -0.5rem;">
+                                        <button class="delete-button" (click)="deleteAccount()"
+                                            title="Eliminar auxiliar">
+                                            <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div *ngIf="showFormTransactional">
+                            <hr class="w-auto h-0.5 mx-auto my-4 bg-gray-100 border-0 rounded md:my-5 dark:bg-gray-700">
+
+                            <!-- Título de la sección -->
+                            <h2 class="section-title">Datos adicionales</h2>
+
+                            <div [formGroup]="formTransactional">
+
+                                <!-- Naturaleza -->
+                                <div class="mb-6">
+                                    <label for="nature" class="label-title">
+                                        Naturaleza
+                                    </label>
+                                    <p-dropdown inputId="nature" name="nature" [options]="listNature" optionLabel="name"
+                                        formControlName="selectedNatureType" [placeholder]="placeNatureType"
+                                        [showClear]="true" [filter]="true" filterBy="name"
+                                        styleClass="dropdown-custom xl:w-3/4 w-full"></p-dropdown>
+                                </div>
+
+                                <!-- Estado Financiero -->
+                                <div class="mb-6">
+                                    <label for="financialState" class="label-title">
+                                        Estado financiero
+                                    </label>
+                                    <p-dropdown inputId="financialState" name="financialState"
+                                        [options]="listFinancialState" optionLabel="name"
+                                        formControlName="selectedFinancialStateType"
+                                        [placeholder]="placeFinancialStateType" [showClear]="true" [filter]="true"
+                                        filterBy="name" styleClass="dropdown-custom xl:w-3/4 w-full"></p-dropdown>
+                                </div>
+
+                                <!-- Clasificación -->
+                                <div class="mb-6">
+                                    <label for="clasification" class="label-title">
+                                        Clasificación
+                                    </label>
+                                    <p-dropdown inputId="clasification" name="clasification"
+                                        [options]="listClasification" optionLabel="name"
+                                        formControlName="selectedClasificationType"
+                                        [placeholder]="placeClasificationType" [showClear]="true" [filter]="true"
+                                        filterBy="name" styleClass="dropdown-custom xl:w-3/4 w-full"></p-dropdown>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div *ngIf="showAddNewClass">
+                            <app-account-form [currentLevelAccount]="'clase'" [level]="1"
+                                (newAccount)="addNewAccount($event)" [parent]="" (cancelar)="cancel()" />
+                        </div>
+
+                        <!-- SECCIÓN BOTONES DE ACCIÓN CON p-button -->
+                        <div *ngIf="showButton" class="flex flex-wrap justify-center items-center gap-4 mt-10">
+
+                            <!-- Botón Actualizar (Estilo Primario por defecto) -->
+                            <p-button label="Actualizar"
+                                [disabled]="!showUpdateButton || searchIfAccountIsLinked(accountSelected!.code)"
+                                (click)="updateAccount()" title="Modifique algún campo para habilitar"
+                                styleClass="btn-action-primary">
+                            </p-button>
+
+                            <!-- Botón Agregar (Estilo Secundario) -->
+                            <div *ngIf="!accountForm.get('auxiliaryName')">
+                                <p-button [label]="'Agregar ' + currentLevelAccount" styleClass="p-button-secondary"
+                                    [disabled]="searchIfAccountIsLinked(accountSelected!.code)" (click)="addNewChild()">
+                                </p-button>
+                            </div>
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <p-dialog header="Información de la Plantilla de Importación" [modal]="true" [(visible)]="showImportModal"
+        [style]="{ width: '50rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [maximizable]="true"
+        (onHide)="closeTemplateModal()">
+
+        <div class="font-family-sans space-y-4">
+            <p class="text-base">
+                Para importar el catálogo de cuentas, por favor, utilice un archivo de Excel (.xlsx) con el siguiente
+                formato y consideraciones.
+            </p>
+
+            <h4 class="font-bold text-lg text-primary">Columnas Requeridas</h4>
+            <p>El archivo debe contener las siguientes columnas en la primera fila:</p>
+            <ul class="list-disc list-inside bg-gray-50 p-4 rounded-md">
+                <li><strong>Código</strong></li>
+                <li><strong>Nombre</strong></li>
+                <li><strong>Naturaleza</strong> (Débito o Crédito)</li>
+                <li><strong>Estado Financiero</strong> (Estado de situacion financiero o Estado de resultados)</li>
+                <li><strong>Clasificación</strong></li>
+            </ul>
+
+            <h4 class="font-bold text-lg text-primary">Consideraciones Importantes</h4>
+            <ul class="list-disc list-inside bg-gray-50 p-4 rounded-md space-y-2">
+                <li>Asegúrese de que no haya filas completamente vacías entre los registros.</li>
+                <li>Todos los campos son obligatorios. Las filas con alguna celda vacía no serán importadas.</li>
+                <li>La jerarquía de las cuentas se creará automáticamente a partir de los códigos.</li>
+            </ul>
+
+
+            <h4 class="font-bold text-lg text-primary">Ejemplo de Formato</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left rtl:text-right text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Código</th>
+                            <th scope="col" class="px-6 py-3">Nombre</th>
+                            <th scope="col" class="px-6 py-3">Naturaleza</th>
+                            <th scope="col" class="px-6 py-3">Estado Financiero</th>
+                            <th scope="col" class="px-6 py-3">Clasificación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium">1</td>
+                            <td class="px-6 py-4">Activo</td>
+                            <td class="px-6 py-4">Debito</td>
+                            <td class="px-6 py-4">Estado de situacion financiero</td>
+                            <td class="px-6 py-4">Corriente</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium">11</td>
+                            <td class="px-6 py-4">Activo Corriente</td>
+                            <td class="px-6 py-4">Debito</td>
+                            <td class="px-6 py-4">Estado de situacion financiero</td>
+                            <td class="px-6 py-4">Corriente</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <td class="px-6 py-4 font-medium">1105</td>
+                            <td class="px-6 py-4">Caja</td>
+                            <td class="px-6 py-4">Debito</td>
+                            <td class="px-6 py-4">Estado de situacion financiero</td>
+                            <td class="px-6 py-4">Corriente</td>
+                        </tr>
+                        <tr class="bg-white">
+                            <td class="px-6 py-4 font-medium">110505</td>
+                            <td class="px-6 py-4">Caja General</td>
+                            <td class="px-6 py-4">Debito</td>
+                            <td class="px-6 py-4">Estado de situacion financiero</td>
+                            <td class="px-6 py-4">Corriente</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-center">
+                <a href="https://docs.google.com/spreadsheets/d/1U2EYlsvEwmmeF7-tpdb17g7I6PQUdf1V/export?format=xlsx" download="plantillaCatalogoCuentas.xlsx"
+                    pButton pRipple label="Descargar Plantilla" icon="pi pi-download" styleClass="p-button-success">
+                </a>
+            </div>
+        </ng-template>
+    </p-dialog>
+
+</div>

@@ -1,0 +1,86 @@
+<form [formGroup]="formNewAccount">
+    <div class="account-section font-titillium">
+        <!-- section to show the text and information drawers -->
+        <div class="w-full flex sm:w-auto">
+            <label *ngIf="currentLevelAccount != 'clase'" for="subcuenta"
+                class="col-span-1 mr-4 mt-1">{{parent?.code}}</label>
+            <input type="text" id="code" formControlName="code" placeholder="Código" class="input-base mb-2 sm:mb-0"
+                inputmode="numeric" pattern="[0-9]*">
+        </div>
+        <div class="w-full sm:w-auto">
+            <input type="text" id="name" formControlName="name" placeholder="Nombre" class="input-base sm:ml-1">
+        </div>
+        <!-- Section to display messages when information is required or an error occurs -->
+        <div>
+            <div *ngIf="formNewAccount.get('code')?.hasError('required') && (formNewAccount.get('code')?.dirty || formNewAccount.get('code')?.touched)"
+                class="error-message">* Código es requerido</div>
+            <div *ngIf="formNewAccount.get('code')?.hasError('maxlength') && (formNewAccount.get('code')?.dirty || formNewAccount.get('code')?.touched)"
+                class="error-message">Código solo debe tener {{messageLength}}</div>
+            <div *ngIf="formNewAccount.get('code')?.hasError('minlength') && (formNewAccount.get('code')?.dirty || formNewAccount.get('code')?.touched)"
+                class="error-message">Código debe tener dos dígitos</div>
+            <div *ngIf="formNewAccount.get('code')?.hasError('pattern') && (formNewAccount.get('code')?.dirty || formNewAccount.get('code')?.touched)"
+                class="error-message">Código inválido (solo números)</div>
+        </div>
+        <div>
+            <div *ngIf="formNewAccount.get('name')?.hasError('required') && (formNewAccount.get('name')?.dirty || formNewAccount.get('name')?.touched)"
+                class="error-message">* Nombre es requerido</div>
+            <div *ngIf="formNewAccount.get('name')?.hasError('pattern') && (formNewAccount.get('name')?.dirty || formNewAccount.get('name')?.touched)"
+                class="error-message">Nombre inválido (solo letras)</div>
+        </div>
+        <div class="floating-label">{{currentLevelAccount}}</div>
+    </div>
+    <hr class="w-auto h-0.5 mx-auto my-4 bg-gray-100 border-0 rounded md:my-5 dark:bg-gray-700">
+    <h1 class="font-bold text-md mb-4">Datos Adicionales</h1>
+
+    <!-- component that defines the selector of the information of the nature of the account -->
+    <!-- Naturaleza -->
+    <div class="mb-4">
+        <label for="nature" class="block mb-1 font-semibold text-gray-700">
+            Naturaleza
+            <span *ngIf="!parent" class="text-red-500">*</span>
+        </label>
+        <p-dropdown inputId="nature" name="nature" [options]="listNature" optionLabel="name" optionValue="name"
+            formControlName="selectedNatureType" [placeholder]="placeNatureType" [showClear]="false" [filter]="true"
+            filterBy="name" styleClass="xl:w-3/4 w-full">
+        </p-dropdown>
+    </div>
+
+    <!-- Estado Financiero -->
+    <div class="mb-4">
+        <label for="financialState" class="block mb-1 font-semibold text-gray-700">
+            Estado Financiero
+            <span *ngIf="!parent" class="text-red-500">*</span>
+        </label>
+        <p-dropdown inputId="financialState" name="financialState" [options]="listFinancialState" optionLabel="name"
+            optionValue="name" formControlName="selectedFinancialStateType" [placeholder]="placeFinancialStateType"
+            [showClear]="false" [filter]="true" filterBy="name" styleClass="xl:w-3/4 w-full">
+        </p-dropdown>
+    </div>
+
+    <!-- Clasificación -->
+    <div class="mb-4">
+        <label for="classification" class="block mb-1 font-semibold text-gray-700">
+            Clasificación
+            <span *ngIf="!parent" class="text-red-500">*</span>
+        </label>
+        <p-dropdown inputId="classification" name="classification" [options]="listClasification" optionLabel="name"
+            optionValue="name" formControlName="selectedClassificationType" [placeholder]="placeClassificationType"
+            [showClear]="false" [filter]="true" filterBy="name" styleClass="xl:w-3/4 w-full">
+        </p-dropdown>
+    </div>
+    <!-- section to show the save and cancel buttons -->
+    <!-- Contenedor Flexbox mejorado para alinear y espaciar los botones -->
+    <div class="flex flex-wrap justify-center items-center mt-4 gap-3">
+
+        <!-- Botón Cancelar -->
+        <p-button label="Cancelar" (click)="cancel()" styleClass="p-button-danger p-button-raised">
+        </p-button>
+
+        <!-- Botón Guardar (Aparece cuando el formulario es válido) -->
+        <div *ngIf="formNewAccount.valid">
+            <p-button [label]="'Guardar ' + currentLevelAccount"  (click)="sendAccount()" styleClass="p-button-raised">
+            </p-button>
+        </div>
+
+    </div>
+</form>

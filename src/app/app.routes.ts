@@ -27,6 +27,16 @@ export const routes: Routes = [
                 './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
               ).then((m) => m.ThirdPartiesListComponent),
           },
+          {
+            path: 'catalogue-accounts',
+            data: {
+              breadcrumb: 'Catálogo de cuentas',
+            },
+            loadComponent: () =>
+              import(
+                './GeneralMasters/AccountCatalogue/components/account-list/account-list.component'
+              ).then((m) => m.AccountListComponent),
+          }
         ],
       },
       {
