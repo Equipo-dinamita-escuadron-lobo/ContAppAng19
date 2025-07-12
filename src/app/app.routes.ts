@@ -3,10 +3,24 @@ import { StyleGuideComponent } from './Shared/Components/style-guide/style-guide
 import { LoginComponent } from './Core/auth/login/login.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
 import { hasRoleGuard } from './Core/Guards/has-role.guard';
+import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    component: LoginComponent,
+  },
+  {
+    path: 'enterprise/list',
+    data: {
+      breadcrumb: 'enterprise-list',
+    },
+    component: ListEnterpriseComponent,
+    canActivate: [hasRoleGuard(['admin_realm'])],
+  },
+  {
     path: '',
+    component: MainTemplateComponent,
     data: {
       breadcrumb: 'Home',
     },
@@ -27,6 +41,7 @@ export const routes: Routes = [
                 './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
               ).then((m) => m.ThirdPartiesListComponent),
           },
+
           {
             path: 'catalogue-accounts',
             data: {
@@ -36,7 +51,7 @@ export const routes: Routes = [
               import(
                 './GeneralMasters/AccountCatalogue/components/account-list/account-list.component'
               ).then((m) => m.AccountListComponent),
-          }
+          },
         ],
       },
       {
@@ -77,6 +92,7 @@ export const routes: Routes = [
         ],
       },
     ],
+
   },
   {
     path: 'style-guide',
@@ -84,20 +100,5 @@ export const routes: Routes = [
       breadcrumb: '',
     },
     component: StyleGuideComponent,
-  },
-  {
-    path: 'login',
-    data: {
-      breadcrumb: '',
-    },
-    component: LoginComponent,
-  },
-  {
-    path: 'enterprise/list',
-    data: {
-      breadcrumb: '',
-    },
-    component: ListEnterpriseComponent,
-    canActivate: [hasRoleGuard(['admin_realm'])],
   },
 ];

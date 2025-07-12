@@ -5,17 +5,26 @@ import { ButtonModule } from 'primeng/button';
 import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseList } from '../models/EnterpriseList';
 import { FormsModule } from '@angular/forms';
+import { HeaderComponent } from '../../../Core/Components/Header/header.component';
+import { DropdownModule } from "primeng/dropdown";
 
 @Component({
   selector: 'app-list-enterprise',
-  imports: [RouterModule, CommonModule, ButtonModule, FormsModule],
+  imports: [
+    RouterModule,
+    CommonModule,
+    ButtonModule,
+    FormsModule,
+    HeaderComponent,
+    DropdownModule,
+],
   templateUrl: './list-enterprise.component.html',
   styleUrl: './list-enterprise.component.css'
 })
 export class ListEnterpriseComponent {
   enterprises: EnterpriseList[] = [];
   filteredEnterprises: EnterpriseList[] = [];
-  selectedStatus: string | undefined;
+  selectedStatus: string = 'active';
   searchTerm: string = '';
 
 

@@ -1,9 +1,9 @@
-<div class="p-6 space-y-4 bg-white">
-  <!-- Breadcrumb -->
-  <p class="font-family-sans font-normal text-sm/26 text-breadcrumb">
-    Inicio  <span class="text-secondary font-semibold" >&gt; </span> <span class=" font-semibold">Listado de empresas</span>
-  </p>
+<!-- Ocupar todo el espacio-->
+<div class="w-full h-full flex flex-col">
+  <app-header></app-header>
+</div>
 
+<div class="m-120  max-w-7xl mx-auto">
   <!-- Título -->
   <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
     Listado de empresas
@@ -25,16 +25,13 @@
       </div>
 
       <!-- Filtro -->
-      <div class="px-4 py-2 bg-neutral-90 rounded-full shadow w-100">
-        <select
+        <p-dropdown
+          [options]="[{ label: 'Activas', value: 'active' }, { label: 'Inactivas', value: 'inactive' }]"
           [(ngModel)]="selectedStatus"
-          (ngModelChange)="selectEnterpriseStatus()"
-          class="w-full bg-transparent outline-none text-sm text-black font-semibold placeholder-neutral-50"
-        >
-          <option value="active">Activas</option>
-          <option value="inactive">Inactivas</option>
-        </select>
-      </div>
+          (onChange)="selectEnterpriseStatus()"
+          placeholder="Seleccione un estado"
+        ></p-dropdown>
+
     </div>
 
     <!-- Botón Agregar -->
@@ -42,14 +39,14 @@
   </div>
 
   <!-- Cards -->
-  <div class="bg-neutral-90 p-6 rounded-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+  <div class="bg-neutral-90 p-18 mt-10 rounded-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
     <div *ngFor="let enterprise of filteredEnterprises" class="bg-white p-6 rounded-xl shadow text-center max-w-xs w-full">
       <div class="w-80 h-80 mx-auto rounded-full bg-gray-200 mb-4"></div>
       <h3 class="font-family-titillium font-semibold text-lg/22">{{ enterprise.name }}</h3>
       <p class="font-family-sans font-normal text-xs/21 text-neutral-50 mb-4">NIT: {{ enterprise.nit }}</p>
       <div class="flex items-center justify-center">
         <a
-          [routerLink]="['/enterprise', enterprise.nit]"
+          [routerLink]="['/enterprise', enterprise.id]"
           (click)="saveSelectedEnterprise(enterprise)"
         >
           <p-button label="Seleccionar" class="w-full"></p-button>
