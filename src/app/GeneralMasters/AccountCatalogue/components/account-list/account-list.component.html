@@ -115,11 +115,11 @@
                                     (click)="toggleSubAccounts(class);selectAccount(class);$event.stopPropagation()">
                                     <div class=" code w-1/2 flex">
                                         <svg class="h-16 w-16 mt-1 transform"
-                                            [ngClass]="{'text-transparent': !class.children, 'rotate-180': class.showSubAccounts}"
+                                            [ngClass]="{'text-transparent': !class.children, 'rotate-90': class.showSubAccounts}"
                                             width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
                                             stroke="currentColor" fill="none" stroke-linejoin="round">
                                             <path stroke="none" d="M0 0h24v24H0z" />
-                                            <polyline points="6 9 12 15 18 9" />
+                                            <polyline points="9 6 15 12 9 18" />
                                         </svg>
                                         {{ class.code }}
                                     </div>
@@ -136,11 +136,11 @@
                                             (click)="toggleSubAccounts(group);selectAccount(group);$event.stopPropagation()">
                                             <div class="code w-1/2 flex">
                                                 <svg class="h-16 w-16 mt-1 transform"
-                                                    [ngClass]="{'text-white': !group.children || group.children.length === 0, 'rotate-180': group.showSubAccounts}"
+                                                    [ngClass]="{'text-white': !group.children || group.children.length === 0, 'rotate-90': group.showSubAccounts}"
                                                     width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
                                                     stroke="currentColor" fill="none" stroke-linejoin="round">
                                                     <path stroke="none" d="M0 0h24v24H0z" />
-                                                    <polyline points="6 9 12 15 18 9" />
+                                                    <polyline points="9 6 15 12 9 18" />
                                                 </svg>
                                                 {{ group.code }}
                                             </div>
@@ -156,11 +156,11 @@
                                                     (click)="toggleSubAccounts(account);selectAccount(account);$event.stopPropagation()">
                                                     <div class="code w-1/2 flex">
                                                         <svg class="h-16 w-16 mt-1 transform"
-                                                            [ngClass]="{'text-white': !account.children || account.children.length === 0, 'rotate-180': account.showSubAccounts}"
+                                                            [ngClass]="{'text-white': !account.children || account.children.length === 0, 'rotate-90': account.showSubAccounts}"
                                                             width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
                                                             stroke="currentColor" fill="none" stroke-linejoin="round">
                                                             <path stroke="none" d="M0 0h24v24H0z" />
-                                                            <polyline points="6 9 12 15 18 9" />
+                                                            <polyline points="9 6 15 12 9 18" />
                                                         </svg>
                                                         {{ account.code }}
                                                     </div>
@@ -178,12 +178,12 @@
                                                             (click)="toggleSubAccounts(subAccount);selectAccount(subAccount);$event.stopPropagation()">
                                                             <div class="code w-1/2 flex">
                                                                 <svg class="h-16 w-16 mt-1 transform"
-                                                                    [ngClass]="{'text-white': !subAccount.children || subAccount.children.length === 0, 'rotate-180': subAccount.showSubAccounts}"
+                                                                    [ngClass]="{'text-white': !subAccount.children || subAccount.children.length === 0, 'rotate-90': subAccount.showSubAccounts}"
                                                                     width="24" height="24" viewBox="0 0 24 24"
                                                                     stroke-width="1" stroke="currentColor" fill="none"
                                                                     stroke-linejoin="round">
                                                                     <path stroke="none" d="M0 0h24v24H0z" />
-                                                                    <polyline points="6 9 12 15 18 9" />
+                                                                    <polyline points="9 6 15 12 9 18" />
                                                                 </svg>
                                                                 {{ subAccount.code }}
                                                             </div>
