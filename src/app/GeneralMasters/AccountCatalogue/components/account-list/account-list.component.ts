@@ -1149,10 +1149,10 @@ export class AccountListComponent {
    * @returns El ID de la empresa.
    */
   getIdEnterprise(): string {
-    const entData = localStorage.getItem('entData');
+    /*const entData = localStorage.getItem('entData'); 
     if (entData) {
       return JSON.parse(entData).entId;
-    }
+    }*/
     //return '';
     return 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d';
   }
@@ -1170,7 +1170,6 @@ export class AccountListComponent {
           this.listAccounts = this.changeNatureType(this.listAccounts);
           this.listAccounts = this.changeFinancialStateType(this.listAccounts);
           this.listAccounts = this.sortAccountsRecursively(this.listAccounts);
-
           resolve();
         },
         error: (error) => {

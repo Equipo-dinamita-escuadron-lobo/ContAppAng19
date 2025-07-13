@@ -109,7 +109,7 @@ export const navbarData: INavbarData[] = [
     ],
   },
   {
-    routeLink: 'TO DO',
+    routeLink: '/commercial',
     icon: 'store',
     label: 'Comercial',
     items: [
@@ -119,7 +119,7 @@ export const navbarData: INavbarData[] = [
         label: 'Maestros Comerciales',
         items: [
           {
-            routeLink: 'TO DO',
+            routeLink: 'commercial/products',
             icon: 'box',
             label: 'Productos',
           },
@@ -163,7 +163,7 @@ export const navbarData: INavbarData[] = [
         ],
       },
       {
-        routeLink: 'TO DO',
+        routeLink: 'commercial/sale-invoice',
         icon: 'order_approve',
         label: 'Factura de Venta',
       },
