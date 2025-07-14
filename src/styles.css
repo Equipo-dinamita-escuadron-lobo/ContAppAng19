@@ -251,9 +251,11 @@ body {
 }
 
 .p-button:disabled {
-  background-color: var(--color-button-primary-disabled) !important;
+  background-color: var(--color-primary) !important;
   border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
+  color: white !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
 }
 
 /* Botón secundario */
@@ -269,7 +271,11 @@ body {
 }
 
 .p-button.p-button-secondary:disabled {
-  background-color: var(--color-button-secondary-disabled) !important;
+  background-color: var(--color-button-secondary) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
 }
 
 /*Estilos personalizados para la seccion del formulario de catalogo de cuentas*/
@@ -396,4 +402,3 @@ body {
       padding: 10px 12px;
       color: #9CA3AF;
   }
-
