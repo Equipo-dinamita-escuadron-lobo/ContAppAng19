@@ -96,4 +96,140 @@
             </div>
         </div>
 
+        <hr class="my-8">
+
+        <!-- ==   SECCIÓN DE PRODUCTOS DE LA FACTURA    == -->
+        <div class="p-2 text-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-primary">Detalle de la Factura</h3>
+                <div class="flex gap-3">
+                    <p-button label="Seleccionar Productos" icon="pi pi-list" (click)="selectProducts()"
+                        [disabled]="!supplierS" pTooltip="Primero debes seleccionar un cliente"
+                        tooltipPosition="top"></p-button>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos con p-table -->
+            <div class="overflow-x-auto">
+                <p-table [value]="lstProducts" styleClass="p-datatable-striped" responsiveLayout="scroll">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th style="width: 3rem">#</th>
+                            <th>Descripción</th>
+                            <th style="width: 8rem">Cantidad</th>
+                            <th style="width: 12rem">Precio Unit.</th>
+                            <th style="width: 17rem">Descuento</th>
+                            <th style="width: 15rem">IVA</th>
+                            <th style="width: 12rem" class="text-right">Subtotal</th>
+                            <th style="width: 5rem"></th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-prod let-i="rowIndex">
+                        <tr>
+                            <td>{{ i + 1 }}</td>
+                            <td>
+                                <span class="font-semibold">{{ prod.description }}</span><br>
+                                <small class="text-gray-500">Cód: {{ prod.itemType }}</small>
+                            </td>
+                            <td>
+                                <!-- Llama a calculateChanges -->
+                                <p-inputNumber [(ngModel)]="prod.amount" mode="decimal" [showButtons]="true" [min]="0"
+                                    (onInput)="calculateChanges(prod)"></p-inputNumber>
+                            </td>
+                            <td>
+                                <!-- Bindea a 'price' y llama a calculateChanges -->
+                                <p-inputNumber [(ngModel)]="prod.price" mode="currency" currency="COP" locale="es-CO"
+                                    (onInput)="calculateChanges(prod)"></p-inputNumber>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <!-- Llama a switchDescuento -->
+                                    <p-inputNumber [(ngModel)]="prod.descuentos[0]" suffix="%" [min]="0" [max]="100"
+                                        (onInput)="switchDescuento('porc', prod)"
+                                        inputStyleClass="w-16"></p-inputNumber>
+                                    <p-inputNumber [(ngModel)]="prod.descuentos[1]" mode="currency" currency="COP"
+                                        locale="es-CO" (onInput)="switchDescuento('val', prod)"></p-inputNumber>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <!-- Llama a calculateChanges -->
+                                    <p-dropdown [options]="[0, 5, 19]" [(ngModel)]="prod.IVA"
+                                        (onChange)="calculateChanges(prod)" placeholder="IVA"></p-dropdown>
+                                    <span class="text-gray-600">{{ prod.IvaValor |
+                                        currency:'COP':'symbol-narrow':'1.2-2' }}</span>
+                                </div>
+                            </td>
+                            <td class="text-right font-semibold">
+                                <!-- Llama a la nueva función base -->
+                                {{ calculateLineSubtotal(prod) | currency:'COP':'symbol-narrow':'1.2-2' }}
+                            </td>
+                            <td>
+                                <p-button icon="pi pi-trash" styleClass="p-button-danger p-button-text w-40 h-40"
+                                    (click)="deleteProduct(i)"></p-button>
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td colspan="8" class="text-center p-5">
+                                <i class="pi pi-shopping-cart text-blue-950" style="font-size: 2rem"></i>
+                                <p class="mt-2">No hay productos en la factura. <br>Selecciona un cliente y luego haz
+                                    clic en "Seleccionar Productos".</p>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </div>
+
+        <hr class="my-8">
+
+        <!-- ==       SECCIÓN DE NOTAS Y TOTALES        == -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6 text-sm">
+            <!-- Columna de Notas -->
+            <div>
+                <h3 class="font-bold text-lg text-primary mb-2">Notas Adicionales</h3>
+                <textarea pInputTextarea [(ngModel)]="nota" rows="5" class="w-full"
+                    placeholder="Añade aquí cualquier observación, término o condición relevante..."></textarea>
+            </div>
+            <!-- Columna de Totales -->
+            <div class="p-4 bg-gray-50 rounded-lg">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center text-md">
+                        <span class="text-gray-700">Subtotal:</span>
+                        <span class="font-semibold">{{ subTotal | currency:'COP':'symbol-narrow':'1.2-2' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-md">
+                        <span class="text-gray-700">Descuento Total:</span>
+                        <span class="font-semibold text-secondary">- {{ descuentoTotal |
+                            currency:'COP':'symbol-narrow':'1.2-2' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-md">
+                        <div class="flex items-center gap-2">
+                            <p-checkbox [(ngModel)]="impuestoCheck" (onChange)="calculateInvoiceTotals()"
+                                [binary]="true" inputId="taxCheck"></p-checkbox>
+                            <label for="taxCheck" class="text-gray-700">Impuestos (IVA):</label>
+                        </div>
+                        <span class="font-semibold">{{ taxTotal | currency:'COP':'symbol-narrow':'1.2-2' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-md">
+                        <div class="flex items-center gap-2">
+                            <p-checkbox [(ngModel)]="retencionCheck" (onChange)="calculateInvoiceTotals()"
+                                [binary]="true" inputId="retCheck"></p-checkbox>
+                            <label for="retCheck" class="text-gray-700">Retención:</label>
+                        </div>
+                        <span class="font-semibold text-secondary">- {{ retention |
+                            currency:'COP':'symbol-narrow':'1.2-2' }}</span>
+                    </div>
+                    <hr class="my-2">
+                    <div class="flex justify-between items-center text-xl">
+                        <span class="font-bold text-primary">TOTAL:</span>
+                        <span class="font-extrabold text-primary">{{ total | currency:'COP':'symbol-narrow':'1.2-2'
+                            }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>

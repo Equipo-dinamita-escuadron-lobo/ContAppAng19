@@ -12,7 +12,7 @@ export interface ProductToSale {
     supplierId: number;
     categoryId: number;
     enterpriseId: string;
-    price: number;
+    cost: number;
     displayPrice: string;
     state: string;
     amount: number;

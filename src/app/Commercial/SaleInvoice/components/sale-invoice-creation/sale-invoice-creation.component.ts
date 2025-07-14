@@ -22,6 +22,7 @@ import Swal from 'sweetalert2';
 import { ProductS } from '../../models/ProductSelect';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { DropdownModule } from 'primeng/dropdown';
+import { SaleInvoiceSelectedProductsComponent } from '../sale-invoice-selected-products/sale-invoice-selected-products.component';
 
 
 @Component({
@@ -119,33 +120,33 @@ export class SaleInvoiceCreationComponent {
    * @param event El evento emitido por p-autoComplete, contiene la consulta (query).
    */
   searchSupplier(event: { query: string }) {
-  const query = (event.query || '').toLowerCase();
+    const query = (event.query || '').toLowerCase();
 
-  // Mapea la lista original a una nueva con un campo displayName virtual
-  const suppliersWithLabel = this.allSuppliers.map(supplier => ({
-    ...supplier,
-    displayName: this.getDisplayName(supplier)
-  }));
+    // Mapea la lista original a una nueva con un campo displayName virtual
+    const suppliersWithLabel = this.allSuppliers.map(supplier => ({
+      ...supplier,
+      displayName: this.getDisplayName(supplier)
+    }));
 
-  if (!query) {
-    this.filteredSuppliers = suppliersWithLabel.slice(0, 50);
-    return;
+    if (!query) {
+      this.filteredSuppliers = suppliersWithLabel.slice(0, 50);
+      return;
+    }
+
+    this.filteredSuppliers = suppliersWithLabel.filter(supplier => {
+      const idNumber = supplier.idNumber?.toString().toLowerCase() || '';
+      return supplier.displayName.toLowerCase().includes(query) || idNumber.includes(query);
+    });
   }
 
-  this.filteredSuppliers = suppliersWithLabel.filter(supplier => {
-    const idNumber = supplier.idNumber?.toString().toLowerCase() || '';
-    return supplier.displayName.toLowerCase().includes(query) || idNumber.includes(query);
-  });
-}
-
-// Generador de nombre para el campo virtual
-getDisplayName(supplier: Third): string {
-  if (supplier.personType === 'Natural') {
-    return `${supplier.names || ''} ${supplier.lastNames || ''}`.trim();
-  } else {
-    return supplier.socialReason || '';
+  // Generador de nombre para el campo virtual
+  getDisplayName(supplier: Third): string {
+    if (supplier.personType === 'Natural') {
+      return `${supplier.names || ''} ${supplier.lastNames || ''}`.trim();
+    } else {
+      return supplier.socialReason || '';
+    }
   }
-}
 
 
 
@@ -417,7 +418,7 @@ getDisplayName(supplier: Third): string {
 
         this.lstProducts.forEach(prod => {
           prod.IVA = prod.taxPercentage;
-          prod.IvaValor = prod.price * prod.IVA / 100;
+          prod.IvaValor = prod.cost * prod.IVA / 100;
           prod.amount = 1;
           prod.totalValue = 0;
         });
@@ -445,41 +446,26 @@ getDisplayName(supplier: Third): string {
    * Recorre la lista de productos para calcular el subtotal y el descuento de cada uno, y luego calcula el total de impuestos y el total general de la factura.
    */
   calculateInvoiceTotals(): void {
-    this.subTotal = 0;
-    this.lstProducts.forEach(prod => {
-      // Calcular subtotal para cada producto aplicando los descuentos
-      let subtotalProducto = 0
+    // 1. Calcular Subtotal General (usando la nueva función base)
+    this.subTotal = this.lstProducts.reduce((acc, prod) => acc + this.calculateLineSubtotal(prod), 0);
 
-      if (prod.amount != 0) {
-        subtotalProducto = (prod.price * prod.amount)
-          - ((prod.price * prod.amount) * prod.descuentos[0] / 100)
-          - prod.descuentos[1];
-      }
+    // 2. Calcular Descuento Total
+    this.descuentoTotal = this.lstProducts.reduce((acc, prod) => {
+      const totalBeforeDiscount = (prod.cost || 0) * (prod.amount || 0);
+      const discountPerc = prod.descuentos?.[0] || 0;
+      const discountVal = prod.descuentos?.[1] || 0;
+      return acc + (totalBeforeDiscount * (discountPerc / 100)) + discountVal;
+    }, 0);
 
-      // Agregar al subtotal total
-      this.subTotal += subtotalProducto;
-    });
+    // 3. Calcular Total de Impuestos
+    this.taxTotal = this.impuestoCheck
+      ? this.lstProducts.reduce((acc, prod) => acc + (prod.IvaValor || 0), 0)
+      : 0;
 
-    this.taxTotal = this.lstProducts.reduce((acc, prod) => acc + (this.calculateTotalValue(prod) * prod.IVA / 100), 0);
+    // 4. Calcular Retención
+    this.calculateRetention(); // Simplificado, ya que uvt está en la clase
 
-    if ((this.uvt * 27) < this.subTotal && this.retencionCheck) {
-      this.retention = this.subTotal * 0.025;
-    } else {
-      this.retention = 0;
-    }
-
-    this.descuentoTotal = 0;
-    this.lstProducts.forEach(prod => {
-      // Calcular descuento para cada producto
-      let descuentoCalculado = 0;
-      if (prod.amount != 0) {
-        descuentoCalculado = ((prod.price * prod.amount) * prod.descuentos[0] / 100) + prod.descuentos[1];
-      }
-
-      // Agregar el descuento al total
-      this.descuentoTotal += descuentoCalculado;
-    });
-
+    // 5. Calcular Total Final
     this.total = this.subTotal + this.taxTotal - this.retention;
   }
 
@@ -493,7 +479,7 @@ getDisplayName(supplier: Third): string {
       if (prod.amount == 0) {
         return 0;
       }
-      const totalValue = prod.price * prod.amount;
+      const totalValue = prod.cost * prod.amount;
 
       return totalValue - (totalValue * prod.descuentos[0] / 100) - prod.descuentos[1];
     }
@@ -562,8 +548,8 @@ getDisplayName(supplier: Third): string {
 
       return;
     } else {
-      this.lstProducts[index].price = this.formatValue(prod.displayPrice, prod.price, prod.displayPrice)[0];
-      this.lstProducts[index].displayPrice = this.formatValue(prod.displayPrice, prod.price, prod.displayPrice)[1];
+      this.lstProducts[index].cost = this.formatValue(prod.displayPrice, prod.cost, prod.displayPrice)[0];
+      this.lstProducts[index].displayPrice = this.formatValue(prod.displayPrice, prod.cost, prod.displayPrice)[1];
 
       prod.totalValue = this.calculateTotalValue(prod); //Llamado para cada producto
       prod.IvaValor = prod.totalValue * prod.IVA / 100;
@@ -580,19 +566,14 @@ getDisplayName(supplier: Third): string {
    * @param prod - El producto al que se le aplicará el cambio de descuento.
    */
   switchDescuento(type: 'porc' | 'val', prod: ProductToSale): void {
-
-    prod.descuentos[1] = this.formatValue(prod.displayDescuentos, prod.descuentos[1], prod.displayDescuentos)[0];
-    prod.displayDescuentos = this.formatValue(prod.displayDescuentos, prod.descuentos[1], prod.displayDescuentos)[1];
-
-    if (type === 'porc') {
-      prod.descuentos[1] = 0; // Vacía el descuento en valor si se escribe en porcentaje
-      prod.displayDescuentos = '0';
-    } else if (type === 'val') {
-      prod.descuentos[0] = 0; // Vacía el descuento en porcentaje si se escribe en valor
+    if (prod.descuentos) {
+      if (type === 'porc') {
+        prod.descuentos[1] = 0;
+      } else if (type === 'val') {
+        prod.descuentos[0] = 0;
+      }
     }
-
-    this.calculateTotal(undefined, prod);
-    this.calculateInvoiceTotals();
+    this.calculateChanges(prod);
   }
 
   /**
@@ -601,17 +582,12 @@ getDisplayName(supplier: Third): string {
   * @param uvt - El valor de la UVT a utilizar para el cálculo.
   * @returns Un valor booleano que indica si se aplica o no la retención.
   */
-  calculateRetention(uvt: number): boolean {
-    this.uvt = uvt;
-
-    if ((this.uvt * 27) < this.subTotal) {
+  calculateRetention(): void {
+    if (this.retencionCheck && (this.subTotal > (this.uvt * 27))) {
       this.retention = this.subTotal * 0.025;
-      return true
     } else {
       this.retention = 0;
-      return false
     }
-
   }
 
   /**
@@ -718,8 +694,8 @@ getDisplayName(supplier: Third): string {
       vat: prod.IVA / 100,
       descount: this.calculateDescountTotal(prod),
       code: prod.itemType,
-      unitPrice: prod.price,
-      subtotal: (prod.price * prod.amount * (1 + prod.IVA / 100))
+      unitPrice: prod.cost,
+      subtotal: (prod.cost * prod.amount * (1 + prod.IVA / 100))
     }));
   }
 
@@ -741,7 +717,7 @@ getDisplayName(supplier: Third): string {
    */
   calculateDescountTotal(product: ProductToSale): Number {
     if (product.descuentos[1] != 0) {
-      const priceTotal = product.price * product.amount;
+      const priceTotal = product.cost * product.amount;
       const discount = 100 * product.descuentos[1] / priceTotal;
       return Math.floor(discount * 100) / 100; // Trunca a dos decimales
     }
@@ -803,5 +779,83 @@ getDisplayName(supplier: Third): string {
       }
     );
   }
+
+
+  // En SaleInvoiceCreationComponent
+
+  selectProducts() {
+    this.ref = this.dialogService.open(SaleInvoiceSelectedProductsComponent, {
+      header: 'Seleccionar Productos',
+      width: '70%',
+      contentStyle: { "max-height": "80vh", "overflow": "auto" },
+      baseZIndex: 10000,
+      data: {
+        entId: this.enterpriseSelected?.id,
+        products: this.lstProducts
+      }
+    });
+
+    this.dialogSubscription = this.ref.onClose.subscribe((selectedProducts: any[]) => {
+      if (selectedProducts) {
+        this.lstProducts = selectedProducts.map(prodFromDialog => {
+          const existingProduct = this.lstProducts.find(p => p.id === prodFromDialog.id);
+
+          return {
+            ...prodFromDialog, // Copiamos todas las propiedades del producto del diálogo
+
+            // --- ¡CORRECCIÓN CLAVE! ---
+            // Mapeamos 'cost' a 'price' para usarlo en la factura
+            price: prodFromDialog.cost,
+
+            // Manejo de valores existentes o por defecto
+            amount: existingProduct?.amount || 1,
+            descuentos: existingProduct?.descuentos || [0, 0],
+            IVA: existingProduct?.IVA ?? prodFromDialog.taxPercentage ?? 0,
+
+            // Propiedades calculadas se resetean
+            IvaValor: 0,
+            totalValue: 0
+          };
+        });
+
+        this.getUnitOfMeasureForId(this.lstProducts);
+        this.calculateInvoiceTotals();
+      }
+    });
+  }
+
+  /**
+   * Calcula el subtotal de UNA LÍNEA de producto (después de aplicar descuentos).
+   * Esta es la nueva función base para los cálculos.
+   */
+  calculateLineSubtotal(prod: ProductToSale): number {
+    // Usamos 'price' que ahora existe en nuestro objeto
+    const price = prod.cost || 0;
+    const amount = prod.amount || 0;
+    const discountPerc = prod.descuentos?.[0] || 0;
+    const discountVal = prod.descuentos?.[1] || 0;
+
+    if (amount === 0) return 0;
+
+    const totalBeforeDiscount = price * amount;
+    const totalDiscount = (totalBeforeDiscount * (discountPerc / 100)) + discountVal;
+
+    return totalBeforeDiscount - totalDiscount;
+  }
+
+  /**
+   * Método principal llamado desde el HTML.
+   * Orquesta todos los cálculos cuando un valor cambia.
+   */
+  calculateChanges(prod: ProductToSale): void {
+    // 1. Recalcula el valor del IVA para la línea modificada
+    const lineSubtotal = this.calculateLineSubtotal(prod);
+    prod.IvaValor = lineSubtotal * ((prod.IVA || 0) / 100);
+
+    // 2. Recalcula TODOS los totales de la factura
+    this.calculateInvoiceTotals();
+  }
+
+  
 
 }

@@ -1,1 +1,71 @@
-<p>sale-invoice-selected-products works!</p>
+<!-- El contenedor del diálogo es gestionado por PrimeNG, solo nos preocupamos por el contenido. -->
+<div class="p-4 font-family-sans">
+
+    <!-- Barra de Búsqueda -->
+    <div class="mb-4">
+        <span class="p-input-icon-left w-full">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" [(ngModel)]="filterText" (ngModelChange)="onFilter()"
+                placeholder="Buscar por código, nombre o descripción..." class="w-full" />
+        </span>
+    </div>
+
+    <!-- Tabla de Productos con p-table -->
+    <div class="product-table-container">
+        <p-table [value]="filteredProducts" dataKey="id" styleClass="p-datatable-striped" [rows]="10" [paginator]="true"
+            [rowsPerPageOptions]="[10, 25, 50]" [scrollable]="true" scrollHeight="400px" responsiveLayout="scroll">
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 5rem">
+                        <!-- Checkbox en la cabecera (opcional, para seleccionar todos) - Lo omitimos por simplicidad -->
+                    </th>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th class="text-right">Precio</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-product>
+                <tr>
+                    <td class="text-center">
+                        <p-checkbox [binary]="true" [(ngModel)]="product.selected"
+                            (onChange)="onSelectionChange(product, $event.checked)">
+                        </p-checkbox>
+                    </td>
+                    <td>{{ product.code }}</td>
+                    <td>{{ product.itemType }}</td>
+                    <td>{{ product.description }}</td>
+                    <td class="text-right">{{ product.cost | currency:'COP':'symbol-narrow':'1.2-2' }}</td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="5" class="text-center p-5">
+                        No se encontraron productos que coincidan con la búsqueda.
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <!-- Pie de página del Diálogo (botones) -->
+    <div class="flex justify-end gap-3 mt-5">
+        <p-button label="Cancelar" styleClass="p-button-secondary" (click)="ref.close()">
+        </p-button>
+        <p-button label="Confirmar Selección" (click)="confirmSelection()" [disabled]="selectedProductsMap.size === 0">
+        </p-button>
+    </div>
+
+</div>
+
+<!-- CSS local para el scroll de la tabla -->
+<style>
+    .product-table-container {
+        max-height: 50vh;
+        /* Ajusta la altura máxima según necesites */
+        overflow-y: auto;
+    }
+</style>
