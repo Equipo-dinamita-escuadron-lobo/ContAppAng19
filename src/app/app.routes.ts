@@ -97,17 +97,17 @@ export const routes: Routes = [
           breadcrumb: 'Módulo Comercial',
         },
         children: [
-          /*{
+          {
             path: 'sale-invoice',
             data: {
               breadcrumb: 'Factura de Venta',
             },
             loadComponent: () =>
-               import(
+              import(
                 './Commercial/SaleInvoice/components/sale-invoice-creation/sale-invoice-creation.component'
               ).then((m) => m.SaleInvoiceCreationComponent),
 
-          },*/
+          },
           {
             path: 'products',
             data: {
