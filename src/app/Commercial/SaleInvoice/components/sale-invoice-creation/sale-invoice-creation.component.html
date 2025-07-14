@@ -1,1 +1,99 @@
-<p>sale-invoice-creation works!</p>
+<div class="flex w-full h-full font-titillium">
+    <div class="m-10 w-full font-sm bg-white rounded-3xl p-10">
+
+        <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-10">
+            <div class="items-center mb-6">
+                <h1
+                    class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+                    Creación de Factura de Venta
+                </h1>
+                <p class="font-family-sans font-normal text-sm mt-2">
+                    Completa los datos del cliente y los productos para generar una nueva factura.
+                </p>
+            </div>
+            <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+                <div class="flex flex-wrap gap-3">
+                    <p-button label="Vista Previa" icon="pi pi-eye" styleClass="p-button-secondary"
+                        (click)="generatePdfPreview()" [loading]="isLoadingPdfPreview"
+                        [disabled]="lstProducts.length === 0 || !supplierS">
+                    </p-button>
+                    <p-button label="Guardar Factura" icon="pi pi-save" (click)="saveFacture()"
+                        [disabled]="lstProducts.length === 0 || !supplierS" [loading]="isSavingPdf">
+                    </p-button>
+                    <p-button label="Cancelar" icon="pi pi-times" styleClass="p-button-danger p-button-outlined">
+                    </p-button>
+                </div>
+            </div>
+        </div>
+
+        <!--SECCIÓN 2: Cuerpo de Factura-->
+        <div class="px-4 py-2 mt-20">
+            <div class="flex flex-col items-center gap-6">
+
+                <!-- Info empresa centrada (Posible para eliminar se ve feo) 
+                <div class="flex flex-row items-center gap-6 justify-center relative">
+                    <div class="absolute left-0">
+                        <img class="w-40 h-40 rounded-full object-cover shadow-sm" [src]="enterpriseSelected?.logo"
+                            alt="Logo Empresa" />
+                    </div>
+
+                    <div class="text-center w-full text-sm">
+                        <h2 class="font-bold text-xl text-primary">{{ enterpriseSelected?.name }}</h2>
+                        <p class="text-gray-600">{{ enterpriseSelected?.nit }}</p>
+                        <p class="text-gray-600">
+                            {{ enterpriseSelected?.location?.country?.name }},
+                            {{ enterpriseSelected?.location?.city?.name }}
+                        </p>
+                        <p class="text-gray-600">
+                            {{ enterpriseSelected?.phone }} - {{ enterpriseSelected?.email }}
+                        </p>
+                    </div>
+                </div>-->
+
+                <!-- Inputs de Fecha y Cliente -->
+                <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-sm">
+                    <!-- Cliente -->
+                    <div class="flex flex-col">
+                        <label for="clientSearch" class="font-normal text-primary mb-1">Cliente:</label>
+                        <p-autoComplete [(ngModel)]="supplierS" [suggestions]="filteredSuppliers" [virtualScroll]="true"
+                            [virtualScrollItemSize]="34" (completeMethod)="searchSupplier($event)"
+                            (onFocus)="searchSupplier({ query: '' })" [dropdown]="true" optionLabel="displayName"
+                            [forceSelection]="true" placeholder="Selecciona o busca un cliente..." styleClass="w-2/3"
+                            [panelStyle]="{ 'max-height': '150px', 'overflow': 'auto' }">
+
+                            <!-- Plantilla visual para opciones -->
+                            <ng-template let-supplier pTemplate="item">
+                                <div class="flex flex-col">
+                                    <span class="font-sm">{{ supplier.displayName }}</span>
+                                    <small>{{ supplier.typeId?.typeId }} {{ supplier.idNumber }}</small>
+                                </div>
+                            </ng-template>
+                        </p-autoComplete>
+                    </div>
+
+
+
+                    <!-- Fecha de Creación -->
+                    <div class="flex flex-col mt-10">
+                        <label class="font-normal text-primary mb-1">Fecha de Creación:</label>
+                        <input type="text" [value]="currentDate | date: 'dd/MM/yyyy'" readonly pInputText
+                            class="w-2/3" />
+                    </div>
+
+                    <!-- Fecha de Vencimiento -->
+                    <div class="flex flex-col mt-10">
+                        <label for="dueDate" class="font-normal text-primary mb-1">Fecha de Vencimiento:</label>
+                        <input id="dueDate" type="date" name="dueDate" [(ngModel)]="dueDate" pInputText class="w-2/3" />
+                    </div>
+
+
+                </div>
+
+                <!-- Botón Crear Cliente 
+                    <div class="flex justify-end w-full md:mt-2">
+                        <p-button label="Crear Nuevo" icon="pi pi-plus" styleClass="p-button-secondary"></p-button>
+                    </div>-->
+            </div>
+        </div>
+
+    </div>

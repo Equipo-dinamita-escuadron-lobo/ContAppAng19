@@ -8,7 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { Subscription } from 'rxjs';
+import { Subscription, filter } from 'rxjs';
 import { Third } from '../../../../GeneralMasters/ThirdParties/models/Third';
 import { ProductToSale } from '../../models/ProductToSale';
 import { SaleInvoiceService } from '../../services/sale-invoice.service';
@@ -20,6 +20,9 @@ import { UnitOfMeasureService } from '../../services/unit-of-measure.service';
 import { FactureV } from '../../models/SaleInvoice';
 import Swal from 'sweetalert2';
 import { ProductS } from '../../models/ProductSelect';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { DropdownModule } from 'primeng/dropdown';
+
 
 @Component({
   selector: 'app-sale-invoice-creation',
@@ -35,7 +38,9 @@ import { ProductS } from '../../models/ProductSelect';
     InputTextModule,
     InputNumberModule,
     CheckboxModule,
-    TooltipModule
+    TooltipModule,
+    AutoCompleteModule,
+    DropdownModule,
   ],
   providers: [
     DialogService // ¡CLAVE! Se necesita proveer el servicio de diálogo de PrimeNG
@@ -89,6 +94,91 @@ export class SaleInvoiceCreationComponent {
   supplierS?: Third;
   supplierSCopy?: Third;
   changeSupplierS: boolean = false;
+  allSuppliers: Third[] = []; // Lista de proveedores, debe ser cargada desde el servicio
+  filteredSuppliers: Third[] = []; // Lista filtrada de proveedores para autocompletar
+
+  /**
+   * Carga la lista completa de terceros (clientes) desde el servicio.
+   */
+  loadAllSuppliers() {
+    const entId = "bf4d475f-5d02-4551-b7f0-49a5c426ac0d";
+    this.thirdService.getThirdList(entId).subscribe({
+      next: (data) => {
+        this.allSuppliers = data;
+        console.log(this.allSuppliers)
+      },
+      error: (error) => {
+        console.error('Error loading suppliers:', error);
+      }
+    });
+  }
+
+
+  /**
+   * Filtra la lista de clientes para el componente p-autoComplete.
+   * @param event El evento emitido por p-autoComplete, contiene la consulta (query).
+   */
+  searchSupplier(event: { query: string }) {
+  const query = (event.query || '').toLowerCase();
+
+  // Mapea la lista original a una nueva con un campo displayName virtual
+  const suppliersWithLabel = this.allSuppliers.map(supplier => ({
+    ...supplier,
+    displayName: this.getDisplayName(supplier)
+  }));
+
+  if (!query) {
+    this.filteredSuppliers = suppliersWithLabel.slice(0, 50);
+    return;
+  }
+
+  this.filteredSuppliers = suppliersWithLabel.filter(supplier => {
+    const idNumber = supplier.idNumber?.toString().toLowerCase() || '';
+    return supplier.displayName.toLowerCase().includes(query) || idNumber.includes(query);
+  });
+}
+
+// Generador de nombre para el campo virtual
+getDisplayName(supplier: Third): string {
+  if (supplier.personType === 'Natural') {
+    return `${supplier.names || ''} ${supplier.lastNames || ''}`.trim();
+  } else {
+    return supplier.socialReason || '';
+  }
+}
+
+
+
+  /**
+   * Se ejecuta cuando un usuario selecciona un cliente del autocompletado.
+   * @param selectedClient El cliente seleccionado.
+   */
+  onClientSelect(selectedClient: Third) {
+    // `supplierS` ya se actualiza a través de ngModel.
+    // Aquí puedes añadir lógica adicional, como advertir si se cambian los productos.
+    if (this.lstProducts.length > 0) {
+      Swal.fire({
+        title: "Cambio de cliente",
+        text: "Has cambiado de cliente. Esto limpiará la lista de productos actual. ¿Deseas continuar?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: '#000066',
+        cancelButtonColor: '#d33',
+        confirmButtonText: "Sí, continuar",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.lstProducts = []; // Limpiar productos
+          this.calculateInvoiceTotals(); // Recalcular totales
+        } else {
+          // Si el usuario cancela, revertimos la selección.
+          // Esta parte es opcional y depende de la UX que desees.
+          // Por simplicidad, la dejamos así. El usuario puede volver a buscar.
+        }
+      });
+    }
+  }
+
 
   /**
    * Variables relacionadas con productos.
@@ -164,7 +254,6 @@ export class SaleInvoiceCreationComponent {
 
   constructor(
     private enterpriseService: EnterpriseService, //Descomentar cuando este implementado
-    private location: Location, // Posible para borrar
     private UnitMeasureService: UnitOfMeasureService,  //Descomentar cuando este implementado
     private dialogService: DialogService,
     private thirdService: ThirdService, //Descometar cuando este implementado
@@ -173,6 +262,7 @@ export class SaleInvoiceCreationComponent {
 
   ngOnInit() {
     this.getEnterpriseSelectedInfo();
+    this.loadAllSuppliers(); // Cargar la lista de proveedores al iniciar el componente
   }
 
   /**
@@ -184,7 +274,8 @@ export class SaleInvoiceCreationComponent {
    * Si se ha seleccionado una empresa, se realiza una llamada a la API para obtener los detalles de la empresa por su ID.
    */
   getEnterpriseSelectedInfo() {
-    const id = this.enterpriseService.getSelectedEnterprise();
+    const id = "bf4d475f-5d02-4551-b7f0-49a5c426ac0d";
+    //const id = this.enterpriseService.getSelectedEnterprise();
     if (id === null) {
       // Manejar caso donde no hay empresa seleccionada
     } else {
@@ -194,6 +285,7 @@ export class SaleInvoiceCreationComponent {
         },
       });
     }
+    console.log(this.enterpriseSelected)
     return this.enterpriseSelected;
   }
 
@@ -640,7 +732,7 @@ export class SaleInvoiceCreationComponent {
     const matches = /filename="(.+)"/.exec(contentDisposition);
     return matches && matches[1] ? matches[1] : null;
   }
-  
+
   /**
    * Calcula el descuento total de un producto, ya sea en porcentaje o en valor fijo.
    * Si el descuento es en valor fijo, calcula el porcentaje correspondiente sobre el precio total del producto.

@@ -91,6 +91,24 @@ export const routes: Routes = [
           },
         ],
       },
+      {
+        path: 'commercial',
+        data: {
+          breadcrumb: 'Módulo Comercial',
+        },
+        children: [
+          {
+            path: 'sale-invoice',
+            data: {
+              breadcrumb: 'Factura de Venta',
+            },
+            loadComponent: () =>
+              import(
+                './Commercial/SaleInvoice/components/sale-invoice-creation/sale-invoice-creation.component'
+              ).then((m) => m.SaleInvoiceCreationComponent),
+          },
+        ]
+      }
     ],
 
   },
