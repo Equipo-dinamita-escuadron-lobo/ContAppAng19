@@ -4,14 +4,13 @@
     <!-- Barra de Búsqueda -->
     <div class="mb-4">
         <span class="p-input-icon-left w-full">
-            <i class="pi pi-search"></i>
             <input pInputText type="text" [(ngModel)]="filterText" (ngModelChange)="onFilter()"
                 placeholder="Buscar por código, nombre o descripción..." class="w-full" />
         </span>
     </div>
 
     <!-- Tabla de Productos con p-table -->
-    <div class="product-table-container">
+    <div class="product-table-container text-sm">
         <p-table [value]="filteredProducts" dataKey="id" styleClass="p-datatable-striped" [rows]="10" [paginator]="true"
             [rowsPerPageOptions]="[10, 25, 50]" [scrollable]="true" scrollHeight="400px" responsiveLayout="scroll">
 

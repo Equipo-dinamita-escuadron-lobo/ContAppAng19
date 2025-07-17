@@ -17,7 +17,7 @@ export class ProductService {
     // --- CORRECCIÓN AQUÍ ---
     // Ahora los objetos cumplen con la estructura de la clase ProductType.
     // Usamos el `enterpriseId` que llega como parámetro para que los datos sean consistentes.
-    const mockProductTypes: ProductType[] = [
+    /*const mockProductTypes: ProductType[] = [
       { 
         id: 1, 
         name: 'Producto', 
@@ -164,13 +164,13 @@ export class ProductService {
       },
     ];
 
-    return of(mockProducts).pipe(delay(500));
+    return of(mockProducts).pipe(delay(500));*/
 
     // --- FIN: CÓDIGO SIMULADO ---
 
     // --- CÓDIGO ORIGINAL (CONEXIÓN AL BACKEND) ---
-    // const url = `${API_URL}products/findAll/${enterpriseId}`;
-    // return this.http.get<Product[]>(url);
+    const url = `${API_URL}products/findAll/${enterpriseId}`;
+    return this.http.get<Product[]>(url);
   }
 
   createProduct(product: Product): Observable<Product> {

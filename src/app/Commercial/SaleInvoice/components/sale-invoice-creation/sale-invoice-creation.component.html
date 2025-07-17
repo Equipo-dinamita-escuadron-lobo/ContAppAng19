@@ -1,171 +1,132 @@
-<div class="flex w-full h-full font-titillium">
-    <div class="m-10 w-full font-sm bg-white rounded-3xl p-10">
+<div class="flex w-full h-full font-titillium bg-gray-50 md:bg-transparent">
+    <div class="m-2 md:m-10 w-full font-sm bg-white rounded-2xl md:rounded-3xl p-4 md:p-10">
 
-        <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-10">
-            <div class="items-center mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 md:justify-between items-center mb-8">
+            <div class="items-center mb-6 md:mb-0">
                 <h1
-                    class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+                    class="font-family-titillium font-bold text-2xl md:text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
                     Creación de Factura de Venta
                 </h1>
-                <p class="font-family-sans font-normal text-sm mt-2">
+                <p class="font-family-sans font-normal text-sm mt-2 hidden sm:block">
                     Completa los datos del cliente y los productos para generar una nueva factura.
                 </p>
             </div>
-            <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
-                <div class="flex flex-wrap gap-3">
+            <div class="flex justify-start md:justify-end">
+                <div class="flex flex-wrap gap-2 sm:gap-3 w-full justify-evenly md:w-auto">
                     <p-button label="Vista Previa" icon="pi pi-eye" styleClass="p-button-secondary"
                         (click)="generatePdfPreview()" [loading]="isLoadingPdfPreview"
-                        [disabled]="lstProducts.length === 0 || !supplierS">
-                    </p-button>
-                    <p-button label="Guardar Factura" icon="pi pi-save" (click)="saveFacture()"
-                        [disabled]="lstProducts.length === 0 || !supplierS" [loading]="isSavingPdf">
-                    </p-button>
-                    <p-button label="Cancelar" icon="pi pi-times" styleClass="p-button-danger p-button-outlined">
-                    </p-button>
+                        [disabled]="lstProducts.length === 0 || !supplierS"></p-button>
+                    <p-button label="Guardar" icon="pi pi-save" (click)="saveFacture()"
+                        [disabled]="lstProducts.length === 0 || !supplierS" [loading]="isSavingPdf"></p-button>
+                    <p-button label="Cancelar" icon="pi pi-times"
+                        styleClass="p-button-danger p-button-outlined"></p-button>
                 </div>
             </div>
         </div>
 
-        <!--SECCIÓN 2: Cuerpo de Factura-->
-        <div class="px-4 py-2 mt-20">
-            <div class="flex flex-col items-center gap-6">
+        <!-- Contenedor Principal del Formulario (Grid optimizado) -->
+        <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 text-sm mb-8 mt-40">
 
-                <!-- Info empresa centrada (Posible para eliminar se ve feo) 
-                <div class="flex flex-row items-center gap-6 justify-center relative">
-                    <div class="absolute left-0">
-                        <img class="w-40 h-40 rounded-full object-cover shadow-sm" [src]="enterpriseSelected?.logo"
-                            alt="Logo Empresa" />
-                    </div>
-
-                    <div class="text-center w-full text-sm">
-                        <h2 class="font-bold text-xl text-primary">{{ enterpriseSelected?.name }}</h2>
-                        <p class="text-gray-600">{{ enterpriseSelected?.nit }}</p>
-                        <p class="text-gray-600">
-                            {{ enterpriseSelected?.location?.country?.name }},
-                            {{ enterpriseSelected?.location?.city?.name }}
-                        </p>
-                        <p class="text-gray-600">
-                            {{ enterpriseSelected?.phone }} - {{ enterpriseSelected?.email }}
-                        </p>
-                    </div>
-                </div>-->
-
-                <!-- Inputs de Fecha y Cliente -->
-                <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 text-sm">
-                    <!-- Cliente -->
-                    <div class="flex flex-col">
-                        <label for="clientSearch" class="font-normal text-primary mb-1">Cliente:</label>
-                        <p-autoComplete [(ngModel)]="supplierS" [suggestions]="filteredSuppliers" [virtualScroll]="true"
-                            [virtualScrollItemSize]="34" (completeMethod)="searchSupplier($event)"
-                            (onFocus)="searchSupplier({ query: '' })" [dropdown]="true" optionLabel="displayName"
-                            [forceSelection]="true" placeholder="Selecciona o busca un cliente..." styleClass="w-2/3"
-                            [panelStyle]="{ 'max-height': '150px', 'overflow': 'auto' }">
-
-                            <!-- Plantilla visual para opciones -->
-                            <ng-template let-supplier pTemplate="item">
-                                <div class="flex flex-col">
-                                    <span class="font-sm">{{ supplier.displayName }}</span>
-                                    <small>{{ supplier.typeId?.typeId }} {{ supplier.idNumber }}</small>
-                                </div>
-                            </ng-template>
-                        </p-autoComplete>
-                    </div>
-
-
-
-                    <!-- Fecha de Creación -->
-                    <div class="flex flex-col mt-10">
-                        <label class="font-normal text-primary mb-1">Fecha de Creación:</label>
-                        <input type="text" [value]="currentDate | date: 'dd/MM/yyyy'" readonly pInputText
-                            class="w-2/3" />
-                    </div>
-
-                    <!-- Fecha de Vencimiento -->
-                    <div class="flex flex-col mt-10">
-                        <label for="dueDate" class="font-normal text-primary mb-1">Fecha de Vencimiento:</label>
-                        <input id="dueDate" type="date" name="dueDate" [(ngModel)]="dueDate" pInputText class="w-2/3" />
-                    </div>
-
-
-                </div>
-
-                <!-- Botón Crear Cliente 
-                    <div class="flex justify-end w-full md:mt-2">
-                        <p-button label="Crear Nuevo" icon="pi pi-plus" styleClass="p-button-secondary"></p-button>
-                    </div>-->
+            <!-- 1. CAMPO CLIENTE (p-autoComplete) - Ocupa todo el ancho en pantallas pequeñas y la mitad en medianas/grandes -->
+            <div class="flex flex-col md:col-span-1">
+                <label for="clientSearch" class="font-normal text-primary mb-1">Cliente:</label>
+                <p-autoComplete id="clientSearch" [(ngModel)]="supplierS" [suggestions]="filteredSuppliers" size="small"
+                    (completeMethod)="searchSupplier($event)" (onFocus)="searchSupplier({ query: '' })"
+                    [dropdown]="true" optionLabel="displayName" [forceSelection]="true"
+                    placeholder="Busca o selecciona un cliente..." styleClass="w-1/2">
+                    <ng-template let-supplier pTemplate="item">
+                        <div class="flex flex-col">
+                            <span class="font-semibold">{{ supplier.displayName }}</span>
+                            <small>{{ supplier.typeId?.typeId }} {{ supplier.idNumber }}</small>
+                        </div>
+                    </ng-template>
+                </p-autoComplete>
             </div>
+
+            <!-- 2. CAMPO FECHA DE CREACIÓN (p-datepicker deshabilitado) -->
+            <div class="flex flex-col">
+                <label class="font-normal text-primary mb-1">Fecha de Creación:</label>
+                <p-datepicker [(ngModel)]="currentDate" [disabled]="true" dateFormat="dd/mm/yy" styleClass="w-1/2"
+                    size="small">
+                </p-datepicker>
+            </div>
+
+            <!-- 3. CAMPO FECHA DE VENCIMIENTO (p-datepicker editable con icono) 
+            <div class="flex flex-col">
+                <label for="dueDate" class="font-normal text-primary mb-1">Fecha de Vencimiento:</label>
+                <p-datepicker id="dueDate" [(ngModel)]="dueDate" dateFormat="dd/mm/yy" size="small"
+                    placeholder="Selecciona una fecha" [showIcon]="true" iconDisplay="input" styleClass="w-1/2">
+                </p-datepicker> 
+            </div> -->
+
         </div>
 
-        <hr class="my-8">
 
-        <!-- ==   SECCIÓN DE PRODUCTOS DE LA FACTURA    == -->
-        <div class="p-2 text-sm">
-            <div class="flex justify-between items-center mb-4">
+        <div class="p-0 sm:p-2 text-sm mt-20">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                 <h3 class="font-bold text-lg text-primary">Detalle de la Factura</h3>
-                <div class="flex gap-3">
-                    <p-button label="Seleccionar Productos" icon="pi pi-list" (click)="selectProducts()"
+                <div class="flex w-full sm:w-auto">
+                    <p-button class="w-full" label="Seleccionar Productos" icon="pi pi-list" (click)="selectProducts()"
                         [disabled]="!supplierS" pTooltip="Primero debes seleccionar un cliente"
                         tooltipPosition="top"></p-button>
                 </div>
             </div>
 
-            <!-- Tabla de Productos con p-table -->
             <div class="overflow-x-auto">
-                <p-table [value]="lstProducts" styleClass="p-datatable-striped" responsiveLayout="scroll">
+                <p-table [value]="lstProducts" [tableStyle]="{'min-width': '65rem'}" styleClass="p-datatable-striped">
                     <ng-template pTemplate="header">
                         <tr>
-                            <th style="width: 3rem">#</th>
-                            <th>Descripción</th>
-                            <th style="width: 8rem">Cantidad</th>
-                            <th style="width: 12rem">Precio Unit.</th>
-                            <th style="width: 17rem">Descuento</th>
-                            <th style="width: 15rem">IVA</th>
-                            <th style="width: 12rem" class="text-right">Subtotal</th>
-                            <th style="width: 5rem"></th>
+                            <th style="width: 4rem;">#</th>
+                            <th style="min-width: 15rem;">Descripción</th>
+                            <th style="width: 8rem;">Cant.</th>
+                            <th style="width: 10rem;">Precio Unit.</th>
+                            <th style="width: 15rem;">Descuento</th>
+                            <th style="width: 8rem;">IVA</th>
+                            <th style="width: 10rem;" class="text-right">Subtotal</th>
+                            <th style="width: 5rem;"></th>
                         </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-prod let-i="rowIndex">
                         <tr>
-                            <td>{{ i + 1 }}</td>
+                            <td class="text-center">{{ i + 1 }}</td>
                             <td>
-                                <span class="font-semibold">{{ prod.description }}</span><br>
-                                <small class="text-gray-500">Cód: {{ prod.itemType }}</small>
+                                <span class="font-semibold">{{ prod.itemType }}</span><br>
+                                <small class="text-gray-500">Cód: {{ prod.code }}</small>
                             </td>
                             <td>
-                                <!-- Llama a calculateChanges -->
-                                <p-inputNumber [(ngModel)]="prod.amount" mode="decimal" [showButtons]="true" [min]="0"
-                                    (onInput)="calculateChanges(prod)"></p-inputNumber>
+                                <p-inputNumber [(ngModel)]="prod.amount" mode="decimal" size="small"
+                                    [showButtons]="true" [min]="0" (onInput)="calculateChanges(prod)"
+                                    inputStyleClass="w-full"></p-inputNumber>
                             </td>
                             <td>
-                                <!-- Bindea a 'price' y llama a calculateChanges -->
-                                <p-inputNumber [(ngModel)]="prod.price" mode="currency" currency="COP" locale="es-CO"
-                                    (onInput)="calculateChanges(prod)"></p-inputNumber>
+                                <p-inputNumber [(ngModel)]="prod.cost" mode="currency" size="small" currency="COP"
+                                    locale="es-CO" (onInput)="calculateChanges(prod)"
+                                    inputStyleClass="w-full"></p-inputNumber>
                             </td>
                             <td>
-                                <div class="flex items-center gap-2">
-                                    <!-- Llama a switchDescuento -->
-                                    <p-inputNumber [(ngModel)]="prod.descuentos[0]" suffix="%" [min]="0" [max]="100"
-                                        (onInput)="switchDescuento('porc', prod)"
-                                        inputStyleClass="w-16"></p-inputNumber>
-                                    <p-inputNumber [(ngModel)]="prod.descuentos[1]" mode="currency" currency="COP"
-                                        locale="es-CO" (onInput)="switchDescuento('val', prod)"></p-inputNumber>
+                                <div class="flex gap-2">
+                                    <p-inputNumber [(ngModel)]="prod.descuentos[0]" size="small" suffix="%" [min]="0"
+                                        [max]="100" (onInput)="switchDescuento('porc', prod)"
+                                        inputStyleClass="w-full"></p-inputNumber>
+                                    <p-inputNumber [(ngModel)]="prod.descuentos[1]" size="small" mode="currency"
+                                        currency="COP" locale="es-CO" (onInput)="switchDescuento('val', prod)"
+                                        inputStyleClass="w-full"></p-inputNumber>
                                 </div>
                             </td>
                             <td>
-                                <div class="flex items-center gap-2">
-                                    <!-- Llama a calculateChanges -->
+                                <div class="flex flex-col items-stretch gap-1">
                                     <p-dropdown [options]="[0, 5, 19]" [(ngModel)]="prod.IVA"
-                                        (onChange)="calculateChanges(prod)" placeholder="IVA"></p-dropdown>
-                                    <span class="text-gray-600">{{ prod.IvaValor |
+                                        (onChange)="calculateChanges(prod)" placeholder="IVA"
+                                        styleClass="w-full max-h-35" [appendTo]="'body'"></p-dropdown>
+                                    <span class="text-gray-600 text-xs text-right">{{ prod.IvaValor |
                                         currency:'COP':'symbol-narrow':'1.2-2' }}</span>
                                 </div>
                             </td>
                             <td class="text-right font-semibold">
-                                <!-- Llama a la nueva función base -->
                                 {{ calculateLineSubtotal(prod) | currency:'COP':'symbol-narrow':'1.2-2' }}
                             </td>
-                            <td>
-                                <p-button icon="pi pi-trash" styleClass="p-button-danger p-button-text w-40 h-40"
+                            <td class="text-center">
+                                <p-button icon="pi pi-trash" styleClass="p-button-danger p-button-text"
                                     (click)="deleteProduct(i)"></p-button>
                             </td>
                         </tr>
@@ -173,8 +134,8 @@
                     <ng-template pTemplate="emptymessage">
                         <tr>
                             <td colspan="8" class="text-center p-5">
-                                <i class="pi pi-shopping-cart text-blue-950" style="font-size: 2rem"></i>
-                                <p class="mt-2">No hay productos en la factura. <br>Selecciona un cliente y luego haz
+                                <i class="pi pi-shopping-cart text-blue-950 text-2xl"></i>
+                                <p class="mt-2">No hay productos en la factura.<br>Selecciona un cliente y luego haz
                                     clic en "Seleccionar Productos".</p>
                             </td>
                         </tr>
@@ -183,29 +144,25 @@
             </div>
         </div>
 
-        <hr class="my-8">
 
-        <!-- ==       SECCIÓN DE NOTAS Y TOTALES        == -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6 text-sm">
-            <!-- Columna de Notas -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 text-sm mt-20">
             <div>
-                <h3 class="font-bold text-lg text-primary mb-2">Notas Adicionales</h3>
-                <textarea pInputTextarea [(ngModel)]="nota" rows="5" class="w-full"
-                    placeholder="Añade aquí cualquier observación, término o condición relevante..."></textarea>
+                <h3 class="font-semibold text-lg text-primary mb-2">Notas Adicionales</h3>
+                <textarea pInputTextarea [(ngModel)]="nota" rows="5" class="w-full border-1 border-gray-300 p-4"
+                    placeholder="Añade aquí cualquier observación..."></textarea>
             </div>
-            <!-- Columna de Totales -->
-            <div class="p-4 bg-gray-50 rounded-lg">
+            <div class="p-4 rounded-lg">
                 <div class="space-y-3">
-                    <div class="flex justify-between items-center text-md">
+                    <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-700">Subtotal:</span>
                         <span class="font-semibold">{{ subTotal | currency:'COP':'symbol-narrow':'1.2-2' }}</span>
                     </div>
-                    <div class="flex justify-between items-center text-md">
+                    <div class="flex justify-between items-center text-sm">
                         <span class="text-gray-700">Descuento Total:</span>
                         <span class="font-semibold text-secondary">- {{ descuentoTotal |
                             currency:'COP':'symbol-narrow':'1.2-2' }}</span>
                     </div>
-                    <div class="flex justify-between items-center text-md">
+                    <div class="flex justify-between items-center text-sm">
                         <div class="flex items-center gap-2">
                             <p-checkbox [(ngModel)]="impuestoCheck" (onChange)="calculateInvoiceTotals()"
                                 [binary]="true" inputId="taxCheck"></p-checkbox>
@@ -213,7 +170,7 @@
                         </div>
                         <span class="font-semibold">{{ taxTotal | currency:'COP':'symbol-narrow':'1.2-2' }}</span>
                     </div>
-                    <div class="flex justify-between items-center text-md">
+                    <div class="flex justify-between items-center text-sm">
                         <div class="flex items-center gap-2">
                             <p-checkbox [(ngModel)]="retencionCheck" (onChange)="calculateInvoiceTotals()"
                                 [binary]="true" inputId="retCheck"></p-checkbox>

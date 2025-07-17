@@ -23,6 +23,7 @@ import { ProductS } from '../../models/ProductSelect';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { DropdownModule } from 'primeng/dropdown';
 import { SaleInvoiceSelectedProductsComponent } from '../sale-invoice-selected-products/sale-invoice-selected-products.component';
+import { DatePickerModule } from 'primeng/datepicker';
 
 
 @Component({
@@ -42,6 +43,7 @@ import { SaleInvoiceSelectedProductsComponent } from '../sale-invoice-selected-p
     TooltipModule,
     AutoCompleteModule,
     DropdownModule,
+    DatePickerModule
   ],
   providers: [
     DialogService // ¡CLAVE! Se necesita proveer el servicio de diálogo de PrimeNG

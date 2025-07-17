@@ -41,7 +41,7 @@ export class SaleInvoiceSelectedProductsComponent implements OnInit {
   selectedProductsMap: Map<string, SelectableProduct> = new Map(); // Mapa para manejar selecciones eficientemente
 
   filterText: string = ''; // Para el input de búsqueda
-  entId: string; // ID de la empresa recibido
+  entId: string = 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d'; // ID de la empresa recibido
 
   constructor(
     private productService: ProductService,
