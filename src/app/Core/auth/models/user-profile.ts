@@ -1,4 +1,4 @@
-export type UserRole = 'admin_realm' ;
+export type UserRole = 'admin_realm' | 'user_realm' | 'super_realm';
 
 export interface UserProfile {
   id: string;

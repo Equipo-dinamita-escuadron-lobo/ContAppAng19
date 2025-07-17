@@ -4,6 +4,7 @@ import { LoginComponent } from './Core/auth/login/login.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
 import { hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
+import { ViewEnterpriseComponent } from './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component';
 
 export const routes: Routes = [
   {
@@ -21,10 +22,15 @@ export const routes: Routes = [
   {
     path: '',
     component: MainTemplateComponent,
+    canActivate: [hasRoleGuard(['admin_realm', 'user_realm', 'super_realm'])],
     data: {
       breadcrumb: 'Home',
     },
     children: [
+      {
+        path: 'home',
+        component: ViewEnterpriseComponent,
+      },
       {
         path: 'gen-masters',
         data: {

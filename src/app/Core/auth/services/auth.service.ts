@@ -86,7 +86,7 @@ export class AuthService {
       switchMap(() => this.fetchAndSetUser()), // Luego obtiene y guarda el usuario en memoria
       tap(() => this.isAuthenticated.set(true)), // Actualiza la señal
       tap(() => {
-        this.router.navigate(['/enterprise']);
+        this.router.navigate(['/enterprise/list']);
       }),
       catchError(error => {
         console.error("Login failed:", error);
@@ -154,7 +154,6 @@ export class AuthService {
     this.removeToken();
     this._currentUser.next(null);
     this.isAuthenticated.set(false);
-    this.router.navigate(['/login']); // Redirige al login
   }
 
   // Remueve el token

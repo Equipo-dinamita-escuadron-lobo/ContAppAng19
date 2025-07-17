@@ -307,8 +307,8 @@ body {
 
 .select-base {
   /* Estilo base para ng-select similar a input-base */
-  @apply px-3 py-2 border border-gray-300 rounded-md shadow-sm 
-    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900 
+  @apply px-3 py-2 border border-gray-300 rounded-md shadow-sm
+    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900
     transition duration-150 ease-in-out;
 }
 
@@ -326,8 +326,8 @@ body {
 
 /* Estilo base del dropdown de PrimeNG */
 .dropdown-custom {
-  @apply w-full max-h-40 px-3 py-2 border border-gray-300 rounded-md shadow-sm 
-    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900 
+  @apply w-full max-h-40 px-3 py-2 border border-gray-300 rounded-md shadow-sm
+    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900
     transition duration-150 ease-in-out text-gray-800 font-normal;
 }
 
@@ -360,7 +360,7 @@ body {
 }
 
   /* --- Estilos para el panel desplegable y las opciones --- */
-  
+
   /* Panel desplegable (la caja con las opciones) */
   .p-dropdown-panel {
     background-color: var(--color-primary-100);
@@ -384,7 +384,7 @@ body {
     background-color: var(--color-primary-90) !important; /* Tu color --color-primary-90 (E0E0FF) */
     color: var(--color-primary) !important;
   }
-  
+
   /* Opción que ya está seleccionada (marcada como p-highlight) */
   .p-dropdown-panel .p-dropdown-item.p-highlight {
     background: var(--color-primary) !important;
@@ -396,7 +396,7 @@ body {
   .p-dropdown-panel .p-dropdown-item:focus {
     box-shadow: none !important;
   }
-  
+
   /* Mensaje de "No se encontraron resultados" */
   .p-dropdown-panel .p-dropdown-empty-message {
       padding: 10px 12px;
