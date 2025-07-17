@@ -96,7 +96,7 @@ export class ProductListComponent implements OnInit {
   /*deleteProduct(product: Product): void {
     this.confirmationService.confirm({
         target: event?.target as EventTarget,
-        message: `¿Estás seguro de que deseas eliminar el producto "${product.description}"?`,
+        message: ¿Estás seguro de que deseas eliminar el producto "${product.description}"?,
         header: 'Confirmación de Eliminación',
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Sí, eliminar',

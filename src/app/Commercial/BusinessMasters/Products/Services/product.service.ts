@@ -16,7 +16,7 @@ export class ProductService {
   getProducts(enterpriseId:string): Observable<Product[]> {
     // --- CORRECCIÓN AQUÍ ---
     // Ahora los objetos cumplen con la estructura de la clase ProductType.
-    // Usamos el `enterpriseId` que llega como parámetro para que los datos sean consistentes.
+    // Usamos el enterpriseId que llega como parámetro para que los datos sean consistentes.
     /*const mockProductTypes: ProductType[] = [
       { 
         id: 1, 

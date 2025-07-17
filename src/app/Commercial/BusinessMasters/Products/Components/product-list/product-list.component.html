@@ -21,7 +21,9 @@
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
           <!-- Botón "Crear Producto" utilizando p-button -->
-          <p-button label="Crear Producto" icon="pi pi-plus"
+          <p-button 
+            label="Crear Producto" 
+            icon="pi pi-plus" 
             (click)="redirectTo('/commercial/masters/products/create')">
           </p-button>
           <!-- Aquí puedes añadir más botones como "Exportar" en el futuro -->
@@ -35,9 +37,14 @@
         class="flex w-full sm:w-1/3 rounded-md border-b-2 border-neutral-400 text-neutral-400 focus-within:border-primary focus-within:text-primary transition-colors duration-300">
         <span class="p-input-icon-left w-full">
           <i class="pi pi-search"></i>
-          <input pInputText type="text" #filterInput (input)="productsTable.filterGlobal(filterInput.value, 'contains')"
-            placeholder="Buscar por código, descripción o referencia..."
-            class="w-full bg-transparent font-family-sans font-normal text-sm outline-none p-2 placeholder-neutral-400 text-inherit focus:text-primary" />
+          <input 
+            pInputText 
+            type="text"
+            #filterInput
+            (input)="productsTable.filterGlobal(filterInput.value, 'contains')" 
+            placeholder="Buscar por código, descripción o referencia..." 
+            class="w-full bg-transparent font-family-sans font-normal text-sm outline-none p-2 placeholder-neutral-400 text-inherit focus:text-primary"
+          />
         </span>
       </div>
     </div>
