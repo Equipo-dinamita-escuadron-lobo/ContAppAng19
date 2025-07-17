@@ -35,7 +35,7 @@ import { TagModule } from 'primeng/tag';
     TableModule,
     ButtonModule,
     InputTextModule,
-    ToastModule, 
+    ToastModule,
     DialogModule,
     TagModule,
   ],
@@ -46,7 +46,6 @@ export class ProductListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
   products: Product[] = [];
-  isLoading = true; // Variable para controlar el estado de carga de la tabla
 
   // --- VARIABLES PARA EL MODAL ---
   isDetailsDialogVisible = false;
@@ -61,27 +60,22 @@ export class ProductListComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private router: Router,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
-    /*if (this.entData) {
-      this.getProducts();
-    }*/
     this.getProducts();
     console.log('Productos obtenidos:', this.products);
   }
 
   getProducts(): void {
-    this.isLoading = true;
-    this.productService.getProducts("ce1417a7-dd71-41f8-a2ec-91b2000fa30b").subscribe({
+    this.productService.getProducts("bf4d475f-5d02-4551-b7f0-49a5c426ac0d").subscribe({
       next: (data: Product[]) => {
         this.products = data;
-        this.isLoading = false;
+        console.log('Productos obtenidos:', this.products);
       },
       error: (error) => {
         console.error('Error al obtener los productos:', error);
-        this.isLoading = false;
         //this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los productos.' });
       }
     });
@@ -94,7 +88,6 @@ export class ProductListComponent implements OnInit {
     this.router.navigateByUrl(route);
   }
 
-  // --- AHORA: Simplificado. El routing se hace con un botón dedicado ---
   redirectToEdit(productId: string): void {
     this.router.navigate(['/commercial/masters/products/edit/', productId]);
   }
@@ -103,7 +96,7 @@ export class ProductListComponent implements OnInit {
   /*deleteProduct(product: Product): void {
     this.confirmationService.confirm({
         target: event?.target as EventTarget,
-        message: `¿Estás seguro de que deseas eliminar el producto "${product.description}"?`,
+        message: ¿Estás seguro de que deseas eliminar el producto "${product.description}"?,
         header: 'Confirmación de Eliminación',
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Sí, eliminar',
@@ -141,10 +134,12 @@ export class ProductListComponent implements OnInit {
       year: 'numeric', month: 'long', day: 'numeric'
     });
   }
-
-  getStateSeverity(state: string): 'success' | 'danger' | 'info' | 'warning' {
-    return state && state.toLowerCase() === 'activo' ? 'success' : 'danger';
+  getStateSeverity(state: string): 'success' | 'danger' {
+    return state && state.toLowerCase() === 'true' ? 'success' : 'danger';
   }
 
-  
+  formatState(state: string): string {
+    return state && state.toLowerCase() === 'true' ? 'Activo' : 'Inactivo';
+  }
+
 }
