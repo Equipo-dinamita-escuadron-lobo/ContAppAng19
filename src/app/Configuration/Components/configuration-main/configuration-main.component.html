@@ -33,7 +33,9 @@
     <!-- Report Cards -->
     <ng-container *ngFor="let item of configItems">
       <div
-        *ngIf="(item.type !== 'usuarios' && item.type !== 'roles') || isAdmin"
+        *ngIf="
+          (item.type !== 'usuarios' && item.type !== 'perfiles') || isAdmin
+        "
         class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer mr-5"
         (click)="goTo(item.route)"
       >
