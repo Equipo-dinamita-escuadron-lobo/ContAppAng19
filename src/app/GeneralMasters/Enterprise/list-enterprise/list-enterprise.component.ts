@@ -79,6 +79,6 @@ export class ListEnterpriseComponent {
   }
 
   saveSelectedEnterprise(enterprise: any) {
-    localStorage.setItem('enterpriseSelected', JSON.stringify(enterprise));
+    localStorage.setItem('entData', JSON.stringify(enterprise));
   }
 }

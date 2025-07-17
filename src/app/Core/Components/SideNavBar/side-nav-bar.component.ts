@@ -71,7 +71,7 @@ export class SideNavBarComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['general/enterprises/list']);
+    this.router.navigate(['/enterprise/list']);
   }
 
   toggleCollapse(): void {

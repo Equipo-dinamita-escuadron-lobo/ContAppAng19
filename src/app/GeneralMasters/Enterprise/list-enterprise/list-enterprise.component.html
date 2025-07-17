@@ -46,7 +46,7 @@
       <p class="font-family-sans font-normal text-xs/21 text-neutral-50 mb-4">NIT: {{ enterprise.nit }}</p>
       <div class="flex items-center justify-center">
         <a
-          [routerLink]="['/enterprise', enterprise.id]"
+          [routerLink]="['/home']"
           (click)="saveSelectedEnterprise(enterprise)"
         >
           <p-button label="Seleccionar" class="w-full"></p-button>

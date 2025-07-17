@@ -142,7 +142,7 @@ export class AccountListComponent {
   * Inicializa los formularios reactivos para la gestión de cuentas y transacciones,
   * y provee la inyección de dependencias necesarias para la exportación de cuentas,
   * servicios de cuenta, impuestos y manejo de diálogos.
-  * 
+  *
   * @param accountExportComponent Componente para exportar cuentas.
   * @param fb Constructor de formularios reactivos.
   * @param _accountService Servicio para gestionar las cuentas contables.
@@ -628,7 +628,7 @@ export class AccountListComponent {
   /**
    * Filtra los datos basados en la longitud del código en la primera columna.
    * Solo se incluyen las filas cuyo código tenga una longitud de 1, 2, 4, 6 o 8 caracteres.
-   * 
+   *
    * @param data - Arreglo de datos (matriz) que se filtrará según la longitud del código en la primera columna.
    * @returns Un arreglo de datos filtrado, donde solo se incluyen las filas con códigos de longitud específica.
    */
@@ -646,7 +646,7 @@ export class AccountListComponent {
    * Verifica que el archivo sea de tipo xlsx, filtra las columnas necesarias, convierte valores numéricos,
    * y filtra las filas vacías o con solo espacios. Además, valida la existencia de campos requeridos y
    * crea una jerarquía con los datos importados.
-   * 
+   *
    * @param event - El evento de entrada de archivo que contiene el archivo Excel.
    */
   ReadExcel(event: any) {
@@ -761,7 +761,7 @@ export class AccountListComponent {
   * Guarda la jerarquía de cuentas de forma recursiva.
   * Para cada cuenta, llama a la función de guardado de forma recursiva y espera a que todas las operaciones
   * de guardado se completen. Al finalizar, devuelve un observable que emite `true`.
-  * 
+  *
   * @param accounts - Lista de cuentas que se guardarán recursivamente.
   * @returns Un observable que emite `true` cuando todas las cuentas hayan sido guardadas correctamente.
   */
@@ -779,7 +779,7 @@ export class AccountListComponent {
   * Guarda una cuenta de forma recursiva, asignando un ID de padre y luego guardando la cuenta.
   * Si la cuenta tiene hijos, se guarda cada uno de ellos recursivamente, esperando a que todos los hijos
   * se guarden antes de devolver la cuenta guardada.
-  * 
+  *
   * @param account - La cuenta que se va a guardar.
   * @param parentId - El ID del padre de la cuenta (por defecto es 0 para la raíz).
   * @returns Un observable que emite la cuenta guardada.
@@ -812,7 +812,7 @@ export class AccountListComponent {
    * Crea una jerarquía de cuentas con relaciones padre-hijo a partir de un arreglo de cuentas.
    * Asigna a cada cuenta su código de padre correspondiente dependiendo del nivel de la cuenta.
    * La función también organiza las cuentas de nivel superior (Clase) y sus hijos en la jerarquía.
-   * 
+   *
    * @param accounts - El arreglo de cuentas que se utilizará para crear la jerarquía.
    * @returns Un arreglo de cuentas de nivel superior (Clase) con sus respectivas relaciones padre-hijo.
    */
@@ -898,7 +898,7 @@ export class AccountListComponent {
   /**
    * Busca una cuenta por su código y devuelve su descripción.
    * Si la cuenta no se encuentra en el nivel actual, busca de manera recursiva en los hijos de la cuenta.
-   * 
+   *
    * @param accounts - El arreglo de cuentas en el que se realizará la búsqueda.
    * @param code - El código de la cuenta que se desea encontrar.
    * @returns La descripción de la cuenta encontrada, o una cadena vacía si no se encuentra.
@@ -921,7 +921,7 @@ export class AccountListComponent {
   /**
    * Actualiza el acceso a los campos de entrada según el nivel de la cuenta.
    * Dependiendo del código del nivel de cuenta proporcionado, se habilitan o deshabilitan los accesos a los diferentes niveles (Clase, Grupo, Cuenta, Subcuenta, Auxiliar).
-   * 
+   *
    * @param code - El código del nivel de la cuenta que determina qué accesos se deben habilitar o deshabilitar (opcional).
    */
   updateInputAccess(code?: number) {
@@ -964,7 +964,7 @@ export class AccountListComponent {
 
   /**
    * Maneja la selección de un tipo de estado financiero y establece el valor correspondiente en el formulario.
-   * 
+   *
    * @param event - El evento de selección que contiene el nombre del tipo de estado financiero seleccionado.
    */
   onSelectionFinancialStateType(event: any) {
@@ -974,7 +974,7 @@ export class AccountListComponent {
 
   /**
    * Maneja la selección de un tipo de naturaleza y establece el valor correspondiente en el formulario.
-   * 
+   *
    * @param event - El evento de selección que contiene el nombre del tipo de naturaleza seleccionado.
    */
   onSelectionNatureType(event: any) {
@@ -984,7 +984,7 @@ export class AccountListComponent {
 
   /**
    * Maneja la selección de un tipo de clasificación y establece el valor correspondiente en el formulario.
-   * 
+   *
    * @param event - El evento de selección que contiene el nombre del tipo de clasificación seleccionado.
    */
   onSelectionClasificationType(event: any) {
@@ -1149,12 +1149,11 @@ export class AccountListComponent {
    * @returns El ID de la empresa.
    */
   getIdEnterprise(): string {
-    /*const entData = localStorage.getItem('entData'); 
+    const entData = localStorage.getItem('entData');
     if (entData) {
-      return JSON.parse(entData).entId;
-    }*/
-    //return '';
-    return 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d';
+      return JSON.parse(entData).id;
+    }
+    return '';
   }
 
   //CRUD Metodos
@@ -1197,7 +1196,7 @@ export class AccountListComponent {
 
   /**
    * Guarda una cuenta llamando al servicio.
-   * Primero verifica si la cuenta ya existe. Si no existe, crea la cuenta mediante el servicio. 
+   * Primero verifica si la cuenta ya existe. Si no existe, crea la cuenta mediante el servicio.
    * Si la cuenta es una subcuenta y la cuenta seleccionada tiene más de dos cuentas auxiliares, muestra un error.
    * @param account La cuenta que contiene la información a guardar.
    */
@@ -1489,7 +1488,7 @@ export class AccountListComponent {
  * Si ocurre un error al obtener los impuestos, se muestra un mensaje de error en la consola.
  */
   getTaxesByCodes(): void {
-    //Descomentar cuando este implementado 
+    //Descomentar cuando este implementado
     /*this.taxService.getTaxes(this.entData).pipe(
       map((taxes: Tax[]) => {
         const depositAccounts = taxes.map(tax => tax.depositAccount);
