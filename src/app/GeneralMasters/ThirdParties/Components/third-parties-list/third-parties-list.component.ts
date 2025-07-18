@@ -1,9 +1,10 @@
 import { Component, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { FileUploadModule } from 'primeng/fileupload';
+import { MessageService } from 'primeng/api';
 import { TagModule } from 'primeng/tag';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -15,7 +16,7 @@ import { ThirdPartyServiceService } from '../../Services/third-party-service.ser
 import { ThirdPartyConfigurationServiceService } from '../../Services/third-party-configuration-service.service';
 import { ePersonType } from '../../models/ePersonType';
 import { eThirdGender } from '../../models/eThirdGender';
-import { MenuItem } from 'primeng/api';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-third-parties-list',
@@ -29,6 +30,7 @@ import { MenuItem } from 'primeng/api';
     IconFieldModule,
     InputIconModule,
   ],
+  providers: [DatePipe],
   templateUrl: './third-parties-list.component.html',
   styleUrl: './third-parties-list.component.css',
 })
@@ -56,18 +58,18 @@ export class ThirdPartiesListComponent {
 
   /** Columnas para la vista resumida */
   displayedColumnsBrief: any[] = [
-    'personType',
-    'thirdTypes',
-    'socialReason',
-    'typeId',
-    'idNumber',
-    'email',
-    'actions',
+    'Tipo de Persona',
+    'Tipos de Tercero',
+    'Nombre / Razón Social',
+    'Tipo de ID',
+    'Número de Identificación',
+    'Correo Electrónico',
+    'Acciones',
   ];
 
   globalFilterFields: string[] = [
     'personType',
-    'thirdTypes.thirdTypeName',
+    'thirdTypesText',
     'socialReason',
     'names',
     'lastNames',
@@ -83,20 +85,20 @@ export class ThirdPartiesListComponent {
 
   /** Columnas para la vista completa */
   displayedColumnsComplete: any[] = [
-    'personType',
-    'thirdTypes',
-    'socialReason',
-    'typeId',
-    'idNumber',
-    'verificationNumber',
-    'email',
-    'country',
-    'province',
-    'city',
-    'address',
-    'phoneNumber',
-    'state',
-    'actions',
+    'Tipo de Persona',
+    'Tipos de Tercero',
+    'Nombre / Razón Social',
+    'Tipo de ID',
+    'Número de Identificación',
+    'Número de Verificación',
+    'Correo Electrónico',
+    'País',
+    'Departamento',
+    'Ciudad',
+    'Dirección',
+    'Número de Teléfono',
+    'Estado',
+    'Acciones',
   ];
 
   /** Fuente de datos para la tabla */
@@ -129,36 +131,36 @@ export class ThirdPartiesListComponent {
    */
   constructor(
     private thirdService: ThirdPartyServiceService,
-    private thirdServiceConfiguration: ThirdPartyConfigurationServiceService
+    private thirdServiceConfiguration: ThirdPartyConfigurationServiceService,
+    private datePipe: DatePipe,
+    private router: Router,
+    private messageService: MessageService
   ) {}
-
-  /**
-   * Inicializa las validaciones del formulario
-   * @returns Objeto con configuración de validaciones
-   */
-  validationsAll() {
-    return {
-      stringSearch: [''],
-    };
-  }
 
   /**
    * Inicializa el componente y carga datos necesarios
    */
   ngOnInit() {
-    this.entData = this.localStorageMethods.loadEnterpriseData();
-    this.getTypesID();
-    this.getThirdTypes();
+    this.entData = 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d';
+    // this.entData = this.localStorageMethods.loadEnterpriseData();
+    // this.getTypesID();
+    // this.getThirdTypes();
+
+    console.log('Datos de la empresa:', this.entData);
 
     if (this.entData) {
-      // this.thirdService.getThirdList(this.entData).subscribe({
-      //   next: (response: Third[]) => {
-      //     this.data = response;
-      //     console.log(response);
-      //     this.dataSource = new MatTableDataSource<Third>(this.data);
-      //     this.dataSource.paginator = this.paginator;
-      //   }
-      // });
+      console.log('Entrando a cargar terceros');
+
+      this.thirdService.getThirdList(this.entData).subscribe({
+        next: (response: Third[]) => {
+          this.data = response.map((third) => ({
+            ...third,
+            thirdTypesText:
+              third.thirdTypes?.map((t) => t.thirdTypeName).join(', ') || '',
+          }));
+          this.dataSource = this.data;
+        },
+      });
     }
   }
 
@@ -207,7 +209,7 @@ export class ThirdPartiesListComponent {
    */
   redirectToEdit(ThirdId: string): void {
     console.log('El id del tercero es', ThirdId);
-    // this.router.navigate(['/general/operations/third-parties/edit', ThirdId]);
+    this.router.navigate(['/gen-masters/third-parties/edit', ThirdId]);
   }
 
   /**
@@ -222,31 +224,29 @@ export class ThirdPartiesListComponent {
    * @param thId ID del tercero
    */
   changeThirdPartieState(thId: number): void {
-    // this.thirdService.changeThirdPartieState(thId).subscribe({
-    //   next: (response: Boolean) => {
-    //     if (response) {
-    //       let updatedThird = this.data.find((t) => t.thId === thId);
-    //       if (updatedThird) {
-    //         updatedThird.state = !updatedThird.state;
-    //       }
-    //       Swal.fire({
-    //         title: 'Exito',
-    //         text: 'Se cambió exitosamente. el estado del tercero',
-    //         confirmButtonColor: buttonColors.confirmationColor,
-    //         icon: 'success',
-    //       });
-    //     }
-    //   },
-    //   error: (error) => {
-    //     console.log(error);
-    //     Swal.fire({
-    //       title: 'Error',
-    //       text: 'No se pudo cambiar el estado del tercero',
-    //       confirmButtonColor: buttonColors.confirmationColor,
-    //       icon: 'error',
-    //     });
-    //   },
-    // });
+    this.thirdService.changeThirdPartieState(thId).subscribe({
+      next: (response: Boolean) => {
+        if (response) {
+          let updatedThird = this.data.find((t) => t.thId === thId);
+          if (updatedThird) {
+            updatedThird.state = !updatedThird.state;
+          }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Exito',
+            detail: 'Se cambió exitosamente el estado del tercero.',
+          });
+        }
+      },
+      error: (error) => {
+        console.log(error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado del tercero',
+        });
+      },
+    });
   }
   /**
    * Elimina un tercero
@@ -278,25 +278,7 @@ export class ThirdPartiesListComponent {
    * @param route Ruta destino
    */
   redirectTo(route: string): void {
-    // this.router.navigateByUrl(route);
-  }
-
-  /**
-   * Aplica filtros a la tabla de terceros
-   * @param event Evento del input de filtro
-   */
-  applyFilter(event: Event) {
-    // const filterValue = (event.target as HTMLInputElement).value.toLowerCase();
-    // // Obtener las columnas por las que se desea filtrar
-    // const columns = ['socialReason', 'names', 'idNumber'];
-    // // Crear un nuevo filtro que solo aplique a las columnas seleccionadas
-    // this.dataSource.filterPredicate = (data: any, filter) => {
-    //   return columns.some((column) =>
-    //     data[column].toString().toLowerCase().includes(filter)
-    //   );
-    // };
-    // // Aplicar el nuevo filtro
-    // this.dataSource.filter = filterValue;
+    this.router.navigateByUrl(route);
   }
 
   /**
@@ -350,57 +332,58 @@ export class ThirdPartiesListComponent {
    * @param third Datos del tercero
    */
   createThirdFromExcel(third: Third) {
-    // this.thirdService.createThird(third).subscribe({
-    //   next: (response) => {
-    //     console.log('Tercero creado con éxito', response);
-    //     // mostrar alerta
-    //   },
-    //   error: (error) => {
-    //     console.error('Error al crear el tercero', error);
-    //     Swal.fire({
-    //       title: 'Error al crear los terceros',
-    //       text: 'Hubo un error al procesar el archivo, por favor intente nuevamente.',
-    //       icon: 'error',
-    //       confirmButtonText: 'Aceptar',
-    //     });
-    //   },
-    // });
+    this.thirdService.createThird(third).subscribe({
+      next: (response) => {
+        console.log('Tercero creado con éxito', response);
+        // mostrar alerta
+      },
+      error: (error) => {
+        console.error('Error al crear el tercero', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail:
+            'Hubo un error al procesar el archivo, por favor intente nuevamente.',
+        });
+      },
+    });
   }
   /**
    * Obtiene los tipos de tercero
    */
   private getThirdTypes(): void {
-    // this.thirdServiceConfiguration.getThirdTypes(this.entData).subscribe({
-    //   next: (response: ThirdType[]) => {
-    //     this.thirdTypes = response;
-    //   },
-    //   error: (error) => {
-    //     console.log(error);
-    //     Swal.fire({
-    //       title: 'Error!',
-    //       text: 'No se han encontrado Tipos De Tercero Para esta Empresa',
-    //       icon: 'error',
-    //     });
-    //   },
-    // });
+    this.thirdServiceConfiguration.getThirdTypes(this.entData).subscribe({
+      next: (response: ThirdType[]) => {
+        this.thirdTypes = response;
+      },
+      error: (error) => {
+        console.log(error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se han encontrado Tipos De Tercero para esta Empresa.',
+        });
+      },
+    });
   }
   /**
    * Obtiene los tipos de identificación
    */
   private getTypesID(): void {
-    // this.thirdServiceConfiguration.getTypeIds(this.entData).subscribe({
-    //   next: (response: TypeId[]) => {
-    //     this.typeIds = response;
-    //   },
-    //   error: (error) => {
-    //     console.log(error);
-    //     Swal.fire({
-    //       title: 'Error!',
-    //       text: 'No se han encontrado Tipos De Identifiacion Para esta Empresa',
-    //       icon: 'error',
-    //     });
-    //   },
-    // });
+    this.thirdServiceConfiguration.getTypeIds(this.entData).subscribe({
+      next: (response: TypeId[]) => {
+        this.typeIds = response;
+      },
+      error: (error) => {
+        console.log(error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail:
+            'No se han encontrado Tipos De Identifiacion  para esta Empresa.',
+        });
+      },
+    });
   }
   excelData: any;
   /**

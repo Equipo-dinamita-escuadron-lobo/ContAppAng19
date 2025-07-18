@@ -1,0 +1,2 @@
+El servicio de terceros se debe elimnar y remplazar la importacion en el ts cuando ya se encuentre implemnetado (Alejandro)
+El servicio de unidades de medida se debe elimnar y remplazar la importacion en el ts cuando ya se encuentre implemnetado (Piamba)

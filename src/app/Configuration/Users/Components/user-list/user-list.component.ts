@@ -14,8 +14,20 @@ import { CommonModule } from '@angular/common';
   imports: [TableModule, Button, IconField, InputIcon, CommonModule],
 })
 export class UserListComponent implements OnInit {
+  redirectTo(arg0: string) {
+    throw new Error('Method not implemented.');
+  }
   users: User[] = [];
   loading: boolean = false;
+
+  displayedColumns: string[] = [
+    'Nombre',
+    'Apellido',
+    'Correo',
+    'Usuario',
+    'Roles',
+    'Acciones',
+  ];
 
   constructor(private userService: UserService) {}
 

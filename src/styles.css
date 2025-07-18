@@ -214,9 +214,9 @@ body {
 
   /* Notificación | Error */
   --color-notification-error-container: #ffdbcc;
-  --color-notification-error-border: var(--color-neutral-35);
-  --color-notification-error-title: var(--color-neutral-35);
-  --color-notification-error-text: var(--color-neutral-10);
+  --color-notification-error-border: var(--color-error-35);
+  --color-notification-error-title: var(--color-error-35);
+  --color-notification-error-text: var(--color-error-10);
   /* Notificación | Seguridad */
   --color-notification-security-container: var(--color-security);
   --color-notification-security-border: var(--color-primary-30);
@@ -307,8 +307,8 @@ body {
 
 .select-base {
   /* Estilo base para ng-select similar a input-base */
-  @apply px-3 py-2 border border-gray-300 rounded-md shadow-sm 
-    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900 
+  @apply px-3 py-2 border border-gray-300 rounded-md shadow-sm
+    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900
     transition duration-150 ease-in-out;
 }
 
@@ -326,8 +326,8 @@ body {
 
 /* Estilo base del dropdown de PrimeNG */
 .dropdown-custom {
-  @apply w-full max-h-40 px-3 py-2 border border-gray-300 rounded-md shadow-sm 
-    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900 
+  @apply w-full max-h-40 px-3 py-2 border border-gray-300 rounded-md shadow-sm
+    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900
     transition duration-150 ease-in-out text-gray-800 font-normal;
 }
 
@@ -359,47 +359,301 @@ body {
   @apply block mb-1 text-sm font-sans text-blue-950;
 }
 
-  /* --- Estilos para el panel desplegable y las opciones --- */
-  
-  /* Panel desplegable (la caja con las opciones) */
-  .p-dropdown-panel {
-    background-color: var(--color-primary-100);
-    border: 1px solid #D1D5DB;
-    border-radius: 0.375rem; /* rounded-md */
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-lg */
-  }
+/* --- Estilos para el panel desplegable y las opciones --- */
 
-  /* Cada opción individual en la lista */
-  .p-dropdown-panel .p-dropdown-item {
-    font-family: var(--font-family-sans);
-    font-size: 14px;
-    color: var(--color-neutral-10);
-    padding: 10px 12px;
-    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
-  }
+/* Panel desplegable (la caja con las opciones) */
+.p-dropdown-panel {
+  background-color: var(--color-primary-100);
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem; /* rounded-md */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-lg */
+}
 
-  /* Opción en estado HOVER o FOCUS (marcada con el teclado) */
-  .p-dropdown-panel .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover,
-  .p-dropdown-panel .p-dropdown-item:not(.p-highlight):not(.p-disabled):focus {
-    background-color: var(--color-primary-90) !important; /* Tu color --color-primary-90 (E0E0FF) */
-    color: var(--color-primary) !important;
-  }
-  
-  /* Opción que ya está seleccionada (marcada como p-highlight) */
-  .p-dropdown-panel .p-dropdown-item.p-highlight {
-    background: var(--color-primary) !important;
-    color: var(--color-primary-100) !important; /* Texto blanco */
-    font-weight: 600; /* SemiBold */
-  }
+/* Panel desplegable (la caja con las opciones) */
+.p-dropdown-panel {
+  background-color: var(--color-primary-100);
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem; /* rounded-md */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-lg */
+}
 
-  /* Quitar el outline azul por defecto del navegador en las opciones */
-  .p-dropdown-panel .p-dropdown-item:focus {
-    box-shadow: none !important;
-  }
-  
-  /* Mensaje de "No se encontraron resultados" */
-  .p-dropdown-panel .p-dropdown-empty-message {
-      padding: 10px 12px;
-      color: #9CA3AF;
-  }
+/* Cada opción individual en la lista */
+.p-dropdown-panel .p-dropdown-item {
+  font-family: var(--font-family-sans);
+  font-size: 14px;
+  color: var(--color-neutral-10);
+  padding: 10px 12px;
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
 
+/* Opción en estado HOVER o FOCUS (marcada con el teclado) */
+.p-dropdown-panel .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover,
+.p-dropdown-panel .p-dropdown-item:not(.p-highlight):not(.p-disabled):focus {
+  background-color: var(
+    --color-primary-90
+  ) !important; /* Tu color --color-primary-90 (E0E0FF) */
+  color: var(--color-primary) !important;
+}
+
+/* Opción que ya está seleccionada (marcada como p-highlight) */
+.p-dropdown-panel .p-dropdown-item.p-highlight {
+  background: var(--color-primary) !important;
+  color: var(--color-primary-100) !important; /* Texto blanco */
+  font-weight: 600; /* SemiBold */
+}
+
+/* Quitar el outline azul por defecto del navegador en las opciones */
+.p-dropdown-panel .p-dropdown-item:focus {
+  box-shadow: none !important;
+}
+
+/* Mensaje de "No se encontraron resultados" */
+.p-dropdown-panel .p-dropdown-empty-message {
+  padding: 10px 12px;
+  color: #9ca3af;
+}
+
+/* ================================
+   TOAST DE ÉXITO 
+   ================================ */
+
+.p-toast-message-success {
+  background: var(--color-notification-success-container) !important;
+  border-left: 8px solid var(--color-notification-success-border) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem 1rem !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 320px;
+  max-width: 400px;
+  font-family: "Open Sans", sans-serif;
+}
+
+/* Ocultar ícono de éxito */
+.p-toast-message-success .p-toast-message-icon {
+  display: none !important;
+}
+
+/* Ícono de cierre */
+.p-toast-message-success .p-toast-icon-close {
+  color: var(--color-notification-success-border) !important;
+  font-size: 1.2rem;
+  top: 1rem;
+  right: 1rem;
+}
+
+/* Título */
+.p-toast-message-success .p-toast-summary {
+  color: var(--color-notification-success-title) !important;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Cuerpo */
+.p-toast-message-success .p-toast-detail {
+  color: var(--color-notification-success-text) !important;
+  font-size: 0.9rem;
+}
+
+/* Ocultar ícono */
+.p-toast-message-error .p-toast-message-icon {
+  display: none !important;
+}
+
+/* ================================
+   TOAST DE INFO 
+   ================================ */
+
+.p-toast-message-info {
+  background: var(--color-notification-info-container) !important;
+  border-left: 8px solid var(--color-notification-info-border) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem 1rem !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 320px;
+  max-width: 400px;
+  font-family: "Open Sans", sans-serif;
+}
+
+.p-toast-message-info .p-toast-message-icon {
+  display: none !important;
+}
+
+.p-toast-message-info .p-toast-icon-close {
+  color: var(--color-notification-info-border) !important;
+  font-size: 1.2rem;
+  top: 1rem;
+  right: 1rem;
+}
+
+.p-toast-message-info .p-toast-summary {
+  color: var(--color-notification-info-title) !important;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.p-toast-message-info .p-toast-detail {
+  color: var(--color-notification-info-text) !important;
+  font-size: 0.9rem;
+}
+
+/* ================================
+   TOAST DE ERROR 
+   ================================ */
+
+.p-toast-message-error {
+  background: var(--color-notification-error-container) !important;
+  border-left: 8px solid var(--color-notification-error-border) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem 1rem !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 320px;
+  max-width: 400px;
+  font-family: "Open Sans", sans-serif;
+}
+
+/* Ícono de cierre */
+.p-toast-message-error .p-toast-icon-close {
+  color: var(--color-notification-error-border) !important;
+  font-size: 1.2rem;
+  top: 1rem;
+  right: 1rem;
+}
+
+/* Título */
+.p-toast-message-error .p-toast-summary {
+  color: var(--color-notification-error-title) !important;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Cuerpo */
+.p-toast-message-error.p-toast-detail {
+  color: var(--color-notification-error-text) !important;
+  font-size: 0.9rem;
+}
+
+/* ================================
+   TOAST DE ADVERTENCIA 
+   ================================ */
+
+.p-toast-message-warn {
+  background: var(--color-notification-security-container) !important;
+  border-left: 8px solid var(--color-notification-security-border) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem 1rem !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 320px;
+  max-width: 400px;
+  font-family: "Open Sans", sans-serif;
+}
+
+.p-toast-message-warn .p-toast-icon-close {
+  color: var(--color-notification-security-border) !important;
+  font-size: 1.2rem;
+  top: 1rem;
+  right: 1rem;
+}
+
+.p-toast-message-warn .p-toast-summary {
+  color: var(--color-notification-security-title) !important;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.p-toast-message-warn .p-toast-detail {
+  color: var(--color-notification-security-text) !important;
+  font-size: 0.9rem;
+}
+
+/* ================================
+   ESTILOS PARA LA P-DATATABLE 
+   ================================ */
+
+.p-datatable {
+  font-family: var(--font-family-sans);
+  font-size: 0.875rem; /* text-sm */
+}
+
+.p-datatable .p-datatable-thead > tr:first-child > th:first-child {
+  border-top-left-radius: 10px;
+}
+.p-datatable .p-datatable-thead > tr:first-child > th:last-child {
+  border-top-right-radius: 10px;
+}
+
+.p-datatable thead > tr > th {
+  background-color: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.p-paginator .p-paginator-pages .p-paginator-page {
+  background-color: var(--color-light);
+  color: white;
+  margin: 0 2px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover en botones de paginación */
+.p-paginator .p-paginator-pages .p-paginator-page:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+/* 📑 Botones de navegación (<< < > >>) */
+.p-paginator .p-paginator-first,
+.p-paginator .p-paginator-prev,
+.p-paginator .p-paginator-next,
+.p-paginator .p-paginator-last {
+  color: #64748b; /* slate-500 */
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+}
+
+.p-paginator .p-paginator-first:hover,
+.p-paginator .p-paginator-prev:hover,
+.p-paginator .p-paginator-next:hover,
+.p-paginator .p-paginator-last:hover {
+  background-color: #f1f5f9; /* slate-100 */
+  color: #1e293b; /* slate-800 */
+}
+
+/* 🎨 Estilo general del selector de filas */
+.p-paginator .p-paginator-rpp-dropdown {
+  background-color: #f9fafb; /* gris muy claro */
+  color: var(--color-primary); /* gris oscuro */
+  border: 1px solid #d1d5db; /* borde gris */
+  border-radius: 0.375rem; /* rounded-md */
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+/* 🎯 Al pasar el mouse */
+.p-paginator .p-paginator-rpp-dropdown:hover {
+  background-color: #e5e7eb; /* gris más intenso */
+  border-color: #9ca3af;
+}
+
+.p-paginator .p-paginator-rpp-dropdown:target {
+  border-color: #111827;
+}

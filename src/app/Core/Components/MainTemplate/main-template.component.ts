@@ -17,10 +17,10 @@ import { BreadCrumbComponent } from '../../../Shared/Components/bread-crumb/brea
     BreadCrumbComponent,
   ],
   templateUrl: './main-template.component.html',
-  styleUrl: './main-template.component.css'
+  styleUrl: './main-template.component.css',
 })
 export class MainTemplateComponent implements OnInit, OnDestroy {
- title = 'ContApp';
+  title = 'ContApp';
   collapsed = true;
   screenWidth = window.innerWidth;
 

@@ -4,6 +4,7 @@ import { LoginComponent } from './Core/auth/login/login.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
 import { hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
+import { ViewEnterpriseComponent } from './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component';
 
 export const routes: Routes = [
   {
@@ -21,6 +22,7 @@ export const routes: Routes = [
   {
     path: '',
     component: MainTemplateComponent,
+    canActivate: [hasRoleGuard(['admin_realm', 'user_realm', 'super_realm'])],
     data: {
       breadcrumb: 'Home',
     },
@@ -55,7 +57,11 @@ export const routes: Routes = [
           },
         ],
       },
+      {
 
+        path: 'home',
+        component: ViewEnterpriseComponent,
+      },
       {
         path: 'gen-masters',
         data: {
@@ -63,16 +69,43 @@ export const routes: Routes = [
         },
         children: [
           {
-            path: 'third-parties/list',
+            path: 'third-parties',
             data: {
               breadcrumb: 'Terceros',
             },
-            loadComponent: () =>
-              import(
-                './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
-              ).then((m) => m.ThirdPartiesListComponent),
+            children: [
+              {
+                path: 'list',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
+                  ).then((m) => m.ThirdPartiesListComponent),
+              },
+              {
+                path: 'create',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-parties-create/third-parties-create.component'
+                  ).then((m) => m.ThirdPartiesCreateComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-parties-edit/third-parties-edit.component'
+                  ).then((m) => m.ThirdPartiesEditComponent),
+              },
+            ],
           },
-
           {
             path: 'catalogue-accounts',
             data: {
@@ -128,17 +161,16 @@ export const routes: Routes = [
           breadcrumb: 'Módulo Comercial',
         },
         children: [
-          /*{
+          {
             path: 'sale-invoice',
             data: {
               breadcrumb: 'Factura de Venta',
             },
             loadComponent: () =>
-               import(
+              import(
                 './Commercial/SaleInvoice/components/sale-invoice-creation/sale-invoice-creation.component'
               ).then((m) => m.SaleInvoiceCreationComponent),
-
-          },*/
+          },
           {
             path: 'products',
             data: {
