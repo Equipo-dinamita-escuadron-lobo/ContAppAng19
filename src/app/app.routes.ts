@@ -63,6 +63,16 @@ export const routes: Routes = [
                     './GeneralMasters/ThirdParties/Components/third-parties-create/third-parties-create.component'
                   ).then((m) => m.ThirdPartiesCreateComponent),
               },
+              {
+                path: 'edit/:id',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-parties-edit/third-parties-edit.component'
+                  ).then((m) => m.ThirdPartiesEditComponent),
+              },
             ],
           },
           {
@@ -129,7 +139,6 @@ export const routes: Routes = [
               import(
                 './Commercial/SaleInvoice/components/sale-invoice-creation/sale-invoice-creation.component'
               ).then((m) => m.SaleInvoiceCreationComponent),
-
           },
           {
             path: 'products',

@@ -12,7 +12,6 @@ import {
 } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { RadioButtonModule } from 'primeng/radiobutton';
-
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
@@ -26,14 +25,12 @@ import { ThirdPartyServiceService } from '../../Services/third-party-service.ser
 import { DatePipe } from '@angular/common';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ThirdPartyConfigurationServiceService } from '../../Services/third-party-configuration-service.service';
-import { Tooltip } from '../../models/Tooltip';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
 import { CityService } from '../../Services/city.service';
 import { DepartmentService } from '../../Services/department.service';
 import { eThirdGender } from '../../models/eThirdGender';
 import { catchError, map, Observable, of } from 'rxjs';
-import { ToolTipService } from '../../Services/tool-tip.service';
 import { MessageService } from 'primeng/api';
 import { InputNumber } from 'primeng/inputnumber';
 

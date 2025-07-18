@@ -141,11 +141,16 @@ export class ThirdPartiesListComponent {
    * Inicializa el componente y carga datos necesarios
    */
   ngOnInit() {
-    this.entData = this.localStorageMethods.loadEnterpriseData();
-    this.getTypesID();
-    this.getThirdTypes();
+    this.entData = 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d';
+    // this.entData = this.localStorageMethods.loadEnterpriseData();
+    // this.getTypesID();
+    // this.getThirdTypes();
+
+    console.log('Datos de la empresa:', this.entData);
 
     if (this.entData) {
+      console.log('Entrando a cargar terceros');
+
       this.thirdService.getThirdList(this.entData).subscribe({
         next: (response: Third[]) => {
           this.data = response.map((third) => ({
@@ -204,7 +209,7 @@ export class ThirdPartiesListComponent {
    */
   redirectToEdit(ThirdId: string): void {
     console.log('El id del tercero es', ThirdId);
-    // this.router.navigate(['/general/operations/third-parties/edit', ThirdId]);
+    this.router.navigate(['/gen-masters/third-parties/edit', ThirdId]);
   }
 
   /**
