@@ -47,7 +47,7 @@ export const routes: Routes = [
           {
             path: 'users/list',
             data: {
-              breadcrumb: 'Usuarios',
+              breadcrumb: 'Gestión de Usuarios',
             },
             loadComponent: () =>
               import(
@@ -58,7 +58,6 @@ export const routes: Routes = [
         ],
       },
       {
-
         path: 'home',
         component: ViewEnterpriseComponent,
       },
