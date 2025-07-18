@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
 
 @Component({
   selector: 'app-view-enterprise',
@@ -9,15 +10,10 @@ import { Component } from '@angular/core';
 export class ViewEnterpriseComponent {
   entData: any | null = null;
 
-  getIdEnterprise() {
-    const entData = localStorage.getItem('entData');
-    if (entData) {
-      this.entData = JSON.parse(entData);
-    }
-  }
+  localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
 
   ngOnInit() {
-    this.getIdEnterprise();
+    this.entData = this.localStorageMethods.loadEnterpriseData();
   }
 
 }

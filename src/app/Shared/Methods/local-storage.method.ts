@@ -8,7 +8,7 @@ export class LocalStorageMethods {
     const enterpriseData = localStorage.getItem('entData');
     if (enterpriseData) {
       const parsedData = JSON.parse(enterpriseData);
-      return parsedData.entId;
+      return parsedData;
     }
     return null;
   }
