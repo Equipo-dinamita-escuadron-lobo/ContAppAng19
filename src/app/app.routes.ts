@@ -38,16 +38,43 @@ export const routes: Routes = [
         },
         children: [
           {
-            path: 'third-parties/list',
+            path: 'third-parties',
             data: {
               breadcrumb: 'Terceros',
             },
-            loadComponent: () =>
-              import(
-                './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
-              ).then((m) => m.ThirdPartiesListComponent),
+            children: [
+              {
+                path: 'list',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
+                  ).then((m) => m.ThirdPartiesListComponent),
+              },
+              {
+                path: 'create',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-parties-create/third-parties-create.component'
+                  ).then((m) => m.ThirdPartiesCreateComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-parties-edit/third-parties-edit.component'
+                  ).then((m) => m.ThirdPartiesEditComponent),
+              },
+            ],
           },
-
           {
             path: 'catalogue-accounts',
             data: {
@@ -112,7 +139,6 @@ export const routes: Routes = [
               import(
                 './Commercial/SaleInvoice/components/sale-invoice-creation/sale-invoice-creation.component'
               ).then((m) => m.SaleInvoiceCreationComponent),
-
           },
           {
             path: 'products',

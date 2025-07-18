@@ -1,1 +1,450 @@
-<p>third-parties-create works!</p>
+<div class="w-full">
+  <h1
+    class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
+  >
+    Creación de Tercero
+  </h1>
+  <p class="mb-6 text-lg text-gray-700">
+    Ingrese la información requerida para crear un nuevo Tercero:
+  </p>
+</div>
+
+<div class="bg-white p-8 rounded-xl shadow-md border border-gray-200 mt-6">
+  <form (submit)="OnSubmit()" [formGroup]="createdThirdForm" class="mt-4">
+    <div class="flex flex-col lg:flex-row gap-6">
+      <!-- COLUMNA IZQUIERDA - INFORMACION BASICA -->
+      <div class="w-full lg:w-1/2">
+        <!-- SECCION INFORMACION BASICA -->
+        <h2
+          class="text-xl font-bold mb-4 text-[var(--color-light)] border-b pb-2"
+        >
+          Información Básica
+        </h2>
+        <!-- Tipo Persona y Estado en dos columnas -->
+        <div class="flex gap-4 mb-4">
+          <!-- Tipo Persona -->
+          <div class="w-1/2">
+            <label for="personType" class="block mb-2 font-semibold">
+              Tipo Persona <span class="text-red-500">*</span>
+            </label>
+            <div class="flex gap-4">
+              <p-radiobutton
+                name="personType"
+                value="Juridica"
+                formControlName="personType"
+                inputId="juridica"
+              ></p-radiobutton>
+              <label for="juridica">Jurídica</label>
+
+              <p-radiobutton
+                name="personType"
+                value="Natural"
+                formControlName="personType"
+                inputId="natural"
+              ></p-radiobutton>
+              <label for="natural">Natural</label>
+            </div>
+            <p-message
+              severity="error"
+              *ngIf="submitted && createdThirdForm.get('personType')?.invalid"
+              text="Seleccione un tipo de persona"
+            ></p-message>
+          </div>
+
+          <!-- Estado -->
+          <div class="w-1/2">
+            <label class="block mb-2 font-semibold">
+              Estado <span class="text-red-500">*</span>
+            </label>
+            <div class="flex gap-4">
+              <p-radiobutton
+                name="state"
+                value="Activo"
+                formControlName="state"
+                inputId="activo"
+              ></p-radiobutton>
+              <label for="activo">Activo</label>
+
+              <p-radiobutton
+                name="state"
+                value="Inactivo"
+                formControlName="state"
+                inputId="inactivo"
+              ></p-radiobutton>
+              <label for="inactivo">Inactivo</label>
+            </div>
+            <p-message
+              severity="error"
+              *ngIf="submitted && createdThirdForm.get('state')?.invalid"
+              text="Seleccione un estado"
+            ></p-message>
+          </div>
+        </div>
+
+        <!-- Tipos de Tercero -->
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold">
+            Tipos de Tercero <span class="text-red-500">*</span>
+          </label>
+          <p-multiselect
+            [options]="listThirdTypes"
+            formControlName="thirdTypes"
+            display="chip"
+            optionLabel="thirdTypeName"
+            placeholder="Seleccione tipos de tercero"
+            [maxSelectedLabels]="3"
+            class="w-full"
+          ></p-multiselect>
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('thirdTypes')?.invalid"
+            text="Seleccione al menos un tipo de tercero"
+          ></p-message>
+        </div>
+
+        <div *ngIf="createdThirdForm.get('personType')?.value === 'Natural'">
+          <div class="flex gap-4 mb-4">
+            <!-- Tipo de Identificación -->
+            <div class="w-1/2">
+              <label class="block mb-2 font-semibold"
+                >Tipo de Identificación
+                <span class="text-red-500">*</span></label
+              >
+              <p-select
+                [options]="typeIds"
+                optionLabel="typeIdname"
+                optionValue="typeId"
+                formControlName="typeId"
+                placeholder="Seleccione tipo de identificación"
+                class="w-full"
+              ></p-select>
+              <p-message
+                severity="error"
+                *ngIf="submitted && createdThirdForm.get('typeId')?.invalid"
+                text="Seleccione un tipo de identificación"
+              ></p-message>
+            </div>
+
+            <!-- Número de Identificación -->
+            <div class="w-1/2">
+              <label class="block mb-2 font-semibold"
+                >Número de Identificación
+                <span class="text-red-500">*</span></label
+              >
+              <p-inputNumber
+                inputId="idNumber"
+                formControlName="idNumber"
+                placeholder="Ingrese número de identificación"
+                class="w-full"
+              />
+              <p-message
+                severity="error"
+                *ngIf="submitted && createdThirdForm.get('idNumber')?.invalid"
+                text="Ingrese un número válido"
+              ></p-message>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="createdThirdForm.get('personType')?.value === 'Juridica'">
+          <!-- TIPO y NÚMERO DE IDENTIFICACIÓN y DIGITO de Verificacion-->
+          <!-- Tipo de Identificación -->
+          <div class="mb-4">
+            <label class="block mb-2 font-semibold"
+              >Tipo de Identificación <span class="text-red-500">*</span></label
+            >
+            <p-select
+              [options]="typeIds"
+              optionLabel="typeIdname"
+              optionValue="typeId"
+              formControlName="typeId"
+              placeholder="Seleccione tipo de identificación"
+              class="w-full"
+            ></p-select>
+            <p-message
+              severity="error"
+              *ngIf="submitted && createdThirdForm.get('typeId')?.invalid"
+              text="Seleccione un tipo de identificación"
+            ></p-message>
+          </div>
+
+          <div class="flex gap-4 mb-4">
+            <!-- Número de Identificación -->
+            <div class="w-1/2">
+              <label class="block mb-2 font-semibold"
+                >Número de Identificación
+                <span class="text-red-500">*</span></label
+              >
+              <input
+                pInputText
+                type="text"
+                formControlName="idNumber"
+                placeholder="Ingrese número de identificación"
+                class="w-full"
+              />
+              <p-message
+                severity="error"
+                *ngIf="submitted && createdThirdForm.get('idNumber')?.invalid"
+                text="Ingrese un número válido"
+              ></p-message>
+            </div>
+
+            <!-- Digito de Verificacion -->
+            <div
+              class="w-1/2"
+              *ngIf="createdThirdForm.get('personType')?.value === 'Juridica'"
+            >
+              <label class="block mb-2 font-semibold"
+                >Digito de Verificación
+                <span class="text-red-500">*</span></label
+              >
+              <input
+                pInputText
+                type="text"
+                formControlName="verificationNumber"
+                placeholder=""
+                class="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Razon Social -->
+        <div
+          class="mb-4"
+          *ngIf="createdThirdForm.get('personType')?.value === 'Juridica'"
+        >
+          <label class="font-semibold">
+            Razón Social <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            formControlName="socialReason"
+            type="text"
+            placeholder="Ingrese la razón social"
+            class="w-full"
+          />
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('socialReason')?.invalid"
+            text="Ingrese una razón social"
+          ></p-message>
+        </div>
+
+        <!-- Nombres -->
+        <div
+          class="mb-4"
+          *ngIf="createdThirdForm.get('personType')?.value === 'Natural'"
+        >
+          <label class="font-semibold">
+            Nombre(s) <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            formControlName="names"
+            type="text"
+            placeholder="Ingrese el nombre del Tercero"
+            class="w-full"
+          />
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('names')?.invalid"
+            text="Ingrese un nombre"
+          ></p-message>
+        </div>
+
+        <!-- Apellidos -->
+        <div
+          class="mb-4"
+          *ngIf="createdThirdForm.get('personType')?.value === 'Natural'"
+        >
+          <label class="font-semibold">
+            Apellido(s) <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            formControlName="lastNames"
+            type="text"
+            placeholder="Ingrese el apellido del Tercero"
+            class="w-full"
+          />
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('lastNames')?.invalid"
+            text="Ingrese un apellido"
+          ></p-message>
+        </div>
+
+        <!-- Género -->
+        <div
+          class="mb-4"
+          *ngIf="createdThirdForm.get('personType')?.value === 'Natural'"
+        >
+          <label class="block mb-2 font-semibold">
+            Género <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            [options]="genderOptions"
+            optionLabel="gender"
+            optionValue="gender"
+            formControlName="gender"
+            placeholder="Seleccione un género"
+            class="w-full"
+          ></p-select>
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('gender')?.invalid"
+            text="Seleccione un género"
+          ></p-message>
+        </div>
+        <!-- -------------------------- -->
+      </div>
+
+      <!-- LÍNEA DIVISORiA VERTICAL -->
+      <div class="hidden lg:block border-l border-gray-300"></div>
+
+      <!-- COLUMNA DERECHA - INFORMACION ADICIONAL -->
+      <div class="w-full lg:w-1/2">
+        <!-- INFORMACION ADICIONAL -->
+        <h2
+          class="text-xl font-bold mb-4 text-[var(--color-light)] border-b pb-2"
+        >
+          Información Adicional
+        </h2>
+        <!-- País -->
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold">
+            País <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            [options]="countries"
+            optionLabel="name"
+            optionValue="id"
+            formControlName="country"
+            placeholder="Seleccione un país"
+            class="w-full"
+            (onChange)="onCountryChange($event)"
+          ></p-select>
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('country')?.invalid"
+            text="Seleccione un país"
+          ></p-message>
+        </div>
+
+        <!-- Departamento -->
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold">
+            Departamento <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            [options]="states"
+            optionLabel="name"
+            optionValue="id"
+            formControlName="province"
+            placeholder="Seleccione un departamento"
+            class="w-full"
+            (onChange)="onStateChange($event)"
+          ></p-select>
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('province')?.invalid"
+            text="Seleccione un departamento"
+          ></p-message>
+        </div>
+
+        <!-- Ciudad -->
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold">
+            Ciudad <span class="text-red-500">*</span>
+          </label>
+          <p-select
+            [options]="cities"
+            optionLabel="name"
+            optionValue="name"
+            formControlName="city"
+            placeholder="Seleccione una ciudad"
+            class="w-full"
+          ></p-select>
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('city')?.invalid"
+            text="Seleccione una ciudad"
+          ></p-message>
+        </div>
+
+        <!-- Correo -->
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold">
+            Correo Electrónico <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            type="email"
+            formControlName="email"
+            placeholder="ejemplo@correo.com"
+            class="w-full"
+          />
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('email')?.invalid"
+            text="Correo inválido"
+          ></p-message>
+        </div>
+
+        <!-- Dirección -->
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold">
+            Dirección <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            type="text"
+            formControlName="address"
+            placeholder="Ingrese la dirección"
+            class="w-full"
+          />
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('address')?.invalid"
+            text="Ingrese una dirección válida"
+          ></p-message>
+        </div>
+
+        <!-- Celular -->
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold">
+            Celular <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            type="text"
+            formControlName="phoneNumber"
+            placeholder="Ingrese el número de celular"
+            class="w-full"
+          />
+          <p-message
+            severity="error"
+            *ngIf="submitted && createdThirdForm.get('phoneNumber')?.invalid"
+            text="Ingrese un número de celular válido"
+          ></p-message>
+        </div>
+        <!-- -------------------------- -->
+      </div>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="flex justify-center gap-4 mt-6 flex-wrap">
+      <button
+        type="button"
+        class="p-button p-button-sm cancel-button"
+        (click)="goToListThirds()"
+      >
+        Cancelar
+      </button>
+      <button type="submit" class="p-button p-button-sm p-button-primary">
+        Crear
+      </button>
+    </div>
+  </form>
+</div>
