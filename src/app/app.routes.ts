@@ -38,16 +38,33 @@ export const routes: Routes = [
         },
         children: [
           {
-            path: 'third-parties/list',
+            path: 'third-parties',
             data: {
               breadcrumb: 'Terceros',
             },
-            loadComponent: () =>
-              import(
-                './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
-              ).then((m) => m.ThirdPartiesListComponent),
+            children: [
+              {
+                path: 'list',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
+                  ).then((m) => m.ThirdPartiesListComponent),
+              },
+              {
+                path: 'create',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-parties-create/third-parties-create.component'
+                  ).then((m) => m.ThirdPartiesCreateComponent),
+              },
+            ],
           },
-
           {
             path: 'catalogue-accounts',
             data: {
