@@ -131,6 +131,24 @@ export const routes: Routes = [
         },
         children: [
           {
+            path: 'business-masters',
+            data: {
+              breadcrumb: 'Maestros Comerciales',
+            },
+            children: [
+              {
+                path: 'kardex',
+                data: {
+                  breadcrumb: 'Kardex',
+                },
+                loadComponent: () =>
+                  import(
+                    './Commercial/BusinessMasters/ValuationModels/WeightedAverage/list-kardex-weighted-average/list-kardex-weighted-average.component'
+                  ).then((m) => m.ListKardexWeightedAverageComponent),
+              },
+            ],
+          },
+          {
             path: 'sale-invoice',
             data: {
               breadcrumb: 'Factura de Venta',

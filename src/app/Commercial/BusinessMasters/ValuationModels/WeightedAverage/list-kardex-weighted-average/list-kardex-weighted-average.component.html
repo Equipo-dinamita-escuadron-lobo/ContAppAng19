@@ -1,1 +1,65 @@
-<p>list-kardex-weighted-average works!</p>
+<p-table
+  [value]="kardexList"
+  [paginator]="true"
+  [rows]="5"
+  [totalRecords]="totalRecords"
+  [lazy]="true"
+  [first]="first"
+  (onLazyLoad)="loadKardex($event)"
+  [loading]="loading"
+  [rowsPerPageOptions]="[5, 10, 20]"
+  styleClass="p-datatable-gridlines"
+  [responsiveLayout]="'scroll'"
+>
+  <!-- Encabezado -->
+  <ng-template pTemplate="header">
+    <tr>
+      <th rowspan="2">Fecha</th>
+      <th rowspan="2">Detalle</th>
+      <th rowspan="2">Ct</th>
+      <th rowspan="2">Valor unitario</th>
+
+      <th colspan="3" class="text-center">Entradas</th>
+      <th colspan="3" class="text-center">Salidas</th>
+      <th colspan="3" class="text-center">Saldo</th>
+    </tr>
+    <tr>
+      <th>Ct</th>
+      <th>Vr Unitario</th>
+      <th>Vr Total</th>
+
+      <th>Ct</th>
+      <th>Vr Unitario</th>
+      <th>Vr Total</th>
+
+      <th>Ct</th>
+      <th>Vr Unitario</th>
+      <th>Vr Total</th>
+    </tr>
+  </ng-template>
+
+  <!-- Cuerpo -->
+  <ng-template pTemplate="body" let-kardex>
+    <tr>
+      <td>{{ kardex.formattedDate }}</td>
+      <td>{{ kardex.details }}</td>
+      <td>{{ kardex.quantity }}</td>
+      <td>{{ kardex.unitPrice | currency:'$' }}</td>
+
+      <!-- Entradas -->
+      <td>{{ kardex.entryQuantity ?? '' }}</td>
+      <td>{{ kardex.entryUnitPrice ? (kardex.entryUnitPrice | currency:'$') : '' }}</td>
+      <td>{{ kardex.entryTotal ? (kardex.entryTotal | currency:'$') : '' }}</td>
+
+      <!-- Salidas -->
+      <td>{{ kardex.exitQuantity ?? '' }}</td>
+      <td>{{ kardex.exitUnitPrice ? (kardex.exitUnitPrice | currency:'$') : '' }}</td>
+      <td>{{ kardex.exitTotal ? (kardex.exitTotal | currency:'$') : '' }}</td>
+
+      <!-- Saldo -->
+      <td>{{ kardex.balanceQuantity }}</td>
+      <td>{{ kardex.balanceUnitPrice | currency:'$' }}</td>
+      <td>{{ kardex.balanceTotal | currency:'$' }}</td>
+    </tr>
+  </ng-template>
+</p-table>
