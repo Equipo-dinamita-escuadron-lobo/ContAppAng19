@@ -7,6 +7,8 @@ import { EnterpriseList } from '../models/EnterpriseList';
 import { FormsModule } from '@angular/forms';
 import { HeaderComponent } from '../../../Core/Components/Header/header.component';
 import { DropdownModule } from "primeng/dropdown";
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-list-enterprise',
@@ -16,6 +18,8 @@ import { DropdownModule } from "primeng/dropdown";
     ButtonModule,
     FormsModule,
     HeaderComponent,
+    IconFieldModule,
+    InputIconModule,
     DropdownModule,
 ],
   templateUrl: './list-enterprise.component.html',

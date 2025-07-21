@@ -109,12 +109,12 @@ export const navbarData: INavbarData[] = [
     ],
   },
   {
-    routeLink: '/commercial',
+    routeLink: 'TO DO',
     icon: 'store',
     label: 'Comercial',
     items: [
       {
-        routeLink: 'TO DO',
+        routeLink: 'business-masters',
         icon: 'construction',
         label: 'Maestros Comerciales',
         items: [
@@ -144,7 +144,7 @@ export const navbarData: INavbarData[] = [
             label: 'Modelos de Valoracion',
             items: [
               {
-                routeLink: 'TO DO',
+                routeLink: '/commercial/business-masters/kardex',
                 icon: '',
                 label: 'Inventario con Promedio Ponderado',
               },
