@@ -3,8 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-ARG BUILD_CMD="ng build:dev"
-RUN $BUILD_CMD
+ARG BUILD_CMD=dev
+RUN ng build:$BUILD_CMD
 
 FROM nginx:stable
 COPY default.conf /etc/nginx/conf.d
