@@ -1,65 +1,152 @@
-<p-table
-  [value]="kardexList"
-  [paginator]="true"
-  [rows]="5"
-  [totalRecords]="totalRecords"
-  [lazy]="true"
-  [first]="first"
-  (onLazyLoad)="loadKardex($event)"
-  [loading]="loading"
-  [rowsPerPageOptions]="[5, 10, 20]"
-  styleClass="p-datatable-gridlines"
-  [responsiveLayout]="'scroll'"
->
-  <!-- Encabezado -->
-  <ng-template pTemplate="header">
-    <tr>
-      <th rowspan="2">Fecha</th>
-      <th rowspan="2">Detalle</th>
-      <th rowspan="2">Ct</th>
-      <th rowspan="2">Valor unitario</th>
+<div class="w-full">
+  <!-- Título -->
+  <div class="flex items-center mb-6">
+    <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+      <span class="border-b-4 border-secondary">Inventario</span> con promedio ponderado
+    </h1>
+    <span class="ml-10 text-primary cursor-help"
+          pTooltip="Información sobre el cálculo del promedio ponderado."
+          tooltipPosition="top">
+      <i class="pi pi-question-circle"></i>
+    </span>
+  </div>
 
-      <th colspan="3" class="text-center">Entradas</th>
-      <th colspan="3" class="text-center">Salidas</th>
-      <th colspan="3" class="text-center">Saldo</th>
-    </tr>
-    <tr>
-      <th>Ct</th>
-      <th>Vr Unitario</th>
-      <th>Vr Total</th>
+  <!-- Fila 1: Producto + Fechas -->
+  <div class="flex flex-wrap gap-4 mt-16">
+    <!-- Producto -->
+    <div class="flex-1 min-w-[200px]">
+      <label for="producto" class="block text-primary  text-sm mb-1">Producto</label>
+      <p-autocomplete
+        [(ngModel)]="selectedItem"
+        [virtualScroll]="true"
+        [suggestions]="filteredItems"
+        [virtualScrollItemSize]="34"
+        (completeMethod)="filterItems($event)"
+        optionLabel="label"
+        [dropdown]="true"
+        inputId="producto"
+        styleClass="w-full"
+      />
+    </div>
 
-      <th>Ct</th>
-      <th>Vr Unitario</th>
-      <th>Vr Total</th>
+    <!-- Fecha de inicio -->
+    <div class="flex-1 min-w-[200px]">
+      <label for="fechaInicio" class="block text-primary text-sm mb-1">Fecha de inicio</label>
+      <p-datePicker
+        [(ngModel)]="startDate"
+        [showIcon]="true"
+        inputId="fechaInicio"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+      ></p-datePicker>
+    </div>
 
-      <th>Ct</th>
-      <th>Vr Unitario</th>
-      <th>Vr Total</th>
-    </tr>
-  </ng-template>
+    <!-- Fecha de finalización alinear a la derecha el componente el textoi al principo -->
+    <div class="flex-1 min-w-[200px]">
+      <label for="fechaFin" class="block text-primary text-sm mb-1 ">Fecha de finalización</label>
+      <p-datePicker
+        [(ngModel)]="endDate"
+        [showIcon]="true"
+        inputId="fechaFin"
+        dateFormat="dd/mm/yy"
+        styleClass="w-full"
+      ></p-datePicker>
+    </div>
+  </div>
 
-  <!-- Cuerpo -->
-  <ng-template pTemplate="body" let-kardex>
-    <tr>
-      <td>{{ kardex.formattedDate }}</td>
-      <td>{{ kardex.details }}</td>
-      <td>{{ kardex.quantity }}</td>
-      <td>{{ kardex.unitPrice | currency:'$' }}</td>
+  <!-- Fila 2: Botón + Info -->
+  <div class="flex flex-wrap gap-4 mt-8 ">
 
-      <!-- Entradas -->
-      <td>{{ kardex.entryQuantity ?? '' }}</td>
-      <td>{{ kardex.entryUnitPrice ? (kardex.entryUnitPrice | currency:'$') : '' }}</td>
-      <td>{{ kardex.entryTotal ? (kardex.entryTotal | currency:'$') : '' }}</td>
+    <div class="flex flex-wrap gap-4 flex-1">
+      <div class="flex flex-col mr-4">
+          <label class="font-normal text-primary mb-1">Referencia:</label>
+          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.referencia || 'A500'" />
+      </div>
+      <div class="flex flex-col mr-4">
+          <label class="font-normal text-primary mb-1">Presentación:</label>
+          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.presentacion || 'Empaque'" />
+      </div>
+      <div class="flex flex-col mr-4">
+          <label class="font-normal text-primary mb-1">Descripción:</label>
+          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.descripcion || 'Producto genérico'" />
+      </div>
+    </div>
 
-      <!-- Salidas -->
-      <td>{{ kardex.exitQuantity ?? '' }}</td>
-      <td>{{ kardex.exitUnitPrice ? (kardex.exitUnitPrice | currency:'$') : '' }}</td>
-      <td>{{ kardex.exitTotal ? (kardex.exitTotal | currency:'$') : '' }}</td>
+    <!-- Botón -->
+    <div class="min-w-[220px] flex justify-end mt-16">
+      <p-button
+        label="Ajuste de inventario"
+        icon="pi pi-sliders-h"
+      ></p-button>
+    </div>
+  </div>
 
-      <!-- Saldo -->
-      <td>{{ kardex.balanceQuantity }}</td>
-      <td>{{ kardex.balanceUnitPrice | currency:'$' }}</td>
-      <td>{{ kardex.balanceTotal | currency:'$' }}</td>
-    </tr>
-  </ng-template>
-</p-table>
+   <!-- Tabla de inventario -->
+   <div class="w-full overflow-x-auto mt-16">
+    <p-table
+      [value]="kardexList"
+      [paginator]="true"
+      [rows]="5"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      [first]="first"
+      (onLazyLoad)="loadKardex($event)"
+      [loading]="loading"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      styleClass="p-datatable-gridlines"
+      [responsiveLayout]="'scroll'"
+    >
+      <!-- Encabezado -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th rowspan="2">Fecha</th>
+          <th rowspan="2">Detalle</th>
+          <th rowspan="2">Ct</th>
+          <th rowspan="2">Valor unitario</th>
+
+          <th colspan="3" class="text-center">Entradas</th>
+          <th colspan="3" class="text-center">Salidas</th>
+          <th colspan="3" class="text-center">Saldo</th>
+        </tr>
+        <tr>
+          <th>Ct</th>
+          <th>Vr Unitario</th>
+          <th>Vr Total</th>
+
+          <th>Ct</th>
+          <th>Vr Unitario</th>
+          <th>Vr Total</th>
+
+          <th>Ct</th>
+          <th>Vr Unitario</th>
+          <th>Vr Total</th>
+        </tr>
+      </ng-template>
+
+      <!-- Cuerpo -->
+      <ng-template pTemplate="body" let-kardex>
+        <tr>
+          <td>{{ kardex.formattedDate }}</td>
+          <td>{{ kardex.details }}</td>
+          <td>{{ kardex.quantity }}</td>
+          <td>{{ kardex.unitPrice | currency:'$' }}</td>
+
+          <!-- Entradas -->
+          <td>{{ kardex.entryQuantity ?? '' }}</td>
+          <td>{{ kardex.entryUnitPrice ? (kardex.entryUnitPrice | currency:'$') : '' }}</td>
+          <td>{{ kardex.entryTotal ? (kardex.entryTotal | currency:'$') : '' }}</td>
+
+          <!-- Salidas -->
+          <td>{{ kardex.exitQuantity ?? '' }}</td>
+          <td>{{ kardex.exitUnitPrice ? (kardex.exitUnitPrice | currency:'$') : '' }}</td>
+          <td>{{ kardex.exitTotal ? (kardex.exitTotal | currency:'$') : '' }}</td>
+
+          <!-- Saldo -->
+          <td>{{ kardex.balanceQuantity }}</td>
+          <td>{{ kardex.balanceUnitPrice | currency:'$' }}</td>
+          <td>{{ kardex.balanceTotal | currency:'$' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
