@@ -2,7 +2,7 @@ FROM node:24-alpine3.21 as build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-RUN npx gcc --properties es2023 browser module main --first only --create-ivy-entry-points
+RUN npx ngcc --properties es2023 browser module main --first only --create-ivy-entry-points
 
 COPY . .
 ARG BUILD_CMD="ng build:dev"
