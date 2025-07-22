@@ -4,7 +4,7 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 ARG BUILD_CMD=dev
-RUN npm run build -- --configuration "${BUILD_CMD}" --base-href /${BUILD_CMD}/
+RUN npm run build -- --configuration "${BUILD_CMD}" --deploy-url /${BUILD_CMD}/
 
 
 FROM httpd:alpine3.18
