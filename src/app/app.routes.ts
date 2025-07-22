@@ -28,6 +28,48 @@ export const routes: Routes = [
     },
     children: [
       {
+        path: 'configuration',
+        data: { breadcrumb: 'Configuración' },
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            data: {
+              breadcrumb: null,
+            },
+            loadComponent: () =>
+              import(
+                './Configuration/Components/configuration-main/configuration-main.component'
+              ).then((m) => m.ConfigurationMainComponent),
+          },
+          {
+            path: 'users/list',
+            data: { breadcrumb: 'Usuarios' },
+            loadComponent: () =>
+              import('./Configuration/Users/Components/user-list/user-list.component')
+                .then((m) => m.UserListComponent),
+            canActivate: [hasRoleGuard(['admin_realm'])],
+          },
+          {
+            path: 'users/create',
+            data: { breadcrumb: 'Crear usuario' },
+            loadComponent: () =>
+              import('./Configuration/Users/Components/user-create/user-create.component')
+                .then((m) => m.UserCreateComponent),
+            canActivate: [hasRoleGuard(['admin_realm'])],
+          },
+          {
+            path: 'users/edit/:id',
+            data: { breadcrumb: 'Editar usuario' },
+            loadComponent: () =>
+              import('./Configuration/Users/Components/user-edit/user-edit.component')
+                .then((m) => m.UserEditComponent),
+            canActivate: [hasRoleGuard(['admin_realm'])],
+          },
+        ],
+      },
+      {
+
         path: 'home',
         component: ViewEnterpriseComponent,
       },

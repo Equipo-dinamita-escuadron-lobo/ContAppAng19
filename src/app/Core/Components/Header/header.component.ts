@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-header',
@@ -44,7 +45,7 @@ export class HeaderComponent {
     },
   ];
 
-  constructor() {}
+  constructor(private router: Router) {}
 
   viewProfile(): void {
     console.log('Ver perfil del usuario');
@@ -53,6 +54,7 @@ export class HeaderComponent {
 
   openSettings(): void {
     console.log('Abrir configuración');
+    this.router.navigate(['/configuration']);
     // Implementar lógica para abrir configuración
   }
 
