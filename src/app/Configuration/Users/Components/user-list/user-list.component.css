@@ -1,0 +1,55 @@
+:host ::ng-deep .p-button {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+}
+
+:host ::ng-deep .configuration-button .p-button {
+  background: transparent !important;
+  color: var(--color-primary) !important;
+  border: none !important;
+}
+
+:host ::ng-deep .configuration-button:hover .p-button {
+  background: var(--color-button-primary-hover) !important;
+  color: white !important;
+}
+
+:host ::ng-deep .empty-message-cell {
+  padding: 0;
+  height: 20rem;
+}
+
+:host ::ng-deep .empty-message-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:host ::ng-deep .action-button .p-button {
+  background: transparent !important;
+  color: var(--color-primary) !important;
+  border: none !important;
+  padding: 0.25rem !important;
+  min-width: 2rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1rem !important;
+  margin: 0 !important;
+  border-radius: 4px !important;
+}
+
+/* Mantener el hover que ya tienes */
+:host ::ng-deep .action-button:hover .p-button {
+  background: var(--color-button-primary-hover) !important;
+  color: white !important;
+}
+
+/* Contenedor que junta los botones de acción */
+:host ::ng-deep td .flex.items-center .justify-center.gap-1 {
+  gap: 0 !important;
+  column-gap: 0 !important;
+}
