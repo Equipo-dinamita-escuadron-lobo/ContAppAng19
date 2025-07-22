@@ -7,17 +7,9 @@
 @font-face {
   font-family: "Open Sans";
   font-style: normal;
-  font-weight: 300;
-  font-display: swap;
-  src: url("/fonts/OpenSans/OpenSans-Light.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Open Sans";
-  font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/OpenSans/OpenSans-Regular.woff2") format("woff2");
+  src: url("../public/fonts/OpenSans/OpenSans-Regular.woff2") format("woff2");
 }
 
 @font-face {
@@ -25,7 +17,7 @@
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/fonts/OpenSans/OpenSans-SemiBold.woff2") format("woff2");
+  src: url("../public/fonts/OpenSans/OpenSans-SemiBold.woff2") format("woff2");
 }
 /* Open Sans Bold */
 @font-face {
@@ -33,7 +25,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("/fonts/OpenSans/OpenSans-Bold.woff2") format("woff2");
+  src: url("../public/fonts/OpenSans/OpenSans-Bold.woff2") format("woff2");
 }
 /* Open Sans SemiBold */
 /* Titillium Web */
@@ -42,7 +34,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/TitilliumWeb/titillium-web-v18-latin-regular.woff2")
+  src: url("../public/fonts/TitilliumWeb/titillium-web-v18-latin-regular.woff2")
     format("woff2");
 }
 /* Titillium Web Bold */
@@ -51,7 +43,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("/fonts/TitilliumWeb/titillium-web-v18-latin-700.woff2")
+  src: url("../public/fonts/TitilliumWeb/titillium-web-v18-latin-700.woff2")
     format("woff2");
 }
 /* Titillium Web SemiBold */
@@ -60,7 +52,7 @@
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("/fonts/TitilliumWeb/titillium-web-v18-latin-600.woff2")
+  src: url("../public/fonts/TitilliumWeb/titillium-web-v18-latin-600.woff2")
     format("woff2");
 }
 
@@ -414,7 +406,7 @@ body {
 }
 
 /* ================================
-   TOAST DE ÉXITO 
+   TOAST DE ÉXITO
    ================================ */
 
 .p-toast-message-success {
@@ -464,7 +456,7 @@ body {
 }
 
 /* ================================
-   TOAST DE INFO 
+   TOAST DE INFO
    ================================ */
 
 .p-toast-message-info {
@@ -505,7 +497,7 @@ body {
 }
 
 /* ================================
-   TOAST DE ERROR 
+   TOAST DE ERROR
    ================================ */
 
 .p-toast-message-error {
@@ -545,7 +537,7 @@ body {
 }
 
 /* ================================
-   TOAST DE ADVERTENCIA 
+   TOAST DE ADVERTENCIA
    ================================ */
 
 .p-toast-message-warn {
@@ -582,7 +574,7 @@ body {
 }
 
 /* ================================
-   ESTILOS PARA LA P-DATATABLE 
+   ESTILOS PARA LA P-DATATABLE
    ================================ */
 
 .p-datatable {
