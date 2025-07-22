@@ -8,6 +8,8 @@ RUN npm run build -- --configuration "${BUILD_CMD}" --base-href /${BUILD_CMD}/
 
 
 FROM httpd:alpine3.18
+ARG BUILD_CMD=dev
 WORKDIR /usr/local/apache2/htdocs/
-COPY --from=build /app/dist/*/browser .
+RUN mkdir -p /usr/local/apache2/htdocs/${BUILD_CMD}
+COPY --from=build /app/dist/*/browser/ /usr/local/apache2/htdocs/${BUILD_CMD}/
 EXPOSE 80
