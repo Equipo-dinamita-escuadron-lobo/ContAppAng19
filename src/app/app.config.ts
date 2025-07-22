@@ -10,9 +10,6 @@ import { initializeAuthFactory } from './Core/auth/factory/auth.factory';
 import { provideHttpClient } from '@angular/common/http';
 import { authInterceptor } from './Core/Interceptors/auth.interceptor';
 import { withInterceptors } from '@angular/common/http';
-import { APP_BASE_HREF } from '@angular/common';
-import { environment } from '../environments/environment';
-
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -37,8 +34,6 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withInterceptors([authInterceptor]),
     ),
-    { provide: APP_BASE_HREF, useValue: environment.baseHref }
-
   ],
 };
 
