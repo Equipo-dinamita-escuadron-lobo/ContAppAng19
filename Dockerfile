@@ -9,5 +9,5 @@ RUN npm run build -- --configuration "${BUILD_CMD}"
 
 FROM nginx:stable
 COPY default.conf /etc/nginx/conf.d
-COPY --from=build /app/dist/cont-app-ang19 /usr/share/nginx/html
+COPY --from=build /app/dist/*/browser /usr/share/nginx/html
 EXPOSE 80
