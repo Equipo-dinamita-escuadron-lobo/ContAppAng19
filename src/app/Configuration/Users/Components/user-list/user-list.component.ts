@@ -6,6 +6,7 @@ import { Button } from 'primeng/button';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-user-list',
@@ -14,9 +15,6 @@ import { CommonModule } from '@angular/common';
   imports: [TableModule, Button, IconField, InputIcon, CommonModule],
 })
 export class UserListComponent implements OnInit {
-  redirectTo(arg0: string) {
-    throw new Error('Method not implemented.');
-  }
   users: User[] = [];
   loading: boolean = false;
 
@@ -29,7 +27,7 @@ export class UserListComponent implements OnInit {
     'Acciones',
   ];
 
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService, private router: Router) {}
 
   ngOnInit(): void {
     this.getUsers();
@@ -50,5 +48,13 @@ export class UserListComponent implements OnInit {
   }
   redirectToEdit(arg0: any) {
     throw new Error('Method not implemented.');
+  }
+
+  goToCreateUser() {
+    this.router.navigate(['/configuration/users/create']);
+  }
+
+  goToEditUser(userId: string) {
+    this.router.navigate(['/configuration/users/edit', userId]);
   }
 }

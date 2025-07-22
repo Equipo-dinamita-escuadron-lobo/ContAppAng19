@@ -1,1 +1,98 @@
-<p>user-create works!</p>
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crear Usuario</title>
+  </head>
+  <body class="bg-gray-100 py-10 px-4">
+    <div class="max-w-4xl mx-auto">
+      <form class="account-section" id="createUserForm">
+        <h2 class="section-title col-span-full">Formulario de Creación de Usuario</h2>
+
+        <!-- Nombre -->
+        <div>
+          <label for="firstName" class="label-title">Nombre</label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            class="input-base"
+            placeholder="Ej: Ana"
+            required
+          />
+        </div>
+
+        <!-- Apellido -->
+        <div>
+          <label for="lastName" class="label-title">Apellido</label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            class="input-base"
+            placeholder="Ej: Gómez"
+            required
+          />
+        </div>
+
+        <!-- Nombre de usuario -->
+        <div>
+          <label for="username" class="label-title">Nombre de Usuario</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            class="input-base"
+            placeholder="Ej: anagomez"
+            required
+          />
+        </div>
+
+        <!-- Correo Electrónico -->
+        <div>
+          <label for="email" class="label-title">Correo Electrónico</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="input-base"
+            placeholder="usuario@ejemplo.com"
+            required
+          />
+        </div>
+
+        <!-- Contraseña -->
+        <div>
+          <label for="password" class="label-title">Contraseña</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="input-base"
+            placeholder="********"
+            required
+          />
+        </div>
+
+        <!-- Roles -->
+        <div>
+          <label for="rol" class="label-title">Rol</label>
+          <select id="rol" name="rol" class="select-base">
+            <option value="">Seleccione un rol</option>
+            <option value="administrador">Administrador</option>
+            <option value="estudiante">Estudiante</option>
+            <option value="profesor">Profesor</option>
+          </select>
+        </div>
+
+        <!-- Boton -->
+        <div class="col-span-full flex justify-end mt-6">
+          <button type="submit" class="p-button">
+            <span class="p-button-label">Crear Usuario</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
