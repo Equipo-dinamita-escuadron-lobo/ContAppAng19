@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
+import { LocalStorageMethods, EntData } from '../../../Shared/Methods/local-storage.method';
 
 @Component({
   selector: 'app-view-enterprise',
@@ -8,7 +8,7 @@ import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.metho
   styleUrl: './view-enterprise.component.css'
 })
 export class ViewEnterpriseComponent {
-  entData: any | null = null;
+  entData: EntData | null = null;
 
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
 
