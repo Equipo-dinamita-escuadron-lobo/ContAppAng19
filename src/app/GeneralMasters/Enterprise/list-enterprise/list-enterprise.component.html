@@ -14,14 +14,19 @@
   <div class="flex items-center justify-between flex-wrap gap-6">
     <div class="flex items-center gap-6 flex-wrap">
       <!-- Buscador -->
-      <div class="flex items-center px-12 py-4 bg-neutral-90 rounded-full shadow w-180">
-        <input
-          type="text"
-          placeholder="Buscar..."
-          class="ml-2 w-full bg-transparent outline-none text-sm placeholder-neutral-50 text-black"
-          [(ngModel)]="searchTerm"
-          (ngModelChange)="filterEnterprises()"
-        />
+      <div class="w-full sm:w-[30rem]">
+        <p-iconfield iconPosition="left">
+          <p-inputicon>
+            <i class="pi pi-search text-gray-500"></i>
+          </p-inputicon>
+          <input
+            type="text"
+            placeholder="Buscar..."
+            class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-b-button-secondary-hover focus:ring-1 focus:ring-primary transition"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="filterEnterprises()"
+          />
+        </p-iconfield>
       </div>
 
       <!-- Filtro -->

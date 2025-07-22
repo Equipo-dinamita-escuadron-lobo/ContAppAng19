@@ -7,6 +7,9 @@ import { EnterpriseList } from '../models/EnterpriseList';
 import { FormsModule } from '@angular/forms';
 import { HeaderComponent } from '../../../Core/Components/Header/header.component';
 import { DropdownModule } from "primeng/dropdown";
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { LocalStorageMethods, EntData } from '../../../Shared/Methods/local-storage.method';
 
 @Component({
   selector: 'app-list-enterprise',
@@ -16,6 +19,8 @@ import { DropdownModule } from "primeng/dropdown";
     ButtonModule,
     FormsModule,
     HeaderComponent,
+    IconFieldModule,
+    InputIconModule,
     DropdownModule,
 ],
   templateUrl: './list-enterprise.component.html',
@@ -27,8 +32,12 @@ export class ListEnterpriseComponent {
   selectedStatus: string = 'active';
   searchTerm: string = '';
 
+  constructor(
+    private enterpriseService: EnterpriseService
+  ) {}
 
-  constructor(private enterpriseService: EnterpriseService) {}
+  LocalStorageMethods = new LocalStorageMethods();
+  entData: EntData | null = null;
 
   ngOnInit() {
     this.getEnterpriseActive();
@@ -79,6 +88,12 @@ export class ListEnterpriseComponent {
   }
 
   saveSelectedEnterprise(enterprise: any) {
-    localStorage.setItem('entData', JSON.stringify(enterprise));
+    this.entData = {
+      id: enterprise.id,
+      name: enterprise.name,
+      nit: enterprise.nit,
+      logo: enterprise.logo
+    };
+    this.LocalStorageMethods.saveEnterpriseData(this.entData);
   }
 }

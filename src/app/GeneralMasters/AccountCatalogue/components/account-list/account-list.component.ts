@@ -16,6 +16,7 @@ import { ButtonModule } from 'primeng/button';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 
 @Component({
@@ -133,7 +134,7 @@ export class AccountListComponent {
   placeNatureType: string = '';
   placeFinancialStateType: string = '';
   placeClasificationType: string = '';
-  //localStorageMethods: LocalStorageMethods = new LocalStorageMethods(); //Descomentar linea cuando se tenga implementado esto
+  localStorageMethods: LocalStorageMethods = new LocalStorageMethods(); //Descomentar linea cuando se tenga implementado esto
   entData: any | null = null;
   //taxes: Tax[] = []; //Descomentar linea cuando se tenga implementado esto
 
@@ -280,7 +281,7 @@ export class AccountListComponent {
     //console.log(this.listRefundAccount);
 
     //DESCOMENTAR CUANDO SE IMPLEMENTE
-    //this.entData = this.localStorageMethods.loadEnterpriseData();
+    this.entData = this.localStorageMethods.loadEnterpriseData();
     this.getTaxesByCodes();
     this.getNatureType();
     this.getFinancialStateType();
