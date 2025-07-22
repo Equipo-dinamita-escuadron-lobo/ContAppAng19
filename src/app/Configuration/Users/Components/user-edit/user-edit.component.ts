@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../Services/user.service';
 import { User } from '../../Models/User'; // Asegúrate que el modelo esté en la ruta correcta
@@ -7,7 +7,8 @@ import { User } from '../../Models/User'; // Asegúrate que el modelo esté en l
 @Component({
   selector: 'app-user-edit',
   templateUrl: './user-edit.component.html',
-  styleUrls: ['./user-edit.component.css']
+  styleUrls: ['./user-edit.component.css'],
+  imports: [ReactiveFormsModule]
 })
 export class UserEditComponent implements OnInit {
   userForm!: FormGroup;

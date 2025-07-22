@@ -26,8 +26,12 @@
   </div>
 
   <div>
-    <label>Roles (separados por coma)</label>
-    <input type="text" [value]="userForm.get('roles')?.value?.join(', ')" (input)="onRolesChange($event.target.value)" />
+    <label>Rol</label>
+    <select formControlName="roles">
+      <option value="administrador">Administrador</option>
+      <option value="estudiante">Estudiante</option>
+      <option value="profesor">Profesor</option>
+    </select>
   </div>
 
   <button type="submit" [disabled]="userForm.invalid">Actualizar usuario</button>
