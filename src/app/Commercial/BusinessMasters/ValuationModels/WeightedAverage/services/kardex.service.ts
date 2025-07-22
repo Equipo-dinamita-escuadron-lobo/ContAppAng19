@@ -4,7 +4,7 @@ import { environment } from '../../../../../../environments/environment';
 import { Observable } from 'rxjs';
 import { ResponseDto } from '../../models/ResponseDto';
 
-let API_URL = environment.API_URL + 'kardex/';
+let API_URL = environment.API_URL + 'kardex/weighted-average/';
 
 @Injectable({
   providedIn: 'root'
