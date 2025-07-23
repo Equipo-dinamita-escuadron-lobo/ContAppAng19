@@ -70,6 +70,10 @@ export class UserListComponent implements OnInit {
     throw new Error('Method not implemented.');
   }
 
+  redirectToDelete(arg0: any) {
+    throw new Error('Method not implemented.');
+  }
+
   goToCreateUser() {
     this.router.navigate(['/configuration/users/create']);
   }
