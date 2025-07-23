@@ -8,10 +8,10 @@
         <h1
           class="text-2xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mb-2"
         >
-          Gestión de usuarios
+          Gestión de perfiles
         </h1>
         <p class="text-sm sm:text-base text-gray-600 max-w-3xl leading-relaxed">
-          Aquí podrá ver la lista de usuarios.
+          Aquí podrá ver la lista de perfiles.
         </p>
       </div>
     </div>
@@ -42,7 +42,7 @@
             label="Agregar"
             class="custom-action-button"
             icon="pi pi-plus"
-            (onClick)="goToCreateUser()"
+            (onClick)="redirectTo('/gen-masters/third-parties/create')"
             size="small"
           ></p-button>
         </div>
@@ -52,7 +52,7 @@
     <!-- Table Container -->
     <p-table
       #dt1
-      [value]="users"
+      [value]="profiles"
       dataKey="id"
       [paginator]="true"
       [rows]="5"
@@ -74,46 +74,39 @@
       </ng-template>
 
       <!-- Table Body -->
-      <ng-template pTemplate="body" let-user>
+      <ng-template pTemplate="body" let-profile>
         <tr class="hover:bg-gray-50">
           <td class="whitespace-nowrap">
             <span class="text-sm font-medium text-gray-900">
-              {{ user.firstName }}
+              {{ profile.name }}
             </span>
           </td>
           <td class="whitespace-nowrap">
-            <span class="text-sm text-gray-900">{{ user.lastName }}</span>
+            <span class="text-sm text-gray-900">{{ profile.description }}</span>
           </td>
           <td class="whitespace-nowrap">
-            <span class="text-sm text-gray-900">{{ user.email }}</span>
-          </td>
-          <td class="whitespace-nowrap">
-            <span class="text-sm text-gray-900">{{ user.username }}</span>
-          </td>
-
-          <td class="whitespace-nowrap">
-            <div class="flex flex-col items-center gap-1">
-              <span
-                *ngFor="let role of user.roles"
-                class="inline-block text-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800"
-                style="width: auto"
+            <div class="flex items-center justify-center gap-1">
+              <p-button
+                class="material-symbols-outlined p-button-md action-button"
+                (onClick)="redirectToView(profile.id)"
+                pTooltip="Ver"
+                tooltipPosition="top"
+                >visibility</p-button
               >
-                {{ role }}
-              </span>
             </div>
           </td>
           <td class="whitespace-nowrap">
             <div class="flex items-center justify-center gap-1">
               <p-button
                 class="material-symbols-outlined p-button-md action-button"
-                (onClick)="goToEditUser(user.id)"
+                (onClick)="redirectToEdit(profile.id)"
                 pTooltip="Editar"
                 tooltipPosition="top"
                 >edit</p-button
               >
               <p-button
                 class="material-symbols-outlined p-button-md action-button"
-                (onClick)="redirectToDelete(user.id)"
+                (onClick)="redirectToDelete(profile.id)"
                 pTooltip="Eliminar"
                 tooltipPosition="top"
                 >delete</p-button
@@ -133,17 +126,17 @@
               <div class="flex flex-col items-center gap-4">
                 <div class="space-y-2 text-center">
                   <h3 class="text-lg font-semibold text-[var(--color-primary)]">
-                    No hay usuarios
+                    No hay perfiles
                     <i
-                      class="pi pi-users bg-gray-100 rounded-full text-2xl"
+                      class="pi pi-shield bg-gray-100 rounded-full text-2xl"
                     ></i>
                   </h3>
                   <p class="text-sm text-gray-600 max-w-md">
-                    No se encontraron usuarios que coincidan con su búsqueda.
+                    No se encontraron perfiles que coincidan con su búsqueda.
                   </p>
                 </div>
                 <p-button
-                  label="Agregar Usuario"
+                  label="Agregar Perfil"
                   icon="pi pi-plus"
                   (onClick)="redirectTo('/configuration/gestion/users/create')"
                 ></p-button>
