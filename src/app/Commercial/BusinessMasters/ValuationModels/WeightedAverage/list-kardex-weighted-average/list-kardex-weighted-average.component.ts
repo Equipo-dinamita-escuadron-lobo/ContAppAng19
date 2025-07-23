@@ -34,53 +34,47 @@ interface AutoCompleteCompleteEvent {
 export class ListKardexWeightedAverageComponent {
 
   constructor(
-    private kardexService: KardexService
+    private kardexService: KardexService,
+    private productService: ProductService
   ) {}
 
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
+  kardexList: KardexRow[] = [];
 
   productId: number = 1;
   totalRecords = 0;
   first = 0;
   loading = false;
 
-  selectedItem: any;
-  filteredItems: any[] = [];
-  items: any[] | undefined;
+  allProducts: ProductResponse[] = [];
+  filteredProducts: ProductResponse[] = [];
+  selectedProduct: ProductResponse | undefined;
+
   startDate: Date | undefined;
   endDate: Date | undefined;
 
-selectedProduct: any;
-
-//products: ProductResponse[] = [];
-
-  filterItems(event: AutoCompleteCompleteEvent) {
-      let filtered: any[] = [];
-      let query = event.query;
-
-      for (let i = 0; i < (this.items as any[]).length; i++) {
-          let item = (this.items as any[])[i];
-          if (item.label.toLowerCase().indexOf(query.toLowerCase()) == 0) {
-              filtered.push(item);
-          }
-      }
-
-      this.filteredItems = filtered;
+  filterProducts(event: AutoCompleteCompleteEvent) {
+    const query = event.query.toLowerCase();
+    this.filteredProducts = this.allProducts.filter(product => {
+      // La propiedad `name` es la que se usa para la búsqueda.
+      return product.name.toLowerCase().includes(query);
+    });
   }
-
-
 
   ngOnInit() {
-    this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
     this.entData = this.localStorageMethods.loadEnterpriseData();
-      // this.items = [];
-      //   for (let i = 0; i < 100; i++) {
-      //       this.items.push({ label: 'Item ' + i, value: 'Item ' + i });
-      //   }
+    this.productService.getAllProducts().subscribe(response => {
+      this.allProducts = response.data;
+    });
   }
 
-  kardexList: KardexRow[] = [];
+  onProductSelect(product: ProductResponse) {
+    this.selectedProduct = product;
+    this.productId = product.idProduct;
+    console.log('Producto seleccionado:', this.selectedProduct);
+    this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
+  }
 
   loadKardex(event: any) {
     this.loading = true;
@@ -92,8 +86,6 @@ selectedProduct: any;
 
     this.kardexService.getKardexByProductId(this.productId, page, size, sort).subscribe((res) => {
       const rawList = res.data.content;
-
-
 
       this.kardexList = rawList.map((item: {
         quantity: any;
@@ -111,7 +103,6 @@ selectedProduct: any;
         exitUnitPrice?: any;
         exitTotal?: any;
        }, index: number) => {
-
 
         const previousBalance = rawList[index - 1]?.balanceQuantity || 0;
         const balanceQuantity = item.quantity + previousBalance;

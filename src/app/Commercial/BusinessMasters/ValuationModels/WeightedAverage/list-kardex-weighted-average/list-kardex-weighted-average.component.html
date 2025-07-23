@@ -17,15 +17,17 @@
     <div class="flex-1 min-w-[200px]">
       <label for="producto" class="block text-primary  text-sm mb-1">Producto</label>
       <p-autocomplete
-        [(ngModel)]="selectedItem"
-        [virtualScroll]="true"
-        [suggestions]="filteredItems"
-        [virtualScrollItemSize]="34"
-        (completeMethod)="filterItems($event)"
-        optionLabel="label"
+        [(ngModel)]="selectedProduct"
+        [suggestions]="filteredProducts"
+        (completeMethod)="filterProducts($event)"
+        (onSelect)="onProductSelect($event.value)"
+        field="name"
         [dropdown]="true"
-        inputId="producto"
+        [virtualScroll]="true"
+        [virtualScrollItemSize]="44"
+        placeholder="Escribe para buscar productos..."
         styleClass="w-full"
+        inputId="product-ac"
       />
     </div>
 
@@ -60,15 +62,15 @@
     <div class="flex flex-wrap gap-4 flex-1">
       <div class="flex flex-col mr-4">
           <label class="font-normal text-primary mb-1">Referencia:</label>
-          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.referencia || 'A500'" />
+          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.reference" />
       </div>
       <div class="flex flex-col mr-4">
           <label class="font-normal text-primary mb-1">Presentación:</label>
-          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.presentacion || 'Empaque'" />
+          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.presentation" />
       </div>
       <div class="flex flex-col mr-4">
-          <label class="font-normal text-primary mb-1">Descripción:</label>
-          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.descripcion || 'Producto genérico'" />
+          <label class="font-normal text-primary mb-1">Responsable:</label>
+          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.manager" />
       </div>
     </div>
 
