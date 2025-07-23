@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
 import { FileUploadModule } from 'primeng/fileupload';
 import { TagModule } from 'primeng/tag';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-user-list',
@@ -46,7 +47,7 @@ export class UserListComponent implements OnInit {
     'Acciones',
   ];
 
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService, private router: Router) {}
 
   ngOnInit(): void {
     this.getUsers();
@@ -68,10 +69,12 @@ export class UserListComponent implements OnInit {
   redirectToEdit(arg0: any) {
     throw new Error('Method not implemented.');
   }
-  redirectTo(arg0: string) {
-    throw new Error('Method not implemented.');
+
+  goToCreateUser() {
+    this.router.navigate(['/configuration/users/create']);
   }
-  redirectToDelete(arg0: any) {
-    throw new Error('Method not implemented.');
+
+  goToEditUser(userId: string) {
+    this.router.navigate(['/configuration/users/edit', userId]);
   }
 }

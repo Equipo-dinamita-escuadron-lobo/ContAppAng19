@@ -42,7 +42,7 @@
             label="Agregar"
             class="custom-action-button"
             icon="pi pi-plus"
-            (onClick)="redirectTo('/gen-masters/third-parties/create')"
+            (onClick)="goToCreateUser()"
             size="small"
           ></p-button>
         </div>
@@ -106,7 +106,7 @@
             <div class="flex items-center justify-center gap-1">
               <p-button
                 class="material-symbols-outlined p-button-md action-button"
-                (onClick)="redirectToEdit(user.id)"
+                (onClick)="goToEditUser(user.id)"
                 pTooltip="Editar"
                 tooltipPosition="top"
                 >edit</p-button

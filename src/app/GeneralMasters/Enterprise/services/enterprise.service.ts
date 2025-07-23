@@ -13,8 +13,6 @@ let API_URL = environment.API_URL + 'enterprises/';
   providedIn: 'root'
 })
 export class EnterpriseService {
-  private enterprisesSubject = new BehaviorSubject<Enterprise[]>([]);
-  public enterprises$ = this.enterprisesSubject.asObservable();
   private apiUrl = API_URL;
 
   getEnterprisesActive(): Observable<EnterpriseList[]> {
@@ -26,18 +24,6 @@ export class EnterpriseService {
   }
 
   constructor(private http: HttpClient) { }
-
-  // getEnterprises(): Enterprise[] {
-  //   const enterprises: Enterprise[] = [
-  //     { nombre: 'Adidas', nit: '1234567890' },
-  //     { nombre: 'Nike', nit: '0987654321' },
-  //     { nombre: 'D1', nit: '9988776655' },
-  //     { nombre: 'Exito', nit: '2233445566' },
-  //   ];
-  //   this.enterprisesSubject.next(enterprises);
-  //   return enterprises;
-  // }
-
 
   //METODOS PARA OBTENER INFORTMACION DE LA EMPRESA SELECCIONADA
   /** Métodos de almacenamiento local */

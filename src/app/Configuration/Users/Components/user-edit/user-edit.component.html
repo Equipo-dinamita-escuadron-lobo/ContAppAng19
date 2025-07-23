@@ -1,1 +1,38 @@
-<p>user-edit works!</p>
+<h2>Editar Usuario</h2>
+<form *ngIf="userForm" [formGroup]="userForm" (ngSubmit)="onSubmit()">
+  <div>
+    <label>Nombre</label>
+    <input type="text" formControlName="firstName" placeholder="Nombre" />
+  </div>
+
+  <div>
+    <label>Apellido</label>
+    <input type="text" formControlName="lastName" placeholder="Apellido" />
+  </div>
+
+  <div>
+    <label>Correo electrónico</label>
+    <input type="email" formControlName="email" placeholder="Correo" />
+  </div>
+
+  <div>
+    <label>Nombre de usuario</label>
+    <input type="text" formControlName="username" placeholder="Usuario" />
+  </div>
+
+  <div>
+    <label>Contraseña</label>
+    <input type="password" formControlName="password" placeholder="Contraseña" />
+  </div>
+
+  <div>
+    <label>Rol</label>
+    <select formControlName="roles">
+      <option value="administrador">Administrador</option>
+      <option value="estudiante">Estudiante</option>
+      <option value="profesor">Profesor</option>
+    </select>
+  </div>
+
+  <button type="submit" [disabled]="userForm.invalid">Actualizar usuario</button>
+</form>
