@@ -26,12 +26,6 @@ import { TagModule } from 'primeng/tag';
   ],
 })
 export class UserListComponent implements OnInit {
-  redirectToView(arg0: any) {
-    throw new Error('Method not implemented.');
-  }
-  redirectToDelete(arg0: any) {
-    throw new Error('Method not implemented.');
-  }
   users: User[] = [];
   loading: boolean = false;
 
@@ -75,6 +69,9 @@ export class UserListComponent implements OnInit {
     throw new Error('Method not implemented.');
   }
   redirectTo(arg0: string) {
+    throw new Error('Method not implemented.');
+  }
+  redirectToDelete(arg0: any) {
     throw new Error('Method not implemented.');
   }
 }

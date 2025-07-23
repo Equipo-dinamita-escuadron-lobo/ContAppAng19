@@ -55,6 +55,17 @@ export const routes: Routes = [
               ).then((m) => m.UserListComponent),
             canActivate: [hasRoleGuard(['admin_realm'])],
           },
+          {
+            path: 'profiles/list',
+            data: {
+              breadcrumb: 'Gestión de Perfiles',
+            },
+            loadComponent: () =>
+              import(
+                './Configuration/Profiles/Components/profile-list/profile-list.component'
+              ).then((m) => m.ProfileListComponent),
+            canActivate: [hasRoleGuard(['admin_realm'])],
+          },
         ],
       },
       {
