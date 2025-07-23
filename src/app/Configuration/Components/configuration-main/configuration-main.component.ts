@@ -21,14 +21,13 @@ export class ConfigurationMainComponent implements OnInit {
     },
     {
       name: 'Gestión de Perfiles',
-      route: '/configuration/perfiles',
+      route: '/configuration/profiles/list',
       type: 'perfiles',
       amount: 4,
       icon: 'admin_panel_settings',
     },
   ];
 
-  // Variable para controlar si el usuario tiene el rol de Administrador
   isAdmin: boolean = false;
 
   constructor(
@@ -38,7 +37,6 @@ export class ConfigurationMainComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Verificar si el usuario tiene el rol de 'Admin'
     this.isAdmin = this.authService.hasRole('admin_realm');
   }
 
