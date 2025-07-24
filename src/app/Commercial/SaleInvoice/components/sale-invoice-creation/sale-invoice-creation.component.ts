@@ -15,7 +15,6 @@ import { SaleInvoiceService } from '../../services/sale-invoice.service';
 import { Router } from '@angular/router';
 import { EnterpriseService } from '../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { EnterpriseDetails } from '../../../../GeneralMasters/Enterprise/models/EnterpriseDetails';
-import { ThirdService } from '../../services/third.service';
 import { UnitOfMeasureService } from '../../services/unit-of-measure.service';
 import { FactureV } from '../../models/SaleInvoice';
 import Swal from 'sweetalert2';
@@ -25,6 +24,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { SaleInvoiceSelectedProductsComponent } from '../sale-invoice-selected-products/sale-invoice-selected-products.component';
 import { DatePickerModule } from 'primeng/datepicker';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { ThirdPartyServiceService } from '../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
 
 
 @Component({
@@ -255,7 +255,7 @@ export class SaleInvoiceCreationComponent {
     private enterpriseService: EnterpriseService, //Descomentar cuando este implementado
     private UnitMeasureService: UnitOfMeasureService,  //Descomentar cuando este implementado
     private dialogService: DialogService,
-    private thirdService: ThirdService, //Descometar cuando este implementado
+    private thirdService: ThirdPartyServiceService, 
     private saleService: SaleInvoiceService,
     private router: Router,
     private localStorageMethods: LocalStorageMethods) { }
