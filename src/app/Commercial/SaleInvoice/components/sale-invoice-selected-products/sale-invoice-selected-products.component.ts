@@ -2,34 +2,34 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-// Importaciones de PrimeNG para el nuevo template
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 
-// Importaciones para el diálogo dinámico de PrimeNG
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { ProductService } from '../../../BusinessMasters/Products/Services/product.service';
 import { Product } from '../../../BusinessMasters/Products/Models/Product';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
-// Tus modelos y servicios (asegúrate que las rutas sean correctas)
-
-// Interfaz local para manejar el estado de selección
 interface SelectableProduct extends Product {
   selected?: boolean;
 }
 
 @Component({
   selector: 'app-sale-invoice-selected-products',
-  standalone: true, // ¡CLAVE! Hacerlo standalone
+  standalone: true, 
   imports: [
     CommonModule,
     FormsModule,
     TableModule,
     ButtonModule,
     InputTextModule,
-    CheckboxModule
+    CheckboxModule,
+    IconFieldModule,
+    InputIconModule
   ],
   templateUrl: './sale-invoice-selected-products.component.html',
   styleUrls: ['./sale-invoice-selected-products.component.css']
@@ -40,19 +40,19 @@ export class SaleInvoiceSelectedProductsComponent implements OnInit {
   filteredProducts: SelectableProduct[] = []; // Lista para mostrar en la tabla, después de filtrar
   selectedProductsMap: Map<string, SelectableProduct> = new Map(); // Mapa para manejar selecciones eficientemente
 
-  filterText: string = ''; // Para el input de búsqueda
-  entId: string = 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d'; // ID de la empresa recibido
+  filterText: string = ''; 
+  entId: string = '';
 
   constructor(
     private productService: ProductService,
-    public ref: DynamicDialogRef, // <-- REEMPLAZA a MatDialogRef
-    public config: DynamicDialogConfig // <-- REEMPLAZA a MAT_DIALOG_DATA
+    public ref: DynamicDialogRef, 
+    public config: DynamicDialogConfig, 
+    private localStorageMethods: LocalStorageMethods
   ) {
-    // Obtenemos los datos pasados al diálogo
-    this.entId = this.config.data.entId;
+    this.entId = this.localStorageMethods.getIdEnterprise();
+    console.log('Enterprise ID:', this.entId);
     const previouslySelectedProducts: Product[] = this.config.data.products || [];
 
-    // Pre-populamos el mapa con los productos que ya estaban seleccionados
     previouslySelectedProducts.forEach(p => {
       this.selectedProductsMap.set(p.id, { ...p, selected: true });
     });
@@ -118,7 +118,6 @@ export class SaleInvoiceSelectedProductsComponent implements OnInit {
    * Cierra el diálogo y devuelve los productos seleccionados.
    */
   confirmSelection(): void {
-    // Convertimos el mapa de vuelta a un array y lo pasamos al componente padre.
     const selectionAsArray = Array.from(this.selectedProductsMap.values());
     this.ref.close(selectionAsArray);
   }
