@@ -1,108 +1,108 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ContaApp - Inicio de Sesión</title>
 </head>
-<body class="bg-white font-sans min-h-screen flex flex-col">
+
+<body class="login-page">
 
   <!-- Encabezado: Logo y título -->
-  <div class="absolute top-8 left-8 flex space-x-6 items-center z-10">
-    <img src="logo_unicauca.png" alt="Logo Unicauca" class="h-40" style="filter: brightness(0) invert(0);" />
-    <div class="w-px h-40 bg-[#003DA5]"></div>
-    <span class="font-family-titillium font-bold text-2xl text-[#003DA5]">ContaApp</span>
+  <div class="login-header">
+    <img src="logo_unicauca.png" alt="Logo Unicauca" class="logo" />
+    <div class="header-divider"></div>
+    <span class="app-title">ContaApp</span>
   </div>
 
   <!-- Contenido principal -->
-  <div class="flex flex-1 min-h-0">
+  <div class="main-content">
     <!-- Formulario: ocupa la mitad izquierda -->
-    <div class="w-full md:w-1/2 flex items-center justify-center bg-white">
-      <div class="w-full max-w-md bg-white shadow-md rounded-lg p-8">
-        <h2 class="text-2xl font-bold mb-8 text-[#003DA5]" style="font-family: 'Open Sans', sans-serif;">Inicio de sesión</h2>
-        <form [formGroup]="loginForm" (submit)="onSubmit()" class="space-y-4">
+    <div class="login-form-container">
+      <div class="login-form">
+        <h2 class="login-title">Inicio de sesión</h2>
+        <form [formGroup]="loginForm" (submit)="onSubmit()" class="form">
           <!-- Correo institucional -->
-          <div>
-            <label for="username" class="block mb-2 text-sm font-medium text-[#003DA5]" style="font-family: 'Open Sans', sans-serif;">
-              Correo institucional <span class="text-red-500">*</span>
+          <div class="form-group">
+            <label for="username" class="loginfields">
+              Correo institucional <span class="required">*</span>
             </label>
-            <div class="relative">
-              <input
-                type="text"
-                id="username"
-                placeholder="usuario@unicauca.edu.co"
-                required
-                formControlName="username"
-                class="w-full border border-gray-300 rounded-xl py-3 px-4 text-base focus:outline-none focus:ring-2 focus:ring-[#003DA5]"
-              />
-              <span class="absolute right-4 top-1/2 -translate-y-1/2 pi pi-envelope text-[#003DA5]"></span>
+            <div class="input-container">
+              <input type="text" id="username" placeholder="usuario@unicauca.edu.co" required
+                formControlName="username" />
+              <span class="input-icon pi pi-envelope"></span>
             </div>
           </div>
           <!-- Contraseña -->
-          <div>
-            <label for="password" class="block mb-2 text-sm font-medium text-[#003DA5]" style="font-family: 'Open Sans', sans-serif;">
-              Contraseña <span class="text-red-500">*</span>
+          <div class="form-group">
+            <label for="password" class="loginfields">
+              Contraseña <span class="required">*</span>
             </label>
-            <div class="relative">
-              <input
-                type="password"
-                id="password"
-                placeholder="**********"
-                required
-                formControlName="password"
-                class="w-full border border-gray-300 rounded-xl py-3 px-4 text-base focus:outline-none focus:ring-2 focus:ring-[#003DA5]"
-              />
-              <span class="absolute right-4 top-1/2 -translate-y-1/2 pi pi-eye text-[#003DA5] cursor-pointer"></span>
+            <div class="input-container">
+              <input type="password" id="password" placeholder="**********" required formControlName="password" />
+              <span class="input-icon pi pi-eye"></span>
             </div>
           </div>
           <!-- Botón ingresar -->
-          <div class="mt-6">
-            <button type="submit" class="bg-[#003DA5] text-white font-bold py-3 px-6 rounded-xl w-full" [disabled]="loginForm.invalid">
+          <div class="form-submit">
+            <button type="submit" [disabled]="loginForm.invalid">
               Iniciar sesión
             </button>
+          </div>
+          <div class="new-user-text">
+            ¿Eres un usuario nuevo?
+            <a routerLink="/register" class="register-link">
+              <span>Click aqui para registrarte</span>
+            </a>
           </div>
         </form>
       </div>
     </div>
     <!-- Imagen derecha: ocupa la mitad derecha -->
-    <div class="hidden lg:flex w-1/2 items-center justify-center bg-cover bg-no-repeat bg-center">
-      <img src="unicauca-economia.jpg" alt="Edificio Unicauca" class="object-cover w-full h-full" />
+    <div class="login-image">
+      <img src="unicauca-economia.jpg" alt="Edificio Unicauca" />
     </div>
   </div>
 
   <!-- Línea de colores -->
-  <div class="w-full flex h-5">
-    <div class="flex-1 bg-[#E30613]"></div>
-    <div class="flex-1 bg-[#FFCB05]"></div>
-    <div class="flex-1 bg-[#003DA5]"></div>
-    <div class="flex-1 bg-[#009640]"></div>
-    <div class="flex-1 bg-[#FFCB05]"></div>
+  <div class="color-strip">
+    <div class="color-red"></div>
+    <div class="color-orange"></div>
+    <div class="color-yellow"></div>
+    <div class="color-blue"></div>
+    <div class="color-purple"></div>
   </div>
 
   <!-- Footer -->
-  <footer class="w-full bg-[#F4F4F4] text-sm text-gray-700 p-6 rounded-t-lg shadow">
-    <div class="border-t border-gray-300 pt-4">
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div>
+  <footer class="footer">
+    <div>
+      <div class="footer-grid">
+        <div class="footer-section">
           <strong>Universidad del Cauca</strong><br />
           NIT. 891500319-2
         </div>
-        <div>
-          <strong>Software contable ContaApp</strong><br />
-          Facultad de Ciencias Contables<br />
-          <a href="mailto:contapp&#64;unicauca.edu.co" class="text-blue-600">contapp&#64;unicauca.edu.co</a>
-        </div>
-        <div>
-          <strong>División de TIC</strong><br />
-          Versión 1.0.0<br />
-          2025
+        <div class="footer-section-data">
+          <div class="footer-section">
+            <strong>Software contable ContaApp</strong><br />
+            Facultad de Ciencias Contables<br />
+            <a href="mailto:contapp&#64;unicauca.edu.co" class="footer-link">contapp&#64;unicauca.edu.co</a>
+          </div>
+          <div class="footer-divider"></div>
+          <div class="footer-section-TIC">
+            <strong>División de Tecnologia de la Información y comunicacion - TIC</strong><br />
+            Versión 1.0.0<br />
+            2025
+          </div>
         </div>
       </div>
-      <p class="mt-4 text-xs text-gray-500">
-        Institución con Acreditación de Alta Calidad por 8 años - Resolución MEN 6218 de 2019 - Vigilada MinEducación<br />
+      <p class="footer-text">
+        Institución con Acreditación de Alta Calidad por 8 años - Resolución MEN 6218 de 2019 - Vigilada
+        MinEducación<br />
         Política de Protección de Datos | Seguridad de la Información | Soporte Técnico
       </p>
     </div>
   </footer>
 </body>
+
 </html>
