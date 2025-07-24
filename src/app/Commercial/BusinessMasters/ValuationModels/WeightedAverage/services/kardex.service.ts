@@ -21,7 +21,7 @@ export class KardexService {
       .set('size', size)
       if (sort) params = params.set('sort', sort);
 
-    return this.http.get<ResponseDto<any>>(`${this.apiUrl}product`, { params });
+    return this.http.get<ResponseDto<any>>(`${this.apiUrl}kardex-by-product`, { params });
   }
 
 }
