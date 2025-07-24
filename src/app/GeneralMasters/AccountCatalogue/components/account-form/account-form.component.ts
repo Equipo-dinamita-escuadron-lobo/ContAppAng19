@@ -8,6 +8,7 @@ import { ClasificationType } from '../../models/ClasificationType';
 import { ChartAccountService } from '../../services/chart-account.service';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 @Component({
   selector: 'app-account-form',
@@ -55,7 +56,10 @@ export class AccountFormComponent implements OnInit {
  * @param _accountService Servicio para gestionar las cuentas del plan contable.
  * @param fb Constructor de formularios reactivos.
  */
-  constructor(private _accountService: ChartAccountService, private fb: FormBuilder) {
+  constructor(
+    private _accountService: ChartAccountService,
+    private fb: FormBuilder, 
+    private localStorage: LocalStorageMethods) {
     this.formNewAccount = this.fb.group({
       code: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
       name: ['', [Validators.required, Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1]+[a-zA-ZÀ-ÿ\u00f1\u00d1\\d,.()\\/\\-+&% ]*$')]],
@@ -120,8 +124,8 @@ export class AccountFormComponent implements OnInit {
    */
   sendAccount() {
     const account: Account = {
-      idEnterprise: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
-      //idEnterprise: this.getIdEnterprise(), //Descomentar esta línea si tienes un método para obtener el ID de la empresa
+      //idEnterprise: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
+      idEnterprise: this.getIdEnterprise(), //Descomentar esta línea si tienes un método para obtener el ID de la empresa
       code: this.formNewAccount.value.code,
       description: this.formNewAccount.value.name,
       nature: this.formNewAccount.value.selectedNatureType,
@@ -139,8 +143,10 @@ export class AccountFormComponent implements OnInit {
    * @returns El ID de la empresa, o una cadena vacía si no se encuentra.
    */
   getIdEnterprise(): string {
-    const entData = localStorage.getItem('entData');
-    return entData ? JSON.parse(entData).entId : '';
+    console.log('Fetching Enterprise ID from LocalStorage'+ this.localStorage.getIdEnterprise());
+    return this.localStorage.getIdEnterprise();
+    /*const entData = localStorage.getItem('entData');
+    return entData ? JSON.parse(entData).entId : '';*/
   }
 
   /**
