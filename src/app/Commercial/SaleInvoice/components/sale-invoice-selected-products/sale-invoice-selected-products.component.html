@@ -2,11 +2,14 @@
 <div class="p-4 font-family-sans">
 
     <!-- Barra de Búsqueda -->
-    <div class="mb-4">
-        <span class="p-input-icon-left w-full">
+    <div class="mb-16">
+        <p-iconfield iconPosition="left">
+            <p-inputicon>
+                <i class="pi pi-search text-gray-500"></i>
+            </p-inputicon>
             <input pInputText type="text" [(ngModel)]="filterText" (ngModelChange)="onFilter()"
                 placeholder="Buscar por código, nombre o descripción..." class="w-full" />
-        </span>
+        </p-iconfield>
     </div>
 
     <!-- Tabla de Productos con p-table -->

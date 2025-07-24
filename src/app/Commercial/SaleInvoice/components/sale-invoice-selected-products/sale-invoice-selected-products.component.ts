@@ -11,6 +11,8 @@ import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { ProductService } from '../../../BusinessMasters/Products/Services/product.service';
 import { Product } from '../../../BusinessMasters/Products/Models/Product';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 interface SelectableProduct extends Product {
   selected?: boolean;
@@ -25,7 +27,9 @@ interface SelectableProduct extends Product {
     TableModule,
     ButtonModule,
     InputTextModule,
-    CheckboxModule
+    CheckboxModule,
+    IconFieldModule,
+    InputIconModule
   ],
   templateUrl: './sale-invoice-selected-products.component.html',
   styleUrls: ['./sale-invoice-selected-products.component.css']
