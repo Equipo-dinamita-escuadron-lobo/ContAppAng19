@@ -10,6 +10,7 @@ import { DropdownModule } from "primeng/dropdown";
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { LocalStorageMethods, EntData } from '../../../Shared/Methods/local-storage.method';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-list-enterprise',
@@ -21,6 +22,7 @@ import { LocalStorageMethods, EntData } from '../../../Shared/Methods/local-stor
     HeaderComponent,
     IconFieldModule,
     InputIconModule,
+    InputTextModule,
     DropdownModule,
 ],
   templateUrl: './list-enterprise.component.html',

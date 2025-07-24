@@ -20,9 +20,10 @@
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
           <input
+          pInputText
             type="text"
             placeholder="Buscar..."
-            class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-b-button-secondary-hover focus:ring-1 focus:ring-primary transition"
+            class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
             [(ngModel)]="searchTerm"
             (ngModelChange)="filterEnterprises()"
           />
