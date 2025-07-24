@@ -24,6 +24,7 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { DropdownModule } from 'primeng/dropdown';
 import { SaleInvoiceSelectedProductsComponent } from '../sale-invoice-selected-products/sale-invoice-selected-products.component';
 import { DatePickerModule } from 'primeng/datepicker';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 
 @Component({
@@ -46,7 +47,7 @@ import { DatePickerModule } from 'primeng/datepicker';
     DatePickerModule
   ],
   providers: [
-    DialogService // ¡CLAVE! Se necesita proveer el servicio de diálogo de PrimeNG
+    DialogService 
   ],
   templateUrl: './sale-invoice-creation.component.html',
   styleUrl: './sale-invoice-creation.component.css'
@@ -104,7 +105,7 @@ export class SaleInvoiceCreationComponent {
    * Carga la lista completa de terceros (clientes) desde el servicio.
    */
   loadAllSuppliers() {
-    const entId = "bf4d475f-5d02-4551-b7f0-49a5c426ac0d";
+    const entId = this.localStorageMethods.getIdEnterprise();
     this.thirdService.getThirdList(entId).subscribe({
       next: (data) => {
         this.allSuppliers = data;
@@ -157,8 +158,6 @@ export class SaleInvoiceCreationComponent {
    * @param selectedClient El cliente seleccionado.
    */
   onClientSelect(selectedClient: Third) {
-    // `supplierS` ya se actualiza a través de ngModel.
-    // Aquí puedes añadir lógica adicional, como advertir si se cambian los productos.
     if (this.lstProducts.length > 0) {
       Swal.fire({
         title: "Cambio de cliente",
@@ -174,9 +173,6 @@ export class SaleInvoiceCreationComponent {
           this.lstProducts = []; // Limpiar productos
           this.calculateInvoiceTotals(); // Recalcular totales
         } else {
-          // Si el usuario cancela, revertimos la selección.
-          // Esta parte es opcional y depende de la UX que desees.
-          // Por simplicidad, la dejamos así. El usuario puede volver a buscar.
         }
       });
     }
@@ -261,7 +257,8 @@ export class SaleInvoiceCreationComponent {
     private dialogService: DialogService,
     private thirdService: ThirdService, //Descometar cuando este implementado
     private saleService: SaleInvoiceService,
-    private router: Router) { }
+    private router: Router,
+    private localStorageMethods: LocalStorageMethods) { }
 
   ngOnInit() {
     this.getEnterpriseSelectedInfo();
@@ -277,7 +274,7 @@ export class SaleInvoiceCreationComponent {
    * Si se ha seleccionado una empresa, se realiza una llamada a la API para obtener los detalles de la empresa por su ID.
    */
   getEnterpriseSelectedInfo() {
-    const id = "bf4d475f-5d02-4551-b7f0-49a5c426ac0d";
+    const id = this.localStorageMethods.getIdEnterprise();
     //const id = this.enterpriseService.getSelectedEnterprise();
     if (id === null) {
       // Manejar caso donde no hay empresa seleccionada
@@ -313,9 +310,6 @@ export class SaleInvoiceCreationComponent {
       });
     }
   }
-
-  //NOTA
-  //Se omite los metodos de sekectSupplier y createSupplier ya que no se va a ahcer con madales 
 
   /**
    * Actualiza la lista de productos con la abreviatura de la unidad de medida correspondiente a cada producto.
@@ -397,7 +391,6 @@ export class SaleInvoiceCreationComponent {
 
     this.dialogSubscription = this.ref.onClose.subscribe((result: any) => {
       if (result && result.length > 0) {
-        // La lógica interna sigue siendo la misma
         let products = result.map((prod: any) => {
           return {
             id: prod.id,
@@ -448,7 +441,7 @@ export class SaleInvoiceCreationComponent {
    * Recorre la lista de productos para calcular el subtotal y el descuento de cada uno, y luego calcula el total de impuestos y el total general de la factura.
    */
   calculateInvoiceTotals(): void {
-    // 1. Calcular Subtotal General (usando la nueva función base)
+    // 1. Calcular Subtotal General
     this.subTotal = this.lstProducts.reduce((acc, prod) => acc + this.calculateLineSubtotal(prod), 0);
 
     // 2. Calcular Descuento Total
@@ -465,7 +458,7 @@ export class SaleInvoiceCreationComponent {
       : 0;
 
     // 4. Calcular Retención
-    this.calculateRetention(); // Simplificado, ya que uvt está en la clase
+    this.calculateRetention(); 
 
     // 5. Calcular Total Final
     this.total = this.subTotal + this.taxTotal - this.retention;
@@ -487,8 +480,6 @@ export class SaleInvoiceCreationComponent {
     }
 
   }
-
-  //Nota: se omite la creacion de producto por el momento 
 
   /**
    * Formatea un precio a dos decimales y lo convierte a una cadena de texto.
@@ -607,7 +598,6 @@ export class SaleInvoiceCreationComponent {
    */
   saveFacture() {
     this.loadFactureInfo();
-    //console.log("Productos a enviar" + this.lstProductsSend.forEach(prod => { console.log(prod) }));
     const factureS: FactureV = {
       entId: this.enterpriseSelected?.id,
       thId: this.supplierS?.thId,
@@ -637,7 +627,6 @@ export class SaleInvoiceCreationComponent {
         const link = document.createElement('a');
         link.href = url;
 
-        // Extraer el nombre del archivo del encabezado 'Content-Disposition'
         const contentDisposition = blob.type;
         const fileName = this.extractFileName(contentDisposition);
 
@@ -857,7 +846,4 @@ export class SaleInvoiceCreationComponent {
     // 2. Recalcula TODOS los totales de la factura
     this.calculateInvoiceTotals();
   }
-
-  
-
 }

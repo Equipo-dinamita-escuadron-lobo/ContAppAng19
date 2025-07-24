@@ -1,3 +1,5 @@
+import { Injectable } from "@angular/core";
+
 export interface EntData {
   id: string;
   name: string;
@@ -5,6 +7,10 @@ export interface EntData {
   logo: string;
 }
 
+
+@Injectable({
+  providedIn: 'root' 
+})
 export class LocalStorageMethods {
   public saveEnterpriseData(data: EntData): void {
     localStorage.setItem('entData', JSON.stringify(data));
@@ -17,6 +23,16 @@ export class LocalStorageMethods {
       return parsedData;
     }
     return null;
+  }
+
+  public getIdEnterprise(): string{
+    const enterpriseData = localStorage.getItem('entData');
+    if (enterpriseData) {
+      const parsedData = JSON.parse(enterpriseData);
+      const id = parsedData.id;
+      return String(id);
+    }
+    return '';
   }
 
   public clearLocalStorage(): void {
