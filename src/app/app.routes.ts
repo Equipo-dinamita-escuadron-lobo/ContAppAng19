@@ -337,10 +337,38 @@ export const routes: Routes = [
             data: {
               breadcrumb: 'Productos',
             },
-            loadComponent: () =>
-              import(
-                './Commercial/BusinessMasters/Products/Components/product-list/product-list.component'
-              ).then((m) => m.ProductListComponent),
+            children: [
+              {
+                path: 'list',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Commercial/BusinessMasters/Products/Components/product-list/product-list.component'
+                  ).then((m) => m.ProductListComponent),
+              },
+              {
+                path: 'create',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Commercial/BusinessMasters/Products/Components/product-creation/product-creation.component'
+                  ).then((m) => m.ProductCreationComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Commercial/BusinessMasters/Products/Components/product-edit/product-edit.component'
+                  ).then((m) => m.ProductEditComponent),
+              }
+            ],
           },
         ],
       },
