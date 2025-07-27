@@ -119,7 +119,7 @@ export const navbarData: INavbarData[] = [
         label: 'Maestros Comerciales',
         items: [
           {
-            routeLink: 'commercial/products',
+            routeLink: 'commercial/products/list',
             icon: 'box',
             label: 'Productos',
           },

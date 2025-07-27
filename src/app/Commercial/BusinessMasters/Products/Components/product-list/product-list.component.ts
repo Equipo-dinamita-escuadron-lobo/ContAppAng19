@@ -21,6 +21,9 @@ import { Product } from '../../Models/Product';
 import { ProductService } from '../../Services/product.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { TagModule } from 'primeng/tag';
+import { InputIcon } from "primeng/inputicon";
+import { IconField } from "primeng/iconfield";
+import Swal from 'sweetalert2';
 
 // --- Componente de Detalles (debe ser standalone también) ---
 // import { ProductDetailsComponent } from '../product-details/product-details.component';
@@ -38,7 +41,9 @@ import { TagModule } from 'primeng/tag';
     ToastModule,
     DialogModule,
     TagModule,
-  ],
+    InputIcon,
+    IconField
+],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css'],
 })
@@ -60,6 +65,8 @@ export class ProductListComponent implements OnInit {
   constructor(
     private productService: ProductService,
     private router: Router,
+    private localstorageMethods: LocalStorageMethods,
+
   ) { }
 
   ngOnInit(): void {
@@ -69,7 +76,8 @@ export class ProductListComponent implements OnInit {
   }
 
   getProducts(): void {
-    this.productService.getProducts("bf4d475f-5d02-4551-b7f0-49a5c426ac0d").subscribe({
+    const enterpriseId = this.localstorageMethods.getIdEnterprise();
+    this.productService.getProducts(enterpriseId).subscribe({
       next: (data: Product[]) => {
         this.products = data;
         console.log('Productos obtenidos:', this.products);
@@ -92,29 +100,50 @@ export class ProductListComponent implements OnInit {
     this.router.navigate(['/commercial/masters/products/edit/', productId]);
   }
 
-  // --- AHORA: Usando ConfirmationService de PrimeNG ---
-  /*deleteProduct(product: Product): void {
-    this.confirmationService.confirm({
-        target: event?.target as EventTarget,
-        message: ¿Estás seguro de que deseas eliminar el producto "${product.description}"?,
-        header: 'Confirmación de Eliminación',
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Sí, eliminar',
-        rejectLabel: 'Cancelar',
-        accept: () => {
-            this.productService.deleteProduct(product.id).subscribe({
-                next: () => {
-                    this.messageService.add({ severity: 'success', summary: 'Confirmado', detail: 'Producto eliminado con éxito' });
-                    this.getProducts(); // Recargar la lista
-                },
-                error: (err) => {
-                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al eliminar el producto' });
-                    console.error(err);
-                }
+  // --- MÉTODO PARA ELIMINAR UN PRODUCTO ---
+   deleteProduct(productId: string): void {
+    // Utilizando SweetAlert para mostrar un cuadro de diálogo de confirmación
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: '¿Estás seguro de que deseas eliminar este producto?',
+      icon: 'warning',
+      confirmButtonColor: '#000066', // Color del botón de confirmación
+      cancelButtonColor: '#9D0311', // Color del botón de cancelación
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      // Si el usuario confirma la eliminación
+      if (result.isConfirmed) {
+        this.productService.deleteProduct(productId).subscribe(
+          (data: Product) => {
+            console.log('Producto eliminado con éxito: ', data);
+            this.getProducts();
+            // Mostrar cuadro de diálogo de éxito
+            Swal.fire({
+              title: 'Eliminado con éxito',
+              text: 'El producto se ha eliminado correctamente.',
+              icon: 'success',
+              confirmButtonColor: '#000066',
+              confirmButtonText: 'Aceptar'
             });
-        }
+            //this.router.navigate(['/general/operations/products']);
+          },
+          (error) => {
+            console.error('Error al eliminar el producto: ', error);
+            // Mostrar cuadro de diálogo de error
+            Swal.fire({
+              title: 'Error al eliminar',
+              text: 'Ha ocurrido un error al intentar eliminar el producto.',
+              icon: 'error',
+              confirmButtonColor: '#000066',
+              confirmButtonText: 'Aceptar'
+            });
+          }
+        );
+      }
     });
-  }*/
+  }
 
   // --- MÉTODO PARA ABRIR EL MODAL ---
   openDetailsModal(product: Product): void {

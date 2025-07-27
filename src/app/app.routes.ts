@@ -218,10 +218,28 @@ export const routes: Routes = [
             data: {
               breadcrumb: 'Productos',
             },
-            loadComponent: () =>
-              import(
-                './Commercial/BusinessMasters/Products/Components/product-list/product-list.component'
-              ).then((m) => m.ProductListComponent),
+            children: [
+              {
+                path: 'list',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Commercial/BusinessMasters/Products/Components/product-list/product-list.component'
+                  ).then((m) => m.ProductListComponent),
+              },
+              {
+                path: 'create',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Commercial/BusinessMasters/Products/Components/product-creation/product-creation.component'
+                  ).then((m) => m.ProductCreationComponent),
+              }
+            ],
           },
         ],
       },
