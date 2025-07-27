@@ -97,7 +97,7 @@ export class ProductListComponent implements OnInit {
   }
 
   redirectToEdit(productId: string): void {
-    this.router.navigate(['/commercial/masters/products/edit/', productId]);
+    this.router.navigate(['/commercial/products/edit/', productId]);
   }
 
   // --- MÉTODO PARA ELIMINAR UN PRODUCTO ---

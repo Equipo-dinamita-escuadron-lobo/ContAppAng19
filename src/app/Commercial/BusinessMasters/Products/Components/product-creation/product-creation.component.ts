@@ -130,6 +130,8 @@ export class ProductCreationComponent implements OnInit {
     formData.quantity = Number(formData.quantity);
     formData.taxPercentage = Number(formData.taxPercentage);
 
+    console.log('Datos del formulario:', formData);
+
     this.productService.createProduct(formData).subscribe({
       next: () => {
         Swal.fire({
