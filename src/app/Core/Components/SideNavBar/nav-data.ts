@@ -7,6 +7,68 @@ export const navbarData: INavbarData[] = [
     label: 'Home',
   },
   {
+    routeLink: '/general-configuration',
+    icon: 'settings',
+    label: 'Configuración General',
+    items: [
+      {
+        routeLink: '/general-configuration/account-catalogue',
+        icon: 'account_balance_wallet',
+        label: 'Catálogo de Cuentas',
+      },
+      {
+        routeLink: '/general-configuration/taxes/list',
+        icon: 'request_page',
+        label: 'Impuestos',
+      },
+      {
+        routeLink: '/general-configuration/third-parties',
+        icon: 'groups',
+        label: 'Terceros',
+      },
+      {
+        routeLink: '/general-configuration/inventory',
+        icon: 'data_table',
+        label: 'Inventario',
+      },
+      {
+        routeLink: '/general-configuration/payment-methods',
+        icon: 'payments',
+        label: 'Métodos de Pago',
+      },
+      {
+        routeLink: '/general-configuration/document-types',
+        icon: 'description',
+        label: 'Tipos de Documentos',
+      },
+      {
+        routeLink: '/general-configuration/document-statuses',
+        icon: 'Task',
+        label: 'Estados de Documentos',
+      },
+      {
+        routeLink: '/general-configuration/bank-accounts',
+        icon: 'account_balance',
+        label: 'Banco y Cuentas Bancarias',
+      },
+      {
+        routeLink: '/general-configuration/cost-centers',
+        icon: 'paid',
+        label: 'Centros de Costo',
+      },
+      {
+        routeLink: '/general-configuration/aged-receivables',
+        icon: 'Calendar_month',
+        label: 'Edades Cartera',
+      },
+      {
+        routeLink: '/general-configuration/help-panels',
+        icon: 'help',
+        label: 'Cuadros de Diálogo',
+      },
+    ],
+  },
+  {
     routeLink: 'TO DO',
     icon: 'construction',
     label: 'Maestros Generales',
@@ -42,11 +104,6 @@ export const navbarData: INavbarData[] = [
             routeLink: 'TO DO',
             icon: 'docs',
             label: 'Documentos',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'request_quote',
-            label: 'Impuestos',
           },
         ],
       },

@@ -1,0 +1,8 @@
+/* Estilos específicos para el componente de creación de impuestos */
+
+/* Personalización del toast */
+::ng-deep .p-toast {
+  z-index: 9999;
+}
+
+
