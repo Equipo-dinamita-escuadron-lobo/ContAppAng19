@@ -17,7 +17,7 @@ export const navbarData: INavbarData[] = [
         label: 'Catálogo de Cuentas',
       },
       {
-        routeLink: '/general-configuration/taxes',
+        routeLink: '/general-configuration/taxes/list',
         icon: 'request_page',
         label: 'Impuestos',
       },
@@ -104,11 +104,6 @@ export const navbarData: INavbarData[] = [
             routeLink: 'TO DO',
             icon: 'docs',
             label: 'Documentos',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'request_quote',
-            label: 'Impuestos',
           },
         ],
       },

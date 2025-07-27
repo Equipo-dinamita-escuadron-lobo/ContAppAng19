@@ -127,12 +127,33 @@ export const routes: Routes = [
                 './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
               ).then((m) => m.ThirdPartiesListComponent),
           },
-          // Rutas placeholder para las demás secciones
+          // Rutas de Impuestos
           {
             path: 'taxes',
             data: { breadcrumb: 'Impuestos' },
-            loadComponent: () =>
-              import('./GeneralConfiguration/Components/menu/menu.component').then((m) => m.MenuComponent),
+            children: [
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import('./GeneralConfiguration/Taxes/components/list-tax/list-tax.component')
+                    .then((m) => m.ListTaxComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Impuesto' },
+                loadComponent: () =>
+                  import('./GeneralConfiguration/Taxes/components/create-tax/create-tax.component')
+                    .then((m) => m.CreateTaxComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Impuesto' },
+                loadComponent: () =>
+                  import('./GeneralConfiguration/Taxes/components/edit-tax/edit-tax.component')
+                    .then((m) => m.EditTaxComponent),
+              },
+            ],
           },
           {
             path: 'inventory',
