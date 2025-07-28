@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseList } from '../models/EnterpriseList';
@@ -35,7 +35,8 @@ export class ListEnterpriseComponent {
   searchTerm: string = '';
 
   constructor(
-    private enterpriseService: EnterpriseService
+    private enterpriseService: EnterpriseService,
+    private router: Router
   ) {}
 
   LocalStorageMethods = new LocalStorageMethods();
@@ -97,5 +98,9 @@ export class ListEnterpriseComponent {
       logo: enterprise.logo
     };
     this.LocalStorageMethods.saveEnterpriseData(this.entData);
+  }
+
+  onCreateEnterprise(): void {
+    this.router.navigate(['/enterprise/create']);
   }
 }
