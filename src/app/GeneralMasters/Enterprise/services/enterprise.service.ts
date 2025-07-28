@@ -47,5 +47,34 @@ export class EnterpriseService {
     return this.http.get<EnterpriseDetails>(url);
   }
 
+  /**
+   * Crea una nueva empresa
+   * @param enterprise Datos de la empresa a crear
+   * @returns Observable con la empresa creada
+   */
+  createEnterprise(enterprise: EnterpriseDetails): Observable<EnterpriseDetails> {
+    return this.http.post<EnterpriseDetails>(this.apiUrl, enterprise);
+  }
+
+  /**
+   * Actualiza una empresa existente
+   * @param id ID de la empresa
+   * @param enterprise Datos actualizados de la empresa
+   * @returns Observable con la empresa actualizada
+   */
+  updateEnterprise(id: string, enterprise: EnterpriseDetails): Observable<EnterpriseDetails> {
+    const url = `${this.apiUrl}${id}`;
+    return this.http.put<EnterpriseDetails>(url, enterprise);
+  }
+
+  /**
+   * Elimina una empresa
+   * @param id ID de la empresa a eliminar
+   * @returns Observable vacío
+   */
+  deleteEnterprise(id: string): Observable<void> {
+    const url = `${this.apiUrl}${id}`;
+    return this.http.delete<void>(url);
+  }
 
 }

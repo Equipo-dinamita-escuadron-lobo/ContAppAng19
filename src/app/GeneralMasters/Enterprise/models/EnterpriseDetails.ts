@@ -1,10 +1,10 @@
 export interface EnterpriseDetails{
     id?:string;
-    name: String;
-    nit: String;
-    phone: String;
-    branch: String;
-    email: String;
+    name: string;
+    nit: string;
+    phone: string;
+    branch: string;
+    email: string;
     logo: string;
     /* Descomentar cuando este implementado
     taxLiabilities: TaxLiability[];
@@ -18,7 +18,12 @@ export interface EnterpriseDetails{
     enterpriseType: any;
     personType: any;
     location: any;
-    dv: String;
+    dv: string;
     mainActivity?:number;
     secondaryActivity?: number;
+    // Campos específicos para persona jurídica
+    legalName?: string;
+    // Campos específicos para persona natural
+    ownerName?: string;
+    lastNames?: string;
 }
