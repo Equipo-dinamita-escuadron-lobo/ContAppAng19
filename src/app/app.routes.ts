@@ -31,6 +31,17 @@ export const routes: Routes = [
     canActivate: [hasRoleGuard(['admin_realm'])],
   },
   {
+    path: 'enterprise/edit',
+    data: {
+      breadcrumb: 'enterprise-edit',
+    },
+    loadComponent: () =>
+      import('./GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component').then(
+        (m) => m.EditEnterpriseComponent
+      ),
+    canActivate: [hasRoleGuard(['admin_realm'])],
+  },
+  {
     path: '',
     component: MainTemplateComponent,
     canActivate: [hasRoleGuard(['admin_realm', 'user_realm', 'super_realm'])],
