@@ -15,6 +15,12 @@ let API_URL = environment.API_URL + 'enterprises/';
 export class EnterpriseService {
   private apiUrl = API_URL;
 
+  constructor(private http: HttpClient) { }
+
+  //METODOS PARA OBTENER INFORTMACION DE LA EMPRESA SELECCIONADA
+  /** Métodos de almacenamiento local */
+  localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
+
   getEnterprisesActive(): Observable<EnterpriseList[]> {
     return this.http.get<EnterpriseList[]>(this.apiUrl);
   }
@@ -22,12 +28,6 @@ export class EnterpriseService {
   getEnterprisesInactive(): Observable<EnterpriseList[]> {
     return this.http.get<EnterpriseList[]>(this.apiUrl + 'inactive');
   }
-
-  constructor(private http: HttpClient) { }
-
-  //METODOS PARA OBTENER INFORTMACION DE LA EMPRESA SELECCIONADA
-  /** Métodos de almacenamiento local */
-  localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
 
   /**
    * Obtiene la empresa seleccionada del almacenamiento local
@@ -76,5 +76,4 @@ export class EnterpriseService {
     const url = `${this.apiUrl}${id}`;
     return this.http.delete<void>(url);
   }
-
 }
