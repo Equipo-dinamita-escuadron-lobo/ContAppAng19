@@ -51,6 +51,10 @@ export class ViewEnterpriseComponent implements OnInit {
     this.router.navigate(['/enterprise/list']);
   }
 
+  goToEdit(): void {
+    this.router.navigate(['/enterprise/edit']);
+  }
+
   // Métodos para obtener nombres de los tipos
   getEnterpriseTypeName(type: any): string {
     if (!type) return 'No disponible';
