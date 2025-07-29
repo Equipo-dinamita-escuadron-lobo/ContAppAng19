@@ -10,7 +10,7 @@ let API_URL = environment.API_URL + 'thirds/';
   providedIn: 'root'
 })
 export class UnitOfMeasureService {
-
+  
   constructor(private http: HttpClient) { }
 
   // Método para obtener por Id las unidades de medida

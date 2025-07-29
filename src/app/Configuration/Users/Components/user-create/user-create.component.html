@@ -7,7 +7,7 @@
   </head>
   <body class="bg-gray-100 py-10 px-4">
     <div class="max-w-4xl mx-auto">
-      <form class="account-section" id="createUserForm">
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="account-section">
         <h2 class="section-title col-span-full">Formulario de Creación de Usuario</h2>
 
         <!-- Nombre -->
@@ -16,9 +16,9 @@
           <input
             type="text"
             id="firstName"
-            name="firstName"
             class="input-base"
             placeholder="Ej: Ana"
+            formControlName="firstName"
             required
           />
         </div>
@@ -29,22 +29,9 @@
           <input
             type="text"
             id="lastName"
-            name="lastName"
             class="input-base"
             placeholder="Ej: Gómez"
-            required
-          />
-        </div>
-
-        <!-- Nombre de usuario -->
-        <div>
-          <label for="username" class="label-title">Nombre de Usuario</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            class="input-base"
-            placeholder="Ej: anagomez"
+            formControlName="lastName"
             required
           />
         </div>
@@ -55,9 +42,9 @@
           <input
             type="email"
             id="email"
-            name="email"
             class="input-base"
             placeholder="usuario@ejemplo.com"
+            formControlName="email"
             required
           />
         </div>
@@ -68,18 +55,17 @@
           <input
             type="password"
             id="password"
-            name="password"
             class="input-base"
             placeholder="********"
+            formControlName="password"
             required
           />
         </div>
 
         <!-- Roles -->
         <div>
-          <label for="rol" class="label-title">Rol</label>
-          <select id="rol" name="rol" class="select-base">
-            <option value="">Seleccione un rol</option>
+          <label for="roles" class="label-title">Rol</label>
+          <select id="roles" class="select-base" formControlName="roles" multiple>
             <option value="administrador">Administrador</option>
             <option value="estudiante">Estudiante</option>
             <option value="profesor">Profesor</option>
