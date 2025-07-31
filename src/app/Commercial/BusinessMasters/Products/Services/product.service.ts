@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
 import { delay, Observable, of } from 'rxjs';
 import { Product } from '../Models/Product';
-import { ProductType } from '../Models/ProductType';
+import { ProductType } from '../../ProductTypes/Models/ProductType';
 
 
 let API_URL = environment.API_URL;

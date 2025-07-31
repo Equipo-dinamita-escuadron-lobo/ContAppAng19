@@ -14,7 +14,7 @@ import { TaxService } from '../../services/tax.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
-import { cuentasDiferentesValidator, collectLeaves } from '../../customValidators/validateTaxInputs';
+import { cuentasDiferentesValidator, collectLeaves } from '../../CustomValidators/validateTaxInputs';
 
 @Component({
   selector: 'app-edit-tax',
@@ -276,7 +276,7 @@ export class EditTaxComponent implements OnInit {
    * Navega de vuelta a la lista de impuestos
    */
   goBack(): void {
-    this.router.navigate(['/general-configuration/taxes/list']);
+    this.router.navigate(['/gen-masters/taxes/list']);
   }
 
   /**

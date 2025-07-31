@@ -21,68 +21,58 @@ export class MenuComponent {
     {
       title: 'Catálogo de Cuentas',
       icon: 'account_balance_wallet',
-      route: '/general-configuration/account-catalogue',
+      route: '/gen-masters/account-catalogue',
       description: 'Gestión del plan de cuentas contables'
     },
     {
       title: 'Impuestos',
       icon: 'request_page',
-      route: '/general-configuration/taxes',
+      route: '/gen-masters/taxes',
       description: 'Configuración de impuestos y tarifas'
     },
     {
       title: 'Terceros',
       icon: 'groups',
-      route: '/general-configuration/third-parties',
+      route: '/gen-masters/third-parties',
       description: 'Gestión de clientes y proveedores'
     },
     {
       title: 'Inventario',
       icon: 'data_table',
-      route: '/general-configuration/inventory',
+      route: '/gen-masters/inventory',
       description: 'Configuración de inventarios'
     },
     {
       title: 'Métodos de Pago',
       icon: 'payments',
-      route: '/general-configuration/payment-methods',
+      route: '/gen-masters/payment-methods',
       description: 'Formas de pago disponibles'
     },
     {
       title: 'Tipos de Documentos',
       icon: 'description',
-      route: '/general-configuration/document-types',
+      route: '/gen-masters/document-types',
       description: 'Tipos de documentos del sistema'
     },
-    {
-      title: 'Estados de Documentos',
-      icon: 'Task',
-      route: '/general-configuration/document-statuses',
-      description: 'Estados de los documentos'
-    },
+
     {
       title: 'Banco y Cuentas Bancarias',
       icon: 'account_balance',
-      route: '/general-configuration/bank-accounts',
+      route: '/gen-masters/bank-accounts',
       description: 'Gestión de cuentas bancarias'
     },
     {
       title: 'Centros de Costo',
       icon: 'paid',
-      route: '/general-configuration/cost-centers',
+      route: '/gen-masters/cost-centers',
       description: 'Configuración de centros de costo'
     },
+
     {
-      title: 'Edades Cartera',
-      icon: 'Calendar_month',
-      route: '/general-configuration/aged-receivables',
-      description: 'Configuración de edades de cartera'
-    },
-    {
-      title: 'Cuadros de Diálogo',
+      title: 'Centro de Ayuda',
       icon: 'help',
-      route: '/general-configuration/help-panels',
-      description: 'Paneles de ayuda del sistema'
+      route: '/gen-masters/help-panels',
+      description: 'Configuración del centro de ayuda del sistema'
     }
   ];
 

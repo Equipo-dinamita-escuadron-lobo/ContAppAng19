@@ -6,82 +6,58 @@ export const navbarData: INavbarData[] = [
     icon: 'home',
     label: 'Home',
   },
+
   {
-    routeLink: '/general-configuration',
-    icon: 'settings',
-    label: 'Configuración General',
+    routeLink: '/gen-masters',
+    icon: 'construction',
+    label: 'Maestros Generales',
     items: [
       {
-        routeLink: '/general-configuration/account-catalogue',
+        routeLink: '/gen-masters/account-catalogue',
         icon: 'account_balance_wallet',
         label: 'Catálogo de Cuentas',
       },
       {
-        routeLink: '/general-configuration/taxes/list',
+        routeLink: '/gen-masters/taxes/list',
         icon: 'request_page',
         label: 'Impuestos',
       },
-      {
-        routeLink: '/general-configuration/third-parties',
-        icon: 'groups',
-        label: 'Terceros',
-      },
-      {
-        routeLink: '/general-configuration/inventory',
-        icon: 'data_table',
-        label: 'Inventario',
-      },
-      {
-        routeLink: '/general-configuration/payment-methods',
-        icon: 'payments',
-        label: 'Métodos de Pago',
-      },
-      {
-        routeLink: '/general-configuration/document-types',
-        icon: 'description',
-        label: 'Tipos de Documentos',
-      },
-      {
-        routeLink: '/general-configuration/document-statuses',
-        icon: 'Task',
-        label: 'Estados de Documentos',
-      },
-      {
-        routeLink: '/general-configuration/bank-accounts',
-        icon: 'account_balance',
-        label: 'Banco y Cuentas Bancarias',
-      },
-      {
-        routeLink: '/general-configuration/cost-centers',
-        icon: 'paid',
-        label: 'Centros de Costo',
-      },
-      {
-        routeLink: '/general-configuration/aged-receivables',
-        icon: 'Calendar_month',
-        label: 'Edades Cartera',
-      },
-      {
-        routeLink: '/general-configuration/help-panels',
-        icon: 'help',
-        label: 'Cuadros de Diálogo',
-      },
-    ],
-  },
-  {
-    routeLink: 'TO DO',
-    icon: 'construction',
-    label: 'Maestros Generales',
-    items: [
       {
         routeLink: '/gen-masters/third-parties/list',
         icon: 'groups',
         label: 'Terceros',
       },
       {
-        routeLink: '/gen-masters/catalogue-accounts',
-        icon: 'article',
-        label: 'Catálogo de cuentas',
+        routeLink: '/gen-masters/inventory',
+        icon: 'data_table',
+        label: 'Inventario',
+      },
+      {
+        routeLink: '/gen-masters/payment-methods',
+        icon: 'payments',
+        label: 'Métodos de Pago',
+      },
+      {
+        routeLink: '/gen-masters/document-types',
+        icon: 'description',
+        label: 'Tipos de Documentos',
+      },
+
+      {
+        routeLink: '/gen-masters/bank-accounts',
+        icon: 'account_balance',
+        label: 'Banco y Cuentas Bancarias',
+      },
+      {
+        routeLink: '/gen-masters/cost-centers',
+        icon: 'paid',
+        label: 'Centros de Costo',
+      },
+
+      {
+        routeLink: '/gen-masters/help-panels',
+        icon: 'help',
+        label: 'Centro de Ayuda',
       },
     ],
   },
@@ -181,17 +157,17 @@ export const navbarData: INavbarData[] = [
             label: 'Productos',
           },
           {
-            routeLink: 'TO DO',
+            routeLink: '/commercial/business-masters/product-types/list',
             icon: 'dashboard',
             label: 'Tipos de Productos',
           },
           {
-            routeLink: 'TO DO',
+            routeLink: '/commercial/business-masters/categories/list',
             icon: 'category_search',
             label: 'Categorias',
           },
           {
-            routeLink: 'TO DO',
+            routeLink: '/commercial/business-masters/measurement-units/list',
             icon: 'square_foot',
             label: 'Unidad de Medida',
           },

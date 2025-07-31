@@ -16,7 +16,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
-import { ProductType } from '../../Models/ProductType';
+import { ProductType } from '../../../ProductTypes/Models/ProductType';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ProductService } from '../../Services/product.service';
 import { UnitOfMeasureService } from '../../../MeasurementUnits/Services/unit-of-measure.service';
@@ -93,9 +93,9 @@ export class ProductCreationComponent implements OnInit {
   }
 
   loadProductTypes(): void {
-    this.productTypeService.getAllProductTypes().subscribe({
-      next: (data) => this.productTypes = data,
-      error: (err) => console.error('Error al cargar tipos de producto', err)
+    this.productTypeService.getProductTypes(this.entData).subscribe({
+      next: (data: any) => this.productTypes = data,
+      error: (err: any) => console.error('Error al cargar tipos de producto', err)
     });
   }
 

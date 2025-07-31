@@ -1,0 +1,82 @@
+<!-- Contenedor Principal con la fuente y fondo estandarizados -->
+<div class="flex w-full h-full font-titillium">
+  <!-- Tarjeta de Contenido Principal, aplicando el estilo de la guía -->
+  <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
+
+    <!-- 1. CABECERA: Título y Botón de Regreso -->
+    <div class="flex justify-between items-start mb-12">
+      <!-- Título con el estilo de marca -->
+      <div class="items-center">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+          Crear Nueva Unidad de Medida
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-2">
+          Ingrese la información requerida para registrar una nueva unidad de medida en el sistema.
+        </p>
+      </div>
+
+      <!-- Botón de Regreso -->
+      <div class="hidden sm:block">
+        <p-button icon="pi pi-arrow-left" (click)="goBack()" pTooltip="Regresar a la lista"
+          styleClass="p-button-text p-button-secondary"></p-button>
+      </div>
+    </div>
+
+    <!-- 2. FORMULARIO DE CREACIÓN DE UNIDAD DE MEDIDA -->
+    <form [formGroup]="unitOfMeasureForm" (ngSubmit)="onSubmit()">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 font-family-sans">
+
+        <!-- Nombre de la Unidad -->
+        <div class="flex flex-col gap-2">
+          <label for="name" class="font-semibold text-primary">Nombre de la Unidad</label>
+          <input pInputText id="name" formControlName="name" placeholder="Ej: Kilogramo"
+            class="w-full md:w-2/3" />
+          @if (hasFieldError('name')) {
+          <small class="text-red-500">{{ getFieldError('name') }}</small>
+          }
+        </div>
+
+        <!-- Abreviatura -->
+        <div class="flex flex-col gap-2">
+          <label for="abbreviation" class="font-semibold text-primary">Abreviatura</label>
+          <input pInputText id="abbreviation" formControlName="abbreviation" placeholder="Ej: Kg"
+            class="w-full md:w-2/3" />
+          @if (hasFieldError('abbreviation')) {
+          <small class="text-red-500">{{ getFieldError('abbreviation') }}</small>
+          }
+        </div>
+
+        <!-- Descripción -->
+        <div class="flex flex-col gap-2 md:col-span-2">
+          <label for="description" class="font-semibold text-primary">Descripción</label>
+          <input pInputText id="description" formControlName="description" 
+            placeholder="Ej: Unidad de medida de masa utilizada para pesar productos"
+            class="w-full md:w-4/5" />
+          @if (hasFieldError('description')) {
+          <small class="text-red-500">{{ getFieldError('description') }}</small>
+          }
+        </div>
+
+      </div>
+
+      <!-- 3. BOTONES DE ACCIÓN -->
+      <div class="flex justify-start gap-4 mt-8 pt-6 border-t border-gray-200">
+        <p-button
+          label="Crear Unidad de Medida"
+          type="submit"
+          icon="pi pi-check"
+          styleClass="p-button-primary"
+        ></p-button>
+        
+        <p-button
+          label="Cancelar"
+          type="button"
+          (click)="goBack()"
+          icon="pi pi-times"
+          styleClass="p-button-secondary"
+        ></p-button>
+      </div>
+    </form>
+
+  </div>
+</div>
