@@ -11,7 +11,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { MessageService, ConfirmationService } from 'primeng/api';
-import { TaxList } from '../../../Taxes/models/Tax';
+import { TaxList } from '../../models/Tax';
 import { TaxService } from '../../services/tax.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
@@ -148,14 +148,14 @@ export class ListTaxComponent implements OnInit {
    * Navega al componente de creación de impuestos
    */
   createTax(): void {
-    this.router.navigate(['/general-configuration/taxes/create']);
+    this.router.navigate(['/gen-masters/taxes/create']);
   }
 
   /**
    * Navega al componente de edición de impuestos
    */
   editTax(tax: TaxList): void {
-    this.router.navigate(['/general-configuration/taxes/edit', tax.id], {
+    this.router.navigate(['/gen-masters/taxes/edit', tax.id], {
       state: { taxData: tax }
     });
   }

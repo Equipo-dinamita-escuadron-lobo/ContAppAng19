@@ -16,6 +16,9 @@ import { ButtonModule } from 'primeng/button';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 
@@ -25,7 +28,8 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
     AccountFormComponent, FilterPipe,
-    ButtonModule, FileUploadModule, DropdownModule, DialogModule
+    ButtonModule, FileUploadModule, DropdownModule, DialogModule,
+    IconFieldModule, InputIconModule, InputTextModule
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.css'

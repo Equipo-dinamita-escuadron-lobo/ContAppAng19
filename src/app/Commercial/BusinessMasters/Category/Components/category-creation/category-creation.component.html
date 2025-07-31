@@ -1,0 +1,144 @@
+<!-- Contenedor Principal con la fuente y fondo estandarizados -->
+<div class="flex w-full h-full" style="font-family: var(--font-family-titillium);">
+  <!-- Tarjeta de Contenido Principal, aplicando el estilo de la guía -->
+  <div class="m-4 md:m-10 w-full font-medium rounded-2xl md:rounded-3xl p-6 md:p-10" style="background-color: var(--color-primary-100);">
+
+    <!-- 1. CABECERA: Título y Botón de Regreso -->
+    <div class="flex justify-between items-start mb-12">
+      <!-- Título con el estilo de marca -->
+      <div class="items-center">
+        <h1 class="font-bold text-3xl/41 inline-block pb-1" style="font-family: var(--font-family-titillium); color: var(--color-primary); border-bottom: 4px solid var(--color-secondary);">
+          Crear Nueva Categoría
+        </h1>
+        <p class="font-normal text-sm mt-2" style="font-family: var(--font-family-sans);">
+          Ingrese la información requerida para registrar una nueva categoría en el sistema.
+        </p>
+      </div>
+
+      <!-- Botón de Regreso -->
+      <div class="hidden sm:block">
+        <p-button icon="pi pi-arrow-left" (click)="goBack()" pTooltip="Regresar a la lista"
+          styleClass="p-button-text p-button-secondary"></p-button>
+      </div>
+    </div>
+
+    <!-- 2. FORMULARIO DE CREACIÓN DE CATEGORÍA -->
+    <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5" style="font-family: var(--font-family-sans);">
+
+        <!-- Nombre de la Categoría -->
+        <div class="flex flex-col gap-2">
+          <label for="name" class="font-semibold" style="color: var(--color-primary);">Nombre de la Categoría</label>
+          <input pInputText id="name" formControlName="name" placeholder="Ej: Electrónicos, Ropa, Alimentos"
+            class="w-full md:w-2/3" />
+          @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+          <small style="color: var(--color-error-35);">El nombre es requerido.</small>
+          }
+        </div>
+
+        <!-- Descripción -->
+        <div class="flex flex-col gap-2">
+          <label for="description" class="font-semibold" style="color: var(--color-primary);">Descripción</label>
+          <input pInputText id="description" formControlName="description" 
+            placeholder="Descripción de la categoría"
+            class="w-full md:w-2/3" />
+          @if (categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched) {
+          <small style="color: var(--color-error-35);">La descripción es requerida.</small>
+          }
+        </div>
+
+        <!-- Cuenta de Inventario -->
+        <div class="flex flex-col gap-2">
+          <label for="inventory" class="font-semibold" style="color: var(--color-primary);">Cuenta de Inventario</label>
+          <p-dropdown inputId="inventory" [options]="inventory" formControlName="inventory"
+            placeholder="Seleccione cuenta de inventario" optionLabel="description" optionValue="id" 
+            [showClear]="true" [filter]="true" filterBy="code,description"
+            styleClass="w-full md:w-2/3">
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+              <div *ngIf="selectedOption">
+                {{ selectedOption.code }} - {{ selectedOption.description }}
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} - {{ option.description }}</div>
+            </ng-template>
+          </p-dropdown>
+          @if (categoryForm.get('inventory')?.invalid && categoryForm.get('inventory')?.touched) {
+          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de inventario.</small>
+          }
+        </div>
+
+        <!-- Cuenta de Costo -->
+        <div class="flex flex-col gap-2">
+          <label for="cost" class="font-semibold" style="color: var(--color-primary);">Cuenta de Costo</label>
+          <p-dropdown inputId="cost" [options]="cost" formControlName="cost"
+            placeholder="Seleccione cuenta de costo" optionLabel="description" optionValue="id" 
+            [showClear]="true" [filter]="true" filterBy="code,description"
+            styleClass="w-full md:w-2/3">
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+              <div *ngIf="selectedOption">
+                {{ selectedOption.code }} - {{ selectedOption.description }}
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} - {{ option.description }}</div>
+            </ng-template>
+          </p-dropdown>
+          @if (categoryForm.get('cost')?.invalid && categoryForm.get('cost')?.touched) {
+          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de costo.</small>
+          }
+        </div>
+
+        <!-- Cuenta de Venta -->
+        <div class="flex flex-col gap-2">
+          <label for="sale" class="font-semibold" style="color: var(--color-primary);">Cuenta de Venta</label>
+          <p-dropdown inputId="sale" [options]="sale" formControlName="sale"
+            placeholder="Seleccione cuenta de venta" optionLabel="description" optionValue="id" 
+            [showClear]="true" [filter]="true" filterBy="code,description"
+            styleClass="w-full md:w-2/3">
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+              <div *ngIf="selectedOption">
+                {{ selectedOption.code }} - {{ selectedOption.description }}
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} - {{ option.description }}</div>
+            </ng-template>
+          </p-dropdown>
+          @if (categoryForm.get('sale')?.invalid && categoryForm.get('sale')?.touched) {
+          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de venta.</small>
+          }
+        </div>
+
+        <!-- Cuenta de Devolución -->
+        <div class="flex flex-col gap-2">
+          <label for="return" class="font-semibold" style="color: var(--color-primary);">Cuenta de Devolución</label>
+          <p-dropdown inputId="return" [options]="return" formControlName="return"
+            placeholder="Seleccione cuenta de devolución" optionLabel="description" optionValue="id" 
+            [showClear]="true" [filter]="true" filterBy="code,description"
+            styleClass="w-full md:w-2/3">
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+              <div *ngIf="selectedOption">
+                {{ selectedOption.code }} - {{ selectedOption.description }}
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} - {{ option.description }}</div>
+            </ng-template>
+          </p-dropdown>
+          @if (categoryForm.get('return')?.invalid && categoryForm.get('return')?.touched) {
+          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de devolución.</small>
+          }
+        </div>
+
+      </div>
+
+      <!-- 3. BOTÓN DE ACCIÓN FINAL -->
+      <div class="flex justify-end mt-8">
+        <p-button label="Crear Categoría" icon="pi pi-check" type="submit"
+          [loading]="formSubmitAttempt && categoryForm.pending"></p-button>
+      </div>
+    </form>
+
+  </div>
+</div>

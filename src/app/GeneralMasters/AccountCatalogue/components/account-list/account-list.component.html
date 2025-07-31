@@ -81,21 +81,23 @@
         </div>
 
 
-        <form class="flex justify-center sm:justify-start sm:ml-8 mt-20">
-            <div
-                class="mb-16 -ml-7 flex w-full sm:w-2/6 rounded-md border-b-2 border-neutral-400  text-neutral-400 focus-within:border-primary focus-within:text-primary transition-colors duration-300">
-
-                <svg class="h-20 w-20 mx-2 text-inherit" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-
-                <input type="text" id="search" placeholder="Buscar cuenta (código/nombre)" name="filterEnterpriseList"
-                    [(ngModel)]="filterAccount"
-                    class="mb-1 w-10/12 bg-transparent font-family-sans font-normal text-sm  outline-none placeholder-neutral-400 text-inherit focus:text-primary" />
+        <!-- Search Field -->
+        <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+            <div class="w-full sm:w-[30rem]">
+                <p-iconfield iconPosition="left">
+                    <p-inputicon>
+                        <i class="pi pi-search text-gray-500"></i>
+                    </p-inputicon>
+                    <input
+                        pInputText
+                        type="text"
+                        [(ngModel)]="filterAccount"
+                        placeholder="Buscar cuenta (código/nombre)..."
+                        class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+                    />
+                </p-iconfield>
             </div>
-        </form>
+        </div>
 
 
 

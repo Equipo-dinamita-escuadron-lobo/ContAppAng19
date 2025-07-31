@@ -1,4 +1,4 @@
-import { ProductType } from "./ProductType";
+import { ProductType } from "../../ProductTypes/Models/ProductType";
 
 
 export interface Product {
