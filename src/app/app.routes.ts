@@ -147,6 +147,11 @@ export const routes: Routes = [
             },
             children: [
               {
+                path: '',
+                redirectTo: 'list',
+                pathMatch: 'full'
+              },
+              {
                 path: 'list',
                 data: {
                   breadcrumb: null,
@@ -184,6 +189,11 @@ export const routes: Routes = [
             data: { breadcrumb: 'Impuestos' },
             children: [
               {
+                path: '',
+                redirectTo: 'list',
+                pathMatch: 'full'
+              },
+              {
                 path: 'list',
                 data: { breadcrumb: null },
                 loadComponent: () =>
@@ -209,8 +219,108 @@ export const routes: Routes = [
           {
             path: 'inventory',
             data: { breadcrumb: 'Inventario' },
-            loadComponent: () =>
-              import('./GeneralMasters/Components/MenuCards/menu.component').then((m) => m.MenuComponent),
+            children: [
+              {
+                path: '',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import('./GeneralMasters/Inventory/Components/MenuCards/inventory-menu.component')
+                    .then((m) => m.InventoryMenuComponent),
+              },
+              {
+                path: 'products',
+                data: { breadcrumb: 'Productos' },
+                children: [
+                  {
+                    path: 'list',
+                    data: { breadcrumb: null },
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/Products/Components/product-list/product-list.component'
+                      ).then((m) => m.ProductListComponent),
+                  },
+                  {
+                    path: 'create',
+                    data: { breadcrumb: 'Crear Producto' },
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/Products/Components/product-creation/product-creation.component'
+                      ).then((m) => m.ProductCreationComponent),
+                  },
+                  {
+                    path: 'edit/:id',
+                    data: { breadcrumb: 'Editar Producto' },
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/Products/Components/product-edit/product-edit.component'
+                      ).then((m) => m.ProductEditComponent),
+                  }
+                ],
+              },
+              {
+                path: 'product-types',
+                data: { breadcrumb: 'Tipos de Productos' },
+                children: [
+                  {
+                    path: 'list',
+                    data: { breadcrumb: null },
+                    loadComponent: () => import('./GeneralMasters/Inventory/ProductTypes/Components/product-type-list/product-type-list.component').then(m => m.ProductTypeListComponent),
+                  },
+                  {
+                    path: 'create',
+                    data: { breadcrumb: 'Crear Tipo de Producto' },
+                    loadComponent: () => import('./GeneralMasters/Inventory/ProductTypes/Components/product-type-creation/product-type-creation.component').then(m => m.ProductTypeCreationComponent),
+                  },
+                  {
+                    path: 'edit/:id',
+                    data: { breadcrumb: 'Editar Tipo de Producto' },
+                    loadComponent: () => import('./GeneralMasters/Inventory/ProductTypes/Components/product-type-edit/product-type-edit.component').then(m => m.ProductTypeEditComponent),
+                  }
+                ]
+              },
+              {
+                path: 'categories',
+                data: { breadcrumb: 'Categorías' },
+                children: [
+                  {
+                    path: 'list',
+                    data: { breadcrumb: null },
+                    loadComponent: () => import('./GeneralMasters/Inventory/Category/Components/category-list/category-list.component').then(m => m.CategoryListComponent),
+                  },
+                  {
+                    path: 'create',
+                    data: { breadcrumb: 'Crear Categoría' },
+                    loadComponent: () => import('./GeneralMasters/Inventory/Category/Components/category-creation/category-creation.component').then(m => m.CategoryCreationComponent),
+                  },
+                  {
+                    path: 'edit/:id',
+                    data: { breadcrumb: 'Editar Categoría' },
+                    loadComponent: () => import('./GeneralMasters/Inventory/Category/Components/category-edit/category-edit.component').then(m => m.CategoryEditComponent),
+                  }
+                ]
+              },
+              {
+                path: 'measurement-units',
+                data: { breadcrumb: 'Unidades de Medida' },
+                children: [
+                  {
+                    path: 'list',
+                    data: { breadcrumb: null },
+                    loadComponent: () => import('./GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-list/unit-of-measure-list.component').then(m => m.UnitOfMeasureListComponent),
+                  },
+                  {
+                    path: 'create',
+                    data: { breadcrumb: 'Crear Unidad de Medida' },
+                    loadComponent: () => import('./GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-creation/unit-of-measure-creation.component').then(m => m.UnitOfMeasureCreationComponent),
+                  },
+                  {
+                    path: 'edit/:id',
+                    data: { breadcrumb: 'Editar Unidad de Medida' },
+                    loadComponent: () => import('./GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-edit/unit-of-measure-edit.component').then(m => m.UnitOfMeasureEditComponent),
+                  }
+                ]
+              },
+            ],
           },
           {
             path: 'payment-methods',
@@ -306,69 +416,7 @@ export const routes: Routes = [
                     './Commercial/BusinessMasters/ValuationModels/WeightedAverage/list-kardex-weighted-average/list-kardex-weighted-average.component'
                   ).then((m) => m.ListKardexWeightedAverageComponent),
               },
-              {
-                path: 'categories',
-                data: { breadcrumb: 'Categorías' },
-                children: [
-                  {
-                    path: 'list',
-                    data: { breadcrumb: null },
-                    loadComponent: () => import('./Commercial/BusinessMasters/Category/Components/category-list/category-list.component').then(m => m.CategoryListComponent),
-                  },
-                  {
-                    path: 'create',
-                    data: { breadcrumb: 'Crear Categoría' },
-                    loadComponent: () => import('./Commercial/BusinessMasters/Category/Components/category-creation/category-creation.component').then(m => m.CategoryCreationComponent),
-                  },
-                  {
-                    path: 'edit/:id',
-                    data: { breadcrumb: 'Editar Categoría' },
-                    loadComponent: () => import('./Commercial/BusinessMasters/Category/Components/category-edit/category-edit.component').then(m => m.CategoryEditComponent),
-                  }
-                ]
-              },
-              {
-                path: 'product-types',
-                data: { breadcrumb: 'Tipos de Productos' },
-                children: [
-                  {
-                    path: 'list',
-                    data: { breadcrumb: null },
-                    loadComponent: () => import('./Commercial/BusinessMasters/ProductTypes/Components/product-type-list/product-type-list.component').then(m => m.ProductTypeListComponent),
-                  },
-                  {
-                    path: 'create',
-                    data: { breadcrumb: 'Crear Tipo de Producto' },
-                    loadComponent: () => import('./Commercial/BusinessMasters/ProductTypes/Components/product-type-creation/product-type-creation.component').then(m => m.ProductTypeCreationComponent),
-                  },
-                  {
-                    path: 'edit/:id',
-                    data: { breadcrumb: 'Editar Tipo de Producto' },
-                    loadComponent: () => import('./Commercial/BusinessMasters/ProductTypes/Components/product-type-edit/product-type-edit.component').then(m => m.ProductTypeEditComponent),
-                  }
-                ]
-              },
-              {
-                path: 'measurement-units',
-                data: { breadcrumb: 'Unidades de Medida' },
-                children: [
-                  {
-                    path: 'list',
-                    data: { breadcrumb: null },
-                    loadComponent: () => import('./Commercial/BusinessMasters/MeasurementUnits/Components/unit-of-measure-list/unit-of-measure-list.component').then(m => m.UnitOfMeasureListComponent),
-                  },
-                  {
-                    path: 'create',
-                    data: { breadcrumb: 'Crear Unidad de Medida' },
-                    loadComponent: () => import('./Commercial/BusinessMasters/MeasurementUnits/Components/unit-of-measure-creation/unit-of-measure-creation.component').then(m => m.UnitOfMeasureCreationComponent),
-                  },
-                  {
-                    path: 'edit/:id',
-                    data: { breadcrumb: 'Editar Unidad de Medida' },
-                    loadComponent: () => import('./Commercial/BusinessMasters/MeasurementUnits/Components/unit-of-measure-edit/unit-of-measure-edit.component').then(m => m.UnitOfMeasureEditComponent),
-                  }
-                ]
-              },
+
             ],
           },
           {
@@ -381,44 +429,7 @@ export const routes: Routes = [
                 './Commercial/SaleInvoice/components/sale-invoice-creation/sale-invoice-creation.component'
               ).then((m) => m.SaleInvoiceCreationComponent),
           },
-          {
-            path: 'products',
-            data: {
-              breadcrumb: 'Productos',
-            },
-            children: [
-              {
-                path: 'list',
-                data: {
-                  breadcrumb: null,
-                },
-                loadComponent: () =>
-                  import(
-                    './Commercial/BusinessMasters/Products/Components/product-list/product-list.component'
-                  ).then((m) => m.ProductListComponent),
-              },
-              {
-                path: 'create',
-                data: {
-                  breadcrumb: null,
-                },
-                loadComponent: () =>
-                  import(
-                    './Commercial/BusinessMasters/Products/Components/product-creation/product-creation.component'
-                  ).then((m) => m.ProductCreationComponent),
-              },
-              {
-                path: 'edit/:id',
-                data: {
-                  breadcrumb: null,
-                },
-                loadComponent: () =>
-                  import(
-                    './Commercial/BusinessMasters/Products/Components/product-edit/product-edit.component'
-                  ).then((m) => m.ProductEditComponent),
-              }
-            ],
-          },
+
         ],
       },
     ],
