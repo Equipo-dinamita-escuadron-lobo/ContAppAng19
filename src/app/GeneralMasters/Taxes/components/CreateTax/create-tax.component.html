@@ -7,19 +7,13 @@
     Crear Impuesto
   </h1>
   <p class="mb-6 text-lg text-gray-700">
-    Complete la información necesaria para crear un nuevo impuesto:
+    Complete la información necesaria para crear un nuevo impuesto.
   </p>
 </div>
 
-<div class="bg-white p-8 rounded-xl shadow-md border border-gray-200 mt-6">
+<div class="mt-6">
   <form [formGroup]="addForm" (ngSubmit)="onSubmit()" class="mt-4">
     <div class="w-full">
-      <!-- SECCION INFORMACION BASICA -->
-      <h2
-        class="text-xl font-bold mb-4 text-[var(--color-light)] border-b pb-2"
-      >
-        Información del Impuesto
-      </h2>
 
       <div class="flex gap-4 mb-4">
         <!-- Código -->
@@ -89,7 +83,7 @@
         <!-- Cuenta de Depósito -->
         <div class="w-1/2">
           <label for="depositAccount" class="block mb-2 font-semibold">
-            Cuenta de Depósito <span class="text-red-500">*</span>
+            Cuenta <span class="text-red-500">*</span>
           </label>
           <p-select
             id="depositAccount"
@@ -160,7 +154,7 @@
       ></p-message>
 
       <!-- Botones de acción -->
-      <div class="flex justify-end gap-4 mt-12 pt-40">
+      <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button 
           type="button"
           label="Cancelar" 

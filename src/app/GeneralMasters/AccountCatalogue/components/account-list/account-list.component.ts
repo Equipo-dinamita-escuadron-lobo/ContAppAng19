@@ -1522,4 +1522,98 @@ export class AccountListComponent {
     return this.listRefundAccount.some(account => account === accountCode) || this.listDepositAccount.some(account => account === accountCode)
   }
 
+  /**
+   * Maneja la entrada de teclado en los campos de código.
+   * Bloquea caracteres que no sean números y limita la longitud según el nivel.
+   * @param event Evento de teclado.
+   * @param maxLength Longitud máxima permitida.
+   */
+  onCodeKeyDown(event: KeyboardEvent, maxLength: number) {
+    // Permitir teclas de navegación y control
+    if (event.ctrlKey || event.altKey || event.metaKey) {
+      return;
+    }
+
+    // Permitir teclas de navegación
+    const allowedKeys = [
+      'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+      'Home', 'End'
+    ];
+    
+    if (allowedKeys.includes(event.key)) {
+      return;
+    }
+
+    // Solo permitir números
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+      return;
+    }
+
+    // Obtener el valor actual del campo
+    const target = event.target as HTMLInputElement;
+    const currentValue = target.value;
+    
+    // Limitar longitud según el nivel
+    if (currentValue.length >= maxLength && !allowedKeys.includes(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  /**
+   * Maneja la entrada en los campos de código para asegurar formato correcto.
+   * @param event Evento de entrada.
+   * @param maxLength Longitud máxima permitida.
+   */
+  onCodeInput(event: Event, maxLength: number) {
+    const target = event.target as HTMLInputElement;
+    let value = target.value;
+    
+    // Remover caracteres que no sean números
+    value = value.replace(/[^0-9]/g, '');
+    
+    // Limitar longitud según el nivel
+    if (value.length > maxLength) {
+      value = value.substring(0, maxLength);
+    }
+    
+    // Actualizar el valor del campo
+    target.value = value;
+    
+    // Actualizar el FormControl correspondiente
+    const formControlName = target.getAttribute('formControlName');
+    if (formControlName) {
+      this.accountForm.get(formControlName)?.setValue(value);
+    }
+  }
+
+  /**
+   * Maneja la entrada de teclado en los campos de nombre.
+   * Bloquea caracteres que no sean letras, espacios y caracteres especiales permitidos.
+   * @param event Evento de teclado.
+   */
+  onNameKeyDown(event: KeyboardEvent) {
+    // Permitir teclas de navegación y control
+    if (event.ctrlKey || event.altKey || event.metaKey) {
+      return;
+    }
+
+    // Permitir teclas de navegación
+    const allowedKeys = [
+      'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+      'Home', 'End', ' '
+    ];
+    
+    if (allowedKeys.includes(event.key)) {
+      return;
+    }
+
+    // Solo permitir letras, espacios y caracteres especiales permitidos
+    const allowedPattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d1,.()\/\-+&%]$/;
+    if (!allowedPattern.test(event.key)) {
+      event.preventDefault();
+    }
+  }
 }

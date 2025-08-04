@@ -31,6 +31,28 @@ export const navbarData: INavbarData[] = [
         routeLink: '/gen-masters/inventory',
         icon: 'data_table',
         label: 'Inventario',
+        items: [
+          {
+            routeLink: '/gen-masters/inventory/products/list',
+            icon: 'box',
+            label: 'Productos',
+          },
+          {
+            routeLink: '/gen-masters/inventory/product-types/list',
+            icon: 'dashboard',
+            label: 'Tipos de Productos',
+          },
+          {
+            routeLink: '/gen-masters/inventory/categories/list',
+            icon: 'category_search',
+            label: 'Categorías',
+          },
+          {
+            routeLink: '/gen-masters/inventory/measurement-units/list',
+            icon: 'square_foot',
+            label: 'Unidades de Medida',
+          },
+        ],
       },
       {
         routeLink: '/gen-masters/payment-methods',
@@ -141,97 +163,77 @@ export const navbarData: INavbarData[] = [
       },
     ],
   },
-  {
-    routeLink: 'TO DO',
-    icon: 'store',
-    label: 'Comercial',
-    items: [
-      {
-        routeLink: 'business-masters',
-        icon: 'construction',
-        label: 'Maestros Comerciales',
-        items: [
-          {
-            routeLink: 'commercial/products/list',
-            icon: 'box',
-            label: 'Productos',
-          },
-          {
-            routeLink: '/commercial/business-masters/product-types/list',
-            icon: 'dashboard',
-            label: 'Tipos de Productos',
-          },
-          {
-            routeLink: '/commercial/business-masters/categories/list',
-            icon: 'category_search',
-            label: 'Categorias',
-          },
-          {
-            routeLink: '/commercial/business-masters/measurement-units/list',
-            icon: 'square_foot',
-            label: 'Unidad de Medida',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'decimal_increase',
-            label: 'Modelos de Valoracion',
-            items: [
-              {
-                routeLink: '/commercial/business-masters/kardex',
-                icon: '',
-                label: 'Inventario con Promedio Ponderado',
-              },
-              {
-                routeLink: 'TO DO',
-                icon: '',
-                label: 'Inventario PEPS',
-              },
-            ],
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'analytics',
-            label: 'Reportes',
-          },
-        ],
-      },
-      {
-        routeLink: 'commercial/sale-invoice',
-        icon: 'order_approve',
-        label: 'Factura de Venta',
-      },
-      {
-        routeLink: 'TO DO',
-        icon: 'receipt_long',
-        label: 'Factura de Compra',
-      },
-      {
-        routeLink: 'TO DO',
-        icon: 'analytics',
-        label: 'Reportes',
-      },
-      {
-        routeLink: 'TO DO',
-        icon: 'shelves',
-        label: 'Ajustes de Inventario',
-        items: [
-          {
-            routeLink: 'TO DO',
-            icon: 'arrows_input',
-            label: 'Entradas',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'arrows_output',
-            label: 'Salidas',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'difference',
-            label: 'Recalculos',
-          },
-        ],
-      },
-    ],
-  },
+     {
+     routeLink: 'TO DO',
+     icon: 'store',
+     label: 'Comercial',
+     items: [
+       {
+         routeLink: 'business-masters',
+         icon: 'construction',
+         label: 'Maestros Comerciales',
+         items: [
+           {
+             routeLink: 'TO DO',
+             icon: 'decimal_increase',
+             label: 'Modelos de Valoracion',
+             items: [
+               {
+                 routeLink: '/commercial/business-masters/kardex',
+                 icon: '',
+                 label: 'Inventario con Promedio Ponderado',
+               },
+               {
+                 routeLink: 'TO DO',
+                 icon: '',
+                 label: 'Inventario PEPS',
+               },
+             ],
+           },
+           {
+             routeLink: 'TO DO',
+             icon: 'analytics',
+             label: 'Reportes',
+           },
+         ],
+       },
+       {
+         routeLink: 'commercial/sale-invoice',
+         icon: 'order_approve',
+         label: 'Factura de Venta',
+       },
+       {
+         routeLink: 'TO DO',
+         icon: 'receipt_long',
+         label: 'Factura de Compra',
+       },
+       {
+         routeLink: 'TO DO',
+         icon: 'analytics',
+         label: 'Reportes',
+       },
+       {
+         routeLink: 'TO DO',
+         icon: 'shelves',
+         label: 'Ajustes de Inventario',
+         items: [
+           {
+             routeLink: 'TO DO',
+             icon: 'arrows_input',
+             label: 'Entradas',
+           },
+           {
+             routeLink: 'TO DO',
+             icon: 'arrows_output',
+             label: 'Salidas',
+           },
+           {
+             routeLink: 'TO DO',
+             icon: 'difference',
+             label: 'Recalculos',
+           },
+         ],
+       },
+     ],
+   },
 ];

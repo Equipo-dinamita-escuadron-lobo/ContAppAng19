@@ -1,6 +1,6 @@
 export interface ProductToSale {
-    id: string;
-    itemType: string;
+    id: number;
+    name: string;
     code: string;
     description: string;
     minQuantity: number;

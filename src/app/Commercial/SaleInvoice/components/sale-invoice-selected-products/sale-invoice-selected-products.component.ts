@@ -8,8 +8,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
-import { ProductService } from '../../../BusinessMasters/Products/Services/product.service';
-import { Product } from '../../../BusinessMasters/Products/Models/Product';
+import { ProductService } from '../../../../GeneralMasters/Inventory/Products/Services/product.service';
+import { Product } from '../../../../GeneralMasters/Inventory/Products/Models/Product';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -38,7 +38,7 @@ export class SaleInvoiceSelectedProductsComponent implements OnInit {
 
   allProducts: SelectableProduct[] = []; // Lista completa de productos del servicio
   filteredProducts: SelectableProduct[] = []; // Lista para mostrar en la tabla, después de filtrar
-  selectedProductsMap: Map<string, SelectableProduct> = new Map(); // Mapa para manejar selecciones eficientemente
+  selectedProductsMap: Map<number, SelectableProduct> = new Map(); // Mapa para manejar selecciones eficientemente
 
   filterText: string = ''; 
   entId: string = '';
@@ -68,7 +68,7 @@ export class SaleInvoiceSelectedProductsComponent implements OnInit {
   loadProducts(): void {
     if (!this.entId) return;
 
-    this.productService.getProducts(this.entId).subscribe({
+          this.productService.getProductsBasic(this.entId).subscribe({
       next: (data: Product[]) => {
         this.allProducts = data.map(product => ({
           ...product,

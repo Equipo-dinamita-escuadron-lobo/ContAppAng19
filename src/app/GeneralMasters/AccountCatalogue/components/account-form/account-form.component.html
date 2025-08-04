@@ -5,10 +5,14 @@
             <label *ngIf="currentLevelAccount != 'clase'" for="subcuenta"
                 class="col-span-1 mr-4 mt-1">{{parent?.code}}</label>
             <input type="text" id="code" formControlName="code" placeholder="Código" class="input-base mb-2 sm:mb-0"
-                inputmode="numeric" pattern="[0-9]*">
+                inputmode="numeric" pattern="[0-9]*" 
+                (keydown)="onCodeKeyDown($event)"
+                (input)="onCodeInput($event)"
+                maxlength="2">
         </div>
         <div class="w-full sm:w-auto">
-            <input type="text" id="name" formControlName="name" placeholder="Nombre" class="input-base sm:ml-1">
+            <input type="text" id="name" formControlName="name" placeholder="Nombre" class="input-base sm:ml-1"
+                (keydown)="onNameKeyDown($event)">
         </div>
         <!-- Section to display messages when information is required or an error occurs -->
         <div>
@@ -18,14 +22,10 @@
                 class="error-message">Código solo debe tener {{messageLength}}</div>
             <div *ngIf="formNewAccount.get('code')?.hasError('minlength') && (formNewAccount.get('code')?.dirty || formNewAccount.get('code')?.touched)"
                 class="error-message">Código debe tener dos dígitos</div>
-            <div *ngIf="formNewAccount.get('code')?.hasError('pattern') && (formNewAccount.get('code')?.dirty || formNewAccount.get('code')?.touched)"
-                class="error-message">Código inválido (solo números)</div>
         </div>
         <div>
             <div *ngIf="formNewAccount.get('name')?.hasError('required') && (formNewAccount.get('name')?.dirty || formNewAccount.get('name')?.touched)"
                 class="error-message">* Nombre es requerido</div>
-            <div *ngIf="formNewAccount.get('name')?.hasError('pattern') && (formNewAccount.get('name')?.dirty || formNewAccount.get('name')?.touched)"
-                class="error-message">Nombre inválido (solo letras)</div>
         </div>
         <div class="floating-label">{{currentLevelAccount}}</div>
     </div>

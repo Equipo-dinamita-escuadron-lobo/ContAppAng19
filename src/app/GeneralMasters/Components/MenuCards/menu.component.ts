@@ -27,13 +27,13 @@ export class MenuComponent {
     {
       title: 'Impuestos',
       icon: 'request_page',
-      route: '/gen-masters/taxes',
+      route: '/gen-masters/taxes/list',
       description: 'Configuración de impuestos y tarifas'
     },
     {
       title: 'Terceros',
       icon: 'groups',
-      route: '/gen-masters/third-parties',
+      route: '/gen-masters/third-parties/list',
       description: 'Gestión de clientes y proveedores'
     },
     {
