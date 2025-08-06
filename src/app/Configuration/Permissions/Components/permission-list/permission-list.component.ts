@@ -9,7 +9,7 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 
 @Component({
-  selector: 'app-profile-list',
+  selector: 'app-permission-list',
   imports: [
     CommonModule,
     TableModule,
@@ -20,23 +20,20 @@ import { TagModule } from 'primeng/tag';
     IconFieldModule,
     InputIconModule,
   ],
-  templateUrl: './profile-list.component.html',
-  styleUrl: './profile-list.component.css',
+  templateUrl: './permission-list.component.html',
+  styleUrl: './permission-list.component.css',
 })
-export class ProfileListComponent {
+export class PermissionListComponent {
   profiles: any[] = [];
 
-  globalFilterFields: string[] = ['name', 'description'];
+  globalFilterFields: string[] = ['Perfil'];
 
-  displayedColumns: any[] = ['Nombre', 'Descripción', 'Acciones'];
+  displayedColumns: any[] = ['Perfil', 'Permisos'];
 
   redirectTo(arg0: string) {
     throw new Error('Method not implemented.');
   }
-  redirectToDelete(arg0: any) {
-    throw new Error('Method not implemented.');
-  }
-  redirectToEdit(arg0: any) {
+  redirectToView(arg0: any) {
     throw new Error('Method not implemented.');
   }
 }

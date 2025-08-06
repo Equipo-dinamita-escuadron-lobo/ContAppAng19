@@ -25,9 +25,9 @@ export const routes: Routes = [
       breadcrumb: 'enterprise-create',
     },
     loadComponent: () =>
-      import('./GeneralMasters/Enterprise/create-enterprise/create-enterprise.component').then(
-        (m) => m.CreateEnterpriseComponent
-      ),
+      import(
+        './GeneralMasters/Enterprise/create-enterprise/create-enterprise.component'
+      ).then((m) => m.CreateEnterpriseComponent),
     canActivate: [hasRoleGuard(['admin_realm'])],
   },
   {
@@ -36,9 +36,9 @@ export const routes: Routes = [
       breadcrumb: 'enterprise-edit',
     },
     loadComponent: () =>
-      import('./GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component').then(
-        (m) => m.EditEnterpriseComponent
-      ),
+      import(
+        './GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component'
+      ).then((m) => m.EditEnterpriseComponent),
     canActivate: [hasRoleGuard(['admin_realm'])],
   },
   {
@@ -102,6 +102,17 @@ export const routes: Routes = [
               ).then((m) => m.ProfileListComponent),
             canActivate: [hasRoleGuard(['admin_realm'])],
           },
+          {
+            path: 'permissions/list',
+            data: {
+              breadcrumb: 'Gestión de Permisos',
+            },
+            loadComponent: () =>
+              import(
+                './Configuration/Permissions/Components/permission-list/permission-list.component'
+              ).then((m) => m.PermissionListComponent),
+            canActivate: [hasRoleGuard(['admin_realm'])],
+          },
         ],
       },
       {
@@ -158,22 +169,25 @@ export const routes: Routes = [
                 path: 'list',
                 data: { breadcrumb: null },
                 loadComponent: () =>
-                  import('./GeneralConfiguration/Taxes/components/list-tax/list-tax.component')
-                    .then((m) => m.ListTaxComponent),
+                  import(
+                    './GeneralConfiguration/Taxes/components/list-tax/list-tax.component'
+                  ).then((m) => m.ListTaxComponent),
               },
               {
                 path: 'create',
                 data: { breadcrumb: 'Crear Impuesto' },
                 loadComponent: () =>
-                  import('./GeneralConfiguration/Taxes/components/create-tax/create-tax.component')
-                    .then((m) => m.CreateTaxComponent),
+                  import(
+                    './GeneralConfiguration/Taxes/components/create-tax/create-tax.component'
+                  ).then((m) => m.CreateTaxComponent),
               },
               {
                 path: 'edit/:id',
                 data: { breadcrumb: 'Editar Impuesto' },
                 loadComponent: () =>
-                  import('./GeneralConfiguration/Taxes/components/edit-tax/edit-tax.component')
-                    .then((m) => m.EditTaxComponent),
+                  import(
+                    './GeneralConfiguration/Taxes/components/edit-tax/edit-tax.component'
+                  ).then((m) => m.EditTaxComponent),
               },
             ],
           },
@@ -181,49 +195,65 @@ export const routes: Routes = [
             path: 'inventory',
             data: { breadcrumb: 'Inventario' },
             loadComponent: () =>
-              import('./GeneralConfiguration/Components/menu/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralConfiguration/Components/menu/menu.component'
+              ).then((m) => m.MenuComponent),
           },
           {
             path: 'payment-methods',
             data: { breadcrumb: 'Métodos de Pago' },
             loadComponent: () =>
-              import('./GeneralConfiguration/Components/menu/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralConfiguration/Components/menu/menu.component'
+              ).then((m) => m.MenuComponent),
           },
           {
             path: 'document-types',
             data: { breadcrumb: 'Tipos de Documentos' },
             loadComponent: () =>
-              import('./GeneralConfiguration/Components/menu/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralConfiguration/Components/menu/menu.component'
+              ).then((m) => m.MenuComponent),
           },
           {
             path: 'document-statuses',
             data: { breadcrumb: 'Estados de Documentos' },
             loadComponent: () =>
-              import('./GeneralConfiguration/Components/menu/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralConfiguration/Components/menu/menu.component'
+              ).then((m) => m.MenuComponent),
           },
           {
             path: 'bank-accounts',
             data: { breadcrumb: 'Banco y Cuentas Bancarias' },
             loadComponent: () =>
-              import('./GeneralConfiguration/Components/menu/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralConfiguration/Components/menu/menu.component'
+              ).then((m) => m.MenuComponent),
           },
           {
             path: 'cost-centers',
             data: { breadcrumb: 'Centros de Costo' },
             loadComponent: () =>
-              import('./GeneralConfiguration/Components/menu/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralConfiguration/Components/menu/menu.component'
+              ).then((m) => m.MenuComponent),
           },
           {
             path: 'aged-receivables',
             data: { breadcrumb: 'Edades Cartera' },
             loadComponent: () =>
-              import('./GeneralConfiguration/Components/menu/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralConfiguration/Components/menu/menu.component'
+              ).then((m) => m.MenuComponent),
           },
           {
             path: 'help-panels',
             data: { breadcrumb: 'Cuadros de Diálogo' },
             loadComponent: () =>
-              import('./GeneralConfiguration/Components/menu/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralConfiguration/Components/menu/menu.component'
+              ).then((m) => m.MenuComponent),
           },
         ],
       },
@@ -389,7 +419,7 @@ export const routes: Routes = [
                   import(
                     './Commercial/BusinessMasters/Products/Components/product-edit/product-edit.component'
                   ).then((m) => m.ProductEditComponent),
-              }
+              },
             ],
           },
         ],
