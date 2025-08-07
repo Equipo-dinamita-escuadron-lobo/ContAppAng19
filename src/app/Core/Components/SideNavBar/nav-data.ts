@@ -6,82 +6,80 @@ export const navbarData: INavbarData[] = [
     icon: 'home',
     label: 'Home',
   },
+
   {
-    routeLink: '/general-configuration',
-    icon: 'settings',
-    label: 'Configuración General',
+    routeLink: '/gen-masters',
+    icon: 'construction',
+    label: 'Maestros Generales',
     items: [
       {
-        routeLink: '/general-configuration/account-catalogue',
+        routeLink: '/gen-masters/account-catalogue',
         icon: 'account_balance_wallet',
         label: 'Catálogo de Cuentas',
       },
       {
-        routeLink: '/general-configuration/taxes/list',
+        routeLink: '/gen-masters/taxes/list',
         icon: 'request_page',
         label: 'Impuestos',
       },
-      {
-        routeLink: '/general-configuration/third-parties',
-        icon: 'groups',
-        label: 'Terceros',
-      },
-      {
-        routeLink: '/general-configuration/inventory',
-        icon: 'data_table',
-        label: 'Inventario',
-      },
-      {
-        routeLink: '/general-configuration/payment-methods',
-        icon: 'payments',
-        label: 'Métodos de Pago',
-      },
-      {
-        routeLink: '/general-configuration/document-types',
-        icon: 'description',
-        label: 'Tipos de Documentos',
-      },
-      {
-        routeLink: '/general-configuration/document-statuses',
-        icon: 'Task',
-        label: 'Estados de Documentos',
-      },
-      {
-        routeLink: '/general-configuration/bank-accounts',
-        icon: 'account_balance',
-        label: 'Banco y Cuentas Bancarias',
-      },
-      {
-        routeLink: '/general-configuration/cost-centers',
-        icon: 'paid',
-        label: 'Centros de Costo',
-      },
-      {
-        routeLink: '/general-configuration/aged-receivables',
-        icon: 'Calendar_month',
-        label: 'Edades Cartera',
-      },
-      {
-        routeLink: '/general-configuration/help-panels',
-        icon: 'help',
-        label: 'Cuadros de Diálogo',
-      },
-    ],
-  },
-  {
-    routeLink: 'TO DO',
-    icon: 'construction',
-    label: 'Maestros Generales',
-    items: [
       {
         routeLink: '/gen-masters/third-parties/list',
         icon: 'groups',
         label: 'Terceros',
       },
       {
-        routeLink: '/gen-masters/catalogue-accounts',
-        icon: 'article',
-        label: 'Catálogo de cuentas',
+        routeLink: '/gen-masters/inventory',
+        icon: 'data_table',
+        label: 'Inventario',
+        items: [
+          {
+            routeLink: '/gen-masters/inventory/products/list',
+            icon: 'box',
+            label: 'Productos',
+          },
+          {
+            routeLink: '/gen-masters/inventory/product-types/list',
+            icon: 'dashboard',
+            label: 'Tipos de Productos',
+          },
+          {
+            routeLink: '/gen-masters/inventory/categories/list',
+            icon: 'category_search',
+            label: 'Categorías',
+          },
+          {
+            routeLink: '/gen-masters/inventory/measurement-units/list',
+            icon: 'square_foot',
+            label: 'Unidades de Medida',
+          },
+        ],
+      },
+      {
+        routeLink: '/gen-masters/payment-methods',
+        icon: 'payments',
+        label: 'Métodos de Pago',
+      },
+      {
+        routeLink: '/gen-masters/document-types',
+        icon: 'description',
+        label: 'Tipos de Documentos',
+      },
+
+      {
+        routeLink: '/gen-masters/bank-accounts',
+        icon: 'account_balance',
+        label: 'Banco y Cuentas Bancarias',
+      },
+      {
+        routeLink: '/gen-masters/cost-centers',
+        icon: 'paid',
+        label: 'Centros de Costo',
+      },
+
+      {
+        routeLink: '/gen-masters/help-panels',
+        icon: 'help',
+        label: 'Centro de Ayuda',
       },
     ],
   },
@@ -165,97 +163,77 @@ export const navbarData: INavbarData[] = [
       },
     ],
   },
-  {
-    routeLink: 'TO DO',
-    icon: 'store',
-    label: 'Comercial',
-    items: [
-      {
-        routeLink: 'business-masters',
-        icon: 'construction',
-        label: 'Maestros Comerciales',
-        items: [
-          {
-            routeLink: 'commercial/products/list',
-            icon: 'box',
-            label: 'Productos',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'dashboard',
-            label: 'Tipos de Productos',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'category_search',
-            label: 'Categorias',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'square_foot',
-            label: 'Unidad de Medida',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'decimal_increase',
-            label: 'Modelos de Valoracion',
-            items: [
-              {
-                routeLink: '/commercial/business-masters/kardex',
-                icon: '',
-                label: 'Inventario con Promedio Ponderado',
-              },
-              {
-                routeLink: 'TO DO',
-                icon: '',
-                label: 'Inventario PEPS',
-              },
-            ],
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'analytics',
-            label: 'Reportes',
-          },
-        ],
-      },
-      {
-        routeLink: 'commercial/sale-invoice',
-        icon: 'order_approve',
-        label: 'Factura de Venta',
-      },
-      {
-        routeLink: 'TO DO',
-        icon: 'receipt_long',
-        label: 'Factura de Compra',
-      },
-      {
-        routeLink: 'TO DO',
-        icon: 'analytics',
-        label: 'Reportes',
-      },
-      {
-        routeLink: 'TO DO',
-        icon: 'shelves',
-        label: 'Ajustes de Inventario',
-        items: [
-          {
-            routeLink: 'TO DO',
-            icon: 'arrows_input',
-            label: 'Entradas',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'arrows_output',
-            label: 'Salidas',
-          },
-          {
-            routeLink: 'TO DO',
-            icon: 'difference',
-            label: 'Recalculos',
-          },
-        ],
-      },
-    ],
-  },
+     {
+     routeLink: 'TO DO',
+     icon: 'store',
+     label: 'Comercial',
+     items: [
+       {
+         routeLink: 'business-masters',
+         icon: 'construction',
+         label: 'Maestros Comerciales',
+         items: [
+           {
+             routeLink: 'TO DO',
+             icon: 'decimal_increase',
+             label: 'Modelos de Valoracion',
+             items: [
+               {
+                 routeLink: '/commercial/business-masters/kardex',
+                 icon: '',
+                 label: 'Inventario con Promedio Ponderado',
+               },
+               {
+                 routeLink: 'TO DO',
+                 icon: '',
+                 label: 'Inventario PEPS',
+               },
+             ],
+           },
+           {
+             routeLink: 'TO DO',
+             icon: 'analytics',
+             label: 'Reportes',
+           },
+         ],
+       },
+       {
+         routeLink: 'commercial/sale-invoice',
+         icon: 'order_approve',
+         label: 'Factura de Venta',
+       },
+       {
+         routeLink: 'TO DO',
+         icon: 'receipt_long',
+         label: 'Factura de Compra',
+       },
+       {
+         routeLink: 'TO DO',
+         icon: 'analytics',
+         label: 'Reportes',
+       },
+       {
+         routeLink: 'TO DO',
+         icon: 'shelves',
+         label: 'Ajustes de Inventario',
+         items: [
+           {
+             routeLink: 'TO DO',
+             icon: 'arrows_input',
+             label: 'Entradas',
+           },
+           {
+             routeLink: 'TO DO',
+             icon: 'arrows_output',
+             label: 'Salidas',
+           },
+           {
+             routeLink: 'TO DO',
+             icon: 'difference',
+             label: 'Recalculos',
+           },
+         ],
+       },
+     ],
+   },
 ];

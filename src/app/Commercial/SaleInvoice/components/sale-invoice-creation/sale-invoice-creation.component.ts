@@ -240,7 +240,7 @@ export class SaleInvoiceCreationComponent {
    */
   columnsProducts: any[] = [
     { title: '#' },
-    { title: 'Codigo', data: 'itemType' },
+    { title: 'Codigo', data: 'name' },
     { title: 'Descripción', data: 'description' },
     { title: 'Cantidad' },
     { title: 'U/M' },
@@ -394,7 +394,7 @@ export class SaleInvoiceCreationComponent {
         let products = result.map((prod: any) => {
           return {
             id: prod.id,
-            itemType: prod.itemType,
+            name: prod.name,
             description: prod.description,
             price: prod.cost,
             displayPrice: String(prod.cost),
@@ -679,12 +679,12 @@ export class SaleInvoiceCreationComponent {
     const descuento = 0;
     this.lstProductsSend = this.lstProducts.map(prod => ({
 
-      productId: parseInt(prod.id),
+      productId: prod.id,
       amount: prod.amount,
       description: prod.description,
       vat: prod.IVA / 100,
       descount: this.calculateDescountTotal(prod),
-      code: prod.itemType,
+      code: prod.name,
       unitPrice: prod.cost,
       subtotal: (prod.cost * prod.amount * (1 + prod.IVA / 100))
     }));
