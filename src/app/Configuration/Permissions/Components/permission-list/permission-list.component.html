@@ -8,10 +8,10 @@
         <h1
           class="text-2xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mb-2"
         >
-          Gestión de perfiles
+          Gestión de permisos
         </h1>
         <p class="text-sm sm:text-base text-gray-600 max-w-3xl leading-relaxed">
-          Aquí podrá ver la lista de perfiles.
+          Aquí podrá ver la lista de permisos.
         </p>
       </div>
     </div>
@@ -31,7 +31,7 @@
               pInputText
               type="text"
               (input)="dt1.filterGlobal($any($event.target).value, 'contains')"
-              placeholder="Buscar perfil..."
+              placeholder="Buscar ..."
               class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
             />
           </p-iconfield>
@@ -39,7 +39,7 @@
         <!-- Buttons -->
         <div class="flex flex-wrap justify-start sm:justify-end gap-2">
           <p-button
-            label="Agregar"
+            label="Asignar Permisos"
             class="custom-action-button"
             icon="pi pi-plus"
             (onClick)="redirectTo('/gen-masters/third-parties/create')"
@@ -82,24 +82,13 @@
             </span>
           </td>
           <td class="whitespace-nowrap">
-            <span class="text-sm text-gray-900">{{ profile.description }}</span>
-          </td>
-
-          <td class="whitespace-nowrap">
             <div class="flex items-center justify-center gap-1">
               <p-button
                 class="material-symbols-outlined p-button-md action-button"
-                (onClick)="redirectToEdit(profile.id)"
-                pTooltip="Editar"
+                (onClick)="redirectToView(profile.id)"
+                pTooltip="Ver"
                 tooltipPosition="top"
-                >edit</p-button
-              >
-              <p-button
-                class="material-symbols-outlined p-button-md action-button"
-                (onClick)="redirectToDelete(profile.id)"
-                pTooltip="Eliminar"
-                tooltipPosition="top"
-                >delete</p-button
+                >visibility</p-button
               >
             </div>
           </td>
@@ -116,17 +105,16 @@
               <div class="flex flex-col items-center gap-4">
                 <div class="space-y-2 text-center">
                   <h3 class="text-lg font-semibold text-[var(--color-primary)]">
-                    No hay perfiles
-                    <i
-                      class="pi pi-shield bg-gray-100 rounded-full text-2xl"
-                    ></i>
+                    No hay permisos asignados
+                    <i class="pi pi-lock bg-gray-100 rounded-full text-2xl"></i>
                   </h3>
                   <p class="text-sm text-gray-600 max-w-md">
-                    No se encontraron perfiles que coincidan con su búsqueda.
+                    No se encontraron permisos asignados que coincidan con su
+                    búsqueda.
                   </p>
                 </div>
                 <p-button
-                  label="Agregar Perfil"
+                  label="Asignar Permisos"
                   icon="pi pi-plus"
                   (onClick)="redirectTo('/configuration/gestion/users/create')"
                 ></p-button>

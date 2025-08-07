@@ -25,9 +25,9 @@ export const routes: Routes = [
       breadcrumb: 'enterprise-create',
     },
     loadComponent: () =>
-      import('./GeneralMasters/Enterprise/create-enterprise/create-enterprise.component').then(
-        (m) => m.CreateEnterpriseComponent
-      ),
+      import(
+        './GeneralMasters/Enterprise/create-enterprise/create-enterprise.component'
+      ).then((m) => m.CreateEnterpriseComponent),
     canActivate: [hasRoleGuard(['admin_realm'])],
   },
   {
@@ -36,9 +36,9 @@ export const routes: Routes = [
       breadcrumb: 'enterprise-edit',
     },
     loadComponent: () =>
-      import('./GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component').then(
-        (m) => m.EditEnterpriseComponent
-      ),
+      import(
+        './GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component'
+      ).then((m) => m.EditEnterpriseComponent),
     canActivate: [hasRoleGuard(['admin_realm'])],
   },
   {
@@ -100,6 +100,17 @@ export const routes: Routes = [
               import(
                 './Configuration/Profiles/Components/profile-list/profile-list.component'
               ).then((m) => m.ProfileListComponent),
+            canActivate: [hasRoleGuard(['admin_realm'])],
+          },
+          {
+            path: 'permissions/list',
+            data: {
+              breadcrumb: 'Gestión de Permisos',
+            },
+            loadComponent: () =>
+              import(
+                './Configuration/Permissions/Components/permission-list/permission-list.component'
+              ).then((m) => m.PermissionListComponent),
             canActivate: [hasRoleGuard(['admin_realm'])],
           },
         ],
@@ -429,7 +440,6 @@ export const routes: Routes = [
                 './Commercial/SaleInvoice/components/sale-invoice-creation/sale-invoice-creation.component'
               ).then((m) => m.SaleInvoiceCreationComponent),
           },
-
         ],
       },
     ],
