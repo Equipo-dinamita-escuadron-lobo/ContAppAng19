@@ -1,0 +1,351 @@
+<!-- Ocupar todo el espacio-->
+<div class="w-full h-full flex flex-col">
+  <app-header></app-header>
+</div>
+
+<div class="m-120 max-w-7xl mx-auto">
+  <!-- Header con título y botón regresar -->
+  <div class="flex justify-between items-start mb-8">
+    <div>
+      <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+        Editar Empresa
+      </h1>
+      <p class="font-family-sans font-normal text-xs/21 text-neutral-50 mt-2">
+        Ingrese toda la información requerida en los siguientes formularios
+      </p>
+    </div>
+    <p-button 
+      label="Regresar" 
+      icon="pi pi-arrow-left" 
+      (click)="goBack()"
+      class="bg-primary text-white">
+    </p-button>
+  </div>
+
+  <!-- Formulario principal -->
+  <div class="bg-white rounded-xl shadow-lg p-8">
+    <form [formGroup]="enterpriseForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Sección: Información básica -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-center mb-6 pb-2 border-b-2 border-primary">
+          Información básica
+        </h2>
+
+        <!-- Selector de tipo de persona -->
+        <div class="flex justify-center mb-8">
+          <div class="flex bg-gray-100 rounded-lg p-1">
+            <button 
+              type="button"
+              [class]="personType === 'juridica' ? 'bg-primary text-white px-6 py-2 rounded-md font-medium' : 'px-6 py-2 text-gray-600 font-medium'"
+              (click)="onPersonTypeChange('juridica')">
+              Persona jurídica
+            </button>
+            <button 
+              type="button"
+              [class]="personType === 'natural' ? 'bg-primary text-white px-6 py-2 rounded-md font-medium' : 'px-6 py-2 text-gray-600 font-medium'"
+              (click)="onPersonTypeChange('natural')">
+              Persona natural
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido del formulario en dos columnas -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <!-- Área de logo (columna izquierda) -->
+          <div class="lg:col-span-1">
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors"
+                 [class.border-primary]="selectedFile || enterpriseData?.logo"
+                 [class.bg-blue-50]="selectedFile || enterpriseData?.logo">
+              <div *ngIf="!selectedFile && !enterpriseData?.logo">
+                <i class="pi pi-image text-4xl text-gray-400 mb-4"></i>
+                <p class="text-gray-600 font-medium">Arrastra y suelta tu logo!</p>
+                <p class="text-sm text-gray-500 mt-2">o haz clic para seleccionar</p>
+              </div>
+              <div *ngIf="selectedFile || enterpriseData?.logo" class="text-center">
+                <div *ngIf="enterpriseData?.logo && !selectedFile" class="mb-4">
+                  <img [src]="enterpriseData?.logo" [alt]="enterpriseData?.name" class="w-20 h-20 rounded-full mx-auto object-cover">
+                </div>
+                <div *ngIf="selectedFile">
+                  <i class="pi pi-check-circle text-4xl text-green-500 mb-4"></i>
+                  <p class="text-green-600 font-medium">Logo seleccionado</p>
+                  <p class="text-sm text-gray-500 mt-2">{{ selectedFile.name }}</p>
+                </div>
+              </div>
+              <input 
+                type="file" 
+                accept="image/*" 
+                class="hidden" 
+                #fileInput
+                (change)="onFileSelected($event)">
+              <p-button 
+                label="{{ selectedFile || enterpriseData?.logo ? 'Cambiar Logo' : 'Seleccionar Logo' }}" 
+                icon="{{ selectedFile || enterpriseData?.logo ? 'pi pi-refresh' : 'pi pi-upload' }}"
+                (click)="fileInput.click()"
+                class="mt-4">
+              </p-button>
+            </div>
+          </div>
+
+          <!-- Campos del formulario (columnas derecha) -->
+          <div class="lg:col-span-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <!-- Columna izquierda -->
+              <div class="space-y-6">
+                <!-- Nombre de Empresa -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre de Empresa <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    pInputText 
+                    formControlName="name"
+                    placeholder="Ej: Pepsi"
+                    class="w-full">
+                </div>
+
+                <!-- Tipo de Empresa -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Empresa <span class="text-red-500">*</span>
+                  </label>
+                  <p-dropdown 
+                    formControlName="enterpriseType"
+                    [options]="enterpriseTypes"
+                    optionLabel="name"
+                    placeholder="Seleccione una opción"
+                    class="w-full">
+                  </p-dropdown>
+                </div>
+
+                <!-- Responsabilidades tributarias -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Responsabilidades tributarias <span class="text-red-500">*</span>
+                  </label>
+                  <p-multiselect 
+                    formControlName="taxLiabilities"
+                    [options]="taxLiabilities"
+                    optionLabel="name"
+                    placeholder="Seleccione una opción(es)"
+                    class="w-full">
+                  </p-multiselect>
+                </div>
+
+                <!-- Razón social (Persona jurídica) -->
+                <div *ngIf="personType === 'juridica'">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Razón social <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    pInputText 
+                    formControlName="legalName"
+                    placeholder="Ej: Pepsico Iberia Servicios Centrales, S.L."
+                    class="w-full">
+                </div>
+
+                <!-- Nombre de Propietario (Persona natural) -->
+                <div *ngIf="personType === 'natural'">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre de Propietario <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    pInputText 
+                    formControlName="ownerName"
+                    placeholder="Ej: Julian"
+                    class="w-full">
+                </div>
+              </div>
+
+              <!-- Columna derecha -->
+              <div class="space-y-6">
+                <!-- NIT -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    NIT (Número de identificación tributaria) <span class="text-red-500">*</span>
+                  </label>
+                  <div class="flex gap-2">
+                    <input 
+                      pInputText 
+                      formControlName="nit"
+                      placeholder="Ej: 6004567890"
+                      class="flex-1">
+                    <input 
+                      pInputText 
+                      formControlName="dv"
+                      placeholder="DV"
+                      class="w-16">
+                  </div>
+                </div>
+
+                <!-- Tipo de Contribuyente -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Contribuyente <span class="text-red-500">*</span>
+                  </label>
+                  <p-dropdown 
+                    formControlName="taxPayerType"
+                    [options]="taxPayerTypes"
+                    optionLabel="name"
+                    placeholder="Seleccione una opción"
+                    class="w-full">
+                  </p-dropdown>
+                </div>
+
+                <!-- Actividades Económicas -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Actividades Económicas <span class="text-red-500">*</span>
+                  </label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs text-gray-600 mb-1">Actividad Principal</label>
+                      <input 
+                        pInputText 
+                        formControlName="mainActivity"
+                        placeholder="Ej: 1234"
+                        class="w-full">
+                    </div>
+                    <div>
+                      <label class="block text-xs text-gray-600 mb-1">Actividad Secundaria</label>
+                      <input 
+                        pInputText 
+                        formControlName="secondaryActivity"
+                        placeholder="Ej: 4321"
+                        class="w-full">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Apellidos (Persona natural) -->
+                <div *ngIf="personType === 'natural'">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Apellidos <span class="text-red-500">*</span>
+                  </label>
+                  <input 
+                    pInputText 
+                    formControlName="lastNames"
+                    placeholder="Ej: Ruano"
+                    class="w-full">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección: Información Adicional -->
+      <div class="border-t pt-8">
+        <h2 class="text-xl font-semibold text-center mb-6 pb-2 border-b-2 border-primary">
+          Información Adicional
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Columna izquierda -->
+          <div class="space-y-6">
+            <!-- País -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                País
+              </label>
+              <p-dropdown 
+                formControlName="country"
+                [options]="countries"
+                optionLabel="name"
+                placeholder="Seleccione un país"
+                class="w-full">
+              </p-dropdown>
+            </div>
+
+            <!-- Departamento -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Departamento <span class="text-red-500">*</span>
+              </label>
+              <p-dropdown 
+                formControlName="department"
+                [options]="departments"
+                optionLabel="name"
+                placeholder="Seleccione una opción"
+                class="w-full">
+              </p-dropdown>
+            </div>
+          </div>
+
+          <!-- Columna derecha -->
+          <div class="space-y-6">
+            <!-- Dirección -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Dirección <span class="text-red-500">*</span>
+              </label>
+              <input 
+                pInputText 
+                formControlName="address"
+                placeholder="Ej: Calle 123 #45-67"
+                class="w-full">
+            </div>
+
+            <!-- Teléfono -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Teléfono <span class="text-red-500">*</span>
+              </label>
+              <input 
+                pInputText 
+                formControlName="phone"
+                placeholder="Ej: 12345678"
+                class="w-full">
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Email <span class="text-red-500">*</span>
+              </label>
+              <input 
+                pInputText 
+                formControlName="email"
+                placeholder="Ej. nombredeusuario@example.com"
+                class="w-full">
+            </div>
+          </div>
+        </div>
+
+        <!-- Checkbox sucursales -->
+        <div class="mt-6 text-center">
+          <div class="flex items-center justify-center gap-2">
+            <p-checkbox 
+              formControlName="hasBranches"
+              [binary]="true">
+            </p-checkbox>
+            <label class="text-sm font-medium text-gray-700">
+              ¿Tiene sucursales?
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="flex justify-center gap-4 mt-8 pt-6 border-t">
+        <p-button 
+          label="Cancelar" 
+          icon="pi pi-times"
+          (click)="goBack()"
+          class="text-gray-600">
+        </p-button>
+        <p-button 
+          label="Guardar" 
+          icon="pi pi-check"
+          type="submit"
+          class="text-primary">
+        </p-button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Notificación de error -->
+<p-toast></p-toast>

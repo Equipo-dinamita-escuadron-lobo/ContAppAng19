@@ -107,8 +107,7 @@ export class UserService {
         user.lastName &&
         user.email &&
         user.password &&
-        user.roles &&
-        user.username
+        user.roles
     );
   }
 }
