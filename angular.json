@@ -67,15 +67,25 @@
             },
             "dev": {
               "baseHref": "/dev/",
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true,
+              "optimization": true,
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.dev.ts"
                 }
-              ]
+              ],
+              "outputHashing": "all"
+            },
+            "test": {
+              "baseHref": "/test/",
+              "optimization": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.test.ts"
+                }
+              ],
+              "outputHashing": "all"
             }
           },
           "defaultConfiguration": "production"
