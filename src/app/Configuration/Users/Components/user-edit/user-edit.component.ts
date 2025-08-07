@@ -33,7 +33,6 @@ export class UserEditComponent implements OnInit {
           email: user.email,
           password: '', // preguntar edicion de password
           roles: user.roles,
-          username: user.username
         });
       },
       error: () => alert('No se pudo cargar el usuario')
@@ -47,7 +46,6 @@ export class UserEditComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       roles: [[], Validators.required],
-      username: ['', Validators.required]
     });
   }
 

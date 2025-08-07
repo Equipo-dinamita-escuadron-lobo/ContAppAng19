@@ -24,23 +24,19 @@ import { TagModule } from 'primeng/tag';
   styleUrl: './profile-list.component.css',
 })
 export class ProfileListComponent {
-  redirectToView(arg0: any) {
+  profiles: any[] = [];
+
+  globalFilterFields: string[] = ['name', 'description'];
+
+  displayedColumns: any[] = ['Nombre', 'Descripción', 'Acciones'];
+
+  redirectTo(arg0: string) {
     throw new Error('Method not implemented.');
   }
   redirectToDelete(arg0: any) {
     throw new Error('Method not implemented.');
   }
   redirectToEdit(arg0: any) {
-    throw new Error('Method not implemented.');
-  }
-  profiles: any[] = [];
-  loading: boolean = false;
-
-  globalFilterFields: string[] = ['name', 'description'];
-
-  displayedColumns: any[] = ['Nombre', 'Descripción', 'Permisos', 'Acciones'];
-
-  redirectTo(arg0: string) {
     throw new Error('Method not implemented.');
   }
 }

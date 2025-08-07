@@ -31,7 +31,7 @@
               pInputText
               type="text"
               (input)="dt1.filterGlobal($any($event.target).value, 'contains')"
-              placeholder="Buscar usuario..."
+              placeholder="Buscar perfil..."
               class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
             />
           </p-iconfield>
@@ -84,17 +84,7 @@
           <td class="whitespace-nowrap">
             <span class="text-sm text-gray-900">{{ profile.description }}</span>
           </td>
-          <td class="whitespace-nowrap">
-            <div class="flex items-center justify-center gap-1">
-              <p-button
-                class="material-symbols-outlined p-button-md action-button"
-                (onClick)="redirectToView(profile.id)"
-                pTooltip="Ver"
-                tooltipPosition="top"
-                >visibility</p-button
-              >
-            </div>
-          </td>
+
           <td class="whitespace-nowrap">
             <div class="flex items-center justify-center gap-1">
               <p-button

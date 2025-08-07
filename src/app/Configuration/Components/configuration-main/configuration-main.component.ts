@@ -26,6 +26,13 @@ export class ConfigurationMainComponent implements OnInit {
       amount: 4,
       icon: 'admin_panel_settings',
     },
+    {
+      name: 'Gestión de Permisos',
+      route: '/configuration/permissions/list',
+      type: 'permisos',
+      amount: 8,
+      icon: 'lock',
+    },
   ];
 
   isAdmin: boolean = false;

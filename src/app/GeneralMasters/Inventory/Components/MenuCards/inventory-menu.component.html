@@ -1,0 +1,53 @@
+<!-- Componente de Menú de Inventario -->
+<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <!-- Header Section -->
+  <div class="mb-6">
+    <h1
+      class="text-2xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mb-3"
+    >
+      Inventario
+    </h1>
+
+    <!-- Container for paragraph -->
+    <div
+      class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6"
+    >
+      <p
+        class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl flex-1"
+      >
+        Administra la configuración del inventario. Desde aquí puedes gestionar productos, 
+        tipos de productos, categorías y unidades de medida del sistema.
+      </p>
+    </div>
+    
+  </div>
+
+  <!-- Inventario seccion tarjetas -->
+  <div
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+  >
+    <!-- Inventario tarjetas -->
+    <ng-container *ngFor="let option of inventoryOptions">
+      <div
+        class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer mr-5"
+        (click)="navigateTo(option.route)"
+      >
+        <div class="flex items-start mb-4">
+          <div class="flex-1">
+            <h3
+              class="text-lg font-semibold text-[var(--color-primary)] mb-1 flex items-center"
+            >
+              <span class="material-symbols-outlined m-0 p-0 mr-2">
+                {{ option.icon }}
+              </span>
+              {{ option.title }}
+            </h3>
+            <p class="text-sm text-gray-500">
+              {{ option.description }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div> 

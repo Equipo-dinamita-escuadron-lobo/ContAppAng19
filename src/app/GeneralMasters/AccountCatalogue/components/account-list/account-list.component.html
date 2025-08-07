@@ -81,21 +81,23 @@
         </div>
 
 
-        <form class="flex justify-center sm:justify-start sm:ml-8 mt-20">
-            <div
-                class="mb-16 -ml-7 flex w-full sm:w-2/6 rounded-md border-b-2 border-neutral-400  text-neutral-400 focus-within:border-primary focus-within:text-primary transition-colors duration-300">
-
-                <svg class="h-20 w-20 mx-2 text-inherit" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-
-                <input type="text" id="search" placeholder="Buscar cuenta (código/nombre)" name="filterEnterpriseList"
-                    [(ngModel)]="filterAccount"
-                    class="mb-1 w-10/12 bg-transparent font-family-sans font-normal text-sm  outline-none placeholder-neutral-400 text-inherit focus:text-primary" />
+        <!-- Search Field -->
+        <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+            <div class="w-full sm:w-[30rem]">
+                <p-iconfield iconPosition="left">
+                    <p-inputicon>
+                        <i class="pi pi-search text-gray-500"></i>
+                    </p-inputicon>
+                    <input
+                        pInputText
+                        type="text"
+                        [(ngModel)]="filterAccount"
+                        placeholder="Buscar cuenta (código/nombre)..."
+                        class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+                    />
+                </p-iconfield>
             </div>
-        </form>
+        </div>
 
 
 
@@ -249,26 +251,26 @@
                                 <div class="w-full sm:w-auto">
                                     <input type="text" id="classCode" formControlName="classCode" placeholder="Código"
                                         class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]=" inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)">
+                                        [class.cursor-not-allowed]=" inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onCodeKeyDown($event, 1)"
+                                        (input)="onCodeInput($event, 1)"
+                                        maxlength="1">
                                 </div>
                                 <div class="w-full sm:w-auto">
                                     <input type="text" id="className" formControlName="className" placeholder="Nombre"
                                         class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)">
+                                        [class.cursor-not-allowed]="inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onNameKeyDown($event)">
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('classCode')?.hasError('required') || accountForm.get('classCode')?.value === '') && (accountForm.get('classCode')?.dirty || accountForm.get('classCode')?.touched)"
                                         class="error-message">* Código es obligatorio</div>
                                     <div *ngIf="(accountForm.get('classCode')?.hasError('maxlength') || accountForm.get('classCode')?.hasError('minlength')) && (accountForm.get('classCode')?.dirty || accountForm.get('classCode')?.touched)"
                                         class="error-message">Código solo debe tener un dígito</div>
-                                    <div *ngIf="accountForm.get('classCode')?.hasError('pattern') && (accountForm.get('classCode')?.dirty || accountForm.get('classCode')?.touched)"
-                                        class="error-message">Código inválido (solo números)</div>
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('className')?.hasError('required') || accountForm.get('className')?.value === '') && (accountForm.get('className')?.dirty || accountForm.get('className')?.touched)"
                                         class="error-message">* Nombre es obligatorio</div>
-                                    <div *ngIf="accountForm.get('className')?.hasError('pattern') && (accountForm.get('className')?.dirty || accountForm.get('className')?.touched)"
-                                        class="error-message">Nombre inválido (solo letras)</div>
                                 </div>
 
                                 <div class="floating-label">Clase
@@ -300,26 +302,26 @@
 
                                     <input type="text" formControlName="codeGroup" placeholder="Código"
                                         class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)">
+                                        [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onCodeKeyDown($event, 1)"
+                                        (input)="onCodeInput($event, 1)"
+                                        maxlength="1">
                                 </div>
                                 <div class="w-full sm:w-auto">
                                     <input type="text" formControlName="groupName" placeholder="Nombre"
                                         class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)">
+                                        [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onNameKeyDown($event)">
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('codeGroup')?.hasError('required') || accountForm.get('codeGroup')?.value === '') && (accountForm.get('codeGroup')?.dirty || accountForm.get('codeGroup')?.touched)"
                                         class="error-message">* Código es obligatorio</div>
                                     <div *ngIf="(accountForm.get('codeGroup')?.hasError('maxlength') || accountForm.get('codeGroup')?.hasError('minlength')) && (accountForm.get('codeGroup')?.dirty || accountForm.get('codeGroup')?.touched)"
                                         class="error-message">Código solo debe tener un dígito</div>
-                                    <div *ngIf="accountForm.get('codeGroup')?.hasError('pattern') && (accountForm.get('codeGroup')?.dirty || accountForm.get('codeGroup')?.touched)"
-                                        class="error-message">Código inválido (solo números)</div>
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('groupName')?.hasError('required') || accountForm.get('groupName')?.value === '') && (accountForm.get('groupName')?.dirty || accountForm.get('groupName')?.touched)"
                                         class="error-message">* Nombre es obligatorio</div>
-                                    <div *ngIf="accountForm.get('groupName')?.hasError('pattern') && (accountForm.get('groupName')?.dirty || accountForm.get('groupName')?.touched)"
-                                        class="error-message">Nombre inválido (solo letras)</div>
                                 </div>
                                 <div class="floating-label">Grupo
                                 </div>
@@ -349,26 +351,26 @@
                                         class="col-span-1 mr-4 mt-1">{{accountForm.get('accountCode')?.value}}</label>
                                     <input type="text" formControlName="codeAccount" placeholder="Código"
                                         class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)">
+                                        [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onCodeKeyDown($event, 2)"
+                                        (input)="onCodeInput($event, 2)"
+                                        maxlength="2">
                                 </div>
                                 <div class="w-full sm:w-auto">
                                     <input type="text" formControlName="accountName" placeholder="Nombre"
                                         class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)">
+                                        [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onNameKeyDown($event)">
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('codeAccount')?.hasError('required') || accountForm.get('codeAccount')?.value === '') && (accountForm.get('codeAccount')?.dirty || accountForm.get('codeAccount')?.touched)"
                                         class="error-message">* Código es obligatorio</div>
                                     <div *ngIf="(accountForm.get('codeAccount')?.hasError('maxlength') || accountForm.get('codeAccount')?.hasError('minlength')) && (accountForm.get('codeAccount')?.dirty || accountForm.get('codeAccount')?.touched)"
                                         class="error-message">Código debe tener dos dígitos</div>
-                                    <div *ngIf="accountForm.get('codeAccount')?.hasError('pattern') && (accountForm.get('codeAccount')?.dirty || accountForm.get('codeAccount')?.touched)"
-                                        class="error-message">Código inválido (solo números)</div>
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('accountName')?.hasError('required') || accountForm.get('accountName')?.value === '') && (accountForm.get('accountName')?.dirty || accountForm.get('accountName')?.touched)"
                                         class="error-message">* Nombre es obligatorio</div>
-                                    <div *ngIf="accountForm.get('accountName')?.hasError('pattern') && (accountForm.get('accountName')?.dirty || accountForm.get('accountName')?.touched)"
-                                        class="error-message">Nombre inválido (solo letras)</div>
                                 </div>
                                 <div class="floating-label">Cuenta
                                 </div>
@@ -396,28 +398,28 @@
                                 <div class="field-wrapper">
                                     <label for="subcuenta"
                                         class="col-span-1 mr-4 mt-1">{{accountForm.get('subAccountCode')?.value}}</label>
-                                    <input type="text" formControlName="codeSubAccount" placeholder="Código"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)">
+                                                                            <input type="text" formControlName="codeSubAccount" placeholder="Código"
+                                            class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                            [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)"
+                                            (keydown)="onCodeKeyDown($event, 2)"
+                                            (input)="onCodeInput($event, 2)"
+                                            maxlength="2">
                                 </div>
                                 <div class="w-full sm:w-auto">
-                                    <input type="text" formControlName="subAccountName" placeholder="Nombre"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)">
+                                                                            <input type="text" formControlName="subAccountName" placeholder="Nombre"
+                                            class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                            [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)"
+                                            (keydown)="onNameKeyDown($event)">
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('codeSubAccount')?.hasError('required') || accountForm.get('codeSubAccount')?.value === '') && (accountForm.get('codeSubAccount')?.dirty || accountForm.get('codeSubAccount')?.touched)"
                                         class="error-message">* Código es obligatorio</div>
                                     <div *ngIf="(accountForm.get('codeSubAccount')?.hasError('maxlength') || accountForm.get('codeSubAccount')?.hasError('minlength')) && (accountForm.get('codeSubAccount')?.dirty || accountForm.get('codeSubAccount')?.touched)"
                                         class="error-message">Código debe tener dos dígitos</div>
-                                    <div *ngIf="accountForm.get('codeSubAccount')?.hasError('pattern') && (accountForm.get('codeSubAccount')?.dirty || accountForm.get('codeSubAccount')?.touched)"
-                                        class="error-message">Código inválido (solo números)</div>
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('subAccountName')?.hasError('required') || accountForm.get('subAccountName')?.value === '') && (accountForm.get('subAccountName')?.dirty || accountForm.get('subAccountName')?.touched)"
                                         class="error-message">* Nombre es obligatorio</div>
-                                    <div *ngIf="accountForm.get('subAccountName')?.hasError('pattern') && (accountForm.get('subAccountName')?.dirty || accountForm.get('subAccountName')?.touched)"
-                                        class="error-message">Nombre inválido (solo letras)</div>
                                 </div>
                                 <div class="floating-label">Subcuenta
                                 </div>
@@ -449,27 +451,27 @@
                                         <input type="text" formControlName="codeAuxiliary" placeholder="Código"
                                             class="input-base"
                                             [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)">
+                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                            (keydown)="onCodeKeyDown($event, 2)"
+                                            (input)="onCodeInput($event, 2)"
+                                            maxlength="2">
                                     </div>
                                     <div class="w-full sm:w-auto">
                                         <input type="text" formControlName="auxiliaryName" placeholder="Nombre"
                                             class="input-base"
                                             [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)">
+                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                            (keydown)="onNameKeyDown($event)">
                                     </div>
                                     <div>
                                         <div *ngIf="(accountForm.get('codeAuxiliary')?.hasError('required') || accountForm.get('codeAuxiliary')?.value === '') && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
                                             class="error-message">* Código es obligatorio</div>
                                         <div *ngIf="(accountForm.get('codeAuxiliary')?.hasError('maxlength') || accountForm.get('codeAuxiliary')?.hasError('minlength')) && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
                                             class="error-message">Código debe tener dos dígitos</div>
-                                        <div *ngIf="accountForm.get('codeAuxiliary')?.hasError('pattern') && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
-                                            class="error-message">Código inválido (solo números)</div>
                                     </div>
                                     <div>
                                         <div *ngIf="(accountForm.get('auxiliaryName')?.hasError('required') || accountForm.get('auxiliaryName')?.value === '') && (accountForm.get('auxiliaryName')?.dirty || accountForm.get('auxiliaryName')?.touched)"
                                             class="error-message">* Nombre es obligatorio</div>
-                                        <div *ngIf="accountForm.get('auxiliaryName')?.hasError('pattern') && (accountForm.get('auxiliaryName')?.dirty || accountForm.get('auxiliaryName')?.touched)"
-                                            class="error-message">Nombre inválido (solo letras)</div>
                                     </div>
                                     <div class="floating-label">
                                         Auxiliar</div>

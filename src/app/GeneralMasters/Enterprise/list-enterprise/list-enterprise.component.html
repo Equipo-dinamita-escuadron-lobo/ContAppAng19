@@ -2,7 +2,6 @@
 <div class="w-full h-full flex flex-col">
   <app-header></app-header>
 </div>
-
 <div class="m-120  max-w-7xl mx-auto">
   <!-- Título -->
   <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
@@ -20,9 +19,10 @@
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
           <input
+          pInputText
             type="text"
             placeholder="Buscar..."
-            class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-b-button-secondary-hover focus:ring-1 focus:ring-primary transition"
+            class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
             [(ngModel)]="searchTerm"
             (ngModelChange)="filterEnterprises()"
           />
@@ -39,16 +39,38 @@
 
     </div>
 
-    <!-- Botón Agregar -->
-    <p-button label="Agregar" type="submit"></p-button>
+    <!-- Botones de acción -->
+    <div class="flex gap-3">
+      <p-button 
+        label="PDF RUT" 
+        icon="pi pi-file-pdf"
+        (click)="showPdfRutModal()"
+        class="bg-blue-600 text-white rounded-full">
+      </p-button>
+      <p-button 
+        label="Agregar" 
+        icon="pi pi-plus"
+        (click)="onCreateEnterprise()"
+        class="bg-primary text-white rounded-full">
+      </p-button>
+    </div>
   </div>
 
   <!-- Cards -->
   <div class="bg-neutral-90 p-18 mt-10 rounded-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
-    <div *ngFor="let enterprise of filteredEnterprises" class="bg-white p-6 rounded-xl shadow text-center max-w-xs w-full">
-      <div class="w-80 h-80 mx-auto rounded-full bg-gray-200 mb-4"></div>
-      <h3 class="font-family-titillium font-semibold text-lg/22">{{ enterprise.name }}</h3>
-      <p class="font-family-sans font-normal text-xs/21 text-neutral-50 mb-4">NIT: {{ enterprise.nit }}</p>
+    <div *ngFor="let enterprise of filteredEnterprises" class="bg-white p-8 rounded-xl shadow text-center max-w-sm w-full">
+      <div class="w-64 h-64 mx-auto rounded-full bg-gray-200 mb-6 flex items-center justify-center overflow-hidden">
+        <img 
+          *ngIf="enterprise.logo" 
+          [src]="enterprise.logo" 
+          [alt]="enterprise.name"
+          (error)="onImageError($event)"
+          (load)="onImageLoad(enterprise)"
+          class="w-full h-full rounded-full object-cover">
+        <i *ngIf="!enterprise.logo" class="pi pi-building text-6xl text-gray-400"></i>
+      </div>
+      <h3 class="font-family-titillium font-semibold text-xl/22 mb-2">{{ enterprise.name }}</h3>
+      <p class="font-family-sans font-normal text-sm/21 text-neutral-50 mb-6">NIT: {{ enterprise.nit }}</p>
       <div class="flex items-center justify-center">
         <a
           [routerLink]="['/home']"
@@ -61,3 +83,64 @@
   </div>
 
 </div>
+
+<!-- Modal PDF RUT -->
+<p-dialog 
+  header="Crear una Empresa apartir del PDF del RUT" 
+  [(visible)]="showPdfModal" 
+  [modal]="true" 
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="w-96"
+  [style]="{width: '500px'}">
+  
+  <div class="p-6">
+    <p class="text-gray-600 mb-6 text-sm leading-relaxed">
+      Por favor, selecciona un archivo PDF para cargar. Asegúrate de que el archivo tenga la informacion con la cual se va a crear el nuevo tercero.
+    </p>
+    
+    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+      <div *ngIf="!selectedPdfFile">
+        <i class="pi pi-file-pdf text-4xl text-gray-400 mb-4"></i>
+        <p class="text-gray-600 font-medium">Arrastra y suelta tu PDF del RUT!</p>
+        <p class="text-sm text-gray-500 mt-2">o haz clic para seleccionar</p>
+      </div>
+      <div *ngIf="selectedPdfFile" class="text-center">
+        <i class="pi pi-check-circle text-4xl text-green-500 mb-4"></i>
+        <p class="text-green-600 font-medium">PDF seleccionado</p>
+        <p class="text-sm text-gray-500 mt-2">{{ selectedPdfFile.name }}</p>
+      </div>
+      <input 
+        type="file" 
+        accept=".pdf" 
+        class="hidden" 
+        #fileInput
+        (change)="onPdfFileSelected($event)">
+      <p-button 
+        label="{{ selectedPdfFile ? 'Cambiar PDF' : 'Seleccionar PDF' }}" 
+        icon="{{ selectedPdfFile ? 'pi pi-refresh' : 'pi pi-upload' }}"
+        (click)="fileInput.click()"
+        class="mt-4">
+      </p-button>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-3">
+      <p-button 
+        label="Cancelar" 
+        icon="pi pi-times"
+        (click)="closePdfModal()"
+        class="text-gray-600">
+      </p-button>
+      <p-button 
+        label="Crear" 
+        icon="pi pi-check"
+        (click)="createEnterpriseFromPdf()"
+        [disabled]="!selectedPdfFile"
+        class="text-blue-600">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -19,7 +19,6 @@ export class UserCreateComponent {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       roles: [[], Validators.required],
-      username: ['', Validators.required]
     });
   }
 

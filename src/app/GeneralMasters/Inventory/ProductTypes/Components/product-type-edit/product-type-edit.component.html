@@ -1,0 +1,107 @@
+<!-- Contenedor Principal con la fuente Titillium -->
+<div class="flex w-full h-full font-titillium">
+  <!-- Tarjeta de Contenido Principal -->
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+    
+    <!-- CABECERA con botón de regreso y título -->
+    <div class="flex items-center mb-8 gap-4">
+      <p-button 
+        icon="pi pi-arrow-left" 
+        (onClick)="goBack()"
+        severity="secondary"
+        [text]="true"
+        pTooltip="Regresar a la lista"
+        tooltipPosition="bottom">
+      </p-button>
+      <div>
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+          Editar Tipo de Producto
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-2 text-neutral-40">
+          Modifique la información del tipo de producto.
+        </p>
+      </div>
+    </div>
+
+    <!-- FORMULARIO -->
+    <form [formGroup]="productTypeForm" (ngSubmit)="onSubmit()" class="space-y-6" *ngIf="!loading">
+      <div class="account-section">
+        
+        <!-- Campo Nombre -->
+        <div class="field-wrapper">
+          <div class="relative">
+            <label class="floating-label" for="name">Nombre del Tipo de Producto *</label>
+            <input
+              pInputText
+              id="name"
+              placeholder="Ingrese el nombre del tipo de producto"
+              formControlName="name"
+              class="input-base"
+              [class.border-red-500]="isFieldInvalid('name')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('name')">
+              {{ getFieldError('name') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Campo Descripción -->
+        <div class="field-wrapper">
+          <div class="relative">
+            <label class="floating-label" for="description">Descripción *</label>
+            <input
+              pInputText
+              id="description"
+              placeholder="Ingrese la descripción del tipo de producto"
+              formControlName="description"
+              class="input-base"
+              [class.border-red-500]="isFieldInvalid('description')"
+            />
+            <div class="error-message" *ngIf="isFieldInvalid('description')">
+              {{ getFieldError('description') }}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div class="flex justify-end gap-4 mt-12 pt-40">
+        <p-button 
+          type="button"
+          label="Cancelar" 
+          severity="secondary"
+          (onClick)="goBack()">
+        </p-button>
+        <p-button 
+          type="submit"
+          label="Guardar Cambios"
+          [disabled]="productTypeForm.invalid || !hasChanges()">
+        </p-button>
+      </div>
+
+      <!-- Botón de eliminar -->
+      <div class="flex justify-end mt-4">
+        <p-button
+          label="Eliminar"
+          severity="danger"
+          icon="pi pi-trash"
+          (onClick)="deleteProductType()"
+          [disabled]="loading">
+        </p-button>
+      </div>
+    </form>
+
+    <!-- Loading state -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast para mensajes -->
+<p-toast></p-toast>
+
+<!-- Confirmation dialog -->
+<p-confirmDialog></p-confirmDialog>

@@ -1,0 +1,20 @@
+/* Estilos específicos para el componente de lista de impuestos */
+
+/* Personalización del toast */
+::ng-deep .p-toast {
+  z-index: 9999;
+}
+
+/* Personalización del confirm dialog */
+::ng-deep .p-confirm-dialog {
+  font-family: var(--font-family-sans);
+}
+
+::ng-deep .p-confirm-dialog .p-dialog-header {
+  background-color: var(--color-primary-95);
+  color: var(--color-primary);
+}
+
+::ng-deep .p-confirm-dialog .p-confirm-dialog-icon {
+  color: var(--color-error);
+}

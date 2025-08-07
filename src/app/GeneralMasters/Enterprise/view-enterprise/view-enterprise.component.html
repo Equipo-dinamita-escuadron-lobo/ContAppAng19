@@ -1,1 +1,180 @@
-<p>ID: {{ entData?.id }}</p>
+<div class="min-h-screen bg-gray-50 p-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800 border-b-4 border-primary pb-2">
+        Inicio
+      </h1>
+      <p class="text-lg text-gray-600 mt-2">Bienvenido a su empresa!!!</p>
+    </div>
+    <p-button 
+      label="← Regresar" 
+      icon="pi pi-arrow-left"
+      (click)="goBack()"
+      class="bg-primary text-white">
+    </p-button>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Main Content Area -->
+    <div class="lg:col-span-3 space-y-6">
+      <!-- Información general -->
+      <div class="bg-white rounded-lg shadow-md p-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-primary">
+          Información general
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Left Column -->
+          <div class="space-y-6">
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Nombre de la empresa:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.name || 'No disponible' }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Tipo de empresa:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ getEnterpriseTypeName(enterpriseData?.enterpriseType) }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Tipo de persona:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ getPersonTypeName(enterpriseData?.personType) }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Actividad económica principal:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.mainActivity || 'No disponible' }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Razón social:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.legalName || 'No disponible' }}</span>
+            </div>
+          </div>
+          
+          <!-- Right Column -->
+          <div class="space-y-6">
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">NIT:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.nit || 'No disponible' }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Dígito de verificación:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.dv || 'No disponible' }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Tipo de contribuyente:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ getTaxPayerTypeName(enterpriseData?.taxPayerType) }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Responsabilidades tributarias:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ getTaxLiabilitiesNames(enterpriseData?.taxLiabilities) }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Actividad económica secundaria:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.secondaryActivity || 'No disponible' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información adicional -->
+      <div class="bg-white rounded-lg shadow-md p-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 pb-3 border-b-2 border-primary">
+          Información adicional
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Left Column -->
+          <div class="space-y-6">
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">País:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ getLocationData('country') }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Departamento:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ getLocationData('department') }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Ciudad:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ getLocationData('city') }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Tiene sucursales:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.branch || 'No disponible' }}</span>
+            </div>
+          </div>
+          
+          <!-- Right Column -->
+          <div class="space-y-6">
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Dirección:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ getLocationData('address') }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Teléfono:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.phone || 'No disponible' }}</span>
+            </div>
+            
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1">Email:</label>
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.email || 'No disponible' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-lg shadow-md p-8">
+        <h3 class="text-xl font-bold text-gray-800 mb-8 text-center">Mi empresa</h3>
+        
+        <!-- Logo -->
+        <div class="flex justify-center mb-8">
+          <div class="w-32 h-32 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden shadow-lg">
+            <img 
+              *ngIf="enterpriseData?.logo" 
+              [src]="enterpriseData?.logo" 
+              [alt]="enterpriseData?.name"
+              class="w-full h-full rounded-full object-cover">
+            <i *ngIf="!enterpriseData?.logo" class="pi pi-building text-4xl text-gray-400"></i>
+          </div>
+        </div>
+        
+        <!-- Company Info -->
+        <div class="text-center mb-8 space-y-4">
+          <h4 class="text-2xl font-bold text-gray-800">{{ enterpriseData?.name || 'Nombre de empresa' }}</h4>
+          <div class="space-y-2">
+            <p class="text-gray-600 font-medium">NIT: {{ enterpriseData?.nit || 'No disponible' }}</p>
+            <p class="text-gray-600">{{ getLocationData('department') }}, {{ getLocationData('city') }}</p>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="space-y-4">
+          <p-button 
+            label="Editar" 
+            icon="pi pi-pencil"
+            (click)="goToEdit()"
+            class="flex-1 text-primary h-12">
+          </p-button>
+          <p-button 
+            label="Archivar" 
+            icon="pi pi-archive"
+            class="flex-1 text-gray-600 h-12">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
