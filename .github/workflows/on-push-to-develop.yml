@@ -1,9 +1,9 @@
-name: Build Docker image & push to Docker Hub on push to test branch
+name: Build Docker image & push to Docker Hub on push to develop branch
 
 on:
   push:
     branches:
-      - test
+      - develop
 
 
 jobs:
@@ -13,9 +13,9 @@ jobs:
       Equipo-dinamita-escuadron-lobo/workflows/.github/workflows/frontend-on-push.yaml@main
     with:
       repository-name: ${{ github.event.repository.name }}
-      environment: test
-      deploy-url: test
-      semver-branch: test
+      environment: dev
+      deploy-url: dev
+      semver-branch: develop
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_ACCESS_TOKEN: ${{ secrets.DOCKER_ACCESS_TOKEN }}
