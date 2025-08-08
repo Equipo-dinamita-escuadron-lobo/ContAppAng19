@@ -3,7 +3,7 @@ import { ProductType } from "../../ProductTypes/Models/ProductType";
 export interface Product {
     id: number; // Cambiado de string a number (Long en backend)
     code: string;
-    itemType: string; // Campo que devuelve el backend con el nombre del producto
+    name: string; // Nombre del producto
     description: string;
     quantity: number; // Integer en backend
     taxPercentage: number; // Integer en backend
@@ -26,6 +26,7 @@ export interface ProductList {
     description: string;
     quantity: number;
     taxPercentage: number;
+    taxDisplayText?: string; // campo para mostrar código + tarifa
     creationDate: Date;
     unitOfMeasureName: string;
     categoryName: string;
