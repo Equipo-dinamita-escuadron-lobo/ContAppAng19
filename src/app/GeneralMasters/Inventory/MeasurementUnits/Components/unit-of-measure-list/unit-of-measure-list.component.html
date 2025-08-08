@@ -86,6 +86,11 @@
           <th
             class="font-semibold text-primary border-b-2 border-primary text-center"
           >
+            Estado
+          </th>
+          <th
+            class="font-semibold text-primary border-b-2 border-primary text-center"
+          >
             Acciones
           </th>
         </tr>
@@ -98,23 +103,35 @@
           <td class="py-3">{{ unit.abbreviation }}</td>
           <td class="py-3">{{ unit.description }}</td>
           <td class="py-3 text-center">
-                         <!-- 4. BOTONES DE ACCIÓN -->
-             <div class="flex justify-center gap-2">
-               <p-button
-                 icon="pi pi-pencil"
-                 pTooltip="Editar Unidad"
-                 tooltipPosition="top"
-                 (click)="redirectToEdit(unit.id)"
-                 styleClass="p-button-rounded p-button-text text-complementary-green"
-               ></p-button>
-               <p-button
-                 icon="pi pi-trash"
-                 pTooltip="Eliminar Unidad"
-                 (click)="deleteUnit(unit.id)"
-                 tooltipPosition="top"
-                 styleClass="p-button-rounded p-button-text text-secondary"
-               ></p-button>
-             </div>
+            <p-tag [value]="formatState(unit.state)" [severity]="getStateSeverity(unit.state)">
+            </p-tag>
+          </td>
+          <td class="py-3 text-center">
+            <!-- 4. BOTONES DE ACCIÓN -->
+            <div class="flex justify-center gap-2 items-center">
+              <p-button
+                icon="pi pi-pencil"
+                pTooltip="Editar Unidad"
+                tooltipPosition="top"
+                (click)="redirectToEdit(unit.id)"
+                styleClass="p-button-rounded p-button-text text-complementary-green"
+              ></p-button>
+              <p-button
+                icon="pi pi-trash"
+                pTooltip="Eliminar Unidad"
+                (click)="deleteUnit(unit.id)"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text text-secondary"
+              ></p-button>
+              <p-toggleSwitch
+                [ngModel]="isActive(unit.state)"
+                (onChange)="changeUnitState(unit)"
+                pTooltip="Cambiar Estado"
+                tooltipPosition="top"
+                styleClass="p-toggleSwitch-sm"
+                [style]="{'transform': 'scale(0.8)'}"
+              ></p-toggleSwitch>
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -122,7 +139,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td
-            colspan="5"
+            colspan="6"
             class="text-center py-6 font-family-sans text-neutral-50"
           >
             No se encontraron unidades de medida.
@@ -133,7 +150,7 @@
       <ng-template pTemplate="loadingbody">
         <tr>
           <td
-            colspan="5"
+            colspan="6"
             class="text-center py-6 font-family-sans text-neutral-50"
           >
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
@@ -144,5 +161,11 @@
     </p-table>
   </div>
 </div>
+
+<!-- Toast para mensajes -->
+<p-toast></p-toast>
+
+<!-- Confirmation dialog -->
+<p-confirmDialog></p-confirmDialog>
 
 

@@ -5,6 +5,7 @@ import Swal from 'sweetalert2';
 
 // --- AHORA: Importaciones Standalone y de PrimeNG ---
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -16,6 +17,9 @@ import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
 import { ReactiveFormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 // --- Servicios y Modelos ---
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
@@ -28,6 +32,7 @@ import { environment } from '../../../../../../environments/environment';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterModule,
     TableModule,
     ButtonModule,
@@ -38,8 +43,11 @@ import { environment } from '../../../../../../environments/environment';
     InputIcon,
     IconField,
     ReactiveFormsModule,
-    TooltipModule
+    TooltipModule,
+    ToggleSwitchModule,
+    ConfirmDialogModule
   ],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './unit-of-measure-list.component.html',
   styleUrls: ['./unit-of-measure-list.component.css']
 })
@@ -52,7 +60,9 @@ export class UnitOfMeasureListComponent implements OnInit {
 
   constructor(
     private unitOfMeasureService: UnitOfMeasureService,
-    private router: Router
+    private router: Router,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService
   ) {}
 
   ngOnInit(): void {
@@ -130,6 +140,46 @@ export class UnitOfMeasureListComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+  }
+
+  // Método para cambiar el estado de la unidad de medida
+  changeUnitState(unit: UnitOfMeasure): void {
+    this.unitOfMeasureService.unitOfMeasureChangeState(unit.id.toString()).subscribe({
+      next: () => {
+        // Cambiar el estado localmente
+        const currentState = this.isActive(unit.state);
+        unit.state = currentState ? 'false' : 'true';
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado de la unidad de medida "${unit.name}" cambiado correctamente`
+        });
+      },
+      error: (error: any) => {
+        console.error('Error al cambiar el estado de la unidad de medida:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado de la unidad de medida'
+        });
+      }
+    });
+  }
+
+  // Métodos para manejar el estado
+  getStateSeverity(state: string): 'success' | 'danger' {
+    if (!state) return 'danger';
+    return (state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active') ? 'success' : 'danger';
+  }
+
+  formatState(state: string): string {
+    if (!state) return 'Inactivo';
+    return (state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active') ? 'Activo' : 'Inactivo';
+  }
+
+  isActive(state: string): boolean {
+    if (!state) return false;
+    return state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active';
   }
 
 }
