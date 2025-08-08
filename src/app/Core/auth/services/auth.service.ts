@@ -11,7 +11,7 @@ import { UserProfile } from '../models/user-profile';
 import { DecodedToken } from '../models/decoded-token';
 
 
-const keycloakUrl = environment.keycloak_url;
+const keycloakUrl = environment.API_URL;
 
 export interface PayloadToken {
   access_token: string;

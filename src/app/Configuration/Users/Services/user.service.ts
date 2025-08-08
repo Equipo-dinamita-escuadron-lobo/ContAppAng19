@@ -9,7 +9,7 @@ import { catchError } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class UserService {
-  private apiUrl = environment.keycloak_url + 'keycloak/';
+  private apiUrl = environment.API_URL + 'keycloak/';
 
   constructor(private http: HttpClient) {}
 
