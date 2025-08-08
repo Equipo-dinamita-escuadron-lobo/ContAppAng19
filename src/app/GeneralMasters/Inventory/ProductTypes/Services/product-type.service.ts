@@ -39,4 +39,10 @@ export class ProductTypeService {
     const url = `${environment.API_URL}product-types/${id}`;
     return this.http.delete(url);
   }
+
+  // Método para cambiar el estado de un tipo de producto
+  changeProductTypeState(id: number): Observable<any> {
+    const url = `${environment.API_URL}product-types/changeState/${id}`;
+    return this.http.put(url, {});
+  }
 }
