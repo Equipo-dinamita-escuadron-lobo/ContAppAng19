@@ -103,6 +103,11 @@
           <th
             class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
           >
+            Estado
+          </th>
+          <th
+            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
+          >
             Acciones
           </th>
         </tr>
@@ -133,9 +138,13 @@
                {{ getCategoryName(cat.returnId) }}
              </span>
            </td>
+           <td class="py-3 text-center">
+             <p-tag [value]="formatState(cat.state)" [severity]="getStateSeverity(cat.state)">
+             </p-tag>
+           </td>
           <td class="py-3 text-center whitespace-nowrap">
             <!-- 4. BOTONES DE ACCIÓN -->
-            <div class="flex justify-center gap-2">
+            <div class="flex justify-center gap-2 items-center">
               <p-button
                 icon="pi pi-pencil"
                 pTooltip="Editar Categoría"
@@ -150,6 +159,14 @@
                 (click)="deleteCategory(cat.id)"
                 styleClass="p-button-rounded p-button-text text-secondary"
               ></p-button>
+              <p-toggleSwitch
+                [ngModel]="isActive(cat.state)"
+                (onChange)="changeCategoryState(cat)"
+                pTooltip="Cambiar Estado"
+                tooltipPosition="top"
+                styleClass="p-toggleSwitch-sm"
+                [style]="{'transform': 'scale(0.8)'}"
+              ></p-toggleSwitch>
             </div>
           </td>
         </tr>
@@ -157,7 +174,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="text-center py-6 font-family-sans text-neutral-50">
+          <td colspan="9" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron categorías.
           </td>
         </tr>
@@ -167,4 +184,10 @@
 
   </div>
 </div>
+
+<!-- Toast para mensajes -->
+<p-toast></p-toast>
+
+<!-- Confirmation dialog -->
+<p-confirmDialog></p-confirmDialog>
 
