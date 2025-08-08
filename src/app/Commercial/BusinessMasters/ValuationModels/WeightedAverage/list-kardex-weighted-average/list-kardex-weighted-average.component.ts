@@ -42,7 +42,7 @@ export class ListKardexWeightedAverageComponent {
   entData: any | null = null;
   kardexList: KardexRow[] = [];
 
-  productId: number = 1;
+  productId: number = 0;
   totalRecords = 0;
   first = 0;
   loading = false;
@@ -51,8 +51,21 @@ export class ListKardexWeightedAverageComponent {
   filteredProducts: ProductResponse[] = [];
   selectedProduct: ProductResponse | undefined;
 
-  startDate: Date | undefined;
-  endDate: Date | undefined;
+  startDate: Date | null = null;
+  endDate: Date | null = null;
+
+  onStartDateChange() {
+    if (this.endDate && this.startDate && this.endDate < this.startDate) {
+      this.endDate = null;
+    }
+  }
+
+  onEndDateChange() {
+    if (this.startDate && this.endDate && this.endDate < this.startDate) {
+      this.endDate = null;
+      console.warn('La fecha de finalización no puede ser menor a la fecha de inicio');
+    }
+  }
 
   filterProducts(event: AutoCompleteCompleteEvent) {
     const query = event.query.toLowerCase();
@@ -79,12 +92,19 @@ export class ListKardexWeightedAverageComponent {
   loadKardex(event: any) {
     this.loading = true;
 
+    if(this.productId === 0) {
+      this.kardexList = [];
+      this.totalRecords = 0;
+      this.loading = false;
+      return;
+    }
+
     const page = event.first / event.rows;
     const size = event.rows;
     this.first = event.first;
     const sort = event.sortField ? `${event.sortField},${event.sortOrder === 1 ? 'asc' : 'desc'}` : '';
 
-    this.kardexService.getKardexByProductId(this.productId, page, size, sort).subscribe((res) => {
+    this.kardexService.getKardexByProductId(this.productId, page, size, sort, this.startDate, this.endDate).subscribe((res) => {
       const rawList = res.data.content;
 
       this.kardexList = rawList.map((item: {
@@ -95,7 +115,7 @@ export class ListKardexWeightedAverageComponent {
         details: string;
         balanceQuantity: any;
         balanceUnitPrice: any;
-        balanceTotal?: any;
+        totalBalance?: any;
         entryQuantity?: any;
         entryUnitPrice?: any;
         entryTotal?: any;
@@ -107,13 +127,30 @@ export class ListKardexWeightedAverageComponent {
         const previousBalance = rawList[index - 1]?.balanceQuantity || 0;
         const balanceQuantity = item.quantity + previousBalance;
         const balanceUnitPrice = item.unitPrice;
-        const balanceTotal = balanceQuantity * balanceUnitPrice;
+        const balanceTotal = item.totalBalance
 
-        if (item.type === 'PURCHASE' || item.type === 'PURCHASERETURN') {
+        if (item.type === 'PURCHASE') {
           item.entryQuantity = item.quantity;
           item.entryUnitPrice = parseFloat(item.unitPrice);
           item.entryTotal = item.entryQuantity * item.entryUnitPrice;
         }
+        if (item.type === 'PURCHASERETURN') {
+          item.entryQuantity = -item.quantity;
+          item.entryUnitPrice = parseFloat(item.unitPrice);
+          item.entryTotal = (item.entryQuantity * item.entryUnitPrice);
+        }
+        if (item.type === 'SALE') {
+          item.exitQuantity = item.quantity;
+          item.exitUnitPrice = parseFloat(item.unitPrice);
+          item.exitTotal = item.exitQuantity * item.exitUnitPrice;
+        }
+        if (item.type === 'SALESRETURN') {
+          item.exitQuantity = -item.quantity;
+          item.exitUnitPrice = parseFloat(item.unitPrice);
+          item.exitTotal = (item.exitQuantity * item.exitUnitPrice);
+        }
+
+
 
         const formattedDate = new Date(item.date).toLocaleDateString('es-CO', {
           day: '2-digit',

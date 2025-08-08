@@ -14,5 +14,5 @@ export interface KardexRow {
 
   balanceQuantity: number;
   balanceUnitPrice: number;
-  balanceTotal: number;
+  totalBalance: number;
 }
