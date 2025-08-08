@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
-import { delay, Observable, of, switchMap, combineLatest, map, forkJoin, from } from 'rxjs';
+import { delay, Observable, of, switchMap, combineLatest, map, forkJoin, from, catchError } from 'rxjs';
 import { Product, ProductList } from '../Models/Product';
 import { ProductType } from '../../ProductTypes/Models/ProductType';
 import { UnitOfMeasure } from '../../MeasurementUnits/Models/UnitOfMeasure';
@@ -32,7 +32,14 @@ export class ProductService {
         const unitOfMeasures$ = this.unitOfMeasureService.getUnitOfMeasures(enterpriseId);
         const categories$ = this.categoryService.getCategories(enterpriseId);
         const productTypes$ = this.productTypeService.getProductTypes(enterpriseId);
-        const taxes$ = this.taxService.getTaxes(enterpriseId);
+        const taxes$ = this.taxService.getTaxes(enterpriseId).pipe(
+          map(taxes => taxes),
+          // Si falla la obtención de impuestos, continuar con array vacío
+          catchError(err => {
+            console.warn('Error al obtener impuestos, continuando sin información de impuestos:', err);
+            return of([]);
+          })
+        );
         
         return combineLatest([unitOfMeasures$, categories$, productTypes$, taxes$]).pipe(
           switchMap(([unitOfMeasures, categories, productTypes, taxes]) => {
@@ -55,8 +62,14 @@ export class ProductService {
                 productType = productTypeMap.get(product.productTypeId) || null;
               }
               
-              // Buscar información del impuesto
-              const taxInfo = taxMap.get(product.taxPercentage);
+              // Buscar información del impuesto - hacerlo más robusto
+              let taxInfo = taxMap.get(product.taxPercentage);
+              
+              // Si no se encuentra exactamente, buscar por aproximación
+              if (!taxInfo && taxes.length > 0) {
+                taxInfo = taxes.find(tax => Math.abs(tax.interest - product.taxPercentage) < 0.01);
+              }
+              
               const taxDisplayText = taxInfo ? `${taxInfo.code} (${taxInfo.interest}%)` : `${product.taxPercentage}%`;
               
               return {
