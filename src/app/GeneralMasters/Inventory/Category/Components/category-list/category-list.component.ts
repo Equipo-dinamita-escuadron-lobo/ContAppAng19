@@ -10,6 +10,7 @@ import { CategoryService } from '../../Services/category.service';
 
 // PrimeNG Imports
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -21,6 +22,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
 import { ReactiveFormsModule } from '@angular/forms';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TagModule } from 'primeng/tag';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 // Componente de detalles (si existe)
 // import { CategoryDetailsComponent } from '../category-details/category-details.component';
@@ -30,6 +34,7 @@ import { ReactiveFormsModule } from '@angular/forms';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     TableModule,
     ButtonModule,
     InputTextModule,
@@ -40,8 +45,11 @@ import { ReactiveFormsModule } from '@angular/forms';
     TooltipModule,
     InputIcon,
     IconField,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    ToggleSwitchModule,
+    TagModule
   ],
+  providers: [ConfirmationService, MessageService],
   templateUrl: './category-list.component.html',
   styleUrl: './category-list.component.css',
 })
@@ -65,7 +73,9 @@ export class CategoryListComponent implements OnInit {
     private categoryService: CategoryService,
     private router: Router,
     private chartAccountService: ChartAccountService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService
   ) {
     this.form = this.fb.group(this.validationsAll());
   }
@@ -247,7 +257,45 @@ export class CategoryListComponent implements OnInit {
     });
   }
 
+  // Método para cambiar el estado de la categoría
+  changeCategoryState(category: Category): void {
+    this.categoryService.changeCategoryState(category.id).subscribe({
+      next: () => {
+        // Cambiar el estado localmente
+        const currentState = this.isActive(category.state);
+        category.state = currentState ? 'false' : 'true';
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado de la categoría "${category.name}" cambiado correctamente`
+        });
+      },
+      error: (error: any) => {
+        console.error('Error al cambiar el estado de la categoría:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado de la categoría'
+        });
+      }
+    });
+  }
 
+  // Métodos para manejar el estado
+  getStateSeverity(state: string): 'success' | 'danger' {
+    if (!state) return 'danger';
+    return (state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active') ? 'success' : 'danger';
+  }
+
+  formatState(state: string): string {
+    if (!state) return 'Inactivo';
+    return (state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active') ? 'Activo' : 'Inactivo';
+  }
+
+  isActive(state: string): boolean {
+    if (!state) return false;
+    return state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active';
+  }
 
 
 }

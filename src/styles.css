@@ -649,3 +649,14 @@ body {
 .p-paginator .p-paginator-rpp-dropdown:target {
   border-color: #111827;
 }
+
+/* ================================
+   ESTILOS PARA P-TOGGLESWITCH
+   ================================ */
+
+.p-toggleswitch {
+  --p-toggleswitch-checked-background: var(--color-complementary-green) !important;
+  --p-toggleswitch-checked-hover-background: var(--color-complementary-green) !important;
+  --p-toggleswitch-handle-background: var(--color-primary-100) !important;
+  --p-toggleswitch-handle-checked-background: var(--color-primary-100) !important;
+}

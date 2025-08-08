@@ -88,4 +88,10 @@ export class CategoryService {
     const url = `${environment.API_URL}categories/delete/${id}`;
     return this.http.delete<Category>(url);
   }
+
+  // Método para cambiar el estado de una categoría
+  changeCategoryState(id: number): Observable<any> {
+    const url = `${environment.API_URL}categories/changeState/${id}`;
+    return this.http.put(url, {});
+  }
 }
