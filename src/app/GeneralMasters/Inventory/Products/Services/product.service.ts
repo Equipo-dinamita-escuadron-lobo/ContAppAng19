@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
-import { delay, Observable, of, switchMap, combineLatest, map, forkJoin, from } from 'rxjs';
+import { delay, Observable, of, switchMap, combineLatest, map, forkJoin, from, catchError } from 'rxjs';
 import { Product, ProductList } from '../Models/Product';
 import { ProductType } from '../../ProductTypes/Models/ProductType';
 import { UnitOfMeasure } from '../../MeasurementUnits/Models/UnitOfMeasure';
@@ -9,6 +9,7 @@ import { Category } from '../../Category/Models/Category';
 import { UnitOfMeasureService } from '../../MeasurementUnits/Services/unit-of-measure.service';
 import { CategoryService } from '../../Category/Services/category.service';
 import { ProductTypeService } from '../../ProductTypes/Services/product-type.service';
+import { TaxService } from '../../../Taxes/services/tax.service';
 
 
 let API_URL = environment.API_URL;
@@ -20,7 +21,8 @@ export class ProductService {
     private http: HttpClient,
     private unitOfMeasureService: UnitOfMeasureService,
     private categoryService: CategoryService,
-    private productTypeService: ProductTypeService
+    private productTypeService: ProductTypeService,
+    private taxService: TaxService
   ) {}
 
   getProducts(enterpriseId:string): Observable<ProductList[]> {
@@ -30,13 +32,22 @@ export class ProductService {
         const unitOfMeasures$ = this.unitOfMeasureService.getUnitOfMeasures(enterpriseId);
         const categories$ = this.categoryService.getCategories(enterpriseId);
         const productTypes$ = this.productTypeService.getProductTypes(enterpriseId);
+        const taxes$ = this.taxService.getTaxes(enterpriseId).pipe(
+          map(taxes => taxes),
+          // Si falla la obtención de impuestos, continuar con array vacío
+          catchError(err => {
+            console.warn('Error al obtener impuestos, continuando sin información de impuestos:', err);
+            return of([]);
+          })
+        );
         
-        return combineLatest([unitOfMeasures$, categories$, productTypes$]).pipe(
-          switchMap(([unitOfMeasures, categories, productTypes]) => {
+        return combineLatest([unitOfMeasures$, categories$, productTypes$, taxes$]).pipe(
+          switchMap(([unitOfMeasures, categories, productTypes, taxes]) => {
             // Crear mapas para búsqueda rápida
             const unitOfMeasureMap = new Map(unitOfMeasures.map(um => [um.id, um]));
             const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
             const productTypeMap = new Map(productTypes.map(pt => [pt.id, pt]));
+            const taxMap = new Map(taxes.map(tax => [tax.interest, tax]));
             
             // Transformar productos a ProductList con nombres
             const transformedProducts = products.map(product => {
@@ -51,13 +62,24 @@ export class ProductService {
                 productType = productTypeMap.get(product.productTypeId) || null;
               }
               
+              // Buscar información del impuesto - hacerlo más robusto
+              let taxInfo = taxMap.get(product.taxPercentage);
+              
+              // Si no se encuentra exactamente, buscar por aproximación
+              if (!taxInfo && taxes.length > 0) {
+                taxInfo = taxes.find(tax => Math.abs(tax.interest - product.taxPercentage) < 0.01);
+              }
+              
+              const taxDisplayText = taxInfo ? `${taxInfo.code} (${taxInfo.interest}%)` : `${product.taxPercentage}%`;
+              
               return {
                 ...product,
-                name: product.itemType, // Mapear itemType a name
+                name: product.name,
                 unitOfMeasureName: unitOfMeasureMap.get(product.unitOfMeasureId)?.name || 'N/A',
                 categoryName: categoryMap.get(product.categoryId)?.name || 'N/A',
                 productType: productType,
                 productTypeName: productType?.name || 'N/A',
+                taxDisplayText: taxDisplayText,
                 state: product.state === 'true' // Convertir string a boolean
               } as ProductList;
             });

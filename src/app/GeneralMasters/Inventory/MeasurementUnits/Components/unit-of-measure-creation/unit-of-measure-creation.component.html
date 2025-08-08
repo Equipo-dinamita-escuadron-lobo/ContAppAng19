@@ -27,7 +27,7 @@
 
     <!-- 2. FORMULARIO DE CREACIÓN DE UNIDAD DE MEDIDA -->
     <form [formGroup]="unitOfMeasureForm" (ngSubmit)="onSubmit()">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 font-family-sans">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
 
         <!-- Nombre de la Unidad -->
         <div class="flex flex-col gap-2">
@@ -50,9 +50,9 @@
         <!-- Descripción -->
         <div class="flex flex-col gap-2 md:col-span-2">
           <label for="description" class="font-semibold text-primary">Descripción</label>
-          <input pInputText id="description" formControlName="description" 
+          <textarea pInputText id="description" formControlName="description" 
             placeholder="Ej: Unidad de medida de masa utilizada para pesar productos"
-            class="w-full md:w-4/5" />
+            class="w-full md:w-1/2" rows="3" pInputTextarea></textarea>
           @if (hasFieldError('description')) {
           <small class="text-red-500">{{ getFieldError('description') }}</small>
           }
@@ -61,7 +61,7 @@
       </div>
 
       <!-- 3. BOTONES DE ACCIÓN -->
-      <div class="flex justify-end gap-4 mt-12 pt-40">
+      <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button 
           type="button"
           label="Cancelar" 

@@ -6,8 +6,7 @@ import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 
 import { ProductType } from '../../Models/ProductType';
 import { ProductTypeService } from '../../Services/product-type.service';
@@ -22,10 +21,9 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     InputTextModule,
     ButtonModule,
     ReactiveFormsModule,
-    ToastModule,
-    ConfirmDialogModule
+    ToastModule
   ],
-  providers: [ConfirmationService, MessageService],
+  providers: [MessageService],
   templateUrl: './product-type-edit.component.html',
 })
 export class ProductTypeEditComponent implements OnInit {
@@ -42,7 +40,6 @@ export class ProductTypeEditComponent implements OnInit {
     private formBuilder: FormBuilder,
     private productTypeService: ProductTypeService,
     private router: Router,
-    private confirmationService: ConfirmationService,
     private messageService: MessageService
   ) {}
 
@@ -136,40 +133,7 @@ export class ProductTypeEditComponent implements OnInit {
     }
   }
 
-  deleteProductType(): void {
-    if (this.productTypeId) {
-      this.confirmationService.confirm({
-        message: '¿Estás seguro de que deseas eliminar este tipo de producto? Esta acción no se puede deshacer.',
-        header: 'Confirmar Eliminación',
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Sí, eliminar',
-        rejectLabel: 'Cancelar',
-        accept: () => {
-          this.productTypeService.deleteProductType(this.productTypeId!).subscribe({
-            next: () => {
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Éxito',
-                detail: 'Tipo de producto eliminado correctamente'
-              });
-              
-              setTimeout(() => {
-                this.router.navigate(['/gen-masters/inventory/product-types/list']);
-              }, 2000);
-            },
-            error: (error: any) => {
-              console.error('Error al eliminar el tipo de producto:', error);
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'No se pudo eliminar el tipo de producto'
-              });
-            }
-          });
-        }
-      });
-    }
-  }
+
 
   private markFormGroupTouched(): void {
     Object.keys(this.productTypeForm.controls).forEach(key => {

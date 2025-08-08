@@ -92,7 +92,7 @@ export class SaleInvoiceSelectedProductsComponent implements OnInit {
       const lowerCaseFilter = this.filterText.toLowerCase();
       this.filteredProducts = this.allProducts.filter(p =>
         p.code?.toLowerCase().includes(lowerCaseFilter) ||
-        p.itemType?.toLowerCase().includes(lowerCaseFilter) ||
+        p.name?.toLowerCase().includes(lowerCaseFilter) ||
         p.description?.toLowerCase().includes(lowerCaseFilter)
       );
     }

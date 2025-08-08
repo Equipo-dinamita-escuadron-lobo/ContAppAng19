@@ -24,7 +24,7 @@
 
     <!-- 2. FORMULARIO DE CREACIÓN DE CATEGORÍA -->
     <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5" style="font-family: var(--font-family-sans);">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24" style="font-family: var(--font-family-sans);">
 
         <!-- Nombre de la Categoría -->
         <div class="flex flex-col gap-2">
@@ -39,9 +39,9 @@
         <!-- Descripción -->
         <div class="flex flex-col gap-2">
           <label for="description" class="font-semibold" style="color: var(--color-primary);">Descripción <span class="text-red-500">*</span></label>
-          <input pInputText id="description" formControlName="description" 
+          <textarea pInputText id="description" formControlName="description" 
             placeholder="Descripción de la categoría"
-            class="w-full md:w-2/3" />
+            class="w-full md:w-2/3" rows="1" pInputTextarea></textarea>
           @if (categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched) {
           <small style="color: var(--color-error-35);">La descripción es requerida.</small>
           }
@@ -162,7 +162,7 @@
       </div>
 
       <!-- 3. BOTONES DE ACCIÓN -->
-      <div class="flex justify-end gap-4 mt-12 pt-40">
+      <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button 
           type="button"
           label="Cancelar" 
