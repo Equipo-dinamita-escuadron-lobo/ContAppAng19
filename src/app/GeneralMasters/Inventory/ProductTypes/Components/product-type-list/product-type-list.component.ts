@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -12,6 +13,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { InputIcon } from 'primeng/inputicon';
 import { IconField } from 'primeng/iconfield';
+import { TagModule } from 'primeng/tag';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 import { ProductType } from '../../Models/ProductType';
 import { ProductTypeService } from '../../Services/product-type.service';
@@ -23,6 +26,7 @@ import { environment } from '../../../../../../environments/environment';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     TableModule,
     ButtonModule,
     InputTextModule,
@@ -32,7 +36,9 @@ import { environment } from '../../../../../../environments/environment';
     ToastModule,
     TooltipModule,
     InputIcon,
-    IconField
+    IconField,
+    TagModule,
+    ToggleSwitchModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './product-type-list.component.html',
@@ -60,7 +66,11 @@ export class ProductTypeListComponent implements OnInit {
     
     this.productTypeService.getProductTypes(this.entData).subscribe({
       next: (data: ProductType[]) => {
-        this.productTypes = data;
+        // Asignar estado por defecto si no viene del backend
+        this.productTypes = data.map(productType => ({
+          ...productType,
+          state: productType.state !== undefined ? productType.state : true
+        }));
         this.loading = false;
       },
       error: (error: any) => {
@@ -111,5 +121,38 @@ export class ProductTypeListComponent implements OnInit {
         });
       }
     });
+  }
+
+  // Método para cambiar el estado del tipo de producto
+  changeProductTypeState(productType: ProductType): void {
+    this.productTypeService.changeProductTypeState(productType.id).subscribe({
+      next: () => {
+        // El estado ya se actualiza automáticamente por el ngModel
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado del tipo de producto "${productType.name}" cambiado correctamente`
+        });
+      },
+      error: (error: any) => {
+        // Revertir el cambio si hay error
+        productType.state = !productType.state;
+        console.error('Error al cambiar el estado del tipo de producto:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado del tipo de producto'
+        });
+      }
+    });
+  }
+
+  // Métodos para manejar el estado
+  getStateSeverity(state: boolean): 'success' | 'danger' {
+    return state ? 'success' : 'danger';
+  }
+
+  formatState(state: boolean): string {
+    return state ? 'Activo' : 'Inactivo';
   }
 }

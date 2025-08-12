@@ -40,6 +40,7 @@
         inputId="fechaInicio"
         dateFormat="dd/mm/yy"
         styleClass="w-full"
+        (onSelect)="onStartDateChange()"
       ></p-datePicker>
     </div>
 
@@ -52,6 +53,8 @@
         inputId="fechaFin"
         dateFormat="dd/mm/yy"
         styleClass="w-full"
+        [minDate]="startDate"
+        (onSelect)="onEndDateChange()"
       ></p-datePicker>
     </div>
   </div>

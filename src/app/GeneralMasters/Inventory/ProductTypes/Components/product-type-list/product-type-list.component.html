@@ -84,6 +84,11 @@
           <th
             class="font-semibold text-primary border-b-2 border-primary text-center"
           >
+            Estado
+          </th>
+          <th
+            class="font-semibold text-primary border-b-2 border-primary text-center"
+          >
             Acciones
           </th>
         </tr>
@@ -95,8 +100,12 @@
           <td class="py-3">{{ productType.name }}</td>
           <td class="py-3">{{ productType.description }}</td>
           <td class="py-3 text-center">
+            <p-tag [value]="formatState(productType.state)" [severity]="getStateSeverity(productType.state)">
+            </p-tag>
+          </td>
+          <td class="py-3 text-center">
             <!-- 4. BOTONES DE ACCIÓN -->
-            <div class="flex justify-center gap-2">
+            <div class="flex justify-center gap-2 items-center">
               <p-button
                 icon="pi pi-pencil"
                 pTooltip="Editar Tipo de Producto"
@@ -111,6 +120,14 @@
                 (click)="deleteProductType(productType.id)"
                 styleClass="p-button-rounded p-button-text text-secondary"
               ></p-button>
+              <p-toggleSwitch
+                [ngModel]="productType.state"
+                (onChange)="changeProductTypeState(productType)"
+                pTooltip="Cambiar Estado"
+                tooltipPosition="top"
+                styleClass="p-toggleSwitch-sm"
+                [style]="{'transform': 'scale(0.8)'}"
+              ></p-toggleSwitch>
             </div>
           </td>
         </tr>
@@ -118,7 +135,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
+          <td colspan="5" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron tipos de productos.
           </td>
         </tr>

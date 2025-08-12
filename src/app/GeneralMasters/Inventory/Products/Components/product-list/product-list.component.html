@@ -7,8 +7,7 @@
       <!-- Título con el estilo de marca (borde inferior) -->
       <div class="items-center mb-6">
         <h1
-          class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1"
-        >
+          class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
           Productos
         </h1>
         <p class="font-family-sans font-normal text-sm mt-2">
@@ -20,11 +19,8 @@
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
           <!-- Botón "Crear Producto" utilizando p-button -->
-          <p-button
-            label="Crear Producto"
-            icon="pi pi-plus"
-            (click)="redirectTo('/gen-masters/inventory/products/create')"
-          >
+          <p-button label="Crear Producto" icon="pi pi-plus"
+            (click)="redirectTo('/gen-masters/inventory/products/create')">
           </p-button>
         </div>
       </div>
@@ -36,102 +32,64 @@
         <p-inputicon>
           <i class="pi pi-search text-gray-500"></i>
         </p-inputicon>
-        <input
-          pInputText
-          type="text"
-          #filterInput
-          (input)="productsTable.filterGlobal(filterInput.value, 'contains')"
+        <input pInputText type="text" #filterInput (input)="productsTable.filterGlobal(filterInput.value, 'contains')"
           placeholder="Buscar por código, nombre, descripción..."
-          class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
-        />
+          class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none" />
       </p-iconfield>
     </div>
 
     <!-- 3. TABLA DE PRODUCTOS: Estilizada para ser coherente con el diseño -->
-    <p-table
-      #productsTable
-      [value]="products"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[5, 10, 20]"
-      [globalFilterFields]="['code', 'name', 'description', 'taxPercentage', 'reference', 'presentation', 'unitOfMeasureName', 'categoryName', 'productTypeName']"
-      styleClass="p-datatable-striped font-family-sans"
-      [tableStyle]="{ 'min-width': '50rem' }"
-      [responsiveLayout]="'scroll'"
-    >
+    <p-table #productsTable [value]="products" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]"
+      [globalFilterFields]="['code', 'name', 'description', 'taxDisplayText', 'reference', 'presentation', 'unitOfMeasureName', 'categoryName', 'productTypeName']"
+      styleClass="p-datatable-striped font-family-sans" [tableStyle]="{ 'min-width': '50rem' }"
+      [responsiveLayout]="'scroll'">
       <ng-template pTemplate="header">
         <tr>
           <!-- Cabeceras de tabla con el estilo de la guía -->
-          <th
-            pSortableColumn="code"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
-          >
+          <th pSortableColumn="code" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Código <p-sortIcon field="code"></p-sortIcon>
           </th>
-          <!-- CAMBIO 2: Se añade la columna 'Nombre' para mostrar name -->
-          <th
-            pSortableColumn="name"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
-          >
+          <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Nombre <p-sortIcon field="name"></p-sortIcon>
           </th>
-          <th
-            pSortableColumn="description"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
-          >
-            Descripción <p-sortIcon field="description"></p-sortIcon>
+          <th pSortableColumn="reference"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+            Referencia/SKU <p-sortIcon field="reference"></p-sortIcon>
           </th>
-          <th
-            pSortableColumn="taxPercentage"
-            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
-          >
-            IVA <p-sortIcon field="taxPercentage"></p-sortIcon>
-          </th>
-          <th
-            pSortableColumn="cost"
-            class="font-semibold text-primary border-b-2 border-primary text-right whitespace-nowrap"
-          >
-            Costo <p-sortIcon field="cost"></p-sortIcon>
-          </th>
-          <th
-            pSortableColumn="quantity"
-            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
-          >
-            Cantidad <p-sortIcon field="quantity"></p-sortIcon>
-          </th>
-          <th
-            pSortableColumn="unitOfMeasureName"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
-          >
-            Unidad de Medida <p-sortIcon field="unitOfMeasureName"></p-sortIcon>
-          </th>
-          <th
-            pSortableColumn="categoryName"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
-          >
-            Categoría <p-sortIcon field="categoryName"></p-sortIcon>
-          </th>
-          <th
-            pSortableColumn="reference"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
-          >
-            Referencia <p-sortIcon field="reference"></p-sortIcon>
-          </th>
-          <th
-            pSortableColumn="presentation"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
-          >
+          <th pSortableColumn="presentation"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Presentación <p-sortIcon field="presentation"></p-sortIcon>
           </th>
-          <th
-            pSortableColumn="productTypeName"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
-          >
+          <th pSortableColumn="description"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+            Descripción <p-sortIcon field="description"></p-sortIcon>
+          </th>
+          <th pSortableColumn="taxPercentage"
+            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
+            Impuesto(s) <p-sortIcon field="taxPercentage"></p-sortIcon>
+          </th>
+          <th pSortableColumn="cost"
+            class="font-semibold text-primary border-b-2 border-primary text-right whitespace-nowrap">
+            Costo <p-sortIcon field="cost"></p-sortIcon>
+          </th>
+          <th pSortableColumn="quantity"
+            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
+            Cantidad <p-sortIcon field="quantity"></p-sortIcon>
+          </th>
+          <th pSortableColumn="unitOfMeasureName"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+            Unidad de Medida <p-sortIcon field="unitOfMeasureName"></p-sortIcon>
+          </th>
+          <th pSortableColumn="categoryName"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+            Categoría <p-sortIcon field="categoryName"></p-sortIcon>
+          </th>
+
+          <th pSortableColumn="productTypeName"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Tipo de Producto <p-sortIcon field="productTypeName"></p-sortIcon>
           </th>
-          <th
-            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
-          >
+          <th class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
             Acciones
           </th>
         </tr>
@@ -141,39 +99,26 @@
         <tr class="text-neutral-20">
           <td class="py-3 whitespace-nowrap">{{ product.code }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.name }}</td>
+          <td class="py-3 whitespace-nowrap">{{ product.reference }}</td>
+          <td class="py-3 whitespace-nowrap">{{ product.presentation }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.description }}</td>
-          <td class="py-3 text-center whitespace-nowrap">{{ product.taxPercentage }}%</td>
+          <td class="py-3 text-center whitespace-nowrap">{{ product.taxDisplayText }}</td>
           <td class="py-3 text-right whitespace-nowrap">{{ formatCost(product.cost) }}</td>
           <td class="py-3 text-center whitespace-nowrap">{{ product.quantity }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.unitOfMeasureName }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.categoryName }}</td>
-          <td class="py-3 whitespace-nowrap">{{ product.reference }}</td>
-          <td class="py-3 whitespace-nowrap">{{ product.presentation }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.productTypeName }}</td>
           <td class="py-3 text-center whitespace-nowrap">
             <!-- 4. BOTONES DE ACCIÓN -->
             <div class="flex justify-center gap-2">
-              <p-button
-                icon="pi pi-eye"
-                pTooltip="Ver Detalles"
-                tooltipPosition="top"
+              <p-button icon="pi pi-eye" pTooltip="Ver Detalles" tooltipPosition="top"
                 (click)="openDetailsModal(product)"
-                styleClass="p-button-rounded p-button-text text-primary-60"
-              ></p-button>
-              <p-button
-                icon="pi pi-pencil"
-                pTooltip="Editar Producto"
-                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text text-primary-60"></p-button>
+              <p-button icon="pi pi-pencil" pTooltip="Editar Producto" tooltipPosition="top"
                 (click)="redirectToEdit(product.id)"
-                styleClass="p-button-rounded p-button-text text-complementary-green"
-              ></p-button>
-              <p-button
-                icon="pi pi-trash"
-                pTooltip="Eliminar Producto"
-                (click)="deleteProduct(product.id)"
-                tooltipPosition="top"
-                styleClass="p-button-rounded p-button-text text-secondary"
-              ></p-button>
+                styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
+              <p-button icon="pi pi-trash" pTooltip="Eliminar Producto" (click)="deleteProduct(product.id)"
+                tooltipPosition="top" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
             </div>
           </td>
         </tr>
@@ -181,11 +126,8 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <!-- Se ajusta el colspan a 11 columnas -->
-          <td
-            colspan="11"
-            class="text-center py-6 font-family-sans text-neutral-50"
-          >
+          <!-- Se ajusta el colspan a 12 columnas -->
+          <td colspan="12" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron productos.
           </td>
         </tr>
@@ -193,11 +135,8 @@
 
       <ng-template pTemplate="loadingbody">
         <tr>
-          <!-- Se ajusta el colspan a 11 columnas -->
-          <td
-            colspan="11"
-            class="text-center py-6 font-family-sans text-neutral-50"
-          >
+          <!-- Se ajusta el colspan a 12 columnas -->
+          <td colspan="12" class="text-center py-6 font-family-sans text-neutral-50">
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             <p class="mt-2 text-primary">Cargando productos...</p>
           </td>
@@ -210,14 +149,8 @@
 <!-- =============================================================== -->
 <!-- ===            MODAL DE DETALLES DEL PRODUCTO                 === -->
 <!-- =============================================================== -->
-<p-dialog
-  header="Detalles del Producto"
-  [modal]="true"
-  [(visible)]="isDetailsDialogVisible"
-  [style]="{ width: '50rem' }"
-  [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
-  [maximizable]="true"
->
+<p-dialog header="Detalles del Producto" [modal]="true" [(visible)]="isDetailsDialogVisible"
+  [style]="{ width: '50rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [maximizable]="true">
   <!-- Contenido del Modal -->
   <!-- Usando la sintaxis @if de Angular 17+ -->
   @if (selectedProduct) {
@@ -255,32 +188,29 @@
             {{ selectedProduct.productType.name || 'N/A' }}
           </p>
         </div>
-                 <div>
-           <p class="font-semibold text-primary-dark">Categoría</p>
-           <p class="text-neutral-20">{{ selectedProduct.categoryName }}</p>
-         </div>
+        <div>
+          <p class="font-semibold text-primary-dark">Categoría</p>
+          <p class="text-neutral-20">{{ selectedProduct.categoryName }}</p>
+        </div>
       </div>
 
       <!-- Columna Derecha -->
       <div class="space-y-5">
         <div>
           <p class="font-semibold text-primary-dark">Estado</p>
-          <p-tag
-            [value]="formatState(selectedProduct.state)"
-            [severity]="getStateSeverity(selectedProduct.state)"
-          >
+          <p-tag [value]="formatState(selectedProduct.state)" [severity]="getStateSeverity(selectedProduct.state)">
           </p-tag>
         </div>
         <div>
           <p class="font-semibold text-primary-dark">Cantidad en Stock</p>
           <p class="text-neutral-20 text-lg">{{ selectedProduct.quantity }}</p>
         </div>
-                 <div>
-           <p class="font-semibold text-primary-dark">Unidad de Medida</p>
-           <p class="text-neutral-20">
-             {{ selectedProduct.unitOfMeasureName }}
-           </p>
-         </div>
+        <div>
+          <p class="font-semibold text-primary-dark">Unidad de Medida</p>
+          <p class="text-neutral-20">
+            {{ selectedProduct.unitOfMeasureName }}
+          </p>
+        </div>
         <div>
           <p class="font-semibold text-primary-dark">Fecha de Creación</p>
           <p class="text-neutral-20">
@@ -293,10 +223,6 @@
   }
 
   <ng-template pTemplate="footer">
-    <p-button
-      label="Cerrar"
-      styleClass="p-button-text"
-      (click)="isDetailsDialogVisible = false"
-    ></p-button>
+    <p-button label="Cerrar" styleClass="p-button-text" (click)="isDetailsDialogVisible = false"></p-button>
   </ng-template>
 </p-dialog>

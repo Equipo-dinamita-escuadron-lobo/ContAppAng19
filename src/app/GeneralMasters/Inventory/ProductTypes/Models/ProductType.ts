@@ -4,6 +4,7 @@ export interface ProductType {
   name: string; 
   description: string;
   enterpriseId: string;
+  state?: boolean;
 }
 
 export interface ProductTypeList {
@@ -11,5 +12,6 @@ export interface ProductTypeList {
   name: string;
   description: string;
   enterpriseId: string;
+  state?: boolean;
 }
   

@@ -31,13 +31,13 @@
       </div>
     } @else {
       <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 font-family-sans">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
           
           <!-- Nombre del Producto -->
           <div class="flex flex-col gap-2">
-            <label for="itemType" class="font-semibold text-primary">Nombre del Producto</label>
-            <input pInputText id="itemType" formControlName="itemType" class="w-full md:w-2/3" />
-            @if (productForm.get('itemType')?.invalid && productForm.get('itemType')?.touched) {
+            <label for="name" class="font-semibold text-primary">Nombre del Producto</label>
+            <input pInputText id="name" formControlName="name" class="w-full md:w-2/3" />
+            @if (productForm.get('name')?.invalid && productForm.get('name')?.touched) {
               <small class="text-red-500">El nombre es requerido.</small>
             }
           </div>
@@ -63,12 +63,30 @@
             }
           </div>
 
-          <!-- Porcentaje de IVA -->
+          <!-- Impuesto(s) -->
           <div class="flex flex-col gap-2">
-            <label for="taxPercentage" class="font-semibold text-primary">Porcentaje de IVA (%)</label>
-            <p-inputNumber inputId="taxPercentage" formControlName="taxPercentage" [min]="0" [max]="100" suffix=" %" styleClass="w-full md:w-2/3"></p-inputNumber>
+            <label for="taxPercentage" class="font-semibold text-primary">Impuesto(s)</label>
+            <p-select
+              id="taxSelect"
+              [options]="taxes"
+              optionLabel="displayText"
+              [optionValue]="'interest'"
+              placeholder="Seleccione un impuesto"
+              [filter]="true"
+              [showClear]="shouldShowClear('taxPercentage')"
+              class="w-full md:w-2/3"
+              formControlName="taxPercentage"
+              (onChange)="onFieldChange('taxPercentage')"
+            >
+              <ng-template pTemplate="selectedItem" let-selectedOption>
+                <div *ngIf="selectedOption">{{ selectedOption.code }} ({{ selectedOption.interest }}%)</div>
+              </ng-template>
+              <ng-template pTemplate="item" let-option>
+                <div>{{ option.code }} ({{ option.interest }}%)</div>
+              </ng-template>
+            </p-select>
             @if (productForm.get('taxPercentage')?.invalid && productForm.get('taxPercentage')?.touched) {
-              <small class="text-red-500">El IVA es requerido (0-100).</small>
+              <small class="text-red-500">El impuesto es requerido.</small>
             }
           </div>
 
@@ -91,8 +109,9 @@
               optionLabel="name"
               placeholder="Seleccione un tipo"
               [filter]="true"
-              [showClear]="true"
+              [showClear]="shouldShowClear('productTypeId')"
               class="w-full md:w-2/3"
+              (onChange)="onFieldChange('productTypeId')"
             >
               <ng-template pTemplate="selectedItem" let-selectedOption>
                 <div *ngIf="selectedOption">
@@ -118,8 +137,9 @@
               optionLabel="name"
               placeholder="Seleccione una unidad"
               [filter]="true"
-              [showClear]="true"
+              [showClear]="shouldShowClear('unitOfMeasureId')"
               class="w-full md:w-2/3"
+              (onChange)="onFieldChange('unitOfMeasureId')"
             >
               <ng-template pTemplate="selectedItem" let-selectedOption>
                 <div *ngIf="selectedOption">
@@ -145,8 +165,9 @@
               optionLabel="name"
               placeholder="Seleccione una categoría"
               [filter]="true"
-              [showClear]="true"
+              [showClear]="shouldShowClear('categoryId')"
               class="w-full md:w-2/3"
+              (onChange)="onFieldChange('categoryId')"
             >
               <ng-template pTemplate="selectedItem" let-selectedOption>
                 <div *ngIf="selectedOption">

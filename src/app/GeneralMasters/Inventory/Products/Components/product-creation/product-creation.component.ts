@@ -19,6 +19,8 @@ import { UnitOfMeasureService } from '../../../MeasurementUnits/Services/unit-of
 import { CategoryService } from '../../../Category/Services/category.service';
 import { ProductTypeService } from '../../../ProductTypes/Services/product-type.service';
 import { MenuItem } from 'primeng/api';
+import { TaxList } from '../../../../Taxes/models/Tax';
+import { TaxService } from '../../../../Taxes/services/tax.service';
 
 @Component({
   selector: 'app-product-creation',
@@ -42,6 +44,7 @@ export class ProductCreationComponent implements OnInit {
   unitOfMeasures: any[] = [];
   categories: any[] = [];
   productTypes: ProductType[] = [];
+  taxes: TaxList[] = [];
 
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
@@ -53,7 +56,8 @@ export class ProductCreationComponent implements OnInit {
     private unitOfMeasureService: UnitOfMeasureService,
     private categoryService: CategoryService,
     private productTypeService: ProductTypeService,
-    private router: Router
+    private router: Router,
+    private taxService: TaxService
   ) {
     // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     const today = new Date().toISOString().split('T')[0];
@@ -63,7 +67,7 @@ export class ProductCreationComponent implements OnInit {
       reference: [''],
       presentation: [''], // Nuevo campo
       quantity: [0, [Validators.required, Validators.min(0)]],
-      taxPercentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+      taxPercentage: [null, [Validators.required, Validators.min(0), Validators.max(100)]],
       cost: [0, [Validators.required, Validators.min(0)]],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
@@ -90,6 +94,7 @@ export class ProductCreationComponent implements OnInit {
     this.getUnitOfMeasures();
     this.getCategories();
     this.loadProductTypes();
+    this.getTaxes();
   }
 
   loadProductTypes(): void {
@@ -113,6 +118,20 @@ export class ProductCreationComponent implements OnInit {
     });
   }
 
+  getTaxes(): void {
+    if (!this.entData) return;
+    this.taxService.getTaxes(this.entData).subscribe({
+      next: (data) => {
+        // Agregar displayText para el filtro del p-select
+        this.taxes = data.map(tax => ({
+          ...tax,
+          displayText: `${tax.code} (${tax.interest}%)`
+        }));
+      },
+      error: (err) => console.error('Error al obtener los impuestos:', err)
+    });
+  }
+
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.productForm.invalid) {
@@ -128,7 +147,7 @@ export class ProductCreationComponent implements OnInit {
     // Asegurarse de que los valores numéricos se envíen como números
     formData.cost = Number(formData.cost);
     formData.quantity = Number(formData.quantity);
-    formData.taxPercentage = Number(formData.taxPercentage);
+    formData.taxPercentage = formData.taxPercentage !== null ? Number(formData.taxPercentage) : 0;
 
     console.log('Datos del formulario:', formData);
 
