@@ -11,7 +11,8 @@ import { UserProfile } from '../models/user-profile';
 import { DecodedToken } from '../models/decoded-token';
 
 
-const keycloakUrl = environment.API_URL;
+const keycloakUrl = environment.keycloak_url;
+const keycloakUrlToken = environment.keycloak_url_token;
 
 export interface PayloadToken {
   access_token: string;
@@ -81,7 +82,7 @@ export class AuthService {
 
 
   public login(auth: Login) {
-    return this.http.post<{ access_token: string }>(`${keycloakUrl}keycloak/token/`, auth).pipe(
+    return this.http.post<{ access_token: string }>(`${keycloakUrlToken}`, auth).pipe(
       tap(res => this.saveToken(res.access_token)), // Guarda el token primero
       switchMap(() => this.fetchAndSetUser()), // Luego obtiene y guarda el usuario en memoria
       tap(() => this.isAuthenticated.set(true)), // Actualiza la señal
@@ -99,7 +100,7 @@ export class AuthService {
 
   // Obtiene el usuario del backend usando el token actual y actualiza el BehaviorSubject
   private fetchAndSetUser() {
-    return this.http.get<UserProfile>(`${keycloakUrl}keycloak/getCurrentUser`).pipe(
+    return this.http.get<UserProfile>(`${keycloakUrl}getCurrentUser`).pipe(
        tap(user => {
          this._currentUser.next(user); // Actualiza estado en memoria
          console.log("User data fetched:", user);
