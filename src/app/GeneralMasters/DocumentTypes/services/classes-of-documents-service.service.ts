@@ -11,8 +11,13 @@ export class ClassesOfDocumentsServiceService {
   private readonly http = inject(HttpClient);
   private readonly apiURL = environment.API_URL + 'config/document-classes/';
 
-  findAll(enterpriseId: string, page = 0, size = 1000): Observable<DocumentClass[]> {
+  findAll(enterpriseId: string, page = 0, size = 1000): Observable<any> {
     const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
     return this.http.get<any>(url);
+  }
+
+  delete(id: number, enterpriseId: string): Observable<void> {
+    const url = `${this.apiURL}delete/${id}/${enterpriseId}`;
+    return this.http.delete<void>(url);
   }
 }
