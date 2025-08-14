@@ -82,8 +82,24 @@ export class DocumentTypesCreationComponent {
         this.goBack();
       },
       error: (err) => {
-        const detail = err?.error?.message || err?.error?.detail || 'No se pudo crear el tipo de documento';
-        this.messageService.add({ severity: 'error', summary: 'Error', detail });
+        if (err?.status === 409) {
+          const msg: string = err?.error?.message || err?.error?.detail || '';
+          const prefixMatch = msg.match(/prefijo\s+'([^']+)'/i) || msg.match(/prefijo\s*[:=]\s*([A-Za-z0-9]+)/i);
+          const nameMatch = msg.match(/nombre\s+'([^']+)'/i) || msg.match(/nombre\s*[:=]\s*([A-Za-zÀ-ÿ0-9\s]+)/i);
+          if (prefixMatch) {
+            const p = (prefixMatch[1] || prefixMatch[0])?.toString().replace(/^[^']*'|'/g,'');
+            this.messageService.add({ severity: 'error', summary: 'Prefijo duplicado', detail: `El prefijo "${p}" ya existe.` });
+            return;
+          }
+          if (nameMatch) {
+            const n = (nameMatch[1] || nameMatch[0])?.toString().replace(/^[^']*'|'/g,'');
+            this.messageService.add({ severity: 'error', summary: 'Nombre duplicado', detail: `El tipo de documento "${n}" ya existe.` });
+            return;
+          }
+          this.messageService.add({ severity: 'error', summary: 'Duplicado', detail: 'Ya existe un tipo con el mismo prefijo o nombre.' });
+          return;
+        }
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el tipo de documento' });
       }
     });
   }
