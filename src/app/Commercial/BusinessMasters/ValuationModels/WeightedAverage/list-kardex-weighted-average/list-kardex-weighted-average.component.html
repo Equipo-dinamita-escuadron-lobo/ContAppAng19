@@ -42,9 +42,12 @@
         styleClass="w-full"
         (onSelect)="onStartDateChange()"
       ></p-datePicker>
+      @if (!startDate && endDate) {
+        <small style="color: var(--color-error-35);">Debe ingresar la fecha de inicio</small>
+      }
     </div>
 
-    <!-- Fecha de finalización alinear a la derecha el componente el textoi al principo -->
+    <!-- Fecha de finalización -->
     <div class="flex-1 min-w-[200px]">
       <label for="fechaFin" class="block text-primary text-sm mb-1 ">Fecha de finalización</label>
       <p-datePicker
@@ -56,6 +59,9 @@
         [minDate]="startDate"
         (onSelect)="onEndDateChange()"
       ></p-datePicker>
+      @if (startDate && !endDate) {
+        <small style="color: var(--color-error-35);">Debe ingresar la fecha de finalización</small>
+      }
     </div>
   </div>
 
