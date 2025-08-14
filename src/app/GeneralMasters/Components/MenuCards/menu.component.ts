@@ -67,13 +67,19 @@ export class MenuComponent {
       route: '/gen-masters/cost-centers',
       description: 'Configuración de centros de costo'
     },
-
+    {
+      title: 'Calendario Contable',
+      icon: 'date_range',
+      route: '/gen-masters/accounting-calendar',
+      description: 'Gestión del calendario contable, apertura y cierre de periodos'
+    },
     {
       title: 'Centro de Ayuda',
       icon: 'help',
       route: '/gen-masters/help-panels',
       description: 'Configuración del centro de ayuda del sistema'
     }
+    
   ];
 
   constructor(private router: Router) {}

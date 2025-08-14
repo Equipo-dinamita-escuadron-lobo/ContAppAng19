@@ -75,7 +75,11 @@ export const navbarData: INavbarData[] = [
         icon: 'paid',
         label: 'Centros de Costo',
       },
-
+      {
+        routeLink: '/gen-masters/accounting-calendar',
+        icon: 'date_range',
+        label: 'Calendario Contable',
+      },
       {
         routeLink: '/gen-masters/help-panels',
         icon: 'help',
@@ -92,12 +96,7 @@ export const navbarData: INavbarData[] = [
         routeLink: 'TO DO',
         icon: 'circle',
         label: 'Maestros',
-        items: [
-          {
-            routeLink: 'TO DO',
-            icon: 'assignment',
-            label: 'PUC',
-          },
+        items: [          
           {
             routeLink: 'TO DO',
             icon: 'docs',
