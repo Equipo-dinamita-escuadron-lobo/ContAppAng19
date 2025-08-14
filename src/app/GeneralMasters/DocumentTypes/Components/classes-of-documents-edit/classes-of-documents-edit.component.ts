@@ -72,8 +72,17 @@ export class ClassesOfDocumentsEditComponent {
         this.goBack();
       },
       error: (err) => {
-        const detail = err?.error?.message || err?.error?.detail || 'No se pudo actualizar la clase';
-        this.messageService.add({ severity: 'error', summary: 'Error', detail });
+        if (err?.status === 409) {
+          const msg: string = err?.error?.message || err?.error?.detail || '';
+          const m1 = msg.match(/nombre\s+'([^']+)'/i);
+          const m2 = msg.match(/nombre\s*[:=]\s*([A-Za-zÀ-ÿ\s]+)/i);
+          const extracted = (m1 && m1[1]) || (m2 && m2[1]) || '';
+          const displayName = (this.form.value?.name || extracted || '').toString().trim();
+          const detail = displayName ? `La clase "${displayName}" ya existe.` : 'Ya existe una clase con el mismo nombre.';
+          this.messageService.add({ severity: 'error', summary: 'Nombre ya existente', detail });
+          return;
+        }
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar la clase' });
       }
     });
   }

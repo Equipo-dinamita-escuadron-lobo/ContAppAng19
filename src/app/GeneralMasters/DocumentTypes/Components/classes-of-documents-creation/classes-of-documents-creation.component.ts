@@ -50,9 +50,29 @@ export class ClassesOfDocumentsCreationComponent {
         this.goBack();
       },
       error: (err) => {
-        const detail = err?.error?.message || err?.error?.detail || 'No se pudo crear la clase';
-        this.messageService.add({ severity: 'error', summary: 'Error', detail });
+        if (err?.status === 409) {
+          this.showDuplicateToast('crear', this.form.value?.name, err?.error?.message || err?.error?.detail || '');
+          return;
+        }
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear la clase' });
       }
     });
+  }
+
+  private showDuplicateToast(action: 'crear' | 'actualizar', name?: string, rawMessage?: string) {
+    const extracted = this.extractName(rawMessage || '');
+    const displayName = (name || extracted || '').toString().trim();
+    const summary = action === 'crear' ? 'Nombre duplicado' : 'Nombre ya existente';
+    const detail = displayName ? `La clase "${displayName}" ya existe.` : 'Ya existe una clase con el mismo nombre.';
+    this.messageService.add({ severity: 'error', summary, detail });
+  }
+
+  private extractName(message: string): string | null {
+    if (!message) return null;
+    const m1 = message.match(/nombre\s+'([^']+)'/i);
+    if (m1 && m1[1]) return m1[1];
+    const m2 = message.match(/nombre\s*[:=]\s*([A-Za-zÀ-ÿ\s]+)/i);
+    if (m2 && m2[1]) return m2[1].trim();
+    return null;
   }
 }
