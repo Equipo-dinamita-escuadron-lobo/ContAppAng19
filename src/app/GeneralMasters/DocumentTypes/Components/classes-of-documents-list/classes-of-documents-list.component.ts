@@ -86,7 +86,7 @@ export class ClassesOfDocumentsListComponent {
     const enterpriseId = this.getEnterpriseId();
     if (!row?.id || !enterpriseId) return;
     this.confirmationService.confirm({
-      message: `¿Desea eliminar la clase? Esta acción no se puede deshacer.`,
+      message: `¿Desea eliminar la clase "${row.name}"? Esta acción no se puede deshacer.`,
       header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Eliminar',
@@ -102,5 +102,10 @@ export class ClassesOfDocumentsListComponent {
         });
       }
     });
+  }
+
+  editClass(row: DocumentClass) {
+    if (!row?.id) return;
+    this.router.navigate(['/gen-masters/document-types/classes/edit', row.id]);
   }
 }

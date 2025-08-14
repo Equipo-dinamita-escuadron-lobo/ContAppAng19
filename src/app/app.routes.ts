@@ -384,6 +384,12 @@ export const routes: Routes = [
                 data: { breadcrumb: 'Crear Clase de Documento' },
                 loadComponent: () => import('./GeneralMasters/DocumentTypes/Components/classes-of-documents-creation/classes-of-documents-creation.component').then(m => m.ClassesOfDocumentsCreationComponent)
               }
+              ,
+              {
+                path: 'classes/edit/:id',
+                data: { breadcrumb: 'Editar Clase de Documento' },
+                loadComponent: () => import('./GeneralMasters/DocumentTypes/Components/classes-of-documents-edit/classes-of-documents-edit.component').then(m => m.ClassesOfDocumentsEditComponent)
+              }
             ]
           },
 
