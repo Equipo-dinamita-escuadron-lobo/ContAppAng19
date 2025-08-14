@@ -58,12 +58,23 @@ export class ListKardexWeightedAverageComponent {
     if (this.endDate && this.startDate && this.endDate < this.startDate) {
       this.endDate = null;
     }
+
+    // Verificar si ambas fechas están establecidas para recargar datos
+    if (this.startDate && this.endDate && this.productId !== 0) {
+      this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
+    }
   }
 
   onEndDateChange() {
     if (this.startDate && this.endDate && this.endDate < this.startDate) {
       this.endDate = null;
       console.warn('La fecha de finalización no puede ser menor a la fecha de inicio');
+      return;
+    }
+
+    // Verificar si ambas fechas están establecidas para recargar datos
+    if (this.startDate && this.endDate && this.productId !== 0) {
+      this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
     }
   }
 
@@ -86,6 +97,7 @@ export class ListKardexWeightedAverageComponent {
     this.selectedProduct = product;
     this.productId = product.idProduct;
     console.log('Producto seleccionado:', this.selectedProduct);
+    // Al seleccionar un producto se carga el kardex con la configuración actual de fechas
     this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
   }
 
@@ -104,7 +116,11 @@ export class ListKardexWeightedAverageComponent {
     this.first = event.first;
     const sort = event.sortField ? `${event.sortField},${event.sortOrder === 1 ? 'asc' : 'desc'}` : '';
 
-    this.kardexService.getKardexByProductId(this.productId, page, size, sort, this.startDate, this.endDate).subscribe((res) => {
+    // Solo enviar fechas si ambas están seleccionadas, de lo contrario enviar null
+    const startDateToSend = (this.startDate && this.endDate) ? this.startDate : null;
+    const endDateToSend = (this.startDate && this.endDate) ? this.endDate : null;
+
+    this.kardexService.getKardexByProductId(this.productId, page, size, sort, startDateToSend, endDateToSend).subscribe((res) => {
       const rawList = res.data.content;
 
       this.kardexList = rawList.map((item: {
