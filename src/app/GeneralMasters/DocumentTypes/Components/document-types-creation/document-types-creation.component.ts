@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { ButtonModule } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
+import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { DocumentTypesServiceService } from '../../services/document-types-service.service';
@@ -14,7 +14,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
 @Component({
   selector: 'app-document-types-creation',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, ToastModule, SelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
   templateUrl: './document-types-creation.component.html',
   styleUrl: './document-types-creation.component.css',
   providers: [MessageService]
@@ -78,8 +78,10 @@ export class DocumentTypesCreationComponent {
     };
     this.service.create(payload as any).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Tipo de documento creado' });
-        this.goBack();
+        this.messageService.add({ severity: 'success', summary: 'Registro exitoso', detail: 'Tipo de documento creado correctamente.' });
+        setTimeout(() => {
+          this.goBack();
+        }, 1000);
       },
       error: (err) => {
         if (err?.status === 409) {

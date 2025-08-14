@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -68,8 +68,10 @@ export class ClassesOfDocumentsEditComponent {
     const payload = { id: this.id, idEnterprise: enterpriseId, name: this.form.value.name };
     this.service['http'].put(`${this.service.apiURL}update`, payload).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Clase actualizada' });
-        this.goBack();
+        this.messageService.add({ severity: 'success', summary: 'Actualización exitosa', detail: 'Clase de documento actualizada correctamente.' });
+        setTimeout(() => {
+          this.goBack();
+        }, 1000);
       },
       error: (err) => {
         if (err?.status === 409) {

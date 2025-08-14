@@ -42,7 +42,9 @@ export class DocumentTypesListComponent {
   constructor(
     private service: DocumentTypesServiceService,
     private classesService: ClassesOfDocumentsServiceService,
-    private router: Router
+    private router: Router,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -106,8 +108,39 @@ export class DocumentTypesListComponent {
   }
 
   deleteType(row: DocumentType) {
+    if (!row?.id) return;
+    
+    this.confirmationService.confirm({
+      header: 'Confirmar Eliminación',
+      message: `¿Desea eliminar el tipo de documento "${row.name}"? Esta acción no se puede deshacer.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => this.confirmDeleteType(row)
+    });
+  }
+
+  private confirmDeleteType(row: DocumentType): void {
     const enterpriseId = this.getEnterpriseId();
     if (!row?.id || !enterpriseId) return;
-    this.service.delete(row.id, enterpriseId).subscribe(() => this.loadData());
+    
+    this.service.delete(row.id, enterpriseId).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Eliminado',
+          detail: 'Tipo de documento eliminado correctamente.'
+        });
+        this.loadData();
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo eliminar el tipo de documento.'
+        });
+      }
+    });
   }
 }

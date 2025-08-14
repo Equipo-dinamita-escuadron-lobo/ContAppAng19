@@ -1,25 +1,28 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { ButtonModule } from 'primeng/button';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { SelectModule } from 'primeng/select';
 import { DocumentTypesServiceService } from '../../services/document-types-service.service';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
+import { DocumentType } from '../../models/DocumentTypes';
+import { DocumentClass } from '../../models/ClassesOfDocuments';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-document-types-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, SelectModule, KeyFilterModule, ButtonModule, Toast],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
   templateUrl: './document-types-edit.component.html',
   styleUrl: './document-types-edit.component.css',
   providers: [MessageService]
 })
-export class DocumentTypesEditComponent {
+export class DocumentTypesEditComponent implements OnInit {
   form: FormGroup;
   id!: number;
   classesOptions: { label: string; value: number }[] = [];
@@ -97,8 +100,10 @@ export class DocumentTypesEditComponent {
     } as any;
     this.service.update(payload).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Tipo de documento actualizado' });
-        this.goBack();
+        this.messageService.add({ severity: 'success', summary: 'Actualización exitosa', detail: 'Tipo de documento actualizado correctamente.' });
+        setTimeout(() => {
+          this.goBack();
+        }, 1000);
       },
       error: (err) => {
         if (err?.status === 409) {

@@ -89,7 +89,7 @@ export class ClassesOfDocumentsListComponent {
       message: `¿Desea eliminar la clase "${row.name}"? Esta acción no se puede deshacer.`,
       header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Eliminar',
+      acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-secondary',

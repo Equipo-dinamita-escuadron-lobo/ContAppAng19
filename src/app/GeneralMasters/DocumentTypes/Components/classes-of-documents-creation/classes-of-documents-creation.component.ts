@@ -46,8 +46,10 @@ export class ClassesOfDocumentsCreationComponent {
     const payload = { idEnterprise: enterpriseId, ...this.form.value };
     this.service.create(payload.name, enterpriseId).subscribe({
       next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Clase creada' });
-        this.goBack();
+        this.messageService.add({ severity: 'success', summary: 'Registro exitoso', detail: 'Clase de documento creada correctamente.' });
+        setTimeout(() => {
+          this.goBack();
+        }, 1000);
       },
       error: (err) => {
         if (err?.status === 409) {
