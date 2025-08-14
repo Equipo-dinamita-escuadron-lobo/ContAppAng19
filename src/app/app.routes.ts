@@ -352,8 +352,33 @@ export const routes: Routes = [
           {
             path: 'document-types',
             data: { breadcrumb: 'Tipos de Documentos' },
-            loadComponent: () =>
-              import('./GeneralMasters/Components/MenuCards/menu.component').then((m) => m.MenuComponent),
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list'
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () => import('./GeneralMasters/DocumentTypes/Components/document-types-list/document-types-list.component').then(m => m.DocumentTypesListComponent)
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Tipo de Documento' },
+                loadComponent: () => import('./GeneralMasters/DocumentTypes/Components/document-types-creation/document-types-creation.component').then(m => m.DocumentTypesCreationComponent)
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Tipo de Documento' },
+                loadComponent: () => import('./GeneralMasters/DocumentTypes/Components/document-types-edit/document-types-edit.component').then(m => m.DocumentTypesEditComponent)
+              },
+              {
+                path: 'classes/list',
+                data: { breadcrumb: 'Clases de Documentos' },
+                loadComponent: () => import('./GeneralMasters/DocumentTypes/Components/classes-of-documents-list/classes-of-documents-list.component').then(m => m.ClassesOfDocumentsListComponent)
+              }
+            ]
           },
 
           {

@@ -60,7 +60,7 @@ export const navbarData: INavbarData[] = [
         label: 'Métodos de Pago',
       },
       {
-        routeLink: '/gen-masters/document-types',
+        routeLink: '/gen-masters/document-types/list',
         icon: 'description',
         label: 'Tipos de Documentos',
       },

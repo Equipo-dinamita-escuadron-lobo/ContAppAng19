@@ -51,7 +51,7 @@ export class MenuComponent {
     {
       title: 'Tipos de Documentos',
       icon: 'description',
-      route: '/gen-masters/document-types',
+      route: '/gen-masters/document-types/list',
       description: 'Tipos de documentos del sistema'
     },
 
