@@ -1,0 +1,165 @@
+<div class="flex w-full h-full font-titillium">
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+    <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+      <div class="items-center mb-6">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+          Centros de costo
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-2">Lista de todos los centros de costo configurados en el sistema.</p>
+      </div>
+      <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+        <div class="flex flex-wrap gap-3">
+          <p-button label="Crear" icon="pi pi-plus" (click)="showFormAddNewRoot()"></p-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Field -->
+    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+      <div class="w-full sm:w-[30rem]">
+        <p-iconfield iconPosition="left">
+          <p-inputicon>
+            <i class="pi pi-search text-gray-500"></i>
+          </p-inputicon>
+          <input pInputText type="text" [(ngModel)]="filterAccount" (ngModelChange)="onFilterChange()" placeholder="Buscar centro (código/nombre)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
+        </p-iconfield>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 font-family-sans text-sm">
+      <!-- Lista (árbol) -->
+      <div class="list-account overscroll-auto border-r-4 sm:border-blue-950 sm:mr-6 sm:p-3">
+        <div class="w-full flex text-blue-950">
+          <div class="w-1/2 border-b-2 border-blue-950 font-semibold">Código</div>
+          <div class="w-1/2 border-b-2 border-blue-950 font-semibold">Nombre</div>
+        </div>
+        <div class="w-full flex">
+          <ul class="w-full mt-3">
+            <li class="mb-2" *ngFor="let c1 of listCentersAux">
+              <div class="w-full flex">
+                <button class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                  (click)="toggle(c1); select(c1); $event.stopPropagation()">
+                  <div class="code w-1/2 flex">
+                    <svg class="h-16 w-16 mt-1 transform" [ngClass]="{'text-transparent': !c1.children, 'rotate-90': c1.showChildren}"
+                      width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none"
+                      stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" />
+                      <polyline points="9 6 15 12 9 18" />
+                    </svg>
+                    {{ c1.code }}
+                  </div>
+                  <div class="name w-1/2">{{ c1.name }}</div>
+                </button>
+              </div>
+
+              <ul class="ml-12 mt-3" *ngIf="c1.showChildren">
+                <li class="mb-2" *ngFor="let c2 of c1.children">
+                  <div class="w-full flex">
+                    <button class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                      (click)="toggle(c2); select(c2); $event.stopPropagation()">
+                      <div class="code w-1/2 flex">
+                        <svg class="h-16 w-16 mt-1 transform" [ngClass]="{'text-white': !c2.children || c2.children.length === 0, 'rotate-90': c2.showChildren}"
+                          width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none"
+                          stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" />
+                          <polyline points="9 6 15 12 9 18" />
+                        </svg>
+                        {{ c2.code }}
+                      </div>
+                      <div class="name w-1/2 -ml-3">{{ c2.name }}</div>
+                    </button>
+                  </div>
+
+                  <ul class="ml-12 mt-3" *ngIf="c2.showChildren">
+                    <li class="mb-2" *ngFor="let c3 of c2.children">
+                      <div class="w-full flex">
+                        <button class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                          (click)="select(c3); $event.stopPropagation()">
+                          <div class="code w-1/2 flex">{{ c3.code }}</div>
+                          <div class="name w-1/2 -ml-6">{{ c3.name }}</div>
+                        </button>
+                      </div>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Panel de creación -->
+      <div class="create-account font-normal">
+        <div class="mb-4">
+          <!-- Formulario encadenado para crear (cuenta → subcuenta → auxiliar) -->
+          <div *ngIf="isCreatingRoot && !showPrincipalForm">
+            <app-cost-centers-form [currentLevel]="currentLevel" [parent]="null"
+                                   (submitted)="onChildSubmitted($event)" (cancelar)="cancelChild()" />
+          </div>
+
+          <!-- Panel de edición/eliminación: muestra camino completo (cuenta, subcuenta, auxiliar) -->
+          <div *ngIf="selected && showPrincipalForm && !isCreatingRoot" class="mt-6">
+            <form [formGroup]="form">
+              <ng-container *ngFor="let node of selectedPath; let i = index">
+                <div style="position: relative;" class="mb-4">
+                  <div class="account-section">
+                    <div class="w-full flex sm:w-auto">
+                      <label class="col-span-1 mr-4 mt-1">{{ getPathParentPrefix(i) }}</label>
+                      <!-- Código: readonly para niveles anteriores, editable en el seleccionado -->
+                      <ng-container *ngIf="i !== selectedPath.length - 1 || addChild; else editableCode">
+                        <input type="text" [value]="getPathSegment(i)" placeholder="Código" class="input-base mb-2 sm:mb-0 cursor-not-allowed" disabled />
+                      </ng-container>
+                      <ng-template #editableCode>
+                        <input
+                          type="text"
+                          formControlName="codeSegment"
+                          placeholder="Código"
+                          class="input-base mb-2 sm:mb-0"
+                          [attr.inputmode]="currentLevel === 'auxiliar' ? null : 'numeric'"
+                          [attr.pattern]="currentLevel === 'auxiliar' ? null : '[0-9]*'"
+                          (keydown)="onEditCodeKeyDown($event)"
+                          (input)="onEditCodeInput($event)"
+                          [attr.maxlength]="currentLevel === 'auxiliar' ? 28 : 2"
+                        />
+                      </ng-template>
+                    </div>
+                    <div class="w-full sm:w-auto">
+                      <!-- Nombre: readonly para niveles anteriores, editable en el seleccionado -->
+                      <ng-container *ngIf="i !== selectedPath.length - 1 || addChild; else editableName">
+                        <input type="text" [value]="node.name" placeholder="Nombre" class="input-base sm:ml-1 cursor-not-allowed" disabled />
+                      </ng-container>
+                      <ng-template #editableName>
+                        <input type="text" formControlName="name" placeholder="Nombre" class="input-base sm:ml-1" (keydown)="onNameKeyDown($event)" />
+                      </ng-template>
+                    </div>
+                    <div class="floating-label">{{ i === 0 ? 'cuenta' : (i === 1 ? 'subcuenta' : 'auxiliar') }}</div>
+                  </div>
+                  <div *ngIf="i === selectedPath.length - 1 && showButtonDelete" style="position: absolute; right: -0.5rem; top: -0.5rem;">
+                  <button class="delete-button" (click)="confirmDeleteSelected()" title="Eliminar">
+                      <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </ng-container>
+
+              <!-- Form de creación encajado debajo del nivel correspondiente -->
+              <div *ngIf="addChild" class="mb-4">
+                <app-cost-centers-form [currentLevel]="currentLevel" [parent]="selected"
+                                       (submitted)="onChildSubmitted($event)" (cancelar)="cancelChild()" />
+              </div>
+
+              <div class="flex flex-wrap justify-center items-center gap-4 mt-4" *ngIf="!addChild">
+                <p-button label="Actualizar" (click)="updateSelected()" [disabled]="form.invalid || !hasChanges()" styleClass="p-button-raised"></p-button>
+                <p-button *ngIf="selected && !isCreatingRoot && currentLevel !== 'auxiliar'" [label]="currentLevel === 'cuenta' ? 'Agregar subcuenta' : 'Agregar auxiliar'" styleClass="p-button-secondary" (click)="addNewChild(currentLevel === 'cuenta' ? 'subcuenta' : 'auxiliar')"></p-button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

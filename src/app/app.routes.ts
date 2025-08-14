@@ -152,6 +152,16 @@ export const routes: Routes = [
               ).then((m) => m.AccountListComponent),
           },
           {
+            path: 'cost-centers',
+            data: {
+              breadcrumb: 'Centros de Costo',
+            },
+            loadComponent: () =>
+              import(
+                './GeneralMasters/CostCenters/components/cost-centers-list/cost-centers-list.component'
+              ).then((m) => m.CostCentersListComponent),
+          },
+          {
             path: 'third-parties',
             data: {
               breadcrumb: 'Terceros',
