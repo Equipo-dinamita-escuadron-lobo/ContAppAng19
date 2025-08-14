@@ -117,11 +117,11 @@
                           formControlName="codeSegment"
                           placeholder="Código"
                           class="input-base mb-2 sm:mb-0"
-                          [attr.inputmode]="currentLevel === 'auxiliar' ? null : 'numeric'"
-                          [attr.pattern]="currentLevel === 'auxiliar' ? null : '[0-9]*'"
+                          [attr.inputmode]="currentLevel === 'auxiliar costo' ? null : 'numeric'"
+                          [attr.pattern]="currentLevel === 'auxiliar costo' ? null : '[0-9]*'"
                           (keydown)="onEditCodeKeyDown($event)"
                           (input)="onEditCodeInput($event)"
-                          [attr.maxlength]="currentLevel === 'auxiliar' ? 28 : 2"
+                          [attr.maxlength]="currentLevel === 'auxiliar costo' ? 28 : 2"
                         />
                       </ng-template>
                     </div>
@@ -134,7 +134,7 @@
                         <input type="text" formControlName="name" placeholder="Nombre" class="input-base sm:ml-1" (keydown)="onNameKeyDown($event)" />
                       </ng-template>
                     </div>
-                    <div class="floating-label">{{ i === 0 ? 'cuenta' : (i === 1 ? 'subcuenta' : 'auxiliar') }}</div>
+                    <div class="floating-label">{{ i === 0 ? 'Costo' : (i === 1 ? 'Subcosto' : 'Auxiliar costo') }}</div>
                   </div>
                   <div *ngIf="i === selectedPath.length - 1 && showButtonDelete" style="position: absolute; right: -0.5rem; top: -0.5rem;">
                   <button class="delete-button" (click)="confirmDeleteSelected()" title="Eliminar">
@@ -154,7 +154,7 @@
 
               <div class="flex flex-wrap justify-center items-center gap-4 mt-4" *ngIf="!addChild">
                 <p-button label="Actualizar" (click)="updateSelected()" [disabled]="form.invalid || !hasChanges()" styleClass="p-button-raised"></p-button>
-                <p-button *ngIf="selected && !isCreatingRoot && currentLevel !== 'auxiliar'" [label]="currentLevel === 'cuenta' ? 'Agregar subcuenta' : 'Agregar auxiliar'" styleClass="p-button-secondary" (click)="addNewChild(currentLevel === 'cuenta' ? 'subcuenta' : 'auxiliar')"></p-button>
+                <p-button *ngIf="selected && !isCreatingRoot && currentLevel !== 'auxiliar costo'" [label]="currentLevel === 'costo' ? 'Agregar Subcosto' : 'Agregar Auxiliar costo'" styleClass="p-button-secondary" (click)="addNewChild(currentLevel === 'costo' ? 'subcosto' : 'auxiliar costo')"></p-button>
               </div>
             </form>
           </div>
