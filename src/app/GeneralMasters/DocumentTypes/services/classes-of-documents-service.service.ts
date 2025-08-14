@@ -9,7 +9,7 @@ import { DocumentClass } from '../models/ClassesOfDocuments';
 })
 export class ClassesOfDocumentsServiceService {
   private readonly http = inject(HttpClient);
-  private readonly apiURL = environment.API_URL + 'config/document-classes/';
+  readonly apiURL = environment.API_URL + 'config/document-classes/';
 
   findAll(enterpriseId: string, page = 0, size = 1000): Observable<any> {
     const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
@@ -19,5 +19,10 @@ export class ClassesOfDocumentsServiceService {
   delete(id: number, enterpriseId: string): Observable<void> {
     const url = `${this.apiURL}delete/${id}/${enterpriseId}`;
     return this.http.delete<void>(url);
+  }
+
+  create(name: string, enterpriseId: string): Observable<any> {
+    const url = `${this.apiURL}create`;
+    return this.http.post<any>(url, { idEnterprise: enterpriseId, name });
   }
 }

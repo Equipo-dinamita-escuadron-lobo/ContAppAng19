@@ -1,11 +1,58 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { InputTextModule } from 'primeng/inputtext';
+import { KeyFilterModule } from 'primeng/keyfilter';
+import { ButtonModule } from 'primeng/button';
+import { Toast } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
 
 @Component({
   selector: 'app-classes-of-documents-creation',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast],
   templateUrl: './classes-of-documents-creation.component.html',
-  styleUrl: './classes-of-documents-creation.component.css'
+  styleUrl: './classes-of-documents-creation.component.css',
+  providers: [MessageService]
 })
 export class ClassesOfDocumentsCreationComponent {
+  form: FormGroup;
+  nameKeyFilter: RegExp = /^[A-Za-zÀ-ÿ ]*$/;
 
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private messageService: MessageService,
+    private service: ClassesOfDocumentsServiceService,
+  ) {
+    this.form = this.fb.group({
+      name: ['', [Validators.required, Validators.pattern('^[A-Za-zÀ-ÿ ]+$')]],
+    });
+  }
+
+  goBack() {
+    this.router.navigate(['/gen-masters/document-types/classes/list']);
+  }
+
+  onSubmit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    const entData = localStorage.getItem('entData');
+    const enterpriseId = entData ? JSON.parse(entData).id : '';
+    const payload = { idEnterprise: enterpriseId, ...this.form.value };
+    this.service.create(payload.name, enterpriseId).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Clase creada' });
+        this.goBack();
+      },
+      error: (err) => {
+        const detail = err?.error?.message || err?.error?.detail || 'No se pudo crear la clase';
+        this.messageService.add({ severity: 'error', summary: 'Error', detail });
+      }
+    });
+  }
 }

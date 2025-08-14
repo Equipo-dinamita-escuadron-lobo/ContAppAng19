@@ -378,6 +378,12 @@ export const routes: Routes = [
                 data: { breadcrumb: 'Clases de Documentos' },
                 loadComponent: () => import('./GeneralMasters/DocumentTypes/Components/classes-of-documents-list/classes-of-documents-list.component').then(m => m.ClassesOfDocumentsListComponent)
               }
+              ,
+              {
+                path: 'classes/create',
+                data: { breadcrumb: 'Crear Clase de Documento' },
+                loadComponent: () => import('./GeneralMasters/DocumentTypes/Components/classes-of-documents-creation/classes-of-documents-creation.component').then(m => m.ClassesOfDocumentsCreationComponent)
+              }
             ]
           },
 
