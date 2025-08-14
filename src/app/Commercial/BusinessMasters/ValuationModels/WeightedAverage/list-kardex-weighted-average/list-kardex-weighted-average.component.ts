@@ -140,9 +140,6 @@ export class ListKardexWeightedAverageComponent {
         exitTotal?: any;
        }, index: number) => {
 
-        const previousBalance = rawList[index - 1]?.balanceQuantity || 0;
-        const balanceQuantity = item.quantity + previousBalance;
-        const balanceUnitPrice = item.unitPrice;
         const balanceTotal = item.totalBalance
 
         if (item.type === 'PURCHASE') {
@@ -166,8 +163,6 @@ export class ListKardexWeightedAverageComponent {
           item.exitTotal = (item.exitQuantity * item.exitUnitPrice);
         }
 
-
-
         const formattedDate = new Date(item.date).toLocaleDateString('es-CO', {
           day: '2-digit',
           month: 'long',
@@ -176,8 +171,6 @@ export class ListKardexWeightedAverageComponent {
 
         return {
           ...item,
-          balanceQuantity,
-          balanceUnitPrice,
           balanceTotal,
           formattedDate
         };
