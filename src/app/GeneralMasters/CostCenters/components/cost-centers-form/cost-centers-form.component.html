@@ -1,0 +1,47 @@
+<form [formGroup]="form">
+  <div class="account-section font-titillium">
+    <div class="w-full flex sm:w-auto">
+      <label *ngIf="parent" class="col-span-1 mr-4 mt-1">{{ parent.code }}</label>
+      <input
+        type="text"
+        id="code"
+        formControlName="code"
+        placeholder="Código"
+        class="input-base mb-2 sm:mb-0"
+        [attr.inputmode]="currentLevel === 'auxiliar' ? null : 'numeric'"
+        [attr.pattern]="currentLevel === 'auxiliar' ? null : '[0-9]*'"
+        (keydown)="onCodeKeyDown($event)"
+        (input)="onCodeInput($event)"
+        [attr.maxlength]="currentLevel === 'auxiliar' ? null : 2"
+      />
+    </div>
+
+    <div class="w-full sm:w-auto">
+      <input
+        type="text"
+        id="name"
+        formControlName="name"
+        placeholder="Nombre"
+        class="input-base sm:ml-1"
+        (keydown)="onNameKeyDown($event)"
+      />
+    </div>
+
+    <div>
+      <div *ngIf="codeControl?.hasError('required') && (codeControl?.dirty || codeControl?.touched)" class="error-message">* Código es requerido</div>
+      <div *ngIf="currentLevel !== 'auxiliar' && (codeControl?.hasError('maxlength') || codeControl?.hasError('minlength')) && (codeControl?.dirty || codeControl?.touched)" class="error-message">Código debe tener dos dígitos</div>
+      <div *ngIf="codeControl?.hasError('pattern') && (codeControl?.dirty || codeControl?.touched)" class="error-message">Código inválido</div>
+    </div>
+    <div>
+      <div *ngIf="nameControl?.hasError('required') && (nameControl?.dirty || nameControl?.touched)" class="error-message">* Nombre es requerido</div>
+    </div>
+    <div class="floating-label">{{ currentLevel }}</div>
+  </div>
+
+  <div class="flex flex-wrap justify-center items-center mt-4 gap-3">
+    <p-button label="Cancelar" (click)="cancel()" styleClass="p-button-danger p-button-raised"></p-button>
+    <div *ngIf="form.valid">
+      <p-button [label]="'Guardar ' + currentLevel" (click)="send()" styleClass="p-button-raised"></p-button>
+    </div>
+  </div>
+</form>
