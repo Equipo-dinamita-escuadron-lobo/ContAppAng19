@@ -1,0 +1,261 @@
+/* Estilos del calendario contable */
+
+/* Grid de calendarios mensuales */
+.month-calendar {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    min-height: 320px;
+    transition: all 0.3s ease;
+  }
+  
+  .month-calendar:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Header del mes */
+  .month-header {
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  
+  .month-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #000066;
+  }
+  
+  /* Días de la semana - Grid de 7 columnas */
+  .weekdays-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  
+  .weekday {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    text-align: center;
+    padding: 4px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Grid de días - Grid de 7x6 (42 días totales) */
+  .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    gap: 4px;
+    min-height: 240px; /* 6 filas * 40px altura */
+    border: 2px solid #d1d5db; /* Borde más visible para debug */
+    background-color: #f9fafb;
+    padding: 4px;
+  }
+  
+  .calendar-day {
+    font-size: 14px;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    border: 1px solid #e5e7eb;
+    background-color: white;
+    position: relative;
+  }
+  
+  .calendar-day.other-month {
+    color: #d1d5db;
+    cursor: default;
+    background-color: #f3f4f6;
+  }
+  
+  .calendar-day.clickable {
+    cursor: pointer;
+  }
+  
+  .calendar-day.clickable:hover {
+    background-color: #f3f4f6;
+    transform: scale(1.05);
+    z-index: 10;
+  }
+  
+  .calendar-day.open {
+    background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+    border: 1px solid #22c55e;
+    color: #15803d;
+    font-weight: 600;
+  }
+  
+  .calendar-day.closed {
+    background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+    border: 1px solid #ef4444;
+    color: #991b1b;
+    font-weight: 600;
+  }
+  
+  .calendar-day.today {
+    font-weight: bold;
+    border: 2px solid #3b82f6;
+  }
+  
+  .calendar-day.today.open {
+    background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+    border: 2px solid #22c55e;
+    color: #15803d;
+  }
+  
+  .calendar-day.today.closed {
+    background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+    border: 2px solid #ef4444;
+    color: #991b1b;
+  }
+  
+  /* Estados del mes */
+  .month-status {
+    margin-top: 12px;
+    text-align: center;
+  }
+  
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .status-closed {
+    background-color: #fef2f2;
+    color: #991b1b;
+  }
+  
+  .status-open {
+    background-color: #f0fdf4;
+    color: #15803d;
+  }
+  
+  .status-mixed {
+    background-color: #fefce8;
+    color: #92400e;
+  }
+  
+  /* Estados visuales del mes completo */
+  .month-fully-closed {
+    border-color: #fca5a5;
+    background-color: #fef2f2;
+  }
+  
+  .month-fully-open {
+    border-color: #86efac;
+    background-color: #f0fdf4;
+  }
+  
+  .month-mixed {
+    border-color: #fde047;
+    background-color: #fefce8;
+  }
+  
+  /* Loading overlay */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  
+  .loading-content {
+    background-color: white;
+    border-radius: 8px;
+    padding: 32px;
+    text-align: center;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .month-calendar {
+      padding: 12px;
+      min-height: 280px;
+    }
+    
+    .calendar-day {
+      font-size: 12px;
+      padding: 4px 2px;
+      min-height: 32px;
+    }
+    
+    .month-title {
+      font-size: 16px;
+    }
+    
+    .days-grid {
+      min-height: 192px; /* 6 filas * 32px altura */
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .month-calendar {
+      min-height: 260px;
+    }
+    
+    .days-grid {
+      min-height: 180px; /* 6 filas * 30px altura */
+    }
+  }
+  
+  /* Personalización del dropdown de PrimeNG */
+  ::ng-deep .p-dropdown {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+  }
+  
+  ::ng-deep .p-dropdown:not(.p-disabled):hover {
+    border-color: #3b82f6;
+  }
+  
+  ::ng-deep .p-dropdown:not(.p-disabled).p-focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+  
+  /* Personalización del toast */
+  ::ng-deep .p-toast {
+    z-index: 9999;
+  }
+  
+  /* Animaciones suaves */
+  .month-calendar {
+    animation: fadeInUp 0.5s ease-out;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  

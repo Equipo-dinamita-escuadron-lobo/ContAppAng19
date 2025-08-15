@@ -71,7 +71,7 @@ export class MenuComponent {
       title: 'Calendario Contable',
       icon: 'date_range',
       route: '/gen-masters/accounting-calendar',
-      description: 'Gestión del calendario contable, apertura y cierre de periodos'
+      description: 'Configuración de periodos contables'
     },
     {
       title: 'Centro de Ayuda',

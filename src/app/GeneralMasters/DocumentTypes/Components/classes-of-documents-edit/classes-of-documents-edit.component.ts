@@ -20,7 +20,6 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
 export class ClassesOfDocumentsEditComponent {
   form: FormGroup;
   id!: number;
-  nameKeyFilter: RegExp = /^[A-Za-zÀ-ÿ ]*$/;
   private initialName = '';
 
   constructor(
@@ -31,7 +30,7 @@ export class ClassesOfDocumentsEditComponent {
     private service: ClassesOfDocumentsServiceService,
   ) {
     this.form = this.fb.group({
-      name: ['', [Validators.required, Validators.pattern('^[A-Za-zÀ-ÿ ]+$')]],
+      name: ['', [Validators.required]],
     });
   }
 
@@ -77,7 +76,7 @@ export class ClassesOfDocumentsEditComponent {
         if (err?.status === 409) {
           const msg: string = err?.error?.message || err?.error?.detail || '';
           const m1 = msg.match(/nombre\s+'([^']+)'/i);
-          const m2 = msg.match(/nombre\s*[:=]\s*([A-Za-zÀ-ÿ\s]+)/i);
+          const m2 = msg.match(/nombre\s*[:=]\s*([A-Za-zÀ-ÿ0-9\s.,;]+)/i);
           const extracted = (m1 && m1[1]) || (m2 && m2[1]) || '';
           const displayName = (this.form.value?.name || extracted || '').toString().trim();
           const detail = displayName ? `La clase "${displayName}" ya existe.` : 'Ya existe una clase con el mismo nombre.';

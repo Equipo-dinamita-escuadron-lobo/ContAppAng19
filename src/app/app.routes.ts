@@ -412,6 +412,12 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./GeneralMasters/Components/MenuCards/menu.component').then((m) => m.MenuComponent),
           },
+          {
+            path: 'accounting-calendar',
+            data: { breadcrumb: 'Calendario Contable' },
+            loadComponent: () =>
+              import('./GeneralMasters/AccountingCalendar/components/accounting-calendar.component').then((m) => m.AccountingCalendarComponent),
+          },
 
         ],
       },

@@ -22,8 +22,8 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
         <div class="flex flex-col gap-2">
           <label class="font-semibold text-primary">Nombre</label>
-          <input pInputText [pKeyFilter]="nameKeyFilter" formControlName="name" placeholder="Ej: Ingreso" class="w-full md:w-2/3" />
-          <small class="text-red-500" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido (solo letras)</small>
+          <input pInputText formControlName="name" placeholder="Ej: Ingreso" class="w-full md:w-2/3" />
+          <small class="text-red-500" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido</small>
         </div>
       </div>
 

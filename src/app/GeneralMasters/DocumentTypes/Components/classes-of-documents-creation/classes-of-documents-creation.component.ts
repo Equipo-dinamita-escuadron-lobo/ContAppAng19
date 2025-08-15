@@ -19,7 +19,6 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
 })
 export class ClassesOfDocumentsCreationComponent {
   form: FormGroup;
-  nameKeyFilter: RegExp = /^[A-Za-zÀ-ÿ ]*$/;
 
   constructor(
     private fb: FormBuilder,
@@ -28,7 +27,7 @@ export class ClassesOfDocumentsCreationComponent {
     private service: ClassesOfDocumentsServiceService,
   ) {
     this.form = this.fb.group({
-      name: ['', [Validators.required, Validators.pattern('^[A-Za-zÀ-ÿ ]+$')]],
+      name: ['', [Validators.required]],
     });
   }
 
@@ -73,7 +72,7 @@ export class ClassesOfDocumentsCreationComponent {
     if (!message) return null;
     const m1 = message.match(/nombre\s+'([^']+)'/i);
     if (m1 && m1[1]) return m1[1];
-    const m2 = message.match(/nombre\s*[:=]\s*([A-Za-zÀ-ÿ\s]+)/i);
+    const m2 = message.match(/nombre\s*[:=]\s*([A-Za-zÀ-ÿ0-9\s.,;]+)/i);
     if (m2 && m2[1]) return m2[1].trim();
     return null;
   }

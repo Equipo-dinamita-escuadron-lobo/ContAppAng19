@@ -1,0 +1,154 @@
+<div class="flex w-full h-full font-titillium">
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+  
+    <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+      <!-- Header -->
+      <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+        <div class="items-center mb-6">
+          <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+            Calendario Contable
+          </h1>
+          <p class="font-family-sans font-normal text-sm mt-2">
+            Gestione los periodos contables y los usuarios permitidos para el registro de transacciones en periodos cerrados.
+          </p>
+          
+          <!-- Selector de año -->
+          <div class="mt-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Año {{ selectedYear }}</label>
+            <p-dropdown 
+              [options]="availableYears" 
+              [(ngModel)]="selectedYear" 
+              (onChange)="onYearChange()"
+              placeholder="Seleccione año"
+              class="w-32">
+            </p-dropdown>
+          </div>
+        </div>
+  
+        <!-- Botón Cerrar Todos -->
+        <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+          <p-button 
+            label="Cerrar Todos" 
+            icon="pi pi-times" 
+            (onClick)="closeAllPeriods()"
+            [loading]="loading"
+            styleClass="p-button-danger">
+          </p-button>
+        </div>
+      </div>
+  
+      <!-- Grid de Calendarios Mensuales -->
+      <div class="grid grid-cols-1 gap-6">
+        <!-- Debug: Mostrar solo el primer mes -->
+        <div 
+          *ngIf="calendarMonths.length > 0"
+          class="month-calendar"
+          [ngClass]="getMonthGridClass(calendarMonths[0])">
+          
+          <!-- Header del mes -->
+          <div class="month-header">
+            <h3 class="month-title">{{ calendarMonths[0].name }} - Debug</h3>
+          </div>
+  
+          <!-- Días de la semana -->
+          <div class="weekdays-header">
+            <div 
+              *ngFor="let dayName of dayNames" 
+              class="weekday">
+              {{ dayName }}
+            </div>
+          </div>
+  
+          <!-- Grid de días -->
+          <div class="days-grid">
+            <div 
+              *ngFor="let day of calendarMonths[0].days; trackBy: trackByDay; let i = index"
+              class="calendar-day"
+              [ngClass]="getDayClass(day)"
+              (click)="onDateClick(day)"
+              [class.clickable]="day.isCurrentMonth"
+              [attr.data-day]="day.day"
+              [title]="'Día ' + day.day + ' - ' + (day.isCurrentMonth ? 'Mes actual' : 'Otro mes') + ' - Índice: ' + i">
+              {{ day.day }}
+            </div>
+          </div>
+  
+          <!-- Debug info -->
+          <div class="text-xs text-gray-500 mt-2 text-center">
+            Total días: {{ getTotalDays(calendarMonths[0]) }} | Mes actual: {{ getCurrentMonthDays(calendarMonths[0]) }}
+          </div>
+  
+          <!-- Estado del mes -->
+          <div class="month-status">
+            <span *ngIf="calendarMonths[0].isFullyClosed" class="status-badge status-closed">
+              <i class="pi pi-lock"></i> Cerrado
+            </span>
+            <span *ngIf="calendarMonths[0].isFullyOpen" class="status-badge status-open">
+              <i class="pi pi-unlock"></i> Abierto
+            </span>
+            <span *ngIf="!calendarMonths[0].isFullyClosed && !calendarMonths[0].isFullyOpen" class="status-badge status-mixed">
+              <i class="pi pi-clock"></i> Mixto
+            </span>
+          </div>
+        </div>
+  
+        <!-- Mostrar todos los meses cuando esté funcionando -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div 
+            *ngFor="let month of calendarMonths.slice(1)" 
+            class="month-calendar"
+            [ngClass]="getMonthGridClass(month)">
+            
+            <!-- Header del mes -->
+            <div class="month-header">
+              <h3 class="month-title">{{ month.name }}</h3>
+            </div>
+  
+            <!-- Días de la semana -->
+            <div class="weekdays-header">
+              <div 
+                *ngFor="let dayName of dayNames" 
+                class="weekday">
+                {{ dayName }}
+              </div>
+            </div>
+  
+            <!-- Grid de días -->
+            <div class="days-grid">
+              <div 
+                *ngFor="let day of month.days; trackBy: trackByDay"
+                class="calendar-day"
+                [ngClass]="getDayClass(day)"
+                (click)="onDateClick(day)"
+                [class.clickable]="day.isCurrentMonth">
+                {{ day.day }}
+              </div>
+            </div>
+  
+            <!-- Estado del mes -->
+            <div class="month-status">
+              <span *ngIf="month.isFullyClosed" class="status-badge status-closed">
+                <i class="pi pi-lock"></i> Cerrado
+              </span>
+              <span *ngIf="month.isFullyOpen" class="status-badge status-open">
+                <i class="pi pi-unlock"></i> Abierto
+              </span>
+              <span *ngIf="!month.isFullyClosed && !month.isFullyOpen" class="status-badge status-mixed">
+                <i class="pi pi-clock"></i> Mixto
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Loading overlay -->
+      <div *ngIf="loading" class="loading-overlay">
+        <div class="loading-content">
+          <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+          <p class="mt-2 text-primary">Cargando calendario contable...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
