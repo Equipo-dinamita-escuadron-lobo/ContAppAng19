@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -33,7 +33,7 @@ interface CalendarMonth {
   imports: [
     CommonModule,
     FormsModule,
-    DropdownModule,
+    SelectModule,
     ButtonModule,
     ToastModule,
     ConfirmDialogModule
@@ -48,10 +48,11 @@ export class AccountingCalendarComponent implements OnInit {
 
   // Estado del componente
   selectedYear: number = new Date().getFullYear();
-  availableYears: number[] = [];
+  availableYears: { label: string; value: number }[] = [];
   calendarMonths: CalendarMonth[] = [];
   loading: boolean = false;
   enterpriseId: string = '';
+  private loaderTimer: any = null;
 
   // Nombres de meses en español
   monthNames: string[] = [
@@ -69,11 +70,14 @@ export class AccountingCalendarComponent implements OnInit {
     // Generar años disponibles (desde 2020 hasta 2030)
     const currentYear = new Date().getFullYear();
     for (let year = currentYear - 5; year <= currentYear + 5; year++) {
-      this.availableYears.push(year);
+      this.availableYears.push({ label: year.toString(), value: year });
     }
   }
 
   ngOnInit(): void {
+    // Asegurar que siempre haya un año válido seleccionado
+    this.selectedYear = new Date().getFullYear();
+    
     this.enterpriseId = this.localStorageMethods.loadEnterpriseData()?.id || '';
     if (this.enterpriseId) {
       this.generateCalendar();
@@ -162,9 +166,6 @@ export class AccountingCalendarComponent implements OnInit {
       });
     }
     
-    // Debug: Verificar que siempre tengamos 42 días
-    console.log(`Mes ${this.monthNames[month]}: ${days.length} días totales, ${days.filter(d => d.isCurrentMonth).length} del mes actual`);
-    
     return {
       name: this.monthNames[month],
       year,
@@ -178,10 +179,19 @@ export class AccountingCalendarComponent implements OnInit {
   private loadCalendarData(): void {
     if (!this.enterpriseId) return;
 
-    this.loading = true;
+    // Mostrar spinner solo si la petición tarda (>150ms)
+    if (this.loaderTimer) {
+      clearTimeout(this.loaderTimer);
+    }
+    this.loaderTimer = setTimeout(() => (this.loading = true), 150);
+
     this.service.findByYear(this.enterpriseId, this.selectedYear).subscribe({
       next: (response) => {
         this.updateCalendarWithData(response.content || []);
+        if (this.loaderTimer) {
+          clearTimeout(this.loaderTimer);
+          this.loaderTimer = null;
+        }
         this.loading = false;
       },
       error: (error) => {
@@ -191,6 +201,10 @@ export class AccountingCalendarComponent implements OnInit {
           summary: 'Error',
           detail: 'No se pudo cargar el calendario contable'
         });
+        if (this.loaderTimer) {
+          clearTimeout(this.loaderTimer);
+          this.loaderTimer = null;
+        }
         this.loading = false;
       }
     });
@@ -350,15 +364,6 @@ export class AccountingCalendarComponent implements OnInit {
 
   trackByDay(index: number, day: CalendarDay): string {
     return `${day.date.getTime()}-${day.isCurrentMonth}`;
-  }
-
-  // Métodos para debug - evitar usar filter en el HTML
-  getTotalDays(month: CalendarMonth): number {
-    return month.days.length;
-  }
-
-  getCurrentMonthDays(month: CalendarMonth): number {
-    return month.days.filter(d => d.isCurrentMonth).length;
   }
 
   private loadTestData(): void {

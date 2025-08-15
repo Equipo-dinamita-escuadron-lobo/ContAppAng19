@@ -1,9 +1,9 @@
-/* Estilos del calendario contable */
+/* Estilos del calendario contable - Consistente con centros de costo */
 
 /* Grid de calendarios mensuales */
 .month-calendar {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--color-primary-100);
+  border: 1px solid var(--color-neutral-80);
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 16px;
@@ -24,7 +24,8 @@
 .month-title {
   font-size: 18px;
   font-weight: 600;
-  color: #000066;
+  color: var(--color-primary);
+  font-family: var(--font-family-titillium);
 }
 
 /* Días de la semana - Grid de 7 columnas */
@@ -38,13 +39,14 @@
 .weekday {
   font-size: 12px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--color-neutral-50);
   text-align: center;
   padding: 4px;
   min-height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--font-family-titillium);
 }
 
 /* Grid de días - Grid de 7x6 (42 días totales) */
@@ -53,9 +55,9 @@
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: repeat(6, 1fr);
   gap: 4px;
-  min-height: 240px; /* 6 filas * 40px altura */
-  border: 2px solid #d1d5db; /* Borde más visible para debug */
-  background-color: #f9fafb;
+  min-height: 240px;
+  border: 2px solid var(--color-neutral-70);
+  background-color: var(--color-neutral-95);
   padding: 4px;
 }
 
@@ -71,15 +73,16 @@
   align-items: center;
   justify-content: center;
   font-weight: 500;
-  border: 1px solid #e5e7eb;
-  background-color: white;
+  border: 1px solid var(--color-neutral-80);
+  background-color: var(--color-primary-100);
   position: relative;
+  font-family: var(--font-family-titillium);
 }
 
 .calendar-day.other-month {
-  color: #d1d5db;
+  color: var(--color-neutral-70);
   cursor: default;
-  background-color: #f3f4f6;
+  background-color: var(--color-neutral-90);
 }
 
 .calendar-day.clickable {
@@ -87,40 +90,32 @@
 }
 
 .calendar-day.clickable:hover {
-  background-color: #f3f4f6;
+  background-color: var(--color-neutral-90);
   transform: scale(1.05);
   z-index: 10;
 }
 
 .calendar-day.open {
-  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
-  border: 1px solid #22c55e;
-  color: #15803d;
+  background: linear-gradient(135deg, var(--color-notification-success-container) 0%, #86efac 100%);
+  border: 1px solid var(--color-complementary-green);
+  color: var(--color-complementary-green);
   font-weight: 600;
 }
 
 .calendar-day.closed {
-  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
-  border: 1px solid #ef4444;
-  color: #991b1b;
+  background: linear-gradient(135deg, var(--color-notification-error-container) 0%, #fca5a5 100%);
+  border: 1px solid var(--color-complementary-red);
+  color: var(--color-complementary-red);
   font-weight: 600;
 }
 
 .calendar-day.today {
-  font-weight: bold;
-  border: 2px solid #3b82f6;
-}
-
-.calendar-day.today.open {
-  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
-  border: 2px solid #22c55e;
-  color: #15803d;
-}
-
-.calendar-day.today.closed {
-  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
-  border: 2px solid #ef4444;
-  color: #991b1b;
+  background: linear-gradient(135deg, var(--color-notification-info-container) 0%, #93c5fd 100%);
+  border: 2px solid var(--color-tertiary);
+  color: var(--color-tertiary-20);
+  font-weight: 700;
+  transform: scale(1.1);
+  z-index: 20;
 }
 
 /* Estados del mes */
@@ -133,128 +128,145 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px;
-  border-radius: 9999px;
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+  font-family: var(--font-family-titillium);
 }
 
 .status-closed {
-  background-color: #fef2f2;
-  color: #991b1b;
+  background-color: var(--color-notification-error-container);
+  color: var(--color-complementary-red);
+  border: 1px solid var(--color-notification-error-border);
 }
 
 .status-open {
-  background-color: #f0fdf4;
-  color: #15803d;
+  background-color: var(--color-notification-success-container);
+  color: var(--color-complementary-green);
+  border: 1px solid var(--color-notification-success-border);
 }
 
 .status-mixed {
-  background-color: #fefce8;
-  color: #92400e;
-}
-
-/* Estados visuales del mes completo */
-.month-fully-closed {
-  border-color: #fca5a5;
-  background-color: #fef2f2;
-}
-
-.month-fully-open {
-  border-color: #86efac;
-  background-color: #f0fdf4;
-}
-
-.month-mixed {
-  border-color: #fde047;
-  background-color: #fefce8;
+  background-color: var(--color-notification-security-container);
+  color: var(--color-complementary-orange);
+  border: 1px solid var(--color-complementary-orange);
 }
 
 /* Loading overlay */
 .loading-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 10;
+  transition: opacity 120ms ease-in-out;
 }
 
 .loading-content {
-  background-color: white;
+  background: var(--color-primary-100);
+  padding: 1rem 1.5rem;
   border-radius: 8px;
-  padding: 32px;
   text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .month-calendar {
-    padding: 12px;
-    min-height: 280px;
-  }
-  
-  .calendar-day {
-    font-size: 12px;
-    padding: 4px 2px;
-    min-height: 32px;
-  }
-  
-  .month-title {
-    font-size: 16px;
-  }
-  
-  .days-grid {
-    min-height: 192px; /* 6 filas * 32px altura */
-  }
+/* Estilos para el selector de año - Consistente con productos */
+:host ::ng-deep .p-select {
+  min-width: 12rem !important;
 }
 
+:host ::ng-deep .p-select .p-select-trigger {
+  width: 100%;
+}
+
+:host ::ng-deep .p-select .p-select-label {
+  padding: 0.5rem 0.75rem;
+  color: var(--color-neutral-30);
+}
+
+:host ::ng-deep .p-select .p-select-items {
+  padding: 0.5rem;
+}
+
+:host ::ng-deep .p-select .p-select-item {
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  margin: 2px 0;
+  color: var(--color-neutral-30);
+}
+
+:host ::ng-deep .p-select .p-select-item:hover {
+  background-color: var(--color-neutral-90);
+  color: var(--color-primary);
+}
+
+:host ::ng-deep .p-select .p-select-item.p-highlight {
+  background-color: var(--color-primary);
+  color: var(--color-primary-100);
+}
+
+/* Overlay del selector */
+:host ::ng-deep .p-select .p-select-overlay {
+  background: var(--color-primary-100);
+  border-color: var(--color-neutral-80);
+  border-radius: 8px;
+  color: var(--color-neutral-30);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive para el selector */
 @media (max-width: 640px) {
-  .month-calendar {
-    min-height: 260px;
-  }
-  
-  .days-grid {
-    min-height: 180px; /* 6 filas * 30px altura */
+  :host ::ng-deep .p-select {
+    min-width: 10rem !important;
   }
 }
 
 /* Personalización del dropdown de PrimeNG */
-::ng-deep .p-dropdown {
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+:host ::ng-deep .p-dropdown {
+  min-width: 12rem;
 }
 
-::ng-deep .p-dropdown:not(.p-disabled):hover {
-  border-color: #3b82f6;
+:host ::ng-deep .p-dropdown .p-dropdown-trigger {
+  width: 3rem;
 }
 
-::ng-deep .p-dropdown:not(.p-disabled).p-focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+:host ::ng-deep .p-dropdown .p-dropdown-label {
+  padding: 0.5rem 0.75rem;
 }
 
-/* Personalización del toast */
-::ng-deep .p-toast {
-  z-index: 9999;
+:host ::ng-deep .p-dropdown .p-dropdown-items {
+  padding: 0.5rem 0;
 }
 
-/* Animaciones suaves */
-.month-calendar {
-  animation: fadeInUp 0.5s ease-out;
+:host ::ng-deep .p-dropdown .p-dropdown-item {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+:host ::ng-deep .p-dropdown .p-dropdown-item:hover {
+  background-color: var(--color-neutral-90);
+}
+
+:host ::ng-deep .p-dropdown .p-dropdown-item.p-highlight {
+  background-color: var(--color-primary);
+  color: var(--color-primary-100);
+}
+
+/* Estilos para botones - Consistente con centros de costo */
+:host ::ng-deep .p-button {
+  font-family: var(--font-family-titillium);
+  font-weight: 500;
+}
+
+:host ::ng-deep .p-button.p-button-danger {
+  background-color: var(--color-complementary-red);
+  border-color: var(--color-complementary-red);
+}
+
+:host ::ng-deep .p-button.p-button-danger:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
 }
