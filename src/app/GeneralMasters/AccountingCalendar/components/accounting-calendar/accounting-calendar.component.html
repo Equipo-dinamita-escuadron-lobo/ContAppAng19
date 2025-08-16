@@ -14,19 +14,19 @@
         </p>
       </div>
 
-      <!-- Botón Cerrar Todos -->
+      <!-- Botón de Control Masivo -->
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <p-button 
-          label="Cerrar Todos" 
-          icon="pi pi-times" 
-          (onClick)="closeAllPeriods()"
+          [label]="areAllMonthsClosed() ? 'Abrir Todos' : 'Cerrar Todos'"
+          [icon]="areAllMonthsClosed() ? 'pi pi-unlock' : 'pi pi-times'"
+          (onClick)="onToggleAll()"
           [loading]="loading"
-          styleClass="p-button-danger">
+          [styleClass]="areAllMonthsClosed() ? 'p-button-success' : 'p-button-danger'">
         </p-button>
       </div>
     </div>
 
-    <!-- Selector de año - Mismo espaciado que centros de costo -->
+    <!-- Selector de año -->
     <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
       <div class="w-full sm:w-[30rem]">
         <label for="yearSelector" class="font-semibold text-primary">Seleccionar Año</label>
@@ -35,7 +35,7 @@
             id="yearSelector"
             [options]="availableYears" 
             [(ngModel)]="selectedYear" 
-            (onSelectionChange)="onYearChange()"
+            (onChange)="onYearChange()"
             placeholder="Seleccione un año"
             [filter]="true"
             optionLabel="label"
@@ -50,50 +50,13 @@
 
     <!-- Grid de Calendarios Mensuales -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <div 
-        *ngFor="let month of calendarMonths" 
-        class="month-calendar"
-        [ngClass]="getMonthGridClass(month)">
-        
-        <!-- Header del mes -->
-        <div class="month-header">
-          <h3 class="month-title">{{ month.name }}</h3>
-        </div>
-
-        <!-- Días de la semana -->
-        <div class="weekdays-header">
-          <div 
-            *ngFor="let dayName of dayNames" 
-            class="weekday">
-            {{ dayName }}
-          </div>
-        </div>
-
-        <!-- Grid de días -->
-        <div class="days-grid">
-          <div 
-            *ngFor="let day of month.days; trackBy: trackByDay"
-            class="calendar-day"
-            [ngClass]="getDayClass(day)"
-            (click)="onDateClick(day)"
-            [class.clickable]="day.isCurrentMonth">
-            {{ day.day }}
-          </div>
-        </div>
-
-        <!-- Estado del mes -->
-        <div class="month-status">
-          <span *ngIf="month.isFullyClosed" class="status-badge status-closed">
-            <i class="pi pi-lock"></i> Cerrado
-          </span>
-          <span *ngIf="month.isFullyOpen" class="status-badge status-open">
-            <i class="pi pi-unlock"></i> Abierto
-          </span>
-          <span *ngIf="!month.isFullyClosed && !month.isFullyOpen" class="status-badge status-mixed">
-            <i class="pi pi-clock"></i> Mixto
-          </span>
-        </div>
-      </div>
+      <app-month-calendar
+        *ngFor="let month of calendarMonths"
+        [month]="month"
+        [loading]="loading"
+        (dayClick)="onDateClick($event)"
+        (monthStatusClick)="onMonthStatusClick($event)">
+      </app-month-calendar>
     </div>
 
     <!-- Loading overlay -->

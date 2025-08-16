@@ -416,7 +416,7 @@ export const routes: Routes = [
             path: 'accounting-calendar',
             data: { breadcrumb: 'Calendario Contable' },
             loadComponent: () =>
-              import('./GeneralMasters/AccountingCalendar/components/accounting-calendar.component').then((m) => m.AccountingCalendarComponent),
+              import('./GeneralMasters/AccountingCalendar/components/accounting-calendar/accounting-calendar.component').then((m) => m.AccountingCalendarComponent),
           },
 
         ],
