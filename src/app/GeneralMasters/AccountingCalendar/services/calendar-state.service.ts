@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { takeUntil, finalize, switchMap, map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
+import { takeUntil, finalize, switchMap, map, catchError } from 'rxjs/operators';
 import { AccountingCalendarService } from './accounting-calendar.service';
 import { CalendarRangeManagerService } from './calendar-range-manager.service';
 import { 
@@ -255,10 +255,16 @@ export class CalendarStateService {
         },
         error: (error) => {
           console.error('Error al cargar el calendario:', error);
-          this.updateState({
-            ...this.currentState,
-            error: 'No se pudo cargar el calendario contable'
-          });
+          // No mostrar error si es simplemente que no hay datos
+          if (error.status !== 404) {
+            this.updateState({
+              ...this.currentState,
+              error: 'No se pudo cargar el calendario contable'
+            });
+          } else {
+            // Si es 404, generar un calendario vacío
+            this.generateCalendar();
+          }
         }
       });
   }
@@ -270,7 +276,18 @@ export class CalendarStateService {
     const { enterpriseId, selectedYear } = this.currentState;
     
     return this.calendarService.findByYear(enterpriseId, selectedYear).pipe(
-      map((response: any) => response.content || [])
+      map((response: any) => {
+        // Si no hay contenido, devolver un array vacío sin lanzar error
+        return response?.content || [];
+      }),
+      catchError((error: any) => {
+        // Si es un error 404 (no encontrado), devolver array vacío
+        if (error?.status === 404) {
+          return of([]);
+        }
+        // Para otros errores, propagar el error
+        return throwError(() => error);
+      })
     );
   }
 
@@ -279,32 +296,16 @@ export class CalendarStateService {
    * @param calendarData Datos del calendario
    */
   private updateCalendarWithData(calendarData: AccountingCalendar[]): void {
-    if (!calendarData || calendarData.length === 0) {
-      // Si no hay datos, asegurar que todos los días estén cerrados
-      const { calendarMonths } = this.currentState;
-      const updatedMonths = calendarMonths.map(month => {
-        const updatedMonth = { ...month };
-        updatedMonth.days = month.days.map(day => {
-          if (day.isCurrentMonth) {
-            return { ...day, isClosed: true };
-          }
-          return { ...day };
-        });
-        this.updateMonthStatus(updatedMonth);
-        return updatedMonth;
-      });
-      
-      this.updateState({
-        ...this.currentState,
-        calendarMonths: updatedMonths
-      });
-      return;
-    }
-    
-    // Si hay datos, actualizar basado en los datos
     const { calendarMonths } = this.currentState;
     const updatedMonths = [...calendarMonths];
     
+    if (!calendarData || calendarData.length === 0) {
+      // Si no hay datos, generar un calendario nuevo
+      this.generateCalendar();
+      return;
+    }
+    
+    // Actualizar los meses con los datos recibidos
     updatedMonths.forEach(month => {
       const updatedMonth = { ...month };
       updatedMonth.days = month.days.map(day => {
