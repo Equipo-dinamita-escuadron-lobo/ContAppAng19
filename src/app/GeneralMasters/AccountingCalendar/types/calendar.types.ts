@@ -40,7 +40,7 @@ export interface DayState {
 export interface MonthState {
   month: number;
   year: number;
-  status: 'fully_open' | 'fully_closed' | 'mixed';
+  status: 'fully_open' | 'fully_closed';
 }
 
 // Tipo para las notificaciones del sistema

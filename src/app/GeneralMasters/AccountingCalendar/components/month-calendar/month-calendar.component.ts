@@ -42,7 +42,7 @@ export class MonthCalendarComponent {
       case MonthStatus.FULLY_OPEN:
         return CSS_CLASS_CONSTANTS.MONTH_STATUS.FULLY_OPEN;
       default:
-        return CSS_CLASS_CONSTANTS.MONTH_STATUS.MIXED;
+        return ''; // Sin clase específica para otros casos
     }
   }
   
@@ -53,6 +53,7 @@ export class MonthCalendarComponent {
     let classes = 'calendar-day';
     
     if (!day.isCurrentMonth) {
+      classes += ' other-month';
       classes += ` ${CSS_CLASS_CONSTANTS.DAY_STATUS.OTHER_MONTH}`;
     } else {
       if (day.isClosed) {

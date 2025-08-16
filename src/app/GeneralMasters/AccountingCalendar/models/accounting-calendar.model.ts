@@ -3,14 +3,12 @@ import { CALENDAR_CONSTANTS, NAME_CONSTANTS } from '../constants/calendar.consta
 // Enums para estados del calendario
 export enum CalendarStatus {
   OPEN = 'open',
-  CLOSED = 'closed',
-  MIXED = 'mixed'
+  CLOSED = 'closed'
 }
 
 export enum MonthStatus {
   FULLY_OPEN = 'fully_open',
-  FULLY_CLOSED = 'fully_closed',
-  MIXED = 'mixed'
+  FULLY_CLOSED = 'fully_closed'
 }
 
 // Interfaces principales del calendario contable

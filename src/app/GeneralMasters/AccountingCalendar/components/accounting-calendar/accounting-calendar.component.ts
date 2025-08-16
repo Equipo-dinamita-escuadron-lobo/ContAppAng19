@@ -122,7 +122,7 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
     
     // Marcar como interacción de usuario y cambiar estado
     this.stateService.markUserInteractionStart();
-    this.stateService.toggleDateState(day);
+    this.stateService.toggleDate(day);
     this.stateService.markUserInteractionEnd();
     
     // Mostrar mensaje de éxito
@@ -150,12 +150,10 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
     if (month.status === MonthStatus.FULLY_CLOSED) {
       action = 'abrir';
       message = `¿Desea abrir todos los periodos contables del mes de ${month.name}?`;
-    } else if (month.status === MonthStatus.FULLY_OPEN) {
+    } else {
+      // Si no está completamente cerrado, está abierto
       action = 'cerrar';
       message = `¿Desea cerrar todos los periodos contables del mes de ${month.name}?`;
-    } else {
-      action = 'cerrar';
-      message = `¿Desea cerrar todos los periodos contables del mes de ${month.name}? Actualmente el mes tiene periodos mixtos (abiertos y cerrados).`;
     }
     
     this.confirmationService.confirm({

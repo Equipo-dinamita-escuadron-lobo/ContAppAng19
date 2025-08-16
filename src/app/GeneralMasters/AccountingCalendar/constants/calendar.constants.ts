@@ -2,14 +2,6 @@
  * Constantes globales para el módulo de calendario contable
  */
 
-// Constantes de tiempo (en milisegundos)
-export const TIME_CONSTANTS = {
-  LOADER_DELAY_MS: 150,
-  BACKEND_PROCESSING_DELAY_MS: 500,
-  NOTIFICATION_DISPLAY_TIME_MS: 3000,
-  NAVIGATION_DELAY_MS: 1500
-} as const;
-
 // Constantes del calendario
 export const CALENDAR_CONSTANTS = {
   MIN_YEAR: 2000,
@@ -43,11 +35,11 @@ export const NAME_CONSTANTS = {
 export const MESSAGE_CONSTANTS = {
   SUCCESS: {
     DATE_STATE_CHANGED: 'Estado Cambiado',
+    DATE_OPENED: 'Fecha Abierta',
+    DATE_CLOSED: 'Fecha Cerrada',
     MONTH_STATE_CHANGED: 'Estado del Mes Cambiado',
     MASS_CLOSE_SUCCESS: 'Cierre Masivo Exitosa',
     MASS_OPEN_SUCCESS: 'Apertura Masiva Exitosa',
-    DATE_OPENED: 'Fecha abierta exitosamente',
-    DATE_CLOSED: 'Fecha cerrada exitosamente'
   },
   ERROR: {
     LOAD_CALENDAR: 'No se pudo cargar el calendario contable',
@@ -55,8 +47,6 @@ export const MESSAGE_CONSTANTS = {
     CHANGE_MONTH_STATE: 'No se pudo cambiar el estado del mes',
     MASS_CLOSE: 'No se pudo cerrar todos los periodos',
     MASS_OPEN: 'No se pudo abrir todos los periodos',
-    DATE_TOGGLE_FAILED: 'Error al cambiar el estado de la fecha',
-    CREATE_YEAR_DATES: 'No se pudieron crear las fechas del año'
   },
   CONFIRMATION: {
     MASS_CLOSE: '¿Desea cerrar todos los periodos contables del año seleccionado? Esta acción no se puede deshacer.',
@@ -69,8 +59,7 @@ export const MESSAGE_CONSTANTS = {
 export const CSS_CLASS_CONSTANTS = {
   MONTH_STATUS: {
     FULLY_CLOSED: 'month-fully-closed',
-    FULLY_OPEN: 'month-fully-open',
-    MIXED: 'month-mixed'
+    FULLY_OPEN: 'month-fully-open'
   },
   DAY_STATUS: {
     OTHER_MONTH: 'other-month',
