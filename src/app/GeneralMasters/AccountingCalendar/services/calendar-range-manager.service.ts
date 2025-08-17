@@ -22,13 +22,17 @@ export class CalendarRangeManagerService {
    */
   initializeYearIfNotExists(enterpriseId: string, year: number): Observable<boolean> {
     return this.calendarService.checkYearExists(enterpriseId, year).pipe(
-      map(exists => {
+      switchMap(exists => {
         if (!exists) {
           // Crear el año completo como fechas individuales
-          this.calendarService.createYearDates(enterpriseId, year).subscribe();
-          return true;
+          // Usar createDateRange para verificar fechas existentes antes de crear
+          const startDate = new Date(year, 0, 1); // 1 de enero
+          const endDate = new Date(year, 11, 31); // 31 de diciembre
+          return this.createDateRange(enterpriseId, startDate.toISOString().split('T')[0], endDate.toISOString().split('T')[0]).pipe(
+            map(() => true)
+          );
         }
-        return true;
+        return of(true);
       }),
       catchError(error => {
         console.error('Error al verificar/crear el año:', error);
