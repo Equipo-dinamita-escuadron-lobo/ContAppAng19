@@ -50,9 +50,16 @@ export const MESSAGE_CONSTANTS = {
     MASS_OPEN: 'No se pudo abrir todos los periodos',
   },
   CONFIRMATION: {
-    MASS_CLOSE: '¿Desea cerrar todos los periodos contables del año seleccionado? Esta acción no se puede deshacer.',
-    MASS_OPEN: '¿Desea abrir todos los periodos contables del año seleccionado? Esta acción no se puede deshacer.',
-    MONTH_STATE_CHANGE: 'Confirmar Cambio de Estado del Mes'
+    MONTH_STATE_CHANGE: 'Confirmar Cambio de Estado',
+  },
+  LABELS: {
+    YES: 'Sí',
+    NO: 'No',
+    CANCEL: 'Cancelar',
+    YES_OPEN_ALL: 'Sí, abrir todos',
+    YES_CLOSE_ALL: 'Sí, cerrar todos',
+    YES_OPEN_MONTH: 'Sí, abrir mes',
+    YES_CLOSE_MONTH: 'Sí, cerrar mes'
   }
 } as const;
 

@@ -81,46 +81,7 @@ export class AccountingCalendarService {
     return this.create(payload);
   }
 
-  /**
-   * Crea todos los días de un mes
-   * @param enterpriseId ID de la empresa
-   * @param year Año
-   * @param month Mes (0-11)
-   */
-  createMonthDays(enterpriseId: string, year: number, month: number): Observable<AccountingCalendar[]> {
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const requests: Observable<AccountingCalendar>[] = [];
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dateStr = date.toISOString().split('T')[0];
-      requests.push(this.createSingleDay(enterpriseId, dateStr));
-    }
-    
-    return forkJoin(requests);
-  }
 
-  /**
-   * Crea todos los días de un año
-   * @param enterpriseId ID de la empresa
-   * @param year Año
-   */
-  createYearDays(enterpriseId: string, year: number): Observable<AccountingCalendar[]> {
-    const requests: Observable<AccountingCalendar>[] = [];
-    
-    // Crear 365 o 366 días dependiendo si es bisiesto
-    const daysInYear = ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 366 : 365;
-    const startDate = new Date(year, 0, 1);
-    
-    for (let i = 0; i < daysInYear; i++) {
-      const currentDate = new Date(startDate);
-      currentDate.setDate(startDate.getDate() + i);
-      const dateStr = currentDate.toISOString().split('T')[0];
-      requests.push(this.createSingleDay(enterpriseId, dateStr));
-    }
-    
-    return forkJoin(requests);
-  }
 
   /**
    * Obtener calendario por año
@@ -180,63 +141,29 @@ export class AccountingCalendarService {
   }
 
   /**
-   * Crear una fecha individual en el calendario
+   * Verifica qué años tienen periodos contables abiertos
    * @param enterpriseId ID de la empresa
-   * @param startDate Fecha de inicio (formato YYYY-MM-DD)
-   * @param endDate Fecha de fin (formato YYYY-MM-DD)
+   * @param years Lista de años a verificar
+   * @returns Observable con la lista de años que tienen periodos abiertos
    */
-  createDate(
-    enterpriseId: string, 
-    startDate: string, 
-    endDate: string
-  ): Observable<AccountingCalendar> {
-    const payload = {
-      idEnterprise: enterpriseId,
-      startDate: startDate,
-      endDate: endDate,
-      status: true // Siempre true
-    };
-    
-    return this.create(payload);
+  getYearsWithOpenPeriods(enterpriseId: string, years: number[]): Observable<number[]> {
+    if (!years || years.length === 0) {
+      return of([]);
+    }
+
+    // Crear observables para verificar cada año
+    const yearChecks = years.map(year => 
+      this.checkYearExists(enterpriseId, year).pipe(
+        map(hasDates => hasDates ? year : null),
+        catchError(() => of(null))
+      )
+    );
+
+    // Ejecutar todas las verificaciones en paralelo
+    return forkJoin(yearChecks).pipe(
+      map(results => results.filter(year => year !== null) as number[])
+    );
   }
 
-  /**
-   * Crear todas las fechas del año para una empresa
-   * @param enterpriseId ID de la empresa
-   * @param year Año para crear las fechas
-   */
-  createYearDates(enterpriseId: string, year: number): Observable<AccountingCalendar[]> {
-    const dates: Observable<AccountingCalendar>[] = [];
-    
-    // Crear una fecha para cada día del año
-    for (let month = 0; month < 12; month++) {
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        dates.push(this.createDate(enterpriseId, dateString, dateString));
-      }
-    }
-    
-    // Ejecutar todas las creaciones en paralelo
-    return forkJoin(dates);
-  }
 
-  /**
-   * Crear fechas de un mes específico para una empresa
-   * @param enterpriseId ID de la empresa
-   * @param year Año
-   * @param month Mes (1-12)
-   */
-  createMonthDates(enterpriseId: string, year: number, month: number): Observable<AccountingCalendar[]> {
-    const dates: Observable<AccountingCalendar>[] = [];
-    const daysInMonth = new Date(year, month, 0).getDate();
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      dates.push(this.createDate(enterpriseId, dateString, dateString));
-    }
-    
-    return forkJoin(dates);
-  }
 }

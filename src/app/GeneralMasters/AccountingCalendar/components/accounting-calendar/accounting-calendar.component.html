@@ -7,7 +7,7 @@
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <div class="items-center mb-6">
         <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Calendario Contable
+          Calendario Contable {{ selectedYear ? ' ' + selectedYear : '' }}
         </h1>
         <p class="font-family-sans font-normal text-sm mt-2">
           Gestione los periodos contables para el registro de transacciones.
@@ -18,7 +18,7 @@
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <p-button 
           [label]="areAllMonthsClosed() ? 'Abrir Todos' : 'Cerrar Todos'"
-          [icon]="areAllMonthsClosed() ? 'pi pi-unlock' : 'pi pi-times'"
+          [icon]="areAllMonthsClosed() ? 'pi pi-lock-open' : 'pi pi-lock'"
           (onClick)="onToggleAll()"
           [loading]="loading"
           [styleClass]="areAllMonthsClosed() ? 'p-button-success' : 'p-button-danger'">
@@ -26,8 +26,56 @@
       </div>
     </div>
 
-    <!-- Selector de año -->
-    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+    <!-- Panel de Información del Calendario -->
+    <div class="mb-6">
+      <p-panel header="Información del Calendario" styleClass="info-panel">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Leyenda de Colores -->
+          <div>
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 border border-gray-400 shadow-sm rounded" style="background-color: var(--color-notification-error-container);"></div>
+                <span class="font-semibold text-primary">Fecha cerrada</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 border border-gray-400 shadow-sm rounded" style="background-color: var(--color-notification-success-container);"></div>
+                <span class="font-semibold text-primary">Fecha abierta</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Información de Años con Periodos Abiertos -->
+          <div>
+            <h4 class="font-semibold text-primary mb-3">Estado del Calendario</h4>
+            <div *ngIf="getCalendarGlobalInfo().openYears > 0; else noOpenYears">
+              <p class="text-sm text-gray-700 mb-2">
+                Se encontraron <strong style="color: var(--day-closed-color);">{{ getCalendarGlobalInfo().openYears }}</strong> año(s) con periodos contables abiertos:
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <span 
+                  *ngFor="let year of getCalendarGlobalInfo().openYearsList" 
+                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium years-badge"
+                  style="background-color: var(--color-notification-warning-container); color: var(--color-notification-warning-on-container); border: 1px solid var(--color-notification-warning-on-container);"
+                  [title]="getYearIndicator(year).tooltip">
+                  <i class="pi pi-lock-open mr-2 text-xs"></i>
+                  {{ year }}
+                </span>
+              </div>
+            </div>
+            <ng-template #noOpenYears>
+              <p class="text-sm text-gray-700">
+                <i class="pi pi-check-circle mr-2 text-green-600"></i>
+                Todos los periodos contables están completamente cerrados
+              </p>
+            </ng-template>
+          </div>
+        </div>
+      </p-panel>
+    </div>
+
+    <!-- Selector de año y Leyenda de Colores -->
+    <div class="flex flex-col sm:flex-row justify-center sm:justify-between items-start sm:items-center mt-20 mb-16 gap-6">
+      <!-- Selector de año -->
       <div class="w-full sm:w-[30rem]">
         <label for="yearSelector" class="font-semibold text-primary">Seleccionar Año</label>
         <div class="mt-2">
@@ -46,6 +94,8 @@
           </p-select>
         </div>
       </div>
+
+
     </div>
 
     <!-- Grid de Calendarios Mensuales -->

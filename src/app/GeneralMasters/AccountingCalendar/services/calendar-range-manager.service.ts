@@ -162,34 +162,5 @@ export class CalendarRangeManagerService {
     );
   }
 
-  /**
-   * Recarga los rangos del año
-   * @param enterpriseId ID de la empresa
-   * @param year Año a recargar
-   * @returns Observable con el resultado de la recarga
-   */
-  optimizeRanges(enterpriseId: string, year: number): Observable<void> {
-    // Por ahora, este método simplemente recarga los datos del año
-    return this.calendarService.findByYear(enterpriseId, year).pipe(
-      map(() => {}),
-      catchError(error => {
-        console.error('Error al recargar rangos:', error);
-        return of(undefined);
-      })
-    );
-  }
 
-  /**
-   * Calcula el número de días entre dos fechas
-   * @param startDate Fecha de inicio (formato YYYY-MM-DD)
-   * @param endDate Fecha de fin (formato YYYY-MM-DD)
-   * @returns Número de días en el rango (inclusive)
-   */
-  private getDaysBetween(startDate: string, endDate: string): number {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const timeDiff = end.getTime() - start.getTime();
-    const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    return dayDiff + 1; // +1 porque es inclusivo
-  }
 }

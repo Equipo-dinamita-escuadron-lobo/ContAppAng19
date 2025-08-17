@@ -126,3 +126,46 @@
   background-color: #b91c1c;
   border-color: #b91c1c;
 }
+
+/* Estilos para el panel de información del calendario */
+:host ::ng-deep .info-panel .p-panel-header {
+  background-color: var(--color-primary-container);
+  color: var(--color-primary-on-container);
+  border-bottom: 2px solid var(--color-primary);
+  border-radius: 8px 8px 0 0;
+}
+
+:host ::ng-deep .info-panel .p-panel-content {
+  background-color: var(--calendar-bg-color);
+  border: 1px solid var(--calendar-border-color);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 1.5rem;
+}
+
+:host ::ng-deep .info-panel .p-panel-title {
+  font-family: var(--font-family-titillium);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Estilos para los badges de años con periodos abiertos */
+.years-badge {
+  transition: all 0.2s ease-in-out;
+}
+
+.years-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive para el panel de información */
+@media (max-width: 768px) {
+  :host ::ng-deep .info-panel .p-panel-content {
+    padding: 1rem;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
