@@ -345,6 +345,22 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Navega al año especificado
+   * @param year Año al que navegar
+   */
+  navigateToYear(year: number): void {
+    // Solo navegar si es un año diferente al actual
+    if (year !== this.selectedYear) {
+      // Usar la misma lógica que el selector de años
+      this.selectedYear = year;
+      this.stateService.changeYear(year);
+      
+      // Verificar años con periodos abiertos después del cambio
+      setTimeout(() => this.checkYearsWithOpenPeriods(), 100);
+    }
+  }
+  
+  /**
    * Formatea una fecha para mostrar en mensajes de usuario
    * @param date Fecha a formatear
    * @returns Fecha formateada en formato legible

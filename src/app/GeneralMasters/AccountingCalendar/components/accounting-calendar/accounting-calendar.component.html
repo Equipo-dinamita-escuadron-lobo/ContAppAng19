@@ -54,9 +54,10 @@
               <div class="flex flex-wrap gap-2">
                 <span 
                   *ngFor="let year of getCalendarGlobalInfo().openYearsList" 
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium years-badge"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium years-badge cursor-pointer hover:scale-105 transition-transform duration-200"
                   style="background-color: var(--color-notification-warning-container); color: var(--color-notification-warning-on-container); border: 1px solid var(--color-notification-warning-on-container);"
-                  [title]="getYearIndicator(year).tooltip">
+                  (click)="navigateToYear(year)"
+                  [class.active-year]="year === selectedYear">
                   <i class="pi pi-lock-open mr-2 text-xs"></i>
                   {{ year }}
                 </span>

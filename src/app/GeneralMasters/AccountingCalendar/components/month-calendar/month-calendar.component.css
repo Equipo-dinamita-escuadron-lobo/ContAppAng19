@@ -104,10 +104,52 @@
   font-weight: 600;
 }
 
+/* El día actual debe mantener su indicador visual pero permitir cambio de estado */
 .calendar-day.today {
-  background-color: var(--color-notification-info-container);
-  color: var(--color-tertiary-20);
+  /* Sin color de fondo para permitir cambio de estado */
+  background-color: transparent;
+  color: var(--color-primary);
   font-weight: 700;
+  position: relative;
+  border: 2px solid var(--color-primary);
+  border-radius: 6px;
+}
+
+/* Prioridad para el estado del día sobre el indicador de "hoy" */
+.calendar-day.today.open {
+  background-color: var(--color-notification-success-container);
+  color: var(--color-complementary-green);
+  font-weight: 600;
+  border: 2px solid var(--color-complementary-green);
+}
+
+.calendar-day.today.closed {
+  background-color: var(--color-notification-error-container);
+  color: var(--color-complementary-red);
+  font-weight: 600;
+  border: 2px solid var(--color-complementary-red);
+}
+
+/* Indicador sutil para el día actual */
+.today-indicator {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background-color: var(--color-primary);
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+/* El indicador se adapta al estado del día */
+.calendar-day.today.open .today-indicator {
+  background-color: var(--color-complementary-green);
+}
+
+.calendar-day.today.closed .today-indicator {
+  background-color: var(--color-complementary-red);
 }
 
 /* Estados del mes */

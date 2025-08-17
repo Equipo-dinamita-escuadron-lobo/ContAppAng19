@@ -152,11 +152,22 @@
 /* Estilos para los badges de años con periodos abiertos */
 .years-badge {
   transition: all 0.2s ease-in-out;
+  user-select: none;
 }
 
 .years-badge:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.years-badge.active-year {
+  border-width: 2px;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.years-badge:active {
+  transform: scale(0.95);
 }
 
 /* Responsive para el panel de información */

@@ -22,6 +22,8 @@
       (click)="onDayClick(day)"
       [class.clickable]="day.isCurrentMonth">
       {{ day.dayOfMonth }}
+      <!-- Indicador sutil para el día actual -->
+      <div *ngIf="day.isToday" class="today-indicator"></div>
     </div>
   </div>
 
