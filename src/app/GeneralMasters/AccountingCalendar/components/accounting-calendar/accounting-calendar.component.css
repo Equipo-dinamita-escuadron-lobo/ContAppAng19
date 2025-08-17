@@ -42,63 +42,14 @@
 }
 
 .loading-content {
-  background: var(--calendar-bg-color);
+  background: var(--color-primary-100);
   padding: 1rem 1.5rem;
   border-radius: 8px;
   text-align: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* Estilos para el selector de año - p-select */
-:host ::ng-deep .p-select {
-  min-width: 12rem !important;
-}
 
-:host ::ng-deep .p-select .p-select-trigger {
-  width: 100%;
-}
-
-:host ::ng-deep .p-select .p-select-label {
-  padding: 0.5rem 0.75rem;
-  color: var(--calendar-text-color);
-}
-
-:host ::ng-deep .p-select .p-select-items {
-  padding: 0.5rem;
-}
-
-:host ::ng-deep .p-select .p-select-item {
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
-  margin: 2px 0;
-  color: var(--calendar-text-color);
-}
-
-:host ::ng-deep .p-select .p-select-item:hover {
-  background-color: var(--color-neutral-95);
-  color: var(--calendar-header-color);
-}
-
-:host ::ng-deep .p-select .p-select-item.p-highlight {
-  background-color: var(--calendar-header-color);
-  color: var(--calendar-bg-color);
-}
-
-/* Overlay del selector */
-:host ::ng-deep .p-select .p-select-overlay {
-  background: var(--calendar-bg-color);
-  border-color: var(--calendar-border-color);
-  border-radius: 8px;
-  color: var(--calendar-text-color);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Responsive para el selector */
-@media (max-width: 640px) {
-  :host ::ng-deep .p-select {
-    min-width: 10rem !important;
-  }
-}
 
 /* Estilos para botones - p-button */
 :host ::ng-deep .p-button {
@@ -106,26 +57,7 @@
   font-weight: 500;
 }
 
-/* Estilos globales existentes */
-:host ::ng-deep .p-button.p-button-success {
-  background-color: var(--day-open-color);
-  border-color: var(--day-open-color);
-}
 
-:host ::ng-deep .p-button.p-button-success:hover {
-  background-color: #16a34a;
-  border-color: #16a34a;
-}
-
-:host ::ng-deep .p-button.p-button-danger {
-  background-color: var(--day-closed-color);
-  border-color: var(--day-closed-color);
-}
-
-:host ::ng-deep .p-button.p-button-danger:hover {
-  background-color: #b91c1c;
-  border-color: #b91c1c;
-}
 
 /* Estilos para el panel de información del calendario */
 :host ::ng-deep .info-panel .p-panel-header {
@@ -136,8 +68,8 @@
 }
 
 :host ::ng-deep .info-panel .p-panel-content {
-  background-color: var(--calendar-bg-color);
-  border: 1px solid var(--calendar-border-color);
+  background-color: var(--color-primary-100);
+  border: 1px solid var(--color-neutral-80);
   border-top: none;
   border-radius: 0 0 8px 8px;
   padding: 1.5rem;
