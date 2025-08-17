@@ -100,7 +100,8 @@ export class CalendarStateService {
     
     if (enterpriseId) {
       this.generateCalendar();
-      this.initializeAndLoadCalendarData();
+      // Solo cargar datos existentes, NO inicializar fechas automáticamente
+      this.loadExistingCalendarDataOnly();
     } else {
       this.generateCalendar();
     }
@@ -119,8 +120,9 @@ export class CalendarStateService {
     this.yearState.next(year);
     this.generateCalendar();
     
+    // cargar datos existentes si hay enterpriseId
     if (this.currentState.enterpriseId) {
-      this.initializeAndLoadCalendarData();
+      this.loadExistingCalendarDataOnly();
     }
   }
 
@@ -225,49 +227,7 @@ export class CalendarStateService {
     };
   }
 
-  /**
-   * Inicializa el año si no existe y carga los datos del calendario
-   */
-  private initializeAndLoadCalendarData(): void {
-    const { enterpriseId, selectedYear } = this.currentState;
-    
-    if (!enterpriseId) {
-      return;
-    }
 
-    this.showLoaderAfterDelay();
-    
-    // Inicializar el año si no existe y luego cargar datos
-    this.rangeManager.initializeYearIfNotExists(enterpriseId, selectedYear)
-      .pipe(
-        switchMap((initResult) => {
-          return this.loadExistingCalendarData();
-        }),
-        takeUntil(this.destroy$),
-        finalize(() => {
-          this.clearLoaderTimer();
-          this.setLoading(false);
-        })
-      )
-      .subscribe({
-        next: (calendarData) => {
-          this.updateCalendarWithData(calendarData);
-        },
-        error: (error) => {
-          console.error('Error al cargar el calendario:', error);
-          // No mostrar error si es simplemente que no hay datos
-          if (error.status !== 404) {
-            this.updateState({
-              ...this.currentState,
-              error: 'No se pudo cargar el calendario contable'
-            });
-          } else {
-            // Si es 404, generar un calendario vacío
-            this.generateCalendar();
-          }
-        }
-      });
-  }
 
   /**
    * Carga datos existentes del calendario
@@ -289,6 +249,48 @@ export class CalendarStateService {
         return throwError(() => error);
       })
     );
+  }
+
+  /**
+   * Carga solo datos existentes del calendario sin inicializar fechas
+   * Usado para cambio de año donde solo queremos mostrar la vista visual
+   */
+  private loadExistingCalendarDataOnly(): void {
+    const { enterpriseId } = this.currentState;
+    
+    if (!enterpriseId) {
+      return;
+    }
+
+    this.showLoaderAfterDelay();
+    
+    // Solo cargar datos existentes, NO crear fechas automáticamente
+    this.loadExistingCalendarData()
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.clearLoaderTimer();
+          this.setLoading(false);
+        })
+      )
+      .subscribe({
+        next: (calendarData) => {
+          this.updateCalendarWithData(calendarData);
+        },
+        error: (error) => {
+          console.error('Error al cargar el calendario:', error);
+          // No mostrar error si es simplemente que no hay datos
+          if (error.status !== 404) {
+            this.updateState({
+              ...this.currentState,
+              error: 'No se pudo cargar el calendario contable'
+            });
+          } else {
+            // Si es 404, mantener el calendario vacío (rojo) sin crear fechas
+            // El calendario ya está generado visualmente en generateCalendar()
+          }
+        }
+      });
   }
 
   /**
@@ -527,26 +529,47 @@ export class CalendarStateService {
     
     // Proceder con la llamada al backend
     const year = this.currentState.selectedYear;
-    const operation = openAll 
-      ? this.rangeManager.openDateRange(enterpriseId, new Date(year, 0, 1), new Date(year, 11, 31))
-      : this.rangeManager.closeDateRange(enterpriseId, new Date(year, 0, 1), new Date(year, 11, 31));
     
-    operation.pipe(
-      switchMap(() => this.loadExistingCalendarData()),
-      takeUntil(this.destroy$),
-      finalize(() => this.setLoading(false))
-    )
-    .subscribe({
-      next: (calendarData) => {
-        this.updateCalendarWithData(calendarData);
-      },
-      error: () => {
-        this.updateState({
-          ...this.currentState,
-          error: openAll ? 'Error al abrir todos los periodos' : 'Error al cerrar todos los periodos'
+    if (openAll) {
+      // Si se van a abrir todos los periodos, primero inicializar el año si no existe
+      this.rangeManager.initializeYearIfNotExists(enterpriseId, year)
+        .pipe(
+          switchMap(() => this.rangeManager.openDateRange(enterpriseId, new Date(year, 0, 1), new Date(year, 11, 31))),
+          switchMap(() => this.loadExistingCalendarData()),
+          takeUntil(this.destroy$),
+          finalize(() => this.setLoading(false))
+        )
+        .subscribe({
+          next: (calendarData) => {
+            this.updateCalendarWithData(calendarData);
+          },
+          error: () => {
+            this.updateState({
+              ...this.currentState,
+              error: 'Error al abrir todos los periodos'
+            });
+          }
         });
-      }
-    });
+    } else {
+      // Si se van a cerrar todos los periodos, solo cerrar (no necesita inicialización)
+      this.rangeManager.closeDateRange(enterpriseId, new Date(year, 0, 1), new Date(year, 11, 31))
+        .pipe(
+          switchMap(() => this.loadExistingCalendarData()),
+          takeUntil(this.destroy$),
+          finalize(() => this.setLoading(false))
+        )
+        .subscribe({
+          next: (calendarData) => {
+            this.updateCalendarWithData(calendarData);
+          },
+          error: () => {
+            this.updateState({
+              ...this.currentState,
+              error: 'Error al cerrar todos los periodos'
+            });
+          }
+        });
+    }
   }
 
   /**

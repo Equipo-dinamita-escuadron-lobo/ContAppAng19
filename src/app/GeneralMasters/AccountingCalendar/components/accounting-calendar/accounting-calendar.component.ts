@@ -125,14 +125,14 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
     this.stateService.toggleDate(day);
     this.stateService.markUserInteractionEnd();
     
-    // Mostrar mensaje de éxito
-    const newStatus = !day.isClosed;
+    const wasClosed = day.isClosed;
+    
     this.messageService.add({
       severity: 'success',
       summary: MESSAGE_CONSTANTS.SUCCESS.DATE_STATE_CHANGED,
-      detail: newStatus 
-        ? MESSAGE_CONSTANTS.SUCCESS.DATE_OPENED 
-        : MESSAGE_CONSTANTS.SUCCESS.DATE_CLOSED
+      detail: wasClosed 
+        ? MESSAGE_CONSTANTS.SUCCESS.DATE_OPENED    // Estaba cerrada, ahora está abierta
+        : MESSAGE_CONSTANTS.SUCCESS.DATE_CLOSED    // Estaba abierta, ahora está cerrada
     });
   }
   

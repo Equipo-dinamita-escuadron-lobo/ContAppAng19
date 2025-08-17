@@ -76,24 +76,59 @@ export class CalendarRangeManagerService {
   private createDateRange(enterpriseId: string, startDate: string, endDate: string): Observable<void> {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const requests: Observable<AccountingCalendar>[] = [];
     
-    const currentDate = new Date(start);
-    while (currentDate <= end) {
-      const dateStr = currentDate.toISOString().split('T')[0];
-      // Crear cada fecha individual
-      const payload = {
-        idEnterprise: enterpriseId,
-        startDate: dateStr,
-        endDate: dateStr,
-        status: true
-      };
-      requests.push(this.calendarService.create(payload));
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
+    // Primero, verificar qué fechas ya existen en el rango
+    return this.calendarService.findByRange(enterpriseId, startDate, endDate, 0, 1000).pipe(
+      switchMap(existingDates => {
+        const existingDateStrings = new Set<string>();
+        
+        // Crear un Set con las fechas que ya existen
+        existingDates.content.forEach(date => {
+          try {
+            const start = new Date(date.startDate);
+            const end = new Date(date.endDate);
+            const current = new Date(start);
+            
+            // Agregar todas las fechas del rango existente al Set
+            while (current <= end) {
+              existingDateStrings.add(current.toISOString().split('T')[0]);
+              current.setDate(current.getDate() + 1);
+            }
+          } catch (e) {
+            console.error('Error al procesar fecha existente:', e);
+          }
+        });
+        
+        // Crear solo las fechas que no existen
+        const requests: Observable<AccountingCalendar>[] = [];
+        const currentDate = new Date(start);
+        
+        while (currentDate <= end) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          
+          // Solo crear la fecha si no existe
+          if (!existingDateStrings.has(dateStr)) {
+            const payload = {
+              idEnterprise: enterpriseId,
+              startDate: dateStr,
+              endDate: dateStr,
+              status: true
+            };
+            requests.push(this.calendarService.create(payload));
+          }
+          // Si la fecha ya existe, no hacer nada (evitar error de solapamiento)
+          
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        // Si no hay fechas nuevas que crear, retornar inmediatamente
+        if (requests.length === 0) {
+          return of(undefined);
+        }
     
-    // Ejecutar todas las creaciones en paralelo
-    return forkJoin(requests).pipe(map(() => {}));
+        return forkJoin(requests).pipe(map(() => {}));
+      })
+    );
   }
 
   /**
@@ -124,19 +159,33 @@ export class CalendarRangeManagerService {
   }
 
   /**
-   * Optimiza los rangos del año (método simplificado)
+   * Recarga los rangos del año
    * @param enterpriseId ID de la empresa
-   * @param year Año a optimizar
-   * @returns Observable con el resultado de la optimización
+   * @param year Año a recargar
+   * @returns Observable con el resultado de la recarga
    */
   optimizeRanges(enterpriseId: string, year: number): Observable<void> {
     // Por ahora, este método simplemente recarga los datos del año
     return this.calendarService.findByYear(enterpriseId, year).pipe(
       map(() => {}),
       catchError(error => {
-        console.error('Error al optimizar rangos:', error);
+        console.error('Error al recargar rangos:', error);
         return of(undefined);
       })
     );
+  }
+
+  /**
+   * Calcula el número de días entre dos fechas
+   * @param startDate Fecha de inicio (formato YYYY-MM-DD)
+   * @param endDate Fecha de fin (formato YYYY-MM-DD)
+   * @returns Número de días en el rango (inclusive)
+   */
+  private getDaysBetween(startDate: string, endDate: string): number {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const timeDiff = end.getTime() - start.getTime();
+    const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    return dayDiff + 1; // +1 porque es inclusivo
   }
 }

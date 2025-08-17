@@ -123,7 +123,7 @@ export class AccountingCalendarService {
   }
 
   /**
-   * Obtener calendario por año (usando findByRange)
+   * Obtener calendario por año
    * @param enterpriseId ID de la empresa
    * @param year Año del calendario
    * @param page Número de página (por defecto 0)

@@ -4,8 +4,9 @@
 
 // Constantes del calendario
 export const CALENDAR_CONSTANTS = {
-  MIN_YEAR: 2000,
-  MAX_YEAR: 2080,
+  // Rango dinámico de años: desde 2000 hasta 55 años en el futuro
+  get MIN_YEAR() { return 2000; },
+  get MAX_YEAR() { return new Date().getFullYear() + 55; },
   MONTHS_IN_YEAR: 12,
   DAYS_IN_WEEK: 7,
   WEEKS_IN_MONTH: 6,
