@@ -29,28 +29,6 @@
   --weekday-min-height: 24px;
 }
 
-/* Loading overlay */
-.loading-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  transition: opacity 120ms ease-in-out;
-}
-
-.loading-content {
-  background: var(--color-primary-100);
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-
-
-
 /* Estilos para botones - p-button */
 :host ::ng-deep .p-button {
   font-family: var(--font-family-titillium);
@@ -83,7 +61,6 @@
 
 /* Estilos para los badges de años con periodos abiertos */
 .years-badge {
-  transition: all 0.2s ease-in-out;
   user-select: none;
 }
 

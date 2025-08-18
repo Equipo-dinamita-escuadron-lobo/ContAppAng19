@@ -22,7 +22,6 @@ import { CSS_CLASS_CONSTANTS, NAME_CONSTANTS } from '../../constants/calendar.co
 })
 export class MonthCalendarComponent {
   @Input() month!: CalendarMonth;
-  @Input() loading: boolean = false;
   
   @Output() dayClick = new EventEmitter<CalendarDay>();
   @Output() monthStatusClick = new EventEmitter<CalendarMonth>();

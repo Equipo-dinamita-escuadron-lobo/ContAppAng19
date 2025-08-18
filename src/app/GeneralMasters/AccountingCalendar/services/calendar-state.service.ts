@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
-import { takeUntil, finalize, switchMap, map, catchError } from 'rxjs/operators';
+import { takeUntil, switchMap, map, catchError } from 'rxjs/operators';
 import { AccountingCalendarService } from './accounting-calendar.service';
 import { 
   AccountingCalendar, 
@@ -28,7 +28,6 @@ export interface CalendarState {
   enterpriseId: string;
   selectedYear: number;
   calendarMonths: CalendarMonth[];
-  loading: boolean;
   error: string | null;
 }
 
@@ -45,19 +44,14 @@ export class CalendarStateService {
     enterpriseId: '',
     selectedYear: new Date().getFullYear(),
     calendarMonths: [],
-    loading: false,
     error: null
   });
 
   // Streams específicos para partes del estado
-  private loadingState = new BehaviorSubject<boolean>(false);
   private yearState = new BehaviorSubject<number>(new Date().getFullYear());
   
   // Subject para gestionar la cancelación de suscripciones
   private destroy$ = new Subject<void>();
-  
-  // Temporizador para el loader
-  private loaderTimer: ReturnType<typeof setTimeout> | null = null;
   
   // Flag para detectar interacciones de usuario vs automáticas
   private isUserInteraction = false;
@@ -72,10 +66,6 @@ export class CalendarStateService {
   // Getters públicos para el estado
   get state$(): Observable<CalendarState> {
     return this.state.asObservable();
-  }
-
-  get loading$(): Observable<boolean> {
-    return this.loadingState.asObservable();
   }
 
   get selectedYear$(): Observable<number> {
@@ -233,7 +223,7 @@ export class CalendarStateService {
 
 
   /**
-   * Carga solo datos existentes del calendario sin inicializar fechas   * 
+   * Carga solo los datos existentes del calendario (sin crear fechas automáticamente)
    */
   private loadExistingCalendarDataOnly(): void {
     const { enterpriseId } = this.currentState;
@@ -242,16 +232,12 @@ export class CalendarStateService {
       return;
     }
 
-    this.showLoaderAfterDelay();
+    // Mostrar loading inmediatamente al iniciar la carga
     
     // Solo cargar datos existentes, NO crear fechas automáticamente
     this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, this.currentState.selectedYear)
       .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => {
-          this.clearLoaderTimer();
-          this.setLoading(false);
-        })
+        takeUntil(this.destroy$)
       )
       .subscribe({
         next: (response: any) => {
@@ -415,7 +401,6 @@ export class CalendarStateService {
       return;
     }
     
-    this.setLoading(true);
     
     const dateKey = this.toDateKey(day.date);
 
@@ -427,8 +412,7 @@ export class CalendarStateService {
     action$
       .pipe(
         switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, this.currentState.selectedYear)),
-        takeUntil(this.destroy$),
-        finalize(() => this.setLoading(false))
+        takeUntil(this.destroy$)
       )
       .subscribe({
         next: (response: any) => {
@@ -489,10 +473,10 @@ export class CalendarStateService {
    * @param month Mes a cambiar
    */
   changeMonthState(month: CalendarMonth): void {
-    const { enterpriseId, loading } = this.currentState;
+    const { enterpriseId } = this.currentState;
     
     // Validaciones de seguridad
-    if (!enterpriseId || loading) {
+    if (!enterpriseId) {
       return;
     }
     
@@ -504,7 +488,6 @@ export class CalendarStateService {
     // Determinar si abrir o cerrar el mes
     const shouldOpen = month.status === MonthStatus.FULLY_CLOSED;
     
-    this.setLoading(true);
     
     if (shouldOpen) {
       // Abrir mes completo
@@ -518,8 +501,7 @@ export class CalendarStateService {
       this.calendarService.openMonth(request)
         .pipe(
           switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, month.year)),
-          takeUntil(this.destroy$),
-          finalize(() => this.setLoading(false))
+          takeUntil(this.destroy$)
         )
         .subscribe({
           next: (response: any) => {
@@ -544,8 +526,7 @@ export class CalendarStateService {
       this.calendarService.deleteByMonth(request)
         .pipe(
           switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, month.year)),
-          takeUntil(this.destroy$),
-          finalize(() => this.setLoading(false))
+          takeUntil(this.destroy$)
         )
         .subscribe({
           next: (response: any) => {
@@ -593,7 +574,6 @@ export class CalendarStateService {
       calendarMonths: updatedMonths
     });
 
-    this.setLoading(true);
     
     // Proceder con la llamada al backend
     const year = this.currentState.selectedYear;
@@ -609,8 +589,7 @@ export class CalendarStateService {
       this.calendarService.openYear(request)
         .pipe(
           switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, year)),
-          takeUntil(this.destroy$),
-          finalize(() => this.setLoading(false))
+          takeUntil(this.destroy$)
         )
         .subscribe({
           next: (response: any) => {
@@ -634,8 +613,7 @@ export class CalendarStateService {
       this.calendarService.deleteByYear(request)
         .pipe(
           switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, year)),
-          takeUntil(this.destroy$),
-          finalize(() => this.setLoading(false))
+          takeUntil(this.destroy$)
         )
         .subscribe({
           next: (response: any) => {
@@ -671,24 +649,6 @@ export class CalendarStateService {
   }
 
   /**
-   * Muestra el loader después de un retraso mínimo
-   */
-  private showLoaderAfterDelay(): void {
-    this.clearLoaderTimer();
-    this.loaderTimer = setTimeout(() => this.setLoading(true), 100); // 100ms de retraso mínimo
-  }
-
-  /**
-   * Limpia el temporizador del loader
-   */
-  private clearLoaderTimer(): void {
-    if (this.loaderTimer) {
-      clearTimeout(this.loaderTimer);
-      this.loaderTimer = null;
-    }
-  }
-
-  /**
    * Actualiza el estado completo
    * @param newState Nuevo estado
    */
@@ -697,22 +657,9 @@ export class CalendarStateService {
   }
 
   /**
-   * Actualiza el estado de carga
-   * @param loading Nuevo estado de carga
-   */
-  private setLoading(loading: boolean): void {
-    this.loadingState.next(loading);
-    this.updateState({
-      ...this.currentState,
-      loading
-    });
-  }
-
-  /**
    * Limpia las suscripciones al destruir el servicio
    */
   destroy(): void {
-    this.clearLoaderTimer();
     this.destroy$.next();
     this.destroy$.complete();
   }

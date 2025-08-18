@@ -61,7 +61,6 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
   // Estado local derivado del servicio de estado
   selectedYear: number = new Date().getFullYear();
   calendarMonths: CalendarMonth[] = [];
-  loading: boolean = false;
   
   // Años disponibles para el selector
   availableYears: AvailableYear[] = [];
@@ -88,7 +87,6 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
       .subscribe(state => {
         this.selectedYear = state.selectedYear;
         this.calendarMonths = state.calendarMonths;
-        this.loading = state.loading;
         
         // Si hay un error, mostrar mensaje
         if (state.error) {
@@ -161,9 +159,6 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
    * @param month Mes seleccionado
    */
   onMonthStatusClick(month: CalendarMonth): void {
-    // Prevenir ejecución durante carga
-    if (this.loading) return;
-    
     let action: string;
     let message: string;
     let acceptLabel: string;
