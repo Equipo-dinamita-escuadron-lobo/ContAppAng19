@@ -2,13 +2,15 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { takeUntil, finalize, switchMap, map, catchError } from 'rxjs/operators';
 import { AccountingCalendarService } from './accounting-calendar.service';
-import { CalendarRangeManagerService } from './calendar-range-manager.service';
 import { 
   AccountingCalendar, 
   CalendarMonth, 
   CalendarDay,
   MonthStatus,
-  AccountingCalendarRangeState
+  AccountingCalendarCreateMonthReq,
+  AccountingCalendarDeleteMonthReq,
+  AccountingCalendarCreateYearReq,
+  AccountingCalendarDeleteYearReq
 } from '../models/accounting-calendar.model';
 import { NAME_CONSTANTS } from '../constants/calendar.constants';
 import { 
@@ -33,7 +35,6 @@ export interface CalendarState {
 /**
  * Servicio para gestionar el estado del calendario contable
  * Implementa el patrón de estado centralizado para mejorar la gestión de datos
- * y reducir la complejidad del componente principal
  */
 @Injectable({
   providedIn: 'root'
@@ -48,7 +49,7 @@ export class CalendarStateService {
     error: null
   });
 
-  // Streams específicos para partes del estado (derivados del estado principal)
+  // Streams específicos para partes del estado
   private loadingState = new BehaviorSubject<boolean>(false);
   private yearState = new BehaviorSubject<number>(new Date().getFullYear());
   
@@ -60,10 +61,12 @@ export class CalendarStateService {
   
   // Flag para detectar interacciones de usuario vs automáticas
   private isUserInteraction = false;
+  
+  // Mapa de entradas activas por fecha (YYYY-MM-DD) para eliminar por ID cuando el día esté activo
+  private activeEntriesByDate: Map<string, AccountingCalendar> = new Map();
 
   constructor(
-    private calendarService: AccountingCalendarService,
-    private rangeManager: CalendarRangeManagerService
+    private calendarService: AccountingCalendarService
   ) {}
 
   // Getters públicos para el estado
@@ -188,7 +191,7 @@ export class CalendarStateService {
         date,
         dayOfMonth: day,
         isCurrentMonth: true,
-        isClosed: true, // Por defecto cerrado (rojo)
+        isClosed: true, // Por defecto cerrado
         isToday: isCurrentDay
       });
     }
@@ -230,30 +233,7 @@ export class CalendarStateService {
 
 
   /**
-   * Carga datos existentes del calendario
-   */
-  private loadExistingCalendarData(): Observable<AccountingCalendar[]> {
-    const { enterpriseId, selectedYear } = this.currentState;
-    
-    return this.calendarService.findByYear(enterpriseId, selectedYear).pipe(
-      map((response: any) => {
-        // Si no hay contenido, devolver un array vacío sin lanzar error
-        return response?.content || [];
-      }),
-      catchError((error: any) => {
-        // Si es un error 404 (no encontrado), devolver array vacío
-        if (error?.status === 404) {
-          return of([]);
-        }
-        // Para otros errores, propagar el error
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /**
-   * Carga solo datos existentes del calendario sin inicializar fechas
-   * Usado para cambio de año donde solo queremos mostrar la vista visual
+   * Carga solo datos existentes del calendario sin inicializar fechas   * 
    */
   private loadExistingCalendarDataOnly(): void {
     const { enterpriseId } = this.currentState;
@@ -265,7 +245,7 @@ export class CalendarStateService {
     this.showLoaderAfterDelay();
     
     // Solo cargar datos existentes, NO crear fechas automáticamente
-    this.loadExistingCalendarData()
+    this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, this.currentState.selectedYear)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -274,10 +254,11 @@ export class CalendarStateService {
         })
       )
       .subscribe({
-        next: (calendarData) => {
+        next: (response: any) => {
+          const calendarData = response?.content || [];
           this.updateCalendarWithData(calendarData);
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error al cargar el calendario:', error);
           // No mostrar error si es simplemente que no hay datos
           if (error.status !== 404) {
@@ -304,9 +285,20 @@ export class CalendarStateService {
     if (!calendarData || calendarData.length === 0) {
       // Si no hay datos, el calendario se mantiene rojo (cerrado)
       this.generateCalendar();
+      // Limpiar mapa de entradas activas
+      this.activeEntriesByDate.clear();
       return;
     }
     
+    // Reconstruir mapa de entradas activas por fecha para eliminar por ID
+    this.activeEntriesByDate.clear();
+    for (const entry of calendarData) {
+      const key = this.toDateKey(entry.date);
+      if (key) {
+        this.activeEntriesByDate.set(key, entry);
+      }
+    }
+
     // Actualizar los meses con los datos recibidos
     updatedMonths.forEach(month => {
       const updatedMonth = { ...month };
@@ -340,7 +332,7 @@ export class CalendarStateService {
   }
 
   /**
-   * Determina si una fecha está seleccionada según los datos del backend
+   * Determina si una fecha está seleccionada
    * @param date Fecha a verificar
    * @param calendarData Datos del calendario
    * @returns true si la fecha está seleccionada
@@ -351,25 +343,26 @@ export class CalendarStateService {
       return false;
     }
 
-    // Buscar un período que incluya esta fecha
-    const matchingPeriod = calendarData.find(period => {
+    // Buscar una fecha que coincida exactamente
+    const matchingDate = calendarData.find(period => {
       try {
-        const startDate = parseDateFromBackend(period.startDate);
-        const endDate = parseDateFromBackend(period.endDate);
-        return isDateInRange(date, startDate, endDate);
+        const periodDate = parseDateFromBackend(period.date);
+        return periodDate.getDate() === date.getDate() && 
+               periodDate.getMonth() === date.getMonth() && 
+               periodDate.getFullYear() === date.getFullYear();
       } catch (e) {
         console.error('Error al analizar la fecha:', e);
         return false;
       }
     });
 
-    // Si no hay un período coincidente, no está seleccionada (rojo)
-    if (!matchingPeriod) {
+    // Si no hay una fecha coincidente, no está seleccionada
+    if (!matchingDate) {
       return false;
     }
 
-    // Retornar el estado (true = seleccionada/verde, false = no seleccionada/rojo)
-    return matchingPeriod.status;
+    // Retornar el estado (true = seleccionada, false = no seleccionada)
+    return matchingDate.status;
   }
 
   /**
@@ -384,12 +377,12 @@ export class CalendarStateService {
       return;
     }
     
-    const selectedDays = currentMonthDays.filter(d => !d.isClosed); // !isClosed = seleccionada (verde)
+    const selectedDays = currentMonthDays.filter(d => !d.isClosed); // !isClosed = seleccionada
     
     if (selectedDays.length === currentMonthDays.length) {
-      month.status = MonthStatus.FULLY_OPEN; // Todo verde
+      month.status = MonthStatus.FULLY_OPEN; // Todo abierto
     } else {
-      month.status = MonthStatus.FULLY_CLOSED; // Todo rojo (por defecto)
+      month.status = MonthStatus.FULLY_CLOSED; // Todo cerrado
     }
   }
 
@@ -424,15 +417,22 @@ export class CalendarStateService {
     
     this.setLoading(true);
     
-    // Usar el servicio para hacer toggle de la fecha
-    this.calendarService.toggleDate(enterpriseId, day.date.toISOString().split('T')[0])
+    const dateKey = this.toDateKey(day.date);
+
+    // Si (!isClosed) -> eliminar por ID; si (isClosed) -> crear
+    const action$: Observable<any> = !day.isClosed
+      ? this.deleteByDateKey(enterpriseId, dateKey)
+      : this.createByDateKey(enterpriseId, dateKey);
+
+    action$
       .pipe(
-        switchMap(() => this.loadExistingCalendarData()),
+        switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, this.currentState.selectedYear)),
         takeUntil(this.destroy$),
         finalize(() => this.setLoading(false))
       )
       .subscribe({
-        next: (calendarData) => {
+        next: (response: any) => {
+          const calendarData = response?.content || [];
           this.updateCalendarWithData(calendarData);
         },
         error: () => {
@@ -444,8 +444,48 @@ export class CalendarStateService {
       });
   }
 
+  // Helpers
+  private toDateKey(input: string | Date): string {
+    try {
+      if (input instanceof Date) {
+        return input.toISOString().split('T')[0];
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(input)) {
+        return input;
+      }
+      const d = new Date(input);
+      return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  }
+
+  private createByDateKey(enterpriseId: string, dateKey: string) {
+    const payload = { idEnterprise: enterpriseId, date: dateKey, status: true };
+    return this.calendarService.create(payload);
+  }
+
+  private deleteByDateKey(enterpriseId: string, dateKey: string) {
+    const entry = this.activeEntriesByDate.get(dateKey);
+    if (entry?.id) {
+      return this.calendarService.delete(entry.id, enterpriseId);
+    }
+    // Fallback: si por alguna razón no está en el mapa, recuperar activos y buscar ID
+    return this.calendarService
+      .findActiveByEnterpriseAndYear(enterpriseId, this.currentState.selectedYear)
+      .pipe(
+        map(res => (res?.content || []).find((e: AccountingCalendar) => this.toDateKey(e.date) === dateKey)),
+        switchMap((found?: AccountingCalendar) => {
+          if (found?.id) {
+            return this.calendarService.delete(found.id, enterpriseId);
+          }
+          return throwError(() => new Error('No se encontró el ID de la fecha a eliminar'));
+        })
+      );
+  }
+
   /**
-   * Cambia el estado de un mes completo
+   * Cambia el estado de un mes completo usando el nuevo endpoint
    * @param month Mes a cambiar
    */
   changeMonthState(month: CalendarMonth): void {
@@ -464,34 +504,62 @@ export class CalendarStateService {
     // Determinar si abrir o cerrar el mes
     const shouldOpen = month.status === MonthStatus.FULLY_CLOSED;
     
-    // Obtener primer y último día del mes
-    const startDate = getFirstDayOfMonth(month.year, month.month);
-    const endDate = getLastDayOfMonth(month.year, month.month);
-    
     this.setLoading(true);
     
-    // Usar el gestor de rangos para la operación
-    const operation = shouldOpen 
-      ? this.rangeManager.openDateRange(enterpriseId, startDate, endDate)
-      : this.rangeManager.closeDateRange(enterpriseId, startDate, endDate);
-    
-    // Ejecutar operación y actualizar estado
-    operation.pipe(
-      switchMap(() => this.loadExistingCalendarData()),
-      takeUntil(this.destroy$),
-      finalize(() => this.setLoading(false))
-    )
-    .subscribe({
-      next: (calendarData) => {
-        this.updateCalendarWithData(calendarData);
-      },
-      error: () => {
-        this.updateState({
-          ...this.currentState,
-          error: 'Error al cambiar el estado del mes'
+    if (shouldOpen) {
+      // Abrir mes completo
+      const request: AccountingCalendarCreateMonthReq = {
+        idEnterprise: enterpriseId,
+        year: month.year,
+        month: month.month + 1, // usa 1-12, no 0-11
+        status: true
+      };
+      
+      this.calendarService.openMonth(request)
+        .pipe(
+          switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, month.year)),
+          takeUntil(this.destroy$),
+          finalize(() => this.setLoading(false))
+        )
+        .subscribe({
+          next: (response: any) => {
+            const calendarData = response?.content || [];
+            this.updateCalendarWithData(calendarData);
+          },
+          error: () => {
+            this.updateState({
+              ...this.currentState,
+              error: 'Error al abrir el mes'
+            });
+          }
         });
-      }
-    });
+    } else {
+      // Cerrar mes completo
+      const request: AccountingCalendarDeleteMonthReq = {
+        idEnterprise: enterpriseId,
+        year: month.year,
+        month: month.month + 1 
+      };
+      
+      this.calendarService.deleteByMonth(request)
+        .pipe(
+          switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, month.year)),
+          takeUntil(this.destroy$),
+          finalize(() => this.setLoading(false))
+        )
+        .subscribe({
+          next: (response: any) => {
+            const calendarData = response?.content || [];
+            this.updateCalendarWithData(calendarData);
+          },
+          error: () => {
+            this.updateState({
+              ...this.currentState,
+              error: 'Error al cerrar el mes'
+            });
+          }
+        });
+    }
   }
 
   /**
@@ -531,16 +599,22 @@ export class CalendarStateService {
     const year = this.currentState.selectedYear;
     
     if (openAll) {
-      // Si se van a abrir todos los periodos, primero inicializar el año si no existe
-      this.rangeManager.initializeYearIfNotExists(enterpriseId, year)
+      // Abrir año completo
+      const request: AccountingCalendarCreateYearReq = {
+        idEnterprise: enterpriseId,
+        year: year,
+        status: true
+      };
+      
+      this.calendarService.openYear(request)
         .pipe(
-          switchMap(() => this.rangeManager.openDateRange(enterpriseId, new Date(year, 0, 1), new Date(year, 11, 31))),
-          switchMap(() => this.loadExistingCalendarData()),
+          switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, year)),
           takeUntil(this.destroy$),
           finalize(() => this.setLoading(false))
         )
         .subscribe({
-          next: (calendarData) => {
+          next: (response: any) => {
+            const calendarData = response?.content || [];
             this.updateCalendarWithData(calendarData);
           },
           error: () => {
@@ -551,15 +625,21 @@ export class CalendarStateService {
           }
         });
     } else {
-      // Si se van a cerrar todos los periodos, solo cerrar (no necesita inicialización)
-      this.rangeManager.closeDateRange(enterpriseId, new Date(year, 0, 1), new Date(year, 11, 31))
+      // Cerrar año completo
+      const request: AccountingCalendarDeleteYearReq = {
+        idEnterprise: enterpriseId,
+        year: year
+      };
+      
+      this.calendarService.deleteByYear(request)
         .pipe(
-          switchMap(() => this.loadExistingCalendarData()),
+          switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, year)),
           takeUntil(this.destroy$),
           finalize(() => this.setLoading(false))
         )
         .subscribe({
-          next: (calendarData) => {
+          next: (response: any) => {
+            const calendarData = response?.content || [];
             this.updateCalendarWithData(calendarData);
           },
           error: () => {
@@ -591,11 +671,11 @@ export class CalendarStateService {
   }
 
   /**
-   * Muestra el loader después de un retraso
+   * Muestra el loader después de un retraso mínimo
    */
   private showLoaderAfterDelay(): void {
     this.clearLoaderTimer();
-    this.loaderTimer = setTimeout(() => this.setLoading(true), 300); // 300ms de retraso
+    this.loaderTimer = setTimeout(() => this.setLoading(true), 100); // 100ms de retraso mínimo
   }
 
   /**

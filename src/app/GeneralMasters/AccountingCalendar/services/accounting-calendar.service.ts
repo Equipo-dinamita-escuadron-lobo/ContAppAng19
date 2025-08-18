@@ -1,9 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
+import { Observable, forkJoin, of, throwError } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { AccountingCalendar, AccountingCalendarDateState, AccountingCalendarRangeState } from '../models/accounting-calendar.model';
+import { 
+  AccountingCalendar, 
+  AccountingCalendarCreateMonthReq,
+  AccountingCalendarDeleteMonthReq,
+  AccountingCalendarCreateYearReq,
+  AccountingCalendarDeleteYearReq
+} from '../models/accounting-calendar.model';
 import { PAGINATION_CONSTANTS } from '../constants/calendar.constants';
 import { Page } from '../types/calendar.types';
 
@@ -14,45 +20,14 @@ export class AccountingCalendarService {
   private readonly http = inject(HttpClient);
   private readonly apiURL = environment.API_URL + 'config/accounting-calendar/';
 
+  // ========== MÉTODOS PRINCIPALES ==========
+
   /**
-   * Crea un nuevo registro en el calendario contable
+   * Crea un nuevo registro en el calendario contable (fecha individual)
    * @param payload Datos para crear el calendario
    */
   create(payload: any): Observable<AccountingCalendar> {
     return this.http.post<AccountingCalendar>(`${this.apiURL}create`, payload);
-  }
-
-  /**
-   * Obtiene un calendario por ID y empresa
-   * @param id ID del calendario
-   * @param enterpriseId ID de la empresa
-   */
-  findById(id: number, enterpriseId: string): Observable<AccountingCalendar> {
-    return this.http.get<AccountingCalendar>(`${this.apiURL}findById/${id}/${enterpriseId}`);
-  }
-
-  /**
-   * Obtiene calendarios por rango de fechas
-   * @param enterpriseId ID de la empresa
-   * @param startDate Fecha de inicio
-   * @param endDate Fecha de fin
-   * @param page Número de página (por defecto 0)
-   * @param size Tamaño de página (por defecto 10)
-   */
-  findByRange(
-    enterpriseId: string, 
-    startDate: string, 
-    endDate: string, 
-    page: number = PAGINATION_CONSTANTS.DEFAULT_PAGE, 
-    size: number = 10
-  ): Observable<Page<AccountingCalendar>> {
-    const params = new HttpParams()
-      .set('startDate', startDate)
-      .set('endDate', endDate)
-      .set('page', page.toString())
-      .set('size', size.toString());
-    
-    return this.http.get<Page<AccountingCalendar>>(`${this.apiURL}findByRange/${enterpriseId}`, { params });
   }
 
   /**
@@ -64,54 +39,66 @@ export class AccountingCalendarService {
     return this.http.delete<void>(`${this.apiURL}delete/${id}/${enterpriseId}`);
   }
 
-  // ========== MÉTODOS DE UTILIDAD PARA EL CALENDARIO ==========
-
   /**
-   * Crea un solo día en el calendario (siempre con estado true)
-   * @param enterpriseId ID de la empresa
-   * @param date Fecha a crear (formato YYYY-MM-DD)
+   * Abre/cierra un mes completo en el calendario contable
+   * @param request Datos para abrir/cerrar el mes
    */
-  createSingleDay(enterpriseId: string, date: string): Observable<AccountingCalendar> {
-    const payload = {
-      idEnterprise: enterpriseId,
-      startDate: date,
-      endDate: date,
-      status: true // Siempre true - fecha seleccionada
-    };
-    return this.create(payload);
+  openMonth(request: AccountingCalendarCreateMonthReq): Observable<AccountingCalendar[]> {
+    return this.http.post<AccountingCalendar[]>(`${this.apiURL}open-month`, request);
   }
 
+  /**
+   * Elimina un mes completo del calendario contable
+   * @param request Datos para eliminar el mes
+   */
+  deleteByMonth(request: AccountingCalendarDeleteMonthReq): Observable<void> {
+    return this.http.delete<void>(`${this.apiURL}delete-month`, { body: request });
+  }
 
+  // ========== MÉTODOS POR AÑO ==========
 
   /**
-   * Obtener calendario por año
+   * Abre/cierra un año completo en el calendario contable
+   * @param request Datos para abrir/cerrar el año
+   */
+  openYear(request: AccountingCalendarCreateYearReq): Observable<AccountingCalendar[]> {
+    return this.http.post<AccountingCalendar[]>(`${this.apiURL}open-year`, request);
+  }
+
+  /**
+   * Elimina un año completo del calendario contable
+   * @param request Datos para eliminar el año
+   */
+  deleteByYear(request: AccountingCalendarDeleteYearReq): Observable<void> {
+    return this.http.delete<void>(`${this.apiURL}delete-year`, { body: request });
+  }
+
+  // ========== MÉTODOS DE CONSULTA ==========
+
+  /**
+   * Obtiene las fechas activas por empresa y año con paginación
    * @param enterpriseId ID de la empresa
    * @param year Año del calendario
    * @param page Número de página (por defecto 0)
    * @param size Tamaño de página (por defecto 1000)
    */
-  findByYear(
+  findActiveByEnterpriseAndYear(
     enterpriseId: string, 
     year: number, 
     page: number = PAGINATION_CONSTANTS.DEFAULT_PAGE, 
     size: number = PAGINATION_CONSTANTS.DEFAULT_PAGE_SIZE
   ): Observable<Page<AccountingCalendar>> {
-    const startDate = `${year}-01-01`;
-    const endDate = `${year}-12-31`;
-    return this.findByRange(enterpriseId, startDate, endDate, page, size);
+    const params = new HttpParams()
+      .set('year', year.toString())
+      .set('page', page.toString())
+      .set('size', size.toString());
+    
+    return this.http.get<Page<AccountingCalendar>>(`${this.apiURL}active/${enterpriseId}`, { params });
   }
 
-  /**
-   * Verificar si existen fechas para un año específico
-   * @param enterpriseId ID de la empresa
-   * @param year Año a verificar
-   */
-  checkYearExists(enterpriseId: string, year: number): Observable<boolean> {
-    return this.findByYear(enterpriseId, year, 0, 1).pipe(
-      map(response => response.totalElements > 0),
-      catchError(() => of(false))
-    );
-  }
+  // ========== MÉTODOS DE UTILIDAD ==========
+
+
 
   /**
    * Toggle de fecha: si existe se elimina, si no existe se crea
@@ -119,25 +106,96 @@ export class AccountingCalendarService {
    * @param date Fecha a toggle (formato YYYY-MM-DD)
    */
   toggleDate(enterpriseId: string, date: string): Observable<void> {
-    // Buscar si la fecha ya existe
-    const startDate = date;
-    const endDate = date;
+    console.log(`[toggleDate] Iniciando toggle para fecha: ${date}, empresa: ${enterpriseId}`);
     
-    return this.findByRange(enterpriseId, startDate, endDate, 0, 1).pipe(
-      switchMap(response => {
-        if (response.content.length > 0) {
-          // La fecha existe, eliminarla
-          const existingDate = response.content[0];
-          if (existingDate.id) {
-            return this.delete(existingDate.id, enterpriseId);
-          }
-        } else {
-          // La fecha no existe, crearla
-          return this.createSingleDay(enterpriseId, date).pipe(map(() => {}));
+    const normalizedInputDate = this.normalizeDateString(date);
+    
+    // Estrategia: buscar primero si la fecha existe para determinar la acción
+    // Como el backend no tiene endpoint para buscar todas las fechas, usamos una estrategia diferente
+    
+    // 1. Intentar crear la fecha con status = true
+    const payload = {
+      idEnterprise: enterpriseId,
+      date: normalizedInputDate,
+      status: true
+    };
+    console.log(`[toggleDate] Intentando crear fecha con payload:`, payload);
+
+    return this.create(payload).pipe(
+      map(() => {
+        console.log(`[toggleDate] Fecha ${normalizedInputDate} creada exitosamente (estaba en rojo)`);
+        return;
+      }),
+      catchError(error => {
+        console.error(`[toggleDate] Error al crear ${normalizedInputDate}:`, error);
+        
+        // Log detallado del error para debugging
+        if (error?.error) {
+          console.log(`[toggleDate] Detalles del error:`, error.error);
         }
-        return of(undefined);
+        
+        if (error?.status === 400 && error?.error?.code === 'ACCOUNTING_CALENDAR_DATE_EXISTS') {
+          console.log(`[toggleDate] Fecha ya existe, procediendo a eliminarla (estaba en verde)`);
+          
+          // La fecha ya existe, necesitamos eliminarla
+          // Como no tenemos endpoint para buscar todas las fechas, usamos una estrategia diferente
+          // Vamos a intentar eliminar usando el endpoint de eliminación por fecha
+          
+          // Estrategia: usar el endpoint delete-month para eliminar solo esa fecha específica
+          const deleteRequest = {
+            idEnterprise: enterpriseId,
+            year: new Date(normalizedInputDate).getFullYear(),
+            month: new Date(normalizedInputDate).getMonth() + 1,
+            specificDate: normalizedInputDate // Agregamos fecha específica
+          };
+          
+          console.log(`[toggleDate] Eliminando fecha específica:`, deleteRequest);
+          
+          // Por ahora, vamos a propagar el error y mostrar un mensaje más claro
+          console.log(`[toggleDate] Error: La fecha ${normalizedInputDate} ya existe pero no se puede eliminar automáticamente`);
+          console.log(`[toggleDate] Se requiere implementar funcionalidad adicional en el backend para el toggle automático`);
+          
+          // Retornar un error más descriptivo
+          return throwError(() => new Error(`La fecha ${normalizedInputDate} ya existe. Se requiere implementar funcionalidad adicional en el backend para el toggle automático.`));
+        }
+        
+        // Para otros tipos de error, propagar
+        console.error(`[toggleDate] Error no manejado (status: ${error?.status}):`, error);
+        return throwError(() => error);
       })
     );
+  }
+
+  /**
+   * Normaliza una fecha string para comparación consistente
+   * @param dateString Fecha en formato string
+   * @returns Fecha normalizada en formato YYYY-MM-DD
+   */
+  private normalizeDateString(dateString: string): string {
+    if (!dateString) return '';
+    
+    try {
+      // Si ya está en formato YYYY-MM-DD, retornarlo
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+      }
+      
+      // Si es una fecha ISO, convertirla
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      
+      // Formatear como YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error('Error al normalizar fecha:', error);
+      return '';
+    }
   }
 
   /**
@@ -153,8 +211,8 @@ export class AccountingCalendarService {
 
     // Crear observables para verificar cada año
     const yearChecks = years.map(year => 
-      this.checkYearExists(enterpriseId, year).pipe(
-        map(hasDates => hasDates ? year : null),
+      this.findActiveByEnterpriseAndYear(enterpriseId, year, 0, 1).pipe(
+        map(response => response.totalElements > 0 ? year : null),
         catchError(() => of(null))
       )
     );
@@ -164,6 +222,4 @@ export class AccountingCalendarService {
       map(results => results.filter(year => year !== null) as number[])
     );
   }
-
-
 }

@@ -16,22 +16,32 @@ export interface AccountingCalendar {
   id?: number;
   idEnterprise: string;
   tenantId?: string;
-  startDate: string; // LocalDate 
-  endDate: string;   // LocalDate
-  status: boolean;   // true: OPEN, false: CLOSED
+  date: string;        
+  status: boolean;     // true: OPEN, false: CLOSED
 }
 
-export interface AccountingCalendarDateState {
+export interface AccountingCalendarCreateMonthReq {
   idEnterprise: string;
-  date: string;      // LocalDate
-  status: boolean;   // true: OPEN, false: CLOSED
+  year: number;
+  month: number;
+  status: boolean;
 }
 
-export interface AccountingCalendarRangeState {
+export interface AccountingCalendarDeleteMonthReq {
   idEnterprise: string;
-  startDate: string; // LocalDate 
-  endDate: string;   // LocalDate
-  status: boolean;   // true: OPEN, false: CLOSED
+  year: number;
+  month: number;
+}
+
+export interface AccountingCalendarCreateYearReq {
+  idEnterprise: string;
+  year: number;
+  status: boolean;
+}
+
+export interface AccountingCalendarDeleteYearReq {
+  idEnterprise: string;
+  year: number;
 }
 
 // Interfaces para la visualización del calendario
