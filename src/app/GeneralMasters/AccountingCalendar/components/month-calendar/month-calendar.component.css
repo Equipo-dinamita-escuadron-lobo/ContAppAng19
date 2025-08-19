@@ -163,6 +163,18 @@
   border-radius: 20px !important;
 }
 
+/* Botón secondary para estados del mes */
+:host ::ng-deep .p-button.p-button-secondary {
+  background-color: var(--color-button-secondary) !important;
+  border-color: var(--color-button-secondary) !important;
+  color: var(--color-primary) !important;
+  border: 1px solid var(--color-button-primary) !important;
+}
+
+:host ::ng-deep .p-button.p-button-secondary:hover {
+  background-color: var(--color-button-secondary-hover) !important;
+}
+
 :host ::ng-deep .p-button.p-button-outlined {
   background-color: transparent !important;
   border-width: 1px !important;
