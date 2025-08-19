@@ -136,18 +136,19 @@
   transform: translateX(-50%);
   width: 4px;
   height: 4px;
-  background-color: var(--color-primary);
   border-radius: 50%;
-  opacity: 0.8;
 }
 
-/* El indicador se adapta al estado del día */
-.calendar-day.today.open .today-indicator {
-  background-color: var(--color-complementary-green);
-}
-
-.calendar-day.today.closed .today-indicator {
-  background-color: var(--color-complementary-red);
+/* Indicador para días festivos */
+.holiday-indicator {
+  position: absolute;
+  top: 2px;
+  right: 50%;
+  transform: translateX(50%);
+  width: 5px;
+  height: 5px;
+  background-color: var(--color-complementary-orange);
+  border-radius: 50%;
 }
 
 /* Estados del mes */

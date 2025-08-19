@@ -51,6 +51,8 @@ export interface CalendarDay {
   isCurrentMonth: boolean;
   isClosed: boolean;
   isToday: boolean;
+  isHoliday?: boolean; // Indica si es un día festivo
+  holidayName?: string; // Nombre del festivo si aplica
 }
 
 export interface CalendarMonth {

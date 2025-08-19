@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
 import { takeUntil, switchMap, map, catchError } from 'rxjs/operators';
 import { AccountingCalendarService } from './accounting-calendar.service';
+import { ColombianHolidaysService } from './colombian-holidays.service';
 import { 
   AccountingCalendar, 
   CalendarMonth, 
@@ -60,7 +61,8 @@ export class CalendarStateService {
   private monthCalendarCache = new Map<string, CalendarMonth>();
 
   constructor(
-    private calendarService: AccountingCalendarService
+    private calendarService: AccountingCalendarService,
+    private holidaysService: ColombianHolidaysService
   ) {}
 
   // Getters públicos para el estado consolidado
@@ -187,12 +189,18 @@ export class CalendarStateService {
                           date.getMonth() === today.getMonth() && 
                           date.getFullYear() === today.getFullYear();
       
+      // Verificar si es festivo
+      const isHoliday = this.holidaysService.isHoliday(date);
+      const holiday = this.holidaysService.getHolidayForDate(date);
+      
       days.push({
         date,
         dayOfMonth: day,
         isCurrentMonth: true,
         isClosed: true, // Por defecto cerrado
-        isToday: isCurrentDay
+        isToday: isCurrentDay,
+        isHoliday,
+        holidayName: holiday?.name
       });
     }
     
