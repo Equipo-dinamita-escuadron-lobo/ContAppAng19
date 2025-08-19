@@ -9,7 +9,7 @@
         <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
           Calendario Contable {{ selectedYear ? ' ' + selectedYear : '' }}
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="text-sm mt-2 font-sans font-normal">
           Gestione los periodos contables para el registro de transacciones.
         </p>
       </div>
@@ -34,18 +34,18 @@
             <div class="space-y-3">
               <div class="flex items-center gap-3">
                 <div class="w-16 h-16 border border-gray-400" style="background-color: var(--color-notification-error-container);"></div>
-                <span class="font-semibold text-primary">Fecha cerrada</span>
+                <span class="text-primary font-titillium font-semibold">Fecha cerrada</span>
               </div>
               <div class="flex items-center gap-3">
                 <div class="w-16 h-16 border border-gray-400" style="background-color: var(--color-notification-success-container);"></div>
-                <span class="font-semibold text-primary">Fecha abierta</span>
+                <span class="text-primary font-titillium font-semibold">Fecha abierta</span>
               </div>
             </div>
           </div>
           
           <!-- Información de Años con Periodos Abiertos -->
           <div>
-            <h4 class="font-semibold text-primary mb-3">Estado del Calendario</h4>
+            <h4 class="text-primary mb-3 font-titillium font-semibold">Estado del Calendario</h4>
             <div *ngIf="getCalendarGlobalInfo().openYears > 0; else noOpenYears">
               <p class="text-sm text-gray-700 mb-2">
                 Se encontraron <strong style="color: var(--day-closed-color);">{{ getCalendarGlobalInfo().openYears }}</strong> año(s) con periodos contables abiertos:
@@ -64,7 +64,7 @@
             </div>
             <ng-template #noOpenYears>
               <p class="text-sm text-gray-700">
-                <i class="pi pi-check-circle mr-2 text-green-600"></i>
+                <i class="pi pi-check-circle mr-2 status-closed-icon"></i>
                 Todos los periodos contables están completamente cerrados
               </p>
             </ng-template>
@@ -77,7 +77,7 @@
     <div class="flex flex-col sm:flex-row justify-center sm:justify-between items-start sm:items-center mt-20 mb-16 gap-6">
       <!-- Selector de año -->
       <div class="w-full sm:w-[30rem]">
-        <label for="yearSelector" class="font-semibold text-primary">Seleccionar Año</label>
+        <label for="yearSelector" class="text-primary font-titillium font-semibold">Seleccionar Año</label>
         <div class="mt-2">
           <p-select 
             id="yearSelector"

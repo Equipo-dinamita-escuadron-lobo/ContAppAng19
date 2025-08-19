@@ -172,3 +172,24 @@ export function addYears(date: Date, years: number): Date {
   result.setFullYear(result.getFullYear() + years);
   return result;
 }
+
+/**
+ * Convierte una fecha a formato de clave (YYYY-MM-DD)
+ * Función centralizada para evitar duplicación de código
+ * @param input Fecha en formato string o Date
+ * @returns Clave de fecha o string vacío en caso de error
+ */
+export function toDateKey(input: string | Date): string {
+  try {
+    if (input instanceof Date) {
+      return input.toISOString().split('T')[0];
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(input)) {
+      return input;
+    }
+    const d = new Date(input);
+    return isNaN(d.getTime()) ? '' : d.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
+}

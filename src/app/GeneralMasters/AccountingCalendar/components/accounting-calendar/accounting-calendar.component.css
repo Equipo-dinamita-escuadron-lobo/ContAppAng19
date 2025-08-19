@@ -79,6 +79,28 @@
   transform: scale(0.95);
 }
 
+/* Estilos para el icono de estado cerrado */
+.status-closed-icon {
+  color: var(--color-notification-success-title);
+}
+
+/* Estilos para fuentes del sistema */
+.font-sans {
+  font-family: var(--font-family-sans);
+}
+
+.font-titillium {
+  font-family: var(--font-family-titillium);
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
 /* Responsive para el panel de información */
 @media (max-width: 768px) {
   :host ::ng-deep .info-panel .p-panel-content {
