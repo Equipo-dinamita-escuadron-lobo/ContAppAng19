@@ -30,22 +30,6 @@ export class MonthCalendarComponent {
   readonly dayNames = NAME_CONSTANTS.DAY_NAMES;
   
   /**
-   * Obtiene la clase CSS para el grid del mes según su estado
-   */
-  getMonthGridClass(): string {
-    if (!this.month) return '';
-    
-    switch (this.month.status) {
-      case MonthStatus.FULLY_CLOSED:
-        return CSS_CLASS_CONSTANTS.MONTH_STATUS.FULLY_CLOSED;
-      case MonthStatus.FULLY_OPEN:
-        return CSS_CLASS_CONSTANTS.MONTH_STATUS.FULLY_OPEN;
-      default:
-        return ''; // Sin clase específica para otros casos
-    }
-  }
-  
-  /**
    * Obtiene la clase CSS para un día según su estado
    */
   getDayClass(day: CalendarDay): string {
