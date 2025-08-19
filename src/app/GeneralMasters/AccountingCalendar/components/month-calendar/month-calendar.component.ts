@@ -88,6 +88,8 @@ export class MonthCalendarComponent {
    * Función para trackBy en ngFor de días
    */
   trackByDay(index: number, day: CalendarDay): string {
-    return `${day.date.getTime()}-${day.isCurrentMonth}`;
+    // Usar formato ISO más eficiente que getTime()
+    const dateKey = day.date.toISOString().split('T')[0];
+    return `${dateKey}-${day.isCurrentMonth}`;
   }
 }

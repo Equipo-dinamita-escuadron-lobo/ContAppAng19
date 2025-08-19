@@ -39,16 +39,13 @@ export interface CalendarState {
   providedIn: 'root'
 })
 export class CalendarStateService {
-  // Stream de estado principal
+  // Stream de estado principal consolidado
   private state = new BehaviorSubject<CalendarState>({
     enterpriseId: '',
     selectedYear: new Date().getFullYear(),
     calendarMonths: [],
     error: null
   });
-
-  // Streams específicos para partes del estado
-  private yearState = new BehaviorSubject<number>(new Date().getFullYear());
   
   // Subject para gestionar la cancelación de suscripciones
   private destroy$ = new Subject<void>();
@@ -59,17 +56,20 @@ export class CalendarStateService {
   // Mapa de entradas activas por fecha (YYYY-MM-DD) para eliminar por ID cuando el día esté activo
   private activeEntriesByDate: Map<string, AccountingCalendar> = new Map();
 
+  // Cache para memoización de calendarios de meses
+  private monthCalendarCache = new Map<string, CalendarMonth>();
+
   constructor(
     private calendarService: AccountingCalendarService
   ) {}
 
-  // Getters públicos para el estado
+  // Getters públicos para el estado consolidado
   get state$(): Observable<CalendarState> {
     return this.state.asObservable();
   }
 
   get selectedYear$(): Observable<number> {
-    return this.yearState.asObservable();
+    return this.state$.pipe(map(state => state.selectedYear));
   }
 
   get currentState(): CalendarState {
@@ -89,7 +89,6 @@ export class CalendarStateService {
       selectedYear: currentYear
     });
 
-    this.yearState.next(currentYear);
     
     if (enterpriseId) {
       this.generateCalendar();
@@ -105,12 +104,14 @@ export class CalendarStateService {
    * @param year Nuevo año seleccionado
    */
   changeYear(year: number): void {
+    // Limpiar cache del año anterior
+    this.clearYearCache();
+    
     this.updateState({
       ...this.currentState,
       selectedYear: year
     });
     
-    this.yearState.next(year);
     this.generateCalendar();
     
     // cargar datos existentes si hay enterpriseId
@@ -120,12 +121,13 @@ export class CalendarStateService {
   }
 
   /**
-   * Genera el calendario para el año seleccionado
+   * Genera el calendario para el año seleccionado con optimización de cache
    */
   private generateCalendar(): void {
     const { selectedYear } = this.currentState;
     const calendarMonths: CalendarMonth[] = [];
     
+    // Generar solo los meses que no estén en cache
     for (let month = 0; month < 12; month++) {
       const monthData = this.createMonthCalendar(month, selectedYear);
       calendarMonths.push(monthData);
@@ -138,12 +140,20 @@ export class CalendarStateService {
   }
 
   /**
-   * Crea el calendario para un mes específico
+   * Crea el calendario para un mes específico con memoización
    * @param month Mes (0-11)
    * @param year Año
    * @returns Datos del mes
    */
   private createMonthCalendar(month: number, year: number): CalendarMonth {
+    // Clave única para el cache
+    const cacheKey = `${year}-${month}`;
+    
+    // Verificar si ya existe en cache
+    if (this.monthCalendarCache.has(cacheKey)) {
+      return this.monthCalendarCache.get(cacheKey)!;
+    }
+    
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
@@ -211,13 +221,18 @@ export class CalendarStateService {
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
     
-    return {
+    const monthCalendar: CalendarMonth = {
       name: monthNames[month],
       year,
       month,
       days,
       status: MonthStatus.FULLY_CLOSED // Por defecto cerrado (rojo)
     };
+    
+    // Guardar en cache
+    this.monthCalendarCache.set(cacheKey, monthCalendar);
+    
+    return monthCalendar;
   }
 
 
@@ -659,5 +674,23 @@ export class CalendarStateService {
   destroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    
+    // Limpiar cache para liberar memoria
+    this.clearCache();
+  }
+
+  /**
+   * Limpia el cache de calendarios para liberar memoria
+   */
+  private clearCache(): void {
+    this.monthCalendarCache.clear();
+    this.activeEntriesByDate.clear();
+  }
+
+  /**
+   * Limpia el cache cuando cambia el año para evitar datos obsoletos
+   */
+  private clearYearCache(): void {
+    this.monthCalendarCache.clear();
   }
 }
