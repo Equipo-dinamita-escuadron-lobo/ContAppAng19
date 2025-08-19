@@ -7,7 +7,6 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 16px;
   min-height: 320px;
-  transition: all 0.3s ease;
 }
 
 .month-calendar:hover {
@@ -68,7 +67,6 @@
   text-align: center;
   padding: 8px 4px;
   cursor: default;
-  transition: background-color 0.2s ease;
   min-height: 40px;
   display: flex;
   align-items: center;
@@ -138,18 +136,19 @@
   transform: translateX(-50%);
   width: 4px;
   height: 4px;
-  background-color: var(--color-primary);
   border-radius: 50%;
-  opacity: 0.8;
 }
 
-/* El indicador se adapta al estado del día */
-.calendar-day.today.open .today-indicator {
-  background-color: var(--color-complementary-green);
-}
-
-.calendar-day.today.closed .today-indicator {
-  background-color: var(--color-complementary-red);
+/* Indicador para días festivos */
+.holiday-indicator {
+  position: absolute;
+  top: 2px;
+  right: 50%;
+  transform: translateX(50%);
+  width: 5px;
+  height: 5px;
+  background-color: var(--color-complementary-orange);
+  border-radius: 50%;
 }
 
 /* Estados del mes */
@@ -165,43 +164,14 @@
   border-radius: 20px !important;
 }
 
-:host ::ng-deep .p-button.p-button-outlined {
-  background-color: transparent !important;
-  border-width: 1px !important;
+/* Botón secondary para estados del mes */
+:host ::ng-deep .p-button.p-button-secondary {
+  background-color: var(--color-button-secondary) !important;
+  border-color: var(--color-button-secondary) !important;
+  color: var(--color-primary) !important;
+  border: 1px solid var(--color-button-primary) !important;
 }
 
-/* Botón outline success */
-:host ::ng-deep .p-button.p-button-outlined.p-button-success {
-  color: var(--color-complementary-green) !important;
-  border-color: var(--color-complementary-green) !important;
-}
-
-:host ::ng-deep .p-button.p-button-outlined.p-button-success:hover {
-  background-color: var(--color-notification-success-container) !important;
-  color: var(--color-complementary-green) !important;
-  border-color: var(--color-complementary-green) !important;
-}
-
-/* Botón outline danger */
-:host ::ng-deep .p-button.p-button-outlined.p-button-danger {
-  color: var(--color-complementary-red) !important;
-  border-color: var(--color-complementary-red) !important;
-}
-
-:host ::ng-deep .p-button.p-button-outlined.p-button-danger:hover {
-  background-color: var(--color-notification-error-container) !important;
-  color: var(--color-complementary-red) !important;
-  border-color: var(--color-complementary-red) !important;
-}
-
-/* Botón outline warning */
-:host ::ng-deep .p-button.p-button-outlined.p-button-warning {
-  color: var(--color-complementary-orange) !important;
-  border-color: var(--color-complementary-orange) !important;
-}
-
-:host ::ng-deep .p-button.p-button-outlined.p-button-warning:hover {
-  background-color: var(--color-notification-security-container) !important;
-  color: var(--color-complementary-orange) !important;
-  border-color: var(--color-complementary-orange) !important;
+:host ::ng-deep .p-button.p-button-secondary:hover {
+  background-color: var(--color-button-secondary-hover) !important;
 }

@@ -22,29 +22,12 @@ import { CSS_CLASS_CONSTANTS, NAME_CONSTANTS } from '../../constants/calendar.co
 })
 export class MonthCalendarComponent {
   @Input() month!: CalendarMonth;
-  @Input() loading: boolean = false;
   
   @Output() dayClick = new EventEmitter<CalendarDay>();
   @Output() monthStatusClick = new EventEmitter<CalendarMonth>();
   
   // Constantes
   readonly dayNames = NAME_CONSTANTS.DAY_NAMES;
-  
-  /**
-   * Obtiene la clase CSS para el grid del mes según su estado
-   */
-  getMonthGridClass(): string {
-    if (!this.month) return '';
-    
-    switch (this.month.status) {
-      case MonthStatus.FULLY_CLOSED:
-        return CSS_CLASS_CONSTANTS.MONTH_STATUS.FULLY_CLOSED;
-      case MonthStatus.FULLY_OPEN:
-        return CSS_CLASS_CONSTANTS.MONTH_STATUS.FULLY_OPEN;
-      default:
-        return ''; // Sin clase específica para otros casos
-    }
-  }
   
   /**
    * Obtiene la clase CSS para un día según su estado
@@ -89,6 +72,8 @@ export class MonthCalendarComponent {
    * Función para trackBy en ngFor de días
    */
   trackByDay(index: number, day: CalendarDay): string {
-    return `${day.date.getTime()}-${day.isCurrentMonth}`;
+    // Usar formato ISO más eficiente que getTime()
+    const dateKey = day.date.toISOString().split('T')[0];
+    return `${dateKey}-${day.isCurrentMonth}`;
   }
 }

@@ -65,10 +65,6 @@ export const MESSAGE_CONSTANTS = {
 
 // Constantes de estilos CSS
 export const CSS_CLASS_CONSTANTS = {
-  MONTH_STATUS: {
-    FULLY_CLOSED: 'month-fully-closed',
-    FULLY_OPEN: 'month-fully-open'
-  },
   DAY_STATUS: {
     OTHER_MONTH: 'other-month',
     CLOSED: 'closed',

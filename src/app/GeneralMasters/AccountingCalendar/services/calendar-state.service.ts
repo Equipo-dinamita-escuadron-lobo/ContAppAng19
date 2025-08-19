@@ -1,23 +1,11 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, of, throwError } from 'rxjs';
-import { takeUntil, finalize, switchMap, map, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { takeUntil, switchMap, map } from 'rxjs/operators';
 import { AccountingCalendarService } from './accounting-calendar.service';
-import { CalendarRangeManagerService } from './calendar-range-manager.service';
-import { 
-  AccountingCalendar, 
-  CalendarMonth, 
-  CalendarDay,
-  MonthStatus,
-  AccountingCalendarRangeState
-} from '../models/accounting-calendar.model';
-import { NAME_CONSTANTS } from '../constants/calendar.constants';
-import { 
-  formatDateForBackend, 
-  parseDateFromBackend, 
-  isDateInRange, 
-  getFirstDayOfMonth, 
-  getLastDayOfMonth 
-} from '../utils/date.utils';
+import { CalendarGeneratorService } from './calendar-generator.service';
+import { CalendarOperationsService } from './calendar-operations.service';
+import { CalendarDataService } from './calendar-data.service';
+import { CalendarMonth, CalendarDay, MonthStatus } from '../models/accounting-calendar.model';
 
 /**
  * Interfaz para el estado del calendario
@@ -26,57 +14,45 @@ export interface CalendarState {
   enterpriseId: string;
   selectedYear: number;
   calendarMonths: CalendarMonth[];
-  loading: boolean;
   error: string | null;
 }
 
 /**
- * Servicio para gestionar el estado del calendario contable
- * Implementa el patrón de estado centralizado para mejorar la gestión de datos
- * y reducir la complejidad del componente principal
+ * Servicio principal para gestionar el estado del calendario contable
+ * Responsabilidad: Coordinación entre servicios especializados y gestión del estado
  */
 @Injectable({
   providedIn: 'root'
 })
 export class CalendarStateService {
-  // Stream de estado principal
+  // Stream de estado principal consolidado
   private state = new BehaviorSubject<CalendarState>({
     enterpriseId: '',
     selectedYear: new Date().getFullYear(),
     calendarMonths: [],
-    loading: false,
     error: null
   });
-
-  // Streams específicos para partes del estado (derivados del estado principal)
-  private loadingState = new BehaviorSubject<boolean>(false);
-  private yearState = new BehaviorSubject<number>(new Date().getFullYear());
   
   // Subject para gestionar la cancelación de suscripciones
   private destroy$ = new Subject<void>();
-  
-  // Temporizador para el loader
-  private loaderTimer: ReturnType<typeof setTimeout> | null = null;
   
   // Flag para detectar interacciones de usuario vs automáticas
   private isUserInteraction = false;
 
   constructor(
     private calendarService: AccountingCalendarService,
-    private rangeManager: CalendarRangeManagerService
+    private calendarGenerator: CalendarGeneratorService,
+    private calendarOperations: CalendarOperationsService,
+    private calendarData: CalendarDataService
   ) {}
 
-  // Getters públicos para el estado
+  // Getters públicos para el estado consolidado
   get state$(): Observable<CalendarState> {
     return this.state.asObservable();
   }
 
-  get loading$(): Observable<boolean> {
-    return this.loadingState.asObservable();
-  }
-
   get selectedYear$(): Observable<number> {
-    return this.yearState.asObservable();
+    return this.state$.pipe(map(state => state.selectedYear));
   }
 
   get currentState(): CalendarState {
@@ -96,11 +72,8 @@ export class CalendarStateService {
       selectedYear: currentYear
     });
 
-    this.yearState.next(currentYear);
-    
     if (enterpriseId) {
       this.generateCalendar();
-      // Solo cargar datos existentes, NO inicializar fechas automáticamente
       this.loadExistingCalendarDataOnly();
     } else {
       this.generateCalendar();
@@ -112,15 +85,17 @@ export class CalendarStateService {
    * @param year Nuevo año seleccionado
    */
   changeYear(year: number): void {
+    // Limpiar cache del año anterior
+    this.calendarData.clearActiveEntries();
+    
     this.updateState({
       ...this.currentState,
       selectedYear: year
     });
     
-    this.yearState.next(year);
     this.generateCalendar();
     
-    // cargar datos existentes si hay enterpriseId
+    // Cargar datos existentes si hay enterpriseId
     if (this.currentState.enterpriseId) {
       this.loadExistingCalendarDataOnly();
     }
@@ -131,12 +106,7 @@ export class CalendarStateService {
    */
   private generateCalendar(): void {
     const { selectedYear } = this.currentState;
-    const calendarMonths: CalendarMonth[] = [];
-    
-    for (let month = 0; month < 12; month++) {
-      const monthData = this.createMonthCalendar(month, selectedYear);
-      calendarMonths.push(monthData);
-    }
+    const calendarMonths = this.calendarGenerator.generateYearCalendar(selectedYear);
     
     this.updateState({
       ...this.currentState,
@@ -145,115 +115,7 @@ export class CalendarStateService {
   }
 
   /**
-   * Crea el calendario para un mes específico
-   * @param month Mes (0-11)
-   * @param year Año
-   * @returns Datos del mes
-   */
-  private createMonthCalendar(month: number, year: number): CalendarMonth {
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const firstDayOfWeek = firstDay.getDay();
-    
-    const days: CalendarDay[] = [];
-    
-    // Días del mes anterior
-    if (firstDayOfWeek > 0) {
-      const prevMonth = month === 0 ? 11 : month - 1;
-      const prevYear = month === 0 ? year - 1 : year;
-      const prevMonthLastDay = new Date(prevYear, prevMonth + 1, 0).getDate();
-      
-      for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-        const day = prevMonthLastDay - i;
-        days.push({
-          date: new Date(prevYear, prevMonth, day),
-          dayOfMonth: day,
-          isCurrentMonth: false,
-          isClosed: true, // Días de otros meses siempre cerrados
-          isToday: false
-        });
-      }
-    }
-    
-    // Días del mes actual
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const today = new Date();
-      const isCurrentDay = date.getDate() === today.getDate() && 
-                          date.getMonth() === today.getMonth() && 
-                          date.getFullYear() === today.getFullYear();
-      
-      days.push({
-        date,
-        dayOfMonth: day,
-        isCurrentMonth: true,
-        isClosed: true, // Por defecto cerrado (rojo)
-        isToday: isCurrentDay
-      });
-    }
-    
-    // Completar con días del mes siguiente
-    const totalDays = 42; // 6 semanas * 7 días
-    const remainingDays = totalDays - days.length;
-    
-    if (remainingDays > 0) {
-      const nextMonth = month === 11 ? 0 : month + 1;
-      const nextYear = month === 11 ? year + 1 : year;
-      
-      for (let day = 1; day <= remainingDays; day++) {
-        days.push({
-          date: new Date(nextYear, nextMonth, day),
-          dayOfMonth: day,
-          isCurrentMonth: false,
-          isClosed: true, // Días de otros meses siempre cerrados
-          isToday: false
-        });
-      }
-    }
-    
-    // Obtener nombre del mes desde una constante o utilidad
-    const monthNames = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-    
-    return {
-      name: monthNames[month],
-      year,
-      month,
-      days,
-      status: MonthStatus.FULLY_CLOSED // Por defecto cerrado (rojo)
-    };
-  }
-
-
-
-  /**
-   * Carga datos existentes del calendario
-   */
-  private loadExistingCalendarData(): Observable<AccountingCalendar[]> {
-    const { enterpriseId, selectedYear } = this.currentState;
-    
-    return this.calendarService.findByYear(enterpriseId, selectedYear).pipe(
-      map((response: any) => {
-        // Si no hay contenido, devolver un array vacío sin lanzar error
-        return response?.content || [];
-      }),
-      catchError((error: any) => {
-        // Si es un error 404 (no encontrado), devolver array vacío
-        if (error?.status === 404) {
-          return of([]);
-        }
-        // Para otros errores, propagar el error
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /**
-   * Carga solo datos existentes del calendario sin inicializar fechas
-   * Usado para cambio de año donde solo queremos mostrar la vista visual
+   * Carga solo los datos existentes del calendario (sin crear fechas automáticamente)
    */
   private loadExistingCalendarDataOnly(): void {
     const { enterpriseId } = this.currentState;
@@ -262,32 +124,19 @@ export class CalendarStateService {
       return;
     }
 
-    this.showLoaderAfterDelay();
-    
-    // Solo cargar datos existentes, NO crear fechas automáticamente
-    this.loadExistingCalendarData()
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => {
-          this.clearLoaderTimer();
-          this.setLoading(false);
-        })
-      )
+    this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, this.currentState.selectedYear)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (calendarData) => {
+        next: (response: any) => {
+          const calendarData = response?.content || [];
           this.updateCalendarWithData(calendarData);
         },
-        error: (error) => {
-          console.error('Error al cargar el calendario:', error);
-          // No mostrar error si es simplemente que no hay datos
+        error: (error: any) => {
           if (error.status !== 404) {
             this.updateState({
               ...this.currentState,
               error: 'No se pudo cargar el calendario contable'
             });
-          } else {
-            // Si es 404, mantener el calendario vacío (rojo) sin crear fechas
-            // El calendario ya está generado visualmente en generateCalendar()
           }
         }
       });
@@ -297,100 +146,15 @@ export class CalendarStateService {
    * Actualiza el calendario con los datos recibidos
    * @param calendarData Datos del calendario
    */
-  private updateCalendarWithData(calendarData: AccountingCalendar[]): void {
+  private updateCalendarWithData(calendarData: any[]): void {
     const { calendarMonths } = this.currentState;
-    const updatedMonths = [...calendarMonths];
-    
-    if (!calendarData || calendarData.length === 0) {
-      // Si no hay datos, el calendario se mantiene rojo (cerrado)
-      this.generateCalendar();
-      return;
-    }
-    
-    // Actualizar los meses con los datos recibidos
-    updatedMonths.forEach(month => {
-      const updatedMonth = { ...month };
-      updatedMonth.days = month.days.map(day => {
-        if (day.isCurrentMonth) {
-          return { 
-            ...day, 
-            isClosed: !this.isDateSelected(day.date, calendarData) // false = seleccionada (verde), true = no seleccionada (rojo)
-          };
-        }
-        return { ...day };
-      });
-      
-      // Recalcular estado del mes
-      this.updateMonthStatus(updatedMonth);
-      
-      // Actualizar el mes en el arreglo
-      const monthIndex = updatedMonths.findIndex(m => 
-        m.month === updatedMonth.month && m.year === updatedMonth.year
-      );
-      if (monthIndex !== -1) {
-        updatedMonths[monthIndex] = updatedMonth;
-      }
-    });
+    const updatedMonths = this.calendarData.updateCalendarWithData(calendarMonths, calendarData);
     
     this.updateState({
       ...this.currentState,
       calendarMonths: updatedMonths,
       error: null
     });
-  }
-
-  /**
-   * Determina si una fecha está seleccionada según los datos del backend
-   * @param date Fecha a verificar
-   * @param calendarData Datos del calendario
-   * @returns true si la fecha está seleccionada
-   */
-  private isDateSelected(date: Date, calendarData: AccountingCalendar[]): boolean {
-    // Si no hay datos, por defecto no está seleccionada (rojo)
-    if (!calendarData || calendarData.length === 0) {
-      return false;
-    }
-
-    // Buscar un período que incluya esta fecha
-    const matchingPeriod = calendarData.find(period => {
-      try {
-        const startDate = parseDateFromBackend(period.startDate);
-        const endDate = parseDateFromBackend(period.endDate);
-        return isDateInRange(date, startDate, endDate);
-      } catch (e) {
-        console.error('Error al analizar la fecha:', e);
-        return false;
-      }
-    });
-
-    // Si no hay un período coincidente, no está seleccionada (rojo)
-    if (!matchingPeriod) {
-      return false;
-    }
-
-    // Retornar el estado (true = seleccionada/verde, false = no seleccionada/rojo)
-    return matchingPeriod.status;
-  }
-
-  /**
-   * Actualiza el estado de un mes según sus días
-   * @param month Mes a actualizar
-   */
-  private updateMonthStatus(month: CalendarMonth): void {
-    const currentMonthDays = month.days.filter(d => d.isCurrentMonth);
-    
-    if (currentMonthDays.length === 0) {
-      month.status = MonthStatus.FULLY_CLOSED; // Por defecto cerrado si no hay días
-      return;
-    }
-    
-    const selectedDays = currentMonthDays.filter(d => !d.isClosed); // !isClosed = seleccionada (verde)
-    
-    if (selectedDays.length === currentMonthDays.length) {
-      month.status = MonthStatus.FULLY_OPEN; // Todo verde
-    } else {
-      month.status = MonthStatus.FULLY_CLOSED; // Todo rojo (por defecto)
-    }
   }
 
   /**
@@ -414,32 +178,60 @@ export class CalendarStateService {
   toggleDate(day: CalendarDay): void {
     if (!day.isCurrentMonth) return;
     
-    const { enterpriseId } = this.currentState;
+    const { enterpriseId, selectedYear } = this.currentState;
     if (!enterpriseId) return;
     
     // Validar que sea una interacción de usuario
     if (!this.isUserInteraction) {
       return;
     }
+
+    // ACTUALIZACIÓN OPTIMISTA: Cambiar inmediatamente el estado en el frontend
+    const updatedMonths = this.currentState.calendarMonths.map(month => {
+      if (month.month === day.date.getMonth() && month.year === day.date.getFullYear()) {
+        const updatedMonth = { ...month };
+        updatedMonth.days = month.days.map(d => {
+          if (d.date.getTime() === day.date.getTime()) {
+            return { ...d, isClosed: !d.isClosed };
+          }
+          return d;
+        });
+        
+        // Recalcular estado del mes
+        this.calendarData.updateMonthStatus(updatedMonth);
+        return updatedMonth;
+      }
+      return month;
+    });
+
+    // Aplicar cambio inmediato en la UI
+    this.updateState({
+      ...this.currentState,
+      calendarMonths: updatedMonths,
+      error: null
+    });
+
+    const activeEntriesMap = this.calendarData.getActiveEntriesMap();
     
-    this.setLoading(true);
-    
-    // Usar el servicio para hacer toggle de la fecha
-    this.calendarService.toggleDate(enterpriseId, day.date.toISOString().split('T')[0])
-      .pipe(
-        switchMap(() => this.loadExistingCalendarData()),
-        takeUntil(this.destroy$),
-        finalize(() => this.setLoading(false))
-      )
+    // Operación en el backend
+    this.calendarOperations.toggleDate(day, enterpriseId, selectedYear, activeEntriesMap)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (calendarData) => {
+        next: (response: any) => {
+          const calendarData = response?.content || [];
+          // Sincronizar con el backend
           this.updateCalendarWithData(calendarData);
         },
-        error: () => {
+        error: (error) => {
+          // REVERTIR CAMBIO OPTIMISTA en caso de error
+          console.error('Error en toggleDate:', error);
           this.updateState({
             ...this.currentState,
             error: 'Error al cambiar el estado de la fecha'
           });
+          
+          // Recargar datos del backend para revertir cambios
+          this.loadExistingCalendarDataOnly();
         }
       });
   }
@@ -449,10 +241,10 @@ export class CalendarStateService {
    * @param month Mes a cambiar
    */
   changeMonthState(month: CalendarMonth): void {
-    const { enterpriseId, loading } = this.currentState;
+    const { enterpriseId } = this.currentState;
     
     // Validaciones de seguridad
-    if (!enterpriseId || loading) {
+    if (!enterpriseId) {
       return;
     }
     
@@ -460,38 +252,56 @@ export class CalendarStateService {
     if (!this.isUserInteraction) {
       return;
     }
-    
-    // Determinar si abrir o cerrar el mes
-    const shouldOpen = month.status === MonthStatus.FULLY_CLOSED;
-    
-    // Obtener primer y último día del mes
-    const startDate = getFirstDayOfMonth(month.year, month.month);
-    const endDate = getLastDayOfMonth(month.year, month.month);
-    
-    this.setLoading(true);
-    
-    // Usar el gestor de rangos para la operación
-    const operation = shouldOpen 
-      ? this.rangeManager.openDateRange(enterpriseId, startDate, endDate)
-      : this.rangeManager.closeDateRange(enterpriseId, startDate, endDate);
-    
-    // Ejecutar operación y actualizar estado
-    operation.pipe(
-      switchMap(() => this.loadExistingCalendarData()),
-      takeUntil(this.destroy$),
-      finalize(() => this.setLoading(false))
-    )
-    .subscribe({
-      next: (calendarData) => {
-        this.updateCalendarWithData(calendarData);
-      },
-      error: () => {
-        this.updateState({
-          ...this.currentState,
-          error: 'Error al cambiar el estado del mes'
+
+    // ACTUALIZACIÓN OPTIMISTA: Cambiar inmediatamente el estado en el frontend
+    const updatedMonths = this.currentState.calendarMonths.map(m => {
+      if (m.month === month.month && m.year === month.year) {
+        const updatedMonth = { ...m };
+        const shouldOpen = month.status === MonthStatus.FULLY_CLOSED;
+        
+        // Cambiar estado de todos los días del mes
+        updatedMonth.days = m.days.map(day => {
+          if (day.isCurrentMonth) {
+            return { ...day, isClosed: !shouldOpen };
+          }
+          return day;
         });
+        
+        // Cambiar estado del mes
+        updatedMonth.status = shouldOpen ? MonthStatus.FULLY_OPEN : MonthStatus.FULLY_CLOSED;
+        return updatedMonth;
       }
+      return m;
     });
+
+    // Aplicar cambio inmediato en la UI
+    this.updateState({
+      ...this.currentState,
+      calendarMonths: updatedMonths,
+      error: null
+    });
+
+    // Operación en el backend
+    this.calendarOperations.changeMonthState(month, enterpriseId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          const calendarData = response?.content || [];
+          // Sincronizar con el backend
+          this.updateCalendarWithData(calendarData);
+        },
+        error: (error) => {
+          // REVERTIR CAMBIO OPTIMISTA en caso de error
+          console.error('Error en changeMonthState:', error);
+          this.updateState({
+            ...this.currentState,
+            error: 'Error al cambiar el estado del mes'
+          });
+          
+          // Recargar datos del backend para revertir cambios
+          this.loadExistingCalendarDataOnly();
+        }
+      });
   }
 
   /**
@@ -499,7 +309,7 @@ export class CalendarStateService {
    * @param openAll Si es true, abre todos los periodos; si es false, los cierra
    */
   changeAllPeriodsState(openAll: boolean): void {
-    const { enterpriseId, calendarMonths } = this.currentState;
+    const { enterpriseId, calendarMonths, selectedYear } = this.currentState;
     if (!enterpriseId) return;
     
     // Validar que sea una interacción de usuario
@@ -525,51 +335,21 @@ export class CalendarStateService {
       calendarMonths: updatedMonths
     });
 
-    this.setLoading(true);
-    
     // Proceder con la llamada al backend
-    const year = this.currentState.selectedYear;
-    
-    if (openAll) {
-      // Si se van a abrir todos los periodos, primero inicializar el año si no existe
-      this.rangeManager.initializeYearIfNotExists(enterpriseId, year)
-        .pipe(
-          switchMap(() => this.rangeManager.openDateRange(enterpriseId, new Date(year, 0, 1), new Date(year, 11, 31))),
-          switchMap(() => this.loadExistingCalendarData()),
-          takeUntil(this.destroy$),
-          finalize(() => this.setLoading(false))
-        )
-        .subscribe({
-          next: (calendarData) => {
-            this.updateCalendarWithData(calendarData);
-          },
-          error: () => {
-            this.updateState({
-              ...this.currentState,
-              error: 'Error al abrir todos los periodos'
-            });
-          }
-        });
-    } else {
-      // Si se van a cerrar todos los periodos, solo cerrar (no necesita inicialización)
-      this.rangeManager.closeDateRange(enterpriseId, new Date(year, 0, 1), new Date(year, 11, 31))
-        .pipe(
-          switchMap(() => this.loadExistingCalendarData()),
-          takeUntil(this.destroy$),
-          finalize(() => this.setLoading(false))
-        )
-        .subscribe({
-          next: (calendarData) => {
-            this.updateCalendarWithData(calendarData);
-          },
-          error: () => {
-            this.updateState({
-              ...this.currentState,
-              error: 'Error al cerrar todos los periodos'
-            });
-          }
-        });
-    }
+    this.calendarOperations.changeAllPeriodsState(openAll, enterpriseId, selectedYear)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          const calendarData = response?.content || [];
+          this.updateCalendarWithData(calendarData);
+        },
+        error: () => {
+          this.updateState({
+            ...this.currentState,
+            error: 'Error al cambiar el estado de todos los periodos'
+          });
+        }
+      });
   }
 
   /**
@@ -578,7 +358,7 @@ export class CalendarStateService {
    */
   areAllMonthsClosed(): boolean {
     const { calendarMonths } = this.currentState;
-    return calendarMonths.every(month => month.status === MonthStatus.FULLY_CLOSED);
+    return this.calendarData.areAllMonthsClosed(calendarMonths);
   }
 
   /**
@@ -587,25 +367,7 @@ export class CalendarStateService {
    */
   areAllMonthsOpen(): boolean {
     const { calendarMonths } = this.currentState;
-    return calendarMonths.every(month => month.status === MonthStatus.FULLY_OPEN);
-  }
-
-  /**
-   * Muestra el loader después de un retraso
-   */
-  private showLoaderAfterDelay(): void {
-    this.clearLoaderTimer();
-    this.loaderTimer = setTimeout(() => this.setLoading(true), 300); // 300ms de retraso
-  }
-
-  /**
-   * Limpia el temporizador del loader
-   */
-  private clearLoaderTimer(): void {
-    if (this.loaderTimer) {
-      clearTimeout(this.loaderTimer);
-      this.loaderTimer = null;
-    }
+    return this.calendarData.areAllMonthsOpen(calendarMonths);
   }
 
   /**
@@ -617,23 +379,13 @@ export class CalendarStateService {
   }
 
   /**
-   * Actualiza el estado de carga
-   * @param loading Nuevo estado de carga
-   */
-  private setLoading(loading: boolean): void {
-    this.loadingState.next(loading);
-    this.updateState({
-      ...this.currentState,
-      loading
-    });
-  }
-
-  /**
    * Limpia las suscripciones al destruir el servicio
    */
   destroy(): void {
-    this.clearLoaderTimer();
     this.destroy$.next();
     this.destroy$.complete();
+    
+    // Limpiar cache para liberar memoria
+    this.calendarData.clearCache();
   }
 }

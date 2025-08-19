@@ -2,9 +2,6 @@
  * Tipos utilitarios para el módulo de calendario contable
  */
 
-// Tipo para el timer del loader
-export type LoaderTimer = ReturnType<typeof setTimeout> | null;
-
 // Tipo para los años disponibles
 export interface AvailableYear {
   label: string;
@@ -18,12 +15,6 @@ export interface Page<T> {
   totalPages: number;
   size: number;
   number: number;
-}
-
-// Tipo para el estado de carga
-export interface LoadingState {
-  isLoading: boolean;
-  error: string | null;
 }
 
 // Tipo para las acciones del calendario

@@ -1,4 +1,4 @@
-<div class="month-calendar" [ngClass]="getMonthGridClass()">
+<div class="month-calendar">
   <!-- Header del mes -->
   <div class="month-header">
     <h3 class="month-title">{{ month.name }}</h3>
@@ -22,8 +22,8 @@
       (click)="onDayClick(day)"
       [class.clickable]="day.isCurrentMonth">
       {{ day.dayOfMonth }}
-      <!-- Indicador sutil para el día actual -->
-      <div *ngIf="day.isToday" class="today-indicator"></div>
+      <!-- Indicador para días festivos -->
+      <div *ngIf="day.isHoliday" class="holiday-indicator" [title]="day.holidayName"></div>
     </div>
   </div>
 
@@ -34,16 +34,14 @@
       label="Cerrado"
       icon="pi pi-lock"
       (onClick)="onMonthStatusClick()"
-      [loading]="loading"
-      styleClass="p-button-sm p-button-outlined p-button-danger">
+      styleClass="p-button-sm p-button-secondary">
     </p-button>
     <p-button 
       *ngIf="month.status === 'fully_open'" 
       label="Abierto"
       icon="pi pi-lock-open"
       (onClick)="onMonthStatusClick()"
-      [loading]="loading"
-      styleClass="p-button-sm p-button-outlined p-button-success">
+      styleClass="p-button-sm p-button-secondary">
     </p-button>
   </div>
 </div>

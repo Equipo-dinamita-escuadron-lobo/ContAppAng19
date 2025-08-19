@@ -61,7 +61,6 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
   // Estado local derivado del servicio de estado
   selectedYear: number = new Date().getFullYear();
   calendarMonths: CalendarMonth[] = [];
-  loading: boolean = false;
   
   // Años disponibles para el selector
   availableYears: AvailableYear[] = [];
@@ -86,9 +85,10 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
     this.stateService.state$
       .pipe(takeUntil(this.destroy$))
       .subscribe(state => {
+        const hasSignificantChanges = this.hasSignificantChanges(state);
+        
         this.selectedYear = state.selectedYear;
         this.calendarMonths = state.calendarMonths;
-        this.loading = state.loading;
         
         // Si hay un error, mostrar mensaje
         if (state.error) {
@@ -99,8 +99,10 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
           });
         }
         
-        // Marcar para detección de cambios
-        this.cdr.markForCheck();
+        // Solo marcar para detección de cambios si hay cambios significativos
+        if (hasSignificantChanges) {
+          this.cdr.markForCheck();
+        }
         
         // Verificar años con periodos abiertos después de la carga inicial
         this.checkYearsWithOpenPeriods();
@@ -111,6 +113,63 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
       });
   }
   
+  /**
+   * Determina si hay cambios significativos en el estado que requieran detección de cambios
+   * @param newState Nuevo estado recibido
+   * @returns true si hay cambios significativos
+   */
+  private hasSignificantChanges(newState: any): boolean {
+    // Cambios en el año seleccionado siempre son significativos
+    if (this.selectedYear !== newState.selectedYear) {
+      return true;
+    }
+    
+    // Cambios en los meses del calendario son significativos
+    if (this.calendarMonths.length !== newState.calendarMonths.length) {
+      return true;
+    }
+    
+    // Verificar si hay cambios en el estado de los meses
+    for (let i = 0; i < this.calendarMonths.length; i++) {
+      const oldMonth = this.calendarMonths[i];
+      const newMonth = newState.calendarMonths[i];
+      
+      if (!oldMonth || !newMonth) {
+        return true;
+      }
+      
+      if (oldMonth.status !== newMonth.status) {
+        return true;
+      }
+      
+      // Verificar cambios en días individuales
+      if (oldMonth.days.length !== newMonth.days.length) {
+        return true;
+      }
+      
+      for (let j = 0; j < oldMonth.days.length; j++) {
+        const oldDay = oldMonth.days[j];
+        const newDay = newMonth.days[j];
+        
+        if (!oldDay || !newDay) {
+          return true;
+        }
+        
+        if (oldDay.isClosed !== newDay.isClosed || 
+            oldDay.isToday !== newDay.isToday) {
+          return true;
+        }
+      }
+    }
+    
+    // Cambios en errores son significativos
+    if (this.stateService.currentState.error !== newState.error) {
+      return true;
+    }
+    
+    return false;
+  }
+
   /**
    * Inicializa la lista de años disponibles
    */
@@ -161,9 +220,6 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
    * @param month Mes seleccionado
    */
   onMonthStatusClick(month: CalendarMonth): void {
-    // Prevenir ejecución durante carga
-    if (this.loading) return;
-    
     let action: string;
     let message: string;
     let acceptLabel: string;
@@ -294,7 +350,6 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error('Error al cargar el estado de años desde el backend:', error);
         // En caso de error, mantener el comportamiento anterior
         this.checkYearsWithOpenPeriods();
       }
