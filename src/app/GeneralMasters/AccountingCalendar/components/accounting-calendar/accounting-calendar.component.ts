@@ -289,7 +289,6 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error('Error al cargar el estado de años desde el backend:', error);
         // En caso de error, mantener el comportamiento anterior
         this.checkYearsWithOpenPeriods();
       }

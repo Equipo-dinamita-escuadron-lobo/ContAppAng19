@@ -106,7 +106,6 @@ export class AccountingCalendarService {
    * @param date Fecha a toggle (formato YYYY-MM-DD)
    */
   toggleDate(enterpriseId: string, date: string): Observable<void> {
-    console.log(`[toggleDate] Iniciando toggle para fecha: ${date}, empresa: ${enterpriseId}`);
     
     const normalizedInputDate = this.normalizeDateString(date);
     
@@ -119,23 +118,12 @@ export class AccountingCalendarService {
       date: normalizedInputDate,
       status: true
     };
-    console.log(`[toggleDate] Intentando crear fecha con payload:`, payload);
-
     return this.create(payload).pipe(
       map(() => {
-        console.log(`[toggleDate] Fecha ${normalizedInputDate} creada exitosamente (estaba en rojo)`);
         return;
       }),
       catchError(error => {
-        console.error(`[toggleDate] Error al crear ${normalizedInputDate}:`, error);
-        
-        // Log detallado del error para debugging
-        if (error?.error) {
-          console.log(`[toggleDate] Detalles del error:`, error.error);
-        }
-        
         if (error?.status === 400 && error?.error?.code === 'ACCOUNTING_CALENDAR_DATE_EXISTS') {
-          console.log(`[toggleDate] Fecha ya existe, procediendo a eliminarla (estaba en verde)`);
           
           // La fecha ya existe, necesitamos eliminarla
           // Como no tenemos endpoint para buscar todas las fechas, usamos una estrategia diferente
@@ -149,18 +137,11 @@ export class AccountingCalendarService {
             specificDate: normalizedInputDate // Agregamos fecha específica
           };
           
-          console.log(`[toggleDate] Eliminando fecha específica:`, deleteRequest);
-          
-          // Por ahora, vamos a propagar el error y mostrar un mensaje más claro
-          console.log(`[toggleDate] Error: La fecha ${normalizedInputDate} ya existe pero no se puede eliminar automáticamente`);
-          console.log(`[toggleDate] Se requiere implementar funcionalidad adicional en el backend para el toggle automático`);
-          
           // Retornar un error más descriptivo
           return throwError(() => new Error(`La fecha ${normalizedInputDate} ya existe. Se requiere implementar funcionalidad adicional en el backend para el toggle automático.`));
         }
         
         // Para otros tipos de error, propagar
-        console.error(`[toggleDate] Error no manejado (status: ${error?.status}):`, error);
         return throwError(() => error);
       })
     );
@@ -193,7 +174,6 @@ export class AccountingCalendarService {
       
       return `${year}-${month}-${day}`;
     } catch (error) {
-      console.error('Error al normalizar fecha:', error);
       return '';
     }
   }

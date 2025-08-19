@@ -245,8 +245,6 @@ export class CalendarStateService {
           this.updateCalendarWithData(calendarData);
         },
         error: (error: any) => {
-          console.error('Error al cargar el calendario:', error);
-          // No mostrar error si es simplemente que no hay datos
           if (error.status !== 404) {
             this.updateState({
               ...this.currentState,
@@ -337,7 +335,6 @@ export class CalendarStateService {
                periodDate.getMonth() === date.getMonth() && 
                periodDate.getFullYear() === date.getFullYear();
       } catch (e) {
-        console.error('Error al analizar la fecha:', e);
         return false;
       }
     });
