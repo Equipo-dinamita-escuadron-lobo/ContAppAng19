@@ -5,6 +5,7 @@ import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterp
 import { hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
 import { ViewEnterpriseComponent } from './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component';
+import { hasPermissionGuard } from './Core/Guards/has-permission.guard';
 
 export const routes: Routes = [
   {
@@ -17,7 +18,7 @@ export const routes: Routes = [
       breadcrumb: 'enterprise-list',
     },
     component: ListEnterpriseComponent,
-    canActivate: [hasRoleGuard(['admin_realm'])],
+    canActivate: [hasRoleGuard(['admin_realm', 'user_realm'])],
   },
   {
     path: 'enterprise/create',
@@ -170,7 +171,7 @@ export const routes: Routes = [
               {
                 path: '',
                 redirectTo: 'list',
-                pathMatch: 'full'
+                pathMatch: 'full',
               },
               {
                 path: 'list',
@@ -212,28 +213,31 @@ export const routes: Routes = [
               {
                 path: '',
                 redirectTo: 'list',
-                pathMatch: 'full'
+                pathMatch: 'full',
               },
               {
                 path: 'list',
                 data: { breadcrumb: null },
                 loadComponent: () =>
-                  import('./GeneralMasters/Taxes/components/ListTax/list-tax.component')
-                    .then((m) => m.ListTaxComponent),
+                  import(
+                    './GeneralMasters/Taxes/components/ListTax/list-tax.component'
+                  ).then((m) => m.ListTaxComponent),
               },
               {
                 path: 'create',
                 data: { breadcrumb: 'Crear Impuesto' },
                 loadComponent: () =>
-                  import('./GeneralMasters/Taxes/components/CreateTax/create-tax.component')
-                    .then((m) => m.CreateTaxComponent),
+                  import(
+                    './GeneralMasters/Taxes/components/CreateTax/create-tax.component'
+                  ).then((m) => m.CreateTaxComponent),
               },
               {
                 path: 'edit/:id',
                 data: { breadcrumb: 'Editar Impuesto' },
                 loadComponent: () =>
-                  import('./GeneralMasters/Taxes/components/EditTax/edit-tax.component')
-                    .then((m) => m.EditTaxComponent),
+                  import(
+                    './GeneralMasters/Taxes/components/EditTax/edit-tax.component'
+                  ).then((m) => m.EditTaxComponent),
               },
             ],
           },
@@ -245,8 +249,9 @@ export const routes: Routes = [
                 path: '',
                 data: { breadcrumb: null },
                 loadComponent: () =>
-                  import('./GeneralMasters/Inventory/Components/MenuCards/inventory-menu.component')
-                    .then((m) => m.InventoryMenuComponent),
+                  import(
+                    './GeneralMasters/Inventory/Components/MenuCards/inventory-menu.component'
+                  ).then((m) => m.InventoryMenuComponent),
               },
               {
                 path: 'products',
@@ -275,7 +280,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/Products/Components/product-edit/product-edit.component'
                       ).then((m) => m.ProductEditComponent),
-                  }
+                  },
                 ],
               },
               {
@@ -285,19 +290,28 @@ export const routes: Routes = [
                   {
                     path: 'list',
                     data: { breadcrumb: null },
-                    loadComponent: () => import('./GeneralMasters/Inventory/ProductTypes/Components/product-type-list/product-type-list.component').then(m => m.ProductTypeListComponent),
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/ProductTypes/Components/product-type-list/product-type-list.component'
+                      ).then((m) => m.ProductTypeListComponent),
                   },
                   {
                     path: 'create',
                     data: { breadcrumb: 'Crear Tipo de Producto' },
-                    loadComponent: () => import('./GeneralMasters/Inventory/ProductTypes/Components/product-type-creation/product-type-creation.component').then(m => m.ProductTypeCreationComponent),
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/ProductTypes/Components/product-type-creation/product-type-creation.component'
+                      ).then((m) => m.ProductTypeCreationComponent),
                   },
                   {
                     path: 'edit/:id',
                     data: { breadcrumb: 'Editar Tipo de Producto' },
-                    loadComponent: () => import('./GeneralMasters/Inventory/ProductTypes/Components/product-type-edit/product-type-edit.component').then(m => m.ProductTypeEditComponent),
-                  }
-                ]
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/ProductTypes/Components/product-type-edit/product-type-edit.component'
+                      ).then((m) => m.ProductTypeEditComponent),
+                  },
+                ],
               },
               {
                 path: 'categories',
@@ -306,19 +320,28 @@ export const routes: Routes = [
                   {
                     path: 'list',
                     data: { breadcrumb: null },
-                    loadComponent: () => import('./GeneralMasters/Inventory/Category/Components/category-list/category-list.component').then(m => m.CategoryListComponent),
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/Category/Components/category-list/category-list.component'
+                      ).then((m) => m.CategoryListComponent),
                   },
                   {
                     path: 'create',
                     data: { breadcrumb: 'Crear Categoría' },
-                    loadComponent: () => import('./GeneralMasters/Inventory/Category/Components/category-creation/category-creation.component').then(m => m.CategoryCreationComponent),
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/Category/Components/category-creation/category-creation.component'
+                      ).then((m) => m.CategoryCreationComponent),
                   },
                   {
                     path: 'edit/:id',
                     data: { breadcrumb: 'Editar Categoría' },
-                    loadComponent: () => import('./GeneralMasters/Inventory/Category/Components/category-edit/category-edit.component').then(m => m.CategoryEditComponent),
-                  }
-                ]
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/Category/Components/category-edit/category-edit.component'
+                      ).then((m) => m.CategoryEditComponent),
+                  },
+                ],
               },
               {
                 path: 'measurement-units',
@@ -327,19 +350,31 @@ export const routes: Routes = [
                   {
                     path: 'list',
                     data: { breadcrumb: null },
-                    loadComponent: () => import('./GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-list/unit-of-measure-list.component').then(m => m.UnitOfMeasureListComponent),
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-list/unit-of-measure-list.component'
+                      ).then((m) => m.UnitOfMeasureListComponent),
                   },
                   {
                     path: 'create',
                     data: { breadcrumb: 'Crear Unidad de Medida' },
-                    loadComponent: () => import('./GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-creation/unit-of-measure-creation.component').then(m => m.UnitOfMeasureCreationComponent),
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-creation/unit-of-measure-creation.component'
+                      ).then((m) => m.UnitOfMeasureCreationComponent),
+                    canActivate: [
+                      hasPermissionGuard(['Create_Unit_of_Measurement']),
+                    ],
                   },
                   {
                     path: 'edit/:id',
                     data: { breadcrumb: 'Editar Unidad de Medida' },
-                    loadComponent: () => import('./GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-edit/unit-of-measure-edit.component').then(m => m.UnitOfMeasureEditComponent),
-                  }
-                ]
+                    loadComponent: () =>
+                      import(
+                        './GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-edit/unit-of-measure-edit.component'
+                      ).then((m) => m.UnitOfMeasureEditComponent),
+                  },
+                ],
               },
             ],
           },
@@ -347,35 +382,44 @@ export const routes: Routes = [
             path: 'payment-methods',
             data: { breadcrumb: 'Métodos de Pago' },
             loadComponent: () =>
-              import('./GeneralMasters/Components/MenuCards/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralMasters/Components/MenuCards/menu.component'
+              ).then((m) => m.MenuComponent),
           },
           {
             path: 'document-types',
             data: { breadcrumb: 'Tipos de Documentos' },
             loadComponent: () =>
-              import('./GeneralMasters/Components/MenuCards/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralMasters/Components/MenuCards/menu.component'
+              ).then((m) => m.MenuComponent),
           },
 
           {
             path: 'bank-accounts',
             data: { breadcrumb: 'Banco y Cuentas Bancarias' },
             loadComponent: () =>
-              import('./GeneralMasters/Components/MenuCards/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralMasters/Components/MenuCards/menu.component'
+              ).then((m) => m.MenuComponent),
           },
           {
             path: 'cost-centers',
             data: { breadcrumb: 'Centros de Costo' },
             loadComponent: () =>
-              import('./GeneralMasters/Components/MenuCards/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralMasters/Components/MenuCards/menu.component'
+              ).then((m) => m.MenuComponent),
           },
 
           {
             path: 'help-panels',
             data: { breadcrumb: 'Centro de Ayuda' },
             loadComponent: () =>
-              import('./GeneralMasters/Components/MenuCards/menu.component').then((m) => m.MenuComponent),
+              import(
+                './GeneralMasters/Components/MenuCards/menu.component'
+              ).then((m) => m.MenuComponent),
           },
-
         ],
       },
       {
@@ -437,7 +481,6 @@ export const routes: Routes = [
                     './Commercial/BusinessMasters/ValuationModels/WeightedAverage/list-kardex-weighted-average/list-kardex-weighted-average.component'
                   ).then((m) => m.ListKardexWeightedAverageComponent),
               },
-
             ],
           },
           {
