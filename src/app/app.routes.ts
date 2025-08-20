@@ -5,6 +5,7 @@ import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterp
 import { hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
 import { ViewEnterpriseComponent } from './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component';
+import { hasPermissionGuard } from './Core/Guards/has-permission.guard';
 
 export const routes: Routes = [
   {
@@ -17,7 +18,7 @@ export const routes: Routes = [
       breadcrumb: 'enterprise-list',
     },
     component: ListEnterpriseComponent,
-    canActivate: [hasRoleGuard(['admin_realm'])],
+    canActivate: [hasRoleGuard(['admin_realm', 'user_realm'])],
   },
   {
     path: 'enterprise/create',
@@ -92,15 +93,36 @@ export const routes: Routes = [
             canActivate: [hasRoleGuard(['admin_realm'])],
           },
           {
-            path: 'profiles/list',
+            path: 'profiles',
             data: {
               breadcrumb: 'Gestión de Perfiles',
             },
-            loadComponent: () =>
-              import(
-                './Configuration/Profiles/Components/profile-list/profile-list.component'
-              ).then((m) => m.ProfileListComponent),
-            canActivate: [hasRoleGuard(['admin_realm'])],
+            children: [
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Profiles/Components/profile-list/profile-list.component'
+                  ).then((m) => m.ProfileListComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Perfil' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Profiles/Components/profile-create/profile-create.component'
+                  ).then((m) => m.ProfileCreateComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Perfil' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Profiles/Components/profile-edit/profile-edit.component'
+                  ).then((m) => m.ProfileEditComponent),
+              },
+            ],
           },
           {
             path: 'permissions/list',
@@ -361,6 +383,9 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-creation/unit-of-measure-creation.component'
                       ).then((m) => m.UnitOfMeasureCreationComponent),
+                    canActivate: [
+                      hasPermissionGuard(['Create_Unit_of_Measurement']),
+                    ],
                   },
                   {
                     path: 'edit/:id',

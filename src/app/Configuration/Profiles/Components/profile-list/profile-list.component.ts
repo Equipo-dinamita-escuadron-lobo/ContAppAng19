@@ -54,8 +54,8 @@ export class ProfileListComponent {
     );
   }
 
-  redirectTo(arg0: string) {
-    throw new Error('Method not implemented.');
+  redirectTo(route: string) {
+    this.router.navigate([route]);
   }
   redirectToDelete(arg0: any) {
     throw new Error('Method not implemented.');
