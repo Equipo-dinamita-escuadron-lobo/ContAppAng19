@@ -526,14 +526,83 @@ export const routes: Routes = [
                   ).then((m) => m.MainViewComponent),
               },
               {
-                path: 'auxiliary-books/list',
+                path: 'auxiliary-books',
                 data: {
                   breadcrumb: 'Libros Auxiliares',
                 },
-                loadComponent: () =>
-                  import(
-                    './Financial/Reports/auxiliary-books/Components/auxiliary-books-list/auxiliary-books-list.component'
-                  ).then((m) => m.AuxiliaryBooksListComponent),
+                children: [
+                  {
+                    path: 'list',
+                    pathMatch: 'full',
+                    data: {
+                      breadcrumb: null,
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/auxiliary-books/Components/auxiliary-books-list/auxiliary-books-list.component'
+                      ).then((m) => m.AuxiliaryBooksListComponent),
+                  },
+                  {
+                    path: 'inventory-and-balances',
+                    data: {
+                      breadcrumb: 'Libro de Inventario y Balances',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),
+                  },
+                  {
+                    path: 'diary',
+                    data: {
+                      breadcrumb: 'Libro Diario',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),
+                  },
+                  {
+                    path: 'major-and-balances',
+                    data: {
+                      breadcrumb: 'Libro Mayor y Balances',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),
+                  },
+                  {
+                    path: 'account-book',
+                    data: {
+                      breadcrumb: 'Libro Auxiliary por Cuenta',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),
+                  },
+                  {
+                    path: 'third-party-book',
+                    data: {
+                      breadcrumb: 'Libro Auxiliar por Tercero',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),
+                  },
+                  {
+                    path: 'accounting-movement',
+                    data: {
+                      breadcrumb: 'Movimiento de Contabilidad',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),
+                  },
+                ],
               },
             ],
           },
