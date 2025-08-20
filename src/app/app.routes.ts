@@ -93,15 +93,36 @@ export const routes: Routes = [
             canActivate: [hasRoleGuard(['admin_realm'])],
           },
           {
-            path: 'profiles/list',
+            path: 'profiles',
             data: {
               breadcrumb: 'Gestión de Perfiles',
             },
-            loadComponent: () =>
-              import(
-                './Configuration/Profiles/Components/profile-list/profile-list.component'
-              ).then((m) => m.ProfileListComponent),
-            canActivate: [hasRoleGuard(['admin_realm'])],
+            children: [
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Profiles/Components/profile-list/profile-list.component'
+                  ).then((m) => m.ProfileListComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Perfil' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Profiles/Components/profile-create/profile-create.component'
+                  ).then((m) => m.ProfileCreateComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Perfil' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Profiles/Components/profile-edit/profile-edit.component'
+                  ).then((m) => m.ProfileEditComponent),
+              },
+            ],
           },
           {
             path: 'permissions/list',
@@ -389,10 +410,61 @@ export const routes: Routes = [
           {
             path: 'document-types',
             data: { breadcrumb: 'Tipos de Documentos' },
-            loadComponent: () =>
-              import(
-                './GeneralMasters/Components/MenuCards/menu.component'
-              ).then((m) => m.MenuComponent),
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list',
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/DocumentTypes/Components/document-types-list/document-types-list.component'
+                  ).then((m) => m.DocumentTypesListComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Tipo de Documento' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/DocumentTypes/Components/document-types-creation/document-types-creation.component'
+                  ).then((m) => m.DocumentTypesCreationComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Tipo de Documento' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/DocumentTypes/Components/document-types-edit/document-types-edit.component'
+                  ).then((m) => m.DocumentTypesEditComponent),
+              },
+              {
+                path: 'classes/list',
+                data: { breadcrumb: 'Clases de Documentos' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/DocumentTypes/Components/classes-of-documents-list/classes-of-documents-list.component'
+                  ).then((m) => m.ClassesOfDocumentsListComponent),
+              },
+              {
+                path: 'classes/create',
+                data: { breadcrumb: 'Crear Clase de Documento' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/DocumentTypes/Components/classes-of-documents-creation/classes-of-documents-creation.component'
+                  ).then((m) => m.ClassesOfDocumentsCreationComponent),
+              },
+              {
+                path: 'classes/edit/:id',
+                data: { breadcrumb: 'Editar Clase de Documento' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/DocumentTypes/Components/classes-of-documents-edit/classes-of-documents-edit.component'
+                  ).then((m) => m.ClassesOfDocumentsEditComponent),
+              },
+            ],
           },
 
           {
@@ -419,6 +491,14 @@ export const routes: Routes = [
               import(
                 './GeneralMasters/Components/MenuCards/menu.component'
               ).then((m) => m.MenuComponent),
+          },
+          {
+            path: 'accounting-calendar',
+            data: { breadcrumb: 'Calendario Contable' },
+            loadComponent: () =>
+              import(
+                './GeneralMasters/AccountingCalendar/components/accounting-calendar/accounting-calendar.component'
+              ).then((m) => m.AccountingCalendarComponent),
           },
         ],
       },

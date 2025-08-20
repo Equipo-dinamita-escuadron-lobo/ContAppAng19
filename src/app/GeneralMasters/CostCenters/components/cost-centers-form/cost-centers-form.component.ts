@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ButtonModule } from 'primeng/button';
 import { CostCenterNode } from '../../models/cost-center.model';
 
-type LevelType = 'cuenta' | 'subcuenta' | 'auxiliar';
+type LevelType = 'costo' | 'subcosto' | 'auxiliar costo';
 
 @Component({
   selector: 'app-cost-centers-form',
@@ -14,7 +14,7 @@ type LevelType = 'cuenta' | 'subcuenta' | 'auxiliar';
   styleUrl: './cost-centers-form.component.css'
 })
 export class CostCentersFormComponent implements OnChanges {
-  @Input() currentLevel: LevelType = 'cuenta';
+  @Input() currentLevel: LevelType = 'costo';
   @Input() parent?: CostCenterNode | null;
 
   @Output() submitted = new EventEmitter<{ codeSegment: string; name: string }>();
@@ -41,7 +41,7 @@ export class CostCentersFormComponent implements OnChanges {
   private setCodeValidators(): void {
     const control = this.codeControl;
     if (!control) return;
-    if (this.currentLevel === 'auxiliar') {
+    if (this.currentLevel === 'auxiliar costo') {
       control.setValidators([Validators.required, Validators.maxLength(28), Validators.pattern('^[a-zA-Z0-9]+$')]);
     } else {
       control.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(2), Validators.pattern('^[0-9]{2}$')]);
@@ -53,7 +53,7 @@ export class CostCentersFormComponent implements OnChanges {
   get nameControl() { return this.form.get('name'); }
 
   onCodeKeyDown(event: KeyboardEvent) {
-    if (this.currentLevel === 'auxiliar') return; // sin restricción para auxiliar
+    if (this.currentLevel === 'auxiliar costo') return; // sin restricción para auxiliar
     const allowed = [
       'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'
@@ -66,7 +66,7 @@ export class CostCentersFormComponent implements OnChanges {
   onCodeInput(event: Event) {
     const input = event.target as HTMLInputElement;
     let raw = input.value || '';
-    if (this.currentLevel === 'auxiliar') {
+    if (this.currentLevel === 'auxiliar costo') {
       let value = raw.replace(/[^a-zA-Z0-9]/g, '');
       if (value.length > 28) value = value.slice(0, 28);
       input.value = value;

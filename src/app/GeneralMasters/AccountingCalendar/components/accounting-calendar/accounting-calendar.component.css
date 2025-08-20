@@ -1,0 +1,113 @@
+/* Estilos del calendario contable */
+
+/* Variables de colores y estilos */
+:host {
+  /* Colores principales */
+  --calendar-bg-color: var(--color-primary-100);
+  --calendar-border-color: var(--color-neutral-80);
+  --calendar-text-color: var(--color-neutral-30);
+  --calendar-header-color: var(--color-primary);
+  
+  /* Estados de días */
+  --day-open-bg: var(--color-notification-success-container);
+  --day-open-color: var(--color-complementary-green);
+  --day-closed-bg: var(--color-notification-error-container);
+  --day-closed-color: var(--color-complementary-red);
+  --day-today-bg: var(--color-notification-info-container);
+  --day-today-color: var(--color-tertiary-20);
+  --day-other-month-bg: var(--color-neutral-90);
+  --day-other-month-color: var(--color-neutral-70);
+  
+  /* Estados de meses */
+  --month-open-color: var(--color-complementary-green);
+  --month-closed-color: var(--color-complementary-red);
+  --month-mixed-color: var(--color-complementary-orange);
+  
+  /* Dimensiones */
+  --month-min-height: 320px;
+  --day-min-height: 40px;
+  --weekday-min-height: 24px;
+}
+
+/* Estilos para botones - p-button */
+:host ::ng-deep .p-button {
+  font-family: var(--font-family-titillium);
+  font-weight: 500;
+}
+
+
+
+/* Estilos para el panel de información del calendario */
+:host ::ng-deep .info-panel .p-panel-header {
+  background-color: var(--color-primary-container);
+  color: var(--color-primary-on-container);
+  border-bottom: 2px solid var(--color-primary);
+  border-radius: 8px 8px 0 0;
+}
+
+:host ::ng-deep .info-panel .p-panel-content {
+  background-color: var(--color-primary-100);
+  border: 1px solid var(--color-neutral-80);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 1.5rem;
+}
+
+:host ::ng-deep .info-panel .p-panel-title {
+  font-family: var(--font-family-titillium);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Estilos para los badges de años con periodos abiertos */
+.years-badge {
+  user-select: none;
+}
+
+.years-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.years-badge.active-year {
+  border-width: 2px;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
+}
+
+.years-badge:active {
+  transform: scale(0.95);
+}
+
+/* Estilos para el icono de estado cerrado */
+.status-closed-icon {
+  color: var(--color-notification-success-title);
+}
+
+/* Estilos para fuentes del sistema */
+.font-sans {
+  font-family: var(--font-family-sans);
+}
+
+.font-titillium {
+  font-family: var(--font-family-titillium);
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
+/* Responsive para el panel de información */
+@media (max-width: 768px) {
+  :host ::ng-deep .info-panel .p-panel-content {
+    padding: 1rem;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
