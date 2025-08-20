@@ -41,14 +41,8 @@ export class AuxiliaryBooksListComponent {
       icon: 'groups_3',
     },
     {
-      name: 'Balance de Prueba / por Tercero',
-      route: '/financial/reports/auxiliary-books/test-balance',
-      description: 'Verifica saldos contables',
-      icon: 'balance',
-    },
-    {
       name: 'Movimiento de Contabilidad',
-      route: '/financial/reports/auxiliary-books/movement-accounting',
+      route: '/financial/reports/auxiliary-books/accounting-movement',
       description: 'Resume todos los movimientos contables registrados',
       icon: 'difference',
     },
