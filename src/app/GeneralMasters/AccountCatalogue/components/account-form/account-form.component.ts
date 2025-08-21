@@ -131,7 +131,7 @@ export class AccountFormComponent implements OnInit {
       nature: this.formNewAccount.value.selectedNatureType,
       classification: this.formNewAccount.value.selectedClassificationType,
       financialStatus: this.formNewAccount.value.selectedFinancialStateType,
-      parent: 0,
+      parent: null,
 
     };
     console.log(account);

@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { NatureType } from '../models/NatureType';
 import { FinancialStateType } from '../models/FinancialStateType';
 import { ClasificationType } from '../models/ClasificationType';
-import { Observable } from 'rxjs';
-import { Account } from '../models/ChartAccount';
+import { Observable, map, catchError, of } from 'rxjs';
+import { Account, AccountCatalogueListRes, ItemAccountCatalogueSearchRes, AccountCatalogueCreateRes, AccountCatalogueUpdateRes } from '../models/ChartAccount';
 
 
 let API_URL = environment.API_URL + 'accountCatalogue/';
@@ -76,17 +76,56 @@ export class ChartAccountService {
      * @returns Un observable que emite un array de cuentas.
      */
   getListAccounts(entId: string): Observable<Account[]> {
-    return this.http.get<Account[]>(this.apiURL + 'trees/' + entId);
+    return this.http.get<AccountCatalogueListRes[]>(this.apiURL + 'trees/' + entId).pipe(
+      map(response => this.convertAccountCatalogueListResToAccount(response, entId))
+    );
   }
 
   /**
-     * Elimina una cuenta por su código.
+   * Convierte la respuesta del backend AccountCatalogueListRes[] a Account[]
+   * 
+   * @param accountList - Lista de cuentas del backend
+   * @param entId - ID de la empresa
+   * @returns Array de cuentas convertidas
+   */
+  private convertAccountCatalogueListResToAccount(accountList: AccountCatalogueListRes[], entId: string): Account[] {
+    if (!accountList || accountList.length === 0) {
+      return [];
+    }
+
+    return accountList.map(item => this.mapAccountCatalogueToAccount(item, entId));
+  }
+
+  /**
+   * Mapea recursivamente AccountCatalogueListRes a Account
+   * 
+   * @param item - Item del backend
+   * @param entId - ID de la empresa
+   * @returns Cuenta mapeada
+   */
+  private mapAccountCatalogueToAccount(item: AccountCatalogueListRes, entId: string): Account {
+    return {
+      id: item.id,
+      idEnterprise: entId,
+      code: item.code,
+      description: item.description,
+      nature: item.nature,
+      financialStatus: item.financialStatus,
+      classification: item.classification,
+      parent: item.parent,
+      children: item.children ? item.children.map(child => this.mapAccountCatalogueToAccount(child, entId)) : [],
+      showSubAccounts: false
+    };
+  }
+
+  /**
+     * Elimina una cuenta por su ID.
      * 
-     * @param code - El código de la cuenta a eliminar.
-     * @returns Un observable de la cuenta eliminada.
+     * @param id - El ID de la cuenta a eliminar.
+     * @returns Un observable que indica si la eliminación fue exitosa.
      */
-  deleteAccount(code: string): Observable<Account> {
-    return this.http.delete<Account>(this.apiURL + code);
+  deleteAccount(id: string): Observable<void> {
+    return this.http.delete<void>(this.apiURL + id);
   }
 
   /**
@@ -96,7 +135,30 @@ export class ChartAccountService {
      * @returns Un observable de la cuenta creada.
      */
   createAccount(account: Account): Observable<Account> {
-    return this.http.post<Account>(this.apiURL, account);
+    return this.http.post<AccountCatalogueCreateRes>(this.apiURL, account).pipe(
+      map(response => this.mapCreateResponseToAccount(response))
+    );
+  }
+
+  /**
+   * Mapea AccountCatalogueCreateRes a Account
+   * 
+   * @param item - Item de respuesta del backend
+   * @returns Cuenta mapeada
+   */
+  private mapCreateResponseToAccount(item: AccountCatalogueCreateRes): Account {
+    return {
+      id: item.id,
+      idEnterprise: item.idEnterprise,
+      code: item.code,
+      description: item.description,
+      nature: item.nature,
+      financialStatus: item.financialStatus,
+      classification: item.classification,
+      parent: item.parent,
+      children: [],
+      showSubAccounts: false
+    };
   }
 
   /**
@@ -107,18 +169,98 @@ export class ChartAccountService {
      * @returns Un observable de la cuenta actualizada.
      */
   updateAccount(id?: number, account?: Account): Observable<Account> {
-    return this.http.put<Account>(`${this.apiURL}${id}`, account);
+    return this.http.put<AccountCatalogueUpdateRes>(`${this.apiURL}${id}`, account).pipe(
+      map(response => this.mapUpdateResponseToAccount(response, account?.idEnterprise || ''))
+    );
   }
 
   /**
-     * Obtiene una cuenta por su código y el ID de entidad.
-     * 
-     * @param code - El código de la cuenta a obtener.
-     * @param entId - El ID de la entidad a la que pertenece la cuenta.
-     * @returns Un observable de la cuenta obtenida.
-     */
-  getAccountByCode(code: string | number, entId: string): Observable<Account> {
-    return this.http.get<Account>(this.apiURL + 'accountByCode/' + code + '/' + entId);
+   * Mapea AccountCatalogueUpdateRes a Account
+   * 
+   * @param item - Item de respuesta del backend
+   * @param entId - ID de la empresa
+   * @returns Cuenta mapeada
+   */
+  private mapUpdateResponseToAccount(item: AccountCatalogueUpdateRes, entId: string): Account {
+    return {
+      id: item.id,
+      idEnterprise: entId,
+      code: item.code,
+      description: item.description,
+      nature: item.nature,
+      financialStatus: item.financialStatus,
+      classification: item.classification,
+      parent: item.parent,
+      children: [],
+      showSubAccounts: false
+    };
+  }
+
+
+  /**
+   * Obtiene una cuenta por su código y el ID de entidad.
+   * Si la cuenta no existe (404), devuelve null silenciosamente sin errores en consola.
+   * 
+   * @param code - El código de la cuenta a obtener.
+   * @param entId - El ID de la entidad a la que pertenece la cuenta.
+   * @returns Un observable de la cuenta obtenida o null si no existe.
+   */
+  getAccountByCode(code: string | number, entId: string): Observable<Account | null> {
+    return this.http.get<ItemAccountCatalogueSearchRes>(this.apiURL + 'accountByCode/' + code + '/' + entId).pipe(
+      map(response => this.mapItemAccountToAccount(response, entId)),
+      catchError((error: HttpErrorResponse) => {
+        // Silenciosamente devuelve null para errores 404 (cuenta no encontrada)
+        if (error.status === 404) {
+          return of(null);
+        }
+        // Para otros errores, propaga el error
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Verifica si una cuenta existe sin cargar datos completos ni mostrar errores.
+   * Usa método HEAD para verificar existencia sin transferir contenido.
+   * 
+   * @param code - El código de la cuenta a verificar.
+   * @param entId - El ID de la entidad a la que pertenece la cuenta.
+   * @returns Un observable boolean que indica si la cuenta existe.
+   */
+  checkAccountExists(code: string | number, entId: string): Observable<boolean> {
+    // Usamos HEAD para verificar existencia sin cargar el contenido
+    return this.http.head(
+      this.apiURL + 'accountByCode/' + code + '/' + entId,
+      { observe: 'response' }
+    ).pipe(
+      map(response => response.status === 200), // Si status es 200, la cuenta existe
+      catchError((error: HttpErrorResponse) => {
+        // Para cualquier error (incluyendo 404), consideramos que no existe
+        return of(false);
+      })
+    );
+  }
+
+  /**
+   * Mapea ItemAccountCatalogueSearchRes a Account
+   * 
+   * @param item - Item del backend
+   * @param entId - ID de la empresa
+   * @returns Cuenta mapeada
+   */
+  private mapItemAccountToAccount(item: ItemAccountCatalogueSearchRes, entId: string): Account {
+    return {
+      id: item.id,
+      idEnterprise: entId,
+      code: item.code,
+      description: item.description,
+      nature: item.nature,
+      financialStatus: item.financialStatus,
+      classification: item.classification,
+      parent: item.parent,
+      children: [],
+      showSubAccounts: false
+    };
   }
 
   /**
