@@ -1,4 +1,8 @@
+<!-- Contenedor Principal con la fuente Titillium -->
 <div class="flex w-full h-full font-titillium">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
   <div class="w-full px-4 sm:px-6 lg:px-8">
     <!-- Header Section -->
     <div
@@ -6,12 +10,12 @@
     >
       <div class="flex-1">
         <h1
-          class="text-2xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mb-2"
+          class="text-2xl sm:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mb-2"
         >
-          Gestión de perfiles
+          Gestion de Perfiles
         </h1>
         <p class="text-sm sm:text-base text-gray-600 max-w-3xl leading-relaxed">
-          Aquí podrá ver la lista de perfiles.
+          Administra y configura todos los perfiles del sistema.
         </p>
       </div>
     </div>
@@ -30,108 +34,117 @@
             <input
               pInputText
               type="text"
-              (input)="dt1.filterGlobal($any($event.target).value, 'contains')"
+              (input)="
+                profilesTable.filterGlobal(
+                  $any($event.target).value,
+                  'contains'
+                )
+              "
               placeholder="Buscar perfil..."
               class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
             />
           </p-iconfield>
         </div>
+
         <!-- Buttons -->
         <div class="flex flex-wrap justify-start sm:justify-end gap-2">
           <p-button
             label="Crear Perfil"
-            class="custom-action-button"
             icon="pi pi-plus"
-            (onClick)="redirectTo('/configuration/profiles/create')"
+            (onClick)="createProfile()"
             size="small"
-          ></p-button>
+          >
+          </p-button>
         </div>
       </div>
     </div>
 
-    <!-- Table Container -->
+    <!-- TABLA DE PERFILES: Corregida la alineación con estilos específicos -->
     <p-table
-      #dt1
-      [value]="profiles"
-      dataKey="id"
+      #profilesTable
+      [value]="filteredProfiles"
+      [loading]="loading"
       [paginator]="true"
-      [rows]="5"
-      [showCurrentPageReport]="true"
-      [rowsPerPageOptions]="[5, 10, 15]"
-      [globalFilterFields]="globalFilterFields"
-      [responsiveLayout]="'scroll'"
-      styleClass="p-datatable-header min-h-[20rem]"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      [globalFilterFields]="['name', 'description']"
+      styleClass="p-datatable-striped font-family-sans custom-table-alignment"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      responsiveLayout="scroll"
     >
-      <!-- Table Header -->
       <ng-template pTemplate="header">
         <tr>
-          <th *ngFor="let colum of displayedColumns" class="whitespace-nowrap">
-            <div class="flex items-center gap-2">
-              <span>{{ colum }}</span>
-            </div>
+          <!-- Cabeceras de tabla con el estilo de la guía -->
+          <th
+            pSortableColumn="name"
+            class="font-semibold text-primary border-b-2 border-primary"
+          >
+            Nombre <p-sortIcon field="name"></p-sortIcon>
+          </th>
+          <th
+            pSortableColumn="description"
+            class="font-semibold text-primary border-b-2 border-primary"
+          >
+            Descripción <p-sortIcon field="description"></p-sortIcon>
+          </th>
+          <!-- CORRECCIÓN: Agregar las mismas clases que los otros headers -->
+          <th
+            class="font-semibold text-primary border-b-2 border-primary text-center"
+            style="width: 150px"
+          >
+            Acciones
           </th>
         </tr>
       </ng-template>
 
-      <!-- Table Body -->
       <ng-template pTemplate="body" let-profile>
-        <tr class="hover:bg-gray-50">
-          <td class="whitespace-nowrap">
-            <span class="text-sm font-medium text-gray-900">
-              {{ profile.name }}
-            </span>
+        <tr class="text-neutral-20">
+          <td class="py-3" style="vertical-align: middle">
+            {{ profile.name }}
           </td>
-          <td class="whitespace-nowrap">
-            <span class="text-sm text-gray-900">{{ profile.description }}</span>
+          <td class="py-3" style="vertical-align: middle">
+            {{ profile.description }}
           </td>
-
-          <td class="whitespace-nowrap">
-            <div class="flex items-center justify-center gap-1">
-              <p-button
-                class="material-symbols-outlined p-button-md action-button"
-                (onClick)="redirectToEdit(profile.id)"
-                pTooltip="Editar"
-                tooltipPosition="top"
-                >edit</p-button
-              >
-              <p-button
-                class="material-symbols-outlined p-button-md action-button"
-                (onClick)="redirectToDelete(profile.id)"
-                pTooltip="Eliminar"
-                tooltipPosition="top"
-                >delete</p-button
-              >
-            </div>
+          <!-- CORRECCIÓN: Usar vertical-align middle con CSS inline -->
+          <td class="py-3 text-center" style="vertical-align: middle">
+            <!-- Botones de acción -->
+            <p-button
+              icon="pi pi-pencil"
+              pTooltip="Editar Perfil"
+              tooltipPosition="top"
+              (onClick)="editProfile(profile)"
+              styleClass="p-button-rounded p-button-text text-complementary-green mr-2"
+            ></p-button>
+            <p-button
+              icon="pi pi-trash"
+              pTooltip="Eliminar Perfil"
+              tooltipPosition="top"
+              (onClick)="deleteProfile(profile)"
+              styleClass="p-button-rounded p-button-text text-secondary"
+            ></p-button>
           </td>
         </tr>
       </ng-template>
-      <!-- Empty State -->
+
       <ng-template pTemplate="emptymessage">
         <tr>
           <td
-            [attr.colspan]="displayedColumns.length"
-            class="empty-message-cell"
+            colspan="3"
+            class="text-center py-6 font-family-sans text-neutral-50"
           >
-            <div class="empty-message-container">
-              <div class="flex flex-col items-center gap-4">
-                <div class="space-y-2 text-center">
-                  <h3 class="text-lg font-semibold text-[var(--color-primary)]">
-                    No hay perfiles
-                    <i
-                      class="pi pi-shield bg-gray-100 rounded-full text-2xl"
-                    ></i>
-                  </h3>
-                  <p class="text-sm text-gray-600 max-w-md">
-                    No se encontraron perfiles que coincidan con su búsqueda.
-                  </p>
-                </div>
-                <p-button
-                  label="Crear Perfil"
-                  icon="pi pi-plus"
-                  (onClick)="redirectTo('/configuration/gestion/users/create')"
-                ></p-button>
-              </div>
-            </div>
+            No se encontraron Perfiles.
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td
+            colspan="3"
+            class="text-center py-6 font-family-sans text-neutral-50"
+          >
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p class="mt-2 text-primary">Cargando Perfiles...</p>
           </td>
         </tr>
       </ng-template>
