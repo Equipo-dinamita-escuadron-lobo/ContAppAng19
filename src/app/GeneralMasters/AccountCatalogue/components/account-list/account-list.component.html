@@ -444,25 +444,24 @@
                         <div style="position: relative;">
                             <div *ngIf="accountForm.get('auxiliaryName') && showPrincipalForm"
                                 class="class account-section">
-                                <div>
-                                    <div class="field-wrapper">
-                                        <label for="auxiliar1"
-                                            class="col-span-1 mr-4 mt-1">{{accountForm.get('auxiliaryCode')?.value}}</label>
-                                        <input type="text" formControlName="codeAuxiliary" placeholder="Código"
-                                            class="input-base"
-                                            [readOnly]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
-                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
-                                            (keydown)="onCodeKeyDown($event, 2)"
-                                            (input)="onCodeInput($event, 2)"
-                                            maxlength="2">
-                                    </div>
-                                    <div class="w-full sm:w-auto">
-                                        <input type="text" formControlName="auxiliaryName" placeholder="Nombre"
-                                            class="input-base"
-                                            [readOnly]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
-                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
-                                            (keydown)="onNameKeyDown($event)">
-                                    </div>
+                                <div class="field-wrapper">
+                                    <label for="auxiliar1"
+                                        class="col-span-1 mr-4 mt-1">{{accountForm.get('auxiliaryCode')?.value}}</label>
+                                    <input type="text" formControlName="codeAuxiliary" placeholder="Código"
+                                        class="input-base"
+                                        [readOnly]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onCodeKeyDown($event, 2)"
+                                        (input)="onCodeInput($event, 2)"
+                                        maxlength="2">
+                                </div>
+                                <div class="w-full sm:w-auto">
+                                    <input type="text" formControlName="auxiliaryName" placeholder="Nombre"
+                                        class="input-base"
+                                        [readOnly]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onNameKeyDown($event)">
+                                </div>
                                     <div>
                                         <div *ngIf="(accountForm.get('codeAuxiliary')?.hasError('required') || accountForm.get('codeAuxiliary')?.value === '') && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
                                             class="error-message">* Código es obligatorio</div>
@@ -487,7 +486,6 @@
                                             </svg>
                                         </button>
                                     </div>
-                                </div>
                             </div>
                         </div>
 

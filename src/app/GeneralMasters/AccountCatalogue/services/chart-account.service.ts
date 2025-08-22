@@ -119,13 +119,14 @@ export class ChartAccountService {
   }
 
   /**
-     * Elimina una cuenta por su ID.
+     * Elimina una cuenta por su ID y empresa.
      * 
      * @param id - El ID de la cuenta a eliminar.
+     * @param idEnterprise - El ID de la empresa.
      * @returns Un observable que indica si la eliminación fue exitosa.
      */
-  deleteAccount(id: string): Observable<void> {
-    return this.http.delete<void>(this.apiURL + id);
+  deleteAccount(id: string, idEnterprise: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiURL}${id}/${idEnterprise}`);
   }
 
   /**

@@ -1321,7 +1321,7 @@ export class AccountListComponent {
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed && this.accountSelected?.id) {
-            this._accountService.deleteAccount(this.accountSelected.id.toString()).subscribe(
+            this._accountService.deleteAccount(this.accountSelected.id.toString(), this.getIdEnterprise()).subscribe(
               () => {
                 Swal.fire({
                   title: 'Eliminación exitosa',
