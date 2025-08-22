@@ -18,7 +18,6 @@ export const routes: Routes = [
       breadcrumb: 'enterprise-list',
     },
     component: ListEnterpriseComponent,
-    canActivate: [hasRoleGuard(['admin_realm', 'user_realm'])],
   },
   {
     path: 'enterprise/create',
@@ -29,7 +28,6 @@ export const routes: Routes = [
       import(
         './GeneralMasters/Enterprise/create-enterprise/create-enterprise.component'
       ).then((m) => m.CreateEnterpriseComponent),
-    canActivate: [hasRoleGuard(['admin_realm'])],
   },
   {
     path: 'enterprise/edit',
@@ -40,12 +38,10 @@ export const routes: Routes = [
       import(
         './GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component'
       ).then((m) => m.EditEnterpriseComponent),
-    canActivate: [hasRoleGuard(['admin_realm'])],
   },
   {
     path: '',
     component: MainTemplateComponent,
-    canActivate: [hasRoleGuard(['admin_realm', 'user_realm', 'super_realm'])],
     data: {
       breadcrumb: 'Home',
     },
@@ -72,7 +68,6 @@ export const routes: Routes = [
               import(
                 './Configuration/Users/Components/user-list/user-list.component'
               ).then((m) => m.UserListComponent),
-            canActivate: [hasRoleGuard(['admin_realm'])],
           },
           {
             path: 'users/create',
@@ -81,7 +76,6 @@ export const routes: Routes = [
               import(
                 './Configuration/Users/Components/user-create/user-create.component'
               ).then((m) => m.UserCreateComponent),
-            canActivate: [hasRoleGuard(['admin_realm'])],
           },
           {
             path: 'users/edit/:id',
@@ -90,7 +84,6 @@ export const routes: Routes = [
               import(
                 './Configuration/Users/Components/user-edit/user-edit.component'
               ).then((m) => m.UserEditComponent),
-            canActivate: [hasRoleGuard(['admin_realm'])],
           },
           {
             path: 'profiles',
@@ -125,15 +118,20 @@ export const routes: Routes = [
             ],
           },
           {
-            path: 'permissions/list',
+            path: 'permissions',
             data: {
               breadcrumb: 'Gestión de Permisos',
             },
-            loadComponent: () =>
-              import(
-                './Configuration/Permissions/Components/permission-list/permission-list.component'
-              ).then((m) => m.PermissionListComponent),
-            canActivate: [hasRoleGuard(['admin_realm'])],
+            children: [
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Permissions/Components/permission-list/permission-list.component'
+                  ).then((m) => m.PermissionListComponent),
+              },
+            ],
           },
         ],
       },

@@ -1,39 +1,74 @@
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { FileUploadModule } from 'primeng/fileupload';
+import { InputTextModule } from 'primeng/inputtext';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
-import { TableModule } from 'primeng/table';
-import { TagModule } from 'primeng/tag';
+import { MessageService } from 'primeng/api';
+import { RolesWithPermissions } from '../../Models/Permission';
+import { PermissionsService } from '../../Services/permission.service';
 
 @Component({
   selector: 'app-permission-list',
   imports: [
     CommonModule,
+    FormsModule,
     TableModule,
     ButtonModule,
     InputTextModule,
-    FileUploadModule,
-    TagModule,
+    ToastModule,
+    ConfirmDialogModule,
+    TooltipModule,
     IconFieldModule,
     InputIconModule,
   ],
+  providers: [MessageService],
   templateUrl: './permission-list.component.html',
   styleUrl: './permission-list.component.css',
 })
-export class PermissionListComponent {
-  profiles: any[] = [];
+export class PermissionListComponent implements OnInit {
+  private readonly router = inject(Router);
+  private readonly permissionsService = inject(PermissionsService);
+  private readonly messageService = inject(MessageService);
 
-  globalFilterFields: string[] = ['Perfil'];
+  rolesWithPermissions: RolesWithPermissions[] = [];
+  filteredRolesWithPermissions: RolesWithPermissions[] = [];
+  loading: boolean = false;
 
-  displayedColumns: any[] = ['Perfil', 'Permisos'];
-
-  redirectTo(arg0: string) {
-    throw new Error('Method not implemented.');
+  ngOnInit(): void {
+    this.getRolesWithPermissions();
   }
-  redirectToView(arg0: any) {
-    throw new Error('Method not implemented.');
+
+  getRolesWithPermissions(): void {
+    this.loading = true;
+    this.permissionsService.getRolesWithPermissions().subscribe({
+      next: (data) => {
+        this.rolesWithPermissions = data;
+        this.filteredRolesWithPermissions = data;
+        this.loading = false;
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los roles con permisos.',
+        });
+        this.loading = false;
+      },
+    });
+  }
+
+  assignPermissions(): void {
+    this.router.navigate(['/configuration/permissions/assign']);
+  }
+
+  editPermisos(role: RolesWithPermissions): void {
+    this.router.navigate(['/configuration/permissions/edit', role.role]);
   }
 }
