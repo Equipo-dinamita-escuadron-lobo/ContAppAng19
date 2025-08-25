@@ -3,8 +3,8 @@ export interface Permission {
 }
 
 export interface AssignPermissionRequest {
-  permissions: string[];
-  roleName: string; // agrego esto porque tu backend espera roleName también
+  permissionNames: string[];
+  roleName: string;
 }
 
 export interface RolesWithPermissions {

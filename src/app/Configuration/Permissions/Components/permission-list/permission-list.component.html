@@ -68,7 +68,7 @@
       [rowsPerPageOptions]="[5, 10, 20]"
       [globalFilterFields]="['role', 'permissions.name']"
       styleClass="p-datatable-striped font-family-sans custom-table-alignment"
-      [tableStyle]="{ 'min-width': '50rem' }"
+      [tableStyle]="{ 'min-width': '55rem' }"
       responsiveLayout="scroll"
     >
       <ng-template pTemplate="header">
@@ -94,17 +94,26 @@
 
       <ng-template pTemplate="body" let-role>
         <tr class="text-neutral-20">
-          <td class="py-3" style="vertical-align: middle">
+          <td class="py-3 align-top">
             {{ role.role }}
           </td>
-          <td class="py-3" style="vertical-align: middle">
-            <ul class="list-disc pl-5">
-              <li *ngFor="let perm of role.permissions">
-                {{ perm.name }}
-              </li>
-            </ul>
+          <td class="py-3 align-top">
+            <div *ngFor="let group of role.groupedPermissions" class="mb-3">
+              <!-- Módulo con negrita menos intensa -->
+              <h4 class="module-title">
+                {{ group.module }}
+              </h4>
+
+              <!-- Permisos alineados con el módulo -->
+              <ul class="permissions-list">
+                <li *ngFor="let perm of group.permissions">
+                  {{ perm.name }}
+                </li>
+              </ul>
+            </div>
           </td>
-          <td class="py-3 text-center" style="vertical-align: middle">
+
+          <td class="py-3 text-center align-top">
             <p-button
               icon="pi pi-pencil"
               pTooltip="Editar Permisos"

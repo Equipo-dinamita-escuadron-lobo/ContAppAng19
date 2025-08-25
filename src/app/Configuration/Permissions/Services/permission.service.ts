@@ -12,7 +12,7 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class PermissionsService {
-  private apiUrl = environment.API_URL + 'keycloak/permissions/';
+  private apiUrl = environment.API_URL + 'keycloak/permissions';
 
   constructor(private http: HttpClient) {}
 
@@ -21,7 +21,9 @@ export class PermissionsService {
    */
   findAllPermissions(): Observable<Permission[]> {
     return this.http.get<string[]>(`${this.apiUrl}/findAll`).pipe(
-      map((permissions) => permissions.map((p) => ({ name: p }))) // transformamos a { name: string }
+      map(
+        (permissions) => permissions.map((p) => ({ name: p })) // transformamos a { name: string }
+      )
     );
   }
 
@@ -29,7 +31,13 @@ export class PermissionsService {
    * Asignar un rol a múltiples permisos
    */
   addPolicyToPermissions(request: AssignPermissionRequest): Observable<string> {
-    return this.http.put(`${this.apiUrl}/updatePermissions`, request, {
+    return this.http.put(`${this.apiUrl}/assignRoleToPermissions`, request, {
+      responseType: 'text',
+    });
+  }
+
+  updatePermissions(request: AssignPermissionRequest): Observable<string> {
+    return this.http.put(`${this.apiUrl}/updatePermissionsForRole`, request, {
       responseType: 'text',
     });
   }
