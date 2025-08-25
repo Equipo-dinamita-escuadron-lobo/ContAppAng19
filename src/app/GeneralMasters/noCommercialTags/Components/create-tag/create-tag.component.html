@@ -1,0 +1,73 @@
+<div class="w-full">
+    <p-toast></p-toast>
+    <h1
+     class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
+    >
+        Crear Etiqueta No Comercial
+    </h1>
+    <p class="mb-6 text-lg text-gray-700">
+        Complete la información necesaria para crear una nueva etiqueta.
+    </p>
+
+    <div class="mt-6">
+        <form [formGroup]="addForm" (ngSubmit)="onSubmit()" class="mt-4">
+            <div class="w-full">
+                <div class="flex gap-4 mb-4">
+                    <!-- titulo -->
+                    <div class="w-1/2">
+                        <label for="title" class="block mb-2 font-semibold">
+                            Titulo <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                         pInputText
+                         id="title"
+                         formControlName="title"
+                         placeholder="Bono Navideño"
+                         class="w-full"
+                        />
+                        <p-message
+                            severity="error"
+                            *ngIf="addForm.get('title')?.touched && addForm.get('title')?.invalid"
+                            text="El titulo es requerido"
+                        ></p-message>
+                    </div>
+
+                     <!-- Descripción -->
+                    <div class="w-1/2">
+                        <label for="description" class="block mb-2 font-semibold">
+                        Descripción <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                        pInputText
+                        id="description"
+                        formControlName="description"
+                        placeholder="Ej: Bono para navidad"
+                        class="w-full"
+                        />
+                        <p-message
+                        severity="error"
+                        *ngIf="addForm.get('description')?.touched && addForm.get('description')?.invalid"
+                        text="La descripción es requerida"
+                        ></p-message>
+                    </div>
+                    
+
+                    <!-- Botones de acción -->
+                     <div class="flex justify-center gap-4 mt-12 pt-40">
+                        <p-button 
+                            type="button"
+                            label="Cancelar" 
+                            severity="secondary"
+                            (onClick)="goBack()">
+                        </p-button>
+                        <p-button 
+                            type="submit"
+                            label="Guardar Etiqueta"
+                            [disabled]="addForm.invalid">
+                        </p-button>
+                     </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
