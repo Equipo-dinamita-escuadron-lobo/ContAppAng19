@@ -131,6 +131,22 @@ export const routes: Routes = [
                     './Configuration/Permissions/Components/permission-list/permission-list.component'
                   ).then((m) => m.PermissionListComponent),
               },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Permiso' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Permissions/Components/permission-create/permission-create.component'
+                  ).then((m) => m.PermissionCreateComponent),
+              },
+              {
+                path: 'edit/:role',
+                data: { breadcrumb: 'Editar Permiso' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Permissions/Components/permission-edit/permission-edit.component'
+                  ).then((m) => m.PermissionEditComponent),
+              },
             ],
           },
         ],
