@@ -1,39 +1,124 @@
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { FileUploadModule } from 'primeng/fileupload';
+import { InputTextModule } from 'primeng/inputtext';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
-import { TableModule } from 'primeng/table';
-import { TagModule } from 'primeng/tag';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { RolesWithPermissions } from '../../Models/Permission';
+import { PermissionsService } from '../../Services/permission.service';
 
 @Component({
   selector: 'app-permission-list',
   imports: [
     CommonModule,
+    FormsModule,
     TableModule,
     ButtonModule,
     InputTextModule,
-    FileUploadModule,
-    TagModule,
+    ToastModule,
+    ConfirmDialogModule,
+    TooltipModule,
     IconFieldModule,
     InputIconModule,
   ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './permission-list.component.html',
   styleUrl: './permission-list.component.css',
 })
-export class PermissionListComponent {
-  profiles: any[] = [];
+export class PermissionListComponent implements OnInit {
+  private readonly router = inject(Router);
+  private readonly permissionsService = inject(PermissionsService);
+  private readonly messageService = inject(MessageService);
 
-  globalFilterFields: string[] = ['Perfil'];
+  rolesWithPermissions: RolesWithPermissions[] = [];
+  filteredRolesWithPermissions: RolesWithPermissions[] = [];
+  loading: boolean = false;
 
-  displayedColumns: any[] = ['Perfil', 'Permisos'];
-
-  redirectTo(arg0: string) {
-    throw new Error('Method not implemented.');
+  ngOnInit(): void {
+    this.getRolesWithPermissions();
   }
-  redirectToView(arg0: any) {
-    throw new Error('Method not implemented.');
+
+  getRolesWithPermissions(): void {
+    this.loading = true;
+    this.permissionsService.getRolesWithPermissions().subscribe({
+      next: (data) => {
+        // Agrupamos y ordenamos los permisos de cada rol
+        this.rolesWithPermissions = data.map((role) => ({
+          ...role,
+          groupedPermissions: this.groupPermissions(role.permissions),
+        }));
+        this.filteredRolesWithPermissions = this.rolesWithPermissions;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar roles con permisos:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los roles con permisos.',
+        });
+        this.loading = false;
+      },
+    });
+  }
+
+  /**
+   * Agrupa permisos por módulo y los ordena alfabéticamente
+   */
+  private groupPermissions(
+    permissions: any[]
+  ): { module: string; permissions: any[] }[] {
+    const grouped: Record<string, any[]> = {};
+    permissions.forEach((perm) => {
+      const module = this.findModuleForPermission(perm.name);
+      if (!grouped[module]) {
+        grouped[module] = [];
+      }
+      grouped[module].push(perm);
+    });
+
+    // Ordenar permisos dentro de cada módulo
+    return Object.keys(grouped).map((module) => ({
+      module,
+      permissions: grouped[module].sort((a, b) =>
+        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
+      ),
+    }));
+  }
+
+  private findModuleForPermission(permissionName: string): string {
+    const modules = [
+      'Unidad de Medida',
+      'Empresa',
+      'Tipo de Movimiento',
+      'Bodega',
+      'Producto',
+      'Usuarios',
+    ];
+
+    const match = modules.find((m) =>
+      permissionName.toLowerCase().includes(m.toLowerCase())
+    );
+    if (match) return match;
+
+    const words = permissionName.split(' ');
+    return words.length > 1
+      ? words.slice(-2).join(' ')
+      : words[words.length - 1];
+  }
+
+  assignPermissions(): void {
+    this.router.navigate(['/configuration/permissions/create']);
+  }
+
+  editPermisos(role: RolesWithPermissions): void {
+    this.router.navigate(['/configuration/permissions/edit', role.role]);
   }
 }

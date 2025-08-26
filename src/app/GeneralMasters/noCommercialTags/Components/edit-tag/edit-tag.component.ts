@@ -1,7 +1,4 @@
-import { TypeId } from './../../../ThirdParties/models/TypeId';
 import { NoCommercialTagUpdateRequest } from './../../Models/NoCommercialTagUpdateRequest';
-import { NoCommercialTag } from './../../Models/NoCommercialTag';
-import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,12 +10,10 @@ import { ToastModule } from 'primeng/toast';
 import { NoCommercialTagService } from '../../Services/no-commercial-tag.service';
 import { MessageService } from 'primeng/api';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
-import { NoCommercialTagRequest } from '../../Models/NoCommercialTagRequest';
 
 @Component({
   selector: 'app-edit-tag',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
@@ -26,7 +21,7 @@ import { NoCommercialTagRequest } from '../../Models/NoCommercialTagRequest';
     MessageModule,
     ToastModule
   ],
-  providers:[MessageModule],
+  providers:[MessageService],
   templateUrl: './edit-tag.component.html',
   styleUrl: './edit-tag.component.css'
 })
@@ -56,7 +51,7 @@ export class EditTagComponent implements OnInit {
 
     //Suscribirse a cambios del formulario para detectar modificaciones
     this.editForm.valueChanges.subscribe(()=>{
-      this.checkForChanges;
+      this.checkForChanges();
     });
   }
 
@@ -69,11 +64,12 @@ export class EditTagComponent implements OnInit {
     const tagData=navigation?.extras?.state?.['tagData'] || history.state?.tagData;
 
     if(tagData){
-      console.log('Datos de etiuetas recibidos del estado: ',tagData);
+      console.log('Datos de etiquetas recibidos del estado: ',tagData);
       this.tagData=tagData;
-
     }
 
+    // Cargar los datos de la etiqueta
+    this.loadTax();
   }
 
 
@@ -157,18 +153,17 @@ export class EditTagComponent implements OnInit {
     if(this.editForm.valid){
       const formValue=this.editForm.value;
 
-      const tagData:NoCommercialTag={
-        id:this.tagId,
-        title:formValue.Title,
+      const tagData:NoCommercialTagUpdateRequest={
+        title:formValue.title,
         description:formValue.description
       };
 
-      this.NoCommercialTagService.updateTag(this.tagData.id,this.tagData).subscribe({
+      this.NoCommercialTagService.updateTag(this.tagId, tagData).subscribe({
         next:(response) =>{
           this.messageService.add({
             severity:'success',
             summary:'Éxito',
-            detail: 'etiqueta actualizado exitosamente',
+            detail: 'Etiqueta actualizada exitosamente',
             life:3000
           });
           setTimeout(() => {
@@ -177,7 +172,7 @@ export class EditTagComponent implements OnInit {
   
         },
         error:(error)=>{
-          console.error('Error al actualizar la etiqueta'),error;
+          console.error('Error al actualizar la etiqueta:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -189,10 +184,6 @@ export class EditTagComponent implements OnInit {
     }else{
       this.markFormGroupTouched();
     }
-
-    
-
-
   }
   
   /**
@@ -206,7 +197,7 @@ export class EditTagComponent implements OnInit {
   }
 
   /**
-   * Navega de vuelta a la lista de impuestos
+   * Navega de vuelta a la lista de etiquetas
    */
   goBack(): void {
     this.router.navigate(['/gen-masters/no-commercial-tags/list']);

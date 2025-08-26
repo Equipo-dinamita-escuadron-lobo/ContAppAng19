@@ -51,7 +51,7 @@ export class MenuComponent {
     {
       title: 'Tipos de Documentos',
       icon: 'description',
-      route: '/gen-masters/document-types',
+      route: '/gen-masters/document-types/list',
       description: 'Tipos de documentos del sistema'
     },
 
@@ -67,13 +67,25 @@ export class MenuComponent {
       route: '/gen-masters/cost-centers',
       description: 'Configuración de centros de costo'
     },
-
+    {
+      title: 'Calendario Contable',
+      icon: 'date_range',
+      route: '/gen-masters/accounting-calendar',
+      description: 'Configuración de periodos contables'
+    },
+    {
+      title: 'Etiquetas no comerciales',
+      icon: 'label',
+      route: '/gen-masters/no-commercial-tags/list',
+      description: 'Gestión de etiquetas no comerciales'
+    },
     {
       title: 'Centro de Ayuda',
       icon: 'help',
       route: '/gen-masters/help-panels',
       description: 'Configuración del centro de ayuda del sistema'
     }
+    
   ];
 
   constructor(private router: Router) {}

@@ -46,7 +46,7 @@ export class CostCentersListComponent {
   showButton = false;
   showButtonDelete = false;
   addChild = false;
-  currentLevel: 'cuenta' | 'subcuenta' | 'auxiliar' = 'cuenta';
+  currentLevel: 'costo' | 'subcosto' | 'auxiliar costo' = 'costo';
   isCreatingRoot = false;
 
   // Forms
@@ -160,10 +160,10 @@ export class CostCentersListComponent {
     this.showButton = false;
     this.addChild = true;
     this.isCreatingRoot = true;
-    this.currentLevel = 'cuenta';
+    this.currentLevel = 'costo';
   }
 
-  addNewChild(level: 'subcuenta' | 'auxiliar') {
+  addNewChild(level: 'subcosto' | 'auxiliar costo') {
     this.addChild = true;
     this.showButton = false;
     this.showPrincipalForm = true;
@@ -269,9 +269,9 @@ export class CostCentersListComponent {
 
   private updateCurrentLevel() {
     const len = this.selected ? this.selected.code.length : 0;
-    if (len <= 2) this.currentLevel = 'cuenta';
-    else if (len <= 4) this.currentLevel = 'subcuenta';
-    else this.currentLevel = 'auxiliar';
+    if (len <= 2) this.currentLevel = 'costo';
+    else if (len <= 4) this.currentLevel = 'subcosto';
+    else this.currentLevel = 'auxiliar costo';
   }
 
   private getSelectedParent(): CostCenterNode | undefined {
@@ -318,7 +318,7 @@ export class CostCentersListComponent {
   private setEditCodeValidators() {
     const control = this.form.get('codeSegment');
     if (!control) return;
-    if (this.currentLevel === 'auxiliar') {
+    if (this.currentLevel === 'auxiliar costo') {
       control.setValidators([Validators.required, Validators.maxLength(28), Validators.pattern('^[a-zA-Z0-9]+$')]);
     } else {
       control.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(2), Validators.pattern('^[0-9]{2}$')]);
@@ -327,7 +327,7 @@ export class CostCentersListComponent {
   }
 
   onEditCodeKeyDown(event: KeyboardEvent) {
-    if (this.currentLevel === 'auxiliar') return;
+    if (this.currentLevel === 'auxiliar costo') return;
     const allowed = ['Backspace','Delete','Tab','Escape','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'];
     if (event.ctrlKey || event.altKey || event.metaKey) return;
     if (allowed.includes(event.key)) return;
@@ -337,7 +337,7 @@ export class CostCentersListComponent {
   onEditCodeInput(event: Event) {
     const input = event.target as HTMLInputElement;
     let raw = input.value || '';
-    if (this.currentLevel === 'auxiliar') {
+    if (this.currentLevel === 'auxiliar costo') {
       let value = raw.replace(/[^a-zA-Z0-9]/g, '');
       if (value.length > 28) value = value.slice(0, 28);
       input.value = value;

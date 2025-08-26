@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -16,7 +15,6 @@ import { MessageService } from 'primeng/api';
 @Component({
   selector: 'app-create-tag',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     ButtonModule, 
     InputTextModule,
@@ -44,7 +42,9 @@ export class CreateTagComponent implements OnInit{
   }
 
   ngOnInit():void{
+    console.log('Componente de creación inicializado');
     this.entData = this.localStorageMethods.loadEnterpriseData();
+    console.log('Datos de empresa cargados:', this.entData);
   }
 
   onSubmit():void{

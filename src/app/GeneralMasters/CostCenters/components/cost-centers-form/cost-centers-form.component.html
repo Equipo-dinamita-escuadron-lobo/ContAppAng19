@@ -8,11 +8,11 @@
         formControlName="code"
         placeholder="Código"
         class="input-base mb-2 sm:mb-0"
-        [attr.inputmode]="currentLevel === 'auxiliar' ? null : 'numeric'"
-        [attr.pattern]="currentLevel === 'auxiliar' ? null : '[0-9]*'"
+        [attr.inputmode]="currentLevel === 'auxiliar costo' ? null : 'numeric'"
+        [attr.pattern]="currentLevel === 'auxiliar costo' ? null : '[0-9]*'"
         (keydown)="onCodeKeyDown($event)"
         (input)="onCodeInput($event)"
-        [attr.maxlength]="currentLevel === 'auxiliar' ? null : 2"
+        [attr.maxlength]="currentLevel === 'auxiliar costo' ? null : 2"
       />
     </div>
 
@@ -29,19 +29,19 @@
 
     <div>
       <div *ngIf="codeControl?.hasError('required') && (codeControl?.dirty || codeControl?.touched)" class="error-message">* Código es requerido</div>
-      <div *ngIf="currentLevel !== 'auxiliar' && (codeControl?.hasError('maxlength') || codeControl?.hasError('minlength')) && (codeControl?.dirty || codeControl?.touched)" class="error-message">Código debe tener dos dígitos</div>
+      <div *ngIf="currentLevel !== 'auxiliar costo' && (codeControl?.hasError('maxlength') || codeControl?.hasError('minlength')) && (codeControl?.dirty || codeControl?.touched)" class="error-message">Código debe tener dos dígitos</div>
       <div *ngIf="codeControl?.hasError('pattern') && (codeControl?.dirty || codeControl?.touched)" class="error-message">Código inválido</div>
     </div>
     <div>
       <div *ngIf="nameControl?.hasError('required') && (nameControl?.dirty || nameControl?.touched)" class="error-message">* Nombre es requerido</div>
     </div>
-    <div class="floating-label">{{ currentLevel }}</div>
+    <div class="floating-label">{{ currentLevel === 'costo' ? 'Costo' : (currentLevel === 'subcosto' ? 'Subcosto' : 'Auxiliar costo') }}</div>
   </div>
 
   <div class="flex flex-wrap justify-center items-center mt-4 gap-3">
     <p-button label="Cancelar" (click)="cancel()" styleClass="p-button-danger p-button-raised"></p-button>
     <div *ngIf="form.valid">
-      <p-button [label]="'Guardar ' + currentLevel" (click)="send()" styleClass="p-button-raised"></p-button>
+      <p-button [label]="'Guardar ' + (currentLevel === 'costo' ? 'Costo' : (currentLevel === 'subcosto' ? 'Subcosto' : 'Auxiliar costo'))" (click)="send()" styleClass="p-button-raised"></p-button>
     </div>
   </div>
 </form>

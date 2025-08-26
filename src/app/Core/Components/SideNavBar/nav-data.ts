@@ -60,7 +60,7 @@ export const navbarData: INavbarData[] = [
         label: 'Métodos de Pago',
       },
       {
-        routeLink: '/gen-masters/document-types',
+        routeLink: '/gen-masters/document-types/list',
         icon: 'description',
         label: 'Tipos de Documentos',
       },
@@ -75,7 +75,16 @@ export const navbarData: INavbarData[] = [
         icon: 'paid',
         label: 'Centros de Costo',
       },
-
+      {
+        routeLink: '/gen-masters/accounting-calendar',
+        icon: 'date_range',
+        label: 'Calendario Contable',
+      },
+      {
+        routeLink: '/gen-masters/no-commercial-tags/list',
+        icon: 'label',
+        label:'Etiquetas no comerciales'
+      },
       {
         routeLink: '/gen-masters/help-panels',
         icon: 'help',
@@ -92,12 +101,7 @@ export const navbarData: INavbarData[] = [
         routeLink: 'TO DO',
         icon: 'circle',
         label: 'Maestros',
-        items: [
-          {
-            routeLink: 'TO DO',
-            icon: 'assignment',
-            label: 'PUC',
-          },
+        items: [          
           {
             routeLink: 'TO DO',
             icon: 'docs',

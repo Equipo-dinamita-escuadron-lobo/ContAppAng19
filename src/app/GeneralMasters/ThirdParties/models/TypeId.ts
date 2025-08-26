@@ -1,6 +1,5 @@
-export interface TypeId{
-    entId: String;
-    typeId: string;
-    typeIdname: string;
-
+export interface TypeId {
+  entId: String;
+  typeId: string;
+  typeIdname: string;
 }

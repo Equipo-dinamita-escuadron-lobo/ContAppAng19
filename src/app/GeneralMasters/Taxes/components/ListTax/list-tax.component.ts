@@ -60,7 +60,7 @@ export class ListTaxComponent implements OnInit {
   loadTaxes(): void {
     if (this.entData?.id) {
       this.loading = true;
-      
+
       // Cargar impuestos primero
       this.taxService.getTaxes(this.entData.id).subscribe({
         next: (taxes) => {
@@ -72,7 +72,7 @@ export class ListTaxComponent implements OnInit {
           }));
           this.filteredTaxes = [...this.taxes];
           this.loading = false;
-          
+
           // Cargar nombres de cuentas en segundo plano
           this.loadAccountNames();
         },
@@ -112,7 +112,7 @@ export class ListTaxComponent implements OnInit {
    */
   private flattenAccounts(accounts: any[]): any[] {
     const result: any[] = [];
-    
+
     const flatten = (items: any[]) => {
       items.forEach(item => {
         result.push(item);
@@ -121,7 +121,7 @@ export class ListTaxComponent implements OnInit {
         }
       });
     };
-    
+
     flatten(accounts);
     return result;
   }
@@ -133,7 +133,7 @@ export class ListTaxComponent implements OnInit {
     return taxes.map(tax => {
       const depositAccount = this.accounts.find(acc => acc.code === tax.depositAccount);
       const refundAccount = this.accounts.find(acc => acc.code === tax.refundAccount);
-      
+
       return {
         ...tax,
         depositAccountName: depositAccount ? `${depositAccount.code} - ${depositAccount.description}` : tax.depositAccount || 'No especificada',

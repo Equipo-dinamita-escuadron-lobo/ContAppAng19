@@ -1,5 +1,4 @@
 import { NoCommercialTagService } from './../../Services/no-commercial-tag.service';
-import { EntData } from './../../../../Shared/Methods/local-storage.method';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
@@ -54,24 +53,25 @@ export class ListTagComponent implements OnInit {
 
   ngOnInit():void{
     this.entData=this.localStorageMethods.loadEnterpriseData();
-
+    this.loadTags(); // Agregar esta línea para cargar los tags
   }
 
   loadTags():void{
     if(this.entData?.id){
       this.loading=true;
-      //cargar impuestos primero
+      //cargar tags primero
       this.noCommercialTagService.getAllTags(this.entData.id).subscribe({
         next:(tags) =>{
           this.tags=tags.map((tag:any)=>({
-            ...tag,
-
+            id: tag.id,
+            title: tag.title,
+            description: tag.description
           }));
           this.filteredTags=[...this.tags]
           this.loading = false;
         },
         error:(error)=>{
-          console.error('Error al cargar los impuestos:', error);
+          console.error('Error al cargar los tags:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -86,22 +86,35 @@ export class ListTagComponent implements OnInit {
 
 
   /**
-   * Navega al componente de creación de impuestos
+   * Navega al componente de creación de etiquetas
    */
   createTag(): void {
-    this.router.navigate(['/gen-masters/no-commercial-tags/create']);
+    console.log('Navegando a crear etiqueta...');
+    console.log('Ruta actual:', this.router.url);
+    this.router.navigate(['/gen-masters/no-commercial-tags/create']).then(() => {
+      console.log('Navegación completada');
+    }).catch(error => {
+      console.error('Error en navegación:', error);
+    });
   }
 
   /**
-   * Navega al componente de edición de impuestos
+   * Navega al componente de edición de etiquetas
    */
   editTag(tag:NoCommercialTag):void{
-    this.router.navigate(['/gen-masters/no-commercial-tags/edit'],{state:{tagData:tag}});
+    console.log('=== editTag() llamado ===');
+    console.log('Tag a editar:', tag);
+    console.log('Navegando a editar etiqueta:', tag);
+    this.router.navigate(['/gen-masters/no-commercial-tags/edit', tag.id],{state:{tagData:tag}}).then(() => {
+      console.log('Navegación a edición completada');
+    }).catch(error => {
+      console.error('Error en navegación a edición:', error);
+    });
   }
 
 
   /**
-   * Confirma y elimina un impuesto
+   * Confirma y elimina una etiqueta
    */
 
   deleteTag(tag:NoCommercialTag):void{
@@ -118,7 +131,7 @@ export class ListTagComponent implements OnInit {
             this.messageService.add({
               severity: 'success',
               summary: 'Éxito',
-              detail: 'Impuesto eliminado exitosamente'
+              detail: 'Etiqueta eliminada exitosamente'
             });
             this.loadTags(); 
           },

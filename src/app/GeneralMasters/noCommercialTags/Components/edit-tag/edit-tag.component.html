@@ -1,9 +1,9 @@
-<div class="w-full">
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20">
     <p-toast></p-toast>
     <h1
      class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
     >
-        Editar Etiqueta No Comercial
+        Editar etiqueta no comercial
     </h1>
     <p class="mb-6 text-lg text-gray-700">
         Modifique la información necesaria de la etiqueta.
@@ -11,64 +11,68 @@
 
     <div class="mt-6">
         <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="mt-4">
-            <div class="w-full">
-                <div class="flex gap-4 mb-4">
-                    <!-- titulo -->
-                    <div class="w-1/2">
-                        <label for="title" class="block mb-2 font-semibold">
-                            Titulo <span class="text-red-500">*</span>
-                        </label>
-                        <input 
-                         pInputText
-                         id="title"
-                         formControlName="title"
-                         placeholder="Bono Navideño"
-                         class="w-full"
-                        />
+            
+            <!-- Contenedor de campos de formulario para mejor responsividad -->
+            <div class="flex flex-wrap -mx-2 mb-4">
+                
+                <!-- Título -->
+                <div class="w-full md:w-1/2 px-2 mb-4 md:mb-0">
+                    <label for="title" class="block mb-2 font-semibold">
+                        Título <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                     pInputText
+                     id="title"
+                     formControlName="title"
+                     placeholder="Bono Navideño"
+                     class="w-full"
+                    />
+
+                    @if (editForm.get('title')?.touched && editForm.get('title')?.invalid) {
                         <p-message
                             severity="error"
-                            *ngIf="editForm.get('code')?.touched && editForm.get('code')?.invalid"
                             text="El titulo es requerido"
                         ></p-message>
-                    </div>
+                    }
+                </div>
 
-                     <!-- Descripción -->
-                    <div class="w-1/2">
-                        <label for="description" class="block mb-2 font-semibold">
-                        Descripción <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                        pInputText
-                        id="description"
-                        formControlName="description"
-                        placeholder="Ej: Impuesto al Valor Agregado"
-                        class="w-full"
-                        />
-                        <p-message
-                        severity="error"
-                        *ngIf="editForm.get('description')?.touched && editForm.get('description')?.invalid"
-                        text="La descripción es requerida"
-                        ></p-message>
-                    </div>
+                <!-- Descripción -->
+                <div class="w-full md:w-1/2 px-2">
+                    <label for="description" class="block mb-2 font-semibold">
+                    Descripción <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                    pInputText
+                    id="description"
+                    formControlName="description"
+                    placeholder="Ej: Bono para navidad"
+                    class="w-full"
+                    />
                     
-
-                    <!-- Botones de acción -->
-                     <div class="flex justify-center gap-4 mt-12 pt-40">
-                        <p-button 
-                            type="button"
-                            label="Cancelar" 
-                            severity="secondary"
-                            (onClick)="goBack()">
-                        </p-button>
-                        <p-button 
-                            type="submit"
-                            label="Actualizar Impuesto"
-                            [disabled]="editForm.invalid || !hasChanges">
-                        </p-button>
-                     </div>
-
+                    @if (editForm.get('description')?.touched && editForm.get('description')?.invalid) {
+                        <p-message
+                            severity="error"
+                            text="La descripción es requerida"
+                        ></p-message>
+                    }
                 </div>
             </div>
+
+            <!-- Botones de acción, ahora centrados y con espaciado limpio -->
+            <div class="flex justify-center gap-4 mt-8">
+                <p-button 
+                    type="button"
+                    label="Cancelar" 
+                    severity="secondary"
+                    (onClick)="goBack()">
+                </p-button>
+                <p-button 
+                    type="submit"
+                    label="Actualizar Etiqueta"
+                    [disabled]="editForm.invalid || !hasChanges">
+                </p-button>
+            </div>
+
         </form>
     </div>
 </div>

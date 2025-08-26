@@ -1,6 +1,4 @@
-import { Tax } from './../../Taxes/models/Tax';
 import { NoCommercialTagResponse } from './../Models/NoCommercialTagResponse';
-import { Enterprise } from './../../Enterprise/models/enterprise';
 import { catchError, Observable, throwError } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
@@ -8,8 +6,6 @@ import { HttpClient } from '@angular/common/http';
 import { NoCommercialTagRequest } from '../Models/NoCommercialTagRequest';
 import { NoCommercialTagUpdateRequest } from '../Models/NoCommercialTagUpdateRequest';
 import { EntData, LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
-import { EnterpriseService } from '../../Enterprise/services/enterprise.service';
-import { NoCommercialTag } from '../Models/NoCommercialTag';
 
 
 @Injectable({
@@ -17,7 +13,7 @@ import { NoCommercialTag } from '../Models/NoCommercialTag';
 })
 export class NoCommercialTagService {
 
-  private readonly apiUrl = `${environment.API_URL}api/config/tag`;
+  private readonly apiUrl = `${environment.API_URL}config/tag`;
   private readonly localStorageMethods = new LocalStorageMethods();
   private readonly entData: EntData | null = this.localStorageMethods.loadEnterpriseData();
   private readonly enterpriseId: string;
@@ -26,9 +22,7 @@ export class NoCommercialTagService {
     this.enterpriseId = this.getEnterpriseIdFromLocalStorage();
   }
 
-  /**
-   * Crea un nuevo tag
-   */
+  
   createTag(tag: NoCommercialTagRequest): Observable<NoCommercialTagResponse> {
     const tagWithEnterpriseId = {
       ...tag,
@@ -42,9 +36,7 @@ export class NoCommercialTagService {
       );
   }
 
-  /**
-   * Actualiza un tag existente
-   */
+  
   updateTag(tagId: number, tag: NoCommercialTagUpdateRequest): Observable<NoCommercialTagResponse> {
     const url = `${this.apiUrl}/update/${tagId}`;
     
@@ -55,9 +47,7 @@ export class NoCommercialTagService {
       );
   }
 
-  /**
-   * Obtiene un tag por ID
-   */
+ 
   getTagById(tagId: number): Observable<NoCommercialTagResponse> {
     const url = `${this.apiUrl}/enterprise/${this.enterpriseId}/tag/${tagId}`;
     
@@ -68,10 +58,7 @@ export class NoCommercialTagService {
       );
   }
 
-  /**
-   * Obtiene todos los tags de una empresa
-   * @param enterpriseId - ID de la empresa (opcional, usa el del localStorage por defecto)
-   */
+ 
   getAllTags(enterpriseId?: string): Observable<NoCommercialTagResponse[]> {
     const targetEnterpriseId = enterpriseId || this.enterpriseId;
     const url = `${this.apiUrl}/tags/${targetEnterpriseId}`;
@@ -83,9 +70,7 @@ export class NoCommercialTagService {
       );
   }
 
-  /**
-   * Elimina un tag por ID
-   */
+ 
   deleteTag(tagId: number): Observable<void> {
     const url = `${this.apiUrl}/deletetag/${tagId}`;
     
@@ -96,10 +81,7 @@ export class NoCommercialTagService {
       );
   }
 
-  /**
-   * Obtiene el ID de empresa desde localStorage
-   * @private
-   */
+
   private getEnterpriseIdFromLocalStorage(): string {
     if (!this.entData?.id) {
       throw new Error('Enterprise data not found in local storage');
@@ -107,14 +89,10 @@ export class NoCommercialTagService {
     return this.entData.id;
   }
 
-  /**
-   * Maneja errores HTTP
-   * @private
-   */
+ 
   private handleError(error: any): Observable<never> {
     console.error('HTTP Error in NoCommercialTagService:', error);
     
-    // Personalizar mensajes de error según el código HTTP
     let errorMessage = 'An error occurred while processing the request';
     
     if (error.status === 404) {
