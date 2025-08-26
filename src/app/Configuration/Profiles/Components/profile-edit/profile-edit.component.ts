@@ -47,10 +47,25 @@ export class ProfileEditComponent implements OnInit {
   initialFormValues: any = null;
   hasChanges: boolean = false;
 
+  // Regex solo letras (con acentos), ñ/Ñ y espacios
+  private static readonly ONLY_LETTERS_REGEX = /^[a-zA-ZÀ-ÿ\u00f1\u00d1 ]+$/;
+
   constructor() {
     this.editProfileForm = this.formBuilder.group({
-      name: ['', Validators.required],
-      description: ['', Validators.required],
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(ProfileEditComponent.ONLY_LETTERS_REGEX),
+        ],
+      ],
+      description: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(ProfileEditComponent.ONLY_LETTERS_REGEX),
+        ],
+      ],
     });
 
     this.editProfileForm.valueChanges.subscribe(() => {
@@ -67,7 +82,6 @@ export class ProfileEditComponent implements OnInit {
       history.state['profileData'];
 
     if (profileData) {
-      console.log('Datos del perfil recibidos del estado: ', profileData);
       this.profileData = profileData;
     }
 
@@ -76,16 +90,13 @@ export class ProfileEditComponent implements OnInit {
 
   loadProfile(): void {
     if (this.profileData) {
-      console.log('Usando datos del estado de navegacion: ', this.profileData);
       this.setFormValues(this.profileData);
       return;
     }
 
     if (this.profileId) {
-      console.log('Intentando cargar desde API, ID: ', this.profileId);
       this.profileService.getProfileById(this.profileId).subscribe({
         next: (profile) => {
-          console.log('Perfil cargado desde API: ', profile);
           this.setFormValues(profile);
         },
         error: (error) => {
@@ -102,11 +113,6 @@ export class ProfileEditComponent implements OnInit {
   }
 
   private setFormValues(profile: any): void {
-    console.log(
-      'Estableciendo valores del formulario con los datos del perfil: ',
-      profile
-    );
-
     this.editProfileForm.patchValue({
       name: profile.name,
       description: profile.description,
@@ -118,12 +124,6 @@ export class ProfileEditComponent implements OnInit {
     };
 
     this.hasChanges = false;
-
-    console.log(
-      'Valores del formulario despues de patchValue: ',
-      this.editProfileForm.value
-    );
-    console.log('Valores iniciales guardados: ', this.initialFormValues);
   }
 
   private checkForChanges(): void {
@@ -133,7 +133,6 @@ export class ProfileEditComponent implements OnInit {
     }
 
     const currentValues = this.editProfileForm.value;
-
     const nameChanged = currentValues.name !== this.initialFormValues.name;
     const descriptionChanged =
       currentValues.description !== this.initialFormValues.description;
@@ -145,12 +144,9 @@ export class ProfileEditComponent implements OnInit {
     if (this.editProfileForm.valid) {
       const formValue = this.editProfileForm.value;
 
-      // Verificar si el nombre cambió respecto al original
       if (formValue.name !== this.initialFormValues.name) {
-        // Si el nombre fue cambiado, verificar si ya existe
         this.profileService.findByName(formValue.name).subscribe({
           next: (existingProfiles) => {
-            // Si existe algún perfil y no es el actual, mostrar error
             if (
               existingProfiles &&
               existingProfiles.length > 0 &&
@@ -162,7 +158,6 @@ export class ProfileEditComponent implements OnInit {
                 detail: 'Ya existe un perfil con este nombre.',
               });
             } else {
-              // No hay duplicado, se puede actualizar
               this.updateProfile(formValue);
             }
           },
@@ -176,7 +171,6 @@ export class ProfileEditComponent implements OnInit {
           },
         });
       } else {
-        // Si el nombre no cambió, simplemente actualizar
         this.updateProfile(formValue);
       }
     } else {
@@ -184,7 +178,6 @@ export class ProfileEditComponent implements OnInit {
     }
   }
 
-  // 🔹 Método auxiliar para actualizar
   private updateProfile(formValue: any): void {
     const profileData: ProfileUpdateRequest = {
       id: this.profileId,
@@ -232,6 +225,9 @@ export class ProfileEditComponent implements OnInit {
     if (field?.errors && field.touched) {
       if (field.errors['required']) {
         return `El campo ${fieldName} es requerido`;
+      }
+      if (field.errors['pattern']) {
+        return `El campo ${fieldName} solo debe contener letras y espacios`;
       }
     }
     return '';
