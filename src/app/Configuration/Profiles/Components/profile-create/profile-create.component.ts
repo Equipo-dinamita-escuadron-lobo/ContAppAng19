@@ -41,10 +41,25 @@ export class ProfileCreateComponent implements OnInit {
 
   addForm: FormGroup;
 
+  // Regex que permite solo letras (con acentos), ñ/Ñ y espacios
+  private static readonly ONLY_LETTERS_REGEX = /^[a-zA-ZÀ-ÿ\u00f1\u00d1 ]+$/;
+
   constructor() {
     this.addForm = this.formBuilder.group({
-      name: ['', Validators.required],
-      description: ['', Validators.required],
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(ProfileCreateComponent.ONLY_LETTERS_REGEX),
+        ],
+      ],
+      description: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(ProfileCreateComponent.ONLY_LETTERS_REGEX),
+        ],
+      ],
     });
   }
 
@@ -123,6 +138,9 @@ export class ProfileCreateComponent implements OnInit {
     if (field?.errors && field.touched) {
       if (field.errors['required']) {
         return `El campo ${fieldName} es requerido`;
+      }
+      if (field.errors['pattern']) {
+        return `El campo ${fieldName} solo debe contener letras y espacios`;
       }
     }
     return '';

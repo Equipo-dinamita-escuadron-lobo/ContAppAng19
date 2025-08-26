@@ -2,11 +2,15 @@ import { Routes } from '@angular/router';
 import { StyleGuideComponent } from './Shared/Components/style-guide/style-guide.component';
 import { LoginComponent } from './Core/auth/login/login.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
-import { hasRoleGuard } from './Core/Guards/has-role.guard';
+import { hasRoleChildGuard, hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
 import { ViewEnterpriseComponent } from './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component';
 import { Breadcrumb } from 'primeng/breadcrumb';
 import { hasPermissionGuard } from './Core/Guards/has-permission.guard';
+import {
+  isAuthenticatedChildGuard,
+  isAuthenticatedGuard,
+} from './Core/Guards/is-authenticated.guard';
 
 export const routes: Routes = [
   {
@@ -15,6 +19,7 @@ export const routes: Routes = [
   },
   {
     path: 'enterprise/list',
+    canActivate: [isAuthenticatedGuard],
     data: {
       breadcrumb: 'enterprise-list',
     },
@@ -43,6 +48,7 @@ export const routes: Routes = [
   {
     path: '',
     component: MainTemplateComponent,
+    canActivate: [isAuthenticatedChildGuard],
     data: {
       breadcrumb: 'Home',
     },
@@ -50,6 +56,7 @@ export const routes: Routes = [
       {
         path: 'configuration',
         data: { breadcrumb: 'Configuración' },
+        canActivate: [hasRoleChildGuard],
         children: [
           {
             path: '',
@@ -134,7 +141,7 @@ export const routes: Routes = [
               },
               {
                 path: 'create',
-                data: { breadcrumb: 'Crear Permiso' },
+                data: { breadcrumb: 'Asignar Permisos a un Perfil' },
                 loadComponent: () =>
                   import(
                     './Configuration/Permissions/Components/permission-create/permission-create.component'
@@ -142,7 +149,7 @@ export const routes: Routes = [
               },
               {
                 path: 'edit/:role',
-                data: { breadcrumb: 'Editar Permiso' },
+                data: { breadcrumb: 'Editar Permisos del Perfil' },
                 loadComponent: () =>
                   import(
                     './Configuration/Permissions/Components/permission-edit/permission-edit.component'

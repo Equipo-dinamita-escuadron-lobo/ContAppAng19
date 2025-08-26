@@ -72,25 +72,42 @@ export class PermissionEditComponent implements OnInit {
         const role = rolesWithPerms.find((r) => r.role === this.roleName);
 
         if (role) {
-          this.currentPermissions = role.permissions.map((p) => p.name);
+          // Opcional: ordena los permisos actuales para una comparación estable
+          this.currentPermissions = role.permissions
+            .map((p) => p.name)
+            .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+
           this.setFormValues(role.role, this.currentPermissions);
         }
 
         // cargar todos los permisos agrupados
         this.permissionsService.findAllPermissions().subscribe({
           next: (allPerms) => {
-            const grouped: Record<string, any[]> = {};
+            const grouped: Record<string, { label: string; value: string }[]> =
+              {};
 
             allPerms.forEach((perm) => {
               const moduleName = this.findModuleForPermission(perm.name);
-              if (!grouped[moduleName]) grouped[moduleName] = [];
-              grouped[moduleName].push({ label: perm.name, value: perm.name });
+              (grouped[moduleName] ||= []).push({
+                label: perm.name,
+                value: perm.name,
+              });
             });
 
-            this.permissions = Object.keys(grouped).map((key) => ({
-              label: key,
-              items: grouped[key],
-            }));
+            // 1) Ordenar permisos dentro de cada módulo
+            Object.keys(grouped).forEach((m) => {
+              grouped[m].sort((a, b) =>
+                a.label.localeCompare(b.label, 'es', { sensitivity: 'base' })
+              );
+            });
+
+            // 2) Ordenar los módulos alfabéticamente
+            this.permissions = Object.keys(grouped)
+              .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+              .map((key) => ({
+                label: key,
+                items: grouped[key],
+              }));
           },
           error: (err) =>
             console.error('Error cargando todos los permisos', err),
