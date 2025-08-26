@@ -1,0 +1,78 @@
+<div class="w-full">
+  <p-toast></p-toast>
+
+  <h1
+    class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
+  >
+    Asignar Permisos a un Perfil
+  </h1>
+  <p class="mb-6 text-lg text-gray-700">
+    Seleccione un perfil y los permisos que desea asignar.
+  </p>
+</div>
+
+<div class="mt-6">
+  <form [formGroup]="assignForm" (ngSubmit)="onSubmit()" class="mt-4">
+    <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Selección de Perfil -->
+      <div>
+        <label for="profile" class="block mb-2 font-semibold">
+          Perfil <span class="text-red-500">*</span>
+        </label>
+        <p-dropdown
+          id="profile"
+          [options]="profiles"
+          optionLabel="name"
+          optionValue="name"
+          placeholder="Seleccione un perfil"
+          formControlName="roleName"
+          class="w-full"
+        ></p-dropdown>
+        <p-message
+          severity="error"
+          *ngIf="assignForm.get('roleName')?.touched && assignForm.get('roleName')?.invalid"
+          text="Debe seleccionar un perfil"
+        ></p-message>
+      </div>
+
+      <!-- Selección de Permisos -->
+      <div>
+        <label for="permissions" class="block mb-2 font-semibold">
+          Permisos <span class="text-red-500">*</span>
+        </label>
+        <p-multiSelect
+          id="permissions"
+          [options]="permissions"
+          optionLabel="label"
+          optionValue="value"
+          formControlName="permissions"
+          display="chip"
+          [filter]="true"
+          [group]="true"
+          placeholder="Seleccione permisos"
+          class="w-full"
+        ></p-multiSelect>
+        <p-message
+          severity="error"
+          *ngIf="assignForm.get('permissions')?.touched && assignForm.get('permissions')?.invalid"
+          text="Debe seleccionar al menos un permiso"
+        ></p-message>
+      </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="flex justify-center gap-4 mt-12 pt-40">
+      <p-button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        (onClick)="goBack()"
+      ></p-button>
+      <p-button
+        type="submit"
+        label="Asignar Permisos"
+        [disabled]="assignForm.invalid"
+      ></p-button>
+    </div>
+  </form>
+</div>
