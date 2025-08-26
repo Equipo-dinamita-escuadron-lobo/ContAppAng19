@@ -5,6 +5,7 @@ import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterp
 import { hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
 import { ViewEnterpriseComponent } from './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component';
+import { Breadcrumb } from 'primeng/breadcrumb';
 import { hasPermissionGuard } from './Core/Guards/has-permission.guard';
 
 export const routes: Routes = [
@@ -239,6 +240,40 @@ export const routes: Routes = [
                   ).then((m) => m.ThirdPartiesEditComponent),
               },
             ],
+          },
+          //Rutas de etiquetas no comerciales
+          {
+            path:'no-commercial-tags',
+            data:{Breadcrumb:'Etiquetas no comerciales'},
+            children:[
+              {
+                path: '',
+                redirectTo: 'list',
+                pathMatch: 'full'
+              },
+              {
+                path:'list',
+                data:{breadcrumb:null},
+                loadComponent:()=>
+                  import('./GeneralMasters/noCommercialTags/Components/list-tag/list-tag.component')
+                    .then((m)=>m.ListTagComponent),
+              },
+              {
+                path:'create',
+                data:{Breadcrumb:'Crear Etiqueta No Comercial'},
+                loadComponent: () =>
+                  import('./GeneralMasters/noCommercialTags/Components/create-tag/create-tag.component')
+                    .then((m)=>m.CreateTagComponent),
+              },
+              {
+                path:'edit/:id',
+                data:{Breadcrumb:'Editar Etiqueta No Comercial'},
+                loadComponent:()=>
+                  import('./GeneralMasters/noCommercialTags/Components/edit-tag/edit-tag.component')
+                    .then((m)=>m.EditTagComponent),
+              }
+
+            ]
           },
           // Rutas de Impuestos
           {

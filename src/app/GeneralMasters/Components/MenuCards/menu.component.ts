@@ -74,6 +74,12 @@ export class MenuComponent {
       description: 'Configuración de periodos contables'
     },
     {
+      title: 'Etiquetas no comerciales',
+      icon: 'label',
+      route: '/gen-masters/no-commercial-tags/list',
+      description: 'Gestión de etiquetas no comerciales'
+    },
+    {
       title: 'Centro de Ayuda',
       icon: 'help',
       route: '/gen-masters/help-panels',
