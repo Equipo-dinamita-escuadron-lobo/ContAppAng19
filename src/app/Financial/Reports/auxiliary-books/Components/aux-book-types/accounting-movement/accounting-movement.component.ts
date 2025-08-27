@@ -23,9 +23,8 @@ import { MessageService } from 'primeng/api';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
-
 @Component({
-  selector: 'app-inventory-and-balances',
+  selector: 'app-accounting-movement',
   imports: [
     CommonModule,
     FormsModule,
@@ -38,10 +37,15 @@ import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliar
     TableModule,
   ],
   providers: [DatePipe],
-  templateUrl: './inventory-and-balances.component.html',
-  styleUrl: './inventory-and-balances.component.css',
+  templateUrl: './accounting-movement.component.html',
+  styleUrl: './accounting-movement.component.css',
 })
-export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
+export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
+  documentTypeInfo: any;
+  documentTypeSelected: boolean = false;
+  isDocumentTypeOptionSelected: boolean = false;
+  documentTypeOptions: any[] = [];
+
   override request: GenerateAuxiliaryBookRequest = {
     entId: '',
     userId: 0,
@@ -68,21 +72,21 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
     );
   }
 
+  onDocumentTypeOptionSelected(): void {
+    this.documentTypeSelected = !this.documentTypeSelected;
+  }
+
+  onSelectDocumentType(): void {
+    this.documentTypeSelected = true;
+  }
+
   protected loadConfig(): void {
     this.auxiliaryBookInfo = {
-      name: 'Libro de Inventarios y Balances',
+      name: 'Movimiento de Contabilidad',
       description:
-        'Presenta los activos, pasivos y patrimonio de la empresa en un momento determinado.',
-      icon: 'inventory_2',
+        'Resume todos los movimientos contables realizados, facilitando auditorías, validaciones y análisis históricos de operaciones.',
+      icon: 'difference',
     };
-
-    this.levels = [
-      { label: 'Clase', value: 'NUMBER_CLASS' },
-      { label: 'SubCuenta', value: 'SUB_ACCOUNT' },
-      { label: 'Grupo', value: 'GROUP' },
-      { label: 'Auxiliar', value: 'AUXILIARY_ACCOUNT' },
-      { label: 'Cuenta', value: 'ACCOUNT' },
-    ];
   }
 
   protected organizeRequest(): void {
@@ -98,6 +102,8 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
       this.criteria.endDate,
       'yyyy-MM-dd'
     );
+
+    this.criteria.criteriaType = 'ACCOUNT';
 
     this.request = {
       //TO DO: Change the value of entId when the enterprise has accounting info

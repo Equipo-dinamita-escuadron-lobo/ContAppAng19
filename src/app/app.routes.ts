@@ -615,8 +615,8 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/diary/diary.component'
+                      ).then((m) => m.DiaryComponent),
                   },
                   {
                     path: 'major-and-balances',
@@ -625,8 +625,8 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/major-and-balances/major-and-balances.component'
+                      ).then((m) => m.MajorAndBalancesComponent),
                   },
                   {
                     path: 'account-book',
@@ -635,8 +635,8 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/account-book/account-book.component'
+                      ).then((m) => m.AccountBookComponent),
                   },
                   {
                     path: 'third-party-book',
@@ -645,8 +645,8 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/third-party-book/third-party-book.component'
+                      ).then((m) => m.ThirdPartyBookComponent),
                   },
                   {
                     path: 'accounting-movement',
@@ -655,8 +655,8 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/accounting-movement/accounting-movement.component'
+                      ).then((m) => m.AccountingMovementComponent),
                   },
                 ],
               },

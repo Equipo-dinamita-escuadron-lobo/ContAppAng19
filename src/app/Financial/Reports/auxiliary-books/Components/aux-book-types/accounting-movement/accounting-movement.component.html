@@ -37,27 +37,6 @@
   </h3>
   <div class="p-4 bg-white rounded-lg shadow-sm">
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
-      <!-- 1. Nivel -->
-      <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Nivel <span class="text-[var(--color-secondary)]"> *</span>
-        </h4>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="flex items-center gap-2" *ngFor="let level of levels">
-            <p-radioButton
-              [inputId]="level.value"
-              name="criteriaType"
-              [value]="level.value"
-              [(ngModel)]="criteria.criteriaType"
-              (onClick)="onLevelChange()"
-            ></p-radioButton>
-            <label class="text-sm cursor-pointer" [for]="level.value">
-              {{ level.label }}
-            </label>
-          </div>
-        </div>
-      </div>
-
       <!-- 2. Rango -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
@@ -100,43 +79,22 @@
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
           <p-checkbox
-            [(ngModel)]="isThirdPartyOptionSelected"
+            [(ngModel)]="isDocumentTypeOptionSelected"
             [binary]="true"
-            [disabled]="!isLevelSelected"
-            (onChange)="onThirdPartyOptionSelected()"
+            (onChange)="onDocumentTypeOptionSelected()"
           ></p-checkbox>
-          Tercero
+          Tipo de Documento
         </h4>
         <p-select
-          #thirdPartySelect
-          [options]="thirdPartyOptions"
-          [(ngModel)]="thirdPartySelected"
-          placeholder="Seleccionar Tercero"
-          [disabled]="!isThirdPartyOptionSelected"
+          #documentTypeSelect
+          [options]="documentTypeOptions"
+          [(ngModel)]="documentTypeSelected"
+          placeholder="Seleccionar Tipo de Documento"
+          [disabled]="!isDocumentTypeOptionSelected"
           styleClass="w-full text-xs"
           [editable]="true"
-          (onChange)="onSelectThirdParty()"
+          (onChange)="onSelectDocumentType()"
         ></p-select>
-        <div class="mt-2 border rounded p-2 text-xs text-gray-600 bg-gray-50">
-          <ng-container *ngIf="!thirdPartyInfo">
-            Información del Tercero...
-          </ng-container>
-
-          <ng-container *ngIf="thirdPartyInfo">
-            <div class="grid grid-cols-2 gap-x-4">
-              <!-- Columna izquierda -->
-              <div>
-                <div><strong>NIT:</strong> {{ thirdPartyInfo.typeId }}</div>
-                <div><strong>Tipo:</strong> {{ thirdPartyInfo.types }}</div>
-              </div>
-
-              <!-- Columna derecha -->
-              <div>
-                <div><strong>Nombre:</strong> {{ thirdPartyInfo.name }}</div>
-              </div>
-            </div>
-          </ng-container>
-        </div>
       </div>
 
       <!-- 4. Fecha de Corte (sin línea a la derecha) -->

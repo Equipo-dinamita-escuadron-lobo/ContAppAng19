@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ViewEncapsulation } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -6,7 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { RadioButton } from 'primeng/radiobutton';
 import { CheckboxModule } from 'primeng/checkbox';
-import { SelectModule } from 'primeng/select';
+import { Select, SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SplitButtonModule } from 'primeng/splitbutton';
 import { TableModule } from 'primeng/table';
@@ -23,9 +24,12 @@ import { MessageService } from 'primeng/api';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
+import { CostCenterService } from '../../../../../../GeneralMasters/CostCenters/services/cost-center.service';
+import { CostCenter } from '../../../../../../GeneralMasters/CostCenters/models/cost-center.model';
+import { Page } from '../../../../../../GeneralMasters/AccountingCalendar/types/calendar.types';
 
 @Component({
-  selector: 'app-inventory-and-balances',
+  selector: 'app-account-book',
   imports: [
     CommonModule,
     FormsModule,
@@ -34,14 +38,30 @@ import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliar
     RadioButton,
     CheckboxModule,
     SelectModule,
+    MultiSelectModule,
     DatePickerModule,
     TableModule,
   ],
   providers: [DatePipe],
-  templateUrl: './inventory-and-balances.component.html',
-  styleUrl: './inventory-and-balances.component.css',
+  templateUrl: './account-book.component.html',
+  styleUrl: './account-book.component.css',
+  encapsulation: ViewEncapsulation.None,
 })
-export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
+export class AccountBookComponent extends BaseAuxiliaryBookComponent {
+  @ViewChild('costCenterSelect') costCenterSelect!: Select;
+
+  costCenterOptions: any;
+  isCostCenterOptionSelected = false;
+  costCenterSelected: any | null = null;
+
+  thirdSelectedInFilter: any | null = null;
+  thirdsOptions: any[] = [];
+
+  costCenterInfo: {
+    id: string;
+    name: string;
+  } | null = null;
+
   override request: GenerateAuxiliaryBookRequest = {
     entId: '',
     userId: 0,
@@ -57,6 +77,7 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
     thirdService: ThirdPartyServiceService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    private costCenterService: CostCenterService,
     private datePipe: DatePipe
   ) {
     super(
@@ -70,19 +91,58 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
 
   protected loadConfig(): void {
     this.auxiliaryBookInfo = {
-      name: 'Libro de Inventarios y Balances',
+      name: 'Libro Auxiliar por Cuenta',
       description:
-        'Presenta los activos, pasivos y patrimonio de la empresa en un momento determinado.',
-      icon: 'inventory_2',
+        'Registra cronológicamente todas las transacciones contables de la empresa.',
+      icon: 'account_balance',
     };
 
     this.levels = [
-      { label: 'Clase', value: 'NUMBER_CLASS' },
-      { label: 'SubCuenta', value: 'SUB_ACCOUNT' },
-      { label: 'Grupo', value: 'GROUP' },
-      { label: 'Auxiliar', value: 'AUXILIARY_ACCOUNT' },
       { label: 'Cuenta', value: 'ACCOUNT' },
+      { label: 'SubCuenta', value: 'SUB_ACCOUNT' },
+      { label: 'Auxiliar', value: 'AUXILIARY_ACCOUNT' },
     ];
+  }
+
+  onCostCenterOptionSelected(): void {
+    if (this.isCostCenterOptionSelected === true) {
+      this.getCostCenterOptions();
+    } else {
+      this.costCenterSelect.clear();
+    }
+  }
+
+  private getCostCenterOptions(): void {
+    this.costCenterService.findAll(this.enterpriseData.id).subscribe({
+      next: (response: Page<CostCenter>) => {
+        this.costCenterOptions = response;
+      },
+      error: (err) => {
+        console.error('Error fetching third parties:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail:
+            'No se han encontrado Terceros para esta Empresa\n Error:' +
+            err.message,
+        });
+      },
+    });
+  }
+
+  onSelectCostCenter(): void {
+    if (this.costCenterSelected) {
+      const seleccionado: any = this.costCenterSelected;
+
+      setTimeout(() => {
+        this.costCenterInfo = {
+          id: seleccionado.id,
+          name: seleccionado.name,
+        };
+      }, 300);
+    } else {
+      this.costCenterInfo = null;
+    }
   }
 
   protected organizeRequest(): void {
