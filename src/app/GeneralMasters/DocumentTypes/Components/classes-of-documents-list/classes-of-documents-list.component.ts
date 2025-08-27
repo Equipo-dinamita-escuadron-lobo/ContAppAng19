@@ -66,7 +66,16 @@ export class ClassesOfDocumentsListComponent {
         this.filtered = this.list;
       },
       complete: () => this.loading = false,
-      error: () => this.loading = false
+      error: (error) => {
+        console.error('Error al cargar clases de documentos:', error);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las clases de documentos. Inténtelo nuevamente.',
+          life: 5000
+        });
+      }
     });
   }
 
@@ -93,11 +102,53 @@ export class ClassesOfDocumentsListComponent {
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
       accept: () => {
         this.service.delete(row.id, enterpriseId).subscribe({
           next: () => {
-            this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Clase eliminada.' });
+            this.messageService.add({ 
+              severity: 'success', 
+              summary: 'Eliminado', 
+              detail: 'Clase de documento eliminada correctamente.' 
+            });
             this.loadData();
+          },
+          error: (error) => {
+            console.error('Error al eliminar clase de documento:', error);
+            
+            // Verificar si es el error específico de clase en uso
+            // Verificamos múltiples formas posibles en que puede venir el error
+            const isClassInUseError = 
+              error?.error?.errorCode === 'DOCUMENT_CLASS_IN_USE' ||
+              error?.error?.message?.includes('está siendo utilizada') ||
+              error?.error?.message?.includes('DOCUMENT_CLASS_IN_USE') ||
+              (error?.status === 400 && error?.error?.message?.includes('tipo de documento'));
+            
+            if (isClassInUseError) {
+              this.messageService.add({
+                severity: 'info',
+                summary: 'No se puede eliminar',
+                detail: `No se puede eliminar la clase "${row.name}" porque está siendo utilizada por uno o más tipos de documentos activos.`,
+                life: 6000
+              });
+            } else if (error?.error?.message) {
+              // Mostrar mensaje específico del backend si está disponible
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: error.error.message,
+                life: 5000
+              });
+            } else {
+              // Mensaje genérico para otros errores
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Ocurrió un error al eliminar la clase de documento. Inténtelo nuevamente.',
+                life: 5000
+              });
+            }
           }
         });
       }
