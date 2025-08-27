@@ -58,7 +58,6 @@ export class DocumentTypesListComponent {
   ) {}
 
   ngOnInit(): void {
-    // La tabla lazy se carga automáticamente con onLazyLoad
     this.loadClassNames(); // Cargar nombres de clases para mapeo
   }
 
@@ -79,6 +78,16 @@ export class DocumentTypesListComponent {
       next: (page: any) => {
         const content: DocumentClass[] = page?.content || page || [];
         content.forEach(c => this.classIdToName.set(c.id, c.name));
+        this.loadTypesLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 }); // Cargar tipos de documentos después de cargar las clases
+      },
+      error: (error) => {
+        console.error('Error al cargar nombres de clases:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las clases de documentos. Inténtelo nuevamente.',
+          life: 5000
+        });
       }
     });
   }
