@@ -43,4 +43,9 @@ export class DocumentTypesServiceService {
     const url = `${this.apiURL}delete/${id}/${enterpriseId}`;
     return this.http.delete<void>(url);
   }
+
+  changeState(id: number, enterpriseId: string, status: boolean): Observable<any> {
+    const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
+    return this.http.patch<any>(url, {});
+  }
 }

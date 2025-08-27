@@ -10,6 +10,9 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TagModule } from 'primeng/tag';
+import { FormsModule } from '@angular/forms';
 import { DocumentTypesServiceService } from '../../services/document-types-service.service';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
 import { DocumentType, DocumentTypeList } from '../../models/DocumentTypes';
@@ -27,7 +30,10 @@ import { DocumentClass } from '../../models/ClassesOfDocuments';
     InputTextModule,
     ToastModule,
     TooltipModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    ToggleSwitchModule,
+    TagModule,
+    FormsModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './document-types-list.component.html',
@@ -114,8 +120,47 @@ export class DocumentTypesListComponent {
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
       rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
       accept: () => this.confirmDeleteType(row)
     });
+  }
+
+  changeTypeState(documentType: DocumentType) {
+    const enterpriseId = this.getEnterpriseId();
+    if (!documentType?.id || !enterpriseId) return;
+
+    const newStatus = !documentType.status;
+    
+    this.service.changeState(documentType.id, enterpriseId, newStatus).subscribe({
+      next: () => {
+        documentType.status = newStatus;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado del tipo de documento "${documentType.name}" cambiado correctamente`
+        });
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado del tipo de documento.'
+        });
+      }
+    });
+  }
+
+  getStateSeverity(status: boolean): string {
+    return status ? 'success' : 'danger';
+  }
+
+  formatState(status: boolean): string {
+    return status ? 'Activo' : 'Inactivo';
+  }
+
+  isActive(status: boolean): boolean {
+    return status === true;
   }
 
   private confirmDeleteType(row: DocumentType): void {
