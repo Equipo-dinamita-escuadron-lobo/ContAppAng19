@@ -14,7 +14,6 @@
 <div class="mt-6">
   <form [formGroup]="editProfileForm" (ngSubmit)="onSubmit()" class="mt-4">
     <div class="w-full">
-
       <div class="flex gap-4 mb-4">
         <!-- Nombre -->
         <div class="w-1/2">
@@ -28,10 +27,23 @@
             placeholder="Ej: Administrador"
             class="w-full"
           />
+          <!-- Requerido -->
           <p-message
             severity="error"
-            *ngIf="editProfileForm.get('name')?.touched && editProfileForm.get('name')?.invalid"
+            *ngIf="
+              editProfileForm.get('name')?.touched &&
+              editProfileForm.get('name')?.hasError('required')
+            "
             text="El nombre es requerido"
+          ></p-message>
+          <!-- Solo letras -->
+          <p-message
+            severity="error"
+            *ngIf="
+              editProfileForm.get('name')?.touched &&
+              editProfileForm.get('name')?.hasError('pattern')
+            "
+            text="El nombre solo debe contener letras y espacios."
           ></p-message>
         </div>
 
@@ -47,10 +59,23 @@
             placeholder="Ej: Perfil de Administrador"
             class="w-full"
           />
+          <!-- Requerido -->
           <p-message
             severity="error"
-            *ngIf="editProfileForm.get('description')?.touched && editProfileForm.get('description')?.invalid"
+            *ngIf="
+              editProfileForm.get('description')?.touched &&
+              editProfileForm.get('description')?.hasError('required')
+            "
             text="La descripción es requerida"
+          ></p-message>
+          <!-- Solo letras -->
+          <p-message
+            severity="error"
+            *ngIf="
+              editProfileForm.get('description')?.touched &&
+              editProfileForm.get('description')?.hasError('pattern')
+            "
+            text="La descripción solo debe contener letras y espacios."
           ></p-message>
         </div>
       </div>
@@ -61,12 +86,14 @@
           type="button"
           label="Cancelar"
           severity="secondary"
-          (onClick)="goBack()">
+          (onClick)="goBack()"
+        >
         </p-button>
         <p-button
           type="submit"
           label="Actualizar Perfil"
-          [disabled]="editProfileForm.invalid || !hasChanges">
+          [disabled]="editProfileForm.invalid || !hasChanges"
+        >
         </p-button>
       </div>
     </div>

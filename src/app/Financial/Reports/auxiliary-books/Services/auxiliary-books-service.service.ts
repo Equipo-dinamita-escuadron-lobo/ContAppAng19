@@ -1,9 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { GenerateAuxiliaryBookRequest } from '../Models/GenerateAuxiliaryBookRequest';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment.local';
-import { auxBookResponse } from '../Models/Response';
+import { environment } from '../../../../../environments/environment.dev';
+import { auxBookResponse } from '../Models/Responses/BookResponse';
 
 @Injectable({
   providedIn: 'root',

@@ -70,27 +70,32 @@ export class PermissionListComponent implements OnInit {
   }
 
   /**
-   * Agrupa permisos por módulo y los ordena alfabéticamente
+   * Agrupa permisos por módulo y los ordena alfabéticamente (módulos y permisos)
    */
   private groupPermissions(
     permissions: any[]
   ): { module: string; permissions: any[] }[] {
     const grouped: Record<string, any[]> = {};
+
     permissions.forEach((perm) => {
       const module = this.findModuleForPermission(perm.name);
-      if (!grouped[module]) {
-        grouped[module] = [];
-      }
-      grouped[module].push(perm);
+      (grouped[module] ||= []).push(perm);
     });
 
-    // Ordenar permisos dentro de cada módulo
-    return Object.keys(grouped).map((module) => ({
-      module,
-      permissions: grouped[module].sort((a, b) =>
+    // 1) Ordenar permisos dentro de cada módulo
+    Object.keys(grouped).forEach((m) => {
+      grouped[m].sort((a, b) =>
         a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
-      ),
-    }));
+      );
+    });
+
+    // 2) Ordenar los módulos alfabéticamente
+    return Object.keys(grouped)
+      .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+      .map((module) => ({
+        module,
+        permissions: grouped[module],
+      }));
   }
 
   private findModuleForPermission(permissionName: string): string {

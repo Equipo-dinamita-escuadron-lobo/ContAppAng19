@@ -27,10 +27,23 @@
             placeholder="Ej: Administrador"
             class="w-full"
           />
+          <!-- Requerido -->
           <p-message
             severity="error"
-            *ngIf="addForm.get('name')?.touched && addForm.get('name')?.invalid"
+            *ngIf="
+              addForm.get('name')?.touched &&
+              addForm.get('name')?.hasError('required')
+            "
             text="El nombre es requerido"
+          ></p-message>
+          <!-- Solo letras -->
+          <p-message
+            severity="error"
+            *ngIf="
+              addForm.get('name')?.touched &&
+              addForm.get('name')?.hasError('pattern')
+            "
+            text="El nombre solo debe contener letras y espacios."
           ></p-message>
         </div>
 
@@ -46,17 +59,27 @@
             placeholder="Ej: Perfil de Administrador"
             class="w-full"
           />
+          <!-- Requerido -->
           <p-message
             severity="error"
             *ngIf="
               addForm.get('description')?.touched &&
-              addForm.get('description')?.invalid
+              addForm.get('description')?.hasError('required')
             "
             text="La descripción es requerida"
           ></p-message>
+          <!-- Solo letras -->
+          <p-message
+            severity="error"
+            *ngIf="
+              addForm.get('description')?.touched &&
+              addForm.get('description')?.hasError('pattern')
+            "
+            text="La descripción solo debe contener letras y espacios."
+          ></p-message>
         </div>
       </div>
-      
+
       <!-- Botones de acción -->
       <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button

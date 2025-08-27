@@ -81,6 +81,11 @@ export const navbarData: INavbarData[] = [
         label: 'Calendario Contable',
       },
       {
+        routeLink: '/gen-masters/no-commercial-tags/list',
+        icon: 'label',
+        label:'Etiquetas no comerciales'
+      },
+      {
         routeLink: '/gen-masters/help-panels',
         icon: 'help',
         label: 'Centro de Ayuda',
