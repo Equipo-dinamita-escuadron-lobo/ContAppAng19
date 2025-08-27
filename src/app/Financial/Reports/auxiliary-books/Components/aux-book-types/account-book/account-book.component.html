@@ -42,7 +42,7 @@
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
           Nivel <span class="text-[var(--color-secondary)]"> *</span>
         </h4>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="">
           <div class="flex items-center gap-2" *ngFor="let level of levels">
             <p-radioButton
               [inputId]="level.value"
@@ -96,58 +96,52 @@
         </div>
       </div>
 
-      <!-- 3. Tercero -->
+      <!-- 3. Centro de Costos -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
           <p-checkbox
-            [(ngModel)]="isThirdPartyOptionSelected"
+            [(ngModel)]="isCostCenterOptionSelected"
             [binary]="true"
             [disabled]="!isLevelSelected"
-            (onChange)="onThirdPartyOptionSelected()"
+            (onChange)="onCostCenterOptionSelected()"
           ></p-checkbox>
-          Tercero
+          Centro de Costos
         </h4>
         <p-select
-          #thirdPartySelect
-          [options]="thirdPartyOptions"
-          [(ngModel)]="thirdPartySelected"
-          placeholder="Seleccionar Tercero"
-          [disabled]="!isThirdPartyOptionSelected"
+          #costCenterSelect
+          [options]="costCenterOptions"
+          [(ngModel)]="costCenterSelected"
+          placeholder="Seleccionar Centro de Costos"
+          [disabled]="!isCostCenterOptionSelected"
           styleClass="w-full text-xs"
           [editable]="true"
-          (onChange)="onSelectThirdParty()"
+          (onChange)="onSelectCostCenter()"
         ></p-select>
         <div class="mt-2 border rounded p-2 text-xs text-gray-600 bg-gray-50">
-          <ng-container *ngIf="!thirdPartyInfo">
-            Información del Tercero...
+          <ng-container *ngIf="!costCenterInfo">
+            Información del Centro de Costos...
           </ng-container>
 
-          <ng-container *ngIf="thirdPartyInfo">
-            <div class="grid grid-cols-2 gap-x-4">
+          <ng-container *ngIf="costCenterInfo">
+            <div class="grid gap-x-4">
               <!-- Columna izquierda -->
               <div>
-                <div><strong>NIT:</strong> {{ thirdPartyInfo.typeId }}</div>
-                <div><strong>Tipo:</strong> {{ thirdPartyInfo.types }}</div>
-              </div>
-
-              <!-- Columna derecha -->
-              <div>
-                <div><strong>Nombre:</strong> {{ thirdPartyInfo.name }}</div>
+                <div><strong>Nombre:</strong> {{ costCenterInfo.name }}</div>
               </div>
             </div>
           </ng-container>
         </div>
       </div>
 
-      <!-- 4. Fecha de Corte (sin línea a la derecha) -->
+      <!-- 4. Periodo (sin línea a la derecha) -->
       <div class="col-span-1">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Fecha de Corte <span class="text-[var(--color-secondary)]"> *</span>
+          Periodo <span class="text-[var(--color-secondary)]"> *</span>
         </h4>
         <p-datepicker
           [(ngModel)]="criteria.endDate"
           dateFormat="dd/mm/yy"
-          placeholder="DD-MM-YYYY"
+          placeholder="DD/MM/YYYY - DD/MM/YYYY"
           [showIcon]="true"
           styleClass="w-full text-xs"
         ></p-datepicker>
@@ -175,20 +169,56 @@
       [rowsPerPageOptions]="[5, 10, 20]"
       [resizableColumns]="true"
       [responsiveLayout]="'scroll'"
-      styleClass="p-datatable-header min-h-[20rem]"
+      styleClass="auxbook-table p-datatable-header min-h-[20rem]"
     >
       <!-- Header -->
       <ng-template pTemplate="header">
         <tr>
-          <th class="text-center" pResizableColumn rowspan="1" colspan="2">
-            Cuenta
+          <th class="text-center" pResizableColumn rowspan="2">Fecha</th>
+          <th class="text-center" pResizableColumn colspan="2">Cuenta</th>
+          <th class="text-center" pResizableColumn colspan="3">Movimiento</th>
+          <th class="text-center" pResizableColumn colspan="2">
+            Tercero
+            <p-columnFilter
+              field="representative"
+              display="menu"
+              [showMatchModes]="false"
+              [showOperator]="false"
+              [showAddButton]="false"
+            >
+              <ng-template #filter let-value let-filter="filterCallback">
+                <p-multiselect
+                  [(ngModel)]="thirdSelectedInFilter"
+                  [options]="thirdsOptions"
+                  placeholder="Any"
+                  (onChange)="filter($event.value)"
+                  optionLabel="name"
+                  [panelStyle]="{ minWidth: '16rem' }"
+                  styleClass="aux-multiselect"
+                  [panelStyleClass]="'aux-multiselect-panel'"
+                  [appendTo]="'self'"
+                >
+                  <ng-template let-option #item>
+                    <div class="flex items-center gap-2">
+                      <span>{{ option.name }}</span>
+                    </div>
+                  </ng-template>
+                </p-multiselect>
+              </ng-template>
+            </p-columnFilter>
           </th>
-          <th class="text-center" pResizableColumn rowspan="2">Descripción</th>
-          <th class="text-center" pResizableColumn rowspan="2">Valor</th>
+          <th class="text-center" pResizableColumn colspan="2">Documento</th>
         </tr>
         <tr>
           <th class="text-center">Código</th>
           <th class="text-center">Descripción</th>
+          <th class="text-center">Débito</th>
+          <th class="text-center">Crédito</th>
+          <th class="text-center">Saldo</th>
+          <th class="text-center">Numero de Identificacion</th>
+          <th class="text-center">Nombre</th>
+          <th class="text-center">Centro de Costos</th>
+          <th class="text-center">Numero</th>
         </tr>
       </ng-template>
 
@@ -207,7 +237,7 @@
       <ng-template pTemplate="emptymessage">
         <tr style="height: 200px">
           <!-- aumenta aquí la altura -->
-          <td colspan="4">
+          <td colspan="10">
             <div class="flex flex-col items-center justify-center h-full">
               <p class="text-sm text-gray-600 max-w-md text-center">
                 NO HAY INFORMACION PARA MOSTRAR

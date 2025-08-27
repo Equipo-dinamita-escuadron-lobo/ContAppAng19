@@ -96,56 +96,15 @@
         </div>
       </div>
 
-      <!-- 3. Tercero -->
-      <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          <p-checkbox
-            [(ngModel)]="isThirdPartyOptionSelected"
-            [binary]="true"
-            [disabled]="!isLevelSelected"
-            (onChange)="onThirdPartyOptionSelected()"
-          ></p-checkbox>
-          Tercero
-        </h4>
-        <p-select
-          #thirdPartySelect
-          [options]="thirdPartyOptions"
-          [(ngModel)]="thirdPartySelected"
-          placeholder="Seleccionar Tercero"
-          [disabled]="!isThirdPartyOptionSelected"
-          styleClass="w-full text-xs"
-          [editable]="true"
-          (onChange)="onSelectThirdParty()"
-        ></p-select>
-        <div class="mt-2 border rounded p-2 text-xs text-gray-600 bg-gray-50">
-          <ng-container *ngIf="!thirdPartyInfo">
-            Información del Tercero...
-          </ng-container>
-
-          <ng-container *ngIf="thirdPartyInfo">
-            <div class="grid grid-cols-2 gap-x-4">
-              <!-- Columna izquierda -->
-              <div>
-                <div><strong>NIT:</strong> {{ thirdPartyInfo.typeId }}</div>
-                <div><strong>Tipo:</strong> {{ thirdPartyInfo.types }}</div>
-              </div>
-
-              <!-- Columna derecha -->
-              <div>
-                <div><strong>Nombre:</strong> {{ thirdPartyInfo.name }}</div>
-              </div>
-            </div>
-          </ng-container>
-        </div>
-      </div>
-
-      <!-- 4. Fecha de Corte (sin línea a la derecha) -->
+      <!-- 3. Periodo (sin línea a la derecha) -->
       <div class="col-span-1">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Fecha de Corte <span class="text-[var(--color-secondary)]"> *</span>
+          Periodo <span class="text-[var(--color-secondary)]"> *</span>
         </h4>
         <p-datepicker
           [(ngModel)]="criteria.endDate"
+          selectionMode="multiple"
+          maxDateCount="2"
           dateFormat="dd/mm/yy"
           placeholder="DD-MM-YYYY"
           [showIcon]="true"
@@ -153,7 +112,9 @@
         ></p-datepicker>
       </div>
 
-      <!-- 5. Botón -->
+      <div class="col-span-1 flex"></div>
+
+      <!-- 4. Botón -->
       <div class="col-span-1 flex justify-center items-center">
         <button
           pButton
@@ -180,37 +141,44 @@
       <!-- Header -->
       <ng-template pTemplate="header">
         <tr>
-          <th class="text-center" pResizableColumn rowspan="1" colspan="2">
-            Cuenta
-          </th>
-          <th class="text-center" pResizableColumn rowspan="2">Descripción</th>
-          <th class="text-center" pResizableColumn rowspan="2">Valor</th>
+          <th pResizableColumn rowspan="2">Fecha</th>
+          <th class="text-center" pResizableColumn colspan="2">Cuenta</th>
+          <th class="text-center" pResizableColumn colspan="2">Comprobante</th>
+          <th class="text-center" pResizableColumn rowspan="2">Débito</th>
+          <th class="text-center" pResizableColumn rowspan="2">Crédito</th>
         </tr>
         <tr>
           <th class="text-center">Código</th>
           <th class="text-center">Descripción</th>
+          <th class="text-center">Código</th>
+          <th class="text-center">Nombre</th>
         </tr>
       </ng-template>
 
       <!-- Body -->
-      <ng-template pTemplate="body" let-accountInfo>
+      <ng-template pTemplate="body" let-row>
         <tr>
-          <td>{{ accountInfo.accountCode }}</td>
-          <td>{{ accountInfo.accountDescription }}</td>
-          <td>{{ accountInfo.description }}</td>
-          <td [ngClass]="{ 'text-red-500': accountInfo.value < 0 }">
-            {{ accountInfo.value | currency : "COP $" : "symbol" : "1.0-0" }}
+          <td>{{ row.date }}</td>
+          <td>{{ row.accountCode }}</td>
+          <td>{{ row.accountDescription }}</td>
+          <td>{{ row.voucherCode }}</td>
+          <td>{{ row.voucherName }}</td>
+          <td [ngClass]="{ 'text-red-500': row.debit < 0 }">
+            {{ row.debit | currency : "COP $" : "symbol" : "1.0-0" }}
+          </td>
+          <td [ngClass]="{ 'text-red-500': row.credit < 0 }">
+            {{ row.credit | currency : "COP $" : "symbol" : "1.0-0" }}
           </td>
         </tr>
       </ng-template>
 
+      <!-- Mensaje vacío -->
       <ng-template pTemplate="emptymessage">
         <tr style="height: 200px">
-          <!-- aumenta aquí la altura -->
-          <td colspan="4">
+          <td colspan="7">
             <div class="flex flex-col items-center justify-center h-full">
-              <p class="text-sm text-gray-600 max-w-md text-center">
-                NO HAY INFORMACION PARA MOSTRAR
+              <p class="text-md text-gray-600 max-w-md text-center">
+                NO HAY INFORMACIÓN PARA MOSTRAR
               </p>
             </div>
           </td>

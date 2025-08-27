@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ViewEncapsulation } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -6,7 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { RadioButton } from 'primeng/radiobutton';
 import { CheckboxModule } from 'primeng/checkbox';
-import { SelectModule } from 'primeng/select';
+import { Select, SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SplitButtonModule } from 'primeng/splitbutton';
 import { TableModule } from 'primeng/table';
@@ -14,7 +15,8 @@ import { TableModule } from 'primeng/table';
 // Models
 import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
-import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
+import { Third } from '../../../../../../GeneralMasters/ThirdParties/models/Third';
+import { ThirdPartyBookResponse } from '../../../Models/Responses/ThirdPartyBookResponse';
 
 // Services
 import { ThirdPartyServiceService } from '../../../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
@@ -25,31 +27,33 @@ import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 
 @Component({
-  selector: 'app-inventory-and-balances',
+  selector: 'app-third-party-book',
   imports: [
     CommonModule,
     FormsModule,
     ButtonModule,
     SplitButtonModule,
-    RadioButton,
     CheckboxModule,
     SelectModule,
+    MultiSelectModule,
     DatePickerModule,
     TableModule,
   ],
   providers: [DatePipe],
-  templateUrl: './inventory-and-balances.component.html',
-  styleUrl: './inventory-and-balances.component.css',
+  templateUrl: './third-party-book.component.html',
+  styleUrl: './third-party-book.component.css',
 })
-export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
+export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
+  override thirdPartyOptions: Third[] = [];
+
   override request: GenerateAuxiliaryBookRequest = {
     entId: '',
     userId: 0,
-    type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
+    type: AuxiliaryBookType.DIARY,
     criteria: this.criteria,
   };
 
-  override dataTable: InventoryAndBalancesResponse[] = [];
+  override dataTable: ThirdPartyBookResponse[] = [];
 
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
@@ -70,19 +74,11 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
 
   protected loadConfig(): void {
     this.auxiliaryBookInfo = {
-      name: 'Libro de Inventarios y Balances',
+      name: 'Libro Auxiliar por Tercero',
       description:
-        'Presenta los activos, pasivos y patrimonio de la empresa en un momento determinado.',
-      icon: 'inventory_2',
+        'Presenta los movimientos contables asociados a terceros (clientes, proveedores, etc.), útil para conciliaciones y seguimiento de cuentas por cobrar o pagar.',
+      icon: 'groups_3',
     };
-
-    this.levels = [
-      { label: 'Clase', value: 'NUMBER_CLASS' },
-      { label: 'SubCuenta', value: 'SUB_ACCOUNT' },
-      { label: 'Grupo', value: 'GROUP' },
-      { label: 'Auxiliar', value: 'AUXILIARY_ACCOUNT' },
-      { label: 'Cuenta', value: 'ACCOUNT' },
-    ];
   }
 
   protected organizeRequest(): void {
@@ -105,7 +101,7 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
       //entId: this.enterpriseData.id,
       entId: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
       criteria: this.criteria,
-      type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
+      type: AuxiliaryBookType.THIRD_PARTY,
       //TO DO: Change the value of userId when the method to get the user ID is implemented
       userId: 123,
     };

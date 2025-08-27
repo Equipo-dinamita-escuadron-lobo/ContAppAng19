@@ -11,21 +11,18 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { SplitButtonModule } from 'primeng/splitbutton';
 import { TableModule } from 'primeng/table';
 
-// Models
-import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
+import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
-import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
-
-// Services
+import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
+import { DiaryResponse } from '../../../Models/Responses/DiaryBookResponse';
+import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
+import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { ThirdPartyServiceService } from '../../../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
-import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
-import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
-import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
-
+import { MajorAndBalancesResponse } from '../../../Models/Responses/MajorAndBalancesBookResponse';
 @Component({
-  selector: 'app-inventory-and-balances',
+  selector: 'app-major-and-balances',
   imports: [
     CommonModule,
     FormsModule,
@@ -38,18 +35,18 @@ import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliar
     TableModule,
   ],
   providers: [DatePipe],
-  templateUrl: './inventory-and-balances.component.html',
-  styleUrl: './inventory-and-balances.component.css',
+  templateUrl: './major-and-balances.component.html',
+  styleUrl: './major-and-balances.component.css',
 })
-export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
+export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
   override request: GenerateAuxiliaryBookRequest = {
     entId: '',
     userId: 0,
-    type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
+    type: AuxiliaryBookType.MAJOR_AND_BALANCES,
     criteria: this.criteria,
   };
 
-  override dataTable: InventoryAndBalancesResponse[] = [];
+  override dataTable: MajorAndBalancesResponse[] = [];
 
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
@@ -70,10 +67,10 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
 
   protected loadConfig(): void {
     this.auxiliaryBookInfo = {
-      name: 'Libro de Inventarios y Balances',
+      name: 'Libro Mayor y Balances',
       description:
-        'Presenta los activos, pasivos y patrimonio de la empresa en un momento determinado.',
-      icon: 'inventory_2',
+        'Muestra los movimientos y saldos por cuenta contable, facilitando la consulta de información acumulada para análisis financieros y elaboración de estados contables.',
+      icon: 'book_5',
     };
 
     this.levels = [
@@ -105,7 +102,7 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
       //entId: this.enterpriseData.id,
       entId: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
       criteria: this.criteria,
-      type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
+      type: AuxiliaryBookType.DIARY,
       //TO DO: Change the value of userId when the method to get the user ID is implemented
       userId: 123,
     };

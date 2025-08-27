@@ -33,6 +33,8 @@
           <input
             type="text"
             placeholder="Buscar Libro Auxiliar"
+            [(ngModel)]="searchTerm"
+            (input)="filterAuxBooks()"
             class="w-full pl-6 pr-12 py-3 border border-[var(--color-primary)] rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--color-light)] focus:border-transparent text-base bg-white"
           />
           <button
@@ -54,10 +56,11 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     <!-- auxbook Cards -->
     <div
-      *ngFor="let auxbook of auxiliaryBooks"
-      class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+      *ngFor="let auxbook of filteredAuxiliaryBooks"
+      class="relative bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer overflow-hidden group"
       (click)="goTo(auxbook.route)"
     >
+      <!-- Contenido normal -->
       <div class="flex items-start mb-4">
         <div class="flex-1">
           <h3
@@ -72,6 +75,15 @@
             {{ auxbook.description }}
           </p>
         </div>
+      </div>
+
+      <!-- Overlay al hacer hover -->
+      <div
+        class="absolute inset-0 bg-white/30 backdrop-blur-[5px] text-[var(--color-secondary)] p-6 flex items-center justify-center text-center translate-y-full group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+      >
+        <p class="text-sm sm:text-base">
+          {{ auxbook.longDescription }}
+        </p>
       </div>
     </div>
   </div>
