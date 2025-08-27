@@ -11,13 +11,13 @@ export class ClassesOfDocumentsServiceService {
   private readonly http = inject(HttpClient);
   readonly apiURL = environment.API_URL + 'config/document-classes/';
 
-  findAll(enterpriseId: string, page = 0, size = 1000): Observable<any> {
+  findAll(enterpriseId: string, page = 0, size = 10): Observable<any> {
     const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
     return this.http.get<any>(url);
   }
 
-  findAllActive(enterpriseId: string): Observable<any> {
-    const url = `${this.apiURL}findAllActive/${enterpriseId}`;
+  findAllActive(enterpriseId: string, page = 0, size = 50): Observable<any> {
+    const url = `${this.apiURL}findAllActive/${enterpriseId}?page=${page}&size=${size}`;
     return this.http.get<any>(url);
   }
 

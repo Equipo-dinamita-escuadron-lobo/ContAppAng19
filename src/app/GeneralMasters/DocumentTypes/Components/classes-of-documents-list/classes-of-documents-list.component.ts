@@ -40,6 +40,9 @@ import { DocumentClass } from '../../models/ClassesOfDocuments';
 export class ClassesOfDocumentsListComponent {
   list: DocumentClass[] = [];
   filtered: DocumentClass[] = [];
+  totalRecords: number = 0;
+  currentPage: number = 0;
+  currentSize: number = 10;
 
   constructor(
     private service: ClassesOfDocumentsServiceService,
@@ -49,7 +52,7 @@ export class ClassesOfDocumentsListComponent {
   ) {}
 
   ngOnInit(): void {
-    this.loadData();
+    // La tabla lazy se carga automáticamente con onLazyLoad
   }
 
   private getEnterpriseId(): string {
@@ -60,15 +63,18 @@ export class ClassesOfDocumentsListComponent {
     return '';
   }
 
-  private loadData(): void {
+  loadClassesLazy(event: any): void {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
+
+    // Calcular página y tamaño desde los controles de PrimeNG
+    this.currentPage = Math.floor(event.first / event.rows);
+    this.currentSize = event.rows;
     
-    this.service.findAll(enterpriseId).subscribe({
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
       next: (page: any) => {
-        const content: DocumentClass[] = page?.content || page || [];
-        this.list = content;
-        this.filtered = this.list;
+        this.list = page?.content || [];
+        this.totalRecords = page?.totalElements || 0;
       },
       error: (error) => {
         console.error('Error al cargar clases de documentos:', error);
@@ -78,6 +84,21 @@ export class ClassesOfDocumentsListComponent {
           detail: 'No se pudieron cargar las clases de documentos. Inténtelo nuevamente.',
           life: 5000
         });
+      }
+    });
+  }
+
+  reloadCurrentPage(): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+      next: (page: any) => {
+        this.list = page?.content || [];
+        this.totalRecords = page?.totalElements || 0;
+      },
+      error: (error) => {
+        console.error('Error al recargar clases de documentos:', error);
       }
     });
   }
@@ -110,12 +131,12 @@ export class ClassesOfDocumentsListComponent {
       accept: () => {
         this.service.delete(row.id, enterpriseId).subscribe({
           next: () => {
-            this.messageService.add({ 
-              severity: 'success', 
-              summary: 'Eliminado', 
-              detail: 'Clase de documento eliminada correctamente.' 
-            });
-            this.loadData();
+                    this.messageService.add({
+          severity: 'success',
+          summary: 'Eliminado',
+          detail: 'Clase de documento eliminada correctamente.'
+        });
+        this.reloadCurrentPage();
           },
           error: (error) => {
             console.error('Error al eliminar clase de documento:', error);

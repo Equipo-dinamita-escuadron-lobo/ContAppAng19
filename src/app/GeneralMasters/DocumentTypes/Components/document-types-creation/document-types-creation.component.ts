@@ -54,7 +54,8 @@ export class DocumentTypesCreationComponent {
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
     if (enterpriseId) {
-      this.classesService.findAllActive(enterpriseId).subscribe((page: any) => {
+      // Cargar todas las clases activas de una vez para dropdown (usar un size alto pero controlado)
+      this.classesService.findAllActive(enterpriseId, 0, 200).subscribe((page: any) => {
         const content = page?.content || page || [];
         // Solo cargar clases activas (status = true) y no eliminadas (isDeleted = false)
         const activeClasses = content.filter((c: any) => c.status === true && c.isDeleted !== true);

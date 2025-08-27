@@ -19,7 +19,7 @@ export class DocumentTypesServiceService {
   private readonly http = inject(HttpClient);
   private readonly apiURL = environment.API_URL + 'config/document-types/';
 
-  findAll(enterpriseId: string, page = 0, size = 1000): Observable<Page<DocumentType>> {
+  findAll(enterpriseId: string, page = 0, size = 10): Observable<Page<DocumentType>> {
     const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
     return this.http.get<Page<DocumentType>>(url);
   }

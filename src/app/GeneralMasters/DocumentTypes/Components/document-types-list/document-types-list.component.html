@@ -35,7 +35,7 @@
     </div>
 
     <!-- Tabla -->
-    <p-table #typesTable [value]="filtered" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [globalFilterFields]="['prefix','name','className','module']" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+    <p-table #typesTable [value]="list" [lazy]="true" (onLazyLoad)="loadTypesLazy($event)" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [globalFilterFields]="['prefix','name','className','module']" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="prefix" class="font-semibold text-primary border-b-2 border-primary">Prefijo <p-sortIcon field="prefix"></p-sortIcon></th>

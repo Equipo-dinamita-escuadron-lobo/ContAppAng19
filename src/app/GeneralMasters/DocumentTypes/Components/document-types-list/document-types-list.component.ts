@@ -43,6 +43,9 @@ export class DocumentTypesListComponent {
   list: DocumentTypeList[] = [];
   filtered: DocumentTypeList[] = [];
   classIdToName = new Map<number, string>();
+  totalRecords: number = 0;
+  currentPage: number = 0;
+  currentSize: number = 10;
 
   constructor(
     private service: DocumentTypesServiceService,
@@ -53,7 +56,8 @@ export class DocumentTypesListComponent {
   ) {}
 
   ngOnInit(): void {
-    this.loadData();
+    // La tabla lazy se carga automáticamente con onLazyLoad
+    this.loadClassNames(); // Cargar nombres de clases para mapeo
   }
 
   private getEnterpriseId(): string {
@@ -64,26 +68,63 @@ export class DocumentTypesListComponent {
     return '';
   }
 
-  private loadData(): void {
+  private loadClassNames(): void {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
     
-    this.classesService.findAll(enterpriseId).subscribe({
+    // Cargar todas las clases para mapeo de nombres (usar un size alto pero controlado)
+    this.classesService.findAll(enterpriseId, 0, 500).subscribe({
       next: (page: any) => {
         const content: DocumentClass[] = page?.content || page || [];
         content.forEach(c => this.classIdToName.set(c.id, c.name));
+      }
+    });
+  }
+
+  loadTypesLazy(event: any): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    // Calcular página y tamaño desde los controles de PrimeNG
+    this.currentPage = Math.floor(event.first / event.rows);
+    this.currentSize = event.rows;
+    
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+      next: (page) => {
+        const content: DocumentType[] = page.content || [];
+        this.list = content.map(dt => ({
+          ...dt,
+          className: this.getClassName(dt.documentClassId)
+        }));
+        this.totalRecords = page?.totalElements || 0;
       },
-      complete: () => {
-        this.service.findAll(enterpriseId).subscribe({
-          next: (page) => {
-            const content: DocumentType[] = page.content || [];
-            this.list = content.map(dt => ({
-              ...dt,
-              className: this.getClassName(dt.documentClassId)
-            }));
-            this.filtered = this.list;
-          }
+      error: (error) => {
+        console.error('Error al cargar tipos de documentos:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los tipos de documentos. Inténtelo nuevamente.',
+          life: 5000
         });
+      }
+    });
+  }
+
+  reloadCurrentPage(): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+      next: (page) => {
+        const content: DocumentType[] = page.content || [];
+        this.list = content.map(dt => ({
+          ...dt,
+          className: this.getClassName(dt.documentClassId)
+        }));
+        this.totalRecords = page?.totalElements || 0;
+      },
+      error: (error) => {
+        console.error('Error al recargar tipos de documentos:', error);
       }
     });
   }
@@ -174,7 +215,7 @@ export class DocumentTypesListComponent {
           summary: 'Eliminado',
           detail: 'Tipo de documento eliminado correctamente.'
         });
-        this.loadData();
+        this.reloadCurrentPage();
       },
       error: (err) => {
         this.messageService.add({
