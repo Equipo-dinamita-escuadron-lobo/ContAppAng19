@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -9,6 +10,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TagModule } from 'primeng/tag';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
 import { DocumentClass } from '../../models/ClassesOfDocuments';
@@ -18,6 +21,7 @@ import { DocumentClass } from '../../models/ClassesOfDocuments';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     TableModule,
     ButtonModule,
     IconFieldModule,
@@ -25,7 +29,9 @@ import { DocumentClass } from '../../models/ClassesOfDocuments';
     InputTextModule,
     ToastModule,
     TooltipModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    ToggleSwitchModule,
+    TagModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './classes-of-documents-list.component.html',
@@ -155,5 +161,46 @@ export class ClassesOfDocumentsListComponent {
   editClass(row: DocumentClass) {
     if (!row?.id) return;
     this.router.navigate(['/gen-masters/document-types/classes/edit', row.id]);
+  }
+
+  // Método para cambiar el estado de la clase de documento
+  changeClassState(documentClass: DocumentClass): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!documentClass?.id || !enterpriseId) return;
+
+    const newStatus = !this.isActive(documentClass.status);
+    
+    this.service.changeState(documentClass.id, enterpriseId, newStatus).subscribe({
+      next: () => {
+        // Actualizar el estado localmente
+        documentClass.status = newStatus;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado de la clase "${documentClass.name}" cambiado correctamente`
+        });
+      },
+      error: (error: any) => {
+        console.error('Error al cambiar el estado de la clase de documento:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado de la clase de documento'
+        });
+      }
+    });
+  }
+
+  // Métodos para manejar el estado
+  getStateSeverity(status: boolean): 'success' | 'danger' {
+    return status ? 'success' : 'danger';
+  }
+
+  formatState(status: boolean): string {
+    return status ? 'Activo' : 'Inactivo';
+  }
+
+  isActive(status: boolean): boolean {
+    return status === true;
   }
 }
