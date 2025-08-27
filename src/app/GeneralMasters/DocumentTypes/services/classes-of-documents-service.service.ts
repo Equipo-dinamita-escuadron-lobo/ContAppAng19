@@ -11,8 +11,8 @@ export class ClassesOfDocumentsServiceService {
   private readonly http = inject(HttpClient);
   readonly apiURL = environment.API_URL + 'config/document-classes/';
 
-  findAll(enterpriseId: string, page = 0, size = 10): Observable<any> {
-    const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
+  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'name', sortOrder = 'asc'): Observable<any> {
+    const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
     return this.http.get<any>(url);
   }
 

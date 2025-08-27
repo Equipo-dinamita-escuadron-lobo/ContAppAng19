@@ -46,6 +46,8 @@ export class DocumentTypesListComponent {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  currentSortField: string = 'name';
+  currentSortOrder: string = 'asc';
 
   constructor(
     private service: DocumentTypesServiceService,
@@ -89,7 +91,13 @@ export class DocumentTypesListComponent {
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
     
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+    // Manejar ordenamiento si está presente
+    if (event.sortField) {
+      this.currentSortField = event.sortField;
+      this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
+    }
+    
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
       next: (page) => {
         const content: DocumentType[] = page.content || [];
         this.list = content.map(dt => ({
@@ -114,7 +122,7 @@ export class DocumentTypesListComponent {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
       next: (page) => {
         const content: DocumentType[] = page.content || [];
         this.list = content.map(dt => ({

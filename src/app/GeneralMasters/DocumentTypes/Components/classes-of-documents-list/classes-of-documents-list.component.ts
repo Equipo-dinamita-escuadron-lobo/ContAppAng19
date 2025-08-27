@@ -43,6 +43,8 @@ export class ClassesOfDocumentsListComponent {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  currentSortField: string = 'name';
+  currentSortOrder: string = 'asc';
 
   constructor(
     private service: ClassesOfDocumentsServiceService,
@@ -71,7 +73,13 @@ export class ClassesOfDocumentsListComponent {
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
     
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+    // Manejar ordenamiento si está presente
+    if (event.sortField) {
+      this.currentSortField = event.sortField;
+      this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
+    }
+    
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
       next: (page: any) => {
         this.list = page?.content || [];
         this.totalRecords = page?.totalElements || 0;
@@ -92,7 +100,7 @@ export class ClassesOfDocumentsListComponent {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
       next: (page: any) => {
         this.list = page?.content || [];
         this.totalRecords = page?.totalElements || 0;
