@@ -34,7 +34,6 @@ import { DocumentClass } from '../../models/ClassesOfDocuments';
   styleUrl: './document-types-list.component.css'
 })
 export class DocumentTypesListComponent {
-  loading = false;
   list: DocumentTypeList[] = [];
   filtered: DocumentTypeList[] = [];
   classIdToName = new Map<number, string>();
@@ -62,7 +61,7 @@ export class DocumentTypesListComponent {
   private loadData(): void {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
-    this.loading = true;
+    
     this.classesService.findAll(enterpriseId).subscribe({
       next: (page: any) => {
         const content: DocumentClass[] = page?.content || page || [];
@@ -77,9 +76,7 @@ export class DocumentTypesListComponent {
               className: this.getClassName(dt.documentClassId)
             }));
             this.filtered = this.list;
-          },
-          complete: () => this.loading = false,
-          error: () => this.loading = false
+          }
         });
       }
     });

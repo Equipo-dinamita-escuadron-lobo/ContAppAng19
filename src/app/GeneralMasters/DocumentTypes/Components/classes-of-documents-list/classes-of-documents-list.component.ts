@@ -32,7 +32,6 @@ import { DocumentClass } from '../../models/ClassesOfDocuments';
   styleUrl: './classes-of-documents-list.component.css'
 })
 export class ClassesOfDocumentsListComponent {
-  loading = false;
   list: DocumentClass[] = [];
   filtered: DocumentClass[] = [];
 
@@ -58,17 +57,15 @@ export class ClassesOfDocumentsListComponent {
   private loadData(): void {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
-    this.loading = true;
+    
     this.service.findAll(enterpriseId).subscribe({
       next: (page: any) => {
         const content: DocumentClass[] = page?.content || page || [];
         this.list = content;
         this.filtered = this.list;
       },
-      complete: () => this.loading = false,
       error: (error) => {
         console.error('Error al cargar clases de documentos:', error);
-        this.loading = false;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
