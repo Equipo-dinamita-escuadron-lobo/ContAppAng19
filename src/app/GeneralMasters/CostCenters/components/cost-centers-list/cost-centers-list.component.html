@@ -66,7 +66,7 @@
                     </svg>
                     {{ c1.code }}
                   </div>
-                  <div class="name w-1/3">{{ c1.name }}</div>
+                  <div class="name w-1/3 text-left break-words overflow-hidden max-w-[200px] leading-tight">{{ c1.name }}</div>
                   <div class="status w-1/3 flex items-center justify-start">
                     <p-tag
                       [value]="c1.status ? 'Activo' : 'Inactivo'"
@@ -116,7 +116,7 @@
                         </svg>
                         {{ c2.code }}
                       </div>
-                      <div class="name w-1/3 -ml-3">{{ c2.name }}</div>
+                      <div class="name w-1/3 -ml-3 text-left break-words overflow-hidden max-w-[200px] leading-tight">{{ c2.name }}</div>
                       <div class="status w-1/3 flex items-center justify-start">
                         <p-tag
                           [value]="c2.status ? 'Activo' : 'Inactivo'"
@@ -147,7 +147,7 @@
                           (click)="select(c3); $event.stopPropagation()"
                         >
                           <div class="code w-1/3 flex">{{ c3.code }}</div>
-                          <div class="name w-1/3 -ml-6">{{ c3.name }}</div>
+                          <div class="name w-1/3 -ml-6 text-left break-words overflow-hidden max-w-[200px] leading-tight">{{ c3.name }}</div>
                           <div class="status w-1/3 flex items-center justify-start">
                             <p-tag
                               [value]="c3.status ? 'Activo' : 'Inactivo'"
