@@ -95,7 +95,7 @@ export class ListKardexWeightedAverageComponent {
 
   onProductSelect(product: ProductResponse) {
     this.selectedProduct = product;
-    this.productId = product.idProduct;
+    this.productId = product.productId;
     console.log('Producto seleccionado:', this.selectedProduct);
     // Al seleccionar un producto se carga el kardex con la configuración actual de fechas
     this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
