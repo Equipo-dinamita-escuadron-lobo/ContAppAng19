@@ -32,54 +32,140 @@
       <!-- Lista (árbol) -->
       <div class="list-account overscroll-auto border-r-4 sm:border-blue-950 sm:mr-6 sm:p-3">
         <div class="w-full flex text-blue-950">
-          <div class="w-1/2 border-b-2 border-blue-950 font-semibold">Código</div>
-          <div class="w-1/2 border-b-2 border-blue-950 font-semibold">Nombre</div>
+          <div class="w-1/3 border-b-2 border-blue-950 font-semibold">Código</div>
+          <div class="w-1/3 border-b-2 border-blue-950 font-semibold">Nombre</div>
+          <div class="w-1/3 border-b-2 border-blue-950 font-semibold">Estado</div>
         </div>
         <div class="w-full flex">
           <ul class="w-full mt-3">
             <li class="mb-2" *ngFor="let c1 of listCentersAux">
-              <div class="w-full flex">
-                <button class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
-                  (click)="toggle(c1); select(c1); $event.stopPropagation()">
-                  <div class="code w-1/2 flex">
-                    <svg class="h-16 w-16 mt-1 transform" [ngClass]="{'text-transparent': !c1.children, 'rotate-90': c1.showChildren}"
-                      width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none"
-                      stroke-linejoin="round">
+              <div
+                class="flex items-center w-full transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+              >
+                <button
+                  class="w-full text-start flex"
+                  (click)="toggle(c1); select(c1); $event.stopPropagation()"
+                >
+                  <div class="code w-1/3 flex">
+                    <svg
+                      class="h-16 w-16 mt-1 transform"
+                      [ngClass]="{
+                        'text-transparent': !c1.children,
+                        'rotate-90': c1.showChildren
+                      }"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      stroke-width="1"
+                      stroke="currentColor"
+                      fill="none"
+                      stroke-linejoin="round"
+                    >
                       <path stroke="none" d="M0 0h24v24H0z" />
                       <polyline points="9 6 15 12 9 18" />
                     </svg>
                     {{ c1.code }}
                   </div>
-                  <div class="name w-1/2">{{ c1.name }}</div>
+                  <div class="name w-1/3">{{ c1.name }}</div>
+                  <div class="status w-1/3 flex items-center justify-start">
+                    <p-tag
+                      [value]="c1.status ? 'Activo' : 'Inactivo'"
+                      [severity]="c1.status ? 'success' : 'danger'"
+                    ></p-tag>
+                  </div>
                 </button>
+                <div *ngIf="c1.showChildren" class="flex items-center gap-2 pr-4">
+                  <p-toggleswitch
+                    [(ngModel)]="c1.status"
+                    (ngModelChange)="changeCostCenterState(c1)"
+                    (click)="$event.stopPropagation()"
+                    [style]="{ transform: 'scale(0.8)' }"
+                    pTooltip="Cambiar Estado"
+                    tooltipPosition="top"
+                  >
+                  </p-toggleswitch>
+                </div>
               </div>
 
               <ul class="ml-12 mt-3" *ngIf="c1.showChildren">
                 <li class="mb-2" *ngFor="let c2 of c1.children">
-                  <div class="w-full flex">
-                    <button class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
-                      (click)="toggle(c2); select(c2); $event.stopPropagation()">
-                      <div class="code w-1/2 flex">
-                        <svg class="h-16 w-16 mt-1 transform" [ngClass]="{'text-white': !c2.children || c2.children.length === 0, 'rotate-90': c2.showChildren}"
-                          width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none"
-                          stroke-linejoin="round">
+                  <div
+                    class="flex items-center w-full transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                  >
+                    <button
+                      class="w-full text-start flex"
+                      (click)="toggle(c2); select(c2); $event.stopPropagation()"
+                    >
+                      <div class="code w-1/3 flex">
+                        <svg
+                          class="h-16 w-16 mt-1 transform"
+                          [ngClass]="{
+                            'text-transparent': !c2.children || c2.children.length === 0,
+                            'rotate-90': c2.showChildren
+                          }"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          stroke-width="1"
+                          stroke="currentColor"
+                          fill="none"
+                          stroke-linejoin="round"
+                        >
                           <path stroke="none" d="M0 0h24v24H0z" />
                           <polyline points="9 6 15 12 9 18" />
                         </svg>
                         {{ c2.code }}
                       </div>
-                      <div class="name w-1/2 -ml-3">{{ c2.name }}</div>
+                      <div class="name w-1/3 -ml-3">{{ c2.name }}</div>
+                      <div class="status w-1/3 flex items-center justify-start">
+                        <p-tag
+                          [value]="c2.status ? 'Activo' : 'Inactivo'"
+                          [severity]="c2.status ? 'success' : 'danger'"
+                        ></p-tag>
+                      </div>
                     </button>
+                    <div *ngIf="c1.showChildren" class="flex items-center gap-2 pr-4">
+                      <p-toggleswitch
+                        [(ngModel)]="c2.status"
+                        (ngModelChange)="changeCostCenterState(c2)"
+                        (click)="$event.stopPropagation()"
+                        [style]="{ transform: 'scale(0.8)' }"
+                        pTooltip="Cambiar Estado"
+                        tooltipPosition="top"
+                      >
+                      </p-toggleswitch>
+                    </div>
                   </div>
 
                   <ul class="ml-12 mt-3" *ngIf="c2.showChildren">
                     <li class="mb-2" *ngFor="let c3 of c2.children">
-                      <div class="w-full flex">
-                        <button class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
-                          (click)="select(c3); $event.stopPropagation()">
-                          <div class="code w-1/2 flex">{{ c3.code }}</div>
-                          <div class="name w-1/2 -ml-6">{{ c3.name }}</div>
+                      <div
+                        class="flex items-center w-full transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                      >
+                        <button
+                          class="w-full text-start flex"
+                          (click)="select(c3); $event.stopPropagation()"
+                        >
+                          <div class="code w-1/3 flex">{{ c3.code }}</div>
+                          <div class="name w-1/3 -ml-6">{{ c3.name }}</div>
+                          <div class="status w-1/3 flex items-center justify-start">
+                            <p-tag
+                              [value]="c3.status ? 'Activo' : 'Inactivo'"
+                              [severity]="c3.status ? 'success' : 'danger'"
+                            ></p-tag>
+                          </div>
                         </button>
+                        <div *ngIf="c2.showChildren" class="flex items-center gap-2 pr-4">
+                          <p-toggleswitch
+                            [(ngModel)]="c3.status"
+                            (ngModelChange)="changeCostCenterState(c3)"
+                            (click)="$event.stopPropagation()"
+                            [style]="{ transform: 'scale(0.8)' }"
+                            pTooltip="Cambiar Estado"
+                            tooltipPosition="top"
+                          >
+                          </p-toggleswitch>
+                        </div>
                       </div>
                     </li>
                   </ul>
@@ -136,11 +222,14 @@
                     </div>
                     <div class="floating-label">{{ i === 0 ? 'Costo' : (i === 1 ? 'Subcosto' : 'Auxiliar costo') }}</div>
                   </div>
-                  <div *ngIf="i === selectedPath.length - 1 && showButtonDelete" style="position: absolute; right: -0.5rem; top: -0.5rem;">
-                  <button class="delete-button" (click)="confirmDeleteSelected()" title="Eliminar">
-                      <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                      </svg>
+                  <div *ngIf="i === selectedPath.length - 1" style="position: absolute; right: -0.5rem; top: -0.5rem;">
+                    <button class="delete-button" (click)="confirmDeleteSelected(node)" title="Eliminar"
+                        pTooltip="Eliminar"
+                        tooltipPosition="top"
+                    >
+                        <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </button>
                   </div>
                 </div>

@@ -4,6 +4,7 @@ export interface CostCenter {
   code: string; 
   name: string;
   parentId?: number | null;
+  status?: boolean;
 }
 
 export interface CostCenterNode extends CostCenter {
