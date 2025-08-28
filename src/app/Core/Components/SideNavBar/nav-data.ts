@@ -101,7 +101,7 @@ export const navbarData: INavbarData[] = [
         routeLink: 'TO DO',
         icon: 'circle',
         label: 'Maestros',
-        items: [          
+        items: [
           {
             routeLink: 'TO DO',
             icon: 'docs',
@@ -210,6 +210,11 @@ export const navbarData: INavbarData[] = [
          routeLink: 'TO DO',
          icon: 'receipt_long',
          label: 'Factura de Compra',
+       },
+       {
+         routeLink: '/commercial/invoice-template',
+         icon: 'description',
+         label: 'Plantilla de Factura',
        },
        {
          routeLink: 'TO DO',
