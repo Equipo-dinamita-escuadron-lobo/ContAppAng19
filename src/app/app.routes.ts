@@ -698,6 +698,16 @@ export const routes: Routes = [
                 './Commercial/SaleInvoice/components/sale-invoice-creation/sale-invoice-creation.component'
               ).then((m) => m.SaleInvoiceCreationComponent),
           },
+          {
+            path: 'invoice-template',
+            data: {
+              breadcrumb: 'Plantilla de Factura',
+            },
+            loadComponent: () =>
+              import(
+                './Commercial/InvoiceTemplate/components/create-invoice/create-invoice.component'
+              ).then((m) => m.CreateInvoiceComponent),
+          }
         ],
       },
     ],
