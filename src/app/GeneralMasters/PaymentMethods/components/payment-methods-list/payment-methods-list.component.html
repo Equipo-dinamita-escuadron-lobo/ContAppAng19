@@ -8,16 +8,15 @@
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <div class="items-center mb-6">
         <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Clases de Documentos
+          Métodos de Pago
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">Lista de todas las clases de documentos configuradas en el sistema.</p>
+        <p class="font-family-sans font-normal text-sm mt-2">Lista de todos los métodos de pago configurados en el sistema.</p>
       </div>
 
       <!-- Botones -->
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
-          <p-button label="Crear Clase" icon="pi pi-plus" (onClick)="createClass()"></p-button>
-          <p-button icon="pi pi-arrow-left" (onClick)="goToTypes()" styleClass="p-button-text p-button-secondary"></p-button>
+          <p-button label="Crear Método" icon="pi pi-plus" (onClick)="createPaymentMethod()"></p-button>
         </div>
       </div>
     </div>
@@ -29,16 +28,17 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" (input)="filterGlobal($event, classesTable)" placeholder="Buscar clase (nombre)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
+          <input pInputText type="text" (input)="filterGlobal($event, paymentMethodsTable)" placeholder="Buscar método de pago..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
         </p-iconfield>
       </div>
     </div>
 
     <!-- Tabla -->
-    <p-table #classesTable [value]="list" [lazy]="true" (onLazyLoad)="loadClassesLazy($event)" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [globalFilterFields]="['name']" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '40rem'}" responsiveLayout="scroll">
+    <p-table #paymentMethodsTable [value]="list" [lazy]="true" (onLazyLoad)="loadPaymentMethodsLazy($event)" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [globalFilterFields]="['name','accountingAccount','accountingAccountDisplay']" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">Nombre <p-sortIcon field="name"></p-sortIcon></th>
+          <th pSortableColumn="accountingAccount" class="font-semibold text-primary border-b-2 border-primary">Cuenta Contable <p-sortIcon field="accountingAccount"></p-sortIcon></th>
           <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
           <th class="font-semibold text-primary border-b-2 border-primary text-center">Acciones</th>
         </tr>
@@ -47,16 +47,17 @@
       <ng-template pTemplate="body" let-row>
         <tr class="text-neutral-20">
           <td class="py-3">{{ row.name }}</td>
+          <td class="py-3">{{ row.accountingAccountDisplay }}</td>
           <td class="py-3 text-center">
             <p-tag [value]="formatState(row.status)" [severity]="getStateSeverity(row.status)"></p-tag>
           </td>
           <td class="py-3 text-center">
             <div class="flex justify-center gap-2 items-center">
-              <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" (onClick)="editClass(row)" styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
-              <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" (onClick)="deleteClass(row)" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
+              <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" (onClick)="editPaymentMethod(row)" styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
+              <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" (onClick)="deletePaymentMethod(row)" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
               <p-toggleSwitch
                 [ngModel]="isActive(row.status)"
-                (onChange)="changeClassState(row)"
+                (onChange)="changePaymentMethodState(row)"
                 pTooltip="Cambiar Estado"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
@@ -69,7 +70,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="3" class="text-center py-6 font-family-sans text-neutral-50">No se encontraron clases.</td>
+          <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">No se encontraron métodos de pago.</td>
         </tr>
       </ng-template>
     </p-table>

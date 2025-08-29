@@ -6,7 +6,7 @@ import { FinancialStateType } from '../../models/FinancialStateType';
 import { NatureType } from '../../models/NatureType';
 import { ClasificationType } from '../../models/ClasificationType';
 import { ChartAccountService } from '../../services/chart-account.service';
-import { forkJoin, map, Observable, of, switchMap } from 'rxjs';
+import { forkJoin, map, Observable, of, switchMap, firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
@@ -789,7 +789,7 @@ export class AccountListComponent {
   * @param parentId - El ID del padre de la cuenta (por defecto es 0 para la raíz).
   * @returns Un observable que emite la cuenta guardada.
   */
-  saveAccountRecursively(account: Account, parentId: number = 0): Observable<Account> {
+  saveAccountRecursively(account: Account, parentId: number | null = null): Observable<Account> {
     // Set the parent ID
     account.parent = parentId;
 
@@ -842,7 +842,7 @@ export class AccountListComponent {
           ...account,
           children: [],
           idEnterprise: this.getIdEnterprise(),  // Asignar idEnterprise a la cuenta actual
-          parent: ""  // Inicialmente, el parent es null
+          parent: null  // Inicialmente, el parent es null
         };
       } else {
         hierarchy[code].description = account.description;
@@ -862,7 +862,7 @@ export class AccountListComponent {
             classification: '',
             children: [],
             idEnterprise: this.getIdEnterprise(),  // Asignar idEnterprise al padre
-            parent: getParentCode(parentCode)  // Obtener el padre del padre
+            parent: getParentCode(parentCode) || null  // Obtener el padre del padre o null si no hay
           };
         }
         if (!hierarchy[currentCode].parent) {
@@ -1183,80 +1183,105 @@ export class AccountListComponent {
     });
   }
 
+
   /**
-   * Obtiene una cuenta por su código.
+   * Verifica si una cuenta existe usando el cache local de cuentas cargadas.
+   * Si no está en cache, hace la búsqueda pero de forma silenciosa.
+   * 
    * @param account El objeto cuenta que contiene el código a buscar.
-   * @returns Una promesa que se resuelve con un valor booleano que indica si la cuenta existe o no, o se rechaza con un error en caso de fallo.
+   * @returns Una promesa que se resuelve con un valor booleano que indica si la cuenta existe o no.
    */
-  getAccountByCode(account: Account): Promise<boolean> {
-    return this._accountService.getAccountByCode(account.code, this.getIdEnterprise()).toPromise()
-      .then(cuenta => {
-        return !!cuenta;
-      })
-      .catch(error => {
-        console.error('Error al obtener la cuenta:', error);
-        return false;
-      });
+  async getAccountByCode(account: Account): Promise<boolean> {
+    try {
+      // Primero verificar en el cache local (listAccounts)
+      const existsInCache = this.findAccountInCache(account.code);
+      if (existsInCache) {
+        return true;
+      }
+
+      // Si no está en cache, hacer búsqueda silenciosa
+      const cuenta = await firstValueFrom(
+        this._accountService.getAccountByCode(account.code, this.getIdEnterprise())
+      );
+      
+      return !!cuenta;
+    } catch (error) {
+      // Cualquier error se considera como cuenta no existente
+      return false;
+    }
+  }
+
+  /**
+   * Busca una cuenta en el cache local (listAccounts) de forma recursiva.
+   * 
+   * @param code Código de la cuenta a buscar.
+   * @returns La cuenta si existe en cache, null si no existe.
+   */
+  private findAccountInCache(code: string): Account | null {
+    const searchInAccounts = (accounts: Account[]): Account | null => {
+      for (const account of accounts) {
+        if (account.code === code) {
+          return account;
+        }
+        if (account.children && account.children.length > 0) {
+          const found = searchInAccounts(account.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    return searchInAccounts(this.listAccounts || []);
   }
 
   /**
    * Guarda una cuenta llamando al servicio.
-   * Primero verifica si la cuenta ya existe. Si no existe, crea la cuenta mediante el servicio.
+   * No valida duplicados porque es una cuenta nueva que se está creando.
+   * El backend se encargará de manejar cualquier error de duplicados.
    * Si la cuenta es una subcuenta y la cuenta seleccionada tiene más de dos cuentas auxiliares, muestra un error.
    * @param account La cuenta que contiene la información a guardar.
    */
   async saveNewAccountType(account: Account) {
     try {
-      const accountExist = await this.getAccountByCode(account);
-      if (!accountExist) {
-        if (this.name === 'subAccountName' && this.accountSelected && this.accountSelected.children && this.accountSelected.children.length >= 2) {
-          Swal.fire({
-            title: 'Error',
-            text: 'Solo se permiten dos cuentas auxiliares para esta subcuenta!',
-            confirmButtonColor: '#000066',
-            //confirmButtonColor: buttonColors.confirmationColor,
-            icon: 'error',
-          });
-          this.selectAccount(this.accountSelected);
-          this.noShowFormAddNewClass();
-          this.noAddNewChild();
-        } else {
-          this._accountService.createAccount(account).subscribe(
-            (response) => {
-              this.getAccounts()
-                .then(() => {
-                  this.expandAccounts(response);
-                  this.selectAccount(response);
-                  this.noShowFormAddNewClass();
-                  this.noAddNewChild();
-                  Swal.fire({
-                    title: 'Creación exitosa',
-                    showConfirmButton: false,
-                    icon: 'success',
-                    timer: 1000
-                  });
-                });
-            },
-            (error) => {
-              Swal.fire({
-                title: 'Error',
-                text: 'Ha ocurrido un error al crear la cuenta!.',
-                confirmButtonColor: '#000066',
-                //confirmButtonColor: buttonColors.confirmationColor,
-                icon: 'error',
-              });
-              console.log(error);
-            }
-          );
-        }
-      } else {
+      // Validación específica para subcuentas con límite de auxiliares
+      if (this.name === 'subAccountName' && this.accountSelected && this.accountSelected.children && this.accountSelected.children.length >= 2) {
         Swal.fire({
           title: 'Error',
-          text: 'Ya existe una cuenta con el código ingresado!',
+          text: 'Solo se permiten dos cuentas auxiliares para esta subcuenta!',
           confirmButtonColor: '#000066',
-          //confirmButtonColor: buttonColors.confirmationColor,
           icon: 'error',
         });
+        this.selectAccount(this.accountSelected);
+        this.noShowFormAddNewClass();
+        this.noAddNewChild();
+      } else {
+        // Crear la cuenta directamente - el backend manejará duplicados si los hay
+        this._accountService.createAccount(account).subscribe(
+          (response) => {
+            this.getAccounts()
+              .then(() => {
+                this.expandAccounts(response);
+                this.selectAccount(response);
+                this.noShowFormAddNewClass();
+                this.noAddNewChild();
+                Swal.fire({
+                  title: 'Creación exitosa',
+                  showConfirmButton: false,
+                  icon: 'success',
+                  timer: 1000
+                });
+              });
+          },
+          (error) => {
+            Swal.fire({
+              title: 'Error',
+              text: 'Ha ocurrido un error al crear la cuenta!.',
+              confirmButtonColor: '#000066',
+              icon: 'error',
+            });
+            console.log(error);
+          }
+        );
       }
     } catch (error) {
       console.error('Error al guardar el tipo de cuenta:', error);
@@ -1296,8 +1321,8 @@ export class AccountListComponent {
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed && this.accountSelected?.id) {
-            this._accountService.deleteAccount(this.accountSelected.id.toString()).subscribe(
-              (response) => {
+            this._accountService.deleteAccount(this.accountSelected.id.toString(), this.getIdEnterprise()).subscribe(
+              () => {
                 Swal.fire({
                   title: 'Eliminación exitosa',
                   showConfirmButton: false,
@@ -1311,10 +1336,15 @@ export class AccountListComponent {
                     if (this.accountSelected && this.accountSelected.parent) {
                       this._accountService.getAccountByCode(this.accountSelected?.parent, this.getIdEnterprise()).subscribe({
                         next: (account) => {
-                          this.expandAccounts(account);
-                          this.selectAccount(account);
-                          this.noShowFormAddNewClass();
-                          this.noAddNewChild();
+                          if (account) {
+                            this.expandAccounts(account);
+                            this.selectAccount(account);
+                            this.noShowFormAddNewClass();
+                            this.noAddNewChild();
+                          } else {
+                            // Si la cuenta es null (no existe)
+                            this.noShowPrincipalAndTransactionalForm();
+                          }
                         }
                       });
                     } else {
@@ -1342,6 +1372,9 @@ export class AccountListComponent {
     }
   }
 
+  // Flag para prevenir múltiples actualizaciones simultáneas
+  private isUpdating = false;
+
   /**
    * Actualiza la información de una cuenta seleccionada.
    * Valida que el código de la cuenta no esté asociado a subcuentas antes de proceder con la actualización.
@@ -1349,19 +1382,54 @@ export class AccountListComponent {
    * Si la cuenta no existe y los datos han cambiado, actualiza la cuenta llamando al servicio correspondiente.
    */
   async updateAccount() {
+    // Prevenir múltiples actualizaciones simultáneas
+    if (this.isUpdating) {
+      return;
+    }
+    this.isUpdating = true;
+
     try {
       if (this.accountSelected) {
-        // ... (tu lógica de validación de subcuentas está bien)
         if (this.accountSelected.children && this.accountSelected.children.length > 0 && this.accountSelected.code !== this.parentId + this.accountForm.get(this.code)?.value) {
-          Swal.fire({ /* ... */ });
+          Swal.fire({
+            title: 'Error',
+            text: 'No se puede cambiar el código de una cuenta que tiene subcuentas asociadas.',
+            confirmButtonColor: '#000066',
+            icon: 'error',
+          });
           this.selectAccount(this.accountSelected);
           return; // Salir de la función
         }
 
         const transactionalValues = this.formTransactional.value;
 
+        // Construir el código correctamente según el nivel de cuenta
+        let newCode = '';
+        const codeValue = this.accountForm.get(this.code)?.value || '';
+        
+        // Asegurar que el código mantenga la longitud correcta según el nivel
+        if (this.num === 1) {
+          // Clase: 1 dígito
+          newCode = codeValue.padStart(1, '0');
+        } else if (this.num === 2) {
+          // Grupo: 2 dígitos  
+          newCode = this.parentId + codeValue.padStart(1, '0');
+        } else if (this.num === 4) {
+          // Cuenta: 4 dígitos
+          newCode = this.parentId + codeValue.padStart(2, '0');
+        } else if (this.num === 6) {
+          // Subcuenta: 6 dígitos
+          newCode = this.parentId + codeValue.padStart(2, '0');
+        } else if (this.num === 8) {
+          // Auxiliar: 8 dígitos
+          newCode = this.parentId + codeValue.padStart(2, '0');
+        } else {
+          // Fallback: usar la construcción original
+          newCode = this.parentId + codeValue;
+        }
+
         const account: Account = {
-          code: this.parentId + this.accountForm.get(this.code)?.value,
+          code: newCode,
           description: this.accountForm.get(this.name)?.value,
 
           // Extraemos el .name del objeto, o enviamos null si no hay nada seleccionado
@@ -1370,35 +1438,32 @@ export class AccountListComponent {
           classification: transactionalValues.selectedClasificationType ? transactionalValues.selectedClasificationType.name : null,
         };
 
-        // ... el resto de tu lógica de validación con `accountExist` y `Swal.fire` está bien y ahora funcionará con el objeto `account` correcto.
-        const accountExist = await this.getAccountByCode(account);
-
-        if (!accountExist) {
+        // Verificar si realmente hay cambios en los datos
+        const hasChanges = (
+          this.accountSelected.code !== account.code ||
+          this.accountSelected.description !== account.description ||
+          this.accountSelected.nature !== account.nature ||
+          this.accountSelected.financialStatus !== account.financialStatus ||
+          this.accountSelected.classification !== account.classification
+        );
+        
+        if (hasChanges) {
+          // Proceder con la actualización - el backend manejará duplicados si los hay
           this.update(this.accountSelected?.id, account);
         } else {
-          if (this.accountSelected.code === account.code && (this.accountSelected.description !== account.description || account.nature !== this.accountSelected.nature || account.financialStatus !== this.accountSelected.financialStatus || account.classification !== this.accountSelected.classification)) {
-            this.update(this.accountSelected?.id, account);
-          } else {
-            if (this.accountSelected.code === account.code && this.accountSelected.description === account.description) {
-              Swal.fire({
-                title: 'Error',
-                text: 'La cuenta tiene la misma información!',
-                confirmButtonColor: '#000066',
-                icon: 'error',
-              });
-            } else {
-              Swal.fire({
-                title: 'Error',
-                text: 'Ya existe una cuenta con el código ingresado!',
-                confirmButtonColor: '#000066',
-                icon: 'error',
-              });
-            }
-          }
+          Swal.fire({
+            title: 'Error',
+            text: 'La cuenta tiene la misma información!',
+            confirmButtonColor: '#000066',
+            icon: 'error',
+          });
         }
       }
     } catch (error) {
       console.error('Error al actualizar la cuenta:', error);
+    } finally {
+      // Restablecer el flag
+      this.isUpdating = false;
     }
   }
 

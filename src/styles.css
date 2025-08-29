@@ -660,3 +660,140 @@ body {
   --p-toggleswitch-handle-background: var(--color-primary-100) !important;
   --p-toggleswitch-handle-checked-background: var(--color-primary-100) !important;
 }
+
+/* ================================
+   ESTILOS PARA P-CONFIRMDIALOG
+   ================================ */
+
+/* Overlay/fondo oscuro detrás del diálogo */
+.p-dialog-mask {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Contenedor principal del diálogo */
+.p-confirm-dialog {
+  font-family: var(--font-family-sans) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04) !important;
+  border: 1px solid var(--color-neutral-80) !important;
+  overflow: hidden !important;
+  max-width: 400px !important;
+  min-width: 350px !important;
+}
+
+/* Header del diálogo */
+.p-confirm-dialog .p-dialog-header {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-light) 100%) !important;
+  color: var(--color-primary-100) !important;
+  padding: 1.25rem 1.5rem !important;
+  border-bottom: none !important;
+}
+
+/* Título del header */
+.p-confirm-dialog .p-dialog-title {
+  font-family: var(--font-family-titillium) !important;
+  font-weight: 700 !important;
+  font-size: 1.125rem !important;
+  color: var(--color-primary-100) !important;
+}
+
+/* Botón de cerrar (X) */
+.p-confirm-dialog .p-dialog-header-close {
+  color: var(--color-primary-100) !important;
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.p-confirm-dialog .p-dialog-header-close:hover {
+  opacity: 1 !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Contenido del diálogo */
+.p-confirm-dialog .p-dialog-content {
+  background-color: var(--color-primary-100) !important;
+  padding: 1.5rem !important;
+  text-align: center;
+}
+
+/* Contenedor del mensaje */
+.p-confirm-dialog .p-confirm-dialog-message {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 1rem !important;
+  text-align: left !important;
+}
+
+/* Ícono del diálogo */
+.p-confirm-dialog .p-confirm-dialog-icon {
+  color: var(--color-complementary-orange) !important;
+  font-size: 2rem !important;
+  margin-top: 0.25rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* Texto del mensaje */
+.p-confirm-dialog .p-confirm-dialog-message .p-confirm-dialog-message-text {
+  font-family: var(--font-family-sans) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+  color: var(--color-neutral-20) !important;
+  font-weight: 400 !important;
+}
+
+/* Footer con botones */
+.p-confirm-dialog .p-dialog-footer {
+  background-color: var(--color-primary-100) !important;
+  padding: 1rem 1.5rem 1.5rem 1.5rem !important;
+  border-top: 1px solid var(--color-neutral-90) !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 0.75rem !important;
+}
+
+/* Botón de aceptar/confirmar (peligroso) */
+.p-confirm-dialog .p-button.p-button-danger {
+  background-color: var(--color-secondary) !important;
+  border-color: var(--color-secondary) !important;
+  color: var(--color-primary-100) !important;
+  font-weight: 600 !important;
+  padding: 0.625rem 1.25rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.p-confirm-dialog .p-button.p-button-danger:hover {
+  background-color: var(--color-secondary-dark) !important;
+  border-color: var(--color-secondary-dark) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.p-confirm-dialog .p-button.p-button-danger:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Botón de cancelar/rechazar (secundario) */
+.p-confirm-dialog .p-button.p-button-secondary {
+  background-color: transparent !important;
+  border: 1px solid var(--color-neutral-60) !important;
+  color: var(--color-neutral-30) !important;
+  font-weight: 600 !important;
+  padding: 0.625rem 1.25rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.p-confirm-dialog .p-button.p-button-secondary:hover {
+  background-color: var(--color-neutral-95) !important;
+  border-color: var(--color-neutral-50) !important;
+  color: var(--color-neutral-20) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-confirm-dialog .p-button.p-button-secondary:active {
+  transform: translateY(0) !important;
+  box-shadow: none !important;
+}
