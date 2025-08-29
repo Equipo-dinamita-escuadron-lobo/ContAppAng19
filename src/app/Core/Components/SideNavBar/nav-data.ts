@@ -55,7 +55,7 @@ export const navbarData: INavbarData[] = [
         ],
       },
       {
-        routeLink: '/gen-masters/payment-methods',
+        routeLink: '/gen-masters/payment-methods/list',
         icon: 'payments',
         label: 'Métodos de Pago',
       },
