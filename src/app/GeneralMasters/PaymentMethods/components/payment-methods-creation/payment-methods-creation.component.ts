@@ -11,6 +11,7 @@ import { PaymentMethodsServiceService } from '../../services/payment-methods-ser
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
 import { AccountingAccountOption } from '../../models/PaymentMethods';
+import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
 
 
 @Component({
@@ -60,17 +61,11 @@ export class PaymentMethodsCreationComponent {
           // Obtener solo las cuentas hoja (auxiliares) que son las de último nivel sin hijos
           const auxiliaryAccounts: Account[] = [];
           accounts.forEach(account => {
-            this.collectLeaves(account, auxiliaryAccounts);
+            PaymentMethodsUtils.collectLeaves(account, auxiliaryAccounts);
           });
 
           // Filtrar cuentas válidas (con código y descripción)
-          const validAuxiliaryAccounts = auxiliaryAccounts.filter((account: Account) => {
-            const hasCode = account.code && account.code.trim() !== '';
-            const hasDescription = account.description && account.description.trim() !== '';
-            const isValid = hasCode && hasDescription;
-
-            return isValid;
-          });
+          const validAuxiliaryAccounts = PaymentMethodsUtils.filterValidAuxiliaryAccounts(auxiliaryAccounts);
 
           this.accountingAccountsOptions = validAuxiliaryAccounts.map((account: Account) => ({
             label: `${account.code} - ${account.description}`,
@@ -109,24 +104,7 @@ export class PaymentMethodsCreationComponent {
     this.router.navigate(['/gen-masters/payment-methods/list']);
   }
 
-  /**
-   * Recorre recursivamente una estructura de cuentas y recoge todos los elementos hoja (cuentas auxiliares)
-   * Si el nodo actual tiene hijos, se recursiona sobre ellos. Si no tiene hijos, se agrega a la lista de hojas.
-   *
-   * @param item - El nodo actual de la cuenta que se está procesando
-   * @param leaves - La lista acumulada de hojas donde se agregarán los nodos sin hijos
-   * @returns Una lista de cuentas que son hojas (cuentas auxiliares sin hijos)
-   */
-  private collectLeaves(item: Account, leaves: Account[]): Account[] {
-    if (item.children && item.children.length > 0) {
-      // Recorrer todos los hijos recursivamente
-      item.children.forEach(child => this.collectLeaves(child, leaves));
-    } else {
-      // Si no hay hijos, agregar el nodo actual a la lista de hojas (cuentas auxiliares)
-      leaves.push(item);
-    }
-    return leaves;
-  }
+
 
   onSubmit() {
     if (this.form.invalid) {
