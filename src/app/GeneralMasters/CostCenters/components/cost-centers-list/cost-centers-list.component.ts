@@ -48,7 +48,7 @@ export class CostCentersListComponent {
   // Data
   listCenters: CostCenterNode[] = [];
   listCentersAux: CostCenterNode[] = [];
-  allCenters: CostCenterNode[] = []; // Lista completa sin filtrar
+  allCenters: CostCenterNode[] = []; // Lista completa de la página actual
   selected?: CostCenterNode;
   selectedPath: CostCenterNode[] = [];
 
@@ -56,7 +56,6 @@ export class CostCentersListComponent {
   first: number = 0;
   rows: number = 30;
   totalRecords: number = 0;
-  paginatedCenters: CostCenterNode[] = [];
 
   // UI State
   showPrincipalForm = false;
@@ -96,9 +95,11 @@ export class CostCentersListComponent {
   }
 
   private loadTree(expandCode?: string, selectCodeAfter?: string) {
-    // Cargar todos los centros de costo para manejar la paginación jerárquica
-    this.service.findAll(this.getIdEnterprise(), 0, 10000).subscribe({
+    const currentPage = Math.floor(this.first / this.rows);
+    this.service.findAll(this.getIdEnterprise(), currentPage, this.rows).subscribe({
       next: (page) => {
+        this.totalRecords = page.totalElements;
+        
         const list = page.content || [];
         const nodes = list.map(cc => ({
           ...cc,
@@ -108,11 +109,10 @@ export class CostCentersListComponent {
           status: cc.status ?? true // Default a true si no está definido
         } as CostCenterNode));
         
+        // Construir jerarquía con los datos paginados del backend
         this.allCenters = this.buildHierarchy(nodes);
         this.listCenters = this.allCenters;
-        
-        // Configurar paginación jerárquica
-        this.setupHierarchicalPagination();
+        this.listCentersAux = this.allCenters;
 
         if (expandCode) {
           this.expandByCode(expandCode);
@@ -129,7 +129,6 @@ export class CostCentersListComponent {
         this.listCenters = [];
         this.allCenters = [];
         this.listCentersAux = [];
-        this.paginatedCenters = [];
         this.totalRecords = 0;
       }
     });
@@ -199,7 +198,7 @@ export class CostCentersListComponent {
   onFilterChange() {
     const term = (this.filterAccount || '').toLowerCase().trim();
     if (!term) {
-      this.listCenters = this.allCenters;
+      this.listCentersAux = this.allCenters;
     } else {
       const filterRecursive = (nodes: CostCenterNode[]): CostCenterNode[] => {
         const result: CostCenterNode[] = [];
@@ -214,171 +213,18 @@ export class CostCentersListComponent {
         }
         return result;
       };
-      this.listCenters = filterRecursive(this.allCenters);
+      this.listCentersAux = filterRecursive(this.allCenters);
     }
-    
-    // Reconfigurar paginación después del filtro
-    this.first = 0;
-    this.setupHierarchicalPagination();
   }
 
   /**
-   * Configura la paginación jerárquica manteniendo las familias de centros de costo juntas
-   */
-  private setupHierarchicalPagination() {
-    const rootNodes = this.listCenters;
-    this.totalRecords = this.countTotalNodes(rootNodes);
-    this.updatePaginatedData();
-  }
-
-  /**
-   * Cuenta el total de nodos incluyendo hijos recursivamente
-   */
-  private countTotalNodes(nodes: CostCenterNode[]): number {
-    let count = 0;
-    for (const node of nodes) {
-      count += 1; // Contar el nodo actual
-      if (node.children && node.children.length > 0) {
-        count += this.countTotalNodes(node.children);
-      }
-    }
-    return count;
-  }
-
-  /**
-   * Actualiza los datos paginados manteniendo la jerarquía
+   * Actualiza los datos - ahora solo aplica filtros ya que la paginación es del backend
    */
   updatePaginatedData() {
-    const startIndex = this.first;
-    const endIndex = this.first + this.rows;
-    
-    this.paginatedCenters = this.getHierarchicalSlice(this.listCenters, startIndex, endIndex);
-    this.listCentersAux = this.paginatedCenters;
+    this.loadTree();
   }
 
-  /**
-   * Obtiene un slice jerárquico de los centros de costo
-   * Mantiene las familias completas juntas
-   */
-  private getHierarchicalSlice(nodes: CostCenterNode[], startIndex: number, endIndex: number): CostCenterNode[] {
-    const result: CostCenterNode[] = [];
-    let currentIndex = 0;
-    let addedCount = 0;
 
-    for (const rootNode of nodes) {
-      const familySize = this.getFamilySize(rootNode);
-      
-      // Si esta familia completa cabe en el rango de la página
-      if (currentIndex >= startIndex && currentIndex + familySize <= endIndex) {
-        result.push(this.cloneNodeWithChildren(rootNode));
-        addedCount += familySize;
-      }
-      // Si estamos en el rango pero la familia completa no cabe, incluirla parcialmente
-      else if (currentIndex < endIndex && currentIndex + familySize > startIndex) {
-        const partialNode = this.getPartialFamily(rootNode, startIndex - currentIndex, endIndex - currentIndex);
-        if (partialNode) {
-          result.push(partialNode);
-          addedCount += this.getFamilySize(partialNode);
-        }
-      }
-      
-      currentIndex += familySize;
-      
-      // Si ya tenemos suficientes elementos, salir
-      if (addedCount >= this.rows) {
-        break;
-      }
-    }
-
-    return result;
-  }
-
-  /**
-   * Obtiene el tamaño total de una familia (nodo + todos sus descendientes)
-   */
-  private getFamilySize(node: CostCenterNode): number {
-    let size = 1; // El nodo actual
-    if (node.children && node.children.length > 0) {
-      for (const child of node.children) {
-        size += this.getFamilySize(child);
-      }
-    }
-    return size;
-  }
-
-  /**
-   * Clona un nodo con todos sus hijos
-   */
-  private cloneNodeWithChildren(node: CostCenterNode): CostCenterNode {
-    const clonedNode: CostCenterNode = { ...node };
-    if (node.children && node.children.length > 0) {
-      clonedNode.children = node.children.map(child => this.cloneNodeWithChildren(child));
-    }
-    return clonedNode;
-  }
-
-  /**
-   * Obtiene una familia parcial según los índices especificados
-   */
-  private getPartialFamily(node: CostCenterNode, relativeStart: number, relativeEnd: number): CostCenterNode | null {
-    if (relativeStart >= this.getFamilySize(node) || relativeEnd <= 0) {
-      return null;
-    }
-
-    const clonedNode: CostCenterNode = { ...node };
-    
-    if (relativeStart <= 0) {
-      // Incluir el nodo raíz
-      if (node.children && node.children.length > 0 && relativeEnd > 1) {
-        clonedNode.children = [];
-        let currentChildIndex = 1; // Empezar después del nodo raíz
-        
-        for (const child of node.children) {
-          const childSize = this.getFamilySize(child);
-          
-          if (currentChildIndex < relativeEnd && currentChildIndex + childSize > relativeStart) {
-            const partialChild = this.getPartialFamily(
-              child, 
-              Math.max(0, relativeStart - currentChildIndex), 
-              relativeEnd - currentChildIndex
-            );
-            if (partialChild) {
-              clonedNode.children.push(partialChild);
-            }
-          }
-          
-          currentChildIndex += childSize;
-          
-          if (currentChildIndex >= relativeEnd) {
-            break;
-          }
-        }
-      } else {
-        clonedNode.children = [];
-      }
-      return clonedNode;
-    } else {
-      // No incluir el nodo raíz, buscar en los hijos
-      if (node.children && node.children.length > 0) {
-        let currentChildIndex = 1;
-        
-        for (const child of node.children) {
-          const childSize = this.getFamilySize(child);
-          
-          if (currentChildIndex <= relativeStart && currentChildIndex + childSize > relativeStart) {
-            return this.getPartialFamily(
-              child,
-              relativeStart - currentChildIndex,
-              relativeEnd - currentChildIndex
-            );
-          }
-          
-          currentChildIndex += childSize;
-        }
-      }
-      return null;
-    }
-  }
 
   /**
    * Maneja el cambio de página del paginador
@@ -386,7 +232,7 @@ export class CostCentersListComponent {
   onPageChange(event: any) {
     this.first = event.first;
     this.rows = event.rows;
-    this.updatePaginatedData();
+    this.loadTree();
   }
 
   updateSelected() {
