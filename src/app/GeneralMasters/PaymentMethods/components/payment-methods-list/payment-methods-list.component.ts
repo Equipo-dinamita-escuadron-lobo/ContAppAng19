@@ -14,7 +14,10 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { FormsModule } from '@angular/forms';
 import { PaymentMethodsServiceService } from '../../services/payment-methods-service.service';
+import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
+import { Account } from '../../../AccountCatalogue/models/ChartAccount';
 import { PaymentMethod } from '../../models/PaymentMethods';
+import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
 
 @Component({
   selector: 'app-payment-methods-list',
@@ -43,16 +46,22 @@ export class PaymentMethodsListComponent {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  accountingAccountsMap: Map<string, string> = new Map(); // código -> descripción
 
   constructor(
     private service: PaymentMethodsServiceService,
+    private chartAccountService: ChartAccountService,
     private router: Router,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
-    this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize });
+    const enterpriseId = this.getEnterpriseId();
+    if (enterpriseId) {
+      // Primero cargar las cuentas contables para crear el mapa
+      this.loadAccountingAccounts(enterpriseId);
+    }
   }
 
   private getEnterpriseId(): string {
@@ -61,6 +70,31 @@ export class PaymentMethodsListComponent {
       try { return JSON.parse(entData).id; } catch {}
     }
     return '';
+  }
+
+  private loadAccountingAccounts(enterpriseId: string): void {
+    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
+      next: (accounts: Account[]) => {
+        // Obtener todas las cuentas auxiliares para crear el mapa
+        const auxiliaryAccounts: Account[] = [];
+        accounts.forEach(account => {
+          PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
+        });
+
+        // Crear mapa de código -> descripción
+        auxiliaryAccounts.forEach(account => {
+          this.accountingAccountsMap.set(account.code, account.description);
+        });
+
+        // Una vez que tenemos el mapa, cargar los métodos de pago
+        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize });
+      },
+      error: (error) => {
+        console.error('Error al cargar cuentas contables:', error);
+        // Aún así cargar los métodos de pago, aunque sin nombres de cuentas
+        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize });
+      }
+    });
   }
 
   loadPaymentMethodsLazy(event: any): void {
@@ -75,7 +109,9 @@ export class PaymentMethodsListComponent {
       next: (page) => {
         const content: PaymentMethod[] = page.content || [];
         this.list = content.map(pm => ({
-          ...pm
+          ...pm,
+          // Agregar propiedad para mostrar el nombre completo de la cuenta
+          accountingAccountDisplay: this.getAccountingAccountDisplay(pm.accountingAccount)
         }));
         this.totalRecords = page?.totalElements || 0;
       },
@@ -99,7 +135,8 @@ export class PaymentMethodsListComponent {
       next: (page) => {
         const content: PaymentMethod[] = page.content || [];
         this.list = content.map(pm => ({
-          ...pm
+          ...pm,
+          accountingAccountDisplay: this.getAccountingAccountDisplay(pm.accountingAccount)
         }));
         this.totalRecords = page?.totalElements || 0;
       },
@@ -107,6 +144,13 @@ export class PaymentMethodsListComponent {
         console.error('Error al recargar métodos de pago:', error);
       }
     });
+  }
+
+  private getAccountingAccountDisplay(accountingAccount: string): string {
+    if (!accountingAccount) return '';
+
+    const description = this.accountingAccountsMap.get(accountingAccount);
+    return description ? `${accountingAccount} - ${description}` : accountingAccount;
   }
 
   filterGlobal(event: Event, table: any) {

@@ -34,7 +34,7 @@
     </div>
 
     <!-- Tabla -->
-    <p-table #paymentMethodsTable [value]="list" [lazy]="true" (onLazyLoad)="loadPaymentMethodsLazy($event)" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [globalFilterFields]="['name','accountingAccount']" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+    <p-table #paymentMethodsTable [value]="list" [lazy]="true" (onLazyLoad)="loadPaymentMethodsLazy($event)" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [globalFilterFields]="['name','accountingAccount','accountingAccountDisplay']" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">Nombre <p-sortIcon field="name"></p-sortIcon></th>
@@ -47,7 +47,7 @@
       <ng-template pTemplate="body" let-row>
         <tr class="text-neutral-20">
           <td class="py-3">{{ row.name }}</td>
-          <td class="py-3">{{ row.accountingAccount }}</td>
+          <td class="py-3">{{ row.accountingAccountDisplay }}</td>
           <td class="py-3 text-center">
             <p-tag [value]="formatState(row.status)" [severity]="getStateSeverity(row.status)"></p-tag>
           </td>
