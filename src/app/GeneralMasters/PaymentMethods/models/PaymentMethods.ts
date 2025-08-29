@@ -6,3 +6,9 @@ export interface PaymentMethod {
   isDeleted: boolean;
   idEnterprise: string;
 }
+
+// Interface simplificada para cuentas contables auxiliares en dropdown
+export interface AccountingAccountOption {
+  label: string;
+  value: string;
+}
