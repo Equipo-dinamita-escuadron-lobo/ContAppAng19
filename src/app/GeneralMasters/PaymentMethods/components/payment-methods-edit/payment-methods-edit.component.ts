@@ -57,7 +57,13 @@ export class PaymentMethodsEditComponent implements OnInit {
           name: paymentMethod.name,
           accountingAccount: paymentMethod.accountingAccount
         });
-        this.initialValue = this.form.getRawValue();
+
+        // Configurar initialValue solo con los campos editables
+        // NOTA: No incluir 'status' ya que no se edita en el formulario
+        this.initialValue = {
+          name: paymentMethod.name,
+          accountingAccount: paymentMethod.accountingAccount
+        };
       },
       error: (error) => {
         this.messageService.add({
@@ -72,15 +78,7 @@ export class PaymentMethodsEditComponent implements OnInit {
   private loadAccountingAccounts(enterpriseId: string): void {
     this.chartAccountService.getListAccounts(enterpriseId).subscribe({
       next: (accounts: Account[]) => {
-        if (accounts.length === 0) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Sin cuentas',
-            detail: 'No se encontraron cuentas contables para esta empresa.',
-            life: 5000
-          });
-          return;
-        }
+        
 
         // Obtener solo las cuentas auxiliares (8 dígitos) que son las que se usan para registrar movimientos
         const auxiliaryAccounts: Account[] = [];
@@ -96,14 +94,7 @@ export class PaymentMethodsEditComponent implements OnInit {
           value: account.code
         }));
 
-        if (this.accountingAccountsOptions.length === 0) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Sin cuentas auxiliares',
-            detail: 'No se encontraron cuentas auxiliares disponibles.',
-            life: 5000
-          });
-        }
+
       },
       error: (error: any) => {
         this.messageService.add({
@@ -132,10 +123,14 @@ export class PaymentMethodsEditComponent implements OnInit {
 
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
+
+    // Solo enviar los campos que el backend espera para actualización
+    // NOTA: El backend NO permite modificar el estado ni la cuenta contable
     const payload = {
       id: this.id,
       idEnterprise: enterpriseId,
-      ...this.form.value
+      name: this.form.value.name,
+      accountingAccount: this.form.value.accountingAccount
     };
 
     this.service.update(payload as any).subscribe({

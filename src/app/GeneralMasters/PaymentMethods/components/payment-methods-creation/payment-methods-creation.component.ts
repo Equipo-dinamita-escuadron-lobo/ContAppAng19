@@ -48,15 +48,6 @@ export class PaymentMethodsCreationComponent {
 
       this.chartAccountService.getListAccounts(enterpriseId).subscribe({
         next: (accounts: Account[]) => {
-          if (accounts.length === 0) {
-            this.messageService.add({
-              severity: 'warn',
-              summary: 'Sin cuentas',
-              detail: 'No se encontraron cuentas contables para esta empresa.',
-              life: 5000
-            });
-            return;
-          }
 
           // Obtener solo las cuentas auxiliares (8 dígitos) que son las que se usan para registrar movimientos
           const auxiliaryAccounts: Account[] = [];
@@ -72,14 +63,7 @@ export class PaymentMethodsCreationComponent {
             value: account.code
           }));
 
-          if (this.accountingAccountsOptions.length === 0) {
-            this.messageService.add({
-              severity: 'warn',
-              summary: 'Sin cuentas auxiliares',
-              detail: 'No se encontraron cuentas auxiliares disponibles.',
-              life: 5000
-            });
-          }
+
         },
         error: (error: any) => {
           this.messageService.add({
