@@ -28,7 +28,26 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 font-family-sans text-sm">
+    <!-- Paginador -->
+    <div class="flex items-center justify-start mt-20 mb-6">
+      <div class="flex justify-center items-center gap-12">
+        <span class="font-medium text-sm">Elementos por página:</span>
+        <p-slider [(ngModel)]="rows" (ngModelChange)="first = 0; updatePaginatedData()" [style]="{ width: '10rem' }" [min]="10" [max]="120" [step]="10" />
+        <span class="text-sm text-gray-600">{{rows}}</span>
+      </div>
+      <p-paginator 
+        (onPageChange)="onPageChange($event)" 
+        [first]="first" 
+        [rows]="rows" 
+        [totalRecords]="totalRecords" 
+        [showFirstLastIcon]="false"
+        [showCurrentPageReport]="true" 
+        currentPageReportTemplate="{first} - {last} de {totalRecords}" 
+        class="ml-6">
+      </p-paginator>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 font-family-sans text-sm mt-20">
       <!-- Lista (árbol) -->
       <div class="list-account overscroll-auto border-r-4 sm:border-blue-950 sm:mr-6 sm:p-3">
         <div class="w-full flex text-blue-950">

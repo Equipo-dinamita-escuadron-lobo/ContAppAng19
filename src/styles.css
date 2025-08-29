@@ -651,6 +651,63 @@ body {
 }
 
 /* ================================
+   ESTILOS PARA P-PAGINATOR
+   ================================ */
+
+.p-paginator {
+  background-color: transparent;
+  border: none;
+  padding: 1rem 0;
+}
+
+.p-paginator .p-paginator-current {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin: 0 1rem;
+}
+
+/* Mejorar espaciado entre elementos del paginador */
+.p-paginator .p-paginator-element {
+  margin: 0 0.25rem;
+}
+
+/* ================================
+   ESTILOS PARA P-SLIDER
+   ================================ */
+
+/* 🎚️ Slider para elementos por página */
+.p-slider {
+  background-color: var(--color-neutral-90);
+  border-radius: 0.375rem;
+  height: 0.5rem;
+}
+
+.p-slider .p-slider-handle {
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.p-slider .p-slider-handle:hover {
+  background-color: var(--color-light);
+  border-color: var(--color-light);
+  transform: scale(1.1);
+}
+
+.p-slider .p-slider-range {
+  background-color: var(--color-primary);
+  border-radius: 0.375rem;
+}
+
+.p-slider:hover .p-slider-range {
+  background-color: var(--color-light);
+}
+
+/* ================================
    ESTILOS PARA P-TOGGLESWITCH
    ================================ */
 
