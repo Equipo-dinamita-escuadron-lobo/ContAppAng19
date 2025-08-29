@@ -7,35 +7,39 @@ import { Account } from '../../AccountCatalogue/models/ChartAccount';
 export class PaymentMethodsUtils {
 
   /**
-   * Recorre recursivamente una estructura de cuentas y recoge todos los elementos hoja (cuentas auxiliares)
-   * Si el nodo actual tiene hijos, se recursiona sobre ellos. Si no tiene hijos, se agrega a la lista de hojas.
+   * Recorre recursivamente una estructura de cuentas y recoge todas las cuentas auxiliares (8 dígitos)
+   * Las cuentas auxiliares son las de mayor detalle que se usan para registrar movimientos específicos.
    *
    * @param item - El nodo actual de la cuenta que se está procesando
-   * @param leaves - La lista acumulada de hojas donde se agregarán los nodos sin hijos
-   * @returns Una lista de cuentas que son hojas (cuentas auxiliares sin hijos)
+   * @param auxiliaryAccounts - La lista acumulada de cuentas auxiliares
+   * @returns Una lista de cuentas auxiliares (8 dígitos)
    */
-  static collectLeaves(item: Account, leaves: Account[]): Account[] {
-    if (item.children && item.children.length > 0) {
-      // Recorrer todos los hijos recursivamente
-      item.children.forEach((child: Account) => PaymentMethodsUtils.collectLeaves(child, leaves));
-    } else {
-      // Si no hay hijos, agregar el nodo actual a la lista de hojas (cuentas auxiliares)
-      leaves.push(item);
+  static collectAuxiliaryAccounts(item: Account, auxiliaryAccounts: Account[]): Account[] {
+    // Si la cuenta actual tiene 8 dígitos, es una cuenta auxiliar
+    if (item.code && item.code.length === 8) {
+      auxiliaryAccounts.push(item);
     }
-    return leaves;
+
+    // Recorrer recursivamente todos los hijos para encontrar más cuentas auxiliares
+    if (item.children && item.children.length > 0) {
+      item.children.forEach((child: Account) => PaymentMethodsUtils.collectAuxiliaryAccounts(child, auxiliaryAccounts));
+    }
+
+    return auxiliaryAccounts;
   }
 
   /**
-   * Filtra cuentas auxiliares válidas (con código y descripción)
+   * Filtra cuentas auxiliares válidas (8 dígitos, con código y descripción)
+   * Asegura que las cuentas auxiliares tengan toda la información necesaria
    *
-   * @param auxiliaryAccounts - Lista de cuentas auxiliares a filtrar
-   * @returns Lista de cuentas auxiliares válidas
+   * @param auxiliaryAccounts - Lista de cuentas auxiliares (8 dígitos) a filtrar
+   * @returns Lista de cuentas auxiliares válidas con código y descripción completos
    */
   static filterValidAuxiliaryAccounts(auxiliaryAccounts: Account[]): Account[] {
     return auxiliaryAccounts.filter((account: Account) => {
-      const hasCode = account.code && account.code.trim() !== '';
-      const hasDescription = account.description && account.description.trim() !== '';
-      return hasCode && hasDescription;
+      const hasValidCode = account.code && account.code.trim() !== '' && account.code.length === 8;
+      const hasValidDescription = account.description && account.description.trim() !== '';
+      return hasValidCode && hasValidDescription;
     });
   }
 }

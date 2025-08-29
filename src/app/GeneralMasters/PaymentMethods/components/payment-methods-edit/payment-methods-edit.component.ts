@@ -82,10 +82,10 @@ export class PaymentMethodsEditComponent implements OnInit {
           return;
         }
 
-        // Obtener solo las cuentas hoja (auxiliares)
+        // Obtener solo las cuentas auxiliares (8 dígitos) que son las que se usan para registrar movimientos
         const auxiliaryAccounts: Account[] = [];
         accounts.forEach(account => {
-          PaymentMethodsUtils.collectLeaves(account, auxiliaryAccounts);
+          PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
         });
 
         // Filtrar cuentas válidas
