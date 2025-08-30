@@ -30,7 +30,6 @@ export class DocumentTypesCreationComponent {
     'Cartera',
     'Contable comercial',
     'Contable cartera',
-    'Libros Auxiliares',
     'Estados financieros'
   ];
   modulesOptions = this.allowedModules.map(m => ({ label: m, value: m }));

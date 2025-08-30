@@ -46,6 +46,8 @@ export class PaymentMethodsListComponent {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  currentSortField: string = 'name';
+  currentSortOrder: string = 'asc';
   accountingAccountsMap: Map<string, string> = new Map(); // código -> descripción
 
   constructor(
@@ -87,12 +89,12 @@ export class PaymentMethodsListComponent {
         });
 
         // Una vez que tenemos el mapa, cargar los métodos de pago
-        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize });
+        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: 1 });
       },
       error: (error) => {
         console.error('Error al cargar cuentas contables:', error);
         // Aún así cargar los métodos de pago, aunque sin nombres de cuentas
-        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize });
+        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: 1 });
       }
     });
   }
@@ -105,7 +107,11 @@ export class PaymentMethodsListComponent {
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
 
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+    // Capturar parámetros de sorting
+    this.currentSortField = event.sortField || 'name'; // Campo por defecto
+    this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc'; // 1 = asc, -1 = desc
+
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
       next: (page) => {
         const content: PaymentMethod[] = page.content || [];
         this.list = content.map(pm => ({
@@ -131,7 +137,7 @@ export class PaymentMethodsListComponent {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
       next: (page) => {
         const content: PaymentMethod[] = page.content || [];
         this.list = content.map(pm => ({
