@@ -16,7 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { PaymentMethodsServiceService } from '../../services/payment-methods-service.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
-import { PaymentMethod } from '../../models/PaymentMethods';
+import { PaymentMethod, AccountingAccountOption } from '../../models/PaymentMethods';
 import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
 
 @Component({
@@ -49,6 +49,7 @@ export class PaymentMethodsListComponent {
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   accountingAccountsMap: Map<string, string> = new Map(); // código -> descripción
+  accountingAccountsOptions: AccountingAccountOption[] = []; // Para compatibilidad
 
   constructor(
     private service: PaymentMethodsServiceService,
@@ -86,6 +87,16 @@ export class PaymentMethodsListComponent {
         // Crear mapa de código -> descripción
         auxiliaryAccounts.forEach(account => {
           this.accountingAccountsMap.set(account.code, account.description);
+
+        // También crear opciones para dropdown si es necesario
+        this.accountingAccountsOptions = this.accountingAccountsOptions || [];
+        if (account.id !== undefined) {
+          this.accountingAccountsOptions.push({
+            label: `${account.code} - ${account.description}`,
+            value: account.id,
+            code: account.code
+          });
+        }
         });
 
         // Una vez que tenemos el mapa, cargar los métodos de pago
@@ -116,8 +127,8 @@ export class PaymentMethodsListComponent {
         const content: PaymentMethod[] = page.content || [];
         this.list = content.map(pm => ({
           ...pm,
-          // Agregar propiedad para mostrar el nombre completo de la cuenta
-          accountingAccountDisplay: this.getAccountingAccountDisplay(pm.accountingAccount)
+          // Usar el campo accountingAccount que ya contiene el formato "código - descripción"
+          accountingAccountDisplay: pm.accountingAccount || 'Sin cuenta asignada'
         }));
         this.totalRecords = page?.totalElements || 0;
       },
@@ -142,7 +153,8 @@ export class PaymentMethodsListComponent {
         const content: PaymentMethod[] = page.content || [];
         this.list = content.map(pm => ({
           ...pm,
-          accountingAccountDisplay: this.getAccountingAccountDisplay(pm.accountingAccount)
+          // Usar el campo accountingAccount que ya contiene el formato "código - descripción"
+          accountingAccountDisplay: pm.accountingAccount || 'Sin cuenta asignada'
         }));
         this.totalRecords = page?.totalElements || 0;
       },

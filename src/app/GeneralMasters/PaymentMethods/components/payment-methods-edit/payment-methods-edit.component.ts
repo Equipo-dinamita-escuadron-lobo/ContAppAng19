@@ -40,7 +40,8 @@ export class PaymentMethodsEditComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
-      accountingAccount: [null, []] // Inicialmente habilitado, se deshabilitará después de cargar datos
+      accountingAccount: [null, []], // Inicialmente habilitado, se deshabilitará después de cargar datos
+      accountingAccountId: [null, []] // Campo oculto para almacenar el ID
     });
   }
 
@@ -50,15 +51,30 @@ export class PaymentMethodsEditComponent implements OnInit {
     const enterpriseId = entData ? JSON.parse(entData).id : '';
     if (!enterpriseId || !this.id) return;
 
-    // Cargar cuentas auxiliares para el dropdown
-    this.loadAccountingAccounts(enterpriseId);
+    // Cargar cuentas auxiliares para el dropdown primero
+    this.loadAccountingAccounts(enterpriseId, () => {
+      // Una vez cargadas las cuentas, cargar los datos del método de pago
+      this.loadPaymentMethodData(enterpriseId);
+    });
+  }
 
-    // Cargar datos del método de pago
+  private loadPaymentMethodData(enterpriseId: string): void {
     this.service.findById(this.id, enterpriseId).subscribe({
       next: (paymentMethod: PaymentMethod) => {
+        // Obtener el ID de la cuenta contable
+        let accountId: number | null = paymentMethod.accountingAccountId;
+        
+        // Si accountingAccountId es null, intentar encontrar la cuenta por el código
+        if (!accountId && paymentMethod.accountingAccount) {
+          const accountCode = paymentMethod.accountingAccount.split(' - ')[0];
+          const foundAccount = this.accountingAccountsOptions.find(option => option.code === accountCode);
+          accountId = foundAccount?.value || null;
+        }
+
         this.form.patchValue({
           name: paymentMethod.name,
-          accountingAccount: paymentMethod.accountingAccount
+          accountingAccount: accountId,
+          accountingAccountId: accountId
         });
 
         // Deshabilitar el campo accountingAccount después de cargar los datos
@@ -79,11 +95,9 @@ export class PaymentMethodsEditComponent implements OnInit {
     });
   }
 
-  private loadAccountingAccounts(enterpriseId: string): void {
+  private loadAccountingAccounts(enterpriseId: string, callback?: () => void): void {
     this.chartAccountService.getListAccounts(enterpriseId).subscribe({
       next: (accounts: Account[]) => {
-        
-
         // Obtener solo las cuentas auxiliares (8 dígitos) que son las que se usan para registrar movimientos
         const auxiliaryAccounts: Account[] = [];
         accounts.forEach(account => {
@@ -93,12 +107,18 @@ export class PaymentMethodsEditComponent implements OnInit {
         // Filtrar cuentas válidas
         const validAuxiliaryAccounts = PaymentMethodsUtils.filterValidAuxiliaryAccounts(auxiliaryAccounts);
 
-        this.accountingAccountsOptions = validAuxiliaryAccounts.map((account: Account) => ({
-          label: `${account.code} - ${account.description}`,
-          value: account.code
-        }));
+        this.accountingAccountsOptions = validAuxiliaryAccounts
+          .filter((account: Account) => account.id !== undefined)
+          .map((account: Account) => ({
+            label: `${account.code} - ${account.description}`,
+            value: account.id!, // Usar ID como value (ya filtrado)
+            code: account.code // Mantener código para referencia
+          }));
 
-
+        // Ejecutar callback si se proporciona
+        if (callback) {
+          callback();
+        }
       },
       error: (error: any) => {
         this.messageService.add({
@@ -129,15 +149,18 @@ export class PaymentMethodsEditComponent implements OnInit {
 
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
-
-    // Solo enviar los campos que el backend espera para actualización
     // Usamos getRawValue() para incluir valores de campos deshabilitados
     const formValues = this.form.getRawValue();
+
+    // Para edición, obtener el ID de la cuenta contable
+    // Como el campo está deshabilitado, el valor debería ser el ID original
+    const accountingAccountId = formValues.accountingAccountId;
+
     const payload = {
       id: this.id,
       idEnterprise: enterpriseId,
       name: formValues.name,
-      accountingAccount: formValues.accountingAccount
+      accountingAccountId: accountingAccountId
     };
 
     this.service.update(payload as any).subscribe({
