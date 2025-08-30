@@ -224,7 +224,6 @@ export class CalendarStateService {
         },
         error: (error) => {
           // REVERTIR CAMBIO OPTIMISTA en caso de error
-          console.error('Error en toggleDate:', error);
           this.updateState({
             ...this.currentState,
             error: 'Error al cambiar el estado de la fecha'
@@ -292,7 +291,6 @@ export class CalendarStateService {
         },
         error: (error) => {
           // REVERTIR CAMBIO OPTIMISTA en caso de error
-          console.error('Error en changeMonthState:', error);
           this.updateState({
             ...this.currentState,
             error: 'Error al cambiar el estado del mes'

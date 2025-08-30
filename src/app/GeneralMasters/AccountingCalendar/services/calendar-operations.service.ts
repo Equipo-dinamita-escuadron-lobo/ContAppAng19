@@ -61,14 +61,9 @@ export class CalendarOperationsService {
         : this.createByDateKey(enterpriseId, dateKey);
 
       return action$.pipe(
-        switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, selectedYear)),
-        map(response => {
-          console.log(`Toggle exitoso para fecha ${dateKey}, estado anterior: ${isCurrentlyClosed}, nuevo estado: ${!isCurrentlyClosed}`);
-          return response;
-        })
+        switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, selectedYear))
       );
     } catch (error) {
-      console.error('Error en toggleDate:', error);
       return throwError(() => new Error(`Error interno en toggleDate: ${error}`));
     }
   }
