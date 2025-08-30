@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -42,7 +42,7 @@ import { SliderModule } from 'primeng/slider';
   styleUrl: './cost-centers-list.component.css',
   providers: [MessageService, ConfirmationService]
 })
-export class CostCentersListComponent {
+export class CostCentersListComponent implements OnDestroy {
   filterAccount: string = '';
 
   // Data
@@ -64,6 +64,8 @@ export class CostCentersListComponent {
   addChild = false;
   currentLevel: 'costo' | 'subcosto' | 'auxiliar costo' = 'costo';
   isCreatingRoot = false;
+  isLoading = false;
+  private sliderTimeout: any;
 
   // Forms
   form: FormGroup;
@@ -86,6 +88,13 @@ export class CostCentersListComponent {
     this.loadTree();
   }
 
+  ngOnDestroy(): void {
+    // Limpiar timeout para evitar memory leaks
+    if (this.sliderTimeout) {
+      clearTimeout(this.sliderTimeout);
+    }
+  }
+
   private getIdEnterprise(): string {
     const entData = localStorage.getItem('entData');
     if (entData) {
@@ -95,8 +104,16 @@ export class CostCentersListComponent {
   }
 
   private loadTree(expandCode?: string, selectCodeAfter?: string) {
+    // Evitar múltiples llamadas simultáneas
+    if (this.isLoading) {
+      return;
+    }
+    
+    this.isLoading = true;
+    // Calcular la página actual basada en el número de familias, no elementos individuales
     const currentPage = Math.floor(this.first / this.rows);
-    this.service.findAll(this.getIdEnterprise(), currentPage, this.rows).subscribe({
+    
+    this.service.findAllHierarchical(this.getIdEnterprise(), currentPage, this.rows).subscribe({
       next: (page) => {
         this.totalRecords = page.totalElements;
         
@@ -109,7 +126,8 @@ export class CostCentersListComponent {
           status: cc.status ?? true // Default a true si no está definido
         } as CostCenterNode));
         
-        // Construir jerarquía con los datos paginados del backend
+        // El backend ya devuelve los datos jerárquicamente organizados
+        // Solo necesitamos construir la jerarquía
         this.allCenters = this.buildHierarchy(nodes);
         this.listCenters = this.allCenters;
         this.listCentersAux = this.allCenters;
@@ -123,6 +141,8 @@ export class CostCentersListComponent {
             this.select(found);
           }
         }
+        
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('No se pudo cargar Centros de Costo:', err);
@@ -130,6 +150,7 @@ export class CostCentersListComponent {
         this.allCenters = [];
         this.listCentersAux = [];
         this.totalRecords = 0;
+        this.isLoading = false;
       }
     });
   }
@@ -222,6 +243,22 @@ export class CostCentersListComponent {
    */
   updatePaginatedData() {
     this.loadTree();
+  }
+
+  /**
+   * Maneja el cambio en el slider de elementos por página con debounce
+   */
+  onSliderChange() {
+    // Cancelar timeout anterior si existe
+    if (this.sliderTimeout) {
+      clearTimeout(this.sliderTimeout);
+    }
+    
+    // Aplicar debounce de 300ms para evitar múltiples llamadas
+    this.sliderTimeout = setTimeout(() => {
+      this.first = 0; // Resetear a la primera página
+      this.loadTree(); // Cargar con el nuevo tamaño
+    }, 300);
   }
 
 
