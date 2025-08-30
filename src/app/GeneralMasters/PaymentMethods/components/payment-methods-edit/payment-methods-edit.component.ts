@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
+import { TooltipModule } from 'primeng/tooltip';
 import { PaymentMethodsServiceService } from '../../services/payment-methods-service.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
@@ -16,7 +17,7 @@ import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
 @Component({
   selector: 'app-payment-methods-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule, TooltipModule],
   templateUrl: './payment-methods-edit.component.html',
   styleUrl: './payment-methods-edit.component.css',
   providers: [MessageService]
@@ -26,6 +27,8 @@ export class PaymentMethodsEditComponent implements OnInit {
   id!: number;
   accountingAccountsOptions: AccountingAccountOption[] = [];
   initialValue: any = {};
+  isEditMode: boolean = true; // Siempre es true en este componente de edición
+  accountingAccountLocked: boolean = true; // La cuenta contable siempre está bloqueada en edición
 
   constructor(
     private fb: FormBuilder,
@@ -37,7 +40,7 @@ export class PaymentMethodsEditComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
-      accountingAccount: [null, [Validators.required]]
+      accountingAccount: [null, []] // Inicialmente habilitado, se deshabilitará después de cargar datos
     });
   }
 
@@ -58,11 +61,12 @@ export class PaymentMethodsEditComponent implements OnInit {
           accountingAccount: paymentMethod.accountingAccount
         });
 
-        // Configurar initialValue solo con los campos editables
-        // NOTA: No incluir 'status' ya que no se edita en el formulario
+        // Deshabilitar el campo accountingAccount después de cargar los datos
+        this.form.get('accountingAccount')?.disable();
+
+        // NOTA: accountingAccount está bloqueado, por lo que no se compara en hasChanges()
         this.initialValue = {
-          name: paymentMethod.name,
-          accountingAccount: paymentMethod.accountingAccount
+          name: paymentMethod.name
         };
       },
       error: (error) => {
@@ -112,7 +116,9 @@ export class PaymentMethodsEditComponent implements OnInit {
   }
 
   hasChanges(): boolean {
-    return JSON.stringify(this.initialValue) !== JSON.stringify(this.form.getRawValue());
+    // Solo comparar el campo 'name' ya que 'accountingAccount' está bloqueado
+    const currentName = this.form.get('name')?.value;
+    return this.initialValue.name !== currentName;
   }
 
   onSubmit() {
@@ -125,12 +131,13 @@ export class PaymentMethodsEditComponent implements OnInit {
     const enterpriseId = entData ? JSON.parse(entData).id : '';
 
     // Solo enviar los campos que el backend espera para actualización
-    // NOTA: El backend NO permite modificar el estado ni la cuenta contable
+    // Usamos getRawValue() para incluir valores de campos deshabilitados
+    const formValues = this.form.getRawValue();
     const payload = {
       id: this.id,
       idEnterprise: enterpriseId,
-      name: this.form.value.name,
-      accountingAccount: this.form.value.accountingAccount
+      name: formValues.name,
+      accountingAccount: formValues.accountingAccount
     };
 
     this.service.update(payload as any).subscribe({
