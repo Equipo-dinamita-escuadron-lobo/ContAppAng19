@@ -122,6 +122,6 @@ export class ReceiptsListComponent {
 
   viewReceiptDetails(receipt: ReceiptView): void {
     console.log('Viendo detalles del recibo:', receipt);
-    // this.router.navigate(['/financial/wallet/cash-receipts/details', receipt.id]);
+    this.router.navigate(['/financial/wallet/receipts/details', receipt.id]);
   }
 }

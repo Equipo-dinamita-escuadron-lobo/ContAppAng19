@@ -296,6 +296,8 @@ export class ReceiptCreationComponent {
     if (this.isFormValidForSubmission()) {
       const formValue = this.cashReceiptForm.value;
       const client: Client = formValue.client; // Obtener el objeto completo del cliente
+      const paymentMethod = formValue.paymentMethod;
+      const auxAccount = formValue.auxiliaryAccount;
 
       let receiptDetails: ReceiptDetail[] = [];
       if (formValue.receiptTypeOption === 'debt_payment') {
@@ -315,6 +317,8 @@ export class ReceiptCreationComponent {
         totalAmount: this.totalAmount,
         observations: formValue.observations,
         details: receiptDetails,
+        paymentMethodId: paymentMethod,
+        auxAccount: auxAccount
       };
 
       if (formValue.receiptTypeOption === 'direct_income') {

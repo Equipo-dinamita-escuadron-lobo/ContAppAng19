@@ -714,6 +714,16 @@ export const routes: Routes = [
                   import(
                     './Financial/Wallet/CashReceipts/Components/receipt-creation/receipt-creation.component'
                   ).then((m) => m.ReceiptCreationComponent),
+              },
+              {
+                path: 'receipts/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del Recibo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/CashReceipts/Components/receipt-details/receipt-details.component'
+                  ).then((m) => m.ReceiptDetailsComponent),
               }
             ],
           }
