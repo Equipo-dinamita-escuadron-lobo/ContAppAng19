@@ -114,7 +114,9 @@ export class ChartAccountService {
       classification: item.classification,
       parent: item.parent,
       children: item.children ? item.children.map(child => this.mapAccountCatalogueToAccount(child, entId)) : [],
-      showSubAccounts: false
+      showSubAccounts: false,
+      crossing: item.crossing,
+      costCenter: item.costCenter
     };
   }
 
@@ -158,7 +160,9 @@ export class ChartAccountService {
       classification: item.classification,
       parent: item.parent,
       children: [],
-      showSubAccounts: false
+      showSubAccounts: false,
+      crossing: item.crossing,
+      costCenter: item.costCenter
     };
   }
 
@@ -193,7 +197,9 @@ export class ChartAccountService {
       classification: item.classification,
       parent: item.parent,
       children: [],
-      showSubAccounts: false
+      showSubAccounts: false,
+      crossing: item.crossing,
+      costCenter: item.costCenter
     };
   }
 

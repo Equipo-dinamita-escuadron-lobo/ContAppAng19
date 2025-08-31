@@ -19,6 +19,7 @@ import { DialogModule } from 'primeng/dialog';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
+import { CheckboxModule } from 'primeng/checkbox';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 
@@ -29,7 +30,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
     CommonModule, ReactiveFormsModule, FormsModule,
     AccountFormComponent, FilterPipe,
     ButtonModule, FileUploadModule, DropdownModule, DialogModule,
-    IconFieldModule, InputIconModule, InputTextModule
+    IconFieldModule, InputIconModule, InputTextModule, CheckboxModule
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.css'
@@ -91,6 +92,12 @@ export class AccountListComponent {
   showUpdateButton = false;
   showAddNewClass: boolean = false;
   showButtonDelete: boolean = false;
+
+  /**
+  * Variables para controlar la visibilidad de los checkboxes en la edición
+  */
+  showCrossingCheckboxEdit: boolean = false;
+  showCostCenterCheckboxEdit: boolean = false;
 
   /**
   * Variables determinadas según el nivel de la cuenta.
@@ -165,7 +172,9 @@ export class AccountListComponent {
     this.formTransactional = this.fb.group({
       selectedNatureType: [''],
       selectedFinancialStateType: [''],
-      selectedClasificationType: ['']
+      selectedClasificationType: [''],
+      crossing: [false],
+      costCenter: [false]
     });
   }
 
@@ -281,8 +290,7 @@ export class AccountListComponent {
    */
   ngOnInit(): void {
     this.getAccounts();
-    //console.log(this.listDepositAccount);
-    //console.log(this.listRefundAccount);
+
 
     //DESCOMENTAR CUANDO SE IMPLEMENTE
     this.entData = this.localStorageMethods.loadEnterpriseData();
@@ -291,8 +299,8 @@ export class AccountListComponent {
     this.getFinancialStateType();
     this.getClasificationType();
 
-    this.accountForm.valueChanges.subscribe(value => {
-      console.log(value); // Log the values of the form whenever it changes
+    this.accountForm.valueChanges.subscribe(() => {
+      this.showUpdateButton = this.shouldShowUpdateButton();
     });
   }
 
@@ -329,6 +337,7 @@ export class AccountListComponent {
     this.selectedAccount = true;
     this.showUpdateButton = false;
     this.accountSelected = account;
+    this.updateCheckboxVisibilityEdit();
   }
 
   /**
@@ -579,6 +588,7 @@ export class AccountListComponent {
 
   /**
    * Cambia el tipo de estado financiero de las cuentas según el código de la cuenta.
+   * Solo asigna valores por defecto si la cuenta no tiene un estado financiero definido.
    * Recorre las cuentas y, según el primer carácter del código, asigna un tipo de estado financiero.
    * Si la cuenta tiene elementos hijos, se aplica recursivamente la misma lógica a esos hijos.
    *
@@ -587,12 +597,15 @@ export class AccountListComponent {
    */
   changeFinancialStateType(accounts: Account[]): Account[] {
     accounts.forEach(account => {
-      var code = account.code[0];
-      if (code === "1" || code === "2" || code === "3") {
-        account.financialStatus = "Estado de situacion financiero";
-      }
-      if (code === "4" || code === "5" || code === "6") {
-        account.financialStatus = "Estado de resultados";
+      // Solo asignar valor por defecto si no tiene un estado financiero definido
+      if (!account.financialStatus || account.financialStatus.trim() === '') {
+        var code = account.code[0];
+        if (code === "1" || code === "2" || code === "3") {
+          account.financialStatus = "Estado de situacion financiero";
+        }
+        if (code === "4" || code === "5" || code === "6") {
+          account.financialStatus = "Estado de resultados";
+        }
       }
       if (account.children) { // Verificamos que children no sea undefined
         account.children = this.changeFinancialStateType(account.children);
@@ -603,6 +616,7 @@ export class AccountListComponent {
 
   /**
    * Cambia el tipo de naturaleza de las cuentas según el código de la cuenta.
+   * Solo asigna valores por defecto si la cuenta no tiene una naturaleza definida.
    * Asigna "Débito" o "Crédito" a la propiedad 'nature' de cada cuenta según el primer carácter del código.
    * Además, verifica los primeros 4 caracteres del código para asignar "Crédito" en ciertos casos.
    * Si la cuenta tiene elementos hijos, se aplica recursivamente la misma lógica a esos hijos.
@@ -612,16 +626,19 @@ export class AccountListComponent {
    */
   changeNatureType(accounts: Account[]): Account[] {
     accounts.forEach(account => {
-      var code = account.code[0];
-      var codeAccount = account.code.slice(0, 4);
-      if (code === "1" || code === "5" || code === "6") {
-        account.nature = "Debito";
-      }
-      if (code === "2" || code === "3" || code === "4") {
-        account.nature = "Credito";
-      }
-      if (codeAccount === "1592" || codeAccount === "1399" || codeAccount === "1499") {
-        account.nature = "Credito";
+      // Solo asignar valor por defecto si no tiene una naturaleza definida
+      if (!account.nature || account.nature.trim() === '') {
+        var code = account.code[0];
+        var codeAccount = account.code.slice(0, 4);
+        if (code === "1" || code === "5" || code === "6") {
+          account.nature = "Debito";
+        }
+        if (code === "2" || code === "3" || code === "4") {
+          account.nature = "Credito";
+        }
+        if (codeAccount === "1592" || codeAccount === "1399" || codeAccount === "1499") {
+          account.nature = "Credito";
+        }
       }
       if (account.children) { // Verificamos que children no sea undefined
         account.children = this.changeNatureType(account.children);
@@ -975,6 +992,8 @@ export class AccountListComponent {
   onSelectionFinancialStateType(event: any) {
     this.formTransactional.get('selectedFinancialStateType')?.setValue(event.name);
     this.placeFinancialStateType = '';
+    // Actualizar la visibilidad de los checkboxes cuando cambie el estado financiero
+    this.updateCheckboxVisibilityEditDynamic(event.name);
   }
 
   /**
@@ -1026,6 +1045,45 @@ export class AccountListComponent {
   // account-list.component.ts
 
   /**
+   * Actualiza la visibilidad de los checkboxes para la edición basándose en el tipo de cuenta y estado financiero.
+   */
+  updateCheckboxVisibilityEdit() {
+    if (this.accountSelected) {
+      // Determinar si es una cuenta auxiliar (8 dígitos)
+      const isAuxiliaryAccount = this.accountSelected.code.length === 8;
+      
+      this.showCrossingCheckboxEdit = isAuxiliaryAccount;
+      
+      // El checkbox de centro de costo se muestra solo si es auxiliar y el estado financiero es "Estado de Resultados"
+      const financialStatus = this.accountSelected.financialStatus;
+      this.showCostCenterCheckboxEdit = isAuxiliaryAccount && financialStatus === 'Estado de Resultados';
+      
+      
+    } else {
+      this.showCrossingCheckboxEdit = false;
+      this.showCostCenterCheckboxEdit = false;
+    }
+  }
+
+  /**
+   * Actualiza dinámicamente la visibilidad del checkbox de centro de costo cuando cambia el estado financiero.
+   */
+  updateCheckboxVisibilityEditDynamic(newFinancialStatus: string) {
+    if (this.accountSelected) {
+      // Determinar si es una cuenta auxiliar (8 dígitos)
+      const isAuxiliaryAccount = this.accountSelected.code.length === 8;
+      
+      // El checkbox de centro de costo se muestra solo si es auxiliar y el estado financiero es "Estado de Resultados"
+      this.showCostCenterCheckboxEdit = isAuxiliaryAccount && newFinancialStatus === 'Estado de Resultados';
+      
+      // Si no se debe mostrar el checkbox de centro de costo, resetear su valor
+      if (!this.showCostCenterCheckboxEdit) {
+        this.formTransactional.patchValue({ costCenter: false });
+      }
+    }
+  }
+
+  /**
    * Establece la información de la cuenta seleccionada en el formulario transaccional.
    * @param selectedAccount La cuenta seleccionada.
    */
@@ -1049,10 +1107,15 @@ export class AccountListComponent {
     );
 
     // 2. Resetea el formulario a un estado "limpio" con los objetos encontrados.
+    const crossingValue = selectedAccount.crossing === true ? true : false;
+    const costCenterValue = selectedAccount.costCenter === true ? true : false;
+    
     this.formTransactional.reset({
       selectedNatureType: natureObject || null,
       selectedFinancialStateType: financialStateObject || null,
-      selectedClasificationType: clasificationObject || null
+      selectedClasificationType: clasificationObject || null,
+      crossing: crossingValue,
+      costCenter: costCenterValue
     });
 
     // 3. Ajustamos los placeholders visualmente.
@@ -1142,7 +1205,9 @@ export class AccountListComponent {
           nature: $event.nature,
           financialStatus: $event.financialStatus,
           classification: $event.classification,
-          parent: this.accountSelected.id
+          parent: this.accountSelected.id,
+          crossing: $event.crossing,
+          costCenter: $event.costCenter
         }
         this.saveNewAccountType(account);
       }
@@ -1279,7 +1344,6 @@ export class AccountListComponent {
               confirmButtonColor: '#000066',
               icon: 'error',
             });
-            console.log(error);
           }
         );
       }
@@ -1436,6 +1500,8 @@ export class AccountListComponent {
           nature: transactionalValues.selectedNatureType ? transactionalValues.selectedNatureType.name : null,
           financialStatus: transactionalValues.selectedFinancialStateType ? transactionalValues.selectedFinancialStateType.name : null,
           classification: transactionalValues.selectedClasificationType ? transactionalValues.selectedClasificationType.name : null,
+          crossing: transactionalValues.crossing || false,
+          costCenter: transactionalValues.costCenter || false
         };
 
         // Verificar si realmente hay cambios en los datos
@@ -1444,7 +1510,9 @@ export class AccountListComponent {
           this.accountSelected.description !== account.description ||
           this.accountSelected.nature !== account.nature ||
           this.accountSelected.financialStatus !== account.financialStatus ||
-          this.accountSelected.classification !== account.classification
+          this.accountSelected.classification !== account.classification ||
+          this.accountSelected.crossing !== account.crossing ||
+          this.accountSelected.costCenter !== account.costCenter
         );
         
         if (hasChanges) {
@@ -1567,7 +1635,7 @@ export class AccountListComponent {
       })
     ).subscribe(
       (data) => {
-        //console.log(data);
+
         const { depositAccounts, refundAccounts } = data;
         this.listDepositAccount = depositAccounts;
         this.listRefundAccount = refundAccounts;

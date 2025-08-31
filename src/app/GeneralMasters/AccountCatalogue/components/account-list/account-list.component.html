@@ -105,7 +105,7 @@
             <div class="list-account overscroll-auto border-r-4 sm:border-blue-950 sm:mr-6 sm:p-3">
                 <div class="w-full flex text-blue-950">
                     <div class=" w-1/2 border-b-2 border-blue-950 font-semibold">Código</div>
-                    <div class=" w-1/2 border-b-2 border-blue-950 font-semibold">Nombre de la cuenta</div>
+                    <div class=" w-1/2 border-b-2 border-blue-950 font-semibold">Nombre</div>
                 </div>
                 <div class="w-full flex ">
                     <!--list of class type accounts C:-->
@@ -533,6 +533,27 @@
                                         filterBy="name" styleClass="dropdown-custom xl:w-3/4 w-full"></p-dropdown>
                                 </div>
 
+                                <!-- Checkboxes para cuentas auxiliares -->
+                                <div *ngIf="showCrossingCheckboxEdit || showCostCenterCheckboxEdit" class="mb-6 mt-30">
+                                    <div class="flex items-center gap-80">
+                                        <!-- Checkbox de Cruce -->
+                                        <div *ngIf="showCrossingCheckboxEdit" class="flex items-center">
+                                            <p-checkbox inputId="crossingEdit" formControlName="crossing" [binary]="true"></p-checkbox>
+                                            <label for="crossingEdit" class="ml-8 text-sm font-medium text-gray-700">
+                                                Cruce
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Checkbox de Centro de Costo -->
+                                        <div *ngIf="showCostCenterCheckboxEdit" class="flex items-center">
+                                            <p-checkbox inputId="costCenterEdit" formControlName="costCenter" [binary]="true"></p-checkbox>
+                                            <label for="costCenterEdit" class="ml-8 text-sm font-medium text-gray-700">
+                                                Centro de Costo
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
@@ -542,7 +563,7 @@
                         </div>
 
                         <!-- SECCIÓN BOTONES DE ACCIÓN CON p-button -->
-                        <div *ngIf="showButton" class="flex flex-wrap justify-center items-center gap-4 mt-10">
+                        <div *ngIf="showButton" class="flex flex-wrap justify-center items-center gap-4 mt-30">
 
                             <!-- Botón Actualizar (Estilo Primario por defecto) -->
                             <p-button label="Actualizar"

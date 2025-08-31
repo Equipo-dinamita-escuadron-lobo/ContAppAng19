@@ -719,6 +719,64 @@ body {
 }
 
 /* ================================
+   ESTILOS PARA P-CHECKBOX
+   ================================ */
+
+/* Contenedor del checkbox */
+.p-checkbox {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+/* Caja del checkbox */
+.p-checkbox .p-checkbox-box {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border: 1px solid var(--color-neutral-60) !important;
+  border-radius: 0.25rem !important;
+  background-color: var(--color-primary-100) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Caja del checkbox en hover */
+.p-checkbox:not(.p-disabled):hover .p-checkbox-box {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-95) !important;
+}
+
+/* Caja del checkbox cuando está checked */
+.p-checkbox.p-checkbox-checked .p-checkbox-box {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Caja del checkbox cuando está checked en hover */
+.p-checkbox.p-checkbox-checked:not(.p-disabled):hover .p-checkbox-box {
+  background-color: var(--color-light) !important;
+  border-color: var(--color-light) !important;
+}
+
+/* Ícono del checkbox (checkmark) */
+.p-checkbox .p-checkbox-box .p-checkbox-icon {
+  color: var(--color-primary-100) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+}
+
+/* Checkbox en estado focus */
+.p-checkbox:not(.p-disabled) .p-checkbox-box.p-focus {
+  outline: 2px solid var(--color-primary-90) !important;
+  outline-offset: 2px !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Checkbox deshabilitado */
+.p-checkbox.p-disabled .p-checkbox-box {
+  background-color: var(--color-neutral-95) !important;
+  border-color: var(--color-neutral-80) !important;
+}
+
+/* ================================
    ESTILOS PARA P-CONFIRMDIALOG
    ================================ */
 
