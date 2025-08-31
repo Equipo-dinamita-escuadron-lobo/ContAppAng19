@@ -17,6 +17,10 @@ import { Router } from '@angular/router';
 import { Receipt } from '../../Model/Receipt';
 import { ReceiptDetail } from '../../Model/ReceiptDetail';
 import { InvoiceSelectionComponent } from '../invoice-selection/invoice-selection.component';
+import { PaymentMethodsServiceService } from '../../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
+import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
+import { PaymentMethod } from '../../../../../GeneralMasters/PaymentMethods/models/PaymentMethods';
+import { CashReceiptService } from '../../Service/cash-receipt.service';
 
 // Modelos adicionales para el frontend
 interface DropdownOption {
@@ -64,9 +68,11 @@ interface Invoice {
   providers: [MessageService]
 })
 export class ReceiptCreationComponent {
+  localStorageMethods = new LocalStorageMethods();
+
   cashReceiptForm!: FormGroup;
   receiptTypes: DropdownOption[] = [];
-  paymentMethods: DropdownOption[] = [];
+  paymentMethods: PaymentMethod[] = [];
   receiptTypeOptions: DropdownOption[] = [];
   auxiliaryAccounts: DropdownOption[] = [];
 
@@ -86,13 +92,14 @@ export class ReceiptCreationComponent {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private paymentMethodService: PaymentMethodsServiceService,
+    private cashReceiptService: CashReceiptService
   ) { }
 
   ngOnInit(): void {
     this.initializeForm();
     this.loadDropdownOptions();
-    this.loadMockClients(); // Cargar clientes de ejemplo
     this.updateTotalAmount(); // Inicializa el total
     this.subscribeToFormChanges();
   }
@@ -115,45 +122,33 @@ export class ReceiptCreationComponent {
   }
 
   loadDropdownOptions(): void {
-    this.receiptTypes = [
-      { label: 'RC-1 - Recibo de Caja', value: 'RC-1' },
-      { label: 'RC-2 - Recibo Bancario', value: 'RC-2' },
-    ];
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
 
-    this.paymentMethods = [
-      { label: 'Efectivo', value: 'cash' },
-      { label: 'Transferencia Bancaria', value: 'bank_transfer' },
-      { label: 'Cheque', value: 'check' },
-    ];
+    // CAMBIO: Cargar desde el servicio
+    this.cashReceiptService.getReceiptTypes().subscribe(data => {
+      this.receiptTypes = data;
+    });
+
+    this.paymentMethodService.findAll(enterpriseId, 0, 10).subscribe((page) => {
+      this.paymentMethods = page.content;
+    });
 
     this.receiptTypeOptions = [
       { label: 'Abono a Deuda', value: 'debt_payment' },
       { label: 'Ingreso Directo', value: 'direct_income' },
     ];
 
-    this.auxiliaryAccounts = [
-      { label: 'Cuenta Auxiliar 1', value: 'aux_1' },
-      { label: 'Cuenta Auxiliar 2', value: 'aux_2' },
-      { label: 'Cuenta Auxiliar 3', value: 'aux_3' },
-    ];
-  }
-
-  // Simula la carga de clientes
-  loadMockClients(): void {
-    this.clients = [
-      { id: 101, name: 'Julian Ruano Majin' },
-      { id: 102, name: 'Maria Lopez' },
-      { id: 103, name: 'Pedro Gomez' },
-      { id: 104, name: 'Ana Fernandez' },
-    ];
+    // CAMBIO: Cargar desde el servicio
+    this.cashReceiptService.getAuxiliaryAccounts().subscribe(data => {
+        this.auxiliaryAccounts = data;
+    });
   }
 
   // Lógica para Autocomplete de Cliente
   searchClient(event: any): void {
-    let query = event.query;
-    this.filteredClients = this.clients.filter(client =>
-      client.name.toLowerCase().includes(query.toLowerCase())
-    );
+    this.cashReceiptService.getClients(event.query).subscribe(clients => {
+      this.filteredClients = clients;
+    });
   }
 
   onClientSelect(event: any): void {
@@ -164,20 +159,12 @@ export class ReceiptCreationComponent {
     this.updateTotalAmount();
   }
 
-  // Simula la carga de facturas de un cliente
   loadClientInvoices(clientId: number): void {
-    // En un caso real, harías una llamada HTTP al backend
     console.log(`Cargando facturas para el cliente ID: ${clientId}`);
-    if (clientId === 101) {
-      this.selectedClientInvoices = [
-        { id: 1, code: 'FV-2-10000', dueDate: new Date('2025-06-20'), pendingBalance: 1200000 },
-        { id: 2, code: 'FV-2-10001', dueDate: new Date('2025-07-15'), pendingBalance: 500000 },
-        { id: 3, code: 'FV-2-10002', dueDate: new Date('2025-08-10'), pendingBalance: 750000 },
-      ];
-    } else {
-      this.selectedClientInvoices = [];
-    }
-    this.availableInvoicesToSelect = [...this.selectedClientInvoices]; // Copia para el diálogo
+    this.cashReceiptService.getInvoicesByClient(clientId).subscribe(invoices => {
+        this.selectedClientInvoices = invoices;
+        this.availableInvoicesToSelect = [...this.selectedClientInvoices]; // Copia para el diálogo
+    });
   }
 
   onReceiptTypeOptionChange(): void {
@@ -338,12 +325,20 @@ export class ReceiptCreationComponent {
 
 
       console.log('Datos del recibo de caja a enviar:', newReceipt);
-      this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo de caja creado correctamente.' });
-      // Aquí llamarías a tu servicio para enviar newReceipt al backend.
-      // this.receiptService.createReceipt(newReceipt).subscribe(...)
-      // Después de un éxito, podrías limpiar el formulario o redirigir:
-      // this.cashReceiptForm.reset();
-      // this.router.navigate(['/cash-receipts/list']);
+      this.cashReceiptService.createReceipt(newReceipt).subscribe({
+        next: (response) => {
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Recibo de caja creado correctamente.' });
+          // Opcional: limpiar formulario y redirigir
+          this.cashReceiptForm.reset();
+          this.selectedInvoicesForPayment = [];
+          this.updateTotalAmount();
+          this.router.navigate(['/financial/wallet/receipts']);
+        },
+        error: (err) => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el recibo. Intente de nuevo.' });
+          console.error('Error al crear recibo:', err);
+        }
+      });
     } else {
       this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Por favor, revise los campos marcados en rojo.' });
       console.log('Formulario inválido', this.cashReceiptForm.errors);

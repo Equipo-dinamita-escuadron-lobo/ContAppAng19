@@ -38,7 +38,7 @@
                 </label>
                 <div class="w-full md:w-2/3">
                     <p-dropdown id="paymentMethod" formControlName="paymentMethod" [options]="paymentMethods"
-                        optionLabel="label" optionValue="value" placeholder="Seleccione el método"
+                        optionLabel="name" optionValue="id" placeholder="Seleccione el método"
                         [styleClass]="'w-full'"
                         [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('paymentMethod')?.invalid && cashReceiptForm.get('paymentMethod')?.touched}">
                     </p-dropdown>

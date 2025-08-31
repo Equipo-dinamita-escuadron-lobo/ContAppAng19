@@ -24,7 +24,7 @@
     <form [formGroup]="filterForm" (ngSubmit)="applyFilters()" class="mb-10">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 items-end">
             <!-- Filtro por Cliente con AutoComplete -->
-            <div class="flex flex-col gap-2 sm:w-full">
+            <div class="flex flex-col gap-2">
                 <label for="client" class="font-semibold text-sm text-[var(--color-primary)]">Cliente</label>
                 <p-autoComplete id="client" formControlName="client" [suggestions]="clientSuggestions" class="sm:w-full" [styleClass]="'w-full'"
                     (completeMethod)="searchClient($event)" placeholder="Ingrese el nombre de un tercero">

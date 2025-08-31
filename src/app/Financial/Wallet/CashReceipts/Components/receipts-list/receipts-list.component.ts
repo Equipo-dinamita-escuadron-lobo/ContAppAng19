@@ -9,23 +9,8 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-
-// Interfaz para el recibo (puedes moverla a un archivo de modelos)
-interface ReceiptView {
-  id: number;
-  receiptCode: string;
-  issueDate: Date;
-  thirdPartyId: number;
-  clientName: string; // Añadimos el nombre para facilitar la visualización
-  status: 'Activo' | 'Anulado';
-  totalAmount: number;
-}
-
-// Interfaz para las opciones del dropdown
-interface DropdownOption {
-  label: string;
-  value: string;
-}
+import { CashReceiptService } from '../../Service/cash-receipt.service';
+import { DropdownOption, ReceiptView } from '../../Model/Models';
 
 @Component({
   selector: 'app-receipts-list',
@@ -58,12 +43,13 @@ export class ReceiptsListComponent {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private cashReceiptService: CashReceiptService
   ) { }
 
   ngOnInit(): void {
     this.initializeForm();
-    this.loadMockReceipts();
+    this.loadReceipts();
     this.filteredReceipts = this.allReceipts;
     this.statusOptions = [
       { label: 'Activo', value: 'Activo' },
@@ -80,19 +66,13 @@ export class ReceiptsListComponent {
     });
   }
 
-  loadMockReceipts(): void {
-    this.allReceipts = [
-        { id: 1, receiptCode: 'RC-1-10000', issueDate: new Date('2025-06-20'), thirdPartyId: 101, clientName: 'Julian Ruano Majin', status: 'Activo', totalAmount: 60000 },
-        { id: 2, receiptCode: 'RC-1-10001', issueDate: new Date('2025-06-19'), thirdPartyId: 105, clientName: 'Julian Piamba', status: 'Activo', totalAmount: 120000 },
-        { id: 3, receiptCode: 'RC-1-10002', issueDate: new Date('2025-06-17'), thirdPartyId: 101, clientName: 'Julian Ruano Majin', status: 'Anulado', totalAmount: 85000 },
-        { id: 4, receiptCode: 'RC-1-10003', issueDate: new Date('2025-06-17'), thirdPartyId: 103, clientName: 'Juliana Campo', status: 'Activo', totalAmount: 50000 },
-        { id: 5, receiptCode: 'RC-1-10004', issueDate: new Date('2025-06-15'), thirdPartyId: 103, clientName: 'Juliana Campo', status: 'Anulado', totalAmount: 75000 },
-        { id: 6, receiptCode: 'RC-1-10005', issueDate: new Date('2025-06-14'), thirdPartyId: 101, clientName: 'Julian Ruano Majin', status: 'Activo', totalAmount: 200000 },
-        { id: 7, receiptCode: 'RC-1-10006', issueDate: new Date('2025-05-30'), thirdPartyId: 102, clientName: 'Maria Lopez', status: 'Activo', totalAmount: 95000 },
-    ];
-
-    // Extraer una lista única de nombres de clientes para el AutoComplete
-    this.allClients = [...new Set(this.allReceipts.map(r => r.clientName))];
+  loadReceipts(): void {
+    this.cashReceiptService.getAllReceipts().subscribe(data => {
+      this.allReceipts = data;
+      this.filteredReceipts = [...this.allReceipts];
+      // Extraer una lista única de nombres de clientes para el AutoComplete
+      this.allClients = [...new Set(this.allReceipts.map(r => r.clientName))];
+    });
   }
 
   // Método para el evento (completeMethod) del AutoComplete
