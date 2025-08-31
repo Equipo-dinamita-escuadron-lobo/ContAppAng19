@@ -26,8 +26,7 @@ export class CostCentersFormComponent implements OnChanges {
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
       code: ['', []],
-      // Evitar error "Range out of order in character class" moviendo el guión al final
-      name: ['', [Validators.required, Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,.()\/ +&%-]+$')]]
+      name: ['', [Validators.required]]
     });
     this.setCodeValidators();
   }
@@ -79,16 +78,7 @@ export class CostCentersFormComponent implements OnChanges {
     this.codeControl?.setValue(value);
   }
 
-  onNameKeyDown(event: KeyboardEvent) {
-    const allowed = [
-      'Backspace', 'Delete', 'Tab', 'Escape', 'Enter', ' ',
-      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'
-    ];
-    if (event.ctrlKey || event.altKey || event.metaKey) return;
-    if (allowed.includes(event.key)) return;
-    const pattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d1,.()\/\-+&%]$/;
-    if (!pattern.test(event.key)) event.preventDefault();
-  }
+
 
   send() {
     if (this.form.valid) {

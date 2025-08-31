@@ -458,10 +458,37 @@ export const routes: Routes = [
           {
             path: 'payment-methods',
             data: { breadcrumb: 'Métodos de Pago' },
-            loadComponent: () =>
-              import(
-                './GeneralMasters/Components/MenuCards/menu.component'
-              ).then((m) => m.MenuComponent),
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list',
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/PaymentMethods/components/payment-methods-list/payment-methods-list.component'
+                  ).then((m) => m.PaymentMethodsListComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Método de Pago' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/PaymentMethods/components/payment-methods-creation/payment-methods-creation.component'
+                  ).then((m) => m.PaymentMethodsCreationComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Método de Pago' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/PaymentMethods/components/payment-methods-edit/payment-methods-edit.component'
+                  ).then((m) => m.PaymentMethodsEditComponent),
+              },
+            ],
           },
           {
             path: 'document-types',

@@ -250,15 +250,15 @@
                                 class="class account-section">
                                 <div class="w-full sm:w-auto">
                                     <input type="text" id="classCode" formControlName="classCode" placeholder="Código"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]=" inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)"
+                                        class="input-base" [readOnly]="inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)"
                                         (keydown)="onCodeKeyDown($event, 1)"
                                         (input)="onCodeInput($event, 1)"
                                         maxlength="1">
                                 </div>
                                 <div class="w-full sm:w-auto">
                                     <input type="text" id="className" formControlName="className" placeholder="Nombre"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        class="input-base" [readOnly]="inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)"
                                         [class.cursor-not-allowed]="inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)"
                                         (keydown)="onNameKeyDown($event)">
                                 </div>
@@ -301,7 +301,7 @@
                                         class="col-span-1 mr-4 mt-1">{{accountForm.get('groupCode')?.value}}</label>
 
                                     <input type="text" formControlName="codeGroup" placeholder="Código"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        class="input-base" [readOnly]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)"
                                         [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)"
                                         (keydown)="onCodeKeyDown($event, 1)"
                                         (input)="onCodeInput($event, 1)"
@@ -309,7 +309,7 @@
                                 </div>
                                 <div class="w-full sm:w-auto">
                                     <input type="text" formControlName="groupName" placeholder="Nombre"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        class="input-base" [readOnly]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)"
                                         [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)"
                                         (keydown)="onNameKeyDown($event)">
                                 </div>
@@ -350,7 +350,7 @@
                                     <label for="cuenta"
                                         class="col-span-1 mr-4 mt-1">{{accountForm.get('accountCode')?.value}}</label>
                                     <input type="text" formControlName="codeAccount" placeholder="Código"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        class="input-base" [readOnly]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)"
                                         [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)"
                                         (keydown)="onCodeKeyDown($event, 2)"
                                         (input)="onCodeInput($event, 2)"
@@ -358,7 +358,7 @@
                                 </div>
                                 <div class="w-full sm:w-auto">
                                     <input type="text" formControlName="accountName" placeholder="Nombre"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                        class="input-base" [readOnly]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)"
                                         [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)"
                                         (keydown)="onNameKeyDown($event)">
                                 </div>
@@ -399,7 +399,7 @@
                                     <label for="subcuenta"
                                         class="col-span-1 mr-4 mt-1">{{accountForm.get('subAccountCode')?.value}}</label>
                                                                             <input type="text" formControlName="codeSubAccount" placeholder="Código"
-                                            class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                            class="input-base" [readOnly]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)"
                                             [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)"
                                             (keydown)="onCodeKeyDown($event, 2)"
                                             (input)="onCodeInput($event, 2)"
@@ -407,7 +407,7 @@
                                 </div>
                                 <div class="w-full sm:w-auto">
                                                                             <input type="text" formControlName="subAccountName" placeholder="Nombre"
-                                            class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
+                                            class="input-base" [readOnly]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)"
                                             [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)"
                                             (keydown)="onNameKeyDown($event)">
                                 </div>
@@ -444,25 +444,24 @@
                         <div style="position: relative;">
                             <div *ngIf="accountForm.get('auxiliaryName') && showPrincipalForm"
                                 class="class account-section">
-                                <div>
-                                    <div class="field-wrapper">
-                                        <label for="auxiliar1"
-                                            class="col-span-1 mr-4 mt-1">{{accountForm.get('auxiliaryCode')?.value}}</label>
-                                        <input type="text" formControlName="codeAuxiliary" placeholder="Código"
-                                            class="input-base"
-                                            [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
-                                            (keydown)="onCodeKeyDown($event, 2)"
-                                            (input)="onCodeInput($event, 2)"
-                                            maxlength="2">
-                                    </div>
-                                    <div class="w-full sm:w-auto">
-                                        <input type="text" formControlName="auxiliaryName" placeholder="Nombre"
-                                            class="input-base"
-                                            [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
-                                            (keydown)="onNameKeyDown($event)">
-                                    </div>
+                                <div class="field-wrapper">
+                                    <label for="auxiliar1"
+                                        class="col-span-1 mr-4 mt-1">{{accountForm.get('auxiliaryCode')?.value}}</label>
+                                    <input type="text" formControlName="codeAuxiliary" placeholder="Código"
+                                        class="input-base"
+                                        [readOnly]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onCodeKeyDown($event, 2)"
+                                        (input)="onCodeInput($event, 2)"
+                                        maxlength="2">
+                                </div>
+                                <div class="w-full sm:w-auto">
+                                    <input type="text" formControlName="auxiliaryName" placeholder="Nombre"
+                                        class="input-base"
+                                        [readOnly]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                        [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)"
+                                        (keydown)="onNameKeyDown($event)">
+                                </div>
                                     <div>
                                         <div *ngIf="(accountForm.get('codeAuxiliary')?.hasError('required') || accountForm.get('codeAuxiliary')?.value === '') && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
                                             class="error-message">* Código es obligatorio</div>
@@ -487,7 +486,6 @@
                                             </svg>
                                         </button>
                                     </div>
-                                </div>
                             </div>
                         </div>
 

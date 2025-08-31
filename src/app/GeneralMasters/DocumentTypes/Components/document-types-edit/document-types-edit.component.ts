@@ -62,9 +62,12 @@ export class DocumentTypesEditComponent implements OnInit {
     const enterpriseId = entData ? JSON.parse(entData).id : '';
     if (!enterpriseId || !this.id) return;
 
-    this.classesService.findAll(enterpriseId).subscribe((page: any) => {
+    // Cargar todas las clases activas de una vez para dropdown (usar un size alto pero controlado)
+    this.classesService.findAllActive(enterpriseId, 0, 200).subscribe((page: any) => {
       const content = page?.content || page || [];
-      this.classesOptions = content.map((c: any) => ({ label: c.name, value: c.id }));
+      // Solo cargar clases activas (status = true) y no eliminadas (isDeleted = false)
+      const activeClasses = content.filter((c: any) => c.status === true && c.isDeleted !== true);
+      this.classesOptions = activeClasses.map((c: any) => ({ label: c.name, value: c.id }));
     });
 
     this.service.findById(this.id, enterpriseId).subscribe((dt) => {

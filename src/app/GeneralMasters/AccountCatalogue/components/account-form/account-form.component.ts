@@ -86,20 +86,22 @@ export class AccountFormComponent implements OnInit {
       this.formNewAccount.get('code')?.updateValueAndValidity();
     }
 
-    if (changes['parent'] && this.parent) {
-      const nature = this.parent.nature === 'Por defecto' ? '' : this.parent.nature;
-      const financialStatus = this.parent.financialStatus === 'Por defecto' ? '' : this.parent.financialStatus;
-      const classification = this.parent.classification === 'Por defecto' ? '' : this.parent.classification;
+    if (changes['parent']) {
+      if (this.parent) {
+        // Establecer valores por defecto del padre
+        this.setDefaultValuesFromParent();
+      } else {
+        // Si no hay padre, resetear a valores por defecto
+        this.formNewAccount.patchValue({
+          selectedNatureType: '',
+          selectedFinancialStateType: '',
+          selectedClassificationType: ''
+        });
 
-      this.formNewAccount.patchValue({
-        selectedNatureType: nature || '',
-        selectedFinancialStateType: financialStatus || '',
-        selectedClassificationType: classification || ''
-      });
-
-      this.placeNatureType = this.parent.nature === 'Por defecto' ? 'Seleccione una opción' : '';
-      this.placeFinancialStateType = this.parent.financialStatus === 'Por defecto' ? 'Seleccione una opción' : '';
-      this.placeClassificationType = this.parent.classification === 'Por defecto' ? 'Seleccione una opción' : '';
+        this.placeNatureType = 'Seleccione una opción';
+        this.placeFinancialStateType = 'Seleccione una opción';
+        this.placeClassificationType = 'Seleccione una opción';
+      }
     }
   }
 
@@ -112,6 +114,11 @@ export class AccountFormComponent implements OnInit {
     this.getFinancialStateType();
     this.getClasificationType();
     this.asignMessage();
+    
+    // Si hay un padre al inicializar, establecer los valores por defecto
+    if (this.parent) {
+      this.setDefaultValuesFromParent();
+    }
   }
 
   //Asigna el mensaje de longitud del código según el nivel de la cuenta.
@@ -131,7 +138,7 @@ export class AccountFormComponent implements OnInit {
       nature: this.formNewAccount.value.selectedNatureType,
       classification: this.formNewAccount.value.selectedClassificationType,
       financialStatus: this.formNewAccount.value.selectedFinancialStateType,
-      parent: 0,
+      parent: null,
 
     };
     console.log(account);
@@ -168,6 +175,41 @@ export class AccountFormComponent implements OnInit {
    */
   getClasificationType() {
     this.listClasification = this._accountService.getClasificationType();
+  }
+
+  /**
+   * Establece los valores por defecto del formulario basándose en la cuenta padre.
+   */
+  private setDefaultValuesFromParent() {
+    if (this.parent) {
+      console.log('Setting default values from parent:', this.parent);
+      
+      // Establecer valores por defecto del padre
+      const nature = this.parent.nature && this.parent.nature !== 'Por defecto' ? this.parent.nature : '';
+      const financialStatus = this.parent.financialStatus && this.parent.financialStatus !== 'Por defecto' ? this.parent.financialStatus : '';
+      const classification = this.parent.classification && this.parent.classification !== 'Por defecto' ? this.parent.classification : '';
+
+      console.log('Default values - Nature:', nature, 'FinancialStatus:', financialStatus, 'Classification:', classification);
+
+      // Actualizar el formulario con los valores del padre
+      this.formNewAccount.patchValue({
+        selectedNatureType: nature,
+        selectedFinancialStateType: financialStatus,
+        selectedClassificationType: classification
+      });
+
+      // Actualizar los placeholders
+      this.placeNatureType = nature || 'Seleccione una opción';
+      this.placeFinancialStateType = financialStatus || 'Seleccione una opción';
+      this.placeClassificationType = classification || 'Seleccione una opción';
+
+      console.log('Form values after patch:', this.formNewAccount.value);
+      console.log('Placeholders updated:', {
+        nature: this.placeNatureType,
+        financialStatus: this.placeFinancialStateType,
+        classification: this.placeClassificationType
+      });
+    }
   }
 
   /**
