@@ -12,6 +12,7 @@ export interface Account {
     parentAccount?: Account;
     crossing?: boolean;
     costCenter?: boolean;
+    status?: boolean;
 }
 
 // Interface para listas
@@ -25,6 +26,7 @@ export interface AccountCatalogueListRes {
     parent: string | null;
     crossing?: boolean;
     costCenter?: boolean;
+    status?: boolean;
     children: AccountCatalogueListRes[];
 }
 
@@ -51,6 +53,7 @@ export interface AccountCatalogueCreateRes {
     parent: string;
     crossing?: boolean;
     costCenter?: boolean;
+    status?: boolean;
 }
 
 // Interface para actualizar cuenta
@@ -64,4 +67,5 @@ export interface AccountCatalogueUpdateRes {
     parent: string;
     crossing?: boolean;
     costCenter?: boolean;
+    status?: boolean;
 }

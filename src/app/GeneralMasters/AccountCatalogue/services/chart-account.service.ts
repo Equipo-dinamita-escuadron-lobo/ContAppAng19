@@ -116,19 +116,33 @@ export class ChartAccountService {
       children: item.children ? item.children.map(child => this.mapAccountCatalogueToAccount(child, entId)) : [],
       showSubAccounts: false,
       crossing: item.crossing,
-      costCenter: item.costCenter
+      costCenter: item.costCenter,
+      status: item.status ?? true // Default a true si no está definido
     };
   }
 
   /**
      * Elimina una cuenta por su ID y empresa.
-     * 
+     *
      * @param id - El ID de la cuenta a eliminar.
      * @param idEnterprise - El ID de la empresa.
      * @returns Un observable que indica si la eliminación fue exitosa.
      */
   deleteAccount(id: string, idEnterprise: string): Observable<void> {
     return this.http.delete<void>(`${this.apiURL}${id}/${idEnterprise}`);
+  }
+
+  /**
+   * Cambia el estado de una cuenta.
+   *
+   * @param id - El ID de la cuenta.
+   * @param idEnterprise - El ID de la empresa.
+   * @param status - El nuevo estado de la cuenta.
+   * @returns Un observable que indica si el cambio fue exitoso.
+   */
+  changeState(id: number, idEnterprise: string, status: boolean): Observable<any> {
+    const url = `${this.apiURL}changeState/${id}/${idEnterprise}?status=${status}`;
+    return this.http.patch<any>(url, {});
   }
 
   /**
@@ -162,7 +176,8 @@ export class ChartAccountService {
       children: [],
       showSubAccounts: false,
       crossing: item.crossing,
-      costCenter: item.costCenter
+      costCenter: item.costCenter,
+      status: item.status ?? true // Default a true si no está definido
     };
   }
 
@@ -199,7 +214,8 @@ export class ChartAccountService {
       children: [],
       showSubAccounts: false,
       crossing: item.crossing,
-      costCenter: item.costCenter
+      costCenter: item.costCenter,
+      status: item.status ?? true // Default a true si no está definido
     };
   }
 

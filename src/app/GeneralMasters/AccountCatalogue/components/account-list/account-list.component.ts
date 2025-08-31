@@ -20,6 +20,12 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 
@@ -30,10 +36,12 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
     CommonModule, ReactiveFormsModule, FormsModule,
     AccountFormComponent, FilterPipe,
     ButtonModule, FileUploadModule, DropdownModule, DialogModule,
-    IconFieldModule, InputIconModule, InputTextModule, CheckboxModule
+    IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
+    ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule
   ],
   templateUrl: './account-list.component.html',
-  styleUrl: './account-list.component.css'
+  styleUrl: './account-list.component.css',
+  providers: [MessageService, ConfirmationService]
 })
 export class AccountListComponent {
   /**
@@ -164,6 +172,8 @@ export class AccountListComponent {
   constructor(
     private fb: FormBuilder,
     private _accountService: ChartAccountService,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService,
     //private dialog: MatDialog,  //Descomentar linea cuando se tenga implementado esto
     //private taxService: TaxService  //Descomentar linea cuando se tenga implementado esto
   ) {
@@ -1439,6 +1449,9 @@ export class AccountListComponent {
   // Flag para prevenir múltiples actualizaciones simultáneas
   private isUpdating = false;
 
+  // Flag para prevenir múltiples cambios de estado simultáneos
+  private isChangingState = false;
+
   /**
    * Actualiza la información de una cuenta seleccionada.
    * Valida que el código de la cuenta no esté asociado a subcuentas antes de proceder con la actualización.
@@ -1738,7 +1751,7 @@ export class AccountListComponent {
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
       'Home', 'End', ' '
     ];
-    
+
     if (allowedKeys.includes(event.key)) {
       return;
     }
@@ -1749,4 +1762,74 @@ export class AccountListComponent {
       event.preventDefault();
     }
   }
+
+  /**
+   * Cambia el estado de una cuenta y actualiza recursivamente el estado de sus hijos.
+   * @param account La cuenta cuyo estado se va a cambiar.
+   */
+  changeAccountState(account: Account) {
+    // Prevenir múltiples cambios de estado simultáneos
+    if (this.isChangingState) {
+      return;
+    }
+    this.isChangingState = true;
+
+    if (!account?.id || account.status == null) {
+      // Revertir el estado en la UI si la validación falla
+      if (account.status != null) {
+        account.status = !account.status;
+      }
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Faltan datos para cambiar el estado de la cuenta.'
+      });
+      this.isChangingState = false;
+      return;
+    }
+
+    const enterpriseId = this.getIdEnterprise();
+    const newStatus = account.status;
+
+    this._accountService.changeState(account.id, enterpriseId, newStatus).subscribe({
+      next: () => {
+        // Actualizar recursivamente el estado de todos los hijos en la UI
+        this.updateChildrenStatusRecursively(account, newStatus);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado de la cuenta "${account.description}" cambiado correctamente`
+        });
+        this.isChangingState = false;
+      },
+      error: () => {
+        // Revertir el estado en la UI del padre y todos los hijos si la llamada al servicio falla
+        account.status = !newStatus;
+        this.updateChildrenStatusRecursively(account, !newStatus);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado de la cuenta.'
+        });
+        this.isChangingState = false;
+      }
+    });
+  }
+
+  /**
+   * Actualiza recursivamente el estado de todas las cuentas hijas en la UI.
+   * @param parent La cuenta padre.
+   * @param status El nuevo estado a aplicar.
+   */
+  private updateChildrenStatusRecursively(parent: Account, status: boolean): void {
+    if (parent.children && parent.children.length > 0) {
+      for (const child of parent.children) {
+        child.status = status;
+        // Actualizar recursivamente los hijos de este hijo
+        this.updateChildrenStatusRecursively(child, status);
+      }
+    }
+  }
+
+
 }
