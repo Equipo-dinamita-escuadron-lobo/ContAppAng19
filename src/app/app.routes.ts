@@ -662,6 +662,34 @@ export const routes: Routes = [
               },
             ],
           },
+          {
+            path: 'wallet',
+            data: {
+              breadcrumb: 'Cartera',
+            },
+            children: [
+              {
+                path: 'receipts',
+                data: {
+                  breadcrumb: 'Recibos de Caja',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/CashReceipts/Components/receipts-list/receipts-list.component'
+                  ).then((m) => m.ReceiptsListComponent),
+              },
+              {
+                path: 'receipts/creation',
+                data: {
+                  breadcrumb: 'Creación de Recibos',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/CashReceipts/Components/receipt-creation/receipt-creation.component'
+                  ).then((m) => m.ReceiptCreationComponent),
+              }
+            ],
+          }
         ],
       },
       {
