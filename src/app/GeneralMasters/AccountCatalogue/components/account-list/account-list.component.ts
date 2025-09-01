@@ -107,12 +107,26 @@ export class AccountListComponent {
   showCrossingCheckboxEdit: boolean = false;
   showCostCenterCheckboxEdit: boolean = false;
 
-  /**
-  * Variables determinadas según el nivel de la cuenta.
-  * Estas variables gestionan el tipo de cuenta y si se deben agregar subcuentas o hijos.
-  */
-  currentLevelAccount: 'grupo' | 'cuenta' | 'subcuenta' | 'auxiliar' | 'clase' = 'clase';
+    /**
+   * Variables determinadas según el nivel de la cuenta.
+   * Estas variables gestionan el tipo de cuenta y si se deben agregar subcuentas o hijos.
+   */
+  private _currentLevelAccount: 'Grupo' | 'Cuenta' | 'Subcuenta' | 'Auxiliar' | 'Clase' = 'Clase';
   addChild: boolean = false;
+
+  /**
+   * Getter que devuelve el valor de currentLevelAccount (ya capitalizado)
+   */
+  get currentLevelAccount(): string {
+    return this._currentLevelAccount;
+  }
+
+  /**
+   * Setter para currentLevelAccount
+   */
+  set currentLevelAccount(value: 'Grupo' | 'Cuenta' | 'Subcuenta' | 'Auxiliar' | 'Clase') {
+    this._currentLevelAccount = value;
+  }
 
   /**
   * Variables para almacenar los nombres de las diferentes cuentas contables.
@@ -367,7 +381,7 @@ export class AccountListComponent {
     if (code.length >= 1) {
       this.accountForm.addControl('className', new FormControl({ value: this.className, disabled: this.inputAccess.class }, [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')]));
       this.accountForm.addControl('classCode', new FormControl({ value: code.slice(0, 1), disabled: this.inputAccess.class }, [Validators.maxLength(1), Validators.minLength(1)]));
-      this.currentLevelAccount = 'grupo';
+      this.currentLevelAccount = 'Grupo';
       this.num = 1;
       this.code = 'classCode';
       this.name = 'className';
@@ -377,7 +391,7 @@ export class AccountListComponent {
       this.accountForm.addControl('groupName', new FormControl({ value: this.groupName, disabled: this.inputAccess.group }, [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')]));
       this.accountForm.addControl('groupCode', new FormControl({ value: code.slice(0, 1), disabled: this.inputAccess.group }));
       this.accountForm.addControl('codeGroup', new FormControl({ value: code.slice(1, 2), disabled: this.inputAccess.group }, [Validators.maxLength(1), Validators.minLength(1)]));
-      this.currentLevelAccount = 'cuenta';
+      this.currentLevelAccount = 'Cuenta';
       this.num = 2;
       this.code = 'codeGroup';
       this.name = 'groupName';
@@ -388,7 +402,7 @@ export class AccountListComponent {
       this.accountForm.addControl('accountName', new FormControl({ value: this.accountName, disabled: this.inputAccess.account }, [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')]));
       this.accountForm.addControl('accountCode', new FormControl(code.slice(0, 2)));
       this.accountForm.addControl('codeAccount', new FormControl({ value: code.slice(2, 4), disabled: this.inputAccess.account }, [Validators.maxLength(2), Validators.minLength(2)]));
-      this.currentLevelAccount = 'subcuenta';
+      this.currentLevelAccount = 'Subcuenta';
       this.num = 4;
       this.code = 'codeAccount';
       this.name = 'accountName';
@@ -399,7 +413,7 @@ export class AccountListComponent {
       this.accountForm.addControl('subAccountName', new FormControl({ value: this.subAccountName, disabled: this.inputAccess.subAccount }, [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')]));
       this.accountForm.addControl('subAccountCode', new FormControl(code.slice(0, 4)));
       this.accountForm.addControl('codeSubAccount', new FormControl({ value: code.slice(4, 6), disabled: this.inputAccess.subAccount }, [Validators.maxLength(2), Validators.minLength(2)]));
-      this.currentLevelAccount = 'auxiliar';
+      this.currentLevelAccount = 'Auxiliar';
       this.num = 6;
       this.code = 'codeSubAccount';
       this.name = 'subAccountName';

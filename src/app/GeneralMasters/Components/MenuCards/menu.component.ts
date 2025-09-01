@@ -83,7 +83,7 @@ export class MenuComponent {
       title: 'Centro de Ayuda',
       icon: 'help',
       route: '/gen-masters/help-panels',
-      description: 'Configuración del centro de ayuda del sistema'
+      description: 'Gestión de cuadros de ayuda del sistema'
     }
     
   ];

@@ -216,30 +216,18 @@ export class AccountFormComponent implements OnInit {
   }
 
   /**
-   * Establece los valores por defecto del formulario basándose en la cuenta padre.
+   * Configura los placeholders del formulario para mostrar "Seleccione una opción"
+   * en lugar de establecer valores automáticos del padre.
    */
   private setDefaultValuesFromParent() {
     if (this.parent) {
 
-      
-      // Establecer valores por defecto del padre
-      const nature = this.parent.nature && this.parent.nature !== 'Por defecto' ? this.parent.nature : '';
-      const financialStatus = this.parent.financialStatus && this.parent.financialStatus !== 'Por defecto' ? this.parent.financialStatus : '';
-      const classification = this.parent.classification && this.parent.classification !== 'Por defecto' ? this.parent.classification : '';
 
 
-
-      // Actualizar el formulario con los valores del padre
-      this.formNewAccount.patchValue({
-        selectedNatureType: nature,
-        selectedFinancialStateType: financialStatus,
-        selectedClassificationType: classification
-      });
-
-      // Actualizar los placeholders
-      this.placeNatureType = nature || 'Seleccione una opción';
-      this.placeFinancialStateType = financialStatus || 'Seleccione una opción';
-      this.placeClassificationType = classification || 'Seleccione una opción';
+      // Mantener siempre "Seleccione una opción" como placeholder
+      this.placeNatureType = 'Seleccione una opción';
+      this.placeFinancialStateType = 'Seleccione una opción';
+      this.placeClassificationType = 'Seleccione una opción';
     }
   }
 
