@@ -701,6 +701,8 @@
                 <li><strong>Naturaleza</strong> (Débito o Crédito)</li>
                 <li><strong>Estado Financiero</strong> (Estado de situacion financiero o Estado de resultados)</li>
                 <li><strong>Clasificación</strong></li>
+                <li><strong>Cruce</strong></li>
+                <li><strong>Centro de Costo</strong></li>
             </ul>
 
             <h4 class="font-bold text-base text-primary">Consideraciones Importantes</h4>
@@ -714,10 +716,9 @@
 
         <ng-template pTemplate="footer">
             <div class="flex justify-center">
-                <a href="https://docs.google.com/spreadsheets/d/1U2EYlsvEwmmeF7-tpdb17g7I6PQUdf1V/export?format=xlsx"
-                    download="plantillaCatalogoCuentas.xlsx" pButton pRipple label="Descargar Plantilla"
-                    icon="pi pi-download" styleClass="p-button-success">
-                </a>
+                <p-button label="Descargar Plantilla" icon="pi pi-download" 
+                    styleClass="p-button-success" (click)="downloadTemplate()">
+                </p-button>
             </div>
         </ng-template>
     </p-dialog>

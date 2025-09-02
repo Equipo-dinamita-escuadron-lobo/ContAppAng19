@@ -292,6 +292,38 @@ export class AccountListComponent {
   }
 
   /**
+   * Descarga la plantilla de catálogo de cuentas desde el backend.
+   */
+  downloadTemplate(): void {
+    this._accountService.downloadTemplate().subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'plantillaCatalogoCuentas.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Descarga exitosa',
+          detail: 'La plantilla se ha descargado correctamente'
+        });
+      },
+      error: (error) => {
+        console.error('Error al descargar la plantilla:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo descargar la plantilla. Intente nuevamente.'
+        });
+      }
+    });
+  }
+
+  /**
   * Abre un diálogo modal con un título y componente específicos.
   * @param title El título del cuadro de diálogo modal.
   * @param component El componente que se mostrará en el cuadro de diálogo modal.
@@ -928,17 +960,6 @@ export class AccountListComponent {
     }
 
     return topLevelAccounts;
-  }
-
-  downloadExcel() {
-    const link = document.createElement('a');
-    link.href = 'assets/templates/plantillaCatalogoCuentas.xlsx';
-    link.download = 'plantillaCatalogoCuentas.xlsx';
-
-    document.body.appendChild(link);
-    link.click();
-
-    document.body.removeChild(link);
   }
 
   /**

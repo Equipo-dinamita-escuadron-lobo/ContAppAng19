@@ -312,4 +312,18 @@ export class ChartAccountService {
   getFinancialStateType(): FinancialStateType[] {
     return this.listFinancialState;
   }
+
+  /**
+   * Descarga la plantilla de catálogo de cuentas.
+   * 
+   * @returns Un observable con el blob de la plantilla para descarga.
+   */
+  downloadTemplate(): Observable<Blob> {
+    return this.http.get(`${this.apiURL}template`, { 
+      responseType: 'blob',
+      headers: new HttpHeaders({
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+    });
+  }
 }
