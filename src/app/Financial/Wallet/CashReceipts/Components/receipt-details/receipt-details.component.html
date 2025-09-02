@@ -1,0 +1,150 @@
+<div class="w-full font-sans">
+
+    @if (errorMessage) {
+    <div class="max-w-5xl mx-auto">
+        <p-message severity="error" [text]="errorMessage"></p-message>
+        <div class="mt-4">
+            <p-button label="Volver al listado" icon="pi pi-arrow-left" styleClass="p-button-secondary"
+                (onClick)="goBack()"></p-button>
+        </div>
+    </div>
+    }
+
+    @if (receipt) {
+    <div class="">
+
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
+            <div>
+                <h1
+                    class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+                    Comprobante de Pago
+                </h1>
+                <p class="font-normal text-sm mt-2 text-gray-600">
+                    Detalles del recibo de caja <span class="font-semibold">{{ receipt.receiptCode }}</span>.
+                </p>
+            </div>
+            <div>
+                <p-button label="Volver al listado" icon="pi pi-arrow-left" styleClass="p-button-secondary"
+                    (onClick)="goBack()"></p-button>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden">
+
+            <div class="">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div class="flex-shrink-0 order-1 p-6 md:p-8">
+                        <img [src]="'logo_unicauca_horizontal.png'" alt="Logo Unicauca" class="h-80 w-auto">
+                    </div>
+
+                    <div class="text-center md:text-center order-2 p-6 md:p-8">
+                        <h2 class="font-['Titillium_Web'] font-bold text-lg text-[var(--color-primary)]">EMPRESA
+                            UNIVERSIDAD DEL CAUCA S.A.S</h2>
+                        <p class="text-sm text-gray-500 mt-1">NIT: 8911500319-2</p>
+                        <p class="text-sm text-gray-500">Dirección: Cra 2, Cl. 15 Nte. Popayan, Colombia</p>
+                    </div>
+
+                    <div class="w-full md:w-auto md:text-center order-3">
+                        <div
+                            class="sm:bg-gray-200 p-3 sm:rounded-bl-md  text-sm space-y-1 inline-block text-center px-20">
+                            <p><strong>Código:</strong> <span class="">{{ receipt.receiptCode }}</span></p>
+                            <p><strong>Fecha de elaboración:</strong> <span class="">{{ receipt.issueDate |
+                                    date:'dd/MM/yyyy' }}</span></p>
+                            <p><strong>Método de pago:</strong> <span class="">{{ receipt.paymentMethodName }}</span>
+                            </p>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <span class="text-2xl font-bold font-['Titillium_Web']"
+                                [ngClass]="receipt.status === 'Activo' ? 'text-[var(--color-accessibility)]' : 'text-[var(--color-secondary)]'">
+                                {{ receipt.status }}
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-x-0 py-10 md:py-20 ">
+                <div class="md:col-span-2 border border-gray-200 overflow-hidden">
+                    <div class="flex items-stretch">
+                        <div class="w-1/3 bg-gray-200 p-3 flex items-center ">
+                            <span class="font-semibold">Valor de</span>
+                        </div>
+                        <div class="flex-1 p-3 flex items-center">
+                            <span class="text-gray-800 text-sm">{{ receipt.totalAmount |
+                                currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-stretch ">
+                        <div class="w-1/3 bg-gray-200 p-3 flex items-center ">
+                            <span class="font-semibold ">Tercero</span>
+                        </div>
+                        <div class="flex-1 p-3 flex items-center">
+                            <span class="text-gray-800 text-sm">{{ receipt.clientName }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="md:col-span-3 mt-4 md:mt-0 md:ml-[-1px] flex border border-gray-200 overflow-hidden">
+                    <div class="w-1/3 bg-gray-200 p-3 border-r border-gray-200">
+                        <span class="font-semibold text-sm">Observaciones:</span>
+                    </div>
+                    <div class="flex-1 p-3">
+                        <p class="text-gray-700 text-sm min-h-[50px]">
+                            {{ receipt.observations || 'Sin observaciones.' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Conceptos/Detalles -->
+            <div class="">
+                <div class="w-full">
+                    <div class="bg-[var(--color-primary)] text-white font-['Titillium_Web'] font-bold p-3 text-center">
+                        Concepto
+                    </div>
+                    <div class="overflow-x-auto px-6 md:px-8 pb-8">
+                        <table class="w-full ">
+                            <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+                                <tr>
+                                    <th class="p-3 text-left">Descripción</th>
+                                    <th class="p-3 text-left">Documento Relacionado</th>
+                                    <th class="p-3 text-left">Detalle Adicional</th>
+                                    <th class="p-3 text-right">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Caso 1: Abono a Deuda -->
+                                @if (!receipt.isDirectIncome) {
+                                @for (detail of receipt.details; track detail.invoiceId) {
+                                <tr class="hover:bg-gray-50 text-sm">
+                                    <td class="p-3">Abono a factura</td>
+                                    <td class="p-3">{{ detail.invoiceCode }}</td>
+                                    <td class="p-3"> </td>
+                                    <td class="p-3 text-right font-semibold">{{ detail.amountPaid |
+                                        currency:'COP':'$':'1.0-0' }}</td>
+                                </tr>
+                                }
+                                } @else {
+                                <!-- Caso 2: Ingreso Directo -->
+                                <tr class="hover:bg-gray-50 text-sm">
+                                    <td class="p-3" colspan="3">Ingreso Directo</td>
+                                    <td class="p-3 text-right font-semibold">{{ receipt.totalAmount |
+                                        currency:'COP':'$':'1.0-0' }}</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex justify-center gap-4 p-6 ">
+                <p-button label="Anular" severity="secondary" (onClick)="annulReceipt()" icon="pi pi-times"></p-button>
+                <p-button label="Contabilidad" (onClick)="generateAccounting()" icon="pi pi-calculator"></p-button>
+            </div>
+        </div>
+    </div>
+    }
+</div>
