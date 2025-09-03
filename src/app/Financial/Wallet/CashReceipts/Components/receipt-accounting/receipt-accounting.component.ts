@@ -45,6 +45,7 @@ export class ReceiptAccountingComponent implements OnInit {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.receiptId = +idParam;
+      console.log('Cargando asiento contable para el recibo ID:', this.receiptId);
       this.loadAccountingEntries(this.receiptId);
     } else {
       this.errorMessage = 'No se proporcionó un ID de recibo para la contabilización.';
@@ -80,7 +81,7 @@ export class ReceiptAccountingComponent implements OnInit {
 
   viewReceiptDetails(): void {
     if (this.receiptId) {
-      this.router.navigate(['/financial/wallet/receipts', this.receiptId]);
+      this.router.navigate(['/financial/wallet/receipts/details/', this.receiptId]);
     } else {
       this.router.navigate(['/financial/wallet/receipts']);
     }
@@ -97,6 +98,5 @@ export class ReceiptAccountingComponent implements OnInit {
   get totalCredit(): number {
     return this.accountingEntries.reduce((total, entry) => total + (entry.credit || 0), 0);
   }
-
 
 }
