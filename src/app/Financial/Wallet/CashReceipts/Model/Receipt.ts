@@ -1,3 +1,4 @@
+import { AccountingEntryLine } from "./AccountinEntryLine";
 import { ReceiptDetail } from "./ReceiptDetail";
 
 
@@ -12,4 +13,6 @@ export interface Receipt {
     details?: ReceiptDetail[];
     paymentMethodId?: number;
     auxAccount?: number;
+    // Añadimos el campo para el asiento contable.
+    accountingEntry?: AccountingEntryLine[];
 }

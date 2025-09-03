@@ -1,12 +1,16 @@
+import { AccountingEntryLine } from "./AccountinEntryLine";
 import { Receipt } from "./Receipt";
 
 export interface ReceiptDetailsView extends Omit<Receipt, 'details' | 'thirdPartyId'> {
     clientName: string;
-    paymentMethodName: string; // Para mostrar el nombre, no el ID
+    paymentMethodName: string; 
     isDirectIncome: boolean;
     details: {
         invoiceId: number;
-        invoiceCode: string; // Necesitamos el código para mostrarlo
+        invoiceCode: string; 
         amountPaid: number;
     }[];
+
+    // Añadimos el asiento contable aqui
+    accountingEntry?: AccountingEntryLine[];
 }
