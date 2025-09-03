@@ -44,6 +44,12 @@ export class CostCenterService {
   findById(id: number, enterpriseId: string): Observable<CostCenter> {
     return this.http.get<CostCenter>(`${this.apiURL}findById/${id}/${enterpriseId}`);
   }
+
+  // Cambiar estado
+  changeState(id: number, enterpriseId: string, status: boolean): Observable<any> {
+    const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
+    return this.http.patch<any>(url, {});
+  }
 }
 
 

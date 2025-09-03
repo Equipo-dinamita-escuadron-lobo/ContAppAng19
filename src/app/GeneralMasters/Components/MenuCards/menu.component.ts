@@ -45,7 +45,7 @@ export class MenuComponent {
     {
       title: 'Métodos de Pago',
       icon: 'payments',
-      route: '/gen-masters/payment-methods',
+      route: '/gen-masters/payment-methods/list',
       description: 'Formas de pago disponibles'
     },
     {
