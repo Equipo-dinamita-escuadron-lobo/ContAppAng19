@@ -61,6 +61,11 @@ export class ReceiptDetailsComponent {
 
   generateAccounting(): void {
     // Lógica para contabilizar
-    console.log('Generando contabilidad para el recibo:', this.receipt?.id);
+      if (this.receipt?.id) {
+      this.router.navigate(['/financial/wallet/receipts', this.receipt.id, 'accounting']);
+    } else {
+      console.warn('No se puede generar contabilidad: ID de recibo no disponible.');
+      this.errorMessage = 'No se puede generar contabilidad: ID de recibo no disponible.';
+    }
   }
 }
