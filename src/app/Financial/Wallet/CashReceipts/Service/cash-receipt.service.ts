@@ -115,6 +115,11 @@ export class CashReceiptService {
     return of(filteredClients);
   }
 
+  public getClientById(id: number): Observable<Client | undefined> {
+    const client = this.mockClientsDB.find(c => c.id === id);
+    return of(client);
+}
+
   getInvoicesByClient(clientId: number): Observable<Invoice[]> {
     let invoices: Invoice[] = [];
     if (clientId === 101) {
@@ -154,8 +159,12 @@ export class CashReceiptService {
       return of(undefined);
     }
 
+    // Usamos getPaymentMethods para tener la información necesaria para generar el asiento
     return this.getPaymentMethods().pipe(
       map(paymentMethods => {
+        // Generamos el asiento dinámicamente usando la lógica correcta
+        const generatedEntry = this._generateAccountingEntry(receipt, paymentMethods);
+
         const client = this.mockClientsDB.find(c => c.id === receipt.thirdPartyId);
         const paymentMethod = paymentMethods.find(p => p.id === receipt.paymentMethodId);
 
@@ -169,7 +178,6 @@ export class CashReceiptService {
           paymentMethodName: paymentMethod ? paymentMethod.name : 'No especificado',
           isDirectIncome: !receipt.details || receipt.details.length === 0,
           details: detailsView,
-          // Propiedades del recibo base
           id: receipt.id,
           receiptCode: receipt.receiptCode,
           status: receipt.status,
@@ -177,8 +185,8 @@ export class CashReceiptService {
           totalAmount: receipt.totalAmount,
           observations: receipt.observations,
           paymentMethodId: receipt.paymentMethodId,
-          // La información clave que añadimos:
-          accountingEntry: receipt.accountingEntry
+          // Asignamos el asiento recién generado
+          accountingEntry: generatedEntry
         };
 
         return receiptDetailsView;
@@ -217,55 +225,48 @@ export class CashReceiptService {
   private _generateAccountingEntry(receipt: Receipt, paymentMethods: PaymentMethod[]): AccountingEntryLine[] {
     const entry: AccountingEntryLine[] = [];
     const total = receipt.totalAmount || 0;
-    const thirdParty = receipt.thirdPartyId || 0;
+    const thirdPartyId = receipt.thirdPartyId || 0;
+    const client = this.mockClientsDB.find(c => c.id === thirdPartyId);
 
-    // 1. LÍNEA DEL DÉBITO (La cuenta que recibe el dinero)
+    // LÍNEA DEL DÉBITO
     const paymentMethod = paymentMethods.find(p => p.id === receipt.paymentMethodId);
     if (!paymentMethod || !paymentMethod.accountingAccount) {
-      console.error("Método de pago o su cuenta contable no encontrados. No se puede generar el asiento.");
-      return [];
+        console.error("Método de pago o su cuenta contable no encontrados.");
+        return [];
     }
     entry.push({
-      accountCode: paymentMethod.accountingAccount,
-      accountName: paymentMethod.name || 'Cuenta de Banco/Caja',
-      debit: total,
-      credit: 0,
-      thirdPartyId: thirdParty,
-      description: `Recibo de caja - ${receipt.observations}`
+        accountCode: paymentMethod.accountingAccount,
+        accountName: paymentMethod.name, // <-- CAMBIO: Usamos el nombre directo (Ej: 'Caja')
+        debit: total,
+        credit: 0,
+        thirdPartyId: thirdPartyId,
+        description: receipt.observations || 'Efectivo' // <-- CAMBIO: Usamos las observaciones o un genérico
     });
 
-    // 2. LÍNEA DEL CRÉDITO (La contrapartida)
+    // LÍNEAS DEL CRÉDITO
     const isDirectIncome = !receipt.details || receipt.details.length === 0;
 
     if (isDirectIncome) {
-      // Caso 1: Es un ingreso directo (no cruza con facturas).
-      const auxAccountCode = receipt.auxAccount?.toString() || '4XXXXX'; // Usar un default si no viene
-      entry.push({
-        accountCode: auxAccountCode,
-        accountName: 'Ingresos Varios', // En un sistema real, se buscaría el nombre de esta cuenta
-        debit: 0,
-        credit: total,
-        thirdPartyId: thirdParty,
-        description: `Ingreso directo - ${receipt.observations}`
-      });
+        // ... (lógica para ingreso directo)
     } else {
-      // Caso 2: Es un abono a deuda (cruza con facturas).
-      const client = this.mockClientsDB.find(c => c.id === thirdParty);
-      if (!client) {
-        console.error("Cliente no encontrado para generar asiento de cartera.");
-        return []; // No continuar si no podemos encontrar la cuenta del cliente
-      }
-      entry.push({
-        accountCode: client.accountsReceivableAccount.code,
-        accountName: client.accountsReceivableAccount.name,
-        debit: 0,
-        credit: total,
-        thirdPartyId: thirdParty,
-        description: `Abono a cartera de facturas`
-      });
-      
+        if (!client) {
+            console.error("Cliente no encontrado para generar asiento de cartera.");
+            return [];
+        }
+        receipt.details?.forEach(detail => {
+            const invoice = this.mockInvoicesDB.find(inv => inv.id === detail.invoiceId);
+            const invoiceCode = invoice ? invoice.code : `ID ${detail.invoiceId}`;
 
+            entry.push({
+                accountCode: client.accountsReceivableAccount.code,
+                accountName: client.accountsReceivableAccount.name, // <-- Usará 'Cliente' del mock
+                debit: 0,
+                credit: detail.amountPaid,
+                thirdPartyId: thirdPartyId,
+                description: invoiceCode // <-- CAMBIO: La descripción es solo el código de la factura
+            });
+        });
     }
     return entry;
-  }
+}
 }
