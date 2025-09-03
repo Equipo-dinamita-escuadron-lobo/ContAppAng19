@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -14,6 +14,14 @@ import { Facture2 } from '../../models/Facture2';
 import { Product2 } from '../../models/Product2';
 import { SteletonService } from '../../services/steleton.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { ProductResponse } from '../../../BusinessMasters/ValuationModels/WeightedAverage/models/ProductResponse';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { ProductService } from '../../../BusinessMasters/ValuationModels/WeightedAverage/services/product.service';
+
+interface AutoCompleteCompleteEvent {
+    originalEvent: Event;
+    query: string;
+}
 
 interface InvoiceType {
   label: string;
@@ -25,14 +33,16 @@ interface InvoiceType {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
-    ButtonModule, 
+    ButtonModule,
     InputTextModule,
     SelectModule,
     InputNumberModule,
     MessageModule,
     ToastModule,
-    DatePickerModule
+    DatePickerModule,
+    AutoCompleteModule
   ],
   providers: [MessageService],
   templateUrl: './create-invoice.component.html',
@@ -44,6 +54,13 @@ export class CreateInvoiceComponent implements OnInit {
   entData: any | null = null;
   selectedInvoiceType: string = '';
 
+  productId: number = 0;
+  totalRecords = 0;
+  first = 0;
+  allProducts: ProductResponse[] = [];
+  filteredProducts: ProductResponse[] = [];
+  selectedProduct: ProductResponse | undefined;
+
   invoiceTypes: InvoiceType[] = [
     { label: 'Factura de Compra', value: 'purchase' },
     { label: 'Factura de Venta', value: 'sale' }
@@ -53,8 +70,9 @@ export class CreateInvoiceComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: MessageService,
-    private steletonService: SteletonService
-  ) { 
+    private steletonService: SteletonService,
+    private productService: ProductService
+  ) {
     this.invoiceForm = this.createInvoiceForm();
   }
 
@@ -62,10 +80,14 @@ export class CreateInvoiceComponent implements OnInit {
     console.log('Componente de creación de factura inicializado');
     this.entData = this.localStorageMethods.loadEnterpriseData();
     console.log('Datos de empresa cargados:', this.entData);
-    
+
     // Suscribirse a cambios en el total pagado para calcular el valor pendiente
     this.invoiceForm.get('totalPay')?.valueChanges.subscribe(() => {
       this.calculatePendingValue();
+    });
+
+    this.productService.getAllProducts().subscribe(response => {
+      this.allProducts = response.data;
     });
   }
 
@@ -84,11 +106,11 @@ export class CreateInvoiceComponent implements OnInit {
 
   private createProductForm(): FormGroup {
     const productForm = this.formBuilder.group({
-      productId: ['', Validators.required],
+      productId: [this.productId || '', Validators.required],
       amount: ['', [Validators.required, Validators.min(1)]],
       description: ['', Validators.required],
       descount: [0, [Validators.min(0), Validators.max(100)]],
-      unitPrice: [0, Validators.min(0)],
+      unitPrice: [0, [Validators.required, Validators.min(0)]], // Siempre requerido
       subtotal: [{ value: 0, disabled: true }],
       taxPercentage: [[]],
       taxPercentageInput: ['']
@@ -99,6 +121,7 @@ export class CreateInvoiceComponent implements OnInit {
     productForm.get('unitPrice')?.valueChanges.subscribe(() => this.calculateSubtotal(productForm));
     productForm.get('descount')?.valueChanges.subscribe(() => this.calculateSubtotal(productForm));
 
+    console.log('Nuevo formulario de producto creado:', productForm.value);
     return productForm;
   }
 
@@ -112,28 +135,10 @@ export class CreateInvoiceComponent implements OnInit {
 
   onInvoiceTypeChange(event: any): void {
     this.selectedInvoiceType = event.value;
-    
-    // Actualizar validadores según el tipo de factura
-    this.factProducts.controls.forEach(product => {
-      const unitPriceControl = product.get('unitPrice');
-      if (this.selectedInvoiceType === 'purchase') {
-        unitPriceControl?.setValidators([Validators.required, Validators.min(0)]);
-      } else {
-        unitPriceControl?.clearValidators();
-        unitPriceControl?.setValue(0);
-      }
-      unitPriceControl?.updateValueAndValidity();
-    });
   }
 
   addProduct(): void {
     const newProduct = this.createProductForm();
-    
-    // Aplicar validadores según el tipo de factura seleccionado
-    if (this.selectedInvoiceType === 'purchase') {
-      newProduct.get('unitPrice')?.setValidators([Validators.required, Validators.min(0)]);
-    }
-    
     this.factProducts.push(newProduct);
   }
 
@@ -147,7 +152,7 @@ export class CreateInvoiceComponent implements OnInit {
   updateTaxPercentages(index: number): void {
     const product = this.factProducts.at(index);
     const taxInput = product.get('taxPercentageInput')?.value;
-    
+
     if (taxInput) {
       const percentages = taxInput.split(',').map((p: string) => parseFloat(p.trim())).filter((p: number) => !isNaN(p));
       product.get('taxPercentage')?.setValue(percentages);
@@ -158,13 +163,13 @@ export class CreateInvoiceComponent implements OnInit {
     const amount = productForm.get('amount')?.value || 0;
     const unitPrice = productForm.get('unitPrice')?.value || 0;
     const discount = productForm.get('descount')?.value || 0;
-    
+
     const subtotalBeforeDiscount = amount * unitPrice;
     const discountAmount = subtotalBeforeDiscount * (discount / 100);
     const subtotal = subtotalBeforeDiscount - discountAmount;
-    
+
     productForm.get('subtotal')?.setValue(subtotal);
-    
+
     // Recalcular el total general
     this.calculateTotalValue();
   }
@@ -175,7 +180,7 @@ export class CreateInvoiceComponent implements OnInit {
       const subtotal = product.get('subtotal')?.value || 0;
       total += subtotal;
     });
-    
+
     this.invoiceForm.get('totalValue')?.setValue(total);
     this.calculatePendingValue();
   }
@@ -184,16 +189,16 @@ export class CreateInvoiceComponent implements OnInit {
     const totalValue = this.invoiceForm.get('totalValue')?.value || 0;
     const totalPay = this.invoiceForm.get('totalPay')?.value || 0;
     const pendingValue = totalValue - totalPay;
-    
+
     this.invoiceForm.get('pendingValue')?.setValue(pendingValue);
   }
 
   onSubmit(): void {
     if (this.invoiceForm.valid) {
       const formValue = this.invoiceForm.getRawValue();
-      
+
       // Formatear fecha
-      const expirationDate = formValue.expirationDate instanceof Date 
+      const expirationDate = formValue.expirationDate instanceof Date
         ? formValue.expirationDate.toISOString().split('T')[0]
         : formValue.expirationDate;
 
@@ -221,7 +226,7 @@ export class CreateInvoiceComponent implements OnInit {
       };
 
       // Llamar al servicio correspondiente según el tipo de factura
-      const serviceCall = formValue.invoiceType === 'purchase' 
+      const serviceCall = formValue.invoiceType === 'purchase'
         ? this.steletonService.createPurchaseSkeleton(factureData)
         : this.steletonService.createSaleSkeleton(factureData);
 
@@ -259,7 +264,7 @@ export class CreateInvoiceComponent implements OnInit {
     Object.keys(this.invoiceForm.controls).forEach(key => {
       const control = this.invoiceForm.get(key);
       control?.markAsTouched();
-      
+
       if (control instanceof FormArray) {
         control.controls.forEach(arrayControl => {
           if (arrayControl instanceof FormGroup) {
@@ -296,5 +301,19 @@ export class CreateInvoiceComponent implements OnInit {
       }
     }
     return '';
+  }
+
+  onProductSelect(event: ProductResponse) {
+    const productForm = this.factProducts.at(this.factProducts.length - 1);
+    productForm.get('productId')?.setValue(event.productId);
+    productForm.get('description')?.setValue(event.name);
+  }
+
+  filterProducts(event: AutoCompleteCompleteEvent) {
+    const query = event.query.toLowerCase();
+    this.filteredProducts = this.allProducts.filter(product => {
+      // La propiedad `name` es la que se usa para la búsqueda.
+      return product.name.toLowerCase().includes(query);
+    });
   }
 }
