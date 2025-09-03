@@ -134,12 +134,19 @@
                                         <label class="block mb-2 font-semibold">
                                             ID Producto <span class="text-red-500">*</span>
                                         </label>
-                                        <p-inputNumber
-                                            formControlName="productId"
-                                            placeholder="1"
-                                            class="w-full"
-                                            [useGrouping]="false">
-                                        </p-inputNumber>
+                                        <p-autocomplete
+                                          formControlName="productId"
+                                          [suggestions]="filteredProducts"
+                                          (completeMethod)="filterProducts($event)"
+                                          (onSelect)="onProductSelect($event.value)"
+                                          field="name"
+                                          [dropdown]="true"
+                                          [virtualScroll]="true"
+                                          [virtualScrollItemSize]="44"
+                                          placeholder="Escribe para buscar productos..."
+                                          styleClass="w-full"
+                                          inputId="product-ac"
+                                        />
                                     </div>
 
                                     <!-- Descripción -->
@@ -167,22 +174,20 @@
                                         </p-inputNumber>
                                     </div>
 
-                                    <!-- Precio Unitario (solo para compras) -->
-                                    @if (selectedInvoiceType === 'purchase') {
-                                        <div>
-                                            <label class="block mb-2 font-semibold">
-                                                Precio Unitario <span class="text-red-500">*</span>
-                                            </label>
-                                            <p-inputNumber
-                                                formControlName="unitPrice"
-                                                placeholder="0.00"
-                                                class="w-full"
-                                                mode="currency"
-                                                currency="COP"
-                                                locale="es-CO">
-                                            </p-inputNumber>
-                                        </div>
-                                    }
+                                    <!-- Precio Unitario -->
+                                    <div>
+                                        <label class="block mb-2 font-semibold">
+                                            Precio Unitario <span class="text-red-500">*</span>
+                                        </label>
+                                        <p-inputNumber
+                                            formControlName="unitPrice"
+                                            placeholder="0.00"
+                                            class="w-full"
+                                            mode="currency"
+                                            currency="COP"
+                                            locale="es-CO">
+                                        </p-inputNumber>
+                                    </div>
 
                                     <!-- Descuento -->
                                     <div>
