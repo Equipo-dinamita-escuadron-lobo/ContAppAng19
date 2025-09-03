@@ -263,6 +263,8 @@ export class CashReceiptService {
         thirdPartyId: thirdParty,
         description: `Abono a cartera de facturas`
       });
+      
+
     }
     return entry;
   }

@@ -12,5 +12,8 @@ export interface ReceiptDetailsView extends Omit<Receipt, 'details' | 'thirdPart
     }[];
 
     // Añadimos el asiento contable aqui
+    id?: number;
+    receiptCode?: string;
+    issueDate?: Date;
     accountingEntry?: AccountingEntryLine[];
 }
