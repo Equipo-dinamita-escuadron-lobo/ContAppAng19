@@ -1,14 +1,18 @@
 // Interfaz genérica para opciones de dropdowns
 export interface DropdownOption {
     label: string;
-    value: any; // Puede ser string, number, etc.
+    value: any; 
 }
 
-// Interfaz para el cliente (tercero)
+// Interfaz para el cliente
 export interface Client {
     id: number;
     name: string;
-    // Otros campos relevantes del cliente que puedan venir del backend
+    accountsReceivableAccount: {
+        id: number;
+        code: string; 
+        name: string;
+    };
 }
 
 // Interfaz para las facturas pendientes de un cliente
@@ -17,8 +21,8 @@ export interface Invoice {
     code: string;
     dueDate: Date;
     pendingBalance: number;
-    selectedForPayment?: boolean; // Campo de UI
-    amountToPay?: number; // Campo de UI
+    selectedForPayment?: boolean; 
+    amountToPay?: number; 
 }
 
 // Interfaz para la vista de lista de recibos
