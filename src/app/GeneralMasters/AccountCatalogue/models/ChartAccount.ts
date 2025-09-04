@@ -10,8 +10,8 @@ export interface Account {
     showSubAccounts?: boolean;
     parent?: string | number | null;
     parentAccount?: Account;
-    crossing?: boolean;
-    costCenter?: boolean;
+    crossing?: boolean | null;
+    costCenter?: boolean | null;
     status?: boolean;
 }
 
@@ -24,8 +24,8 @@ export interface AccountCatalogueListRes {
     financialStatus: string;
     classification: string;
     parent: string | null;
-    crossing?: boolean;
-    costCenter?: boolean;
+    crossing?: boolean | null;
+    costCenter?: boolean | null;
     status?: boolean;
     children: AccountCatalogueListRes[];
 }
@@ -51,8 +51,8 @@ export interface AccountCatalogueCreateRes {
     financialStatus: string;
     classification: string;
     parent: string;
-    crossing?: boolean;
-    costCenter?: boolean;
+    crossing?: boolean | null;
+    costCenter?: boolean | null;
     status?: boolean;
 }
 
@@ -65,7 +65,7 @@ export interface AccountCatalogueUpdateRes {
     financialStatus: string;
     classification: string;
     parent: string;
-    crossing?: boolean;
-    costCenter?: boolean;
+    crossing?: boolean | null;
+    costCenter?: boolean | null;
     status?: boolean;
 }

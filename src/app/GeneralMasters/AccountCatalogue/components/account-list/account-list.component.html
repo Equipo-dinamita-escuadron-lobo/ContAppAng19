@@ -723,4 +723,56 @@
         </ng-template>
     </p-dialog>
 
+    <!-- Modal de Errores de Importación -->
+    <p-dialog header="Importación Fallida" [modal]="true" [(visible)]="showErrorModal"
+        [style]="{ width: '80rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"
+        (onHide)="closeErrorModal()">
+
+        <div class="bg-orange-100 border-l-4 border-orange-500 text-orange-700 px-15 py-15 mb-15">
+            <p class="font-bold">Se encontraron algunos errores!</p>
+            <p>No se puede importar el archivo debido a los siguientes errores:</p>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg px-15 py-15 mb-15">
+            <h4 class="font-bold text-base text-primary mb-2">Instrucciones:</h4>
+            <ul class="list-disc list-inside text-sm space-y-1">
+                <li>El archivo Excel debe contener las columnas: Código (A), Nombre (B), Naturaleza (C), Estado Financiero (D), Clasificación (E), Cruce (F), Centro de Costo (G).</li>
+                <li>Todos los campos son obligatorios y no pueden estar vacíos a excepción de los campos de cruce y centro de costo.</li>
+                <li>La primera fila debe contener los encabezados.</li>
+                <li>Se mostrarán errores específicos indicando fila y columna.</li>
+            </ul>
+        </div>
+
+        <p-table [value]="importErrors" [paginator]="true" [rows]="10" [totalRecords]="totalErrors"
+            [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} errores"
+            styleClass="p-datatable-sm" [tableStyle]="{'min-width': '50rem'}">
+            
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Fila</th>
+                    <th>Columna</th>
+                    <th>Campo</th>
+                    <th>Error</th>
+                </tr>
+            </ng-template>
+            
+            <ng-template pTemplate="body" let-error>
+                <tr>
+                    <td>{{ error.fila }}</td>
+                    <td>{{ error.columna }}</td>
+                    <td>{{ error.campo }}</td>
+                    <td class="text-red-600">{{ error.error }}</td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-center gap-3">
+                <p-button label="Aceptar" styleClass="p-button-secondary" (click)="closeErrorModal()"></p-button>
+                <p-button label="Exportar Errores" icon="pi pi-download" 
+                    styleClass="p-button-success" (click)="exportErrors()"></p-button>
+            </div>
+        </ng-template>
+    </p-dialog>
+
 </div>
