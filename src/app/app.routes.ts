@@ -782,6 +782,16 @@ export const routes: Routes = [
               import(
                 './Commercial/InvoiceTemplate/components/create-invoice/create-invoice.component'
               ).then((m) => m.CreateInvoiceComponent),
+          },
+          {
+            path: 'return-template',
+            data: {
+              breadcrumb: 'Plantilla de Devolución',
+            },
+            loadComponent: () =>
+              import(
+                './Commercial/InvoiceTemplate/components/create-return/create-return.component'
+              ).then((m) => m.CreateReturnComponent),
           }
         ],
       },
@@ -795,3 +805,5 @@ export const routes: Routes = [
     component: StyleGuideComponent,
   },
 ];
+
+

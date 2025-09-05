@@ -1,0 +1,138 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20">
+    <p-toast></p-toast>
+    <h1
+     class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
+    >
+        Crear Devolución
+    </h1>
+    <p class="mb-6 text-lg text-gray-700">
+        Complete la información necesaria para crear una nueva devolución.
+    </p>
+
+    <div class="mt-6">
+        <form [formGroup]="returnForm" (ngSubmit)="onSubmit()" class="mt-4">
+            <div class="w-full max-w-2xl mx-auto">
+                <!-- Tipo de devolución -->
+                <div class="mb-6">
+                    <label for="returnType" class="block mb-2 font-semibold">
+                        Tipo de Devolución <span class="text-red-500">*</span>
+                    </label>
+                    <p-select
+                        id="returnType"
+                        formControlName="returnType"
+                        [options]="returnTypes"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Seleccione el tipo de devolución"
+                        class="w-full">
+                    </p-select>
+
+                    @if (returnForm.get('returnType')?.touched && returnForm.get('returnType')?.invalid) {
+                        <p-message
+                            severity="error"
+                            text="El tipo de devolución es requerido"
+                        ></p-message>
+                    }
+                </div>
+
+                <!-- Código de Factura -->
+                <div class="mb-6">
+                    <label for="factCode" class="block mb-2 font-semibold">
+                        Código de Factura <span class="text-red-500">*</span>
+                    </label>
+                    <p-inputNumber
+                        id="factCode"
+                        formControlName="factCode"
+                        placeholder="001"
+                        class="w-full"
+                        [useGrouping]="false">
+                    </p-inputNumber>
+
+                    @if (returnForm.get('factCode')?.touched && returnForm.get('factCode')?.invalid) {
+                        <p-message
+                            severity="error"
+                            text="El código de factura es requerido"
+                        ></p-message>
+                    }
+                </div>
+
+                <!-- Producto -->
+                <div class="mb-6">
+                    <label for="productId" class="block mb-2 font-semibold">
+                        Producto <span class="text-red-500">*</span>
+                    </label>
+                    <p-autocomplete
+                        id="productId"
+                        formControlName="productId"
+                        [suggestions]="filteredProducts"
+                        (completeMethod)="filterProducts($event)"
+                        (onSelect)="onProductSelect($event.value)"
+                        field="name"
+                        [dropdown]="true"
+                        [virtualScroll]="true"
+                        [virtualScrollItemSize]="44"
+                        placeholder="Escribe para buscar productos..."
+                        styleClass="w-full"
+                        inputId="product-ac">
+                    </p-autocomplete>
+
+                    @if (returnForm.get('productId')?.touched && returnForm.get('productId')?.invalid) {
+                        <p-message
+                            severity="error"
+                            text="El producto es requerido"
+                        ></p-message>
+                    }
+                </div>
+
+                <!-- Cantidad -->
+                <div class="mb-6">
+                    <label for="amount" class="block mb-2 font-semibold">
+                        Cantidad <span class="text-red-500">*</span>
+                    </label>
+                    <p-inputNumber
+                        id="amount"
+                        formControlName="amount"
+                        placeholder="1"
+                        class="w-full"
+                        [min]="1">
+                    </p-inputNumber>
+
+                    @if (returnForm.get('amount')?.touched && returnForm.get('amount')?.invalid) {
+                        <p-message
+                            severity="error"
+                            text="La cantidad es requerida y debe ser mayor a 0"
+                        ></p-message>
+                    }
+                </div>
+
+                <!-- Información del producto seleccionado -->
+                @if (selectedProduct) {
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-semibold text-blue-800 mb-2">Producto Seleccionado:</h4>
+                        <p class="text-blue-700">
+                            <span class="font-medium">Nombre:</span> {{ selectedProduct.name }}
+                        </p>
+                        <p class="text-blue-700">
+                            <span class="font-medium">ID:</span> {{ selectedProduct.productId }}
+                        </p>
+                    </div>
+                }
+
+                <!-- Botones de acción -->
+                <div class="flex justify-center gap-4 mt-8">
+                    <p-button
+                        type="button"
+                        label="Cancelar"
+                        severity="secondary"
+                        >
+                    </p-button>
+                    <p-button
+                        type="submit"
+                        label="Crear Devolución"
+                        [disabled]="returnForm.invalid">
+                    </p-button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
