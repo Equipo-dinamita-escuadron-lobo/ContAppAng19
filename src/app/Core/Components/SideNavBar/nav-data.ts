@@ -217,6 +217,11 @@ export const navbarData: INavbarData[] = [
          label: 'Plantilla de Factura',
        },
        {
+         routeLink: '/commercial/return-template',
+         icon: 'replay',
+         label: 'Devoluciones',
+       },
+       {
          routeLink: 'TO DO',
          icon: 'analytics',
          label: 'Reportes',
