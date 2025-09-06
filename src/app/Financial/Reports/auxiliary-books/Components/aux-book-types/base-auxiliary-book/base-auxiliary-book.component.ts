@@ -30,6 +30,8 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   isThirdPartyOptionSelected = false;
   thirdPartySelected: Third | null = null;
 
+  datePeriod: Date[] = [];
+
   levels: any[] = [];
   levelRange: { from: number | null; to: number | null } = {
     from: null,
@@ -61,6 +63,9 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   dataTable: any;
 
+  totalDebit: number = 0;
+  totalCredit: number = 0;
+
   constructor(
     protected auxiliaryBookService: AuxiliaryBooksServiceService,
     protected enterpriseService: EnterpriseService,
@@ -85,6 +90,8 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
    * para definir sus criterios y columnas
    */
   protected abstract organizeRequest(): void;
+
+  protected calculateTotals(): void {}
 
   private getEnterpriseInfo(): void {
     this.enterpriseData = this.enterpriseService.getSelectedEnterprise();
@@ -309,6 +316,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     this.auxiliaryBookService.registerAuxiliaryBook(this.request).subscribe({
       next: (response: auxBookResponse) => {
         this.dataTable = response.data;
+        this.calculateTotals();
         console.log(this.dataTable);
 
         this.isReportGenerated = true;
@@ -340,8 +348,22 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       this.errors.push('No ha seleccionado un nivel.');
     }
 
-    if (!this.isDateValid(this.criteria.endDate)) {
-      this.errors.push('No ha seleccionado una fecha de corte.');
+    if (this.auxiliaryBookInfo.name === 'Libro de Inventarios y Balances') {
+      if (!this.isDateValid(this.criteria.endDate)) {
+        this.errors.push('No ha seleccionado una fecha de corte.');
+      }
+    } else {
+      if (this.datePeriod.length === 2) {
+        if (!this.isDatePeriodValid()) {
+          this.errors.push(
+            'El rango de fechas no es válido. La fecha inicial debe ser anterior a la fecha final.'
+          );
+        }
+      } else {
+        this.errors.push(
+          'Debe seleccionar 2 fechas (Inicial y Final) para el periodo.'
+        );
+      }
     }
 
     if (this.isRangeOptionSelected && !this.isRangeValid()) {
@@ -372,5 +394,9 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   private isThirdPartyValid(): boolean {
     return !!this.criteria.thirdPartyId;
+  }
+
+  private isDatePeriodValid(): boolean {
+    return !(this.datePeriod[0].getTime() > this.datePeriod[1].getTime());
   }
 }

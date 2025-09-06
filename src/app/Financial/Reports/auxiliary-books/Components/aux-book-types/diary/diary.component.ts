@@ -87,12 +87,12 @@ export class DiaryComponent extends BaseAuxiliaryBookComponent {
     //this.criteria.startDate = this.enterpriseData.creationDate;
 
     this.criteria.startDate = this.datePipe.transform(
-      new Date('01/01/2025'),
+      this.datePeriod[0],
       'yyyy-MM-dd'
     );
 
     this.criteria.endDate = this.datePipe.transform(
-      this.criteria.endDate,
+      this.datePeriod[1],
       'yyyy-MM-dd'
     );
 
@@ -106,5 +106,19 @@ export class DiaryComponent extends BaseAuxiliaryBookComponent {
       //TO DO: Change the value of userId when the method to get the user ID is implemented
       userId: 123,
     };
+  }
+
+  override calculateTotals() {
+    this.totalDebit = this.dataTable.reduce(
+      (sum, row) => sum + (Number(row.debit) || 0),
+      0
+    );
+    this.totalCredit = this.dataTable.reduce(
+      (sum, row) => sum + (Number(row.credit) || 0),
+      0
+    );
+
+    console.log('Total Débito:', this.totalDebit);
+    console.log('Total Crédito:', this.totalCredit);
   }
 }
