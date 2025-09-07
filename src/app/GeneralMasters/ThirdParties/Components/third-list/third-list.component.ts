@@ -18,6 +18,7 @@ import { DialogModule } from 'primeng/dialog';
 
 // Componentes internos
 import { ThirdImportComponent } from '../third-import/third-import.component';
+import { ThirdExportComponent } from '../third-export/third-export.component';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 // Models and Services
@@ -51,7 +52,8 @@ import { saveAs } from 'file-saver';
     ConfirmDialogModule,
     FileUploadModule,
     DialogModule,
-    ThirdImportComponent
+    ThirdImportComponent,
+    ThirdExportComponent
   ],
   providers: [MessageService, ConfirmationService, DatePipe],
   templateUrl: './third-list.component.html',
@@ -499,6 +501,14 @@ export class ThirdListComponent implements OnInit {
 
   closeTemplateModal(): void {
     this.showTemplateModal = false;
+  }
+
+  openExportModal(): void {
+    this.showExportModal = true;
+  }
+
+  closeExportModal(): void {
+    this.showExportModal = false;
   }
 
   openCreatePDFRunt(): void {

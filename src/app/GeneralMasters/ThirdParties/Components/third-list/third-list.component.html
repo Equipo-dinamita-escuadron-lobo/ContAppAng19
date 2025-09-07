@@ -29,7 +29,7 @@
             label="Exportar" 
             icon="pi pi-download"
             severity="secondary"
-            (click)="exportThirdsToExcel()">
+            (click)="openExportModal()">
           </p-button>
           
           <p-fileUpload 
@@ -265,6 +265,13 @@
   [inputData]="{ title: 'Plantilla de Importación de Terceros' }"
   (close)="closeTemplateModal()">
 </app-third-import>
+
+<!-- Componente de exportación de terceros -->
+<app-third-export
+  [visible]="showExportModal"
+  [inputData]="{ title: 'Exportar Terceros a Excel' }"
+  (close)="closeExportModal()">
+</app-third-export>
 
 <!-- PDF RUT Component (if needed) -->
 <div *ngIf="createPdfRUT">

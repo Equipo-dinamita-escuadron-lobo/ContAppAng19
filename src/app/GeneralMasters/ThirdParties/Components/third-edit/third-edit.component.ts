@@ -6,12 +6,12 @@ import { ActivatedRoute } from '@angular/router';
 import { eTypeId } from '../../models/eTypeId';
 import { ePersonType } from '../../models/ePersonType';
 import { HttpHeaders } from '@angular/common/http'; // Importa HttpHeaders aquí
-import { ThirdServiceService } from '../../services/third-service.service';
+import { ThirdService } from '../../Services/third.service';
 import { DatePipe } from '@angular/common';
 import { get } from 'jquery';
 import Swal from 'sweetalert2';
-import { LocalStorageMethods } from '../../../../../shared/methods/local-storage.method';
-import { ThirdServiceConfigurationService } from '../../services/third-service-configuration.service';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
 import { CityService } from '../../services/city.service';
@@ -21,7 +21,7 @@ import { catchError, map, Observable, of } from 'rxjs';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { throwError } from 'rxjs'; // Asegúrate de que esta línea esté incluida
-import { buttonColors } from '../../../../../shared/buttonColors';
+import { buttonColors } from '../../../../Shared/buttonColors';
 
 @Component({
   selector: 'app-third-edit',
