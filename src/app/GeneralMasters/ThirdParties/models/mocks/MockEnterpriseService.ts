@@ -1,8 +1,27 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { Enterprise } from '../../models/Enterprise';
-import { EnterpriseList } from '../../models/EnterpriseList';
-import { EnterpriseType } from '../../models/EnterpriseType';
+
+// Interfaces locales para el mock
+interface Enterprise {
+  id: number;
+  name: string;
+  nit: string;
+  address: string;
+  phone: string;
+  email: string;
+  logo?: string;
+}
+
+interface EnterpriseList {
+  id: number;
+  name: string;
+  nit: string;
+}
+
+interface EnterpriseType {
+  id: number;
+  name: string;
+}
 
 @Injectable()
 export class MockEnterpriseService {
