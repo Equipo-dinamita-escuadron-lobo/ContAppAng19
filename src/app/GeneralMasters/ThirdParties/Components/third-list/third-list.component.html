@@ -1,203 +1,293 @@
+<!-- Toast y Dialog de confirmación -->
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
 <div class="flex w-full h-full font-titillium">
-    <div class="container ">
-      <div class="container__title">
-        <div class="title">
-          <h1 class="title-text">Terceros</h1>
-          <p class="description">Aquí podrá crear, editar, cambiar el estado y ver los detalles de los terceros de su
-            empresa</p>
-        </div>
-        <div class="buttonAgregar">
-          <div class="relative group">
-            <button class="icon-button" (click)="openConfigTPModal()">
-              <span class="material-icons">settings</span>
-            </button>
-            <div class="tooltip">Configuración</div>
-          </div>
-        </div>
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+    
+    <!-- Header Section -->
+    <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-16">
+      <div class="items-center mb-6">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+          Terceros
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-2">
+          Aquí podrá crear, editar, cambiar el estado y ver los detalles de los terceros de su empresa
+        </p>
       </div>
-  
-      <div class="content-wrapper">
-        <div class="container-buttons-search">
-          <!--buscar-->
-          <div>
-            <mat-form-field>
-              <mat-label>Buscar</mat-label>
-              <input matInput (keyup)="applyFilter($event)" placeholder="Buscar" #input>
-            </mat-form-field>
-          </div>
-  
-          <div class="buttons">
-            <button class="btn-full-view" (click)="showDetailTableFunction()">
-              <span *ngIf="!showDetailTable">Vista completa</span>
-              <span *ngIf="showDetailTable">Vista resumida</span>
-            </button>
-            <button class="btn-full-view" (click)="redirectTo('/general/operations/third-parties/create')">Agregar</button>
-            <!-- Crear Tercero con PDF RUT -->
-            <button (click)="openCreatePDFRunt()" class="btn-full-view">
-              PDF RUT
-            </button>
-            <app-third-create-pdf-rut *ngIf="createPdfRUT" (close)="closeCreatePDFRunt()"></app-third-create-pdf-rut>
-            <button (click)="exportThirdsToExcel()" class="btn-full-view">
-              Exportar
-            </button>
-            <button (click)="fileInput.click()" class="btn-full-view">
-              Importar
-              <input type="file" accept=".xlsx" #fileInput (change)="ReadExcel($event)" class="hidden">
-            </button>
-            <button (click)="openModalDetailsImport()" class="btn-full-view">
-              Plantilla
-            </button>        
-          </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+        <div class="flex flex-wrap gap-3">
+          <p-button 
+            label="Crear" 
+            icon="pi pi-plus"
+            (click)="navigateToCreate()">
+          </p-button>
+          
+          <p-button 
+            label="Exportar" 
+            icon="pi pi-download"
+            severity="secondary"
+            (click)="exportThirdsToExcel()">
+          </p-button>
+          
+          <p-fileUpload 
+            mode="basic" 
+            name="excelUpload" 
+            chooseLabel="Importar" 
+            accept=".xlsx" 
+            [auto]="true"
+            (onSelect)="onFileSelect($event)"
+            icon="pi pi-upload">
+          </p-fileUpload>
+          
+          <p-button 
+            label="Plantilla" 
+            icon="pi pi-file"
+            severity="secondary"
+            (click)="openTemplateModal()">
+          </p-button>
+          
+          <p-button 
+            label="PDF RUT" 
+            icon="pi pi-file-pdf"
+            severity="secondary"
+            (click)="openCreatePDFRunt()">
+          </p-button>
+          
+          <p-button 
+            label="Configuración" 
+            icon="pi pi-cog"
+            severity="secondary"
+            (click)="openConfigModal()">
+          </p-button>
         </div>
-  
-        <div>
-          <!-- Tabla para Vista Completa -->
-          <div class="relative overflow-x-auto" *ngIf="showDetailTable">
-            <table mat-table [dataSource]="dataSource" class="table">
-              <ng-container matColumnDef="personType">
-                <th mat-header-cell *matHeaderCellDef class="bold-text"> Tipo Persona </th>
-                <td mat-cell *matCellDef="let third"> {{  third.personType }} </td>
-              </ng-container>
-              <ng-container matColumnDef="thirdTypes">
-                <th mat-header-cell *matHeaderCellDef> Tipo(s) Tercero </th>
-                <td mat-cell *matCellDef="let third"> 
-                  <span *ngFor="let type of third.thirdTypes">{{ type.thirdTypeName }}<br></span>  
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="socialReason">
-                <th mat-header-cell *matHeaderCellDef> Nombre/Razón Social </th>
-                <td mat-cell *matCellDef="let third"> {{ third.names ? third.names + ' ' + third.lastNames : third.socialReason }} </td>
-              </ng-container>
-              <ng-container matColumnDef="typeId">
-                <th mat-header-cell *matHeaderCellDef> Tipo Id </th>
-                <td mat-cell *matCellDef="let third"> {{ third.typeId.typeId }} </td>
-              </ng-container>
-              <ng-container matColumnDef="idNumber">
-                <th mat-header-cell *matHeaderCellDef> Número de Documento </th>
-                <td mat-cell *matCellDef="let third"> {{third.idNumber}} </td>
-              </ng-container>
-              <ng-container matColumnDef="verificationNumber">
-                <th mat-header-cell *matHeaderCellDef> Digito de Verificación </th>
-                <td mat-cell *matCellDef="let third"> 
-                  <div [ngSwitch]="third.verificationNumber">
-                    <span *ngSwitchCase="null">NO APLICA</span>
-                    <span *ngSwitchDefault>{{ third.verificationNumber }}</span>
-                  </div>  
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="email">
-                <th mat-header-cell *matHeaderCellDef> Correo </th>
-                <td mat-cell *matCellDef="let third"> {{ third.email }} </td>
-              </ng-container>
-              <ng-container matColumnDef="country">
-                <th mat-header-cell *matHeaderCellDef> País </th>
-                <td mat-cell *matCellDef="let third"> {{ third.country }} </td>
-              </ng-container>
-              <ng-container matColumnDef="province">
-                <th mat-header-cell *matHeaderCellDef> Departamento </th>
-                <td mat-cell *matCellDef="let third"> {{ third.province }} </td>
-              </ng-container>
-              <ng-container matColumnDef="city">
-                <th mat-header-cell *matHeaderCellDef> Ciudad </th>
-                <td mat-cell *matCellDef="let third"> {{ third.city }} </td>
-              </ng-container>
-              <ng-container matColumnDef="address">
-                <th mat-header-cell *matHeaderCellDef> Dirección </th>
-                <td mat-cell *matCellDef="let third"> {{ third.address }} </td>
-              </ng-container>
-              <ng-container matColumnDef="phoneNumber">
-                <th mat-header-cell *matHeaderCellDef> Teléfono </th>
-                <td mat-cell *matCellDef="let third"> {{ third.phoneNumber }} </td>
-              </ng-container>
-              <ng-container matColumnDef="state">
-                <th mat-header-cell *matHeaderCellDef> Estado </th>
-                <td mat-cell *matCellDef="let third"> 
-                  <p *ngIf="third.state" class="state-active">Activo</p>
-                  <p *ngIf="!third.state" class="state-inactive">Inactivo</p>  
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef> Acciones </th>
-                <td mat-cell *matCellDef="let third"> 
-                  <button class="edit-button" (click)="redirectToEdit(third.thId)"><span class="material-icons">edit</span></button>
-                  <button *ngIf="third.state === true" class="toggle-off-button"
-                    (click)="changeThirdPartieState(third.thId)">
-                    <span class="material-icons">toggle_off</span>
-                  </button>
-                  <button *ngIf="third.state === false" class="toggle-on-button"
-                    (click)="changeThirdPartieState(third.thId)">
-                    <span class="material-icons">toggle_on</span>
-                  </button>  
-                </td>
-              </ng-container>
-            
-              <tr mat-header-row *matHeaderRowDef="displayedColumnsComplete"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumnsComplete;"></tr>
-  
-              <!-- Row shown when there is no matching data. -->
-              <tr class="mat-row" *matNoDataRow>
-                <td class="mat-cell" [colSpan]="displayedColumnsBrief.length">No se encontro ningun tercero para esta empresa {{input.value}}</td>
-              </tr>
-            </table>
-          </div>
-  
-          <!-- Tabla para Vista Resumida -->
-          <div class="relative overflow-x-auto" *ngIf="!showDetailTable">
-            <table mat-table [dataSource]="dataSource" class="table">
-              <ng-container matColumnDef="personType">
-                <th mat-header-cell *matHeaderCellDef class="bold-text"> Tipo Persona </th>
-                <td mat-cell *matCellDef="let third"> {{  third.personType }} </td>
-              </ng-container>
-              <ng-container matColumnDef="thirdTypes">
-                <th mat-header-cell *matHeaderCellDef> Tipo(s) Tercero </th>
-                <td mat-cell *matCellDef="let third"> {{ third.thirdTypes[0]?.thirdTypeName }} </td>
-              </ng-container>
-              <ng-container matColumnDef="socialReason">
-                <th mat-header-cell *matHeaderCellDef> Nombre/Razón Social </th>
-                <td mat-cell *matCellDef="let third"> {{ third.names ? third.names + ' ' + third.lastNames : third.socialReason }} </td>
-              </ng-container>
-              <ng-container matColumnDef="typeId">
-                <th mat-header-cell *matHeaderCellDef> Tipo Id </th>
-                <td mat-cell *matCellDef="let third"> {{ third.typeId.typeId }} </td>
-              </ng-container>
-              <ng-container matColumnDef="idNumber">
-                <th mat-header-cell *matHeaderCellDef> Número de Documento </th>
-                <td mat-cell *matCellDef="let third"> {{third.idNumber}} </td>
-              </ng-container>
-              <ng-container matColumnDef="email">
-                <th mat-header-cell *matHeaderCellDef> Correo </th>
-                <td mat-cell *matCellDef="let third"> {{ third.email }} </td>
-              </ng-container>
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef> Acciones </th>
-                <td mat-cell *matCellDef="let third"> 
-                  <button (click)="openModalDetails(+third.thId)"> <span class="material-icons">visibility</span> </button>
-                  <button class="edit-button" (click)="redirectToEdit(third.thId)"><span class="material-icons">edit</span></button>
-                  <button *ngIf="third.state === true" class="toggle-off-button"
-                    (click)="changeThirdPartieState(third.thId)">
-                    <span class="material-icons">toggle_off</span>
-                  </button>
-                  <button *ngIf="third.state === false" class="toggle-on-button"
-                    (click)="changeThirdPartieState(third.thId)">
-                    <span class="material-icons">toggle_on</span>
-                  </button>  
-                </td>
-              </ng-container>
-            
-              <tr mat-header-row *matHeaderRowDef="displayedColumnsBrief"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumnsBrief;"></tr>
-  
-              <!-- Row shown when there is no matching data. -->
-              <tr class="mat-row" *matNoDataRow>
-                <td class="mat-cell" [colSpan]="displayedColumnsBrief.length">No se encontro ningun tercero para esta empresa {{input.value}}</td>
-              </tr>
-            </table>
-          </div>
-          <mat-paginator [pageSizeOptions]="[10]"
-                        aria-label="Select page of thirds">
-          </mat-paginator>
-        </div>
-  
       </div>
     </div>
+
+    <!-- Search and View Toggle Section -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <!-- Search Input -->
+      <div class="flex-1">
+        <p-iconField iconPosition="left">
+          <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+          <input 
+            pInputText 
+            type="text" 
+            placeholder="Buscar terceros..."
+            class="w-full"
+            [(ngModel)]="globalFilterValue"
+            (input)="applyGlobalFilter($event)">
+        </p-iconField>
+      </div>
+      
+      <!-- View Toggle and Clear Filters -->
+      <div class="flex gap-3">
+        <p-button 
+          [label]="showDetailView ? 'Vista resumida' : 'Vista completa'"
+          icon="pi pi-eye"
+          severity="secondary"
+          (click)="toggleDetailView()">
+        </p-button>
+        
+        <p-button 
+          label="Limpiar filtros" 
+          icon="pi pi-filter-slash"
+          severity="secondary"
+          (click)="clearFilters()">
+        </p-button>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <p-table 
+      #dt
+      [value]="thirds"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="rows"
+      [totalRecords]="totalRecords"
+      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      [globalFilterFields]="['names', 'lastNames', 'socialReason', 'idNumber', 'email', 'typeId.typeId']"
+      styleClass="p-datatable-gridlines"
+      [responsiveLayout]="'scroll'"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} terceros"
+      [showCurrentPageReport]="true">
+      
+      <!-- Table Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Tipo Persona</th>
+          <th>Tipo(s) Tercero</th>
+          <th>Nombre/Razón Social</th>
+          <th>Tipo ID</th>
+          <th>Número de Documento</th>
+          <th *ngIf="showDetailView">Dígito de Verificación</th>
+          <th>Correo</th>
+          <th *ngIf="showDetailView">País</th>
+          <th *ngIf="showDetailView">Departamento</th>
+          <th *ngIf="showDetailView">Ciudad</th>
+          <th *ngIf="showDetailView">Dirección</th>
+          <th *ngIf="showDetailView">Teléfono</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+
+      <!-- Table Body -->
+      <ng-template pTemplate="body" let-third>
+        <tr>
+          <!-- Tipo Persona -->
+          <td>
+            <p-tag 
+              [value]="third.personType" 
+              [severity]="third.personType === 'natural' ? 'info' : 'warning'">
+            </p-tag>
+          </td>
+          
+          <!-- Tipos de Tercero -->
+          <td>
+            <span class="text-sm">
+              {{ showDetailView ? getThirdTypesText(third.thirdTypes) : (third.thirdTypes[0]?.thirdTypeName || 'N/A') }}
+            </span>
+          </td>
+          
+          <!-- Nombre/Razón Social -->
+          <td>
+            <span class="font-semibold">{{ getDisplayName(third) }}</span>
+          </td>
+          
+          <!-- Tipo ID -->
+          <td>{{ third.typeId.typeId }}</td>
+          
+          <!-- Número de Documento -->
+          <td>{{ third.idNumber }}</td>
+          
+          <!-- Dígito de Verificación (solo vista detallada) -->
+          <td *ngIf="showDetailView">
+            {{ third.verificationNumber || 'NO APLICA' }}
+          </td>
+          
+          <!-- Correo -->
+          <td>
+            <span class="text-sm text-blue-600">{{ third.email }}</span>
+          </td>
+          
+          <!-- Información geográfica (solo vista detallada) -->
+          <td *ngIf="showDetailView">{{ third.country }}</td>
+          <td *ngIf="showDetailView">{{ third.province }}</td>
+          <td *ngIf="showDetailView">{{ third.city }}</td>
+          <td *ngIf="showDetailView">{{ third.address }}</td>
+          <td *ngIf="showDetailView">{{ third.phoneNumber }}</td>
+          
+          <!-- Estado -->
+          <td>
+            <p-tag 
+              [value]="getStateText(third.state)"
+              [severity]="getStateSeverity(third.state)">
+            </p-tag>
+          </td>
+          
+          <!-- Acciones -->
+          <td>
+            <div class="flex gap-2">
+              <!-- Botón Ver (solo vista resumida) -->
+              <p-button 
+                *ngIf="!showDetailView"
+                icon="pi pi-eye" 
+                size="small"
+                severity="info"
+                [text]="true"
+                pTooltip="Ver detalles"
+                tooltipPosition="top">
+              </p-button>
+              
+              <!-- Botón Editar -->
+              <p-button 
+                icon="pi pi-pencil" 
+                size="small"
+                severity="warning"
+                [text]="true"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="navigateToEdit(third.thId)">
+              </p-button>
+              
+              <!-- Botón Cambiar Estado -->
+              <p-button 
+                [icon]="third.state ? 'pi pi-eye-slash' : 'pi pi-eye'" 
+                size="small"
+                [severity]="third.state ? 'danger' : 'success'"
+                [text]="true"
+                [pTooltip]="third.state ? 'Desactivar' : 'Activar'"
+                tooltipPosition="top"
+                (click)="changeThirdState(third)">
+              </p-button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty State -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="showDetailView ? 14 : 8" class="text-center py-8">
+            <div class="flex flex-col items-center gap-3">
+              <i class="pi pi-users text-4xl text-gray-400"></i>
+              <p class="text-gray-500 text-lg">No se encontraron terceros</p>
+              <p class="text-gray-400 text-sm">
+                {{ globalFilterValue ? 'Intenta cambiar los filtros de búsqueda' : 'Comienza creando tu primer tercero' }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Loading State -->
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td [attr.colspan]="showDetailView ? 14 : 8" class="text-center py-8">
+            <div class="flex flex-col items-center gap-3">
+              <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
+              <p class="text-gray-500">Cargando terceros...</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
+</div>
+
+<!-- Template Modal -->
+<p-dialog 
+  header="Plantilla de Importación" 
+  [(visible)]="showTemplateModal"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [closable]="true">
+  
+  <div class="flex flex-col gap-4">
+    <p>Descarga la plantilla de Excel para importar terceros correctamente.</p>
+    
+    <div class="flex justify-end gap-2">
+      <p-button 
+        label="Descargar Plantilla" 
+        icon="pi pi-download"
+        (click)="closeTemplateModal()">
+      </p-button>
+      
+      <p-button 
+        label="Cerrar" 
+        severity="secondary"
+        (click)="closeTemplateModal()">
+      </p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- PDF RUT Component (if needed) -->
+<div *ngIf="createPdfRUT">
+  <!-- TODO: Add PDF RUT component here -->
+  <!-- <app-third-create-pdf-rut (close)="closeCreatePDFRunt()"></app-third-create-pdf-rut> -->
+</div>
