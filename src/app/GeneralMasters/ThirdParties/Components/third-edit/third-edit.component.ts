@@ -1,15 +1,28 @@
-import { Component } from '@angular/core';
-import { AbstractControl, AsyncValidatorFn, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AbstractControl, AsyncValidatorFn, FormBuilder, FormGroup, ValidationErrors, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { DatePipe } from '@angular/common';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+
+// PrimeNG Imports
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DropdownModule } from 'primeng/dropdown';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { CardModule } from 'primeng/card';
+import { DividerModule } from 'primeng/divider';
+import { TooltipModule } from 'primeng/tooltip';
+import { InputNumberModule } from 'primeng/inputnumber';
+
+// Models and Services
 import { Third } from '../../models/Third';
-import { Router } from '@angular/router';
-import { ActivatedRoute } from '@angular/router';
 import { eTypeId } from '../../models/eTypeId';
 import { ePersonType } from '../../models/ePersonType';
-import { HttpHeaders } from '@angular/common/http'; // Importa HttpHeaders aquí
 import { ThirdService } from '../../Services/third.service';
-import { DatePipe } from '@angular/common';
-import { get } from 'jquery';
-import Swal from 'sweetalert2';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
@@ -17,22 +30,36 @@ import { TypeId } from '../../models/TypeId';
 import { CityService } from '../../services/city.service';
 import { DepartmentService } from '../../services/department.service';
 import { eThirdGender } from '../../models/eThirdGender';
-import { catchError, map, Observable, of } from 'rxjs';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { throwError } from 'rxjs'; // Asegúrate de que esta línea esté incluida
-import { buttonColors } from '../../../../Shared/buttonColors';
+// import { buttonColors } from '../../../../Shared/buttonColors';
+
+// External libraries
+import { catchError, map, Observable, of, throwError } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-third-edit',
-  imports: [],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    ButtonModule,
+    InputTextModule,
+    DropdownModule,
+    RadioButtonModule,
+    MultiSelectModule,
+    ToastModule,
+    CardModule,
+    DividerModule,
+    TooltipModule,
+    InputNumberModule
+  ],
+  providers: [MessageService, DatePipe],
   templateUrl: './third-edit.component.html',
   styleUrl: './third-edit.component.css'
 })
 export class ThirdEditComponent implements OnInit {
   
-  //private apiUrl = 'http://http://localhost//api/thirds/update';
-  //private apiUrl = 'http://contables.unicauca.edu.co/api/thirds/update';
   /** Indica si se ha cargado una persona natural */
   PersonaCargadaNatural = false;
 
@@ -71,8 +98,8 @@ export class ThirdEditComponent implements OnInit {
       entId: "0",
       typeId: "CC",
       typeIdname: "CC"
-    },  // Utiliza uno de los valores definidos en el enum
-    thirdTypes: [],       // Array vacío o podrías iniciar con valores predeterminados si aplica
+    },
+    thirdTypes: [],
     rutPath: undefined,
     personType: ePersonType.natural,
     names: undefined,
@@ -99,821 +126,448 @@ export class ThirdEditComponent implements OnInit {
   /** Tooltip que está siendo editado */
   editingHelp: string | null = null;
 
-  /** Tooltip visible actualmente */
-  visibleHelp: string | null = null;
+  /** Visibilidad de tooltips */
+  helpVisible: { [key: string]: boolean } = {};
 
-  /** Datos de entrada al componente */
-  inputData: any;
-
-  /**
-   * Actualiza el texto de ayuda para un tooltip específico
-   * @param helpId ID del tooltip
-   * @param value Nuevo texto de ayuda
-   */
-  updateHelpText(helpId: string, value: string): void {
-    this.helpTexts[helpId] = value; // Actualiza el texto de ayuda
-  }
-
-  /**
-   * Muestra un tooltip específico
-   * @param helpId ID del tooltip a mostrar
-   */
-  showHelp(helpId: string): void {
-    this.visibleHelp = helpId; // Muestra el cuadro de ayuda
-  }
-
-  /**
-   * Oculta un tooltip específico
-   * @param helpId ID del tooltip a ocultar
-   */
-  hideHelp(helpId: string): void {
-    if (this.editingHelp !== helpId) {
-      this.visibleHelp = null; // Oculta el cuadro de ayuda
-      this.stopEditing(); // Cierra la edición si no se está editando
-    }
-  }
-
-  /**
-   * Alterna la visibilidad de un tooltip
-   * @param helpId ID del tooltip
-   * @param event Evento del mouse
-   */
-  toggleHelp(helpId: string, event: MouseEvent): void {
-    if (this.editingHelp === helpId) {
-      this.stopEditing(); // Cierra el cuadro si ya está editando
-    } else {
-      this.setEditing(helpId, event); // Abre el cuadro para edición
-    }
-  }
-
-  /**
-   * Establece un tooltip en modo edición
-   * @param helpId ID del tooltip
-   * @param event Evento del mouse
-   */
-  setEditing(helpId: string, event: MouseEvent): void {
-    this.editingHelp = helpId; // Establece el cuadro actual en edición
-    this.visibleHelp = helpId; // Mantiene el cuadro visible mientras se edita
-    this.mousePosition = { x: event.clientX +10, y: event.clientY +10 }; 
-    /*if (this.mousePosition.x === this.positionInicial.x) { // Captura la posición del mouse
-      this.mousePosition = {
-        x: event.clientX + 10,
-        y: event.clientY + 10
-      };
-    }*/
-    
-  }
-
-  /**
-   * Detiene la edición del tooltip actual
-   */
-  stopEditing(): void {
-    this.editingHelp = null; // Salir del modo de edición
-    this.visibleHelp = null;
-    localStorage.setItem('helpTexts', JSON.stringify(this.helpTexts)); // Guarda los textos de ayuda en el almacenamiento local
-  }
-
-  /**
-   * Verifica si un tooltip está en modo edición
-   * @param helpId ID del tooltip
-   * @returns Boolean indicando si está en edición
-   */
-  isEditing(helpId: string): boolean {
-    return this.editingHelp === helpId; // Retorna si el cuadro está en edición
-  }
-
-  /**
-   * Verifica si un tooltip está visible
-   * @param helpId ID del tooltip
-   * @returns Boolean indicando si está visible
-   */
-  isHelpVisible(helpId: string): boolean {
-    return this.visibleHelp === helpId || this.isEditing(helpId); // Muestra el cuadro si está visible o en edición
-  }
-
-  /**
-   * Verifica si un tooltip no está visible
-   * @param helpId ID del tooltip
-   * @returns Boolean indicando si no está visible
-   */
-  noisHelpVisible(helpId: string): boolean {
-    return this.isEditing(helpId); // No Muestra el cuadro si está visible, solo en edición
-  }
-
-  /** Tipos de tercero seleccionados */
-  selectedThirdTypes: ThirdType[] = [];
-
-  /** Formulario de edición del tercero */
+  /** Formulario reactivo para edición de terceros */
   createdThirdForm!: FormGroup;
 
   /** Indica si el formulario ha sido enviado */
   submitted = false;
 
-  /** Estado del botón de persona jurídica */
-  button1Checked = false;
+  /** Estados de los botones de tipo de persona */
+  button1Checked = false; // Jurídica
+  button2Checked = false; // Natural
 
-  /** Estado del botón de persona natural */
-  button2Checked = false;
-
-  /** Controla la visibilidad de div adicional */
-  showAdditionalDiv = false;
-
-  /** Lista de países disponibles */
-  countries: any[] = [];
-
-  /** Lista de estados/departamentos */
-  states: any[] = [];
-
-  /** Lista de tipos de tercero */
+  /** Lista de tipos de tercero disponibles */
   thirdTypes: ThirdType[] = [];
 
-  /** Lista de tipos de identificación */
+  /** Lista de tipos de identificación disponibles */
   typeIds: TypeId[] = [];
+
+  /** Lista de departamentos */
+  departments: any[] = [];
 
   /** Lista de ciudades */
   cities: any[] = [];
 
-  /** Código del país seleccionado */
-  countryCode!: string;
+  /** Lista de países */
+  countries: any[] = [];
 
-  /** País seleccionado */
-  selectedCountry: any;
+  /** Lista de géneros para dropdown */
+  genders = [
+    { label: 'Masculino', value: eThirdGender.masculino },
+    { label: 'Femenino', value: eThirdGender.femenino },
+    { label: 'Otro', value: eThirdGender.Otro }
+  ];
 
-  /** Estado/departamento seleccionado */
-  selectedState: any;
+  /** Estados para radio buttons */
+  states = [
+    { label: 'Activo', value: true },
+    { label: 'Inactivo', value: false }
+  ];
 
-  /** Dígito de verificación calculado */
-  verificationNumber: number | null = null;
+  /** Tipos de persona para radio buttons */
+  personTypes = [
+    { label: 'Jurídica', value: ePersonType.juridica },
+    { label: 'Natural', value: ePersonType.natural }
+  ];
 
-  /** Mensajes de error del formulario */
-  errorMessages: string[] = [];
+  /** ID de la empresa */
+  entData: string = '';
 
-  /** Métodos de localStorage */
-  localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
-
-  /** Datos de la empresa */
-  entData: any | null = null;
-
-  /** Indica si el ID está duplicado */
-  isDuplicated: boolean = false;
-
-  /**
-   * Constructor del componente
-   * @param http Cliente HTTP
-   * @param route Servicio de ruta activa
-   * @param formBuilder Constructor de formularios
-   * @param thirdService Servicio de terceros
-   * @param datePipe Pipe para formateo de fechas
-   * @param thirdServiceConfiguration Servicio de configuración
-   * @param cityService Servicio de ciudades
-   * @param departmentService Servicio de departamentos
-   * @param router Router para navegación
-   */
   constructor(
-    private http: HttpClient,
-    private route: ActivatedRoute,
-    private formBuilder: FormBuilder,
-    private thirdService: ThirdServiceService,
-    private datePipe: DatePipe,
-    private thirdServiceConfiguration: ThirdServiceConfigurationService,
+    private fb: FormBuilder,
+    private thirdService: ThirdService,
+    private thirdConfigurationService: ThirdServiceConfigurationService,
     private cityService: CityService,
     private departmentService: DepartmentService,
     private router: Router,
-  ) { }
-
-  /**
-   * Inicializa el componente y carga datos necesarios
-   */
-  ngOnInit(): void {
-    this.entData = this.localStorageMethods.loadEnterpriseData();
+    private route: ActivatedRoute,
+    private datePipe: DatePipe,
+    private http: HttpClient,
+    private messageService: MessageService,
+    private localStorageMethods: LocalStorageMethods
+  ) {
+    this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
-    
-    this.getCountries();
-    this.getTypesID();
-    this.getThirdTypes();
-    
-    
-    // Cargar textos de ayuda del almacenamiento local al iniciar
-    const savedHelpTexts = localStorage.getItem('helpTexts');
-    if (savedHelpTexts) {
-      this.helpTexts = JSON.parse(savedHelpTexts);
-    }
+    this.initializeHelpTexts();
+  }
+
+  ngOnInit(): void {
     this.route.params.subscribe(params => {
-      this.thirdId = params['id']; // Obtener el ID del producto de los parámetros de ruta
-      this.getthirdDetails(); // Llamar a la función para obtener los detalles del producto
-    });
-
-    
-    //this.inputData = this.data;    
-  }
-
-  /**
-   * Obtiene los detalles del tercero a editar
-   */
-  getthirdDetails(): void {
-    this.thirdService.getThirdPartie(this.thirdId).subscribe(
-      (third: Third) => {
-        this.thirdEdit = third;
-        this.thirdData = third;
-        console.log("Los datos cargados son", third)
-        let TipoPersona: number = 0;  // Asignar un valor al declarar
-        if (third.personType === 'Natural'){
-          this.button2Checked = true
-          this.button1Checked = false
-          this.PersonaCargadaNatural = true
-          this.PersonaCargadaJuridica = false
-        }else{
-          this.button1Checked = true
-          this.button2Checked = false
-          this.PersonaCargadaNatural = false
-          this.PersonaCargadaJuridica = true
-        }
-        
-        console.log("los tipos de terceros unicos cargados son" ,this.thirdTypes);
-        this.selectedCountry = this.countries.find(country => country.name === third.country);
-        
-        
-        if(this.selectedCountry.id){
-          this.getDepartments()
-        }
-        
-        if(third.state){
-          this.EstadoGuardado = 'Activo'
-          console.log("Se cargar estado Activo")
-        }else{
-          this.EstadoGuardado = 'Inactivo'
-          console.log("Se cargar estado Inactivo")
-        }
-        this.selectedState = this.states.find(state => state.name === third.province);
-        this.getCities(this.selectedState.id)
-        third.thirdTypes = third.thirdTypes.map(dbType => {
-          if (!dbType.entId) {
-            const matchedType = this.thirdTypes.find(
-              type => type.thirdTypeName === dbType.thirdTypeName
-            );
-            if (matchedType) {
-              dbType.entId = matchedType.entId;
-            }
-          }
-          return dbType;
-        });
-        this.createdThirdForm.patchValue({
-          thId:third.thId,
-          typeId: third.typeId.typeId,
-          address:third.address,
-          state:this.EstadoGuardado,
-          verificationNumber:third.verificationNumber,
-          personType:third.personType, 
-          thirdTypes:third.thirdTypes,
-          idNumber:third.idNumber,
-          names:third.names,
-          lastNames:third.lastNames,
-          gender: third.gender ?? "",
-          email:third.email,
-          phoneNumber:third.phoneNumber,
-          country:third.country,
-          province:this.selectedState.id,
-          city:third.city,
-          socialReason:third.socialReason,
-          creationDate: third.creationDate,
-          updateDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!
-        });          
-        
-        if(this.createdThirdForm.get('typeId')?.value === 'NIT'){
-          this.createdThirdForm.get('verificationNumber')?.enable();  // Habilitar
-        }else{
-          this.createdThirdForm.get('verificationNumber')?.disable();  // Deshabilitar
-        }
-      },
-      error => {
-        console.error('Error obteniendo detalles del producto:', error);
+      this.thirdId = +params['id'];
+      if (this.thirdId) {
+        this.loadThirdData();
       }
-    );
+    });
+    
+    this.loadInitialData();
   }
 
   /**
-   * Inicializa el formulario con validaciones
+   * Inicializa el formulario reactivo
    */
   private initializeForm(): void {
-    this.createdThirdForm = this.formBuilder.group({
-      entId: [''],
+    this.createdThirdForm = this.fb.group({
+      personType: ['', Validators.required],
+      state: [true, Validators.required],
+      thirdTypes: [[], Validators.required],
       typeId: ['', Validators.required],
-      thirdTypes: ['', Validators.required],
-      rutPath: [''],
-      personType: ['Natural', Validators.required],
+      idNumber: ['', [Validators.required, Validators.min(1)]],
+      verificationNumber: [''],
       names: [''],
       lastNames: [''],
       socialReason: [''],
-      gender: [null],
-      idNumber: ['', {validators: [Validators.required], asyncValidators:[this.idDuplicadoAsyncValidator(this.thirdService)], updateOn: 'blur'}],
-      verificationNumber: [{ value: '', disabled: true }],
-      state: ['Activo', Validators.required],
-      photoPath: [''],
+      gender: [''],
       country: ['', Validators.required],
       province: ['', Validators.required],
       city: ['', Validators.required],
       address: ['', Validators.required],
       phoneNumber: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]], //Validacion requerida para que tenga el formato correcto de correo electronico
-      creationDate: [''],
-      updateDate: ['']      
+      email: ['', [Validators.required, Validators.email]]
     });
-    console.log("el valor del estado es ",this.createdThirdForm.get('state')?.value);
-    this.createdThirdForm.get('idNumber')?.valueChanges.subscribe(value => {
-      if (value) {
-        this.updateVerificationNumber(value);
-      } else {
-        this.verificationNumber = null;
-      }
-    });
+
+    // Configurar validaciones dinámicas
+    this.setupDynamicValidations();
   }
 
   /**
-   * Obtiene la lista de países disponibles
+   * Configura validaciones dinámicas según el tipo de persona
    */
-  private getCountries(): void {
-    //this.countries = [ {name: 'Colombia', id: 1}, {name: 'Ecuador', id: 2}, {name: 'Peru', id: 3}, {name: 'Venezuela', id: 4}];
-    this.countries = [{ name: 'Colombia', id: 1 }];
-  }
+  private setupDynamicValidations(): void {
+    this.createdThirdForm.get('personType')?.valueChanges.subscribe(value => {
+      const namesControl = this.createdThirdForm.get('names');
+      const lastNamesControl = this.createdThirdForm.get('lastNames');
+      const socialReasonControl = this.createdThirdForm.get('socialReason');
+      const genderControl = this.createdThirdForm.get('gender');
 
-  /**
-   * Obtiene los tipos de identificación disponibles
-   */
-  private getTypesID(): void {
-    this.thirdServiceConfiguration.getTypeIds(this.entData).subscribe({
-      next: (response: TypeId[]) => {
-        this.typeIds = response;
-      },
-      error: (error) => {
-        console.log(error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se han encontrado Tipos De Identifiacion Para esta Empresa',
-          icon: 'error',
-          confirmButtonColor: buttonColors.confirmationColor,
-        });
+      if (value === ePersonType.natural) {
+        // Persona natural: nombres y apellidos requeridos
+        namesControl?.setValidators([Validators.required]);
+        lastNamesControl?.setValidators([Validators.required]);
+        socialReasonControl?.clearValidators();
+        genderControl?.setValidators([Validators.required]);
+        
+        this.button2Checked = true;
+        this.button1Checked = false;
+        this.PersonaCargadaNatural = true;
+        this.PersonaCargadaJuridica = false;
+      } else if (value === ePersonType.juridica) {
+        // Persona jurídica: razón social requerida
+        socialReasonControl?.setValidators([Validators.required]);
+        namesControl?.clearValidators();
+        lastNamesControl?.clearValidators();
+        genderControl?.clearValidators();
+        
+        this.button1Checked = true;
+        this.button2Checked = false;
+        this.PersonaCargadaJuridica = true;
+        this.PersonaCargadaNatural = false;
       }
-    });
-  }
 
-  /**
-   * Obtiene los tipos de tercero disponibles
-   */
-  private getThirdTypes(): void {
-    this.thirdServiceConfiguration.getThirdTypes(this.entData).subscribe({
-      next: (response: ThirdType[]) => {
-        this.thirdTypes = response;
-      },
-      error: (error) => {
-        console.log(error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se han encontrado Tipos De Tercero Para esta Empresa',
-          icon: 'error',
-          confirmButtonColor: buttonColors.confirmationColor,
-        });
-      }
+      namesControl?.updateValueAndValidity();
+      lastNamesControl?.updateValueAndValidity();
+      socialReasonControl?.updateValueAndValidity();
+      genderControl?.updateValueAndValidity();
     });
   }
 
   /**
-   * Maneja la selección de tipos de tercero
-   * @param selectedItems Tipos seleccionados
+   * Inicializa los textos de ayuda
    */
-  onThirdTypeSelect(selectedItems: ThirdType[]): void {
-    this.selectedThirdTypes = [];
-    this.selectedThirdTypes.push(...selectedItems);
-    this.createdThirdForm.get('thirdTypes')?.setValue(this.selectedThirdTypes);
-    console.log('Tipos seleccionados actualizados:', this.selectedThirdTypes);
-  }
-
-  /**
-   * Actualiza el dígito de verificación
-   * @param idNumber Número de identificación
-   */
-  private updateVerificationNumber(idNumber: number): void {
-    const idNumberStr = idNumber.toString();
-    const duplicatedStr = idNumberStr + idNumberStr;
-    const duplicatedNumber = parseInt(duplicatedStr, 10);
-    const verificationNumber = this.calcularDigitoVerificador(idNumberStr);
-    this.verificationNumber = verificationNumber;
-    console.log("El numero es", verificationNumber)
-    this.createdThirdForm.get('verificationNumber')?.setValue(this.verificationNumber, { emitEvent: false });
-  }
-
-  /**
-   * Calcula el dígito verificador
-   * @param rut Número RUT
-   * @returns Dígito verificador calculado
-   */
-  private calcularDigitoVerificador(rut: string): number {
-    rut = rut.replace(/\./g, '').replace(/-/g, '');
-    if (rut.length < 7) {
-      return 0;
-    }
-    const rutNumeros = rut.split('').map(Number);
-    const multiplicadores = [2, 3, 4, 5, 6, 7, 2, 3, 4, 5];
-    let suma = 0;
-    let j = 0;
-    for (let i = rutNumeros.length - 1; i >= 0; i--) {
-      suma += rutNumeros[i] * multiplicadores[j];
-      j = (j + 1) % multiplicadores.length; 
-    }
-    const residuo = suma % 11;
-    const digitoVerificador = 11 - residuo;
-    if (digitoVerificador === 10) {
-      return 10;
-    } else if (digitoVerificador === 11) {
-      return 0;
-    } else {
-      return digitoVerificador;
-    }
-  }
-
-  /**
-   * Maneja el cambio de país
-   * @param event Evento de cambio
-   */
-  onCountryChange(event: any) {
-    this.selectedCountry = JSON.parse(event.target.value);
-    this.countryCode = this.selectedCountry.id;
-    this.getDepartments();
-  }
-
-  /**
-   * Maneja el cambio de estado/departamento
-   * @param event Evento de cambio
-   */
-  onStateChange(event: any) {
-    const id_state = JSON.parse(event.target.value);
-    this.selectedState = this.states.find(state => state.id == id_state);
-    console.log(this.selectedState);
-    this.getCities(this.selectedState.id);
-  }
-
-  /**
-   * Obtiene las ciudades de un departamento
-   * @param id ID del departamento
-   */
-  getCities(id: number) {
-    this.cityService.getListCitiesByDepartment(id).subscribe((data) => {
-      this.cities = data.cities;
-    });
-  }
-
-  /**
-   * Obtiene los departamentos disponibles
-   */
-  getDepartments() {
-    this.states = this.departmentService.getListDepartments();
-  }
-
-  /**
-   * Maneja el cambio de tipo de identificación
-   * @param event Evento de cambio
-   */
-  onTypeIdChange(event: Event): void {
-    const value = (event.target as HTMLSelectElement).value;//Obtenemos el valor del evento
-    if (value.includes('NIT')) {
-      console.log("tipo ID", value, " Se genera digito de verificacion");
-      this.createdThirdForm.get('verificationNumber')?.enable();
-    } else {
-      console.log("No se genera digito de verificacion");
-      this.createdThirdForm.get('verificationNumber')?.disable();
-    }
-
-  }
-
-  /**
-   * Navega a la lista de terceros
-   */
-  goToListThirds(): void {
-    this.router.navigateByUrl('/general/operations/third-parties');
-  }
-
-  /**
-   * Actualiza los validadores según el tipo de persona
-   */
-  updateValidator() {
-    if (this.button1Checked) {
-      this.createdThirdForm.get('socialReason')?.setValidators([Validators.required]);
-    } else {
-      this.createdThirdForm.get('socialReason')?.clearValidators();
-    }
-
-    if (this.button2Checked) {
-      this.createdThirdForm.get('names')?.setValidators([Validators.required]);
-      this.createdThirdForm.get('lastNames')?.setValidators([Validators.required]);
-      this.createdThirdForm.get('gender')?.setValidators([Validators.required]);
-    } else {
-      this.createdThirdForm.get('names')?.clearValidators();
-      this.createdThirdForm.get('lastNames')?.clearValidators();
-      this.createdThirdForm.get('gender')?.clearValidators();
-    }
-    this.createdThirdForm.get('socialReason')?.updateValueAndValidity();
-    this.createdThirdForm.get('names')?.updateValueAndValidity();
-    this.createdThirdForm.get('lastNames')?.updateValueAndValidity();
-    this.createdThirdForm.get('gender')?.updateValueAndValidity();
-  }
-
-  /**
-   * Maneja el cambio en los botones de tipo de persona
-   * @param buttonId ID del botón (1: Jurídica, 2: Natural)
-   */
-  onCheckChange(buttonId: number): void {
-    //this.updateTypeIds();
-    if (buttonId === 1 && this.button1Checked) {
-      this.button2Checked = false;
-      this.createdThirdForm.get('names')?.setValue('');
-      this.createdThirdForm.get('lastNames')?.setValue('');
-      this.createdThirdForm.get('verificationNumber')?.disable();
-      if (this.PersonaCargadaJuridica && this.PersonaCargadaNatural === false){
-        console.log("Se cambia de tipo de persona a Juridica")
-        this.assigndata()
-      }
-    } else if (buttonId === 2 && this.button2Checked) {
-      this.button1Checked = false;
-      this.createdThirdForm.get('socialReason')?.setValue('');
-      this.createdThirdForm.get('verificationNumber')?.disable();
-      if (this.PersonaCargadaNatural && this.PersonaCargadaJuridica === false){
-        console.log("Se cambia de tipo de persona a natural")
-        this.assigndata()
-      }
-    }
-    this.updateValidator();
-  }
-
-  /**
-   * Asigna los datos del tercero al formulario
-   */
-  assigndata(): void{
-    this.createdThirdForm.patchValue({
-      thId:this.thirdData.thId,
-      typeId: this.thirdData.typeId.typeId,
-      address:this.thirdData.address,
-      state:this.EstadoGuardado,
-      verificationNumber:this.thirdData.verificationNumber,
-      //personType:this.thirdData.personType, 
-      thirdTypes:this.thirdData.thirdTypes,
-      idNumber:this.thirdData.idNumber,
-      names:this.thirdData.names,
-      lastNames:this.thirdData.lastNames,
-      gender: this.thirdData.gender ?? "",
-      email:this.thirdData.email,
-      phoneNumber:this.thirdData.phoneNumber,
-      country:this.thirdData.country,
-      province:this.selectedState.id,
-      city:this.thirdData.city,
-      socialReason:this.thirdData.socialReason,
-      creationDate: this.thirdData.creationDate,
-      updateDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!
-    });          
-    console.log("el valor de tipo de identificacion es ", this.thirdData.typeId.typeId)
-    if(this.createdThirdForm.get('typeId')?.value === 'NIT'){
-      this.createdThirdForm.get('verificationNumber')?.enable();  // Habilitar
-    }else{
-      this.createdThirdForm.get('verificationNumber')?.disable();  // Deshabilitar
-    }
-  }
-
-  /**
-   * Actualiza los tipos de identificación disponibles
-   */
-  updateTypeIds(): void {
-    this.thirdServiceConfiguration.getTypeIds(this.entData).subscribe({
-      next: (response: TypeId[]) => {
-        let filteredTypeIds;
-        if (this.button1Checked) {
-          filteredTypeIds = response.filter(elemento =>
-            elemento.typeIdname && elemento.typeIdname.includes('NIT')
-          );
-        } else {
-          filteredTypeIds = response;
-        }
-        this.typeIds = filteredTypeIds;
-        this.createdThirdForm.get('typeId')?.setValue('');
-      },
-      error: (error) => {
-        console.log(error);
-        Swal.fire({
-          title: 'Error',
-          text: 'No se han encontrado Tipos De Identificación Para esta Empresa',
-          icon: 'error',
-          confirmButtonColor: buttonColors.confirmationColor,
-        });
-      }
-    });
-  }
-
-  /**
-   * Obtiene los errores del formulario
-   * @returns Array de mensajes de error
-   */
-  private getFormErrors(): string[] {
-    const errors = [];
-    const controls = this.createdThirdForm.controls;
-console.log("Se actualizara")
-    // Verificar si el formulario fue enviado
-    if (this.submitted) {
-      for (const name in controls) {
-        const control = controls[name];
-
-        if (control.invalid) {
-          // Si el control es requerido y esta vacio
-          if (control.errors?.['required']) {
-            switch (name) {
-              case 'typeId':
-                errors.push(`Seleccione un Tipo de Identificacion`);
-                break;
-              case 'thirdTypes':
-                errors.push(`Seleccione al menos un Tipo de Tercero`);
-                break;
-              case 'personType':
-                errors.push(`Seleccione un Tipo de Persona`);
-                break;
-              case 'idNumber':
-                errors.push(`Ingrese un Numero de Identificacion`);
-                break;
-              case 'country':
-                errors.push(`Seleccione un Pais`);
-                break;
-              case 'province':
-                errors.push(`Seleccione un Departamento`);
-                break;
-              case 'city':
-                errors.push(`Seleccione una Ciudad`);
-                break;
-              case 'address':
-                errors.push(`Ingrese una Direccion `);
-                break;
-              case 'phoneNumber':
-                errors.push(`Ingrese un numero de Celular`);
-                break;
-              case 'email':
-                errors.push(`Ingrese un Correo Electronico`);
-                break;
-              case 'state':
-                errors.push(`Seleccione un estado`);
-                break;
-              case 'names':
-                errors.push(`Ingrese un Nombre`);
-                break;
-              case 'lastNames':
-                errors.push(`Ingrese un Apellido`);
-                break;
-              case 'socialReason':
-                errors.push(`Ingrese una Razon Social`);
-                break;
-
-              case 'gender':
-                errors.push(`Seleccione un Genero`);
-                break;
-              default:
-                errors.push(`${name} es requerido`);
-            }
-          }
-
-          // Validación del formato de correo electrónico
-          if (control.errors?.['email']) {
-            errors.push(`El fromato del Correo Electronico es Invalido`);
-          }
-          //validacion id duplicado
-          if (control.errors?.['idDuplicado']) {
-            errors.push(`El Número de Identificación ya existe`);
-          }
-        }
-      }
-    }
-
-    return errors;
-  }
-  
-  /**
-   * Validador asíncrono para IDs duplicados
-   * @param thirdService Servicio de terceros
-   * @returns Validador asíncrono
-   */
-  idDuplicadoAsyncValidator(thirdService: ThirdServiceService): AsyncValidatorFn {
-    return (control: AbstractControl): Observable<ValidationErrors | null> => {
-      return thirdService.existThird(control.value, this.entData).pipe(
-        map((isDuplicated: any) => (isDuplicated ? { idDuplicado: true } : null)),
-        catchError(() => of(null)) // Manejar errores del servicio
-      );
+  private initializeHelpTexts(): void {
+    this.helpTexts = {
+      'TipoPersona': 'Seleccione si es una persona natural (individual) o jurídica (empresa/organización)',
+      'TipoTerceros': 'Seleccione los tipos de tercero que aplican (Cliente, Proveedor, etc.)',
+      'TipoIdentificación': 'Seleccione el tipo de documento de identificación',
+      'razonSocial': 'Ingrese la razón social para personas jurídicas'
     };
   }
 
   /**
-   * Procesa el envío del formulario
+   * Carga los datos iniciales necesarios
    */
-  OnSubmit() {
-    
-    let third: Third = this.createdThirdForm.value;
-    third.thId = this.thirdData.thId;
-    third.entId = this.entData;
-    const selectThirdTypes = this.createdThirdForm.get("thirdTypes")?.value;
-
-    let typeIdValue = this.typeIds.find(typeId => typeId.typeId === this.createdThirdForm.get('typeId')?.value);
-    if (typeIdValue) {
-      third.typeId = typeIdValue;
+  private async loadInitialData(): Promise<void> {
+    try {
+      await Promise.all([
+        this.loadThirdTypes(),
+        this.loadTypeIds(),
+        this.loadCountries(),
+        this.loadDepartments()
+      ]);
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Error al cargar los datos iniciales'
+      });
     }
-    
-    // Depuración para validar campos faltantes
-    const missingFields = [];
-    if (!third.creationDate) missingFields.push('creationDate');
-    if (!third.updateDate) missingFields.push('updateDate');
-    if (typeof third.country !== 'string') missingFields.push('country (Debe ser una cadena de texto)');
-    if (typeof third.province !== 'string') missingFields.push('province (Debe ser una cadena de texto)');
-
-    if (missingFields.length > 0) {
-        console.warn('Campos faltantes o incorrectos:', missingFields.join(', '));
-    } else {
-        console.log("Todos los campos requeridos están presentes.");
-    }
-
-    let thirdTypes = this.createdThirdForm.get("thirdTypes")?.value;
-
-  // Verificar y asignar "standart" si `entId` es null
-  let thirdTypesUpdate = this.createdThirdForm.get("thirdTypes")?.value;
-
-  thirdTypesUpdate = thirdTypesUpdate.map((type: any) => {
-  if (type.entId === null || type.entId === '') {
-    type.entId = 'standart';
-  }
-    return type;
-  });
-
-  console.log("El genero que se guardara es", third.gender ? third.gender.toString() : "");
-
-  console.log("El Nombre que se guardara es", third.names ? third.names.toString() : "");
-
-  console.log("El Apellido que se guardara es", third.lastNames ? third.lastNames.toString() : "");
-  if(third.gender === undefined){
-    //console.log("El genero es nulo", third.gender?toString)
   }
 
-    //Guardado pr defecto
-    const TerceroDefecto = {
-      thId: third.thId,
-      entId: this.entData,
-      typeId: third.typeId,
-      thirdTypes: thirdTypesUpdate,
-      rutPath: "",
+  /**
+   * Carga los datos del tercero a editar
+   */
+  private loadThirdData(): void {
+    this.thirdService.getThirdPartie(this.thirdId).subscribe({
+      next: (third: Third) => {
+        this.thirdEdit = third;
+        this.populateForm(third);
+      },
+      error: (error: any) => {
+        console.error('Error loading third data:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar los datos del tercero'
+        });
+      }
+    });
+  }
+
+  /**
+   * Llena el formulario con los datos del tercero
+   */
+  private populateForm(third: Third): void {
+    this.createdThirdForm.patchValue({
       personType: third.personType,
-      names: third.names ? third.names.toString() : "",
-      lastNames: third.lastNames ? third.lastNames.toString() : "",
-      socialReason: third.socialReason,
-      gender: third.personType === ePersonType.juridica 
-        ? third.gender?.toString 
-        : (third.gender ? third.gender.toString() : ""),
+      state: third.state,
+      thirdTypes: third.thirdTypes,
+      typeId: third.typeId,
       idNumber: third.idNumber,
-      verificationNumber:third.verificationNumber,
-      state: this.createdThirdForm.get('state')?.value === 'Activo' ? true : false,
-      photoPath: "",
+      verificationNumber: third.verificationNumber,
+      names: third.names,
+      lastNames: third.lastNames,
+      socialReason: third.socialReason,
+      gender: third.gender,
       country: third.country,
-      province: this.selectedState.name,
+      province: third.province,
       city: third.city,
       address: third.address,
       phoneNumber: third.phoneNumber,
-      email: third.email,
-      creationDate: third.creationDate,
-      updateDate: third.updateDate
-    };
+      email: third.email
+    });
 
-    
-    
-    
-    console.log("Datos JSON enviados:", JSON.stringify(third, null, 2));
-    console.log("Datos JSON enviados por defecto:", JSON.stringify(TerceroDefecto, null, 2));
-    this.thirdService.UpdateThird(TerceroDefecto).subscribe(
-      (response: Third) => {
-        Swal.fire({
-          title: 'Edición exitosa',
-          text: 'Se ha editado el tercero exitosamente.',
-          icon: 'success',
-          confirmButtonColor: buttonColors.confirmationColor,
-        });
-      },
-      (error) => {
-        console.error("Error en la solicitud:", error);
-        console.log("Detalles del error:", error.message || "No se especificaron detalles adicionales.");
-        console.log("Respuesta del servidor completa:", error);
-        Swal.fire({
-          title: 'Error',
-          text: 'Ha ocurrido un error al editar el tercero.',
-          icon: 'error',
-          confirmButtonColor: buttonColors.confirmationColor,
-        });
-      }
-    );
-}
+    // Cargar ciudades del departamento seleccionado
+    if (third.province) {
+      this.loadCities(third.province);
+    }
+  }
 
   /**
-   * Reinicia el formulario
+   * Carga los tipos de tercero
    */
-  OnReset() {
-    this.submitted = false;
-    this.button2Checked = false;
-    this.button1Checked = false;
-    this.createdThirdForm.reset();
+  private loadThirdTypes(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.thirdConfigurationService.getThirdTypes(this.entData).subscribe({
+        next: (types: ThirdType[]) => {
+          this.thirdTypes = types;
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('Error loading third types:', error);
+          reject(error);
+        }
+      });
+    });
+  }
+
+  /**
+   * Carga los tipos de identificación
+   */
+  private loadTypeIds(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.thirdConfigurationService.getTypeIds(this.entData).subscribe({
+        next: (types: TypeId[]) => {
+          this.typeIds = types;
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('Error loading type IDs:', error);
+          reject(error);
+        }
+      });
+    });
+  }
+
+  /**
+   * Carga los países
+   */
+  private loadCountries(): Promise<void> {
+    return new Promise((resolve) => {
+      // Lista básica de países - se puede expandir según necesidades
+      this.countries = [
+        { label: 'Colombia', value: 1 },
+        { label: 'Estados Unidos', value: 2 },
+        { label: 'México', value: 3 },
+        // Agregar más países según sea necesario
+      ];
+      resolve();
+    });
+  }
+
+  /**
+   * Carga los departamentos
+   */
+  private loadDepartments(): Promise<void> {
+    return new Promise((resolve) => {
+      try {
+        const departments = this.departmentService.getListDepartments();
+        this.departments = departments.map(dept => ({
+          label: dept.name,
+          value: dept.id
+        }));
+        resolve();
+      } catch (error) {
+        console.error('Error loading departments:', error);
+        resolve(); // Continuar aunque falle
+      }
+    });
+  }
+
+  /**
+   * Carga las ciudades de un departamento
+   */
+  private loadCities(departmentId: number): void {
+    this.cityService.getListCitiesByDepartment(departmentId).subscribe({
+      next: (cities: any) => {
+        if (Array.isArray(cities)) {
+          this.cities = cities.map((city: any) => ({
+            label: city.name,
+            value: city.id
+          }));
+    } else {
+          this.cities = [];
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading cities:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar las ciudades'
+        });
+        this.cities = [];
+      }
+    });
+  }
+
+  /**
+   * Maneja el cambio de departamento
+   */
+  onDepartmentChange(departmentId: number): void {
+    this.createdThirdForm.get('city')?.setValue('');
+    this.cities = [];
+    if (departmentId) {
+      this.loadCities(departmentId);
+    }
+  }
+
+  /**
+   * Maneja el cambio de tipo de persona
+   */
+  onCheckChange(buttonNumber: number): void {
+    if (buttonNumber === 1) {
+      this.createdThirdForm.get('personType')?.setValue(ePersonType.juridica);
+    } else {
+      this.createdThirdForm.get('personType')?.setValue(ePersonType.natural);
+    }
+  }
+
+  /**
+   * Envía el formulario
+   */
+  OnSubmit(): void {
+    this.submitted = true;
+
+    if (this.createdThirdForm.valid) {
+      const formData = this.createdThirdForm.value;
+      
+      const updatedThird: Third = {
+        ...this.thirdEdit,
+        ...formData,
+      updateDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!
+      };
+
+      this.thirdService.UpdateThird(updatedThird).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tercero actualizado correctamente'
+          });
+          
+          setTimeout(() => {
+            this.router.navigate(['/gen-masters/third-parties/list']);
+          }, 2000);
+        },
+        error: (error: any) => {
+          console.error('Error updating third:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al actualizar el tercero'
+          });
+        }
+      });
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario inválido',
+        detail: 'Por favor complete todos los campos requeridos'
+      });
+    }
+  }
+
+  /**
+   * Cancela la edición y regresa a la lista
+   */
+  onCancel(): void {
+    this.router.navigate(['/gen-masters/third-parties/list']);
+  }
+
+  // Métodos para manejo de tooltips (conservando funcionalidad original)
+  toggleHelp(field: string, event: MouseEvent): void {
+    this.mousePosition = { x: event.clientX, y: event.clientY };
+    this.helpVisible[field] = !this.helpVisible[field];
+  }
+
+  showHelp(field: string): void {
+    this.helpVisible[field] = true;
+  }
+
+  hideHelp(field: string): void {
+    this.helpVisible[field] = false;
+  }
+
+  isHelpVisible(field: string): boolean {
+    return this.helpVisible[field] || false;
+  }
+
+  noisHelpVisible(field: string): boolean {
+    return !this.isHelpVisible(field);
+  }
+
+  isEditing(field: string): boolean {
+    return this.editingHelp === field;
+  }
+
+  stopEditing(): void {
+    this.editingHelp = null;
+  }
+
+  // Validador asíncrono para verificar si el tercero existe
+  thirdExistsValidator(thirdService: ThirdService, entId: string): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      if (!control.value) {
+        return of(null);
+      }
+
+      return thirdService.existThird(control.value, entId).pipe(
+        map(exists => exists ? { thirdExists: true } : null),
+        catchError(() => of(null))
+      );
+    };
   }
 }
