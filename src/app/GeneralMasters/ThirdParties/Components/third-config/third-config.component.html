@@ -1,1 +1,81 @@
-<p>third-config works!</p>
+<div class="fixed inset-0 z-40 bg-black bg-opacity-50" (click)="closePopUp()"></div>
+<div class="overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none flex items-center justify-center">
+  <div class="relative w-auto my-6 mx-auto max-w-4xl">
+    <!--content-->
+    <div class="bg-white rounded-lg shadow-lg">
+      <!--header-->
+      <div class="flex items-start justify-between p-5 border-b border-gray-200 rounded-t">
+        <h3 class="text-2xl font-semibold text-gray-900">
+          {{ inputData.title }}
+        </h3>
+        <button class="p-1 ml-auto bg-transparent border-0 text-red-500 float-right text-3xl leading-none font-semibold outline-none focus:outline-none" (click)="closePopUp()">
+          <span class="text-2xl">×</span>
+        </button>
+      </div>
+      <!--body-->
+      <div class="flex bg-gray-50 p-4 rounded-lg">
+        <div class="flex flex-col justify-center items-center m-5">
+          <div class="mb-4">
+            <button (click)="showIdentifications = true" class="bg-blue-500 text-white p-2 rounded mr-2">Tipos Identificaciones</button>
+            <button (click)="showIdentifications = false" class="bg-blue-500 text-white p-2 rounded">Tipos Tercero</button>
+          </div>
+          <div *ngIf="showIdentifications">
+            <ul class="flex-1 text-center px-4">
+              <h5 class="text-md font-bold text-blue-900 mb-4">Tipos de Identificaciones</h5>
+              <li *ngFor="let typeId of typesId; let i = index" class="bg-white my-2 mx-auto rounded-lg shadow flex items-center p-2 w-full max-w-sm">
+                <span class="flex-1 text-gray-800 text-lg pr-2">{{ typeId.typeId }}</span>
+                <button (click)="deleteItem(typesId, i)" class="flex items-center justify-center p-2 ml-2 rounded-md text-red-600 hover:bg-red-600 hover:text-white">
+                  <span class="material-icons">delete</span>
+                </button>
+              </li>
+              <li *ngIf="showInputTypeId" class="bg-white my-2 mx-auto rounded-lg shadow flex items-center p-2 w-full max-w-sm">
+                <input type="text" [(ngModel)]="newIdentificatioName" class="form-input flex-1 text-gray-800 text-lg pr-2" placeholder="Nueva identificación">
+                <div>
+                  <button (click)="addTypeId(typesId)" class="bg-green-500 text-white p-2 mr-1 rounded">✓</button>
+                  <button (click)="cancelAddTypeId()" class="bg-red-500 text-white p-2 rounded">✗</button>
+                </div>
+              </li>
+              <li *ngIf="!showInputTypeId" class="bg-blue-500 my-2 mx-auto rounded-lg shadow flex items-center p-2 w-full max-w-sm">
+                <a (click)="showInputTypeId = true" class="flex-1 text-white text-lg pr-2 cursor-pointer">Agregar</a>
+                <button (click)="showInputTypeId = true" class="flex items-center justify-center p-2 ml-2 rounded-md text-white hover:bg-blue-600">
+                  <span class="material-icons">add</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div *ngIf="!showIdentifications">
+            <ul class="flex-1 text-center px-4">
+              <h5 class="text-md font-bold text-blue-900 mb-4">Tipos de Terceros</h5>
+              <li *ngFor="let thirdType of thirdTypes; let i = index" class="bg-white my-2 mx-auto rounded-lg shadow flex items-center p-2 w-full max-w-sm">
+                <span class="flex-1 text-gray-800 text-lg pr-2">{{ thirdType.thirdTypeName }}</span>
+                <button (click)="deleteItemId(thirdTypes, i)" class="flex items-center justify-center p-2 ml-2 rounded-md text-red-600 hover:bg-red-600 hover:text-white">
+                  <span class="material-icons">delete</span>
+                </button>
+              </li>
+              <li *ngIf="showInputThirdType" class="bg-white my-2 mx-auto rounded-lg shadow flex items-center p-2 w-full max-w-sm">
+                <input type="text" [(ngModel)]="newThirdTypeName" class="form-input flex-1 text-gray-800 text-lg pr-2" placeholder="Nuevo tipo de tercero">
+                <div>
+                  <button (click)="addThirdType(thirdTypes)" class="bg-green-500 text-white p-2 mr-1 rounded">✓</button>
+                  <button (click)="cancelAddThirdType()" class="bg-red-500 text-white p-2 rounded">✗</button>
+                </div>
+              </li>
+              <li *ngIf="!showInputThirdType" class="bg-blue-500 my-2 mx-auto rounded-lg shadow flex items-center p-2 w-full max-w-sm">
+                <a (click)="showInputThirdType = true" class="flex-1 text-white text-lg pr-2 cursor-pointer">Agregar</a>
+                <button (click)="showInputThirdType = true" class="flex items-center justify-center p-2 ml-2 rounded-md text-white hover:bg-blue-600">
+                  <span class="material-icons">add</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!--footer-->
+      <div class="flex items-center justify-end p-6 border-t border-gray-200">
+        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out" type="button" (click)="closePopUp()">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

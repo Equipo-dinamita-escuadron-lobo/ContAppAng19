@@ -1,1 +1,68 @@
-<p>third-import works!</p>
+<!-- Toast para notificaciones -->
+<p-toast></p-toast>
+<p-dialog
+  [header]="inputData?.title || 'Plantilla de Importación'"
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '90vw', maxWidth: '1000px' }"
+  (onHide)="onHide()">
+  
+  <div class="grid grid-cols-1 sm:grid-cols-2 p-7">
+    
+    <div class="p-2">
+      <p>Querido usuario, asegurese de que el archivo que usted desea importar contenga lo siguientes campos
+        obligatorios:</p>
+      <ol class="mt-2">
+        <li> - Tipo persona</li>
+        <li> - Tipos de tercero</li>
+        <li> - Nombre</li>
+        <li> - Apellido</li>
+        <li> - Razon social</li>
+        <li> - Genero</li>
+        <li> - Tipo ID</li>
+        <li> - Identificion</li>
+        <li> - Numero de verificacion</li>
+        <li> - Estado</li>
+        <li> - Pais</li>
+        <li> - Departamento</li>
+        <li> - Ciudad</li>
+        <li> - Direccion</li>
+        <li> - Telefono</li>
+        <li> - Correo</li>
+        <!--Otros campos-->
+      </ol>
+    </div>
+    
+    <!-- Columna derecha - Conservando el diseño original con imagen de fondo -->
+    <div class="flex justify-center items-center p-2"
+      style="background-image: url('../../../../../../assets/Iconos/helpImportThirds.png'); background-size: contain; background-position: center; background-repeat: no-repeat;">
+      
+      <!-- Botón de descarga original adaptado a PrimeNG -->
+      <p-button 
+        (click)="downloadExcel()"
+        styleClass="download bg-green-600 rounded-full flex items-center justify-center text-white hover:bg-gradient-to-r from-green-600 to-green-800 hover:shadow-md transition duration-300 ease-in-out">
+        <svg class="h-12 w-12" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+          fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" />
+          <circle cx="12" cy="12" r="9" />
+          <line x1="8" y1="12" x2="12" y2="16" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="16" y1="12" x2="12" y2="16" />
+        </svg>
+        <span class="ml-2 mr-3 font-sans font-bold">Descargar plantilla</span>
+      </p-button>
+    </div>
+  </div>
+  
+  <!-- Footer original -->
+  <ng-template pTemplate="footer">
+    <div class="flex items-center justify-center p-6 border-t border-gray-200">
+      <div>
+        Gracias por usar nuestros servicios
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

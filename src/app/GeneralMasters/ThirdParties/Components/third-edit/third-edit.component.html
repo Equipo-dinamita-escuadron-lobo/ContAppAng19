@@ -1,1 +1,391 @@
-<p>third-edit works!</p>
+<div class="flex w-full h-5.5/6">
+    <!-- se estableces cuadros de ayuda para el componente de editar-->
+  
+    <div class="help-icon " (click)="toggleHelp('TipoPersona', $event)"></div>
+    <div class="help-text" *ngIf="noisHelpVisible('TipoPersona')"
+      [ngStyle]="{'top.px': mousePosition.y, 'left.px': mousePosition.x}">
+  
+      <input [(ngModel)]="helpTexts['TipoPersona']" (blur)="stopEditing()" (keydown.enter)="stopEditing()" class="edit-input" />
+    </div>
+  
+    <div class="help-icon " (click)="toggleHelp('TipoTerceros', $event)"></div>
+    <div class="help-text" *ngIf="noisHelpVisible('TipoTerceros')"
+      [ngStyle]="{'top.px': mousePosition.y, 'left.px': mousePosition.x}">
+  
+      <input [(ngModel)]="helpTexts['TipoTerceros']" (blur)="stopEditing()" (keydown.enter)="stopEditing()" class="edit-input" />
+    </div> 
+  
+    <div class="help-icon " (click)="toggleHelp('TipoIdentificación', $event)"></div>
+    <div class="help-text" *ngIf="noisHelpVisible('TipoIdentificación')"
+      [ngStyle]="{'top.px': mousePosition.y, 'left.px': mousePosition.x}">
+  
+      <input [(ngModel)]="helpTexts['TipoIdentificación']" (blur)="stopEditing()" (keydown.enter)="stopEditing()" class="edit-input" />
+    </div> 
+  
+    <div class="help-icon " (click)="toggleHelp('razonSocial', $event)"></div>
+    <div class="help-text" *ngIf="noisHelpVisible('razonSocial')"
+      [ngStyle]="{'top.px': mousePosition.y, 'left.px': mousePosition.x}">
+  
+      <input [(ngModel)]="helpTexts['razonSocial']" (blur)="stopEditing()" (keydown.enter)="stopEditing()" class="edit-input" />
+    </div> 
+  
+    <div class="m-10 w-full h-full font-titillium font-medium bg-white rounded-3xl p-10">
+      <div class="flex flex-col items-center justify-start w-full h-full p-5">
+        <div class="w-full px-8">
+          <h1 class="text-3xl font-bold text-blue-900 mt-6 mb-4">Edición de Tercero</h1>
+          <p class="mb-6 text-lg text-gray-700">
+            Ingrese la información requerida para editar el Tercero:
+          </p>
+        </div>
+  
+        <!--
+        <form (submit)="OnSubmit()" [formGroup]="createdThirdForm"
+          class="w-full max-w-4xl bg-white rounded-lg shadow-lg p-6">
+        -->
+        <form (submit)="OnSubmit()" [formGroup]="createdThirdForm"
+          class="w-full max-w-4xl bg-white rounded-lg shadow-lg p-6">
+          <h2 class="text-xl text-center font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">Informacion
+            Basica</h2>
+  
+          <!--Tipos de Tercero, Tercero, Estado-->
+          <div class="border-b pb-6 mb-6 col-span-1 md:col-span-2">
+            <div class="flex justify-between">
+              <div class="mb-5 w-1/2">
+                <!-- Tipo Persona -->
+                <div class="flex items-center"> <!-- Flex container to align the label and the help icon -->
+                  <label class="block font-semibold mb-2 mr-2" for="personType">Tipo Persona *</label>
+  
+                  <span class="help-icon" (click)="toggleHelp('TipoPersona', $event)" (mouseenter)="showHelp('TipoPersona')"
+                    (mouseleave)="hideHelp('TipoPersona')">?</span>
+                </div>
+                <div>
+                  <div class="help-text" *ngIf="isHelpVisible('TipoPersona')">
+                    <span *ngIf="!isEditing('TipoPersona')">{{ helpTexts['TipoPersona'] || 'Este es un texto de ayuda por defecto.'
+                      }}</span>
+                  </div>
+                </div>
+  
+                <div class="flex space-x-4">
+                  <app-check-button [(isChecked)]="button1Checked" (isCheckedChange)="onCheckChange(1)"
+                    formControlName="personType" value="Juridica" texto="Jurídica" tailConfig="w-32"></app-check-button>
+                  <app-check-button [(isChecked)]="button2Checked" (isCheckedChange)="onCheckChange(2)"
+                    formControlName="personType" value="Natural" texto="Natural" tailConfig="w-32"></app-check-button>
+                </div>
+                <div class="text-red-600"
+                  *ngIf="(submitted || createdThirdForm.get('personType')?.touched) && createdThirdForm.get('personType')?.invalid">
+                  <ng-container *ngIf="createdThirdForm.get('personType')?.errors?.['required']">
+                    Seleccione un Tipo de Persona (Juridica o Natural)
+                  </ng-container>
+                </div>
+              </div>
+              <!-- Estado -->
+              <div class="mb-5 w-1/2"> <!-- Estado -->
+                <label class="block font-semibold mb-2">Estado *</label>
+                <div class="flex gap-4">
+                  <label class="flex items-center">
+                    <input type="radio" formControlName="state" value="Activo"
+                      class="mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <span class="font-semibold">Activo</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="radio" formControlName="state" value="Inactivo"
+                      class="mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <span class="font-semibold">Inactivo</span>
+                  </label>
+                </div>
+                <div class="text-red-600"
+                  *ngIf="(submitted || createdThirdForm.get('state')?.touched) && createdThirdForm.get('state')?.invalid">
+                  <ng-container *ngIf="createdThirdForm.get('state')?.errors?.['required']">
+                    Seleccione un estado (Activo o Inactivo)
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+  
+            <!--Tipos de tercero-->
+            <div class="mb-5">
+              <div class="flex items-center"> <!-- Flex container to align the label and the help icon -->
+                <label class="block font-semibold mb-2 mr-2" for="personType">Tipo Terceros *</label>
+    
+                <span class="help-icon" (click)="toggleHelp('TipoTerceros', $event)" (mouseenter)="showHelp('TipoTerceros')"
+                  (mouseleave)="hideHelp('TipoTerceros')">?</span>
+              </div>
+              <div>
+                <div class="help-text" *ngIf="isHelpVisible('TipoTerceros')">
+                  <span *ngIf="!isEditing('TipoTerceros')">{{ helpTexts['TipoTerceros'] || 'Este es un texto de ayuda por defecto.'
+                    }}</span>
+                </div>
+              </div>
+              <div>
+                <ng-select [items]="thirdTypes" bindLabel="thirdTypeName" [multiple]="true" [clearable]="false"
+                  [placeholder]="'Seleccione tipos de terceros'" formControlName="thirdTypes"
+                  class="border border-gray-400 rounded-md px-3 py-1 mt-1 w-full min-h-9"
+                  (change)="onThirdTypeSelect($event)">
+                  <ng-template ng-option-tmp let-item="item">
+                    <div class="py-2 px-4 cursor-pointer hover:bg-blue-950 hover:text-white bg-white">
+                      {{ item.thirdTypeName }}
+                    </div>
+                  </ng-template>
+                </ng-select>
+                <div class="text-red-600"
+                  *ngIf="(submitted || createdThirdForm.get('thirdTypes')?.touched) && createdThirdForm.get('thirdTypes')?.invalid">
+                  <ng-container *ngIf="createdThirdForm.get('thirdTypes')?.errors?.['required']">
+                    Seleccione al menos un Tipo de Tercero
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+  
+            <!--Tipo de Identificacion, numero de Identificacion, Digito Verificacion-->
+            <div class="grid grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <div class="flex items-center"> <!-- Flex container to align the label and the help icon -->
+                  <label class="block font-semibold mb-2 mr-2" for="personType">Tipo Identificación *</label>
+      
+                  <span class="help-icon" (click)="toggleHelp('TipoIdentificación', $event)" (mouseenter)="showHelp('TipoIdentificación')"
+                    (mouseleave)="hideHelp('TipoIdentificación')">?</span>
+                </div>
+                <div>
+                  <div class="help-text" *ngIf="isHelpVisible('TipoIdentificación')">
+                    <span *ngIf="!isEditing('TipoIdentificación')">{{ helpTexts['TipoIdentificación'] || 'Este es un texto de ayuda por defecto.'
+                      }}</span>
+                  </div>
+                </div>
+                <select formControlName="typeId"
+                  class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  (change)="onTypeIdChange($event)">
+                  <option value="" disabled selected>Seleccione un tipo de identificación</option>
+                  <option *ngFor="let typeId of typeIds" [value]="typeId.typeId">{{ typeId.typeIdname }}</option>
+                </select>
+                <div class="text-red-600"
+                  *ngIf="(submitted || createdThirdForm.get('typeId')?.touched) && createdThirdForm.get('typeId')?.invalid">
+                  <ng-container *ngIf="createdThirdForm.get('typeId')?.errors?.['required']">
+                    El Tipo De Identificación Es Requerido
+                  </ng-container>
+                </div>
+              </div>
+  
+              <div class="space-y-2">
+                <p class="font-semibold">Número Identificación *</p>
+                <div class="flex items-center">
+                  <input formControlName="idNumber" type="number"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ingrese el número de identificación">
+                  <div *ngIf="createdThirdForm.get('verificationNumber')?.enabled" class="relative ml-2">
+                    <input formControlName="verificationNumber" type="number"
+                      class="w-14 text-center h-10 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      [value]="verificationNumber" readonly onmouseover="this.nextElementSibling.style.display='block';"
+                      onmouseout="this.nextElementSibling.style.display='none';">
+  
+                    <div
+                      class="absolute text-center hidden bg-blue-600 text-white rounded-lg p-1 w-24 -translate-x-1/2 left-1/2"
+                      style="bottom: 120%;">
+                      Digito de verificacion
+                    </div>
+                  </div>
+                </div>
+                <div class="text-red-600"
+                  *ngIf="(submitted || createdThirdForm.get('idNumber')?.touched) && createdThirdForm.get('idNumber')?.invalid">
+                  <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['required']">
+                    El número de identificación es requerido
+                  </ng-container>
+                  <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['idDuplicado']">
+                    El número de identificación ya existe
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+            <!--Nombres, Apellidos, Razon Social-->
+            <div class="grid grid-cols-2 mt-4 gap-6">
+              <div *ngIf="button2Checked">
+                <div class="space-y-2">
+                  <p class="font-semibold">Nombre*</p>
+                  <input formControlName="names" type="text"
+                    class="mb-1 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ingrese su Nombre">
+                  <div class="text-red-600"
+                    *ngIf="(submitted || createdThirdForm.get('names')?.touched) && createdThirdForm.get('names')?.invalid">
+                    <ng-container *ngIf="createdThirdForm.get('names')?.errors?.['required']">
+                      Ingrese un Nombre
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="button2Checked">
+                <div class="space-y-2">
+                  <p class="font-semibold">Apellidos *</p>
+                  <input formControlName="lastNames" type="text"
+                    class="mb-1 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ingrese sus apellidos" />
+                  <div class="text-red-600"
+                    *ngIf="(submitted || createdThirdForm.get('lastNames')?.touched) && createdThirdForm.get('lastNames')?.invalid">
+                    <ng-container *ngIf="createdThirdForm.get('lastNames')?.errors?.['required']">
+                      Ingrese un Apellido
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+  
+              <div *ngIf="button1Checked">
+                <div class="space-y-2">
+                  <div class="flex items-center"> <!-- Flex container to align the label and the help icon -->
+                    <label class="block font-semibold mb-2 mr-2" for="personType">Razón Social *</label>
+        
+                    <span class="help-icon" (click)="toggleHelp('razonSocial', $event)" (mouseenter)="showHelp('razonSocial')"
+                      (mouseleave)="hideHelp('razonSocial')">?</span>
+                  </div>
+                  <div>
+                    <div class="help-text" *ngIf="isHelpVisible('razonSocial')">
+                      <span *ngIf="!isEditing('razonSocial')">{{ helpTexts['razonSocial'] || 'Este es un texto de ayuda por defecto.'
+                        }}</span>
+                    </div>
+                  </div>
+  
+                  <input formControlName="socialReason" type="text"
+                    class="mb-1 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ingrese Razon Social">
+                  <div class="text-red-600"
+                    *ngIf="(submitted || createdThirdForm.get('socialReason')?.touched) && createdThirdForm.get('socialReason')?.invalid">
+                    <ng-container *ngIf="createdThirdForm.get('socialReason')?.errors?.['required']">
+                      Ingrese una Razon Social
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--Genero-->
+            <div class="grid grid-cols-2 mt-4 gap-6">
+              <div *ngIf="button2Checked">
+                <p class="font-semibold">Género *</p>
+                <select formControlName="gender"
+                  class="px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino" selected>Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+                <div class="text-red-600"
+                  *ngIf="(submitted || createdThirdForm.get('gender')?.touched) && createdThirdForm.get('gender')?.invalid">
+                  <ng-container *ngIf="createdThirdForm.get('gender')?.errors?.['required']">
+                    Seleccione un Género
+                  </ng-container>
+                </div>
+              </div>
+            </div>          
+          </div>
+  
+          <!--Informacion de Contacto-->
+          <div>
+            <h2 class="text-xl text-center font-semibold text-gray-800 mb-4 border-b border-gray-200 pb-2">Informacion de
+              Adicional</h2>
+            <div class="border-b pb-6 mb-6 grid grid-cols-2 gap-6">
+              <div class="space-y-4">
+                <!-- Columna Izquierda -->
+                <div class="space-y-2">
+                  <p class="font-semibold">País *</p>
+                  <select (change)="onCountryChange($event)" formControlName="country"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected>Seleccione un país</option>
+                    <option *ngFor="let country of countries" [value]="country.name">{{country.name}}</option>
+                  </select>
+                  <div class="text-red-600"
+                    *ngIf="(submitted || createdThirdForm.get('country')?.touched) && createdThirdForm.get('country')?.invalid">
+                    <ng-container *ngIf="createdThirdForm.get('country')?.errors?.['required']">
+                      Seleccione un Pais
+                    </ng-container>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <p class="font-semibold">Departamento *</p>
+                  <select (change)="onStateChange($event)" formControlName="province"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected>Seleccione un departamento</option>
+                    <option *ngFor="let state of states" [value]="state.id">{{ state.name }}</option>
+                  </select>
+                  <div class="text-red-600"
+                    *ngIf="(submitted || createdThirdForm.get('province')?.touched) && createdThirdForm.get('province')?.invalid">
+                    <ng-container *ngIf="createdThirdForm.get('province')?.errors?.['required']">
+                      Seleccione un Departamento
+                    </ng-container>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <p class="font-semibold">Ciudad *</p>
+                  <select formControlName="city"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected>Seleccione una ciudad</option>
+                    <option *ngFor="let city of cities" [value]="city.name">{{ city.name }}</option>
+                  </select>
+                  <div class="text-red-600"
+                    *ngIf="(submitted || createdThirdForm.get('city')?.touched) && createdThirdForm.get('city')?.invalid">
+                    <ng-container *ngIf="createdThirdForm.get('city')?.errors?.['required']">
+                      Seleccione una ciudad
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+  
+              <div class="space-y-4">
+                <!-- Columna Derecha -->
+                <div class="space-y-2">
+                  <p class="font-semibold">Dirección *</p>
+                  <input formControlName="address" type="text"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ingrese la dirección">
+                  <div class="text-red-600"
+                    *ngIf="(submitted || createdThirdForm.get('address')?.touched) && createdThirdForm.get('address')?.invalid">
+                    <ng-container *ngIf="createdThirdForm.get('address')?.errors?.['required']">
+                      Ingrese una Direccion
+                    </ng-container>
+                  </div>
+                </div>
+  
+                <div class="space-y-2">
+                  <p class="font-semibold">Correo *</p>
+                  <input formControlName="email" type="email"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="ejemplo@dominio.com">
+                  <div class="text-red-600"
+                    *ngIf="(submitted || createdThirdForm.get('email')?.touched) && createdThirdForm.get('email')?.invalid">
+                    <ng-container *ngIf="createdThirdForm.get('email')?.errors?.['required']">
+                      Ingrese un Correo Electronico
+                    </ng-container>
+                    <ng-container *ngIf="createdThirdForm.get('email')?.errors?.['email']">
+                      Formato de Correo Incorrecto (ejemplo&#64;dominio.com)
+                    </ng-container>
+                  </div>
+                </div>
+  
+                <div class="space-y-2">
+                  <p class="font-semibold">Celular *</p>
+                  <input formControlName="phoneNumber" type="tel" pattern="^[0-9]*$"
+                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ej: 3123456789" required>
+  
+                  <div class="text-red-600"
+                    *ngIf="(submitted || createdThirdForm.get('phoneNumber')?.touched) && createdThirdForm.get('phoneNumber')?.invalid">
+                    <ng-container *ngIf="createdThirdForm.get('phoneNumber')?.errors?.['required']">
+                      Ingrese un Numero de Celular
+                    </ng-container>
+                    <ng-container *ngIf="createdThirdForm.get('phoneNumber')?.errors?.['pattern']">
+                      Solo se permiten ingresar numeros en el Celular
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!--Botones-->
+          <div class="flex justify-center items-center">
+            <a (click)="goToListThirds()"
+              class="py-2 px-4 mr-1 bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 text-white font-bold rounded-lg text-lg cursor-pointer">
+              Cancelar
+            </a>
+            <button type="submit"
+              class="py-2 px-4 ml-1 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-white font-bold rounded-lg text-lg">
+              Actualizar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>

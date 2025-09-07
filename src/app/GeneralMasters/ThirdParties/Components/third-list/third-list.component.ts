@@ -15,6 +15,9 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
+
+// Componentes internos
+import { ThirdImportComponent } from '../third-import/third-import.component';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 // Models and Services
@@ -47,7 +50,8 @@ import { saveAs } from 'file-saver';
     ToastModule,
     ConfirmDialogModule,
     FileUploadModule,
-    DialogModule
+    DialogModule,
+    ThirdImportComponent
   ],
   providers: [MessageService, ConfirmationService, DatePipe],
   templateUrl: './third-list.component.html',

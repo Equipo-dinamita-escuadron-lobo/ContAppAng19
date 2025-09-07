@@ -1,1 +1,65 @@
-<p>third-creation-pdf-rut works!</p>
+<!-- Fondo semitransparente para el modal -->
+<div class="fixed inset-0 z-40 bg-black bg-opacity-50" (click)="closePopUp()"></div>
+
+<!-- Modal -->
+<div class="overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none flex items-center justify-center">
+  <div [ngClass]="isFileLoaded ? 'max-w-full' : 'max-w-xs'" class="relative w-full my-6 mx-auto transition-all duration-300" style="width: 90%; max-width: 1000px;">
+    <div class="bg-white rounded-lg shadow-lg relative">
+      <!-- Botón de cerrar modal -->
+      <div class="relative">
+        <button (click)="closePopUp()" class="absolute top-3 right-4 w-12 h-12 bg-gray-200 text-gray-800 rounded-full flex items-center justify-center hover:bg-red-500 focus:outline-none">
+          <span class="text-2xl font-semibold">&times;</span>
+        </button>
+      </div>
+      
+      <!-- Título del modal -->
+      <div class="flex items-center justify-between p-5 border-b border-gray-200 rounded-t">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-semibold text-center w-full text-blue-900">{{ inputData.title }}</h1>
+      </div>
+      
+      <!-- Contenido del modal -->
+      <div class="flex flex-col items-center p-6 space-y-6">
+        
+        <!-- Descripción pequeña antes del archivo -->
+        <p class="text-sm text-gray-600 text-center mb-4 max-w-md">
+          Por favor, selecciona un archivo PDF para cargar. Asegúrate de que el archivo tenga la informacion con la cual se va a crear el nuevo tercero.
+        </p>
+
+        <!-- Campo para seleccionar el archivo -->
+        <input 
+          type="file" 
+          (change)="onFileChange($event)" 
+          accept="application/pdf" 
+          class="w-full max-w-xs p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          aria-label="Seleccionar archivo PDF"
+        />
+        
+        <!-- Vista previa del archivo PDF (si existe) -->
+        <div *ngIf="pdfUrl" class="mt-6 w-full">
+          <h4 class="text-lg font-bold text-gray-900 mb-2">Vista previa del PDF:</h4>
+          <iframe [src]="pdfUrl" class="w-full h-96 sm:h-[400px] md:h-[400px] lg:h-[400px] border rounded-lg shadow-lg"></iframe>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="flex items-center justify-center p-6 border-t border-gray-200 space-x-4">
+        <button 
+          class="text-white bg-gradient-to-r from-red-800 via-red-700 to-red-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 transition duration-150 ease-in-out"
+          type="button" 
+          (click)="closePopUp()" 
+          aria-label="Cancelar"
+        >
+          Cancelar
+        </button>
+        <button 
+          (click)="uploadFile()" 
+          class="text-white bg-gradient-to-r from-blue-900 via-blue-800 to-blue-950 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-900 dark:focus:ring-blue-950 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 transition duration-150 ease-in-out"
+          aria-label="Subir archivo PDF"
+        >
+          Crear
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -259,32 +259,12 @@
   </div>
 </div>
 
-<!-- Template Modal -->
-<p-dialog 
-  header="Plantilla de Importación" 
-  [(visible)]="showTemplateModal"
-  [modal]="true"
-  [style]="{ width: '500px' }"
-  [closable]="true">
-  
-  <div class="flex flex-col gap-4">
-    <p>Descarga la plantilla de Excel para importar terceros correctamente.</p>
-    
-    <div class="flex justify-end gap-2">
-      <p-button 
-        label="Descargar Plantilla" 
-        icon="pi pi-download"
-        (click)="closeTemplateModal()">
-      </p-button>
-      
-      <p-button 
-        label="Cerrar" 
-        severity="secondary"
-        (click)="closeTemplateModal()">
-      </p-button>
-    </div>
-  </div>
-</p-dialog>
+<!-- Componente de importación de terceros -->
+<app-third-import
+  [visible]="showTemplateModal"
+  [inputData]="{ title: 'Plantilla de Importación de Terceros' }"
+  (close)="closeTemplateModal()">
+</app-third-import>
 
 <!-- PDF RUT Component (if needed) -->
 <div *ngIf="createPdfRUT">
