@@ -27,8 +27,8 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
-import { CityService } from '../../services/city.service';
-import { DepartmentService } from '../../services/department.service';
+import { CityService } from '../../Services/city.service';
+import { DepartmentService } from '../../Services/department.service';
 import { eThirdGender } from '../../models/eThirdGender';
 // import { buttonColors } from '../../../../Shared/buttonColors';
 
@@ -97,7 +97,8 @@ export class ThirdEditComponent implements OnInit {
     typeId:  {
       entId: "0",
       typeId: "CC",
-      typeIdname: "CC"
+      typeIdname: "CC",
+      status: true
     },
     thirdTypes: [],
     rutPath: undefined,
@@ -110,9 +111,9 @@ export class ThirdEditComponent implements OnInit {
     verificationNumber: 0,
     state: true,
     photoPath: undefined,
-    country: 0,
-    province: 0,
-    city: 0,
+    country: "0",
+    province: "0",
+    city: "0",
     address: '',
     phoneNumber: '',
     email: '',
@@ -429,8 +430,9 @@ export class ThirdEditComponent implements OnInit {
   /**
    * Carga las ciudades de un departamento
    */
-  private loadCities(departmentId: number): void {
-    this.cityService.getListCitiesByDepartment(departmentId).subscribe({
+  private loadCities(departmentId: number | string): void {
+    const depId = typeof departmentId === 'string' ? parseInt(departmentId, 10) : departmentId;
+    this.cityService.getListCitiesByDepartment(depId).subscribe({
       next: (cities: any) => {
         if (Array.isArray(cities)) {
           this.cities = cities.map((city: any) => ({

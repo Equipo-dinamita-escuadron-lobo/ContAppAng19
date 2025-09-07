@@ -5,7 +5,7 @@ import { Third } from '../../../../../../GeneralMasters/ThirdParties/models/Thir
 import { Criteria } from '../../../Models/Criteria';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
-import { ThirdPartyServiceService } from '../../../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
+import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
 import { Select } from 'primeng/select';
@@ -64,7 +64,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   constructor(
     protected auxiliaryBookService: AuxiliaryBooksServiceService,
     protected enterpriseService: EnterpriseService,
-    protected thirdService: ThirdPartyServiceService,
+    protected thirdService: ThirdService,
     protected accountService: ChartAccountService,
     protected messageService: MessageService
   ) {}
@@ -251,7 +251,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       next: (response: Third[]) => {
         this.thirdPartyOptions = response;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error fetching third parties:', err);
         this.messageService.add({
           severity: 'error',

@@ -15,6 +15,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 
 // Componentes internos
 import { ThirdImportComponent } from '../third-import/third-import.component';
@@ -53,6 +54,7 @@ import { saveAs } from 'file-saver';
     ConfirmDialogModule,
     FileUploadModule,
     DialogModule,
+    TooltipModule,
     ThirdImportComponent,
     ThirdExportComponent,
     ThirdDetailsComponent

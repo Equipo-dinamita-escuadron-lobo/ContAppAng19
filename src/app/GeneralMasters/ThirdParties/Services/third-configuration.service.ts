@@ -1,6 +1,6 @@
 
 import { Injectable } from '@angular/core';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, tap, throwError } from 'rxjs';
 import { ThirdType } from '../models/ThirdType';
@@ -74,40 +74,30 @@ export class ThirdServiceConfigurationService {
   }
 
   /**
-   * Elimina un tercero específico
-   * @param entId ID de la empresa
-   * @returns Observable con la respuesta de la eliminación
+   * Actualiza un tipo de tercero existente
+   * @param ThirdType Objeto con los datos actualizados del tipo de tercero
+   * @returns Observable con el tipo de tercero actualizado
    */
-  deleteThird(entId: string): Observable<void> {
-    return this.http.delete<void>(`${this.thirdApiUrl}${entId}`).pipe(
-        catchError((error: HttpErrorResponse) => {
-            console.error('Error occurred: ', error);
-            const errorMessage = error.error && error.error.text ? error.error.text : 'Error occurred while deleting the third type';
-            return throwError(() => new HttpErrorResponse({
-                error: { text: errorMessage },
-                status: error.status,
-                statusText: error.statusText,
-            }));
-        })
+  updateThirdType(ThirdType: ThirdType): Observable<ThirdType> {
+    return this.http.post<ThirdType>(this.thirdApiUrl + "thirdtype/update", ThirdType).pipe(
+      catchError((error) => {
+        console.error('Error occurred: ', error);
+        return throwError(() => new Error('Error occurred while updating third type'));
+      })
     );
   }
 
   /**
-   * Elimina un tipo de identificación específico
-   * @param entId ID de la empresa
-   * @returns Observable con la respuesta de la eliminación
+   * Actualiza un tipo de identificación existente
+   * @param TypeId Objeto con los datos actualizados del tipo de identificación
+   * @returns Observable con el tipo de identificación actualizado
    */
-  deleteId(entId: string): Observable<void> {
-    return this.http.delete<void>(`${this.thirdApiUrl}${entId}`).pipe(
-        catchError((error: HttpErrorResponse) => {
-            console.error('Error occurred: ', error);
-            const errorMessage = error.error && error.error.text ? error.error.text : 'Error occurred while deleting the third type';
-            return throwError(() => new HttpErrorResponse({
-                error: { text: errorMessage },
-                status: error.status,
-                statusText: error.statusText,
-            }));
-        })
+  updateTypeId(TypeId: TypeId): Observable<TypeId> {
+    return this.http.post<TypeId>(this.thirdApiUrl + "typeid/update", TypeId).pipe(
+      catchError((error) => {
+        console.error('Error occurred: ', error);
+        return throwError(() => new Error('Error occurred while updating type id'));
+      })
     );
   }
 }

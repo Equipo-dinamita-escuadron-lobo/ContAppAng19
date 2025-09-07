@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { City } from '../models/City';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 /** URL base de la API */
 let API_URL = '';
@@ -12,12 +12,13 @@ let API_URL = '';
  * Configuración de la URL de la API según el tipo de microservicio
  * Si el microservicio es 'enterprise', se usa la URL local
  */
+/*
 if(environment.microservice == 'enterprise'){
     API_URL = environment.API_LOCAL_URL;
 }
 else{
     API_URL = environment.API_URL;
-}
+}*/
 
 @Injectable({
   providedIn: 'root'
