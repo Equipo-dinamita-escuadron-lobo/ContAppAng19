@@ -1,55 +1,212 @@
-<div class="fixed inset-0 z-40 bg-black bg-opacity-50" (click)="closePopUp()"></div>
-<div class="overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none flex items-center justify-center">
-  <div class="relative w-auto my-6 mx-auto max-w-4xl">
-    <!--content-->
-    <div class="bg-white rounded-lg shadow-lg">
-      <!--header-->
-      <div class="flex items-start justify-between p-5 border-b border-gray-200 rounded-t">
-        <h3 class="text-2xl font-semibold text-gray-900">
-          {{ inputData.title }}
-        </h3>
-        <button class="p-1 ml-auto bg-transparent border-0 text-red-500 float-right text-3xl leading-none font-semibold outline-none focus:outline-none" (click)="closePopUp()">
-          <span class="text-2xl">×</span>
-        </button>
+<p-dialog
+  [header]="inputData?.title || 'Detalles del Tercero'"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '800px' }"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onHide()">
+
+  <!-- Contenido del modal -->
+  <div class="p-fluid" *ngIf="!loading">
+    <!-- Sección superior con imagen e información básica -->
+    <div class="flex flex-column md:flex-row align-items-center gap-4 mb-4">
+      <!-- Imagen del tercero -->
+      <div class="flex-shrink-0">
+        <img 
+          src="../../../../../../assets/Iconos/third-parties/third-partie-icon-default.png" 
+          alt="Icono del Tercero" 
+          class="w-8rem h-8rem border-round shadow-2">
       </div>
-      <!--body-->
-      <div class="p-6 space-y-6">
-        <div class="flex items-center space-x-6">
-          <img src="../../../../../../assets/Iconos/third-parties/third-partie-icon-default.png" alt="Icon" class="w-32 h-32">
+      
+      <!-- Información básica -->
+      <div class="flex-1">
+        <div class="grid">
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label class="label-title">Tipo de ID:</label>
+              <p class="text-lg font-medium text-gray-800 mt-1">
+                {{ thirdData.typeId?.typeId || 'NO APLICA' }}
+              </p>
+            </div>
+          </div>
           
-          <div class="flex-1">
-            <p class="text-md font-medium text-gray-800">Tipo de ID: {{ thirdData.typeId.typeId}}</p>
-            <p class="text-md font-medium text-gray-800">
-              Tipos de Tercero: {{ getThirdTypesNames() }}
-            </p>
-            
-            
-            <p class="text-md font-medium text-gray-800">Tipo de Persona: {{ thirdData.personType }}</p>
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label class="label-title">Tipo de Persona:</label>
+              <p class="text-lg font-medium text-gray-800 mt-1">
+                {{ thirdData.personType }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="col-12">
+            <div class="field">
+              <label class="label-title">Tipos de Tercero:</label>
+              <p class="text-lg font-medium text-gray-800 mt-1">
+                {{ getThirdTypesNames() }}
+              </p>
+            </div>
           </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <p *ngIf="thirdData.personType === 'Natural'" class="text-md font-medium text-gray-800">Nombre Completo: {{ thirdData.names }} {{thirdData.lastNames}}</p>
-          <p *ngIf="thirdData.personType === 'Juridica'" class="text-md font-medium text-gray-800">Razón Social: {{ thirdData.socialReason }}</p>
-          <p class="text-md font-medium text-gray-800">Género: {{ getGender() }}</p>
-          <p class="text-md font-medium text-gray-800">Número de ID: {{ thirdData.idNumber }}</p>
-          <p class="text-md font-medium text-gray-800">Digito de Verificación: {{ getVerificationNumber() }}</p>
-          <p class="text-md font-medium text-gray-800">Estado: {{ thirdData.state ? 'Activo' : 'Inactivo' }}</p>
-          <p class="text-md font-medium text-gray-800">País: {{ thirdData.country }}</p>
-          <p class="text-md font-medium text-gray-800">Provincia: {{ thirdData.province }}</p>
-          <p class="text-md font-medium text-gray-800">Ciudad: {{ thirdData.city }}</p>
-          <p class="text-md font-medium text-gray-800">Dirección: {{ thirdData.address }}</p>
-          <p class="text-md font-medium text-gray-800">Teléfono: {{ thirdData.phoneNumber }}</p>
-          <p class="text-md font-medium text-gray-800">Email: {{ thirdData.email }}</p>
-          <p class="text-md font-medium text-gray-800">Fecha de Creación: {{ thirdData.creationDate }}</p>
-          <p class="text-md font-medium text-gray-800">Fecha de Actualización: {{ thirdData.updateDate }}</p>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Información detallada en grid -->
+    <div class="grid">
+      <!-- Información Personal/Empresa -->
+      <div class="col-12 md:col-6" *ngIf="isNaturalPerson()">
+        <div class="field">
+          <label class="label-title">Nombre Completo:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ getFullName() }}
+          </p>
         </div>
       </div>
-      <!--footer-->
-      <div class="flex items-center justify-end p-6 border-t border-gray-200">
-        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out" type="button" (click)="closePopUp()">
-          Cerrar
-        </button>
+
+      <div class="col-12 md:col-6" *ngIf="isJuridicPerson()">
+        <div class="field">
+          <label class="label-title">Razón Social:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ getSocialReason() }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6" *ngIf="isNaturalPerson()">
+        <div class="field">
+          <label class="label-title">Género:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ getGender() }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Información de Identificación -->
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Número de ID:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.idNumber }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Dígito de Verificación:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ getVerificationNumber() }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Estado:</label>
+          <p-tag 
+            [value]="getStateText()" 
+            [severity]="getStateSeverity()"
+            class="mt-1">
+          </p-tag>
+        </div>
+      </div>
+
+      <!-- Información de Ubicación -->
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">País:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.country || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Departamento:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.province || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Ciudad:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.city || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="field">
+          <label class="label-title">Dirección:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.address || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Información de Contacto -->
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Teléfono:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.phoneNumber || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Email:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.email || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Fechas -->
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Fecha de Creación:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ formatDate(thirdData.creationDate) }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Fecha de Actualización:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ formatDate(thirdData.updateDate) }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
-</div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="flex justify-content-center align-items-center p-6">
+    <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
+    <span class="ml-3 text-lg">Cargando datos del tercero...</span>
+  </div>
+
+  <!-- Footer con botón de cerrar -->
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end">
+      <p-button 
+        label="Cerrar" 
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="closePopUp()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

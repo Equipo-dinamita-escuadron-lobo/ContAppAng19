@@ -19,6 +19,7 @@ import { DialogModule } from 'primeng/dialog';
 // Componentes internos
 import { ThirdImportComponent } from '../third-import/third-import.component';
 import { ThirdExportComponent } from '../third-export/third-export.component';
+import { ThirdDetailsComponent } from '../third-details/third-details.component';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 // Models and Services
@@ -53,7 +54,8 @@ import { saveAs } from 'file-saver';
     FileUploadModule,
     DialogModule,
     ThirdImportComponent,
-    ThirdExportComponent
+    ThirdExportComponent,
+    ThirdDetailsComponent
   ],
   providers: [MessageService, ConfirmationService, DatePipe],
   templateUrl: './third-list.component.html',
@@ -82,6 +84,12 @@ export class ThirdListComponent implements OnInit {
   showTemplateModal = false;
   showImportModal = false;
   showExportModal = false;
+
+  /** Control de visibilidad del modal de detalles */
+  showDetailsModal = false;
+
+  /** Datos para el modal de detalles */
+  detailsModalData: any = null;
   createPdfRUT = false;
   
   // Company data
@@ -509,6 +517,26 @@ export class ThirdListComponent implements OnInit {
 
   closeExportModal(): void {
     this.showExportModal = false;
+  }
+
+  /**
+   * Abre el modal de detalles para un tercero específico
+   * @param third Datos del tercero a mostrar
+   */
+  openDetailsModal(third: Third): void {
+    this.detailsModalData = {
+      title: `Detalles del Tercero - ${third.names || third.socialReason || 'Sin nombre'}`,
+      thId: third.thId
+    };
+    this.showDetailsModal = true;
+  }
+
+  /**
+   * Cierra el modal de detalles
+   */
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.detailsModalData = null;
   }
 
   openCreatePDFRunt(): void {

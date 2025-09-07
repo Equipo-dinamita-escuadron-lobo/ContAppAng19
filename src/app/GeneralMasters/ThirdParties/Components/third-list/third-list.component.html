@@ -200,7 +200,8 @@
                 severity="info"
                 [text]="true"
                 pTooltip="Ver detalles"
-                tooltipPosition="top">
+                tooltipPosition="top"
+                (click)="openDetailsModal(third)">
               </p-button>
               
               <!-- Botón Editar -->
@@ -272,6 +273,13 @@
   [inputData]="{ title: 'Exportar Terceros a Excel' }"
   (close)="closeExportModal()">
 </app-third-export>
+
+<!-- Componente de detalles de terceros -->
+<app-third-details
+  [visible]="showDetailsModal"
+  [inputData]="detailsModalData"
+  (close)="closeDetailsModal()">
+</app-third-details>
 
 <!-- PDF RUT Component (if needed) -->
 <div *ngIf="createPdfRUT">
