@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -15,6 +15,8 @@ import { CostCentersFormComponent } from '../cost-centers-form/cost-centers-form
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { PaginatorModule } from 'primeng/paginator';
+import { SliderModule } from 'primeng/slider';
 
 @Component({
   selector: 'app-cost-centers-list',
@@ -32,20 +34,28 @@ import { TooltipModule } from 'primeng/tooltip';
     CostCentersFormComponent,
     ToggleSwitchModule,
     TagModule,
-    TooltipModule
+    TooltipModule,
+    PaginatorModule,
+    SliderModule
   ],
   templateUrl: './cost-centers-list.component.html',
   styleUrl: './cost-centers-list.component.css',
   providers: [MessageService, ConfirmationService]
 })
-export class CostCentersListComponent {
+export class CostCentersListComponent implements OnDestroy {
   filterAccount: string = '';
 
   // Data
   listCenters: CostCenterNode[] = [];
   listCentersAux: CostCenterNode[] = [];
+  allCenters: CostCenterNode[] = []; // Lista completa de la página actual
   selected?: CostCenterNode;
   selectedPath: CostCenterNode[] = [];
+
+  // Pagination
+  first: number = 0;
+  rows: number = 30;
+  totalRecords: number = 0;
 
   // UI State
   showPrincipalForm = false;
@@ -54,6 +64,8 @@ export class CostCentersListComponent {
   addChild = false;
   currentLevel: 'costo' | 'subcosto' | 'auxiliar costo' = 'costo';
   isCreatingRoot = false;
+  isLoading = false;
+  private sliderTimeout: any;
 
   // Forms
   form: FormGroup;
@@ -76,6 +88,13 @@ export class CostCentersListComponent {
     this.loadTree();
   }
 
+  ngOnDestroy(): void {
+    // Limpiar timeout para evitar memory leaks
+    if (this.sliderTimeout) {
+      clearTimeout(this.sliderTimeout);
+    }
+  }
+
   private getIdEnterprise(): string {
     const entData = localStorage.getItem('entData');
     if (entData) {
@@ -85,8 +104,19 @@ export class CostCentersListComponent {
   }
 
   private loadTree(expandCode?: string, selectCodeAfter?: string) {
-    this.service.findAll(this.getIdEnterprise()).subscribe({
+    // Evitar múltiples llamadas simultáneas
+    if (this.isLoading) {
+      return;
+    }
+    
+    this.isLoading = true;
+    // Calcular la página actual basada en el número de familias, no elementos individuales
+    const currentPage = Math.floor(this.first / this.rows);
+    
+    this.service.findAllHierarchical(this.getIdEnterprise(), currentPage, this.rows).subscribe({
       next: (page) => {
+        this.totalRecords = page.totalElements;
+        
         const list = page.content || [];
         const nodes = list.map(cc => ({
           ...cc,
@@ -95,8 +125,12 @@ export class CostCentersListComponent {
           showChildren: false,
           status: cc.status ?? true // Default a true si no está definido
         } as CostCenterNode));
-        this.listCenters = this.buildHierarchy(nodes);
-        this.listCentersAux = this.listCenters;
+        
+        // El backend ya devuelve los datos jerárquicamente organizados
+        // Solo necesitamos construir la jerarquía
+        this.allCenters = this.buildHierarchy(nodes);
+        this.listCenters = this.allCenters;
+        this.listCentersAux = this.allCenters;
 
         if (expandCode) {
           this.expandByCode(expandCode);
@@ -107,11 +141,16 @@ export class CostCentersListComponent {
             this.select(found);
           }
         }
+        
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('No se pudo cargar Centros de Costo:', err);
         this.listCenters = [];
+        this.allCenters = [];
         this.listCentersAux = [];
+        this.totalRecords = 0;
+        this.isLoading = false;
       }
     });
   }
@@ -180,23 +219,57 @@ export class CostCentersListComponent {
   onFilterChange() {
     const term = (this.filterAccount || '').toLowerCase().trim();
     if (!term) {
-      this.listCentersAux = this.listCenters;
-      return;
-    }
-    const filterRecursive = (nodes: CostCenterNode[]): CostCenterNode[] => {
-      const result: CostCenterNode[] = [];
-      for (const n of nodes) {
-        const children = n.children ? filterRecursive(n.children) : [];
-        const matches = n.code.toLowerCase().includes(term) || n.name.toLowerCase().includes(term);
-        if (matches || children.length) {
-          const copy: CostCenterNode = { ...n, children };
-          copy.showChildren = children.length > 0;
-          result.push(copy);
+      this.listCentersAux = this.allCenters;
+    } else {
+      const filterRecursive = (nodes: CostCenterNode[]): CostCenterNode[] => {
+        const result: CostCenterNode[] = [];
+        for (const n of nodes) {
+          const children = n.children ? filterRecursive(n.children) : [];
+          const matches = n.code.toLowerCase().includes(term) || n.name.toLowerCase().includes(term);
+          if (matches || children.length) {
+            const copy: CostCenterNode = { ...n, children };
+            copy.showChildren = children.length > 0;
+            result.push(copy);
+          }
         }
-      }
-      return result;
-    };
-    this.listCentersAux = filterRecursive(this.listCenters);
+        return result;
+      };
+      this.listCentersAux = filterRecursive(this.allCenters);
+    }
+  }
+
+  /**
+   * Actualiza los datos - ahora solo aplica filtros ya que la paginación es del backend
+   */
+  updatePaginatedData() {
+    this.loadTree();
+  }
+
+  /**
+   * Maneja el cambio en el slider de elementos por página con debounce
+   */
+  onSliderChange() {
+    // Cancelar timeout anterior si existe
+    if (this.sliderTimeout) {
+      clearTimeout(this.sliderTimeout);
+    }
+    
+    // Aplicar debounce de 300ms para evitar múltiples llamadas
+    this.sliderTimeout = setTimeout(() => {
+      this.first = 0; // Resetear a la primera página
+      this.loadTree(); // Cargar con el nuevo tamaño
+    }, 300);
+  }
+
+
+
+  /**
+   * Maneja el cambio de página del paginador
+   */
+  onPageChange(event: any) {
+    this.first = event.first;
+    this.rows = event.rows;
+    this.loadTree();
   }
 
   updateSelected() {

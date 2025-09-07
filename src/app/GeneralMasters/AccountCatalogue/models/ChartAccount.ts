@@ -10,9 +10,12 @@ export interface Account {
     showSubAccounts?: boolean;
     parent?: string | number | null;
     parentAccount?: Account;
+    crossing?: boolean | null;
+    costCenter?: boolean | null;
+    status?: boolean;
 }
 
-// Interface que coincide con la respuesta del backend para listas
+// Interface para listas
 export interface AccountCatalogueListRes {
     id: number;
     code: string;
@@ -21,10 +24,13 @@ export interface AccountCatalogueListRes {
     financialStatus: string;
     classification: string;
     parent: string | null;
+    crossing?: boolean | null;
+    costCenter?: boolean | null;
+    status?: boolean;
     children: AccountCatalogueListRes[];
 }
 
-// Interface que coincide con la respuesta del backend para items individuales
+// Interface para items individuales
 export interface ItemAccountCatalogueSearchRes {
     id: number;
     code: string;
@@ -35,7 +41,7 @@ export interface ItemAccountCatalogueSearchRes {
     parent: string;
 }
 
-// Interface que coincide con la respuesta del backend para crear cuenta
+// Interface para crear cuenta
 export interface AccountCatalogueCreateRes {
     id: number;
     idEnterprise: string;
@@ -45,9 +51,12 @@ export interface AccountCatalogueCreateRes {
     financialStatus: string;
     classification: string;
     parent: string;
+    crossing?: boolean | null;
+    costCenter?: boolean | null;
+    status?: boolean;
 }
 
-// Interface que coincide con la respuesta del backend para actualizar cuenta
+// Interface para actualizar cuenta
 export interface AccountCatalogueUpdateRes {
     id: number;
     code: string;
@@ -56,4 +65,7 @@ export interface AccountCatalogueUpdateRes {
     financialStatus: string;
     classification: string;
     parent: string;
+    crossing?: boolean | null;
+    costCenter?: boolean | null;
+    status?: boolean;
 }

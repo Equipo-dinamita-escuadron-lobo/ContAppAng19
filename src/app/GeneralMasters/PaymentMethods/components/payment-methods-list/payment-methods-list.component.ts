@@ -16,7 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { PaymentMethodsServiceService } from '../../services/payment-methods-service.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
-import { PaymentMethod } from '../../models/PaymentMethods';
+import { PaymentMethod, AccountingAccountOption } from '../../models/PaymentMethods';
 import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
 
 @Component({
@@ -46,7 +46,10 @@ export class PaymentMethodsListComponent {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  currentSortField: string = 'name';
+  currentSortOrder: string = 'asc';
   accountingAccountsMap: Map<string, string> = new Map(); // código -> descripción
+  accountingAccountsOptions: AccountingAccountOption[] = []; // Para compatibilidad
 
   constructor(
     private service: PaymentMethodsServiceService,
@@ -84,15 +87,25 @@ export class PaymentMethodsListComponent {
         // Crear mapa de código -> descripción
         auxiliaryAccounts.forEach(account => {
           this.accountingAccountsMap.set(account.code, account.description);
+
+        // También crear opciones para dropdown si es necesario
+        this.accountingAccountsOptions = this.accountingAccountsOptions || [];
+        if (account.id !== undefined) {
+          this.accountingAccountsOptions.push({
+            label: `${account.code} - ${account.description}`,
+            value: account.id,
+            code: account.code
+          });
+        }
         });
 
         // Una vez que tenemos el mapa, cargar los métodos de pago
-        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize });
+        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: 1 });
       },
       error: (error) => {
         console.error('Error al cargar cuentas contables:', error);
         // Aún así cargar los métodos de pago, aunque sin nombres de cuentas
-        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize });
+        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: 1 });
       }
     });
   }
@@ -105,13 +118,17 @@ export class PaymentMethodsListComponent {
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
 
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+    // Capturar parámetros de sorting
+    this.currentSortField = event.sortField || 'name'; // Campo por defecto
+    this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc'; // 1 = asc, -1 = desc
+
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
       next: (page) => {
         const content: PaymentMethod[] = page.content || [];
         this.list = content.map(pm => ({
           ...pm,
-          // Agregar propiedad para mostrar el nombre completo de la cuenta
-          accountingAccountDisplay: this.getAccountingAccountDisplay(pm.accountingAccount)
+          // Usar el campo accountingAccount que ya contiene el formato "código - descripción"
+          accountingAccountDisplay: pm.accountingAccount || 'Sin cuenta asignada'
         }));
         this.totalRecords = page?.totalElements || 0;
       },
@@ -131,12 +148,13 @@ export class PaymentMethodsListComponent {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize).subscribe({
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
       next: (page) => {
         const content: PaymentMethod[] = page.content || [];
         this.list = content.map(pm => ({
           ...pm,
-          accountingAccountDisplay: this.getAccountingAccountDisplay(pm.accountingAccount)
+          // Usar el campo accountingAccount que ya contiene el formato "código - descripción"
+          accountingAccountDisplay: pm.accountingAccount || 'Sin cuenta asignada'
         }));
         this.totalRecords = page?.totalElements || 0;
       },

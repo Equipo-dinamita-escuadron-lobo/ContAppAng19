@@ -58,10 +58,13 @@ export class PaymentMethodsCreationComponent {
           // Filtrar cuentas válidas (con código y descripción)
           const validAuxiliaryAccounts = PaymentMethodsUtils.filterValidAuxiliaryAccounts(auxiliaryAccounts);
 
-          this.accountingAccountsOptions = validAuxiliaryAccounts.map((account: Account) => ({
-            label: `${account.code} - ${account.description}`,
-            value: account.code
-          }));
+          this.accountingAccountsOptions = validAuxiliaryAccounts
+            .filter((account: Account) => account.id !== undefined)
+            .map((account: Account) => ({
+              label: `${account.code} - ${account.description}`,
+              value: account.id!, // Usar ID como value (ya filtrado)
+              code: account.code // Mantener código para referencia
+            }));
 
 
         },
@@ -98,9 +101,15 @@ export class PaymentMethodsCreationComponent {
 
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
+    const selectedAccountId = this.form.value.accountingAccount;
+
+    // Obtener la opción seleccionada por ID
+    const selectedOption = this.accountingAccountsOptions.find(option => option.value === selectedAccountId);
+
     const payload = {
       idEnterprise: enterpriseId,
-      ...this.form.value,
+      name: this.form.value.name,
+      accountingAccountId: selectedAccountId,
       status: true // Por defecto activo
     };
 

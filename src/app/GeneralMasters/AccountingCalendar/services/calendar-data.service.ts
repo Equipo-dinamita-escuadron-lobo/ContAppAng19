@@ -21,13 +21,9 @@ export class CalendarDataService {
    * @returns Meses actualizados
    */
   updateCalendarWithData(calendarMonths: CalendarMonth[], calendarData: AccountingCalendar[]): CalendarMonth[] {
-    console.log(`updateCalendarWithData: Actualizando con ${calendarData?.length || 0} entradas del backend`);
-    console.log('updateCalendarWithData: Datos del backend:', calendarData);
-    
     const updatedMonths = [...calendarMonths];
     
     if (!calendarData || calendarData.length === 0) {
-      console.log('updateCalendarWithData: No hay datos del backend, manteniendo calendario cerrado');
       // Si no hay datos, el calendario se mantiene rojo (cerrado)
       this.clearActiveEntriesMap();
       return updatedMonths;
@@ -38,17 +34,11 @@ export class CalendarDataService {
 
     // Actualizar los meses con los datos recibidos
     updatedMonths.forEach(month => {
-      console.log(`updateCalendarWithData: Procesando mes ${month.name} ${month.year}`);
-      
       const updatedMonth = { ...month };
       updatedMonth.days = month.days.map(day => {
         if (day.isCurrentMonth) {
           const wasClosed = day.isClosed;
           const newIsClosed = !this.isDateSelected(day.date, calendarData);
-          
-          if (wasClosed !== newIsClosed) {
-            console.log(`updateCalendarWithData: Día ${day.date.toISOString().split('T')[0]} cambió de ${wasClosed} a ${newIsClosed}`);
-          }
           
           return { 
             ...day, 
@@ -60,8 +50,7 @@ export class CalendarDataService {
       
       // Recalcular estado del mes
       this.updateMonthStatus(updatedMonth);
-      console.log(`updateCalendarWithData: Mes ${month.name} ${month.year} - Estado actualizado: ${updatedMonth.status}`);
-      
+
       // Actualizar el mes en el arreglo
       const monthIndex = updatedMonths.findIndex(m => 
         m.month === updatedMonth.month && m.year === updatedMonth.year
@@ -70,8 +59,7 @@ export class CalendarDataService {
         updatedMonths[monthIndex] = updatedMonth;
       }
     });
-    
-    console.log('updateCalendarWithData: Actualización completada');
+
     return updatedMonths;
   }
 
@@ -84,7 +72,6 @@ export class CalendarDataService {
   private isDateSelected(date: Date, calendarData: AccountingCalendar[]): boolean {
     // Si no hay datos, por defecto no está seleccionada (rojo)
     if (!calendarData || calendarData.length === 0) {
-      console.log(`isDateSelected: No hay datos del calendario para fecha ${date.toISOString().split('T')[0]}`);
       return false;
     }
 
@@ -92,30 +79,23 @@ export class CalendarDataService {
     const matchingDate = calendarData.find(period => {
       try {
         const periodDate = parseDateFromBackend(period.date);
-        const isMatch = periodDate.getDate() === date.getDate() && 
-                       periodDate.getMonth() === date.getMonth() && 
+        const isMatch = periodDate.getDate() === date.getDate() &&
+                       periodDate.getMonth() === date.getMonth() &&
                        periodDate.getFullYear() === date.getFullYear();
-        
-        if (isMatch) {
-          console.log(`isDateSelected: Fecha ${date.toISOString().split('T')[0]} encontrada, status: ${period.status}`);
-        }
         
         return isMatch;
       } catch (e) {
-        console.error(`Error parseando fecha del backend: ${period.date}`, e);
         return false;
       }
     });
 
     // Si no hay una fecha coincidente, no está seleccionada
     if (!matchingDate) {
-      console.log(`isDateSelected: Fecha ${date.toISOString().split('T')[0]} no encontrada en datos del backend`);
       return false;
     }
 
     // Retornar el estado (true = seleccionada, false = no seleccionada)
     const result = matchingDate.status;
-    console.log(`isDateSelected: Fecha ${date.toISOString().split('T')[0]} - Estado final: ${result}`);
     return result;
   }
 
