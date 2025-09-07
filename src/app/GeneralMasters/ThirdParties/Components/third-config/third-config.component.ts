@@ -1,41 +1,63 @@
-import { Component, Inject, Type } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { ThirdServiceService } from '../../services/third-service.service';
-import { LocalStorageMethods } from '../../../../../shared/methods/local-storage.method';
-import Swal from 'sweetalert2';
-import { ThirdServiceConfigurationService } from '../../services/third-service-configuration.service';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+// PrimeNG Imports
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { ToastModule } from 'primeng/toast';
+import { MessageService, ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TabViewModule } from 'primeng/tabview';
+import { CardModule } from 'primeng/card';
+
+// Models and Services
+import { ThirdService } from '../../Services/third.service';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
-import { buttonColors } from '../../../../../shared/buttonColors';
-import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-third-config',
-  imports: [],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    DialogModule,
+    ButtonModule,
+    InputTextModule,
+    ToastModule,
+    ConfirmDialogModule,
+    TabViewModule,
+    CardModule
+  ],
+  providers: [MessageService, ConfirmationService, LocalStorageMethods],
   templateUrl: './third-config.component.html',
   styleUrl: './third-config.component.css'
 })
-export class ThirdConfigComponent {
+export class ThirdConfigComponent implements OnInit {
+  /** Control de visibilidad del modal */
+  @Input() visible: boolean = false;
+  
   /** Datos recibidos como input al componente */
-  inputData: any;
+  @Input() inputData: any;
+  
+  /** Evento para cerrar el modal */
+  @Output() close = new EventEmitter<void>();
 
   /** Controla la visibilidad de la sección de identificaciones */
   showIdentifications = true;
 
-  /** Instancia de métodos para manejo de localStorage */
-  localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
-
   /** Datos de la empresa actual */
-  entData: any | null = null;
+  entData: string = '';
 
   /** Controla la visibilidad del input para nuevo tipo de tercero */
   showInputThirdType = false;
 
   /** Controla la visibilidad del input para nuevo tipo de identificación */
   showInputTypeId = false;
-
-  /** Nombre temporal para nuevo item */
-  newItemName = '';
 
   /** Nombre para nueva identificación */
   newIdentificatioName = '';
@@ -44,254 +66,300 @@ export class ThirdConfigComponent {
   newThirdTypeName = '';
 
   /** Array de tipos de identificación */
-  typesId: TypeId[] = []
+  typesId: TypeId[] = [];
 
   /** Array de tipos de terceros */
   thirdTypes: ThirdType[] = [];
 
+  /** Estados de carga */
+  loading = false;
+  loadingTypeIds = false;
+  loadingThirdTypes = false;
+
   /**
    * Constructor del componente
-   * 
-   * @param data - Datos inyectados al modal
-   * @param ref - Referencia al diálogo actual
-   * @param service - Servicio para operaciones con terceros
-   * @param thirdServiceConfiguration - Servicio para configuración de terceros
    */
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any, private ref: MatDialogRef<ThirdConfigModalComponent>, private service: ThirdServiceService, private thirdServiceConfiguration: ThirdServiceConfigurationService) {
+  constructor(
+    private thirdService: ThirdService,
+    private thirdServiceConfiguration: ThirdServiceConfigurationService,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService,
+    private localStorageMethods: LocalStorageMethods
+  ) {}
+
+  /**
+   * Inicializa el componente cargando los datos necesarios
+   */
+  ngOnInit(): void {
+    this.entData = this.localStorageMethods.getIdEnterprise();
+    this.loadData();
+  }
+
+  /**
+   * Se ejecuta cuando cambian los inputs
+   */
+  ngOnChanges(): void {
+    if (this.visible) {
+      this.loadData();
+    }
+  }
+
+  /**
+   * Se ejecuta cuando se oculta el diálogo
+   */
+  onHide(): void {
+    this.close.emit();
   }
 
   /**
    * Cierra el modal actual
-   * 
-   * @returns {void}
    */
-  closePopUp() {
-    this.ref.close('closing from modal details');
+  closePopUp(): void {
+    this.close.emit();
   }
 
   /**
-   * Inicializa el componente cargando los datos necesarios
-   * 
-   * @returns {void}
+   * Carga los datos iniciales
    */
-  ngOnInit() {
-    this.inputData = this.data;
-    this.entData = this.localStorageMethods.loadEnterpriseData();
+  private loadData(): void {
+    this.loadThirdTypes();
+    this.loadTypeIds();
+  }
+
+  /**
+   * Carga los tipos de tercero
+   */
+  private loadThirdTypes(): void {
+    this.loadingThirdTypes = true;
     this.thirdServiceConfiguration.getThirdTypes(this.entData).subscribe({
       next: (response: ThirdType[]) => {
         this.thirdTypes = response;
+        this.loadingThirdTypes = false;
       },
-      error: (error) => {
-        console.log(error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se han encontrado Tipos De Tercero Para esta Empresa',
-          confirmButtonColor: buttonColors.confirmationColor,
-          icon: 'error',
+      error: (error: any) => {
+        console.error('Error loading third types:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se han encontrado Tipos De Tercero Para esta Empresa'
         });
+        this.loadingThirdTypes = false;
       }
     });
+  }
 
+  /**
+   * Carga los tipos de identificación
+   */
+  private loadTypeIds(): void {
+    this.loadingTypeIds = true;
     this.thirdServiceConfiguration.getTypeIds(this.entData).subscribe({
       next: (response: TypeId[]) => {
         this.typesId = response;
-        console.log(response)
+        this.loadingTypeIds = false;
       },
-      error: (error) => {
-        console.log(error)
-        Swal.fire({
-          title: 'Error',
-          text: 'No se han encontrado Tipos De Tercero Para esta Empresa',
-          confirmButtonColor: buttonColors.confirmationColor,
-          icon: 'error',
+      error: (error: any) => {
+        console.error('Error loading type IDs:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se han encontrado Tipos De Identificación Para esta Empresa'
         });
-      }
-    });
-  }
-
-  /**
-   * Añade un nuevo tipo de identificación
-   * Corrección HU-1.1: Al momento de crear un nuevo Tipo de identificación se muestra un mensaje en pantalla
-   * Se actualiza la tabla donde se muestran todos los tipos de identifiación registrados en el sistema
-   * 
-   * @param items - Lista actual de tipos de identificación
-   * @returns {void}
-   */
-  addTypeId(items: any) {
-    console.log(this.newIdentificatioName)
-    let sendTypeId: TypeId = {
-      entId: this.entData,
-      typeId: this.newIdentificatioName,
-      typeIdname: this.newIdentificatioName
-    };
-    this.thirdServiceConfiguration.createTypeId(sendTypeId).subscribe({
-      next: (response) => {
-        this.typesId.push(response);
-        this.newIdentificatioName = '';
-        this.showInputTypeId = false;
-        Swal.fire({
-          title: 'Éxito',
-          text: 'Tipo de identificación agregado con éxito',
-          icon: "success",
-          confirmButtonColor: buttonColors.confirmationColor
-        });
-      },
-      error: (error) => {
-        console.error('Error:', error);
-        Swal.fire({
-          title: 'Error',
-          text: 'Hubo un error al agregar el Tipo de Identifiacion',
-          icon: 'error',
-          confirmButtonColor: buttonColors.confirmationColor
-        });
-      },
-    });
-  }
-
-  /**
-   * Añade un nuevo tipo de tercero
-   * Corrección HU-1.2: Al momento de crear un nuevo Tipo de Tercero se muestra un mensaje en pantalla
-   * Se actualiza la tabla donde se muestran todos los tipos de Terceros registrados en el sistema
-   * 
-   * @param items - Lista actual de tipos de tercero
-   * @returns {void}
-   */
-  addThirdType(items: any) {
-    console.log(this.newThirdTypeName)
-    let sendTypeId: ThirdType = {
-      entId: this.entData,
-      thirdTypeId: Math.floor(Math.random() * 1001),
-      thirdTypeName: this.newThirdTypeName
-    };
-    console.log(sendTypeId)
-    this.thirdServiceConfiguration.createThirdType(sendTypeId).subscribe({
-      next: (response) => {
-        this.thirdTypes.push(response);
-        this.newThirdTypeName = '';
-        this.showInputThirdType = false;
-        Swal.fire({
-          title: 'Éxito',
-          text: 'Tipo de tercero agregado con exito',
-          icon: "success",
-          confirmButtonColor: buttonColors.confirmationColor
-        });
-      },
-      error: (error) => {
-        console.error('Error:', error);
-        Swal.fire({
-          title: 'Error',
-          text: 'Hubo un error al agregar el Tipo de Tercero',
-          icon: 'error',
-          confirmButtonColor: buttonColors.confirmationColor
-        });
-      },
-    });
-  }
-
-  /**
-   * Cancela la adición de un nuevo tipo de tercero
-   * 
-   * @returns {void}
-   */
-  cancelAddThirdType() {
-    this.newThirdTypeName = '';
-    this.showInputThirdType = false;
-  }
-
-  /**
-   * Cancela la adición de un nuevo tipo de identificación
-   * 
-   * @returns {void}
-   */
-  cancelAddTypeId() {
-    this.newIdentificatioName = '';
-    this.showInputTypeId = false;
-  }
-
-  /**
-   * Elimina un tipo de tercero
-   * 
-   * @param items - Lista de tipos de tercero
-   * @param index - Índice del elemento a eliminar
-   * @returns {void}
-   */
-  deleteItem(items: any, index: number) {
-    this.thirdServiceConfiguration.deleteThird(items[index].thirdTypeId).subscribe({
-      next: (response) => {
-      },
-      error: (error: HttpErrorResponse) => {
-        if (error.error.text === 'SUCCESS') {
-          this.createAlert(items, index, "¿estás seguro?", "no se podra revertir este cambio", 'success', true, "si, eliminalo")
-        }
-        else {
-          this.createAlert(items, index, "No se pudo eliminar", "el valor esta asignado a un usuario", 'error', false, undefined)
-        }
+        this.loadingTypeIds = false;
       }
     });
   }
 
   /**
    * Elimina un tipo de identificación
-   * 
-   * @param items - Lista de tipos de identificación
-   * @param index - Índice del elemento a eliminar
-   * @returns {void}
    */
-  deleteItemId(items: any, index: number) {
-    this.thirdServiceConfiguration.deleteThird(items[index].thirdTypeId).subscribe({
-      next: (response) => {
-      },
-      error: (error: HttpErrorResponse) => {
-        if (error.error.text === 'SUCCESS') {
-          this.createAlert(items, index, "¿estás seguro?", "no se podra revertir este cambio", 'success', true, "si, eliminalo")
-        }
-        else {
-          this.createAlert(items, index, "No se pudo eliminar", "el valor esta asignado a un usuario", 'error', false, undefined)
-        }
+  deleteItem(array: TypeId[], index: number): void {
+    const item = array[index];
+    
+    this.confirmationService.confirm({
+      message: `¿Está seguro de que desea eliminar el tipo de identificación "${item.typeId}"?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, Eliminar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.thirdServiceConfiguration.deleteId(String(item.entId)).subscribe({
+          next: () => {
+            array.splice(index, 1);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: 'Tipo de identificación eliminado correctamente'
+            });
+          },
+          error: (error: any) => {
+            console.error('Error deleting type ID:', error);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Error al eliminar el tipo de identificación'
+            });
+          }
+        });
       }
     });
   }
 
   /**
-   * Crea y muestra una alerta de confirmación
-   * 
-   * @param items - Lista de elementos afectados
-   * @param index - Índice del elemento en la lista
-   * @param title - Título de la alerta
-   * @param text - Texto descriptivo de la alerta
-   * @param icono - Tipo de icono a mostrar
-   * @param confirmed - Indica si se requiere confirmación
-   * @param confirmButtonText - Texto del botón de confirmación
-   * @returns {void}
+   * Elimina un tipo de tercero
    */
-  createAlert(
-    items: any,
-    index: number,
-    title: string,
-    text: string,
-    icono: 'success' | 'error' | 'warning' | 'info' | 'question',
-    confirmed: boolean,
-    confirmButtonText: string | undefined
-  ) {
-    Swal.fire({
-      title: title,
-      text: text,
-      icon: icono,
-      showCancelButton: true,
-      confirmButtonColor: buttonColors.confirmationColor,
-      cancelButtonColor: buttonColors.cancelButtonColor,
-      confirmButtonText: confirmed ? confirmButtonText : undefined,
-      showConfirmButton: confirmed
-    }).then((result) => {
-      if (confirmed && result.isConfirmed) {
-        items.splice(index, 1);
-        Swal.fire({
-          title: "Eliminado!",
-          text: "Se eliminó con exito el tipo",
-          confirmButtonColor: buttonColors.confirmationColor,
-          icon: "success"
+  deleteItemId(array: ThirdType[], index: number): void {
+    const item = array[index];
+    
+    this.confirmationService.confirm({
+      message: `¿Está seguro de que desea eliminar el tipo de tercero "${item.thirdTypeName}"?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, Eliminar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.thirdServiceConfiguration.deleteThird(String(item.entId)).subscribe({
+          next: () => {
+            array.splice(index, 1);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: 'Tipo de tercero eliminado correctamente'
+            });
+          },
+          error: (error: any) => {
+            console.error('Error deleting third type:', error);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Error al eliminar el tipo de tercero'
+            });
+          }
         });
       }
     });
+  }
+
+  /**
+   * Agrega un nuevo tipo de identificación
+   */
+  addTypeId(array: TypeId[]): void {
+    if (!this.newIdentificatioName.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campo requerido',
+        detail: 'Por favor ingrese el nombre de la identificación'
+      });
+      return;
+    }
+
+    const newTypeId: TypeId = {
+      entId: this.entData,
+      typeId: this.newIdentificatioName.trim(),
+      typeIdname: this.newIdentificatioName.trim()
+    };
+
+    this.thirdServiceConfiguration.createTypeId(newTypeId).subscribe({
+      next: (response: TypeId) => {
+        array.push(response);
+        this.newIdentificatioName = '';
+        this.showInputTypeId = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Tipo de identificación creado correctamente'
+        });
+      },
+      error: (error: any) => {
+        console.error('Error creating type ID:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al crear el tipo de identificación'
+        });
+      }
+    });
+  }
+
+  /**
+   * Cancela la adición de un tipo de identificación
+   */
+  cancelAddTypeId(): void {
+    this.newIdentificatioName = '';
+    this.showInputTypeId = false;
+  }
+
+  /**
+   * Agrega un nuevo tipo de tercero
+   */
+  addThirdType(array: ThirdType[]): void {
+    if (!this.newThirdTypeName.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campo requerido',
+        detail: 'Por favor ingrese el nombre del tipo de tercero'
+      });
+      return;
+    }
+
+    const newThirdType: ThirdType = {
+      entId: this.entData,
+      thirdTypeId: 0,
+      thirdTypeName: this.newThirdTypeName.trim()
+    };
+
+    this.thirdServiceConfiguration.createThirdType(newThirdType).subscribe({
+      next: (response: ThirdType) => {
+        array.push(response);
+        this.newThirdTypeName = '';
+        this.showInputThirdType = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Tipo de tercero creado correctamente'
+        });
+      },
+      error: (error: any) => {
+        console.error('Error creating third type:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al crear el tipo de tercero'
+        });
+      }
+    });
+  }
+
+  /**
+   * Cancela la adición de un tipo de tercero
+   */
+  cancelAddThirdType(): void {
+    this.newThirdTypeName = '';
+    this.showInputThirdType = false;
+  }
+
+  /**
+   * Cambia a la vista de identificaciones
+   */
+  showIdentificationsView(): void {
+    this.showIdentifications = true;
+    this.cancelAddTypeId();
+    this.cancelAddThirdType();
+  }
+
+  /**
+   * Cambia a la vista de tipos de tercero
+   */
+  showThirdTypesView(): void {
+    this.showIdentifications = false;
+    this.cancelAddTypeId();
+    this.cancelAddThirdType();
+  }
+
+  /**
+   * Verifica si hay elementos cargando
+   */
+  isLoading(): boolean {
+    return this.loadingTypeIds || this.loadingThirdTypes;
   }
 }
