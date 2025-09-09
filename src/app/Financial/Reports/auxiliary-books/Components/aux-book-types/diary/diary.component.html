@@ -102,13 +102,16 @@
           Periodo <span class="text-[var(--color-secondary)]"> *</span>
         </h4>
         <p-datepicker
-          [(ngModel)]="criteria.endDate"
+          [(ngModel)]="datePeriod"
           selectionMode="multiple"
           maxDateCount="2"
           dateFormat="dd/mm/yy"
-          placeholder="DD-MM-YYYY"
+          placeholder="DD/MM/YYYY - DD/MM/YYYY"
           [showIcon]="true"
+          showClear="true"
           styleClass="w-full text-xs"
+          multipleSeparator="-"
+          [style]="{ width: '100%', minWidth: '310px' }"
         ></p-datepicker>
       </div>
 
@@ -129,14 +132,13 @@
   <!-- Tabla de Resultados -->
   <div class="mt-10 bg-white rounded-lg shadow-sm">
     <p-table
-      showGridlines
       [value]="dataTable"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[5, 10, 20]"
+      showGridlines
       [resizableColumns]="true"
+      [scrollable]="true"
+      scrollHeight="400px"
       [responsiveLayout]="'scroll'"
-      styleClass="p-datatable-header min-h-[20rem]"
+      styleClass="p-datatable-header"
     >
       <!-- Header -->
       <ng-template pTemplate="header">
@@ -163,11 +165,32 @@
           <td>{{ row.accountDescription }}</td>
           <td>{{ row.voucherCode }}</td>
           <td>{{ row.voucherName }}</td>
-          <td [ngClass]="{ 'text-red-500': row.debit < 0 }">
+          <td [ngClass]="{ 'text-[var(--color-secondary)]': row.debit < 0 }">
             {{ row.debit | currency : "COP $" : "symbol" : "1.0-0" }}
           </td>
-          <td [ngClass]="{ 'text-red-500': row.credit < 0 }">
+          <td [ngClass]="{ 'text-[var(--color-secondary)]': row.credit < 0 }">
             {{ row.credit | currency : "COP $" : "symbol" : "1.0-0" }}
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Footer (Totales) -->
+      <ng-template pTemplate="footer">
+        <tr class="font-bold bg-gray-100">
+          <td colspan="5" class="text-right pr-4">TOTAL:</td>
+          <td>
+            {{
+              dataTable.length > 0
+                ? (totalDebit | currency : "COP $" : "symbol" : "1.0-0")
+                : "-"
+            }}
+          </td>
+          <td>
+            {{
+              dataTable.length > 0
+                ? (totalCredit | currency : "COP $" : "symbol" : "1.0-0")
+                : "-"
+            }}
           </td>
         </tr>
       </ng-template>

@@ -47,7 +47,8 @@
                             formControlName="factCode"
                             placeholder="001"
                             class="w-full"
-                            [useGrouping]="false">
+                            [useGrouping]="false"
+                            [readonly]="true">
                         </p-inputNumber>
 
                         @if (invoiceForm.get('factCode')?.touched && invoiceForm.get('factCode')?.invalid) {
