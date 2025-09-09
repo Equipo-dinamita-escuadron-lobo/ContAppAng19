@@ -188,13 +188,6 @@ export class ThirdListComponent implements OnInit {
     this.dt.filterGlobal(target.value, 'contains');
   }
 
-  /**
-   * Limpia todos los filtros
-   */
-  clearFilters(): void {
-    this.dt.clear();
-    this.globalFilterValue = '';
-  }
 
   /**
    * Alterna entre vista detallada y resumida
