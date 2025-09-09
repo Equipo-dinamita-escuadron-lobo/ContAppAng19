@@ -16,6 +16,7 @@ import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CheckboxModule } from 'primeng/checkbox';
+import { SelectModule } from 'primeng/select';
 
 // Models and Services
 import { Third } from '../../models/Third';
@@ -49,7 +50,8 @@ import { catchError, map, Observable, of } from 'rxjs';
     DividerModule,
     TooltipModule,
     InputNumberModule,
-    CheckboxModule
+    CheckboxModule,
+    SelectModule
   ],
   providers: [MessageService, DatePipe, LocalStorageMethods],
   templateUrl: './third-creation.component.html',
@@ -178,22 +180,22 @@ export class ThirdCreationComponent implements OnInit {
    */
   private initializeForm(): void {
     this.createdThirdForm = this.fb.group({
-      personType: ['', Validators.required],
+      personType: [null, Validators.required],
       state: [true, Validators.required],
       thirdTypes: [[], Validators.required],
-      typeId: ['', Validators.required],
-      idNumber: ['', [Validators.required, Validators.min(1)], [this.thirdExistsValidator(this.thirdService, this.entData)]],
-      verificationNumber: [''],
-      names: [''],
-      lastNames: [''],
-      socialReason: [''],
-      gender: [''],
-      country: ['', Validators.required],
-      province: ['', Validators.required],
-      city: ['', Validators.required],
-      address: ['', Validators.required],
-      phoneNumber: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]]
+      typeId: [null, Validators.required],
+      idNumber: [null, [Validators.required, Validators.min(1)], [this.thirdExistsValidator(this.thirdService, this.entData)]],
+      verificationNumber: [null],
+      names: [null],
+      lastNames: [null],
+      socialReason: [null],
+      gender: [null],
+      country: [null, Validators.required],
+      province: [null, Validators.required],
+      city: [null, Validators.required],
+      address: [null, Validators.required],
+      phoneNumber: [null, Validators.required],
+      email: [null, [Validators.required, Validators.email]]
     });
 
     this.setupDynamicValidations();

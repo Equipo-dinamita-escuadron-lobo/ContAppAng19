@@ -79,13 +79,24 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="flex flex-col gap-2">
               <label class="font-semibold text-primary">Tipo de Identificación *</label>
-              <p-dropdown 
+              <p-select 
                 [options]="typeIds" 
                 formControlName="typeId"
                 optionLabel="typeId"
                 placeholder="Seleccione tipo de ID"
+                [filter]="true"
+                filterBy="typeId"
+                [showClear]="true"
                 class="max-w-sm">
-              </p-dropdown>
+                <ng-template pTemplate="selectedItem" let-selectedOption>
+                  <div *ngIf="selectedOption">
+                    {{ selectedOption.typeId }}
+                  </div>
+                </ng-template>
+                <ng-template pTemplate="item" let-option>
+                  <div>{{ option.typeId }}</div>
+                </ng-template>
+              </p-select>
               <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('typeId')?.touched) && createdThirdForm.get('typeId')?.invalid">
                 Seleccione un tipo de identificación
               </small>
@@ -198,14 +209,25 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="flex flex-col gap-2">
               <label class="font-semibold text-primary">País *</label>
-              <p-dropdown 
+              <p-select 
                 [options]="countries" 
                 formControlName="country"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccione país"
+                [filter]="true"
+                filterBy="label,value"
+                [showClear]="true"
                 class="max-w-sm">
-              </p-dropdown>
+                <ng-template pTemplate="selectedItem" let-selectedOption>
+                  <div *ngIf="selectedOption">
+                    {{ selectedOption.label }}
+                  </div>
+                </ng-template>
+                <ng-template pTemplate="item" let-option>
+                  <div>{{ option.label }}</div>
+                </ng-template>
+              </p-select>
               <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('country')?.touched) && createdThirdForm.get('country')?.invalid">
                 Seleccione un país
               </small>
@@ -213,15 +235,26 @@
 
             <div class="flex flex-col gap-2">
               <label class="font-semibold text-primary">Departamento *</label>
-              <p-dropdown 
+              <p-select 
                 [options]="states" 
                 formControlName="province"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccione departamento"
                 (onChange)="onStateChange($event.value)"
+                [filter]="true"
+                filterBy="label,value"
+                [showClear]="true"
                 class="max-w-sm">
-              </p-dropdown>
+                <ng-template pTemplate="selectedItem" let-selectedOption>
+                  <div *ngIf="selectedOption">
+                    {{ selectedOption.label }}
+                  </div>
+                </ng-template>
+                <ng-template pTemplate="item" let-option>
+                  <div>{{ option.label }}</div>
+                </ng-template>
+              </p-select>
               <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('province')?.touched) && createdThirdForm.get('province')?.invalid">
                 Seleccione un departamento
               </small>
@@ -229,15 +262,26 @@
 
             <div class="flex flex-col gap-2">
               <label class="font-semibold text-primary">Ciudad *</label>
-              <p-dropdown 
+              <p-select 
                 [options]="cities" 
                 formControlName="city"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccione ciudad"
                 [disabled]="!createdThirdForm.get('province')?.value"
+                [filter]="true"
+                filterBy="label,value"
+                [showClear]="true"
                 class="max-w-sm">
-              </p-dropdown>
+                <ng-template pTemplate="selectedItem" let-selectedOption>
+                  <div *ngIf="selectedOption">
+                    {{ selectedOption.label }}
+                  </div>
+                </ng-template>
+                <ng-template pTemplate="item" let-option>
+                  <div>{{ option.label }}</div>
+                </ng-template>
+              </p-select>
               <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('city')?.touched) && createdThirdForm.get('city')?.invalid">
                 Seleccione una ciudad
               </small>
