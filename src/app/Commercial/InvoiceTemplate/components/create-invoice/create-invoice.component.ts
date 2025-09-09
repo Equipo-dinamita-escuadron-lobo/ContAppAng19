@@ -92,9 +92,11 @@ export class CreateInvoiceComponent implements OnInit {
   }
 
   private createInvoiceForm(): FormGroup {
+    const randomFactCode = Math.floor(Math.random() * 10000) + 1;
+    
     return this.formBuilder.group({
       invoiceType: ['', Validators.required],
-      factCode: ['', Validators.required],
+      factCode: [{ value: randomFactCode, disabled: true }, Validators.required],
       thId: ['', Validators.required],
       expirationDate: ['', Validators.required],
       factProducts: this.formBuilder.array([this.createProductForm()]),
