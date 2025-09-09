@@ -500,9 +500,9 @@ export class ThirdListComponent implements OnInit {
     return matchingType;
   }
 
-  // Modal methods
+  // Navigation methods
   openConfigModal(): void {
-    // TODO: Implement configuration modal
+    this.router.navigate(['/gen-masters/third-parties/configuration']);
   }
 
   openTemplateModal(): void {

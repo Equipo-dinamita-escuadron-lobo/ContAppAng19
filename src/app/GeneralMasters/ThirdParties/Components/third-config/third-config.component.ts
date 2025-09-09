@@ -11,6 +11,12 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TabViewModule } from 'primeng/tabview';
 import { CardModule } from 'primeng/card';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { TableModule } from 'primeng/table';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // Models and Services
 import { ThirdService } from '../../Services/third.service';
@@ -31,7 +37,13 @@ import { TypeId } from '../../models/TypeId';
     ToastModule,
     ConfirmDialogModule,
     TabViewModule,
-    CardModule
+    CardModule,
+    TagModule,
+    TooltipModule,
+    TableModule,
+    IconFieldModule,
+    InputIconModule,
+    ToggleSwitchModule
   ],
   providers: [MessageService, ConfirmationService, LocalStorageMethods],
   templateUrl: './third-config.component.html',
@@ -46,9 +58,6 @@ export class ThirdConfigComponent implements OnInit {
   
   /** Evento para cerrar el modal */
   @Output() close = new EventEmitter<void>();
-
-  /** Controla la visibilidad de la sección de identificaciones */
-  showIdentifications = true;
 
   /** Datos de la empresa actual */
   entData: string = '';
@@ -104,19 +113,6 @@ export class ThirdConfigComponent implements OnInit {
     }
   }
 
-  /**
-   * Se ejecuta cuando se oculta el diálogo
-   */
-  onHide(): void {
-    this.close.emit();
-  }
-
-  /**
-   * Cierra el modal actual
-   */
-  closePopUp(): void {
-    this.close.emit();
-  }
 
   /**
    * Carga los datos iniciales
@@ -170,71 +166,60 @@ export class ThirdConfigComponent implements OnInit {
     });
   }
 
+
   /**
-   * Elimina un tipo de identificación
+   * Cambia el estado de un tipo de identificación (activar/desactivar)
    */
-  deleteItem(array: TypeId[], index: number): void {
-    const item = array[index];
+  toggleTypeIdStatus(typeId: TypeId, index: number): void {
+    const newStatus = !typeId.status;
+    const action = newStatus ? 'activar' : 'desactivar';
     
-    this.confirmationService.confirm({
-      message: `¿Está seguro de que desea eliminar el tipo de identificación "${item.typeId}"?`,
-      header: 'Confirmar Eliminación',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, Eliminar',
-      rejectLabel: 'Cancelar',
-      accept: () => {
-        this.thirdServiceConfiguration.deleteId(String(item.entId)).subscribe({
-          next: () => {
-            array.splice(index, 1);
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: 'Tipo de identificación eliminado correctamente'
-            });
-          },
-          error: (error: any) => {
-            console.error('Error deleting type ID:', error);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Error al eliminar el tipo de identificación'
-            });
-          }
+    const updatedTypeId = { ...typeId, status: newStatus };
+    
+    this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
+      next: (response: TypeId) => {
+        this.typesId[index] = response;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Tipo de identificación ${newStatus ? 'activado' : 'desactivado'} correctamente`
+        });
+      },
+      error: (error: any) => {
+        console.error('Error updating type ID status:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al ${action} el tipo de identificación`
         });
       }
     });
   }
 
   /**
-   * Elimina un tipo de tercero
+   * Cambia el estado de un tipo de tercero (activar/desactivar)
    */
-  deleteItemId(array: ThirdType[], index: number): void {
-    const item = array[index];
+  toggleThirdTypeStatus(thirdType: ThirdType, index: number): void {
+    const newStatus = !thirdType.status;
+    const action = newStatus ? 'activar' : 'desactivar';
     
-    this.confirmationService.confirm({
-      message: `¿Está seguro de que desea eliminar el tipo de tercero "${item.thirdTypeName}"?`,
-      header: 'Confirmar Eliminación',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, Eliminar',
-      rejectLabel: 'Cancelar',
-      accept: () => {
-        this.thirdServiceConfiguration.deleteThird(String(item.entId)).subscribe({
-          next: () => {
-            array.splice(index, 1);
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: 'Tipo de tercero eliminado correctamente'
-            });
-          },
-          error: (error: any) => {
-            console.error('Error deleting third type:', error);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Error al eliminar el tipo de tercero'
-            });
-          }
+    const updatedThirdType = { ...thirdType, status: newStatus };
+    
+    this.thirdServiceConfiguration.updateThirdType(updatedThirdType).subscribe({
+      next: (response: ThirdType) => {
+        this.thirdTypes[index] = response;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Tipo de tercero ${newStatus ? 'activado' : 'desactivado'} correctamente`
+        });
+      },
+      error: (error: any) => {
+        console.error('Error updating third type status:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al ${action} el tipo de tercero`
         });
       }
     });
@@ -256,7 +241,8 @@ export class ThirdConfigComponent implements OnInit {
     const newTypeId: TypeId = {
       entId: this.entData,
       typeId: this.newIdentificatioName.trim(),
-      typeIdname: this.newIdentificatioName.trim()
+      typeIdname: this.newIdentificatioName.trim(),
+      status: true
     };
 
     this.thirdServiceConfiguration.createTypeId(newTypeId).subscribe({
@@ -305,7 +291,8 @@ export class ThirdConfigComponent implements OnInit {
     const newThirdType: ThirdType = {
       entId: this.entData,
       thirdTypeId: 0,
-      thirdTypeName: this.newThirdTypeName.trim()
+      thirdTypeName: this.newThirdTypeName.trim(),
+      status: true
     };
 
     this.thirdServiceConfiguration.createThirdType(newThirdType).subscribe({
@@ -338,23 +325,6 @@ export class ThirdConfigComponent implements OnInit {
     this.showInputThirdType = false;
   }
 
-  /**
-   * Cambia a la vista de identificaciones
-   */
-  showIdentificationsView(): void {
-    this.showIdentifications = true;
-    this.cancelAddTypeId();
-    this.cancelAddThirdType();
-  }
-
-  /**
-   * Cambia a la vista de tipos de tercero
-   */
-  showThirdTypesView(): void {
-    this.showIdentifications = false;
-    this.cancelAddTypeId();
-    this.cancelAddThirdType();
-  }
 
   /**
    * Verifica si hay elementos cargando

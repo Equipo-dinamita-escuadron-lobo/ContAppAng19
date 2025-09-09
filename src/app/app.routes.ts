@@ -246,6 +246,16 @@ export const routes: Routes = [
                     './GeneralMasters/ThirdParties/Components/third-edit/third-edit.component'
                   ).then((m) => m.ThirdEditComponent),
               },
+              {
+                path: 'configuration',
+                data: {
+                  breadcrumb: 'Configuración de Terceros',
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-config/third-config.component'
+                  ).then((m) => m.ThirdConfigComponent),
+              },
             ],
           },
           //Rutas de etiquetas no comerciales
