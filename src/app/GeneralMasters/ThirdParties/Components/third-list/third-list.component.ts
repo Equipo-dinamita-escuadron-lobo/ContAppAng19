@@ -125,18 +125,23 @@ export class ThirdListComponent implements OnInit {
     this.loading = true;
     this.thirdService.getThirdList(this.entData).subscribe({
       next: (data: Third[]) => {
-        this.thirds = data;
-        this.totalRecords = data.length;
+        this.thirds = data || [];
+        this.totalRecords = this.thirds.length;
         this.loading = false;
       },
       error: (error: any) => {
         console.error('Error loading thirds:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Error al cargar los terceros'
-        });
+        this.thirds = [];
+        this.totalRecords = 0;
         this.loading = false;
+        // Only show error if it's not a 404 or empty result
+        if (error.status !== 404) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al cargar los terceros'
+          });
+        }
       }
     });
   }
@@ -328,7 +333,7 @@ export class ThirdListComponent implements OnInit {
    * Maneja la selección de archivos para importación
    */
   onFileSelect(event: any): void {
-    const file = event.files[0];
+    const file = event.target.files[0];
     if (!file) return;
 
     if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
@@ -341,6 +346,8 @@ export class ThirdListComponent implements OnInit {
     }
 
     this.readExcelFile(file);
+    // Reset the input so the same file can be selected again
+    event.target.value = '';
   }
 
   /**
