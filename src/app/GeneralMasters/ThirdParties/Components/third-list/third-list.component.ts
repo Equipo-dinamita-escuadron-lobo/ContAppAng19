@@ -205,14 +205,14 @@ export class ThirdListComponent implements OnInit {
    * Navega a la página de creación de terceros
    */
   navigateToCreate(): void {
-    this.router.navigate(['/general/operations/third-parties/create']);
+    this.router.navigate(['/gen-masters/third-parties/create']);
   }
 
   /**
    * Navega a la página de edición de terceros
    */
   navigateToEdit(thirdId: number): void {
-    this.router.navigate(['/general/operations/third-parties/edit', thirdId]);
+    this.router.navigate(['/gen-masters/third-parties/edit', thirdId]);
   }
 
   /**
