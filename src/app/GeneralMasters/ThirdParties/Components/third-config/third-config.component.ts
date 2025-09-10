@@ -9,7 +9,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -36,7 +36,7 @@ import { TypeId } from '../../models/TypeId';
     InputTextModule,
     ToastModule,
     ConfirmDialogModule,
-    TabViewModule,
+    TabsModule,
     CardModule,
     TagModule,
     TooltipModule,
@@ -79,6 +79,9 @@ export class ThirdConfigComponent implements OnInit {
 
   /** Array de tipos de terceros */
   thirdTypes: ThirdType[] = [];
+
+  /** Pestaña activa por defecto */
+  activeTab: string = '0';
 
   /** Estados de carga */
   loading = false;

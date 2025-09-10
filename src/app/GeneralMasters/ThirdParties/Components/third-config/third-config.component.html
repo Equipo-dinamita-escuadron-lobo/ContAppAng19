@@ -19,259 +19,266 @@
     </div>
 
     <!-- Tabs Container -->
-    <p-tabView>
+    <p-tabs [(value)]="activeTab">
+      <p-tablist>
+        <p-tab value="0" class="flex items-center !gap-6">
+          <i class="pi pi-id-card"></i>
+          <span>Tipos de Identificación</span>
+        </p-tab>
+        <p-tab value="1" class="flex items-center !gap-6">
+          <i class="pi pi-users"></i>
+          <span>Tipos de Tercero</span>
+        </p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <!-- Actions Bar -->
+          <div class="mb-6">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4">
+              <!-- Search Field -->
+              <div class="w-full sm:w-[30rem]">
+                <p-iconfield iconPosition="left">
+                  <p-inputicon>
+                    <i class="pi pi-search text-gray-500"></i>
+                  </p-inputicon>
+                  <input
+                    pInputText
+                    type="text"
+                    (input)="typeIdTable.filterGlobal($any($event.target).value, 'contains')"
+                    placeholder="Buscar tipo de identificación..."
+                    class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+                  />
+                </p-iconfield>
+              </div>
 
-      <!-- Tab de Tipos de Identificación -->
-      <p-tabPanel header="Tipos de Identificación" leftIcon="pi pi-id-card">
-        
-        <!-- Actions Bar -->
-        <div class="mb-6">
-          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4">
-            <!-- Search Field -->
-            <div class="w-full sm:w-[30rem]">
-              <p-iconfield iconPosition="left">
-                <p-inputicon>
-                  <i class="pi pi-search text-gray-500"></i>
-                </p-inputicon>
-                <input
-                  pInputText
-                  type="text"
-                  (input)="typeIdTable.filterGlobal($any($event.target).value, 'contains')"
-                  placeholder="Buscar tipo de identificación..."
-                  class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
-                />
-              </p-iconfield>
+              <!-- Buttons -->
+              <div class="flex flex-wrap justify-start sm:justify-end gap-2">
+                <p-button 
+                  label="Crear Tipo de Identificación" 
+                  icon="pi pi-plus" 
+                  (onClick)="showInputTypeId = true"
+                  size="small">
+                </p-button>
+              </div>
             </div>
+          </div>
 
-            <!-- Buttons -->
-            <div class="flex flex-wrap justify-start sm:justify-end gap-2">
+          <!-- Input para nueva identificación -->
+          <div *ngIf="showInputTypeId" class="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <div class="flex align-items-center gap-2">
+              <input 
+                pInputText 
+                [(ngModel)]="newIdentificatioName" 
+                placeholder="Nueva identificación"
+                class="flex-1"
+                (keydown.enter)="addTypeId(typesId)"
+                (keydown.escape)="cancelAddTypeId()">
               <p-button 
-                label="Crear Tipo de Identificación" 
-                icon="pi pi-plus" 
-                (onClick)="showInputTypeId = true"
-                size="small">
+                icon="pi pi-check" 
+                severity="success"
+                size="small"
+                (onClick)="addTypeId(typesId)">
+              </p-button>
+              <p-button 
+                icon="pi pi-times" 
+                severity="danger"
+                size="small"
+                (onClick)="cancelAddTypeId()">
               </p-button>
             </div>
           </div>
-        </div>
 
-        <!-- Input para nueva identificación -->
-        <div *ngIf="showInputTypeId" class="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-          <div class="flex align-items-center gap-2">
-            <input 
-              pInputText 
-              [(ngModel)]="newIdentificatioName" 
-              placeholder="Nueva identificación"
-              class="flex-1"
-              (keydown.enter)="addTypeId(typesId)"
-              (keydown.escape)="cancelAddTypeId()">
-            <p-button 
-              icon="pi pi-check" 
-              severity="success"
-              size="small"
-              (onClick)="addTypeId(typesId)">
-            </p-button>
-            <p-button 
-              icon="pi pi-times" 
-              severity="danger"
-              size="small"
-              (onClick)="cancelAddTypeId()">
-            </p-button>
-          </div>
-        </div>
+          <!-- Tabla de Tipos de Identificación -->
+          <p-table #typeIdTable [value]="typesId" [loading]="loadingTypeIds" [paginator]="true" [rows]="10" 
+            [rowsPerPageOptions]="[5, 10, 20]"
+            [globalFilterFields]="['typeId', 'typeIdname']" 
+            styleClass="p-datatable-striped font-family-sans"
+            [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
 
-        <!-- Tabla de Tipos de Identificación -->
-        <p-table #typeIdTable [value]="typesId" [loading]="loadingTypeIds" [paginator]="true" [rows]="10" 
-          [rowsPerPageOptions]="[5, 10, 20]"
-          [globalFilterFields]="['typeId', 'typeIdname']" 
-          styleClass="p-datatable-striped font-family-sans"
-          [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="typeId" class="font-semibold text-primary border-b-2 border-primary">
+                  Código <p-sortIcon field="typeId"></p-sortIcon>
+                </th>
+                <th pSortableColumn="typeIdname" class="font-semibold text-primary border-b-2 border-primary">
+                  Nombre <p-sortIcon field="typeIdname"></p-sortIcon>
+                </th>
+                <th pSortableColumn="status" class="font-semibold text-primary border-b-2 border-primary text-center">
+                  Estado <p-sortIcon field="status"></p-sortIcon>
+                </th>
+                <th class="font-semibold text-primary border-b-2 border-primary text-center">
+                  Acciones
+                </th>
+              </tr>
+            </ng-template>
 
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="typeId" class="font-semibold text-primary border-b-2 border-primary">
-                Código <p-sortIcon field="typeId"></p-sortIcon>
-              </th>
-              <th pSortableColumn="typeIdname" class="font-semibold text-primary border-b-2 border-primary">
-                Nombre <p-sortIcon field="typeIdname"></p-sortIcon>
-              </th>
-              <th pSortableColumn="status" class="font-semibold text-primary border-b-2 border-primary text-center">
-                Estado <p-sortIcon field="status"></p-sortIcon>
-              </th>
-              <th class="font-semibold text-primary border-b-2 border-primary text-center">
-                Acciones
-              </th>
-            </tr>
-          </ng-template>
+            <ng-template pTemplate="body" let-typeId let-i="rowIndex">
+              <tr>
+                <td class="font-medium">{{ typeId.typeId }}</td>
+                <td>{{ typeId.typeIdname }}</td>
+                <td class="text-center">
+                  <p-tag 
+                    [value]="typeId.status ? 'Activo' : 'Inactivo'" 
+                    [severity]="typeId.status ? 'success' : 'danger'">
+                  </p-tag>
+                </td>
+                <td class="text-center">
+                  <p-toggleSwitch 
+                    [ngModel]="typeId.status"
+                    (onChange)="toggleTypeIdStatus(typeId, i)"
+                    [style]="{ transform: 'scale(0.8)' }"
+                    [pTooltip]="typeId.status ? 'Activo' : 'Inactivo'"
+                    tooltipPosition="top">
+                  </p-toggleSwitch>
+                </td>
+              </tr>
+            </ng-template>
 
-          <ng-template pTemplate="body" let-typeId let-i="rowIndex">
-            <tr>
-              <td class="font-medium">{{ typeId.typeId }}</td>
-              <td>{{ typeId.typeIdname }}</td>
-              <td class="text-center">
-                <p-tag 
-                  [value]="typeId.status ? 'Activo' : 'Inactivo'" 
-                  [severity]="typeId.status ? 'success' : 'danger'">
-                </p-tag>
-              </td>
-              <td class="text-center">
-                <p-toggleSwitch 
-                  [ngModel]="typeId.status"
-                  (onChange)="toggleTypeIdStatus(typeId, i)"
-                  [style]="{ transform: 'scale(0.8)' }"
-                  [pTooltip]="typeId.status ? 'Activo' : 'Inactivo'"
-                  tooltipPosition="top">
-                </p-toggleSwitch>
-              </td>
-            </tr>
-          </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
+                  No se encontraron tipos de identificación.
+                </td>
+              </tr>
+            </ng-template>
 
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
-                No se encontraron tipos de identificación.
-              </td>
-            </tr>
-          </ng-template>
+            <ng-template pTemplate="loadingbody">
+              <tr>
+                <td colspan="4" class="text-center py-8">
+                  <div class="flex flex-col items-center gap-3">
+                    <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
+                    <p class="text-gray-500">Cargando tipos de identificación...</p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
 
-          <ng-template pTemplate="loadingbody">
-            <tr>
-              <td colspan="4" class="text-center py-8">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
-                  <p class="text-gray-500">Cargando tipos de identificación...</p>
-                </div>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </p-tabPanel>
+        <p-tabpanel value="1">
+          <!-- Actions Bar -->
+          <div class="mb-6">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4">
+              <!-- Search Field -->
+              <div class="w-full sm:w-[30rem]">
+                <p-iconfield iconPosition="left">
+                  <p-inputicon>
+                    <i class="pi pi-search text-gray-500"></i>
+                  </p-inputicon>
+                  <input
+                    pInputText
+                    type="text"
+                    (input)="thirdTypeTable.filterGlobal($any($event.target).value, 'contains')"
+                    placeholder="Buscar tipo de tercero..."
+                    class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+                  />
+                </p-iconfield>
+              </div>
 
-      <!-- Tab de Tipos de Tercero -->
-      <p-tabPanel header="Tipos de Tercero" leftIcon="pi pi-users">
-        
-        <!-- Actions Bar -->
-        <div class="mb-6">
-          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4">
-            <!-- Search Field -->
-            <div class="w-full sm:w-[30rem]">
-              <p-iconfield iconPosition="left">
-                <p-inputicon>
-                  <i class="pi pi-search text-gray-500"></i>
-                </p-inputicon>
-                <input
-                  pInputText
-                  type="text"
-                  (input)="thirdTypeTable.filterGlobal($any($event.target).value, 'contains')"
-                  placeholder="Buscar tipo de tercero..."
-                  class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
-                />
-              </p-iconfield>
+              <!-- Buttons -->
+              <div class="flex flex-wrap justify-start sm:justify-end gap-2">
+                <p-button 
+                  label="Crear Tipo de Tercero" 
+                  icon="pi pi-plus" 
+                  (onClick)="showInputThirdType = true"
+                  size="small">
+                </p-button>
+              </div>
             </div>
+          </div>
 
-            <!-- Buttons -->
-            <div class="flex flex-wrap justify-start sm:justify-end gap-2">
+          <!-- Input para nuevo tipo de tercero -->
+          <div *ngIf="showInputThirdType" class="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <div class="flex align-items-center gap-2">
+              <input 
+                pInputText 
+                [(ngModel)]="newThirdTypeName" 
+                placeholder="Nuevo tipo de tercero"
+                class="flex-1"
+                (keydown.enter)="addThirdType(thirdTypes)"
+                (keydown.escape)="cancelAddThirdType()">
               <p-button 
-                label="Crear Tipo de Tercero" 
-                icon="pi pi-plus" 
-                (onClick)="showInputThirdType = true"
-                size="small">
+                icon="pi pi-check" 
+                severity="success"
+                size="small"
+                (onClick)="addThirdType(thirdTypes)">
+              </p-button>
+              <p-button 
+                icon="pi pi-times" 
+                severity="danger"
+                size="small"
+                (onClick)="cancelAddThirdType()">
               </p-button>
             </div>
           </div>
-        </div>
 
-        <!-- Input para nuevo tipo de tercero -->
-        <div *ngIf="showInputThirdType" class="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-          <div class="flex align-items-center gap-2">
-            <input 
-              pInputText 
-              [(ngModel)]="newThirdTypeName" 
-              placeholder="Nuevo tipo de tercero"
-              class="flex-1"
-              (keydown.enter)="addThirdType(thirdTypes)"
-              (keydown.escape)="cancelAddThirdType()">
-            <p-button 
-              icon="pi pi-check" 
-              severity="success"
-              size="small"
-              (onClick)="addThirdType(thirdTypes)">
-            </p-button>
-            <p-button 
-              icon="pi pi-times" 
-              severity="danger"
-              size="small"
-              (onClick)="cancelAddThirdType()">
-            </p-button>
-          </div>
-        </div>
+          <!-- Tabla de Tipos de Tercero -->
+          <p-table #thirdTypeTable [value]="thirdTypes" [loading]="loadingThirdTypes" [paginator]="true" [rows]="10" 
+            [rowsPerPageOptions]="[5, 10, 20]"
+            [globalFilterFields]="['thirdTypeName']" 
+            styleClass="p-datatable-striped font-family-sans"
+            [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
 
-        <!-- Tabla de Tipos de Tercero -->
-        <p-table #thirdTypeTable [value]="thirdTypes" [loading]="loadingThirdTypes" [paginator]="true" [rows]="10" 
-          [rowsPerPageOptions]="[5, 10, 20]"
-          [globalFilterFields]="['thirdTypeName']" 
-          styleClass="p-datatable-striped font-family-sans"
-          [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="thirdTypeId" class="font-semibold text-primary border-b-2 border-primary">
+                  ID <p-sortIcon field="thirdTypeId"></p-sortIcon>
+                </th>
+                <th pSortableColumn="thirdTypeName" class="font-semibold text-primary border-b-2 border-primary">
+                  Nombre <p-sortIcon field="thirdTypeName"></p-sortIcon>
+                </th>
+                <th pSortableColumn="status" class="font-semibold text-primary border-b-2 border-primary text-center">
+                  Estado <p-sortIcon field="status"></p-sortIcon>
+                </th>
+                <th class="font-semibold text-primary border-b-2 border-primary text-center">
+                  Acciones
+                </th>
+              </tr>
+            </ng-template>
 
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="thirdTypeId" class="font-semibold text-primary border-b-2 border-primary">
-                ID <p-sortIcon field="thirdTypeId"></p-sortIcon>
-              </th>
-              <th pSortableColumn="thirdTypeName" class="font-semibold text-primary border-b-2 border-primary">
-                Nombre <p-sortIcon field="thirdTypeName"></p-sortIcon>
-              </th>
-              <th pSortableColumn="status" class="font-semibold text-primary border-b-2 border-primary text-center">
-                Estado <p-sortIcon field="status"></p-sortIcon>
-              </th>
-              <th class="font-semibold text-primary border-b-2 border-primary text-center">
-                Acciones
-              </th>
-            </tr>
-          </ng-template>
+            <ng-template pTemplate="body" let-thirdType let-i="rowIndex">
+              <tr>
+                <td class="font-medium">{{ thirdType.thirdTypeId }}</td>
+                <td>{{ thirdType.thirdTypeName }}</td>
+                <td class="text-center">
+                  <p-tag 
+                    [value]="thirdType.status ? 'Activo' : 'Inactivo'" 
+                    [severity]="thirdType.status ? 'success' : 'danger'">
+                  </p-tag>
+                </td>
+                <td class="text-center">
+                  <p-toggleSwitch 
+                    [ngModel]="thirdType.status"
+                    (onChange)="toggleThirdTypeStatus(thirdType, i)"
+                    [style]="{ transform: 'scale(0.8)' }"
+                    [pTooltip]="thirdType.status ? 'Activo' : 'Inactivo'"
+                    tooltipPosition="top">
+                  </p-toggleSwitch>
+                </td>
+              </tr>
+            </ng-template>
 
-          <ng-template pTemplate="body" let-thirdType let-i="rowIndex">
-            <tr>
-              <td class="font-medium">{{ thirdType.thirdTypeId }}</td>
-              <td>{{ thirdType.thirdTypeName }}</td>
-              <td class="text-center">
-                <p-tag 
-                  [value]="thirdType.status ? 'Activo' : 'Inactivo'" 
-                  [severity]="thirdType.status ? 'success' : 'danger'">
-                </p-tag>
-              </td>
-              <td class="text-center">
-                <p-toggleSwitch 
-                  [ngModel]="thirdType.status"
-                  (onChange)="toggleThirdTypeStatus(thirdType, i)"
-                  [style]="{ transform: 'scale(0.8)' }"
-                  [pTooltip]="thirdType.status ? 'Activo' : 'Inactivo'"
-                  tooltipPosition="top">
-                </p-toggleSwitch>
-              </td>
-            </tr>
-          </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
+                  No se encontraron tipos de tercero.
+                </td>
+              </tr>
+            </ng-template>
 
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
-                No se encontraron tipos de tercero.
-              </td>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="loadingbody">
-            <tr>
-              <td colspan="4" class="text-center py-8">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
-                  <p class="text-gray-500">Cargando tipos de tercero...</p>
-                </div>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </p-tabPanel>
-    </p-tabView>
+            <ng-template pTemplate="loadingbody">
+              <tr>
+                <td colspan="4" class="text-center py-8">
+                  <div class="flex flex-col items-center gap-3">
+                    <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
+                    <p class="text-gray-500">Cargando tipos de tercero...</p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
   </div>
 </div>
