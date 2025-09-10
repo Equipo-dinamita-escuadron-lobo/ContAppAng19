@@ -64,27 +64,43 @@
           </div>
 
           <!-- Input para nueva identificación -->
-          <div *ngIf="showInputTypeId" class="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <div class="flex align-items-center gap-2">
-              <input 
-                pInputText 
-                [(ngModel)]="newIdentificatioName" 
-                placeholder="Nueva identificación"
-                class="flex-1"
-                (keydown.enter)="addTypeId(typesId)"
-                (keydown.escape)="cancelAddTypeId()">
-              <p-button 
-                icon="pi pi-check" 
-                severity="success"
-                size="small"
-                (onClick)="addTypeId(typesId)">
-              </p-button>
-              <p-button 
-                icon="pi pi-times" 
-                severity="danger"
-                size="small"
-                (onClick)="cancelAddTypeId()">
-              </p-button>
+          <div *ngIf="showInputTypeId" class="mb-15 mt-12 p-4 border border-gray-200 rounded-lg">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-15 p-15 items-end">
+              <div>
+                <label class="font-semibold text-primary">Código *</label>
+                <input 
+                  pInputText 
+                  [(ngModel)]="newIdentificationCode" 
+                  placeholder="Ej: CC, TI, CE"
+                  class="w-full"
+                  maxlength="10"
+                  (keydown.enter)="addTypeId(typesId)"
+                  (keydown.escape)="cancelAddTypeId()">
+              </div>
+              <div>
+                <label class="font-semibold text-primary">Nombre *</label>
+                <input 
+                  pInputText 
+                  [(ngModel)]="newIdentificationName" 
+                  placeholder="Ej: Cédula de Ciudadanía"
+                  class="w-full"
+                  (keydown.enter)="addTypeId(typesId)"
+                  (keydown.escape)="cancelAddTypeId()">
+              </div>
+              <div class="flex gap-2 justify-center">
+                <p-button 
+                  type="button" 
+                  label="Cancelar" 
+                  severity="secondary" 
+                  (onClick)="cancelAddTypeId()">
+                </p-button>
+                <p-button 
+                  type="button" 
+                  label="Guardar" 
+                  [disabled]="!newIdentificationCode.trim() || !newIdentificationName.trim()"
+                  (onClick)="addTypeId(typesId)">
+                </p-button>
+              </div>
             </div>
           </div>
 

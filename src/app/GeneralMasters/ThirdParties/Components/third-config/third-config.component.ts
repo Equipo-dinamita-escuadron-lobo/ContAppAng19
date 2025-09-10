@@ -68,8 +68,11 @@ export class ThirdConfigComponent implements OnInit {
   /** Controla la visibilidad del input para nuevo tipo de identificación */
   showInputTypeId = false;
 
+  /** Código para nueva identificación */
+  newIdentificationCode = '';
+
   /** Nombre para nueva identificación */
-  newIdentificatioName = '';
+  newIdentificationName = '';
 
   /** Nombre para nuevo tipo de tercero */
   newThirdTypeName = '';
@@ -232,7 +235,16 @@ export class ThirdConfigComponent implements OnInit {
    * Agrega un nuevo tipo de identificación
    */
   addTypeId(array: TypeId[]): void {
-    if (!this.newIdentificatioName.trim()) {
+    if (!this.newIdentificationCode.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Campo requerido',
+        detail: 'Por favor ingrese el código de la identificación'
+      });
+      return;
+    }
+
+    if (!this.newIdentificationName.trim()) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Campo requerido',
@@ -243,15 +255,16 @@ export class ThirdConfigComponent implements OnInit {
 
     const newTypeId: TypeId = {
       entId: this.entData,
-      typeId: this.newIdentificatioName.trim(),
-      typeIdname: this.newIdentificatioName.trim(),
+      typeId: this.newIdentificationCode.trim(),
+      typeIdname: this.newIdentificationName.trim(),
       status: true
     };
 
     this.thirdServiceConfiguration.createTypeId(newTypeId).subscribe({
       next: (response: TypeId) => {
         array.push(response);
-        this.newIdentificatioName = '';
+        this.newIdentificationCode = '';
+        this.newIdentificationName = '';
         this.showInputTypeId = false;
         this.messageService.add({
           severity: 'success',
@@ -274,7 +287,8 @@ export class ThirdConfigComponent implements OnInit {
    * Cancela la adición de un tipo de identificación
    */
   cancelAddTypeId(): void {
-    this.newIdentificatioName = '';
+    this.newIdentificationCode = '';
+    this.newIdentificationName = '';
     this.showInputTypeId = false;
   }
 
