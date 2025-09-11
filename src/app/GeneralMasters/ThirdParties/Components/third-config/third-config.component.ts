@@ -67,6 +67,9 @@ export class ThirdConfigComponent implements OnInit {
   /** Controla la visibilidad del input para nuevo tipo de tercero */
   showInputThirdType = false;
 
+  /** Controla la visibilidad del input para editar tipo de tercero */
+  showEditThirdType = false;
+
   /** Controla la visibilidad del input para nuevo tipo de identificación */
   showInputTypeId = false;
 
@@ -87,6 +90,18 @@ export class ThirdConfigComponent implements OnInit {
   
   /** Formulario reactivo para tipos de terceros */
   thirdTypeForm: FormGroup;
+
+  /** Formulario reactivo para editar tipos de terceros */
+  editThirdTypeForm: FormGroup;
+
+  /** Índice del tipo de tercero que se está editando */
+  editingThirdTypeIndex: number = -1;
+
+  /** Tipo de tercero original antes de editar */
+  originalThirdType: ThirdType | null = null;
+
+  /** Valor inicial del formulario de edición de ThirdType para detectar cambios */
+  initialThirdTypeValue: any = {};
 
   /** Índice del tipo de identificación que se está editando */
   editingTypeIdIndex: number = -1;
@@ -136,6 +151,10 @@ export class ThirdConfigComponent implements OnInit {
     });
     
     this.thirdTypeForm = this.fb.group({
+      name: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/), Validators.minLength(1)]]
+    });
+    
+    this.editThirdTypeForm = this.fb.group({
       name: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/), Validators.minLength(1)]]
     });
   }
@@ -514,6 +533,113 @@ export class ThirdConfigComponent implements OnInit {
   cancelAddThirdType(): void {
     this.thirdTypeForm.reset();
     this.showInputThirdType = false;
+  }
+
+  /**
+   * Inicia la edición de un tipo de tercero
+   */
+  editThirdType(thirdType: ThirdType, index: number): void {
+    // Cerrar otros formularios
+    this.showInputTypeId = false;
+    this.showInputThirdType = false;
+    this.showEditTypeId = false;
+    
+    // Guardar referencia del elemento original
+    this.originalThirdType = { ...thirdType };
+    this.editingThirdTypeIndex = index;
+    
+    // Llenar el formulario con los datos actuales
+    this.editThirdTypeForm.patchValue({
+      name: thirdType.thirdTypeName
+    });
+    
+    // Guardar valor inicial para detectar cambios
+    this.initialThirdTypeValue = {
+      name: thirdType.thirdTypeName
+    };
+    
+    // Mostrar el formulario de edición
+    this.showEditThirdType = true;
+  }
+
+  /**
+   * Verifica si hay cambios en el formulario de edición de ThirdType
+   */
+  hasThirdTypeChanges(): boolean {
+    const currentName = this.editThirdTypeForm.get('name')?.value;
+    return this.initialThirdTypeValue.name !== currentName;
+  }
+
+  /**
+   * Actualiza un tipo de tercero existente
+   */
+  updateThirdType(): void {
+    if (this.editThirdTypeForm.invalid || !this.hasThirdTypeChanges()) {
+      this.editThirdTypeForm.markAllAsTouched();
+      return;
+    }
+    
+    if (this.originalThirdType) {
+      const formValue = this.editThirdTypeForm.value;
+      const name = formValue.name?.trim();
+      
+      // Verificar si ya existe otro tipo con el mismo nombre (excluyendo el actual)
+      const existingThirdType = this.thirdTypes.find((t, index) => 
+        t.thirdTypeName.toLowerCase() === name.toLowerCase() && 
+        index !== this.editingThirdTypeIndex
+      );
+      
+      if (existingThirdType) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Ya existe otro tipo de tercero con ese nombre'
+        });
+        return;
+      }
+
+      const updatedThirdType: ThirdType = {
+        entId: this.originalThirdType.entId,
+        thirdTypeId: this.originalThirdType.thirdTypeId,
+        thirdTypeName: name,
+        status: this.originalThirdType.status // Mantener el estado actual
+      };
+
+      this.thirdServiceConfiguration.updateThirdType(updatedThirdType).subscribe({
+        next: (response: ThirdType) => {
+          // Actualizar el elemento en el array
+          this.thirdTypes[this.editingThirdTypeIndex] = response;
+          
+          // Limpiar el formulario y ocultar
+          this.cancelEditThirdType();
+          
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tipo de tercero actualizado correctamente'
+          });
+        },
+        error: (error: any) => {
+          console.error('Error updating third type:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al actualizar el tipo de tercero'
+          });
+        }
+      });
+    }
+  }
+
+  /**
+   * Cancela la edición de un tipo de tercero
+   */
+  cancelEditThirdType(): void {
+    this.editThirdTypeForm.reset();
+    this.showEditThirdType = false;
+    this.editingThirdTypeIndex = -1;
+    this.originalThirdType = null;
+    this.initialThirdTypeValue = {};
   }
 
   /**

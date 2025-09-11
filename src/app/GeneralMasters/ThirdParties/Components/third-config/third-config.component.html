@@ -211,12 +211,10 @@
                   <div class="flex justify-center items-center gap-2">
                     <p-button 
                       icon="pi pi-pencil" 
-                      severity="info" 
-                      size="small"
-                      [text]="true"
-                      (onClick)="editTypeId(typeId, i)"
-                      pTooltip="Editar"
-                      tooltipPosition="top">
+                      pTooltip="Editar" 
+                      tooltipPosition="top" 
+                      (onClick)="editTypeId(typeId, i)" 
+                      styleClass="p-button-rounded p-button-text">
                     </p-button>
                     <p-toggleSwitch 
                       [ngModel]="typeId.status"
@@ -253,7 +251,7 @@
 
         <p-tabpanel value="1">
           <!-- Actions Bar -->
-          <div class="mt-20 mb-20">
+          <div class="mt-20 mb-16">
             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4">
               <!-- Search Field -->
               <div class="w-full sm:w-[30rem]">
@@ -285,6 +283,9 @@
 
           <!-- Input para nuevo tipo de tercero -->
           <div *ngIf="showInputThirdType" class="mb-15 mt-12 p-4 border border-gray-200 rounded-lg">
+            <div class="mb-3 p-15">
+              <h3 class="font-semibold text-primary">Crear Tipo de Tercero</h3>
+            </div>
             <form [formGroup]="thirdTypeForm" (ngSubmit)="addThirdType(thirdTypes)">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-15 p-15 items-start">
                 <div class="relative">
@@ -312,6 +313,44 @@
                       type="submit" 
                       label="Guardar" 
                       [disabled]="thirdTypeForm.invalid">
+                    </p-button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Input para editar tipo de tercero -->
+          <div *ngIf="showEditThirdType" class="mb-15 mt-12 p-4 border border-gray-200 rounded-lg">
+            <div class="mb-3 p-15">
+              <h3 class="font-semibold text-primary">Editar Tipo de Tercero</h3>
+            </div>
+            <form [formGroup]="editThirdTypeForm" (ngSubmit)="updateThirdType()">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-15 p-15 items-start">
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <input 
+                    pInputText 
+                    formControlName="name" 
+                    placeholder="Ej: Cliente, Proveedor, Empleado"
+                    class="w-full mb-6"
+                    maxlength="100"
+                    (keydown.enter)="updateThirdType()"
+                    (keydown.escape)="cancelEditThirdType()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editThirdTypeForm.get('name')?.touched && editThirdTypeForm.get('name')?.invalid">Nombre requerido</small>
+                </div>
+                <div class="flex flex-col justify-center h-full">
+                  <div class="flex gap-2 justify-center">
+                    <p-button 
+                      type="button" 
+                      label="Cancelar" 
+                      severity="secondary" 
+                      (onClick)="cancelEditThirdType()">
+                    </p-button>
+                    <p-button 
+                      type="submit" 
+                      label="Guardar Cambios" 
+                      [disabled]="editThirdTypeForm.invalid || !hasThirdTypeChanges()">
                     </p-button>
                   </div>
                 </div>
@@ -350,13 +389,22 @@
                   </p-tag>
                 </td>
                 <td class="text-center">
-                  <p-toggleSwitch 
-                    [ngModel]="thirdType.status"
-                    (onChange)="toggleThirdTypeStatus(thirdType, i)"
-                    [style]="{ transform: 'scale(0.8)' }"
-                    [pTooltip]="thirdType.status ? 'Activo' : 'Inactivo'"
-                    tooltipPosition="top">
-                  </p-toggleSwitch>
+                  <div class="flex justify-center items-center gap-2">
+                    <p-button 
+                      icon="pi pi-pencil" 
+                      pTooltip="Editar" 
+                      tooltipPosition="top" 
+                      (onClick)="editThirdType(thirdType, i)" 
+                      styleClass="p-button-rounded p-button-text">
+                    </p-button>
+                    <p-toggleSwitch 
+                      [ngModel]="thirdType.status"
+                      (onChange)="toggleThirdTypeStatus(thirdType, i)"
+                      [style]="{ transform: 'scale(0.8)' }"
+                      [pTooltip]="thirdType.status ? 'Activo' : 'Inactivo'"
+                      tooltipPosition="top">
+                    </p-toggleSwitch>
+                  </div>
                 </td>
               </tr>
             </ng-template>
