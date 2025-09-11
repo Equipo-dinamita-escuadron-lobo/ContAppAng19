@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
@@ -31,6 +31,7 @@ import { TypeId } from '../../models/TypeId';
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     DialogModule,
     ButtonModule,
     InputTextModule,
@@ -74,6 +75,9 @@ export class ThirdConfigComponent implements OnInit {
   /** Nombre para nueva identificación */
   newIdentificationName = '';
 
+  /** Formulario reactivo para tipos de identificación */
+  typeIdForm: FormGroup;
+
   /** Nombre para nuevo tipo de tercero */
   newThirdTypeName = '';
 
@@ -99,8 +103,14 @@ export class ThirdConfigComponent implements OnInit {
     private thirdServiceConfiguration: ThirdServiceConfigurationService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
-    private localStorageMethods: LocalStorageMethods
-  ) {}
+    private localStorageMethods: LocalStorageMethods,
+    private fb: FormBuilder
+  ) {
+    this.typeIdForm = this.fb.group({
+      code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
+      name: ['', [Validators.required]]
+    });
+  }
 
   /**
    * Inicializa el componente cargando los datos necesarios
@@ -235,60 +245,67 @@ export class ThirdConfigComponent implements OnInit {
    * Agrega un nuevo tipo de identificación
    */
   addTypeId(array: TypeId[]): void {
-    if (!this.newIdentificationCode.trim()) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Campo requerido',
-        detail: 'Por favor ingrese el código de la identificación'
-      });
-      return;
-    }
-
-    if (!this.newIdentificationName.trim()) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Campo requerido',
-        detail: 'Por favor ingrese el nombre de la identificación'
-      });
-      return;
-    }
-
-    const newTypeId: TypeId = {
-      entId: this.entData,
-      typeId: this.newIdentificationCode.trim(),
-      typeIdname: this.newIdentificationName.trim(),
-      status: true
-    };
-
-    this.thirdServiceConfiguration.createTypeId(newTypeId).subscribe({
-      next: (response: TypeId) => {
-        array.push(response);
-        this.newIdentificationCode = '';
-        this.newIdentificationName = '';
-        this.showInputTypeId = false;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Tipo de identificación creado correctamente'
-        });
-      },
-      error: (error: any) => {
-        console.error('Error creating type ID:', error);
+    if (this.typeIdForm.valid) {
+      const code = this.typeIdForm.get('code')?.value?.trim();
+      const name = this.typeIdForm.get('name')?.value?.trim();
+      
+      // Verificar si ya existe el código
+      const existingTypeId = array.find(t => t.typeId.toLowerCase() === code.toLowerCase());
+      if (existingTypeId) {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Error al crear el tipo de identificación'
+          detail: 'Ya existe un tipo de identificación con ese código'
         });
+        return;
       }
-    });
+
+      const newTypeId: TypeId = {
+        entId: this.entData,
+        typeId: code,
+        typeIdname: name,
+        status: true
+      };
+
+      this.thirdServiceConfiguration.createTypeId(newTypeId).subscribe({
+        next: (response: TypeId) => {
+          array.push(response);
+          this.typeIdForm.reset();
+          this.showInputTypeId = false;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tipo de identificación creado correctamente'
+          });
+        },
+        error: (error: any) => {
+          console.error('Error creating type ID:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al crear el tipo de identificación'
+          });
+        }
+      });
+    } else {
+      // Marcar todos los campos como tocados para mostrar errores
+      Object.keys(this.typeIdForm.controls).forEach(key => {
+        this.typeIdForm.get(key)?.markAsTouched();
+      });
+      
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Por favor complete todos los campos requeridos'
+      });
+    }
   }
 
   /**
    * Cancela la adición de un tipo de identificación
    */
   cancelAddTypeId(): void {
-    this.newIdentificationCode = '';
-    this.newIdentificationName = '';
+    this.typeIdForm.reset();
     this.showInputTypeId = false;
   }
 

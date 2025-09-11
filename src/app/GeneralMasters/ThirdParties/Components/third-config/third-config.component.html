@@ -65,43 +65,48 @@
 
           <!-- Input para nueva identificación -->
           <div *ngIf="showInputTypeId" class="mb-15 mt-12 p-4 border border-gray-200 rounded-lg">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-15 p-15 items-end">
-              <div>
-                <label class="font-semibold text-primary">Código *</label>
-                <input 
-                  pInputText 
-                  [(ngModel)]="newIdentificationCode" 
-                  placeholder="Ej: CC, TI, CE"
-                  class="w-full"
-                  maxlength="10"
-                  (keydown.enter)="addTypeId(typesId)"
-                  (keydown.escape)="cancelAddTypeId()">
+            <form [formGroup]="typeIdForm" (ngSubmit)="addTypeId(typesId)">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-15 p-15 items-start">
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2">Código *</label>
+                  <input 
+                    pInputText 
+                    formControlName="code" 
+                    placeholder="Ej: CC, TI, CE"
+                    class="w-full mb-6"
+                    maxlength="10"
+                    (keydown.enter)="addTypeId(typesId)"
+                    (keydown.escape)="cancelAddTypeId()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('code')?.touched && typeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
+                </div>
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <input 
+                    pInputText 
+                    formControlName="name" 
+                    placeholder="Ej: Cédula de Ciudadanía"
+                    class="w-full mb-6"
+                    (keydown.enter)="addTypeId(typesId)"
+                    (keydown.escape)="cancelAddTypeId()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('name')?.touched && typeIdForm.get('name')?.invalid">Nombre requerido</small>
+                </div>
+                <div class="flex flex-col justify-center h-full">
+                  <div class="flex gap-2 justify-center">
+                    <p-button 
+                      type="button" 
+                      label="Cancelar" 
+                      severity="secondary" 
+                      (onClick)="cancelAddTypeId()">
+                    </p-button>
+                    <p-button 
+                      type="submit" 
+                      label="Guardar" 
+                      [disabled]="typeIdForm.invalid">
+                    </p-button>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label class="font-semibold text-primary">Nombre *</label>
-                <input 
-                  pInputText 
-                  [(ngModel)]="newIdentificationName" 
-                  placeholder="Ej: Cédula de Ciudadanía"
-                  class="w-full"
-                  (keydown.enter)="addTypeId(typesId)"
-                  (keydown.escape)="cancelAddTypeId()">
-              </div>
-              <div class="flex gap-2 justify-center">
-                <p-button 
-                  type="button" 
-                  label="Cancelar" 
-                  severity="secondary" 
-                  (onClick)="cancelAddTypeId()">
-                </p-button>
-                <p-button 
-                  type="button" 
-                  label="Guardar" 
-                  [disabled]="!newIdentificationCode.trim() || !newIdentificationName.trim()"
-                  (onClick)="addTypeId(typesId)">
-                </p-button>
-              </div>
-            </div>
+            </form>
           </div>
 
           <!-- Tabla de Tipos de Identificación -->
