@@ -16,6 +16,14 @@
           Administra y configura los tipos de terceros y tipos de identificación del sistema.
         </p>
       </div>
+      <div class="flex justify-end">
+        <p-button 
+          type="button"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          (onClick)="goBack()">
+        </p-button>
+      </div>
     </div>
 
     <!-- Tabs Container -->
@@ -209,28 +217,39 @@
           </div>
 
           <!-- Input para nuevo tipo de tercero -->
-          <div *ngIf="showInputThirdType" class="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <div class="flex align-items-center gap-2">
-              <input 
-                pInputText 
-                [(ngModel)]="newThirdTypeName" 
-                placeholder="Nuevo tipo de tercero"
-                class="flex-1"
-                (keydown.enter)="addThirdType(thirdTypes)"
-                (keydown.escape)="cancelAddThirdType()">
-              <p-button 
-                icon="pi pi-check" 
-                severity="success"
-                size="small"
-                (onClick)="addThirdType(thirdTypes)">
-              </p-button>
-              <p-button 
-                icon="pi pi-times" 
-                severity="danger"
-                size="small"
-                (onClick)="cancelAddThirdType()">
-              </p-button>
-            </div>
+          <div *ngIf="showInputThirdType" class="mb-15 mt-12 p-4 border border-gray-200 rounded-lg">
+            <form [formGroup]="thirdTypeForm" (ngSubmit)="addThirdType(thirdTypes)">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-15 p-15 items-start">
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <input 
+                    pInputText 
+                    formControlName="name" 
+                    placeholder="Ej: Cliente, Proveedor, Empleado"
+                    class="w-full mb-6"
+                    maxlength="100"
+                    (keydown.enter)="addThirdType(thirdTypes)"
+                    (keydown.escape)="cancelAddThirdType()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('required')">Nombre requerido</small>
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('pattern')">Solo se permiten letras y espacios</small>
+                </div>
+                <div class="flex flex-col justify-center h-full">
+                  <div class="flex gap-2 justify-center">
+                    <p-button 
+                      type="button" 
+                      label="Cancelar" 
+                      severity="secondary" 
+                      (onClick)="cancelAddThirdType()">
+                    </p-button>
+                    <p-button 
+                      type="submit" 
+                      label="Guardar" 
+                      [disabled]="thirdTypeForm.invalid">
+                    </p-button>
+                  </div>
+                </div>
+              </div>
+            </form>
           </div>
 
           <!-- Tabla de Tipos de Tercero -->
@@ -242,9 +261,6 @@
 
             <ng-template pTemplate="header">
               <tr>
-                <th pSortableColumn="thirdTypeId" class="font-semibold text-primary border-b-2 border-primary">
-                  ID <p-sortIcon field="thirdTypeId"></p-sortIcon>
-                </th>
                 <th pSortableColumn="thirdTypeName" class="font-semibold text-primary border-b-2 border-primary">
                   Nombre <p-sortIcon field="thirdTypeName"></p-sortIcon>
                 </th>
@@ -259,8 +275,7 @@
 
             <ng-template pTemplate="body" let-thirdType let-i="rowIndex">
               <tr>
-                <td class="font-medium">{{ thirdType.thirdTypeId }}</td>
-                <td>{{ thirdType.thirdTypeName }}</td>
+                <td class="font-medium">{{ thirdType.thirdTypeName }}</td>
                 <td class="text-center">
                   <p-tag 
                     [value]="thirdType.status ? 'Activo' : 'Inactivo'" 
@@ -281,7 +296,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
+                <td colspan="3" class="text-center py-6 font-family-sans text-neutral-50">
                   No se encontraron tipos de tercero.
                 </td>
               </tr>
@@ -289,7 +304,7 @@
 
             <ng-template pTemplate="loadingbody">
               <tr>
-                <td colspan="4" class="text-center py-8">
+                <td colspan="3" class="text-center py-8">
                   <div class="flex flex-col items-center gap-3">
                     <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
                     <p class="text-gray-500">Cargando tipos de tercero...</p>

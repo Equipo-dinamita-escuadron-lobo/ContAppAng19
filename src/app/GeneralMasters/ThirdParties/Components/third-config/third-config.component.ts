@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 
 // PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
@@ -77,6 +78,9 @@ export class ThirdConfigComponent implements OnInit {
 
   /** Formulario reactivo para tipos de identificación */
   typeIdForm: FormGroup;
+  
+  /** Formulario reactivo para tipos de terceros */
+  thirdTypeForm: FormGroup;
 
   /** Nombre para nuevo tipo de tercero */
   newThirdTypeName = '';
@@ -99,16 +103,20 @@ export class ThirdConfigComponent implements OnInit {
    * Constructor del componente
    */
   constructor(
-    private thirdService: ThirdService,
     private thirdServiceConfiguration: ThirdServiceConfigurationService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private localStorageMethods: LocalStorageMethods,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {
     this.typeIdForm = this.fb.group({
       code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
       name: ['', [Validators.required]]
+    });
+    
+    this.thirdTypeForm = this.fb.group({
+      name: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/), Validators.minLength(1)]]
     });
   }
 
@@ -313,57 +321,74 @@ export class ThirdConfigComponent implements OnInit {
    * Agrega un nuevo tipo de tercero
    */
   addThirdType(array: ThirdType[]): void {
-    if (!this.newThirdTypeName.trim()) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Campo requerido',
-        detail: 'Por favor ingrese el nombre del tipo de tercero'
-      });
-      return;
-    }
-
-    const newThirdType: ThirdType = {
-      entId: this.entData,
-      thirdTypeId: 0,
-      thirdTypeName: this.newThirdTypeName.trim(),
-      status: true
-    };
-
-    this.thirdServiceConfiguration.createThirdType(newThirdType).subscribe({
-      next: (response: ThirdType) => {
-        array.push(response);
-        this.newThirdTypeName = '';
-        this.showInputThirdType = false;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Tipo de tercero creado correctamente'
-        });
-      },
-      error: (error: any) => {
-        console.error('Error creating third type:', error);
+    if (this.thirdTypeForm.valid) {
+      const name = this.thirdTypeForm.get('name')?.value?.trim();
+      
+      // Verificar si ya existe el nombre
+      const existingThirdType = array.find(t => t.thirdTypeName.toLowerCase() === name.toLowerCase());
+      if (existingThirdType) {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Error al crear el tipo de tercero'
+          detail: 'Ya existe un tipo de tercero con ese nombre'
         });
+        return;
       }
-    });
+
+      const newThirdType: ThirdType = {
+        entId: this.entData,
+        thirdTypeId: 0,
+        thirdTypeName: name,
+        status: true
+      };
+
+      this.thirdServiceConfiguration.createThirdType(newThirdType).subscribe({
+        next: (response: ThirdType) => {
+          array.push(response);
+          this.thirdTypeForm.reset();
+          this.showInputThirdType = false;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tipo de tercero creado correctamente'
+          });
+        },
+        error: (error: any) => {
+          console.error('Error creating third type:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al crear el tipo de tercero'
+          });
+        }
+      });
+    } else {
+      // Marcar todos los campos como tocados para mostrar errores
+      Object.keys(this.thirdTypeForm.controls).forEach(key => {
+        this.thirdTypeForm.get(key)?.markAsTouched();
+      });
+    }
   }
 
   /**
    * Cancela la adición de un tipo de tercero
    */
   cancelAddThirdType(): void {
-    this.newThirdTypeName = '';
+    this.thirdTypeForm.reset();
     this.showInputThirdType = false;
   }
-
 
   /**
    * Verifica si hay elementos cargando
    */
   isLoading(): boolean {
     return this.loadingTypeIds || this.loadingThirdTypes;
+  }
+
+  /**
+   * Navega de vuelta al módulo de maestros generales
+   */
+  goBack(): void {
+    this.router.navigate(['/gen-masters/third-parties/list']);
   }
 }
