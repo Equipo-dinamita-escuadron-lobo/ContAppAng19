@@ -70,6 +70,9 @@ export class ThirdConfigComponent implements OnInit {
   /** Controla la visibilidad del input para nuevo tipo de identificación */
   showInputTypeId = false;
 
+  /** Controla la visibilidad del input para editar tipo de identificación */
+  showEditTypeId = false;
+
   /** Código para nueva identificación */
   newIdentificationCode = '';
 
@@ -79,8 +82,20 @@ export class ThirdConfigComponent implements OnInit {
   /** Formulario reactivo para tipos de identificación */
   typeIdForm: FormGroup;
   
+  /** Formulario reactivo para editar tipos de identificación */
+  editTypeIdForm: FormGroup;
+  
   /** Formulario reactivo para tipos de terceros */
   thirdTypeForm: FormGroup;
+
+  /** Índice del tipo de identificación que se está editando */
+  editingTypeIdIndex: number = -1;
+
+  /** Tipo de identificación original antes de editar */
+  originalTypeId: TypeId | null = null;
+
+  /** Valor inicial del formulario de edición para detectar cambios */
+  initialTypeIdValue: any = {};
 
   /** Nombre para nuevo tipo de tercero */
   newThirdTypeName = '';
@@ -112,6 +127,11 @@ export class ThirdConfigComponent implements OnInit {
   ) {
     this.typeIdForm = this.fb.group({
       code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
+      name: ['', [Validators.required]]
+    });
+    
+    this.editTypeIdForm = this.fb.group({
+      code: ['', [Validators.required]],
       name: ['', [Validators.required]]
     });
     
@@ -315,6 +335,124 @@ export class ThirdConfigComponent implements OnInit {
   cancelAddTypeId(): void {
     this.typeIdForm.reset();
     this.showInputTypeId = false;
+  }
+
+  /**
+   * Inicia la edición de un tipo de identificación
+   */
+  editTypeId(typeId: TypeId, index: number): void {
+    // Cerrar otros formularios
+    this.showInputTypeId = false;
+    this.showInputThirdType = false;
+    
+    // Guardar referencia del elemento original
+    this.originalTypeId = { ...typeId };
+    this.editingTypeIdIndex = index;
+    
+    // Llenar el formulario con los datos actuales
+    this.editTypeIdForm.patchValue({
+      code: typeId.typeId,
+      name: typeId.typeIdname
+    });
+    
+    // Guardar valor inicial para detectar cambios
+    this.initialTypeIdValue = {
+      name: typeId.typeIdname
+    };
+    
+    // Mostrar el formulario de edición
+    this.showEditTypeId = true;
+  }
+
+  /**
+   * Actualiza un tipo de identificación existente
+   */
+  updateTypeId(): void {
+    if (this.editTypeIdForm.invalid || !this.hasTypeIdChanges()) {
+      this.editTypeIdForm.markAllAsTouched();
+      return;
+    }
+    
+    if (this.originalTypeId) {
+      const formValue = this.editTypeIdForm.value;
+      const name = formValue.name?.trim();
+      
+      // Verificar si ya existe otro tipo con el mismo nombre (excluyendo el actual)
+      const existingTypeId = this.typesId.find((t, index) => 
+        t.typeIdname.toLowerCase() === name.toLowerCase() && 
+        index !== this.editingTypeIdIndex
+      );
+      
+      if (existingTypeId) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Ya existe otro tipo de identificación con ese nombre'
+        });
+        return;
+      }
+
+      const updatedTypeId: TypeId = {
+        entId: this.originalTypeId.entId,
+        typeId: this.originalTypeId.typeId, // El código no cambia
+        typeIdname: name,
+        status: this.originalTypeId.status // Mantener el estado actual
+      };
+
+      this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
+        next: (response: TypeId) => {
+          // Actualizar el elemento en el array
+          this.typesId[this.editingTypeIdIndex] = response;
+          
+          // Limpiar el formulario y ocultar
+          this.cancelEditTypeId();
+          
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tipo de identificación actualizado correctamente'
+          });
+        },
+        error: (error: any) => {
+          console.error('Error updating type ID:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al actualizar el tipo de identificación'
+          });
+        }
+      });
+    } else {
+      // Marcar todos los campos como tocados para mostrar errores
+      Object.keys(this.editTypeIdForm.controls).forEach(key => {
+        this.editTypeIdForm.get(key)?.markAsTouched();
+      });
+      
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Por favor complete todos los campos requeridos'
+      });
+    }
+  }
+
+  /**
+   * Verifica si hay cambios en el formulario de edición de TypeId
+   */
+  hasTypeIdChanges(): boolean {
+    const currentName = this.editTypeIdForm.get('name')?.value;
+    return this.initialTypeIdValue.name !== currentName;
+  }
+
+  /**
+   * Cancela la edición de un tipo de identificación
+   */
+  cancelEditTypeId(): void {
+    this.editTypeIdForm.reset();
+    this.showEditTypeId = false;
+    this.editingTypeIdIndex = -1;
+    this.originalTypeId = null;
+    this.initialTypeIdValue = {};
   }
 
   /**
