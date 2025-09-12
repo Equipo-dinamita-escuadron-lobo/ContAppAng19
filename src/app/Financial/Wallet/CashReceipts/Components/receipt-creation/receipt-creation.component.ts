@@ -21,6 +21,7 @@ import { PaymentMethodsServiceService } from '../../../../../GeneralMasters/Paym
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { PaymentMethod } from '../../../../../GeneralMasters/PaymentMethods/models/PaymentMethods';
 import { CashReceiptService } from '../../Service/cash-receipt.service';
+import { Invoice } from '../../Model/Models';
 
 // Modelos adicionales para el frontend
 interface DropdownOption {
@@ -32,15 +33,6 @@ interface Client {
   id: number;
   name: string;
   // Otros campos relevantes del cliente
-}
-
-interface Invoice {
-  id: number;
-  code: string;
-  dueDate: Date;
-  pendingBalance: number;
-  selectedForPayment?: boolean; // Para el checkbox
-  amountToPay?: number; // Para el input de abono
 }
 
 @Component({
@@ -195,7 +187,7 @@ export class ReceiptCreationComponent {
   // Lógica para el checkbox de la tabla de abono
   onInvoiceSelectionChange(invoice: Invoice, rowIndex: number): void {
     if (invoice.selectedForPayment) {
-      invoice.amountToPay = invoice.pendingBalance; // Inicializar con el saldo pendiente
+      invoice.amountToPay = invoice.pendingValue; // Inicializar con el saldo pendiente
       this.selectedInvoicesForPayment.push(invoice);
     } else {
       invoice.amountToPay = undefined; // Limpiar el monto si se deselecciona
@@ -211,8 +203,8 @@ export class ReceiptCreationComponent {
     }
     if (invoice.amountToPay < 0) {
       invoice.amountToPay = 0;
-    } else if (invoice.amountToPay > invoice.pendingBalance!) {
-      invoice.amountToPay = invoice.pendingBalance; // No se puede abonar más del saldo
+    } else if (invoice.amountToPay > invoice.pendingValue!) {
+      invoice.amountToPay = invoice.pendingValue; // No se puede abonar más del saldo
       this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El valor a abonar no puede ser mayor al saldo pendiente.' });
     }
     this.updateTotalAmount();
@@ -235,7 +227,7 @@ export class ReceiptCreationComponent {
         ...invoice,
         selectedForPayment: true,
         // Si ya tenía un monto, lo conservamos. Si es nueva, le asignamos el saldo total.
-        amountToPay: previouslyPaidAmount !== undefined ? previouslyPaidAmount : invoice.pendingBalance
+        amountToPay: previouslyPaidAmount !== undefined ? previouslyPaidAmount : invoice.pendingValue
       };
     });
 
@@ -278,7 +270,7 @@ export class ReceiptCreationComponent {
     if (receiptTypeOption === 'debt_payment') {
       // Validar que al menos una factura esté seleccionada y tenga un monto válido
       const hasValidPayment = this.selectedInvoicesForPayment.some(invoice =>
-        invoice.selectedForPayment && invoice.amountToPay && invoice.amountToPay > 0 && invoice.amountToPay <= invoice.pendingBalance!
+        invoice.selectedForPayment && invoice.amountToPay && invoice.amountToPay > 0 && invoice.amountToPay <= invoice.pendingValue!
       );
       return this.cashReceiptForm.valid && hasValidPayment;
     } else if (receiptTypeOption === 'direct_income') {
@@ -348,7 +340,7 @@ export class ReceiptCreationComponent {
       console.log('Formulario inválido', this.cashReceiptForm.errors);
       if (this.cashReceiptForm.get('receiptTypeOption')?.value === 'debt_payment') {
         const hasValidPayment = this.selectedInvoicesForPayment.some(invoice =>
-          invoice.selectedForPayment && invoice.amountToPay && invoice.amountToPay > 0 && invoice.amountToPay <= invoice.pendingBalance!
+          invoice.selectedForPayment && invoice.amountToPay && invoice.amountToPay > 0 && invoice.amountToPay <= invoice.pendingValue!
         );
         if (!hasValidPayment) {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Debe seleccionar al menos una factura y especificar un monto válido a abonar.' });

@@ -8,13 +8,14 @@ import { PaymentMethod } from '../../../../GeneralMasters/PaymentMethods/models/
 import { PaymentMethodsServiceService } from '../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { AccountingEntryLine } from '../Model/AccountinEntryLine';
+import { environment } from '../../../../../environments/environment';
+import { ReceiptResponse } from '../Model/ReceiptResponse';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CashReceiptService {
-  // TODO: Reemplazar con la URL base de tu API
-  private apiUrl = 'api/cash-receipts';
+  private apiUrl = environment.API_URL + 'payments';
 
   private paymentMethodsCache: PaymentMethod[] = [];
 
@@ -47,18 +48,18 @@ export class CashReceiptService {
   ];
 
   private mockClientsDB: Client[] = [
-    { id: 101, name: 'Julian Ruano Majin', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 102, name: 'Maria Lopez', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 103, name: 'Pedro Gomez', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 104, name: 'Ana Fernandez', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 105, name: 'Julian Piamba', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 106, name: 'Juliana Campo', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } }
+    { id: 1, name: 'Julian Ruano Majin', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
+    { id: 2, name: 'Maria Lopez', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
+    { id: 3, name: 'Pedro Gomez', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
+    { id: 4, name: 'Ana Fernandez', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
+    { id: 5, name: 'Julian Piamba', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
+    { id: 6, name: 'Juliana Campo', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } }
   ];
 
   private mockInvoicesDB: Invoice[] = [
-    { id: 1, code: 'FV-2-10000', dueDate: new Date('2025-06-20'), pendingBalance: 1200000 },
-    { id: 2, code: 'FV-2-10001', dueDate: new Date('2025-07-15'), pendingBalance: 500000 },
-    { id: 3, code: 'FV-2-10002', dueDate: new Date('2025-08-10'), pendingBalance: 750000 },
+    { id: 1, factCode: 'FV-2-10000', expirationDate: new Date('2025-06-20'), pendingValue: 1200000 },
+    { id: 2, factCode: 'FV-2-10001', expirationDate: new Date('2025-07-15'), pendingValue: 500000 },
+    { id: 3, factCode: 'FV-2-10002', expirationDate: new Date('2025-08-10'), pendingValue: 750000 },
   ];
 
   constructor(
@@ -120,37 +121,74 @@ export class CashReceiptService {
     return of(client);
 }
 
+/*
   getInvoicesByClient(clientId: number): Observable<Invoice[]> {
     let invoices: Invoice[] = [];
     if (clientId === 101) {
       invoices = [
-        { id: 1, code: 'FV-2-10000', dueDate: new Date('2025-06-20'), pendingBalance: 1200000 },
-        { id: 2, code: 'FV-2-10001', dueDate: new Date('2025-07-15'), pendingBalance: 500000 },
-        { id: 3, code: 'FV-2-10002', dueDate: new Date('2025-08-10'), pendingBalance: 750000 },
+        { id: 1, factCode: 'FV-2-10000', expirationDate: new Date('2025-06-20'), pendingValue: 1200000 },
+        { id: 2, factCode: 'FV-2-10001', expirationDate: new Date('2025-07-15'), pendingValue: 500000 },
+        { id: 3, factCode: 'FV-2-10002', expirationDate: new Date('2025-08-10'), pendingValue: 750000 },
       ];
     }
 
     return of(invoices);
     // TODO: Cuando conectes al backend:
     // return this.http.get<Invoice[]>(`api/invoices/by-client/${clientId}`);
+  }*/
+
+  getInvoicesByClient(clientId: number): Observable<Invoice[]> {
+    // 1. Hacemos la llamada HTTP a la nueva URL.
+    return this.http.get<Invoice[]>(`${this.apiUrl}/pending/client/${clientId}`).pipe(
+      // 2. (Opcional pero recomendado) Transformamos los datos recibidos.
+      map(invoicesFromApi => {
+        // La API envía las fechas como strings (ej: "2023-10-27").
+        // Es una buena práctica convertirlas a objetos Date de JS para que
+        // componentes como p-calendar funcionen correctamente.
+        return invoicesFromApi.map(invoice => ({
+          ...invoice,
+          dueDate: new Date(invoice.expirationDate) // Convertimos el string de fecha a un objeto Date
+        }));
+      })
+    );
   }
 
-  // --- MÉTODOS PARA EL CRUD DE RECIBOS ---
 
+  // --- MÉTODOS PARA EL CRUD DE RECIBOS ---
   getAllReceipts(): Observable<ReceiptView[]> {
-    const receiptViews: ReceiptView[] = this.mockReceiptsDB.map(receipt => {
-      const client = this.mockClientsDB.find(c => c.id === receipt.thirdPartyId);
-      return {
-        id: receipt.id ?? 0,
-        receiptCode: receipt.receiptCode ?? '',
-        issueDate: receipt.issueDate ?? new Date(),
-        thirdPartyId: receipt.thirdPartyId ?? 0,
-        clientName: client ? client.name : 'Desconocido',
-        status: (receipt.status === 'Activo' ? 'Activo' : 'Anulado'),
-        totalAmount: receipt.totalAmount ?? 0
-      };
-    });
-    return of(receiptViews).pipe(delay(500));
+    //const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    const enterpriseId = "asdasdasfafa";
+    if (!enterpriseId) {
+      console.error("ID de empresa no encontrado. No se pueden cargar los recibos.");
+      return of([]); 
+    }
+
+    return this.http.get<ReceiptResponse[]>(`${this.apiUrl}/by-enterprise/${enterpriseId}`).pipe(
+      map(apiReceipts => {
+
+        if (!apiReceipts) {
+          return [];
+        }
+        
+        // 4. Transformar cada `ReceiptResponse` (de la API) en un `ReceiptView` (para la UI)
+        return apiReceipts.map(receiptFromApi => {
+
+          const client = this.mockClientsDB.find(c => c.id === receiptFromApi.thirdPartyId);
+
+          console.log("Recibo:", receiptFromApi)
+          // 6. Construir y retornar el objeto que el componente espera.
+          return {
+            id: receiptFromApi.id,
+            receiptCode: receiptFromApi.receiptCode,
+            issueDate: new Date(receiptFromApi.issueDate), 
+            thirdPartyId: receiptFromApi.thirdPartyId,
+            clientName: client ? client.name : `ID: ${receiptFromApi.thirdPartyId}`, 
+            status: receiptFromApi.status === 'FINALIZED' ? 'Activo' : 'Anulado', 
+            totalAmount: receiptFromApi.totalAmount
+          };
+        });
+      })
+    );
   }
 
   getReceiptById(id: number): Observable<ReceiptDetailsView | undefined> {
@@ -170,7 +208,7 @@ export class CashReceiptService {
 
         const detailsView = receipt.details?.map(detail => {
           const invoice = this.mockInvoicesDB.find(inv => inv.id === detail.invoiceId);
-          return { ...detail, invoiceCode: invoice ? invoice.code : 'N/A' };
+          return { ...detail, invoiceCode: invoice ? invoice.factCode : 'N/A' };
         }) ?? [];
 
         const receiptDetailsView: ReceiptDetailsView = {
@@ -255,7 +293,7 @@ export class CashReceiptService {
         }
         receipt.details?.forEach(detail => {
             const invoice = this.mockInvoicesDB.find(inv => inv.id === detail.invoiceId);
-            const invoiceCode = invoice ? invoice.code : `ID ${detail.invoiceId}`;
+            const invoiceCode = invoice ? invoice.factCode : `ID ${detail.invoiceId}`;
 
             entry.push({
                 accountCode: client.accountsReceivableAccount.code,
