@@ -4,16 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
+import { Invoice } from '../../Model/Models';
 
-// Reutilizamos la misma interfaz Invoice
-interface Invoice {
-  id: number;
-  code: string;
-  dueDate: Date;
-  pendingBalance: number;
-  selectedForPayment?: boolean;
-  amountToPay?: number;
-}
 
 @Component({
   selector: 'app-invoice-selection',
