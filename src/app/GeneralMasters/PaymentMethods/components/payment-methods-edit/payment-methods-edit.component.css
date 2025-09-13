@@ -1,0 +1,16 @@
+/* Estilos para el select deshabilitado */
+.p-select-disabled .p-select-label {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+}
+
+.p-select-disabled .p-select-trigger {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+}
+
+.p-select-disabled {
+  opacity: 0.7;
+}

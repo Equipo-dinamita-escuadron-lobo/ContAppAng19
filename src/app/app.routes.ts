@@ -2,11 +2,15 @@ import { Routes } from '@angular/router';
 import { StyleGuideComponent } from './Shared/Components/style-guide/style-guide.component';
 import { LoginComponent } from './Core/auth/login/login.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
-import { hasRoleGuard } from './Core/Guards/has-role.guard';
+import { hasRoleChildGuard, hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
 import { ViewEnterpriseComponent } from './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component';
 import { Breadcrumb } from 'primeng/breadcrumb';
 import { hasPermissionGuard } from './Core/Guards/has-permission.guard';
+import {
+  isAuthenticatedChildGuard,
+  isAuthenticatedGuard,
+} from './Core/Guards/is-authenticated.guard';
 
 export const routes: Routes = [
   {
@@ -15,6 +19,7 @@ export const routes: Routes = [
   },
   {
     path: 'enterprise/list',
+    canActivate: [isAuthenticatedGuard],
     data: {
       breadcrumb: 'enterprise-list',
     },
@@ -43,6 +48,7 @@ export const routes: Routes = [
   {
     path: '',
     component: MainTemplateComponent,
+    canActivate: [isAuthenticatedChildGuard],
     data: {
       breadcrumb: 'Home',
     },
@@ -50,6 +56,7 @@ export const routes: Routes = [
       {
         path: 'configuration',
         data: { breadcrumb: 'Configuración' },
+        canActivate: [hasRoleChildGuard],
         children: [
           {
             path: '',
@@ -134,7 +141,7 @@ export const routes: Routes = [
               },
               {
                 path: 'create',
-                data: { breadcrumb: 'Crear Permiso' },
+                data: { breadcrumb: 'Asignar Permisos a un Perfil' },
                 loadComponent: () =>
                   import(
                     './Configuration/Permissions/Components/permission-create/permission-create.component'
@@ -142,7 +149,7 @@ export const routes: Routes = [
               },
               {
                 path: 'edit/:role',
-                data: { breadcrumb: 'Editar Permiso' },
+                data: { breadcrumb: 'Editar Permisos del Perfil' },
                 loadComponent: () =>
                   import(
                     './Configuration/Permissions/Components/permission-edit/permission-edit.component'
@@ -451,10 +458,37 @@ export const routes: Routes = [
           {
             path: 'payment-methods',
             data: { breadcrumb: 'Métodos de Pago' },
-            loadComponent: () =>
-              import(
-                './GeneralMasters/Components/MenuCards/menu.component'
-              ).then((m) => m.MenuComponent),
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list',
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/PaymentMethods/components/payment-methods-list/payment-methods-list.component'
+                  ).then((m) => m.PaymentMethodsListComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Método de Pago' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/PaymentMethods/components/payment-methods-creation/payment-methods-creation.component'
+                  ).then((m) => m.PaymentMethodsCreationComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Método de Pago' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/PaymentMethods/components/payment-methods-edit/payment-methods-edit.component'
+                  ).then((m) => m.PaymentMethodsEditComponent),
+              },
+            ],
           },
           {
             path: 'document-types',
@@ -608,8 +642,8 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/diary/diary.component'
+                      ).then((m) => m.DiaryComponent),
                   },
                   {
                     path: 'major-and-balances',
@@ -618,8 +652,8 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/major-and-balances/major-and-balances.component'
+                      ).then((m) => m.MajorAndBalancesComponent),
                   },
                   {
                     path: 'account-book',
@@ -628,8 +662,8 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/account-book/account-book.component'
+                      ).then((m) => m.AccountBookComponent),
                   },
                   {
                     path: 'third-party-book',
@@ -638,8 +672,8 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/third-party-book/third-party-book.component'
+                      ).then((m) => m.ThirdPartyBookComponent),
                   },
                   {
                     path: 'accounting-movement',
@@ -648,13 +682,61 @@ export const routes: Routes = [
                     },
                     loadComponent: () =>
                       import(
-                        './Financial/Reports/auxiliary-books/Components/aux-book-types/inventory-and-balances/inventory-and-balances.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),
+                        './Financial/Reports/auxiliary-books/Components/aux-book-types/accounting-movement/accounting-movement.component'
+                      ).then((m) => m.AccountingMovementComponent),
                   },
                 ],
               },
             ],
           },
+          {
+            path: 'wallet',
+            data: {
+              breadcrumb: 'Cartera',
+            },
+            children: [
+              {
+                path: 'receipts',
+                data: {
+                  breadcrumb: 'Recibos de Caja',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/CashReceipts/Components/receipts-list/receipts-list.component'
+                  ).then((m) => m.ReceiptsListComponent),
+              },
+              {
+                path: 'receipts/creation',
+                data: {
+                  breadcrumb: 'Creación de Recibos',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/CashReceipts/Components/receipt-creation/receipt-creation.component'
+                  ).then((m) => m.ReceiptCreationComponent),
+              },
+              {
+                path: 'receipts/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del Recibo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/CashReceipts/Components/receipt-details/receipt-details.component'
+                  ).then((m) => m.ReceiptDetailsComponent),
+              },
+              {
+                path: 'receipts/:id/accounting',
+                data: {
+                  breadcrumb: 'Contabilización del Recibo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/CashReceipts/Components/receipt-accounting/receipt-accounting.component'
+                  ).then((m) => m.ReceiptAccountingComponent),
+                }
+            ],
+          }
         ],
       },
       {
@@ -701,6 +783,26 @@ export const routes: Routes = [
                 './Commercial/SaleInvoice/components/sale-invoice-creation/sale-invoice-creation.component'
               ).then((m) => m.SaleInvoiceCreationComponent),
           },
+          {
+            path: 'invoice-template',
+            data: {
+              breadcrumb: 'Plantilla de Factura',
+            },
+            loadComponent: () =>
+              import(
+                './Commercial/InvoiceTemplate/components/create-invoice/create-invoice.component'
+              ).then((m) => m.CreateInvoiceComponent),
+          },
+          {
+            path: 'return-template',
+            data: {
+              breadcrumb: 'Plantilla de Devolución',
+            },
+            loadComponent: () =>
+              import(
+                './Commercial/InvoiceTemplate/components/create-return/create-return.component'
+              ).then((m) => m.CreateReturnComponent),
+          }
         ],
       },
     ],
@@ -713,3 +815,5 @@ export const routes: Routes = [
     component: StyleGuideComponent,
   },
 ];
+
+

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -12,6 +12,11 @@ import { ConfirmationService } from 'primeng/api';
 import { CostCenter, CostCenterNode } from '../../models/cost-center.model';
 import { CostCenterService } from '../../services/cost-center.service';
 import { CostCentersFormComponent } from '../cost-centers-form/cost-centers-form.component';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { PaginatorModule } from 'primeng/paginator';
+import { SliderModule } from 'primeng/slider';
 
 @Component({
   selector: 'app-cost-centers-list',
@@ -26,20 +31,31 @@ import { CostCentersFormComponent } from '../cost-centers-form/cost-centers-form
     InputTextModule,
     ToastModule,
     ConfirmDialogModule,
-    CostCentersFormComponent
+    CostCentersFormComponent,
+    ToggleSwitchModule,
+    TagModule,
+    TooltipModule,
+    PaginatorModule,
+    SliderModule
   ],
   templateUrl: './cost-centers-list.component.html',
   styleUrl: './cost-centers-list.component.css',
   providers: [MessageService, ConfirmationService]
 })
-export class CostCentersListComponent {
+export class CostCentersListComponent implements OnDestroy {
   filterAccount: string = '';
 
   // Data
   listCenters: CostCenterNode[] = [];
   listCentersAux: CostCenterNode[] = [];
+  allCenters: CostCenterNode[] = []; // Lista completa de la página actual
   selected?: CostCenterNode;
   selectedPath: CostCenterNode[] = [];
+
+  // Pagination
+  first: number = 0;
+  rows: number = 30;
+  totalRecords: number = 0;
 
   // UI State
   showPrincipalForm = false;
@@ -48,6 +64,8 @@ export class CostCentersListComponent {
   addChild = false;
   currentLevel: 'costo' | 'subcosto' | 'auxiliar costo' = 'costo';
   isCreatingRoot = false;
+  isLoading = false;
+  private sliderTimeout: any;
 
   // Forms
   form: FormGroup;
@@ -62,12 +80,19 @@ export class CostCentersListComponent {
   ) {
     this.form = this.fb.group({
       codeSegment: [''],
-      name: ['', [Validators.required, Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,.()\/ +&%-]+$')]]
+      name: ['', [Validators.required]]
     });
   }
 
   ngOnInit(): void {
     this.loadTree();
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar timeout para evitar memory leaks
+    if (this.sliderTimeout) {
+      clearTimeout(this.sliderTimeout);
+    }
   }
 
   private getIdEnterprise(): string {
@@ -79,17 +104,33 @@ export class CostCentersListComponent {
   }
 
   private loadTree(expandCode?: string, selectCodeAfter?: string) {
-    this.service.findAll(this.getIdEnterprise()).subscribe({
+    // Evitar múltiples llamadas simultáneas
+    if (this.isLoading) {
+      return;
+    }
+    
+    this.isLoading = true;
+    // Calcular la página actual basada en el número de familias, no elementos individuales
+    const currentPage = Math.floor(this.first / this.rows);
+    
+    this.service.findAllHierarchical(this.getIdEnterprise(), currentPage, this.rows).subscribe({
       next: (page) => {
+        this.totalRecords = page.totalElements;
+        
         const list = page.content || [];
         const nodes = list.map(cc => ({
           ...cc,
           code: String(cc.code),
           children: [],
-          showChildren: false
+          showChildren: false,
+          status: cc.status ?? true // Default a true si no está definido
         } as CostCenterNode));
-        this.listCenters = this.buildHierarchy(nodes);
-        this.listCentersAux = this.listCenters;
+        
+        // El backend ya devuelve los datos jerárquicamente organizados
+        // Solo necesitamos construir la jerarquía
+        this.allCenters = this.buildHierarchy(nodes);
+        this.listCenters = this.allCenters;
+        this.listCentersAux = this.allCenters;
 
         if (expandCode) {
           this.expandByCode(expandCode);
@@ -100,11 +141,16 @@ export class CostCentersListComponent {
             this.select(found);
           }
         }
+        
+        this.isLoading = false;
       },
       error: (err) => {
         console.error('No se pudo cargar Centros de Costo:', err);
         this.listCenters = [];
+        this.allCenters = [];
         this.listCentersAux = [];
+        this.totalRecords = 0;
+        this.isLoading = false;
       }
     });
   }
@@ -173,23 +219,57 @@ export class CostCentersListComponent {
   onFilterChange() {
     const term = (this.filterAccount || '').toLowerCase().trim();
     if (!term) {
-      this.listCentersAux = this.listCenters;
-      return;
-    }
-    const filterRecursive = (nodes: CostCenterNode[]): CostCenterNode[] => {
-      const result: CostCenterNode[] = [];
-      for (const n of nodes) {
-        const children = n.children ? filterRecursive(n.children) : [];
-        const matches = n.code.toLowerCase().includes(term) || n.name.toLowerCase().includes(term);
-        if (matches || children.length) {
-          const copy: CostCenterNode = { ...n, children };
-          copy.showChildren = children.length > 0;
-          result.push(copy);
+      this.listCentersAux = this.allCenters;
+    } else {
+      const filterRecursive = (nodes: CostCenterNode[]): CostCenterNode[] => {
+        const result: CostCenterNode[] = [];
+        for (const n of nodes) {
+          const children = n.children ? filterRecursive(n.children) : [];
+          const matches = n.code.toLowerCase().includes(term) || n.name.toLowerCase().includes(term);
+          if (matches || children.length) {
+            const copy: CostCenterNode = { ...n, children };
+            copy.showChildren = children.length > 0;
+            result.push(copy);
+          }
         }
-      }
-      return result;
-    };
-    this.listCentersAux = filterRecursive(this.listCenters);
+        return result;
+      };
+      this.listCentersAux = filterRecursive(this.allCenters);
+    }
+  }
+
+  /**
+   * Actualiza los datos - ahora solo aplica filtros ya que la paginación es del backend
+   */
+  updatePaginatedData() {
+    this.loadTree();
+  }
+
+  /**
+   * Maneja el cambio en el slider de elementos por página con debounce
+   */
+  onSliderChange() {
+    // Cancelar timeout anterior si existe
+    if (this.sliderTimeout) {
+      clearTimeout(this.sliderTimeout);
+    }
+    
+    // Aplicar debounce de 300ms para evitar múltiples llamadas
+    this.sliderTimeout = setTimeout(() => {
+      this.first = 0; // Resetear a la primera página
+      this.loadTree(); // Cargar con el nuevo tamaño
+    }, 300);
+  }
+
+
+
+  /**
+   * Maneja el cambio de página del paginador
+   */
+  onPageChange(event: any) {
+    this.first = event.first;
+    this.rows = event.rows;
+    this.loadTree();
   }
 
   updateSelected() {
@@ -223,9 +303,9 @@ export class CostCentersListComponent {
     });
   }
 
-  confirmDeleteSelected() {
-    if (!this.selected) return;
-    const name = this.selected.name;
+  confirmDeleteSelected(node: CostCenterNode) {
+    if (!node) return;
+    const name = node.name;
     this.confirmationService.confirm({
       header: 'Confirmación',
       message: `¿Desea eliminar el centro de costo "${name}"? Esta acción no se puede deshacer.`,
@@ -234,29 +314,106 @@ export class CostCentersListComponent {
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-secondary',
-      accept: () => this.deleteSelected(),
+      accept: () => this.deleteSelected(node),
     });
   }
 
-  deleteSelected() {
-    if (!this.selected || this.selected.id == null) return;
+  deleteSelected(node: CostCenterNode) {
+    if (!node || node.id == null) return;
     const enterprise = this.getIdEnterprise();
-    const parent = this.getSelectedParent();
+    const parent = this.getSelectedParent(); // Podría necesitar un ajuste si el padre no es el seleccionado global
     const parentCode = parent ? parent.code : '';
-    this.service.delete(this.selected.id, enterprise).subscribe(() => {
-      this.selected = undefined;
-      this.showPrincipalForm = false;
-      this.showButton = false;
-      this.showButtonDelete = false;
-      this.addChild = false;
-      // Expandir el padre (si existe) y seleccionarlo
-      if (parentCode) {
-        this.loadTree(parentCode, parentCode);
-      } else {
-        this.loadTree();
+    this.service.delete(node.id, enterprise).subscribe({
+      next: () => {
+        this.selected = undefined;
+        this.showPrincipalForm = false;
+        this.showButton = false;
+        this.showButtonDelete = false;
+        this.addChild = false;
+        // Expandir el padre (si existe) y seleccionarlo
+        if (parentCode) {
+          this.loadTree(parentCode, parentCode);
+        } else {
+          this.loadTree();
+        }
+        this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Centro de costo eliminado.' });
+      },
+      error: (err) => {
+        // Capturar específicamente el error 400 de cuenta con hijos
+        if (err?.status === 400 && err?.error?.code === 'COST_CENTER_HAS_CHILDREN') {
+          const body = err.error || {};
+          const message: string = body.message || body.detail || 'No se puede eliminar el centro de costo porque tiene subcuentas asociadas.';
+          this.messageService.add({
+            severity: 'info',
+            summary: 'No se puede eliminar',
+            detail: message,
+            life: 6000
+          });
+        } else {
+          // Para otros errores, mostrar mensaje genérico
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo eliminar el centro de costo.'
+          });
+        }
       }
-      this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Centro de costo eliminado.' });
     });
+  }
+
+  changeCostCenterState(costCenter: CostCenterNode) {
+    const enterpriseId = this.getIdEnterprise();
+    if (!costCenter?.id || !enterpriseId || costCenter.status == null) {
+      // Revertir el estado en la UI si la validación falla
+      if (costCenter.status != null) {
+        costCenter.status = !costCenter.status;
+      }
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Faltan datos para cambiar el estado del centro de costo.'
+      });
+      return;
+    }
+
+    const newStatus = costCenter.status;
+
+    this.service.changeState(costCenter.id, enterpriseId, newStatus).subscribe({
+      next: () => {
+        // Actualizar recursivamente el estado de todos los hijos en la UI
+        this.updateChildrenStatusRecursively(costCenter, newStatus);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado del centro de costo "${costCenter.name}" cambiado correctamente`
+        });
+      },
+      error: () => {
+        // Revertir el estado en la UI del padre y todos los hijos si la llamada al servicio falla
+        costCenter.status = !newStatus;
+        this.updateChildrenStatusRecursively(costCenter, !newStatus);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado del centro de costo.'
+        });
+      }
+    });
+  }
+
+  /**
+   * Actualiza recursivamente el estado de todos los centros de costo hijos en la UI
+   * @param parent Centro de costo padre
+   * @param status Nuevo estado a aplicar
+   */
+  private updateChildrenStatusRecursively(parent: CostCenterNode, status: boolean): void {
+    if (parent.children && parent.children.length > 0) {
+      for (const child of parent.children) {
+        child.status = status;
+        // Actualizar recursivamente los hijos de este hijo
+        this.updateChildrenStatusRecursively(child, status);
+      }
+    }
   }
 
   cancelChild() {
@@ -266,7 +423,7 @@ export class CostCentersListComponent {
     this.showPrincipalForm = !!this.selected;
     this.updateCurrentLevel();
   }
-
+  
   private updateCurrentLevel() {
     const len = this.selected ? this.selected.code.length : 0;
     if (len <= 2) this.currentLevel = 'costo';
@@ -466,7 +623,7 @@ export class CostCentersListComponent {
     if (event.ctrlKey || event.altKey || event.metaKey) return;
     const allowed = ['Backspace','Delete','Tab','Escape','Enter',' ','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'];
     if (allowed.includes(event.key)) return;
-    const pattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d1,.()\/\-+&%]$/;
+    const pattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d10-9,.()\/\-+&%]$/;
     if (!pattern.test(event.key)) event.preventDefault();
   }
 }

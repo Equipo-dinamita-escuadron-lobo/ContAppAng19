@@ -19,8 +19,8 @@ export class DocumentTypesServiceService {
   private readonly http = inject(HttpClient);
   private readonly apiURL = environment.API_URL + 'config/document-types/';
 
-  findAll(enterpriseId: string, page = 0, size = 1000): Observable<Page<DocumentType>> {
-    const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
+  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'name', sortOrder = 'asc'): Observable<Page<DocumentType>> {
+    const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
     return this.http.get<Page<DocumentType>>(url);
   }
 
@@ -42,5 +42,10 @@ export class DocumentTypesServiceService {
   delete(id: number, enterpriseId: string): Observable<void> {
     const url = `${this.apiURL}delete/${id}/${enterpriseId}`;
     return this.http.delete<void>(url);
+  }
+
+  changeState(id: number, enterpriseId: string, status: boolean): Observable<any> {
+    const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
+    return this.http.patch<any>(url, {});
   }
 }

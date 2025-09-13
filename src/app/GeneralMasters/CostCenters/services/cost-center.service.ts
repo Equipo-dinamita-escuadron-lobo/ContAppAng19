@@ -20,9 +20,14 @@ export class CostCenterService {
 
   constructor(private http: HttpClient) {}
 
-  // Listado paginado por enterprise (por defecto, tamaño grande para traer todo)
-  findAll(enterpriseId: string, page = 0, size = 1000): Observable<Page<CostCenter>> {
-    return this.http.get<Page<CostCenter>>(`${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`);
+  // Listar todos los centros de costo de una empresa (submetodo de findAllHierarchical)
+  findAll(enterpriseId: string, page = 0, size = 30000): Observable<Page<CostCenter>> {
+    return this.http.get<Page<CostCenter>>(`${this.apiURL}findAllHierarchical/${enterpriseId}?page=${page}&size=${size}`);
+  }
+  
+  // Listado paginado jerárquico - mantiene familias completas juntas
+  findAllHierarchical(enterpriseId: string, page = 0, size = 30): Observable<Page<CostCenter>> {
+    return this.http.get<Page<CostCenter>>(`${this.apiURL}findAllHierarchical/${enterpriseId}?page=${page}&size=${size}`);
   }
 
   // Crear
@@ -43,6 +48,12 @@ export class CostCenterService {
   // Obtener por id
   findById(id: number, enterpriseId: string): Observable<CostCenter> {
     return this.http.get<CostCenter>(`${this.apiURL}findById/${id}/${enterpriseId}`);
+  }
+
+  // Cambiar estado
+  changeState(id: number, enterpriseId: string, status: boolean): Observable<any> {
+    const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
+    return this.http.patch<any>(url, {});
   }
 }
 

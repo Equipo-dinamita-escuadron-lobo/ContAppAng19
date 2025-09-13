@@ -8,12 +8,13 @@ import { ClasificationType } from '../../models/ClasificationType';
 import { ChartAccountService } from '../../services/chart-account.service';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 @Component({
   selector: 'app-account-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DropdownModule, ButtonModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DropdownModule, ButtonModule, CheckboxModule],
   templateUrl: './account-form.component.html',
   styleUrl: './account-form.component.css'
 })
@@ -50,6 +51,10 @@ export class AccountFormComponent implements OnInit {
   //message depending on the level
   messageLength: string = '';
 
+  // Propiedades para controlar la visibilidad de los checkboxes
+  showCrossingCheckbox: boolean = false;
+  showCostCenterCheckbox: boolean = false;
+
   /**
  * Constructor del componente.
  * Inicializa el formulario reactivo para crear una nueva cuenta y configura las validaciones.
@@ -65,7 +70,9 @@ export class AccountFormComponent implements OnInit {
       name: ['', [Validators.required, Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1]+[a-zA-ZÀ-ÿ\u00f1\u00d1\\d,.()\\/\\-+&% ]*$')]],
       selectedNatureType: ['', [Validators.required]],
       selectedFinancialStateType: ['', [Validators.required]],
-      selectedClassificationType: ['', [Validators.required]]
+      selectedClassificationType: ['', [Validators.required]],
+      crossing: [false],
+      costCenter: [false]
     });
   }
 
@@ -84,22 +91,27 @@ export class AccountFormComponent implements OnInit {
       ]; 
       this.formNewAccount.get('code')?.setValidators(validators);
       this.formNewAccount.get('code')?.updateValueAndValidity();
+      
+      // Determinar si es una cuenta auxiliar (nivel 4 = 8 dígitos totales)
+      this.updateCheckboxVisibility();
     }
 
-    if (changes['parent'] && this.parent) {
-      const nature = this.parent.nature === 'Por defecto' ? '' : this.parent.nature;
-      const financialStatus = this.parent.financialStatus === 'Por defecto' ? '' : this.parent.financialStatus;
-      const classification = this.parent.classification === 'Por defecto' ? '' : this.parent.classification;
+    if (changes['parent']) {
+      if (this.parent) {
+        // Establecer valores por defecto del padre
+        this.setDefaultValuesFromParent();
+      } else {
+        // Si no hay padre, resetear a valores por defecto
+        this.formNewAccount.patchValue({
+          selectedNatureType: '',
+          selectedFinancialStateType: '',
+          selectedClassificationType: ''
+        });
 
-      this.formNewAccount.patchValue({
-        selectedNatureType: nature || '',
-        selectedFinancialStateType: financialStatus || '',
-        selectedClassificationType: classification || ''
-      });
-
-      this.placeNatureType = this.parent.nature === 'Por defecto' ? 'Seleccione una opción' : '';
-      this.placeFinancialStateType = this.parent.financialStatus === 'Por defecto' ? 'Seleccione una opción' : '';
-      this.placeClassificationType = this.parent.classification === 'Por defecto' ? 'Seleccione una opción' : '';
+        this.placeNatureType = 'Seleccione una opción';
+        this.placeFinancialStateType = 'Seleccione una opción';
+        this.placeClassificationType = 'Seleccione una opción';
+      }
     }
   }
 
@@ -112,6 +124,16 @@ export class AccountFormComponent implements OnInit {
     this.getFinancialStateType();
     this.getClasificationType();
     this.asignMessage();
+    
+    // Si hay un padre al inicializar, establecer los valores por defecto
+    if (this.parent) {
+      this.setDefaultValuesFromParent();
+    }
+    
+    // Suscribirse a cambios en el estado financiero para controlar el checkbox de centro de costo
+    this.formNewAccount.get('selectedFinancialStateType')?.valueChanges.subscribe(() => {
+      this.updateCheckboxVisibility();
+    });
   }
 
   //Asigna el mensaje de longitud del código según el nivel de la cuenta.
@@ -120,9 +142,31 @@ export class AccountFormComponent implements OnInit {
   }
 
   /**
+   * Actualiza la visibilidad de los checkboxes basándose en el nivel y estado financiero.
+   * - Cruce: Se muestra solo para cuentas auxiliares (nivel 4 = 8 dígitos totales)
+   * - Centro de costo: Se muestra solo para cuentas auxiliares con estado financiero "Estado de Resultados"
+   */
+  updateCheckboxVisibility() {
+    // Determinar si es una cuenta auxiliar (nivel 4 significa que el código total será de 8 dígitos)
+    const isAuxiliaryAccount = this.level === 2 && this.parent !== undefined && this.parent.code.length === 6;
+    
+    this.showCrossingCheckbox = isAuxiliaryAccount;
+    
+    // El checkbox de centro de costo se muestra solo si es auxiliar y el estado financiero es "Estado de Resultados"
+    const financialStatus = this.formNewAccount.get('selectedFinancialStateType')?.value;
+    this.showCostCenterCheckbox = isAuxiliaryAccount && financialStatus === 'Estado de Resultados';
+    
+    // Si no se debe mostrar el checkbox de centro de costo, resetear su valor
+    if (!this.showCostCenterCheckbox) {
+      this.formNewAccount.patchValue({ costCenter: false });
+    }
+  }
+
+  /**
    * Emite el evento newAccount con la nueva cuenta contable creada.
    */
   sendAccount() {
+    
     const account: Account = {
       //idEnterprise: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
       idEnterprise: this.getIdEnterprise(), //Descomentar esta línea si tienes un método para obtener el ID de la empresa
@@ -131,10 +175,11 @@ export class AccountFormComponent implements OnInit {
       nature: this.formNewAccount.value.selectedNatureType,
       classification: this.formNewAccount.value.selectedClassificationType,
       financialStatus: this.formNewAccount.value.selectedFinancialStateType,
-      parent: 0,
-
+      parent: null,
+      crossing: this.formNewAccount.value.crossing || false,
+      costCenter: this.formNewAccount.value.costCenter || false
     };
-    console.log(account);
+    
     this.newAccount.emit(account);
   }
 
@@ -143,7 +188,7 @@ export class AccountFormComponent implements OnInit {
    * @returns El ID de la empresa, o una cadena vacía si no se encuentra.
    */
   getIdEnterprise(): string {
-    console.log('Fetching Enterprise ID from LocalStorage'+ this.localStorage.getIdEnterprise());
+
     return this.localStorage.getIdEnterprise();
     /*const entData = localStorage.getItem('entData');
     return entData ? JSON.parse(entData).entId : '';*/
@@ -168,6 +213,22 @@ export class AccountFormComponent implements OnInit {
    */
   getClasificationType() {
     this.listClasification = this._accountService.getClasificationType();
+  }
+
+  /**
+   * Configura los placeholders del formulario para mostrar "Seleccione una opción"
+   * en lugar de establecer valores automáticos del padre.
+   */
+  private setDefaultValuesFromParent() {
+    if (this.parent) {
+
+
+
+      // Mantener siempre "Seleccione una opción" como placeholder
+      this.placeNatureType = 'Seleccione una opción';
+      this.placeFinancialStateType = 'Seleccione una opción';
+      this.placeClassificationType = 'Seleccione una opción';
+    }
   }
 
   /**

@@ -55,7 +55,7 @@ export const navbarData: INavbarData[] = [
         ],
       },
       {
-        routeLink: '/gen-masters/payment-methods',
+        routeLink: '/gen-masters/payment-methods/list',
         icon: 'payments',
         label: 'Métodos de Pago',
       },
@@ -101,7 +101,7 @@ export const navbarData: INavbarData[] = [
         routeLink: 'TO DO',
         icon: 'circle',
         label: 'Maestros',
-        items: [          
+        items: [
           {
             routeLink: 'TO DO',
             icon: 'docs',
@@ -149,17 +149,17 @@ export const navbarData: INavbarData[] = [
         ],
       },
       {
-        routeLink: 'TO DO',
+        routeLink: '/financial/wallet',
         icon: 'point_of_sale',
         label: 'Cartera',
         items: [
           {
-            routeLink: 'TO DO',
+            routeLink: '/financial/wallet/receipts',
             icon: 'receipt',
             label: 'Recibos de Caja',
           },
           {
-            routeLink: 'TO DO',
+            routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',
           },
@@ -211,6 +211,16 @@ export const navbarData: INavbarData[] = [
          routeLink: 'TO DO',
          icon: 'receipt_long',
          label: 'Factura de Compra',
+       },
+       {
+         routeLink: '/commercial/invoice-template',
+         icon: 'description',
+         label: 'Plantilla de Factura',
+       },
+       {
+         routeLink: '/commercial/return-template',
+         icon: 'replay',
+         label: 'Devoluciones',
        },
        {
          routeLink: 'TO DO',

@@ -5,6 +5,8 @@ export interface DocumentType {
   name: string;
   documentClassId: number;
   module: string;
+  status: boolean;
+  isDeleted: boolean;
 }
 
 export interface DocumentTypeList extends DocumentType {

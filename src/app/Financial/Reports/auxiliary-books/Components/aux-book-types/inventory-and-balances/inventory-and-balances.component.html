@@ -74,7 +74,7 @@
           <p-select
             #fromSelect
             [options]="rangeFromOptionsFiltered"
-            [(ngModel)]="range.from"
+            [(ngModel)]="levelRange.from"
             [disabled]="!isRangeOptionSelected"
             optionLabel="code"
             optionValue="code"
@@ -87,7 +87,7 @@
             [options]="rangeToOptions"
             optionLabel="code"
             optionValue="code"
-            [(ngModel)]="range.to"
+            [(ngModel)]="levelRange.to"
             placeholder="Hasta"
             [disabled]="!isRangeOptionSelected"
             (onChange)="onToChange()"

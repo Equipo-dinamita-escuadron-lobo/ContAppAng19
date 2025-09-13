@@ -68,9 +68,30 @@
             [showClear]="false" [filter]="true" filterBy="name" styleClass="dropdown-custom xl:w-3/4 w-full">  
         </p-dropdown>
     </div>
+
+    <!-- Checkboxes para cuentas auxiliares -->
+    <div *ngIf="showCrossingCheckbox || showCostCenterCheckbox" class="mb-4 mt-30">
+        <div class="flex items-center gap-80">
+            <!-- Checkbox de Cruce -->
+            <div *ngIf="showCrossingCheckbox" class="flex items-center">
+                <p-checkbox inputId="crossing" formControlName="crossing" [binary]="true"></p-checkbox>
+                <label for="crossing" class="ml-8 text-sm font-medium text-gray-700">
+                    Cruce
+                </label>
+            </div>
+            
+            <!-- Checkbox de Centro de Costo -->
+            <div *ngIf="showCostCenterCheckbox" class="flex items-center">
+                <p-checkbox inputId="costCenter" formControlName="costCenter" [binary]="true"></p-checkbox>
+                <label for="costCenter" class="ml-8 text-sm font-medium text-gray-700">
+                    Centro de Costo
+                </label>
+            </div>
+        </div>
+    </div>
     <!-- section to show the save and cancel buttons -->
     <!-- Contenedor Flexbox mejorado para alinear y espaciar los botones -->
-    <div class="flex flex-wrap justify-center items-center mt-4 gap-3">
+    <div class="flex flex-wrap justify-center items-center mt-30 gap-3">
 
         <!-- Botón Cancelar -->
         <p-button label="Cancelar" (click)="cancel()" styleClass="p-button-danger p-button-raised">

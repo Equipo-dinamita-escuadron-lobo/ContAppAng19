@@ -45,7 +45,7 @@ export class MenuComponent {
     {
       title: 'Métodos de Pago',
       icon: 'payments',
-      route: '/gen-masters/payment-methods',
+      route: '/gen-masters/payment-methods/list',
       description: 'Formas de pago disponibles'
     },
     {
@@ -83,7 +83,7 @@ export class MenuComponent {
       title: 'Centro de Ayuda',
       icon: 'help',
       route: '/gen-masters/help-panels',
-      description: 'Configuración del centro de ayuda del sistema'
+      description: 'Gestión de cuadros de ayuda del sistema'
     }
     
   ];

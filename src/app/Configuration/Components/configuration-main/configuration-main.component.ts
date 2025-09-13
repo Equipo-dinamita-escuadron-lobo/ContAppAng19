@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { AuthService } from '../../../Core/auth/services/auth.service';
 import { ProfileService } from '../../Profiles/Services/profile.service';
 
 @Component({
@@ -41,13 +40,10 @@ export class ConfigurationMainComponent implements OnInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private authService: AuthService,
     private profileService: ProfileService
   ) {}
 
   ngOnInit(): void {
-    this.isAdmin = this.authService.hasRole('admin_realm');
-
     // Obtener la cantidad de perfiles dinámicamente
     this.profileService.getProfilesCount().subscribe((count) => {
       // Actualizar el número de perfiles en la configuración
