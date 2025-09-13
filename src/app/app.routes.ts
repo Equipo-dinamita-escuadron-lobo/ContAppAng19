@@ -679,6 +679,16 @@ export const routes: Routes = [
                     './Commercial/BusinessMasters/ValuationModels/WeightedAverage/list-kardex-weighted-average/list-kardex-weighted-average.component'
                   ).then((m) => m.ListKardexWeightedAverageComponent),
               },
+              {
+                path: 'kardex-peps',
+                data: {
+                  breadcrumb: 'Kardex PEPS',
+                },
+                loadComponent: () =>
+                  import(
+                    './Commercial/BusinessMasters/ValuationModels/PEPS/list-kardex-peps/list-kardex-peps.component'
+                  ).then((m) => m.ListKardexPepsComponent),
+              }
             ],
           },
           {
