@@ -10,6 +10,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { AccountingEntryLine } from '../Model/AccountinEntryLine';
 import { environment } from '../../../../../environments/environment';
 import { ReceiptResponse } from '../Model/ReceiptResponse';
+import { ReceiptCreateRequest } from '../Model/ReceiptCreateRequest';
 
 @Injectable({
   providedIn: 'root'
@@ -79,11 +80,9 @@ export class CashReceiptService {
       return of([]);
     }
 
-    // Llamamos al servicio real. Usamos una página grande para traer todos los métodos.
     return this.paymentMethodsService.findAll(enterpriseId, 0, 100).pipe(
       map(page => {
         this.paymentMethodsCache = page.content;
-        console.log(this.paymentMethodsCache);
         return this.paymentMethodsCache;
       })
     );
@@ -232,7 +231,7 @@ export class CashReceiptService {
     );
   }
 
-  createReceipt(receipt: Receipt): Observable<Receipt> {
+  /*createReceipt(receipt: Receipt): Observable<Receipt> {
     // Usamos switchMap para encadenar observables: primero necesitamos los métodos de pago para poder generar el asiento.
     return this.getPaymentMethods().pipe(
       switchMap(paymentMethods => {
@@ -257,7 +256,14 @@ export class CashReceiptService {
         return of(newCompleteReceipt);
       }),
     );
-  }
+  }*/
+
+  createReceipt(receiptData: ReceiptCreateRequest): Observable<ReceiptResponse> {
+    // La URL de la API de pagos/recibos
+    //const apiUrl = `${environment.API_URL}/api/payments`;
+    
+    return this.http.post<ReceiptResponse>(`${this.apiUrl}/`, receiptData);
+}
 
   // --> NUEVO: Método privado que contiene la lógica para generar el asiento contable.
   private _generateAccountingEntry(receipt: Receipt, paymentMethods: PaymentMethod[]): AccountingEntryLine[] {
