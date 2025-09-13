@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { delay, map, Observable, of, switchMap } from 'rxjs';
+import { delay, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { Client, DropdownOption, Invoice, ReceiptView } from '../Model/Models';
 import { Receipt } from '../Model/Receipt';
 import { ReceiptDetailsView } from '../Model/ReceiptView';
@@ -11,6 +11,7 @@ import { AccountingEntryLine } from '../Model/AccountinEntryLine';
 import { environment } from '../../../../../environments/environment';
 import { ReceiptResponse } from '../Model/ReceiptResponse';
 import { ReceiptCreateRequest } from '../Model/ReceiptCreateRequest';
+import { VoidReceiptRequest } from '../Model/VoidReceiptRequest';
 
 @Injectable({
   providedIn: 'root'
@@ -19,34 +20,6 @@ export class CashReceiptService {
   private apiUrl = environment.API_URL + 'payments';
 
   private paymentMethodsCache: PaymentMethod[] = [];
-
-  private mockReceiptsDB: Receipt[] = [
-    {
-      id: 1, receiptCode: 'RC-1-10000', thirdPartyId: 101, status: 'Activo', issueDate: new Date('2025-06-20'),
-      totalAmount: 2400000, observations: 'Abono a facturas pendientes de pago.',
-      details: [
-        { invoiceId: 1, amountPaid: 1200000 },
-        { invoiceId: 2, amountPaid: 600000 },
-        { invoiceId: 3, amountPaid: 600000 }
-      ],
-      paymentMethodId: 1,
-      accountingEntry: [
-        { accountCode: '110505', accountName: 'Caja General', debit: 2400000, credit: 0, thirdPartyId: 101, description: 'Pago recibido del cliente' },
-        { accountCode: '130505', accountName: 'Clientes Nacionales', debit: 0, credit: 2400000, thirdPartyId: 101, description: 'Abono a facturas FV-2-10000, FV-2-10001, FV-2-10002' }
-      ]
-    },
-    {
-      id: 7, receiptCode: 'RC-1-10006', thirdPartyId: 102, status: 'Activo', issueDate: new Date('2025-05-30'),
-      totalAmount: 95000, observations: 'Ingreso directo por concepto de servicios varios.',
-      details: [],
-      paymentMethodId: 2,
-      auxAccount: 413536, // Ejemplo de cuenta de ingreso
-      accountingEntry: [
-        { accountCode: '111005', accountName: 'Bancos Nacionales', debit: 95000, credit: 0, thirdPartyId: 102, description: 'Ingreso recibido del cliente' },
-        { accountCode: '413536', accountName: 'Venta de servicios', debit: 0, credit: 95000, thirdPartyId: 102, description: 'Servicios varios prestados' }
-      ]
-    },
-  ];
 
   private mockClientsDB: Client[] = [
     { id: 1, name: 'Julian Ruano Majin', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
@@ -118,23 +91,7 @@ export class CashReceiptService {
   public getClientById(id: number): Observable<Client | undefined> {
     const client = this.mockClientsDB.find(c => c.id === id);
     return of(client);
-}
-
-/*
-  getInvoicesByClient(clientId: number): Observable<Invoice[]> {
-    let invoices: Invoice[] = [];
-    if (clientId === 101) {
-      invoices = [
-        { id: 1, factCode: 'FV-2-10000', expirationDate: new Date('2025-06-20'), pendingValue: 1200000 },
-        { id: 2, factCode: 'FV-2-10001', expirationDate: new Date('2025-07-15'), pendingValue: 500000 },
-        { id: 3, factCode: 'FV-2-10002', expirationDate: new Date('2025-08-10'), pendingValue: 750000 },
-      ];
-    }
-
-    return of(invoices);
-    // TODO: Cuando conectes al backend:
-    // return this.http.get<Invoice[]>(`api/invoices/by-client/${clientId}`);
-  }*/
+  }
 
   getInvoicesByClient(clientId: number): Observable<Invoice[]> {
     // 1. Hacemos la llamada HTTP a la nueva URL.
@@ -155,11 +112,10 @@ export class CashReceiptService {
 
   // --- MÉTODOS PARA EL CRUD DE RECIBOS ---
   getAllReceipts(): Observable<ReceiptView[]> {
-    //const enterpriseId = this.localStorageMethods.getIdEnterprise();
     const enterpriseId = "asdasdasfafa";
     if (!enterpriseId) {
       console.error("ID de empresa no encontrado. No se pueden cargar los recibos.");
-      return of([]); 
+      return of([]);
     }
 
     return this.http.get<ReceiptResponse[]>(`${this.apiUrl}/by-enterprise/${enterpriseId}`).pipe(
@@ -168,21 +124,19 @@ export class CashReceiptService {
         if (!apiReceipts) {
           return [];
         }
-        
+
         // 4. Transformar cada `ReceiptResponse` (de la API) en un `ReceiptView` (para la UI)
         return apiReceipts.map(receiptFromApi => {
 
           const client = this.mockClientsDB.find(c => c.id === receiptFromApi.thirdPartyId);
 
-          console.log("Recibo:", receiptFromApi)
-          // 6. Construir y retornar el objeto que el componente espera.
           return {
             id: receiptFromApi.id,
             receiptCode: receiptFromApi.receiptCode,
-            issueDate: new Date(receiptFromApi.issueDate), 
+            issueDate: new Date(receiptFromApi.issueDate),
             thirdPartyId: receiptFromApi.thirdPartyId,
-            clientName: client ? client.name : `ID: ${receiptFromApi.thirdPartyId}`, 
-            status: receiptFromApi.status === 'FINALIZED' ? 'Activo' : 'Anulado', 
+            clientName: client ? client.name : `ID: ${receiptFromApi.thirdPartyId}`,
+            status: receiptFromApi.status === 'FINALIZED' ? 'Activo' : 'Anulado',
             totalAmount: receiptFromApi.totalAmount
           };
         });
@@ -191,39 +145,52 @@ export class CashReceiptService {
   }
 
   getReceiptById(id: number): Observable<ReceiptDetailsView | undefined> {
-    const receipt = this.mockReceiptsDB.find(r => r.id === id);
-    if (!receipt) {
-      return of(undefined);
-    }
+    return this.http.get<ReceiptResponse>(`${this.apiUrl}/${id}`).pipe(
+      switchMap(receiptFromApi => {
 
-    // Usamos getPaymentMethods para tener la información necesaria para generar el asiento
-    return this.getPaymentMethods().pipe(
-      map(paymentMethods => {
-        // Generamos el asiento dinámicamente usando la lógica correcta
-        const generatedEntry = this._generateAccountingEntry(receipt, paymentMethods);
+        if (!receiptFromApi) {
+          return of(undefined);
+        }
 
-        const client = this.mockClientsDB.find(c => c.id === receipt.thirdPartyId);
-        const paymentMethod = paymentMethods.find(p => p.id === receipt.paymentMethodId);
+        // 2. Preparamos las llamadas para obtener los datos adicionales. forkJoin las ejecutará en paralelo para mayor eficiencia.
+        return forkJoin({
+          receipt: of(receiptFromApi), // Pasamos el recibo original
+          client: this.getClientById(receiptFromApi.thirdPartyId),
+          // Para el método de pago, primero obtenemos todos y luego buscamos.
+          /*paymentMethod: this.getPaymentMethods().pipe(
+              map(methods => methods.find(m => m.id === receiptFromApi.paymentMethodId))
+          )*/
+        });
+      }),
+      map(result => {
+        // Si en el paso anterior algo falló, result será null.
+        if (!result) {
+          return undefined;
+        }
 
-        const detailsView = receipt.details?.map(detail => {
-          const invoice = this.mockInvoicesDB.find(inv => inv.id === detail.invoiceId);
-          return { ...detail, invoiceCode: invoice ? invoice.factCode : 'N/A' };
-        }) ?? [];
+        //const { receipt, client, paymentMethod } = result;
+        const { receipt, client } = result;
 
+        // 3. Construimos el objeto final 'ReceiptDetailsView' que el componente necesita.
         const receiptDetailsView: ReceiptDetailsView = {
-          clientName: client ? client.name : 'Desconocido',
-          paymentMethodName: paymentMethod ? paymentMethod.name : 'No especificado',
-          isDirectIncome: !receipt.details || receipt.details.length === 0,
-          details: detailsView,
           id: receipt.id,
           receiptCode: receipt.receiptCode,
-          status: receipt.status,
-          issueDate: receipt.issueDate,
+          issueDate: new Date(receipt.issueDate), // Convertimos el string de la API a Date
+          thirdPartyId: receipt.thirdPartyId,
+          clientName: client ? client.name : 'Cliente no encontrado',
+          //paymentMethodName: paymentMethod ? paymentMethod.name : 'No especificado',
+          paymentMethodName: 'No especificado',
+          status: receipt.status === 'FINALIZED' ? 'Activo' : 'Anulado',
           totalAmount: receipt.totalAmount,
           observations: receipt.observations,
-          paymentMethodId: receipt.paymentMethodId,
-          // Asignamos el asiento recién generado
-          accountingEntry: generatedEntry
+          isDirectIncome: !receipt.details || receipt.details.length === 0,
+          details: receipt.details.map(detail => ({
+            invoiceId: detail.invoiceId,
+            amountPaid: detail.amountPaid,
+            invoiceCode: detail.invoiceCode,
+            accountingAccount: detail.accountingAccount,
+          })),
+          accountingEntry: [] // Lo dejamos vacío por ahora, ya que el backend no lo provee.
         };
 
         return receiptDetailsView;
@@ -231,41 +198,15 @@ export class CashReceiptService {
     );
   }
 
-  /*createReceipt(receipt: Receipt): Observable<Receipt> {
-    // Usamos switchMap para encadenar observables: primero necesitamos los métodos de pago para poder generar el asiento.
-    return this.getPaymentMethods().pipe(
-      switchMap(paymentMethods => {
-        const generatedEntry = this._generateAccountingEntry(receipt, paymentMethods);
-
-        const newId = this.mockReceiptsDB.length > 0
-          ? Math.max(...this.mockReceiptsDB.map(r => r.id!).filter(Number.isFinite)) + 1
-          : 1;
-
-        const newCompleteReceipt: Receipt = {
-          ...receipt,
-          id: newId,
-          receiptCode: `RC-1-${10000 + newId - 1}`, // Simula un consecutivo
-          status: 'Activo',
-          accountingEntry: generatedEntry // Adjuntamos el asiento generado
-        };
-
-        this.mockReceiptsDB.unshift(newCompleteReceipt);
-        console.log("Recibo Creado con Asiento Contable Simulado:", newCompleteReceipt);
-        
-        // Retornamos el recibo completo como un observable
-        return of(newCompleteReceipt);
-      }),
-    );
-  }*/
-
   createReceipt(receiptData: ReceiptCreateRequest): Observable<ReceiptResponse> {
-    // La URL de la API de pagos/recibos
-    //const apiUrl = `${environment.API_URL}/api/payments`;
-    
     return this.http.post<ReceiptResponse>(`${this.apiUrl}/`, receiptData);
+  }
+
+  voidReceipt(receiptId: number, reason: string): Observable<ReceiptResponse> {
+    const requestBody: VoidReceiptRequest = { reason };
+    return this.http.put<ReceiptResponse>(`${this.apiUrl}/${receiptId}/void`, requestBody);
 }
 
-  // --> NUEVO: Método privado que contiene la lógica para generar el asiento contable.
   private _generateAccountingEntry(receipt: Receipt, paymentMethods: PaymentMethod[]): AccountingEntryLine[] {
     const entry: AccountingEntryLine[] = [];
     const total = receipt.totalAmount || 0;
@@ -275,42 +216,42 @@ export class CashReceiptService {
     // LÍNEA DEL DÉBITO
     const paymentMethod = paymentMethods.find(p => p.id === receipt.paymentMethodId);
     if (!paymentMethod || !paymentMethod.accountingAccount) {
-        console.error("Método de pago o su cuenta contable no encontrados.");
-        return [];
+      console.error("Método de pago o su cuenta contable no encontrados.");
+      return [];
     }
     entry.push({
-        accountCode: paymentMethod.accountingAccount,
-        accountName: paymentMethod.name, // <-- CAMBIO: Usamos el nombre directo (Ej: 'Caja')
-        debit: total,
-        credit: 0,
-        thirdPartyId: thirdPartyId,
-        description: receipt.observations || 'Efectivo' // <-- CAMBIO: Usamos las observaciones o un genérico
+      accountCode: paymentMethod.accountingAccount,
+      accountName: paymentMethod.name, // <-- CAMBIO: Usamos el nombre directo (Ej: 'Caja')
+      debit: total,
+      credit: 0,
+      thirdPartyId: thirdPartyId,
+      description: receipt.observations || 'Efectivo' // <-- CAMBIO: Usamos las observaciones o un genérico
     });
 
     // LÍNEAS DEL CRÉDITO
     const isDirectIncome = !receipt.details || receipt.details.length === 0;
 
     if (isDirectIncome) {
-        // ... (lógica para ingreso directo)
+      // ... (lógica para ingreso directo)
     } else {
-        if (!client) {
-            console.error("Cliente no encontrado para generar asiento de cartera.");
-            return [];
-        }
-        receipt.details?.forEach(detail => {
-            const invoice = this.mockInvoicesDB.find(inv => inv.id === detail.invoiceId);
-            const invoiceCode = invoice ? invoice.factCode : `ID ${detail.invoiceId}`;
+      if (!client) {
+        console.error("Cliente no encontrado para generar asiento de cartera.");
+        return [];
+      }
+      receipt.details?.forEach(detail => {
+        const invoice = this.mockInvoicesDB.find(inv => inv.id === detail.invoiceId);
+        const invoiceCode = invoice ? invoice.factCode : `ID ${detail.invoiceId}`;
 
-            entry.push({
-                accountCode: client.accountsReceivableAccount.code,
-                accountName: client.accountsReceivableAccount.name, // <-- Usará 'Cliente' del mock
-                debit: 0,
-                credit: detail.amountPaid,
-                thirdPartyId: thirdPartyId,
-                description: invoiceCode // <-- CAMBIO: La descripción es solo el código de la factura
-            });
+        entry.push({
+          accountCode: client.accountsReceivableAccount.code,
+          accountName: client.accountsReceivableAccount.name, // <-- Usará 'Cliente' del mock
+          debit: 0,
+          credit: detail.amountPaid,
+          thirdPartyId: thirdPartyId,
+          description: invoiceCode // <-- CAMBIO: La descripción es solo el código de la factura
         });
+      });
     }
     return entry;
-}
+  }
 }

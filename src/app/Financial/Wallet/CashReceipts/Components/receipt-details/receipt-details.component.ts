@@ -5,21 +5,35 @@ import { CashReceiptService } from '../../Service/cash-receipt.service';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { DialogModule } from 'primeng/dialog';
+import { FormsModule } from '@angular/forms';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { InputTextarea } from 'primeng/inputtextarea';
 
 @Component({
   selector: 'app-receipt-details',
-  imports: [CommonModule, RouterModule, ButtonModule, MessageModule],
+  imports: [CommonModule, RouterModule, ButtonModule, InputTextarea , MessageModule, DialogModule, FormsModule, ConfirmDialogModule, ToastModule],
   templateUrl: './receipt-details.component.html',
-  styleUrl: './receipt-details.component.css'
+  styleUrl: './receipt-details.component.css',
+  providers: [ConfirmationService, MessageService]
 })
 export class ReceiptDetailsComponent {
   receipt: ReceiptDetailsView | null = null;
   errorMessage: string | null = null;
+
+  // Propiedades para el diálogo de anulación
+  displayAnnulDialog: boolean = false;
+  annulReason: string = '';
+  isSubmittingAnnulment: boolean = false;
   
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private cashReceiptService: CashReceiptService
+    private cashReceiptService: CashReceiptService,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService 
   ) {}
 
   ngOnInit(): void {
@@ -53,10 +67,49 @@ export class ReceiptDetailsComponent {
     this.router.navigate(['/financial/wallet/receipts']);
   }
 
-  annulReceipt(): void {
-    // Lógica para anular el recibo
-    console.log('Anulando recibo:', this.receipt?.id);
-    // Aquí llamarías a un método del servicio this.cashReceiptService.annul(id)
+  promptAnnulReceipt(): void {
+    this.confirmationService.confirm({
+        message: `¿Está seguro de que desea anular el recibo <strong>${this.receipt?.receiptCode}</strong>? Esta acción no se puede deshacer.`,
+        header: 'Confirmar Anulación',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, anular',
+        rejectLabel: 'Cancelar',
+        accept: () => {
+            this.annulReason = ''; 
+            this.displayAnnulDialog = true;
+        }
+    });
+  }
+
+  cancelAnnulment(): void {
+    this.displayAnnulDialog = false;
+  }
+
+  confirmAnnulment(): void {
+    if (!this.annulReason.trim()) {
+        this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El motivo de la anulación es requerido.' });
+        return;
+    }
+
+    if (!this.receipt) return;
+    
+    this.isSubmittingAnnulment = true;
+
+    this.cashReceiptService.voidReceipt(this.receipt.id, this.annulReason).subscribe({
+        next: (updatedReceipt) => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'El recibo ha sido anulado correctamente.' });
+            if (this.receipt) {
+                this.receipt.status = 'Anulado'; // Actualizamos el estado en la vista
+            }
+            this.displayAnnulDialog = false;
+            this.isSubmittingAnnulment = false;
+        },
+        error: (err) => {
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo anular el recibo. Intente de nuevo.' });
+            console.error('Error al anular el recibo:', err);
+            this.isSubmittingAnnulment = false;
+        }
+    });
   }
 
   generateAccounting(): void {
