@@ -14,13 +14,13 @@ import { TableModule } from 'primeng/table';
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
-import { DiaryResponse } from '../../../Models/Responses/DiaryBookResponse';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { ThirdPartyServiceService } from '../../../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
 import { MajorAndBalancesResponse } from '../../../Models/Responses/MajorAndBalancesBookResponse';
+import { DialogService } from 'primeng/dynamicdialog';
 @Component({
   selector: 'app-major-and-balances',
   imports: [
@@ -34,7 +34,7 @@ import { MajorAndBalancesResponse } from '../../../Models/Responses/MajorAndBala
     DatePickerModule,
     TableModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService],
   templateUrl: './major-and-balances.component.html',
   styleUrl: './major-and-balances.component.css',
 })
@@ -54,6 +54,7 @@ export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
     thirdService: ThirdPartyServiceService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    dialogService: DialogService,
     private datePipe: DatePipe
   ) {
     super(
@@ -61,7 +62,8 @@ export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
       enterpriseService,
       thirdService,
       accountService,
-      messageService
+      messageService,
+      dialogService
     );
   }
 

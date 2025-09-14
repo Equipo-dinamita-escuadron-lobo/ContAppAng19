@@ -4,9 +4,8 @@ import { FormsModule } from '@angular/forms';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
-import { RadioButton } from 'primeng/radiobutton';
 import { CheckboxModule } from 'primeng/checkbox';
-import { Select, SelectModule } from 'primeng/select';
+import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SplitButtonModule } from 'primeng/splitbutton';
@@ -25,6 +24,7 @@ import { MessageService } from 'primeng/api';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
+import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-third-party-book',
@@ -39,7 +39,7 @@ import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliar
     DatePickerModule,
     TableModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService],
   templateUrl: './third-party-book.component.html',
   styleUrl: './third-party-book.component.css',
 })
@@ -61,6 +61,7 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
     thirdService: ThirdPartyServiceService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    dialogService: DialogService,
     private datePipe: DatePipe
   ) {
     super(
@@ -68,7 +69,8 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
       enterpriseService,
       thirdService,
       accountService,
-      messageService
+      messageService,
+      dialogService
     );
   }
 

@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
-import { RadioButton } from 'primeng/radiobutton';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -23,6 +22,7 @@ import { MessageService } from 'primeng/api';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
+import { DialogService } from 'primeng/dynamicdialog';
 @Component({
   selector: 'app-accounting-movement',
   imports: [
@@ -30,13 +30,12 @@ import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliar
     FormsModule,
     ButtonModule,
     SplitButtonModule,
-    RadioButton,
     CheckboxModule,
     SelectModule,
     DatePickerModule,
     TableModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService],
   templateUrl: './accounting-movement.component.html',
   styleUrl: './accounting-movement.component.css',
 })
@@ -61,6 +60,7 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
     thirdService: ThirdPartyServiceService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    dialogService: DialogService,
     private datePipe: DatePipe
   ) {
     super(
@@ -68,7 +68,8 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
       enterpriseService,
       thirdService,
       accountService,
-      messageService
+      messageService,
+      dialogService
     );
   }
 

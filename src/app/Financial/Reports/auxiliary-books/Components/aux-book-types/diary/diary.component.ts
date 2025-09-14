@@ -20,6 +20,7 @@ import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/s
 import { ThirdPartyServiceService } from '../../../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
+import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-diary',
@@ -34,7 +35,7 @@ import { MessageService } from 'primeng/api';
     DatePickerModule,
     TableModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService],
   templateUrl: './diary.component.html',
   styleUrl: './diary.component.css',
 })
@@ -54,6 +55,7 @@ export class DiaryComponent extends BaseAuxiliaryBookComponent {
     thirdService: ThirdPartyServiceService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    dialogService: DialogService,
     private datePipe: DatePipe
   ) {
     super(
@@ -61,7 +63,8 @@ export class DiaryComponent extends BaseAuxiliaryBookComponent {
       enterpriseService,
       thirdService,
       accountService,
-      messageService
+      messageService,
+      dialogService
     );
   }
 

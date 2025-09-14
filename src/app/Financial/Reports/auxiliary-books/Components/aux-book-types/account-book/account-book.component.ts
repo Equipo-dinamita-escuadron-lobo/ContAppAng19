@@ -27,6 +27,7 @@ import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliar
 import { CostCenterService } from '../../../../../../GeneralMasters/CostCenters/services/cost-center.service';
 import { CostCenter } from '../../../../../../GeneralMasters/CostCenters/models/cost-center.model';
 import { Page } from '../../../../../../GeneralMasters/AccountingCalendar/types/calendar.types';
+import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-account-book',
@@ -42,7 +43,7 @@ import { Page } from '../../../../../../GeneralMasters/AccountingCalendar/types/
     DatePickerModule,
     TableModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService],
   templateUrl: './account-book.component.html',
   styleUrl: './account-book.component.css',
   encapsulation: ViewEncapsulation.None,
@@ -77,6 +78,7 @@ export class AccountBookComponent extends BaseAuxiliaryBookComponent {
     thirdService: ThirdPartyServiceService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    dialogService: DialogService,
     private costCenterService: CostCenterService,
     private datePipe: DatePipe
   ) {
@@ -85,7 +87,8 @@ export class AccountBookComponent extends BaseAuxiliaryBookComponent {
       enterpriseService,
       thirdService,
       accountService,
-      messageService
+      messageService,
+      dialogService
     );
   }
 

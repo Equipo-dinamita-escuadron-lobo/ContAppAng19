@@ -23,6 +23,7 @@ import { MessageService } from 'primeng/api';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
+import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-inventory-and-balances',
@@ -37,7 +38,7 @@ import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliar
     DatePickerModule,
     TableModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService],
   templateUrl: './inventory-and-balances.component.html',
   styleUrl: './inventory-and-balances.component.css',
 })
@@ -57,6 +58,7 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
     thirdService: ThirdPartyServiceService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    dialogService: DialogService,
     private datePipe: DatePipe
   ) {
     super(
@@ -64,7 +66,8 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
       enterpriseService,
       thirdService,
       accountService,
-      messageService
+      messageService,
+      dialogService
     );
   }
 

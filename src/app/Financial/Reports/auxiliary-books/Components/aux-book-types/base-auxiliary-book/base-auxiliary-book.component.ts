@@ -10,6 +10,8 @@ import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCat
 import { MessageService } from 'primeng/api';
 import { Select } from 'primeng/select';
 import { auxBookResponse } from '../../../Models/Responses/BookResponse';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { ExportAuxiliaryBookComponent } from '../../export-auxiliary-book/export-auxiliary-book.component';
 
 @Directive()
 export abstract class BaseAuxiliaryBookComponent implements OnInit {
@@ -66,12 +68,15 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   totalDebit: number = 0;
   totalCredit: number = 0;
 
+  refDialog: DynamicDialogRef | undefined;
+
   constructor(
     protected auxiliaryBookService: AuxiliaryBooksServiceService,
     protected enterpriseService: EnterpriseService,
     protected thirdService: ThirdPartyServiceService,
     protected accountService: ChartAccountService,
-    protected messageService: MessageService
+    protected messageService: MessageService,
+    protected dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -398,5 +403,11 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   private isDatePeriodValid(): boolean {
     return !(this.datePeriod[0].getTime() > this.datePeriod[1].getTime());
+  }
+
+  showExportDialog(data: any) {
+    this.refDialog = this.dialogService.open(ExportAuxiliaryBookComponent, {
+      data: data,
+    });
   }
 }
