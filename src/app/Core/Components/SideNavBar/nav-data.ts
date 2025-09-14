@@ -132,17 +132,17 @@ export const navbarData: INavbarData[] = [
         ],
       },
       {
-        routeLink: 'TO DO',
+        routeLink: 'financial/treasury',
         icon: 'money_bag',
         label: 'Tesorería',
         items: [
           {
-            routeLink: 'TO DO',
+            routeLink: 'financial/treasury/expense-receipts',
             icon: 'receipt_long',
             label: 'Comprobantes de Egreso',
           },
           {
-            routeLink: 'TO DO',
+            routeLink: 'financial/treasury/reports',
             icon: 'analytics',
             label: 'Reportes',
           },

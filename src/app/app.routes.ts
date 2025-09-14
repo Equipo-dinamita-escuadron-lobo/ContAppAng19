@@ -736,6 +736,54 @@ export const routes: Routes = [
                   ).then((m) => m.ReceiptAccountingComponent),
                 }
             ],
+          },
+          {
+            path: 'treasury',
+            data: {
+              breadcrumb: 'Tesorería',
+            },
+            children: [
+              {
+                path: 'expense-receipts',
+                data: {
+                  breadcrumb: 'Comprobantes de Egreso',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipts-list/expense-receipts-list.component'
+                  ).then((m) => m.ExpenseReceiptsListComponent),
+              },
+              {
+                path: 'expense-receipts/creation',
+                data: {
+                  breadcrumb: 'Creación de Comprobantes',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-creation/expense-receipt-creation.component'
+                  ).then((m) => m.ExpenseReceiptCreationComponent),
+              },
+              {
+                path: 'expense-receipts/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del Comprobante',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-details/expense-receipt-details.component'
+                  ).then((m) => m.ExpenseReceiptDetailsComponent),
+              },
+              {
+                path: 'expense-receipts/:id/accounting',
+                data: {
+                  breadcrumb: 'Contabilización del Comprobante',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-accounting/expense-receipt-accounting.component'
+                  ).then((m) => m.ExpenseReceiptAccountingComponent),
+                }
+            ],
           }
         ],
       },
@@ -805,5 +853,3 @@ export const routes: Routes = [
     component: StyleGuideComponent,
   },
 ];
-
-

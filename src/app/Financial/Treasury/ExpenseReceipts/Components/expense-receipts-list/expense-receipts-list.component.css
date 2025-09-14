@@ -1,0 +1,4 @@
+.status-anulado {
+    color: #dc3545 !important;
+    text-decoration: line-through;
+}

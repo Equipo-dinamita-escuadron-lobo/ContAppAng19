@@ -1,0 +1,198 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20 font-sans">
+    <p-toast></p-toast>
+
+    <!-- CABECERA -->
+    <div class="mb-12">
+        <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            Crear Comprobante de Egreso
+        </h1>
+        <p class="mt-2 text-base text-gray-600">
+            Complete la información necesaria para registrar un nuevo comprobante de egreso en el sistema.
+        </p>
+    </div>
+
+    <!-- CONTENEDOR DEL FORMULARIO -->
+    <form [formGroup]="expenseReceiptForm" (ngSubmit)="onSubmit()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-12">
+            <!-- Tipo de Comprobante de Egreso -->
+            <div class="flex flex-col gap-2">
+                <label for="receiptType" class="font-semibold text-[var(--color-primary)]">
+                    Tipo de Comprobante de Egreso <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown id="receiptType" formControlName="receiptType" [options]="receiptTypes"
+                        optionLabel="label" optionValue="value" placeholder="Seleccione el tipo"
+                        [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('receiptType')?.invalid && expenseReceiptForm.get('receiptType')?.touched}">
+                    </p-dropdown>
+                    @if (expenseReceiptForm.get('receiptType')?.touched && expenseReceiptForm.get('receiptType')?.invalid) {
+                        <small class="p-error error-message">El tipo de comprobante es requerido.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Método de Pago -->
+            <div class="flex flex-col gap-2">
+                <label for="paymentMethod" class="font-semibold text-[var(--color-primary)]">
+                    Método de Pago <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown id="paymentMethod" formControlName="paymentMethod" [options]="paymentMethods"
+                        optionLabel="name" optionValue="id" placeholder="Seleccione el método"
+                        [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('paymentMethod')?.invalid && expenseReceiptForm.get('paymentMethod')?.touched}">
+                    </p-dropdown>
+                    @if (expenseReceiptForm.get('paymentMethod')?.touched && expenseReceiptForm.get('paymentMethod')?.invalid) {
+                        <small class="p-error error-message">El método de pago es requerido.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Tipo de Operación -->
+            <div class="flex flex-col gap-2">
+                <label for="receiptTypeOption" class="font-semibold text-[var(--color-primary)]">
+                    Tipo de Operación <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown id="receiptTypeOption" formControlName="receiptTypeOption" [options]="receiptTypeOptions"
+                        optionLabel="label" optionValue="value" placeholder="Seleccione la operación"
+                        [styleClass]="'w-full'">
+                    </p-dropdown>
+                </div>
+            </div>
+
+            <!-- Proveedor -->
+            <div class="flex flex-col gap-2">
+                <label for="supplier" class="font-semibold text-[var(--color-primary)]">
+                    Proveedor <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-autoComplete id="supplier" formControlName="supplier" [suggestions]="filteredSuppliers"
+                        (completeMethod)="searchSupplier($event)" field="name" placeholder="Busque un proveedor"
+                        [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('supplier')?.invalid && expenseReceiptForm.get('supplier')?.touched}">
+                    </p-autoComplete>
+                    @if (expenseReceiptForm.get('supplier')?.touched && expenseReceiptForm.get('supplier')?.invalid) {
+                        <small class="p-error error-message">El proveedor es requerido.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Fecha de Elaboración -->
+            <div class="flex flex-col gap-2">
+                <label for="issueDate" class="font-semibold text-[var(--color-primary)]">
+                    Fecha de Elaboración <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-calendar id="issueDate" formControlName="issueDate" dateFormat="dd/mm/yy"
+                        [showIcon]="true" placeholder="dd/mm/yyyy" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('issueDate')?.invalid && expenseReceiptForm.get('issueDate')?.touched}">
+                    </p-calendar>
+                    @if (expenseReceiptForm.get('issueDate')?.touched && expenseReceiptForm.get('issueDate')?.invalid) {
+                        <small class="p-error error-message">La fecha de elaboración es requerida.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Cuenta Auxiliar (solo para gastos directos) -->
+            @if (expenseReceiptForm.get('receiptTypeOption')?.value === 'direct_expense') {
+                <div class="flex flex-col gap-2">
+                    <label for="auxiliaryAccount" class="font-semibold text-[var(--color-primary)]">
+                        Cuenta de Gasto <span class="text-red-500">*</span>
+                    </label>
+                    <div class="w-full md:w-2/3">
+                        <p-dropdown id="auxiliaryAccount" formControlName="auxiliaryAccount" [options]="auxiliaryAccounts"
+                            optionLabel="label" optionValue="value" placeholder="Seleccione la cuenta"
+                            [styleClass]="'w-full'"
+                            [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('auxiliaryAccount')?.invalid && expenseReceiptForm.get('auxiliaryAccount')?.touched}">
+                        </p-dropdown>
+                        @if (expenseReceiptForm.get('auxiliaryAccount')?.touched && expenseReceiptForm.get('auxiliaryAccount')?.invalid) {
+                            <small class="p-error error-message">La cuenta de gasto es requerida.</small>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Monto Total (solo para gastos directos) -->
+            @if (expenseReceiptForm.get('receiptTypeOption')?.value === 'direct_expense') {
+                <div class="flex flex-col gap-2">
+                    <label for="totalAmount" class="font-semibold text-[var(--color-primary)]">
+                        Monto Total <span class="text-red-500">*</span>
+                    </label>
+                    <div class="w-full md:w-2/3">
+                        <p-inputNumber id="totalAmount" formControlName="totalAmount"
+                            mode="currency" currency="COP" locale="es-CO"
+                            [styleClass]="'w-full'"
+                            [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('totalAmount')?.invalid && expenseReceiptForm.get('totalAmount')?.touched}"
+                            (onInput)="updateTotalAmount()">
+                        </p-inputNumber>
+                        @if (expenseReceiptForm.get('totalAmount')?.touched && expenseReceiptForm.get('totalAmount')?.invalid) {
+                            <small class="p-error error-message">El monto total es requerido y debe ser mayor a 0.</small>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- OBSERVACIONES -->
+        <div class="mb-12">
+            <label for="observations" class="block font-semibold text-[var(--color-primary)] mb-2">
+                Observaciones
+            </label>
+            <div class="w-full">
+                <textarea
+                    pInputTextarea
+                    id="observations"
+                    formControlName="observations"
+                    rows="3"
+                    placeholder="Ingrese observaciones adicionales..."
+                    class="w-full">
+                </textarea>
+            </div>
+        </div>
+
+        <!-- RESUMEN -->
+        <div class="bg-gray-50 p-6 rounded-lg mb-8">
+            <h3 class="text-lg font-semibold text-[var(--color-primary)] mb-4">Resumen del Comprobante</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <span class="font-medium">Proveedor:</span>
+                    <span class="ml-2">{{ expenseReceiptForm.get('supplier')?.value?.name || 'No seleccionado' }}</span>
+                </div>
+                <div>
+                    <span class="font-medium">Tipo de Operación:</span>
+                    <span class="ml-2">
+                        {{ expenseReceiptForm.get('receiptTypeOption')?.value === 'debt_payment' ? 'Pago de facturas' : 'Gasto directo' }}
+                    </span>
+                </div>
+                <div>
+                    <span class="font-medium">Monto Total:</span>
+                    <span class="ml-2 font-semibold text-green-600">
+                        {{ totalAmount | currency:'COP':'symbol':'1.0-0':'es-CO' }}
+                    </span>
+                </div>
+                <div>
+                    <span class="font-medium">Fecha:</span>
+                    <span class="ml-2">{{ expenseReceiptForm.get('issueDate')?.value | date:'dd/MM/yyyy' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTONES DE ACCIÓN -->
+        <div class="flex justify-center gap-4 pb-8">
+            <p-button
+                type="submit"
+                label="Crear Comprobante"
+                icon="pi pi-check"
+                [disabled]="!isFormValidForSubmission()">
+            </p-button>
+            <p-button
+                type="button"
+                label="Cancelar"
+                icon="pi pi-times"
+                styleClass="p-button-secondary"
+                (onClick)="onCancel()">
+            </p-button>
+        </div>
+    </form>
+</div>
