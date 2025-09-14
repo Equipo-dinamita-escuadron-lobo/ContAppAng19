@@ -38,6 +38,7 @@ interface Page<T> {
   size: number;
   number: number;
 }
+import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-account-book',
