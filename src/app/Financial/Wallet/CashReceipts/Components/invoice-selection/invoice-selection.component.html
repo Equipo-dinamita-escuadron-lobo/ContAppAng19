@@ -19,9 +19,9 @@
                 <td>
                     <p-tableCheckbox [value]="invoice"></p-tableCheckbox>
                 </td>
-                <td>{{ invoice.code }}</td>
-                <td>{{ invoice.dueDate | date:'dd/MM/yyyy' }}</td>
-                <td>{{ invoice.pendingBalance}}</td>
+                <td>{{ invoice.factCode }}</td>
+                <td>{{ invoice.expirationDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ invoice.pendingValue }}</td>
             </tr>
         </ng-template>
         <ng-template pTemplate="empty">
