@@ -1,4 +1,4 @@
-/* Expense Receipts List Styles */
+/* Purchase Bills List Styles */
 
 .container-fluid {
   max-width: 1400px;
@@ -35,8 +35,7 @@
 ::ng-deep .p-inputtext,
 ::ng-deep .p-dropdown,
 ::ng-deep .p-calendar .p-inputtext,
-::ng-deep .p-inputnumber input,
-::ng-deep .p-autocomplete input {
+::ng-deep .p-inputnumber input {
   border: 2px solid #e5e7eb;
   border-radius: 8px;
   transition: all 0.3s ease;
@@ -46,8 +45,7 @@
 ::ng-deep .p-inputtext:focus,
 ::ng-deep .p-dropdown:focus,
 ::ng-deep .p-calendar .p-inputtext:focus,
-::ng-deep .p-inputnumber input:focus,
-::ng-deep .p-autocomplete input:focus {
+::ng-deep .p-inputnumber input:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
@@ -262,6 +260,18 @@
   color: #334155;
 }
 
+::ng-deep .filter-actions .p-button.p-button-success {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border-color: #22c55e;
+  color: #16a34a;
+}
+
+::ng-deep .filter-actions .p-button.p-button-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #16a34a;
+  color: #15803d;
+}
+
 /* Filter buttons container */
 .filter-buttons-container {
   display: flex;
@@ -309,6 +319,18 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
+/* Confirmation dialog */
+::ng-deep .p-confirm-dialog {
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+::ng-deep .p-confirm-dialog .p-dialog-header {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
 /* Currency formatting */
 .currency-positive {
   color: #059669;
@@ -320,8 +342,8 @@
   font-weight: 600;
 }
 
-/* Receipt code styling */
-.receipt-code {
+/* Bill ID styling */
+.bill-id {
   font-family: 'Courier New', monospace;
   font-weight: 600;
   color: #3b82f6;

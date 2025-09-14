@@ -782,7 +782,56 @@ export const routes: Routes = [
                   import(
                     './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-accounting/expense-receipt-accounting.component'
                   ).then((m) => m.ExpenseReceiptAccountingComponent),
+              },
+              // Purchase Bills Routes
+              {
+                path: 'purchase-bills',
+                data: {
+                  breadcrumb: 'Facturas de Compra',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/PurchaseBills/Components/bill-list/bill-list.component'
+                  ).then((m) => m.BillListComponent),
+              },
+            {
+              path: 'purchase-bills/create',
+              data: {
+                breadcrumb: 'Nueva Factura de Compra',
+              },
+              loadComponent: () =>
+                import(
+                  './Financial/Treasury/PurchaseBills/Components/bill-creation/bill-creation.component'
+                ).then((m) => m.BillCreationComponent),
+            },
+            {
+              path: 'reports',
+              data: {
+                breadcrumb: 'Reportes',
+              },
+              children: [
+                {
+                  path: 'vendors',
+                  data: {
+                    breadcrumb: 'Reportes de Proveedores',
+                  },
+                  loadComponent: () =>
+                    import(
+                      './Financial/Treasury/Reports/VendorReports/Components/vendor-list/vendor-list.component'
+                    ).then((m) => m.VendorListComponent),
+                },
+                {
+                  path: 'vendor-report/:id',
+                  data: {
+                    breadcrumb: 'Reporte Individual',
+                  },
+                  loadComponent: () =>
+                    import(
+                      './Financial/Treasury/Reports/VendorReports/Components/vendor-report/vendor-report.component'
+                    ).then((m) => m.VendorReportComponent),
                 }
+              ]
+            }
             ],
           }
         ],

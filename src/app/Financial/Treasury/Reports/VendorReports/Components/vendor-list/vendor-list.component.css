@@ -1,4 +1,4 @@
-/* Expense Receipts List Styles */
+/* Vendor Reports List Styles */
 
 .container-fluid {
   max-width: 1400px;
@@ -35,8 +35,7 @@
 ::ng-deep .p-inputtext,
 ::ng-deep .p-dropdown,
 ::ng-deep .p-calendar .p-inputtext,
-::ng-deep .p-inputnumber input,
-::ng-deep .p-autocomplete input {
+::ng-deep .p-inputnumber input {
   border: 2px solid #e5e7eb;
   border-radius: 8px;
   transition: all 0.3s ease;
@@ -46,8 +45,7 @@
 ::ng-deep .p-inputtext:focus,
 ::ng-deep .p-dropdown:focus,
 ::ng-deep .p-calendar .p-inputtext:focus,
-::ng-deep .p-inputnumber input:focus,
-::ng-deep .p-autocomplete input:focus {
+::ng-deep .p-inputnumber input:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
@@ -320,25 +318,31 @@
   font-weight: 600;
 }
 
-/* Receipt code styling */
-.receipt-code {
-  font-family: 'Courier New', monospace;
-  font-weight: 600;
-  color: #3b82f6;
-  background: #eff6ff;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
+/* Balance colors */
+.text-green-600 {
+  color: #059669 !important;
 }
 
-/* Supplier name styling */
-.supplier-name {
+.text-orange-600 {
+  color: #ea580c !important;
+}
+
+.text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.text-red-600 {
+  color: #dc2626 !important;
+}
+
+/* Vendor name styling */
+.vendor-name {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.supplier-icon {
+.vendor-icon {
   color: #6b7280;
   font-size: 0.9rem;
 }

@@ -137,15 +137,20 @@ export const navbarData: INavbarData[] = [
         label: 'Tesorería',
         items: [
           {
-            routeLink: 'financial/treasury/expense-receipts',
-            icon: 'receipt_long',
-            label: 'Comprobantes de Egreso',
+            routeLink: 'financial/treasury/purchase-bills',
+            icon: 'description',
+            label: 'Facturas de Compra',
           },
-          {
-            routeLink: 'financial/treasury/reports',
-            icon: 'analytics',
-            label: 'Reportes',
-          },
+            {
+              routeLink: 'financial/treasury/expense-receipts',
+              icon: 'receipt_long',
+              label: 'Comprobantes de Egreso',
+            },
+            {
+              routeLink: 'financial/treasury/reports/vendors',
+              icon: 'analytics',
+              label: 'Reportes de Proveedores',
+            },
         ],
       },
       {

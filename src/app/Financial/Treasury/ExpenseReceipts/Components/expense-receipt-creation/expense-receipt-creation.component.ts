@@ -16,7 +16,6 @@ import { MessageService } from 'primeng/api';
 import { Router } from '@angular/router';
 import { ExpenseReceipt } from '../../Model/ExpenseReceipt';
 import { ExpenseReceiptDetail } from '../../Model/ExpenseReceiptDetail';
-import { SupplierInvoiceSelectionComponent } from '../supplier-invoice-selection/supplier-invoice-selection.component';
 import { PaymentMethodsServiceService } from '../../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { PaymentMethod } from '../../../../../GeneralMasters/PaymentMethods/models/PaymentMethods';
@@ -54,7 +53,6 @@ interface Supplier {
     DialogModule,
     MessagesModule,
     FormsModule,
-    SupplierInvoiceSelectionComponent
   ],
   templateUrl: './expense-receipt-creation.component.html',
   styleUrl: './expense-receipt-creation.component.css',
@@ -73,12 +71,14 @@ export class ExpenseReceiptCreationComponent {
   suppliers: Supplier[] = [];
   filteredSuppliers: Supplier[] = [];
 
-  // Para Pago de Facturas
-  selectedSupplierInvoices: PurchaseInvoice[] = []; // Facturas pendientes del proveedor seleccionado
-  selectedInvoicesForPayment: PurchaseInvoice[] = []; // Facturas seleccionadas para pago en la tabla principal
-  availableInvoicesToSelect: PurchaseInvoice[] = []; // Facturas disponibles en el diálogo de selección
+  // Para facturas disponibles del proveedor seleccionado
+  availableInvoices: any[] = [];
 
-  displayInvoiceSelectionDialog: boolean = false;
+  // Cuentas por pagar (Post To)
+  payableAccounts: any[] = [];
+
+  // Detalles de la factura seleccionada
+  selectedInvoiceDetails: any = null;
 
   totalAmount: number = 0;
 
@@ -99,10 +99,10 @@ export class ExpenseReceiptCreationComponent {
 
   initializeForm(): void {
     this.expenseReceiptForm = this.fb.group({
-      receiptType: ['', Validators.required],
-      receiptTypeOption: ['debt_payment', Validators.required], // 'debt_payment' o 'direct_expense'
       supplier: [null, Validators.required],
-      paymentMethod: ['', Validators.required],
+      invoice: [null, Validators.required],
+      postToAccount: [null, Validators.required],
+      transferAccount: [null, Validators.required],
       issueDate: [new Date(), Validators.required],
       totalAmount: [0, [Validators.required, Validators.min(0.01)]],
       observations: [''],
@@ -111,12 +111,7 @@ export class ExpenseReceiptCreationComponent {
   }
 
   loadDropdownOptions(): void {
-    // Cargar tipos de recibo
-    this.expenseReceiptService.getReceiptTypes().subscribe(data => {
-      this.receiptTypes = data;
-    });
-
-    // Cargar métodos de pago
+    // Cargar métodos de pago (Transfer Account)
     this.paymentMethodService.findAll(this.localStorageMethods.getIdEnterprise() || 'test', 0, 100)
       .subscribe({
         next: (page) => {
@@ -142,45 +137,21 @@ export class ExpenseReceiptCreationComponent {
         }
       });
 
+    // Cargar cuentas por pagar (Post To)
+    this.payableAccounts = [
+      { id: 1, code: '220505', name: 'Proveedores Nacionales', fullName: '220505 - Proveedores Nacionales' },
+      { id: 2, code: '220510', name: 'Proveedores del Exterior', fullName: '220510 - Proveedores del Exterior' },
+      { id: 3, code: '220515', name: 'Cuentas por Pagar Diversas', fullName: '220515 - Cuentas por Pagar Diversas' }
+    ];
+
     // Cargar cuentas auxiliares para gastos directos
     this.expenseReceiptService.getAuxiliaryAccounts().subscribe(data => {
       this.auxiliaryAccounts = data;
     });
-
-    // Opciones de tipo de recibo
-    this.receiptTypeOptions = [
-      { label: 'Pago de facturas pendientes', value: 'debt_payment' },
-      { label: 'Gasto directo', value: 'direct_expense' }
-    ];
   }
 
   subscribeToFormChanges(): void {
-    // Cuando cambia el tipo de opción de recibo
-    this.expenseReceiptForm.get('receiptTypeOption')?.valueChanges.subscribe(value => {
-      if (value === 'direct_expense') {
-        // Gasto directo: limpiar facturas y hacer auxiliaryAccount requerido
-        this.selectedInvoicesForPayment = [];
-        this.expenseReceiptForm.get('auxiliaryAccount')?.setValidators([Validators.required]);
-        this.expenseReceiptForm.get('totalAmount')?.setValidators([Validators.required, Validators.min(0.01)]);
-      } else {
-        // Pago de deuda: remover validación de auxiliaryAccount
-        this.expenseReceiptForm.get('auxiliaryAccount')?.clearValidators();
-        this.expenseReceiptForm.get('totalAmount')?.clearValidators();
-      }
-      this.expenseReceiptForm.get('auxiliaryAccount')?.updateValueAndValidity();
-      this.expenseReceiptForm.get('totalAmount')?.updateValueAndValidity();
-      this.updateTotalAmount();
-    });
-
-    // Cuando cambia el proveedor seleccionado
-    this.expenseReceiptForm.get('supplier')?.valueChanges.subscribe(supplier => {
-      if (supplier && supplier.id) {
-        this.loadSupplierInvoices(supplier.id);
-      } else {
-        this.selectedSupplierInvoices = [];
-        this.selectedInvoicesForPayment = [];
-      }
-    });
+    // Los cambios se manejan directamente en los métodos onSupplierSelect y onInvoiceSelect
   }
 
   // Autocompletado de proveedores
@@ -190,81 +161,67 @@ export class ExpenseReceiptCreationComponent {
     });
   }
 
-  loadSupplierInvoices(supplierId: number): void {
-    this.expenseReceiptService.getInvoicesBySupplier(supplierId).subscribe(
-      invoices => {
-        this.selectedSupplierInvoices = invoices.map(inv => ({
-          ...inv,
-          selectedForPayment: false,
-          amountToPay: 0
-        }));
+  // Cuando selecciona un proveedor
+  onSupplierSelect(event: any): void {
+    const supplier = event.value || event;
+    if (supplier && supplier.id) {
+      this.loadInvoicesForSupplier(supplier.id);
+    }
+  }
+
+  // Cargar facturas del proveedor seleccionado
+  loadInvoicesForSupplier(supplierId: number): void {
+    // Mock data de facturas contabilizadas (POSTED) del proveedor
+    const mockInvoices = [
+      {
+        id: 1,
+        billId: 'BILL-20250914-0001',
+        date: new Date('2025-09-14'),
+        total: 1190000,
+        displayText: 'BILL-20250914-0001 - $1,190,000 (14/09/2025)'
       },
-      error => {
-        console.error('Error al cargar facturas del proveedor:', error);
-        this.messageService.add({ severity: 'warn', summary: 'Información', detail: 'No se encontraron facturas pendientes para este proveedor.' });
-        this.selectedSupplierInvoices = [];
+      {
+        id: 2,
+        billId: 'BILL-20250913-0002',
+        date: new Date('2025-09-13'),
+        total: 595000,
+        displayText: 'BILL-20250913-0002 - $595,000 (13/09/2025)'
       }
-    );
+    ];
+
+    this.availableInvoices = mockInvoices;
+
+    // Limpiar factura seleccionada anterior
+    this.expenseReceiptForm.get('invoice')?.setValue(null);
+    this.selectedInvoiceDetails = null;
   }
 
-  // Gestión de facturas seleccionadas para pago
-  openInvoiceSelectionDialog(): void {
-    this.availableInvoicesToSelect = this.selectedSupplierInvoices.filter(inv =>
-      !this.selectedInvoicesForPayment.some(selected => selected.id === inv.id)
-    );
-    this.displayInvoiceSelectionDialog = true;
-  }
+  // Cuando selecciona una factura
+  onInvoiceSelect(event: any): void {
+    const invoiceId = event.value;
+    const selectedInvoice = this.availableInvoices.find(inv => inv.id === invoiceId);
 
-  onInvoicesSelected(selectedInvoices: PurchaseInvoice[]): void {
-    selectedInvoices.forEach(invoice => {
-      if (!this.selectedInvoicesForPayment.some(selected => selected.id === invoice.id)) {
-        this.selectedInvoicesForPayment.push({
-          ...invoice,
-          selectedForPayment: true,
-          amountToPay: invoice.pendingValue
-        });
-      }
-    });
-    this.updateTotalAmount();
-  }
+    if (selectedInvoice) {
+      // Llenar automáticamente el monto
+      this.expenseReceiptForm.get('totalAmount')?.setValue(selectedInvoice.total);
 
-  removeInvoiceFromPayment(invoice: PurchaseInvoice): void {
-    this.selectedInvoicesForPayment = this.selectedInvoicesForPayment.filter(inv => inv.id !== invoice.id);
-    this.updateTotalAmount();
-  }
-
-  onInvoiceAmountChange(): void {
-    this.updateTotalAmount();
+      // Mostrar detalles de la factura
+      this.selectedInvoiceDetails = {
+        date: selectedInvoice.date,
+        number: selectedInvoice.billId,
+        type: 'Factura',
+        debit: selectedInvoice.total, // En el pago, se debita cuentas por pagar
+        credit: selectedInvoice.total  // Se acredita la cuenta de pago (caja/banco)
+      };
+    }
   }
 
   updateTotalAmount(): void {
-    if (this.expenseReceiptForm?.get('receiptTypeOption')?.value === 'debt_payment') {
-      // Pago de facturas: sumar los montos de las facturas seleccionadas
-      this.totalAmount = this.selectedInvoicesForPayment
-        .filter(inv => inv.selectedForPayment && inv.amountToPay && inv.amountToPay > 0)
-        .reduce((sum, inv) => sum + (inv.amountToPay || 0), 0);
-    } else {
-      // Gasto directo: usar el valor del formulario
-      this.totalAmount = this.expenseReceiptForm?.get('totalAmount')?.value || 0;
-    }
-
-    // Actualizar el campo del formulario sin disparar eventos
-    this.expenseReceiptForm?.get('totalAmount')?.setValue(this.totalAmount, { emitEvent: false });
+    // El total se actualiza automáticamente al seleccionar la factura
+    this.totalAmount = this.expenseReceiptForm?.get('totalAmount')?.value || 0;
   }
 
   isFormValidForSubmission(): boolean {
-    if (!this.expenseReceiptForm.valid) {
-      return false;
-    }
-
-    if (this.expenseReceiptForm.get('receiptTypeOption')?.value === 'debt_payment') {
-      // Para pago de facturas, debe haber al menos una factura seleccionada con monto válido
-      const hasValidPayment = this.selectedInvoicesForPayment.some(inv =>
-        inv.selectedForPayment && inv.amountToPay && inv.amountToPay > 0
-      );
-      return hasValidPayment;
-    }
-
     return this.expenseReceiptForm.valid;
   }
 
@@ -272,15 +229,11 @@ export class ExpenseReceiptCreationComponent {
     this.expenseReceiptForm.markAllAsTouched();
 
     if (!this.isFormValidForSubmission()) {
-      this.messageService.add({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, revise los campos del formulario.' });
-
-      // Mensaje específico si es pago de facturas y no hay facturas válidas seleccionadas
-      if (this.expenseReceiptForm.get('receiptTypeOption')?.value === 'debt_payment') {
-        const hasValidPayment = this.selectedInvoicesForPayment.some(inv => inv.selectedForPayment && inv.amountToPay && inv.amountToPay > 0);
-        if (!hasValidPayment) {
-          this.messageService.add({ severity: 'warn', summary: 'Información Faltante', detail: 'Debe seleccionar al menos una factura y especificar un monto a pagar.' });
-        }
-      }
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de Validación',
+        detail: 'Por favor, complete todos los campos requeridos.'
+      });
       return;
     }
 
@@ -289,48 +242,50 @@ export class ExpenseReceiptCreationComponent {
     const enterpriseId = "asdasdasfafa"; // TODO: Obtener del localStorage
 
     if (!enterpriseId) {
-      this.messageService.add({ severity: 'error', summary: 'Error de Configuración', detail: 'No se encontró el ID de la empresa. Por favor, inicie sesión de nuevo.' });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de Configuración',
+        detail: 'No se encontró el ID de la empresa. Por favor, inicie sesión de nuevo.'
+      });
       return;
     }
 
-    let typeOptionId: number = 1;
-
-    if (formValue.receiptTypeOption === 'debt_payment') {
-      typeOptionId = 1;
-    } else {
-      typeOptionId = 2;
-    }
-
-    // 1. Construir el objeto de solicitud para la API (ExpenseReceiptCreateRequest)
+    // Construir el objeto de solicitud para la API
     const requestData: ExpenseReceiptCreateRequest = {
       thirdPartyId: supplier.id,
-      paymentMethodId: formValue.paymentMethod,
-      receiptTypeId: typeOptionId,
+      paymentMethodId: formValue.transferAccount,
+      receiptTypeId: 1, // Siempre es pago de factura
       observations: formValue.observations,
       enterpriseId: enterpriseId,
-      totalAmount: this.totalAmount,
-      details: this.selectedInvoicesForPayment
-        .filter(inv => inv.selectedForPayment && inv.amountToPay && inv.amountToPay > 0)
-        .map(inv => ({
-          invoiceId: inv.id,
-          amountPaid: inv.amountToPay || 0
-        })),
-      ledgerAccountId: formValue.auxiliaryAccount || 0
+      totalAmount: formValue.totalAmount,
+      details: [{
+        invoiceId: formValue.invoice,
+        amountPaid: formValue.totalAmount
+      }],
+      ledgerAccountId: formValue.postToAccount
     };
 
-    // 2. Enviar la solicitud al backend
+    // Enviar la solicitud al backend
     this.expenseReceiptService.createExpenseReceipt(requestData).subscribe({
       next: (response) => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Comprobante de egreso ${response.receiptCode} creado correctamente.` });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Comprobante de egreso ${response.receiptCode} creado correctamente.`
+        });
 
-        // 3. Redirigir al listado después de un breve retraso
+        // Redirigir al listado después de un breve retraso
         setTimeout(() => {
           this.router.navigate(['/financial/treasury/expense-receipts']);
         }, 2000);
       },
       error: (error) => {
         console.error('Error al crear el comprobante de egreso:', error);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Ocurrió un error al crear el comprobante de egreso. Intente nuevamente.' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Ocurrió un error al crear el comprobante de egreso. Intente nuevamente.'
+        });
       }
     });
   }

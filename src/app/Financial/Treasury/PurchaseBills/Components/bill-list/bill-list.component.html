@@ -1,10 +1,10 @@
-<!-- Expense Receipts List -->
+<!-- Purchase Bills List -->
 <div class="container-fluid p-4">
     <!-- Page Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">Comprobantes de Egreso</h1>
-            <p class="text-gray-600">Consulte y gestione los pagos realizados a proveedores y gastos directos</p>
+            <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">Facturas de Compra</h1>
+            <p class="text-gray-600">Gestión de facturas de proveedores (Bills)</p>
         </div>
         <div class="flex gap-2">
             <p-button
@@ -14,9 +14,9 @@
                 (onClick)="onExportData()">
             </p-button>
             <p-button
-                label="Efectuar Pago"
+                label="Nueva Factura"
                 icon="pi pi-plus"
-                (onClick)="goToCreateReceipt()">
+                (onClick)="onCreateBill()">
             </p-button>
         </div>
     </div>
@@ -24,47 +24,24 @@
     <!-- Filters Card -->
     <p-card header="Filtros de Búsqueda" class="mb-4">
         <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <!-- Bill ID Filter -->
+            <div class="flex flex-col gap-2">
+                <label for="billId" class="font-semibold text-[var(--color-primary)]">Bill ID</label>
+                <input
+                    pInputText
+                    id="billId"
+                    formControlName="billId"
+                    placeholder="Buscar por Bill ID...">
+            </div>
 
             <!-- Supplier Filter -->
             <div class="flex flex-col gap-2">
-                <label for="supplier" class="font-semibold text-[var(--color-primary)]">Proveedor</label>
-                <p-autoComplete
-                    id="supplier"
-                    formControlName="supplier"
-                    [suggestions]="supplierSuggestions"
-                    (completeMethod)="searchSupplier($event)"
-                    placeholder="Buscar proveedor...">
-                    <ng-template pTemplate="item" let-item>
-                        <div class="flex items-center gap-2 p-2">
-                            <i class="pi pi-user text-gray-500"></i>
-                            <span>{{ item }}</span>
-                        </div>
-                    </ng-template>
-                </p-autoComplete>
-            </div>
-
-            <!-- Date From Filter -->
-            <div class="flex flex-col gap-2">
-                <label for="startDate" class="font-semibold text-[var(--color-primary)]">Desde</label>
-                <p-calendar
-                    id="startDate"
-                    formControlName="startDate"
-                    dateFormat="dd/mm/yy"
-                    [showIcon]="true"
-                    placeholder="Fecha desde">
-                </p-calendar>
-            </div>
-
-            <!-- Date To Filter -->
-            <div class="flex flex-col gap-2">
-                <label for="endDate" class="font-semibold text-[var(--color-primary)]">Hasta</label>
-                <p-calendar
-                    id="endDate"
-                    formControlName="endDate"
-                    dateFormat="dd/mm/yy"
-                    [showIcon]="true"
-                    placeholder="Fecha hasta">
-                </p-calendar>
+                <label for="supplierName" class="font-semibold text-[var(--color-primary)]">Proveedor</label>
+                <input
+                    pInputText
+                    id="supplierName"
+                    formControlName="supplierName"
+                    placeholder="Buscar por proveedor...">
             </div>
 
             <!-- Status Filter -->
@@ -80,14 +57,28 @@
                 </p-dropdown>
             </div>
 
-            <!-- Receipt Code Filter -->
+            <!-- Date From Filter -->
             <div class="flex flex-col gap-2">
-                <label for="receiptCode" class="font-semibold text-[var(--color-primary)]">Código Comprobante</label>
-                <input
-                    pInputText
-                    id="receiptCode"
-                    formControlName="receiptCode"
-                    placeholder="Buscar por código...">
+                <label for="dateFrom" class="font-semibold text-[var(--color-primary)]">Desde</label>
+                <p-calendar
+                    id="dateFrom"
+                    formControlName="dateFrom"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    placeholder="Fecha desde">
+                </p-calendar>
+            </div>
+
+            <!-- Date To Filter -->
+            <div class="flex flex-col gap-2">
+                <label for="dateTo" class="font-semibold text-[var(--color-primary)]">Hasta</label>
+                <p-calendar
+                    id="dateTo"
+                    formControlName="dateTo"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    placeholder="Fecha hasta">
+                </p-calendar>
             </div>
 
             <!-- Min Amount Filter -->
@@ -132,28 +123,29 @@
                         tooltipPosition="top"
                         (onClick)="clearFilters()">
                     </p-button>
+
                 </div>
             </div>
         </form>
     </p-card>
 
-    <!-- Expense Receipts Table -->
-    <p-card header="Lista de Comprobantes de Egreso" class="mb-4">
+    <!-- Bills Table -->
+    <p-card header="Lista de Facturas" class="mb-4">
         <p-table
-            [value]="filteredReceipts"
+            [value]="filteredBills"
             [loading]="loading"
             [paginator]="true"
             [rows]="10"
             [rowsPerPageOptions]="[5, 10, 20, 50]"
             [showCurrentPageReport]="true"
-            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} comprobantes"
-            [globalFilterFields]="['receiptCode', 'supplierName', 'status']"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} facturas"
+            [globalFilterFields]="['billId', 'supplierName', 'statusDisplay']"
             styleClass="p-datatable-striped">
 
             <ng-template pTemplate="caption">
                 <div class="flex justify-between items-center">
                     <span class="text-lg font-semibold">
-                        Total: {{ filteredReceipts.length }} comprobantes
+                        Total: {{ filteredBills.length }} facturas
                     </span>
                     <div class="flex gap-2">
                         <span class="p-input-icon-left">
@@ -171,17 +163,17 @@
 
             <ng-template pTemplate="header">
                 <tr>
-                    <th pSortableColumn="receiptCode" style="width: 150px">
-                        Código Comprobante <p-sortIcon field="receiptCode"></p-sortIcon>
+                    <th pSortableColumn="billId" style="width: 150px">
+                        Bill ID <p-sortIcon field="billId"></p-sortIcon>
                     </th>
-                    <th pSortableColumn="issueDate" style="width: 120px">
-                        Fecha <p-sortIcon field="issueDate"></p-sortIcon>
+                    <th pSortableColumn="dateOpened" style="width: 120px">
+                        Fecha <p-sortIcon field="dateOpened"></p-sortIcon>
                     </th>
                     <th pSortableColumn="supplierName" style="width: 200px">
                         Proveedor <p-sortIcon field="supplierName"></p-sortIcon>
                     </th>
-                    <th pSortableColumn="totalAmount" style="width: 150px" class="text-right">
-                        Total <p-sortIcon field="totalAmount"></p-sortIcon>
+                    <th pSortableColumn="total" style="width: 150px" class="text-right">
+                        Total <p-sortIcon field="total"></p-sortIcon>
                     </th>
                     <th pSortableColumn="status" style="width: 120px">
                         Estado <p-sortIcon field="status"></p-sortIcon>
@@ -190,27 +182,27 @@
                 </tr>
             </ng-template>
 
-            <ng-template pTemplate="body" let-receipt>
+            <ng-template pTemplate="body" let-bill>
                 <tr>
                     <td>
-                        <span class="font-mono font-semibold text-blue-600">{{ receipt.receiptCode }}</span>
+                        <span class="font-mono font-semibold text-blue-600">{{ bill.billId }}</span>
                     </td>
                     <td>
-                        <span>{{ formatDate(receipt.issueDate) }}</span>
+                        <span>{{ formatDate(bill.dateOpened) }}</span>
                     </td>
                     <td>
                         <div class="flex items-center gap-2">
                             <i class="pi pi-building text-gray-500"></i>
-                            <span>{{ receipt.supplierName }}</span>
+                            <span>{{ bill.supplierName }}</span>
                         </div>
                     </td>
                     <td class="text-right">
-                        <span class="font-semibold text-green-600">{{ formatCurrency(receipt.totalAmount) }}</span>
+                        <span class="font-semibold text-green-600">{{ formatCurrency(bill.total) }}</span>
                     </td>
                     <td>
                         <p-tag
-                            [value]="receipt.status"
-                            [severity]="getStatusSeverity(receipt.status)">
+                            [value]="bill.statusDisplay"
+                            [severity]="getStatusSeverity(bill.status)">
                         </p-tag>
                     </td>
                     <td>
@@ -222,28 +214,29 @@
                                 severity="info"
                                 [text]="true"
                                 pTooltip="Ver detalles"
-                                (onClick)="viewReceiptDetails(receipt)">
+                                (onClick)="onViewBill(bill)">
                             </p-button>
 
-                            <!-- Print Button -->
+                            <!-- Edit Button -->
                             <p-button
-                                icon="pi pi-print"
+                                icon="pi pi-pencil"
                                 size="small"
-                                severity="secondary"
+                                severity="warn"
                                 [text]="true"
-                                pTooltip="Imprimir comprobante"
-                                (onClick)="printReceipt(receipt)">
+                                [disabled]="bill.status === 'POSTED' || bill.status === 'PAID'"
+                                pTooltip="Editar factura"
+                                (onClick)="onEditBill(bill)">
                             </p-button>
 
-                            <!-- Cancel Button -->
+                            <!-- Delete Button -->
                             <p-button
-                                icon="pi pi-times"
+                                icon="pi pi-trash"
                                 size="small"
                                 severity="danger"
                                 [text]="true"
-                                [disabled]="receipt.status === 'Anulado'"
-                                pTooltip="Anular comprobante"
-                                (onClick)="cancelReceipt(receipt)">
+                                [disabled]="bill.status === 'POSTED' || bill.status === 'PAID'"
+                                pTooltip="Eliminar factura"
+                                (onClick)="onDeleteBill(bill)">
                             </p-button>
                         </div>
                     </td>
@@ -256,18 +249,18 @@
                         <div class="flex flex-col items-center gap-4">
                             <i class="pi pi-inbox text-4xl text-gray-400"></i>
                             <div>
-                                <p class="text-lg font-semibold text-gray-600 mb-2">No se encontraron comprobantes</p>
+                                <p class="text-lg font-semibold text-gray-600 mb-2">No se encontraron facturas</p>
                                 <p class="text-gray-500">
-                                    {{ filteredReceipts.length === 0 && filteredReceipts.length < getTotalReceipts()
+                                    {{ filteredBills.length === 0 && allBills.length > 0
                                         ? 'Intente ajustar los filtros de búsqueda'
-                                        : 'Comience creando su primer comprobante de egreso' }}
+                                        : 'Comience creando su primera factura de compra' }}
                                 </p>
                             </div>
                             <p-button
-                                *ngIf="filteredReceipts.length === 0 && getTotalReceipts() === 0"
-                                label="Efectuar Primer Pago"
+                                *ngIf="filteredBills.length === 0 && allBills.length === 0"
+                                label="Crear Primera Factura"
                                 icon="pi pi-plus"
-                                (onClick)="goToCreateReceipt()">
+                                (onClick)="onCreateBill()">
                             </p-button>
                         </div>
                     </td>
@@ -279,7 +272,7 @@
                     <td colspan="6" class="text-center py-8">
                         <div class="flex flex-col items-center gap-4">
                             <i class="pi pi-spin pi-spinner text-3xl text-blue-500"></i>
-                            <p class="text-lg text-gray-600">Cargando comprobantes...</p>
+                            <p class="text-lg text-gray-600">Cargando facturas...</p>
                         </div>
                     </td>
                 </tr>
@@ -287,41 +280,50 @@
         </p-table>
     </p-card>
 
-    <!-- Summary Statistics -->
+    <!-- Summary Statistics (Optional) -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <p-card>
             <div class="text-center">
                 <i class="pi pi-file-o text-3xl text-blue-500 mb-2"></i>
-                <h3 class="text-2xl font-bold text-gray-800">{{ getTotalReceipts() }}</h3>
-                <p class="text-gray-600">Total Comprobantes</p>
+                <h3 class="text-2xl font-bold text-gray-800">{{ allBills.length }}</h3>
+                <p class="text-gray-600">Total Facturas</p>
+            </div>
+        </p-card>
+
+        <p-card>
+            <div class="text-center">
+                <i class="pi pi-clock text-3xl text-orange-500 mb-2"></i>
+                <h3 class="text-2xl font-bold text-gray-800">
+                    {{ getDraftCount() }}
+                </h3>
+                <p class="text-gray-600">Borradores</p>
             </div>
         </p-card>
 
         <p-card>
             <div class="text-center">
                 <i class="pi pi-check-circle text-3xl text-green-500 mb-2"></i>
-                <h3 class="text-2xl font-bold text-gray-800">{{ getActiveReceipts() }}</h3>
-                <p class="text-gray-600">Activos</p>
-            </div>
-        </p-card>
-
-        <p-card>
-            <div class="text-center">
-                <i class="pi pi-times-circle text-3xl text-red-500 mb-2"></i>
-                <h3 class="text-2xl font-bold text-gray-800">{{ getCancelledReceipts() }}</h3>
-                <p class="text-gray-600">Anulados</p>
+                <h3 class="text-2xl font-bold text-gray-800">
+                    {{ getPostedCount() }}
+                </h3>
+                <p class="text-gray-600">Contabilizadas</p>
             </div>
         </p-card>
 
         <p-card>
             <div class="text-center">
                 <i class="pi pi-money-bill text-3xl text-purple-500 mb-2"></i>
-                <h3 class="text-2xl font-bold text-gray-800">{{ getTotalAmount() | currency:'COP':'symbol':'1.0-0' }}</h3>
-                <p class="text-gray-600">Monto Total</p>
+                <h3 class="text-2xl font-bold text-gray-800">
+                    {{ getPaidCount() }}
+                </h3>
+                <p class="text-gray-600">Pagadas</p>
             </div>
         </p-card>
     </div>
 
     <!-- Toast Messages -->
     <p-toast></p-toast>
+
+    <!-- Confirmation Dialog -->
+    <p-confirmDialog></p-confirmDialog>
 </div>
