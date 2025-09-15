@@ -4,19 +4,19 @@ export interface DropdownOption {
     value: any; 
 }
 
-// Interfaz para el cliente
-export interface Client {
+// Interfaz para el proveedor (equivalente al cliente pero para gastos)
+export interface Supplier {
     id: number;
     name: string;
-    accountsReceivableAccount: {
+    accountsPayableAccount: {
         id: number;
         code: string; 
         name: string;
     };
 }
 
-// Interfaz para las facturas pendientes de un cliente
-export interface Invoice {
+// Interfaz para las facturas pendientes de un proveedor (cuentas por pagar)
+export interface PurchaseInvoice {
     id: number;
     factCode: string;
     expirationDate: Date;
@@ -25,13 +25,13 @@ export interface Invoice {
     amountToPay?: number; 
 }
 
-// Interfaz para la vista de lista de recibos
-export interface ReceiptView {
+// Interfaz para la vista de lista de recibos de gastos
+export interface ExpenseReceiptView {
     id: number;
     receiptCode: string;
     issueDate: Date;
     thirdPartyId: number;
-    clientName: string;
+    supplierName: string;
     status: 'Activo' | 'Anulado';
     totalAmount: number;
 }

@@ -1,0 +1,280 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20 font-sans">
+    <p-toast></p-toast>
+
+    <!-- CABECERA -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+                    Reporte de Proveedor: {{ vendorName }}
+                </h1>
+                <p class="mt-2 text-base text-gray-600">
+                    Estado de cuenta detallado del proveedor seleccionado
+                </p>
+            </div>
+            <p-button
+                label="Volver"
+                icon="pi pi-arrow-left"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="goBack()">
+            </p-button>
+        </div>
+    </div>
+
+    <!-- SELECTOR DE RANGO DE FECHAS -->
+    <p-card header="Seleccionar Período" styleClass="mb-6">
+        <form [formGroup]="dateRangeForm">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div class="flex flex-col gap-2">
+                    <label for="startDate" class="font-semibold text-sm text-[var(--color-primary)]">
+                        Fecha Inicial
+                    </label>
+                    <p-calendar
+                        id="startDate"
+                        formControlName="startDate"
+                        dateFormat="dd/mm/yy"
+                        [showIcon]="true"
+                        placeholder="dd/mm/yyyy"
+                        styleClass="w-full"
+                        (onSelect)="onDateRangeChange()">
+                    </p-calendar>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="endDate" class="font-semibold text-sm text-[var(--color-primary)]">
+                        Fecha Final
+                    </label>
+                    <p-calendar
+                        id="endDate"
+                        formControlName="endDate"
+                        dateFormat="dd/mm/yy"
+                        [showIcon]="true"
+                        placeholder="dd/mm/yyyy"
+                        styleClass="w-full"
+                        (onSelect)="onDateRangeChange()">
+                    </p-calendar>
+                </div>
+
+                <div class="flex gap-2">
+                    <p-button
+                        label="Actualizar"
+                        icon="pi pi-refresh"
+                        size="small"
+                        (onClick)="loadVendorReport()">
+                    </p-button>
+                    <p-button
+                        label="PDF"
+                        icon="pi pi-file-pdf"
+                        severity="danger"
+                        [outlined]="true"
+                        size="small"
+                        pTooltip="Exportar a PDF"
+                        (onClick)="exportToPdf()"
+                        [disabled]="!vendorReport">
+                    </p-button>
+                    <p-button
+                        label="Excel"
+                        icon="pi pi-file-excel"
+                        severity="success"
+                        [outlined]="true"
+                        size="small"
+                        pTooltip="Exportar a Excel"
+                        (onClick)="exportToExcel()"
+                        [disabled]="!vendorReport">
+                    </p-button>
+                </div>
+            </div>
+        </form>
+    </p-card>
+
+    <!-- LOADING SPINNER -->
+    <div *ngIf="loading" class="text-center py-8">
+        <p-progressSpinner strokeWidth="4" animationDuration="1s"></p-progressSpinner>
+        <p class="mt-4 text-gray-600">Cargando reporte...</p>
+    </div>
+
+    <!-- CONTENIDO DEL REPORTE -->
+    <div *ngIf="!loading && vendorReport">
+
+        <!-- INFORMACIÓN DEL PERÍODO -->
+        <p-card styleClass="mb-6 bg-blue-50 border-l-4 border-blue-500">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-semibold text-lg text-[var(--color-primary)] mb-2">Período del Reporte</h3>
+                    <p class="text-gray-700">
+                        <strong>Desde:</strong> {{ vendorReport.dateRange.startDate | date:'dd/MM/yyyy' }}
+                    </p>
+                    <p class="text-gray-700">
+                        <strong>Hasta:</strong> {{ vendorReport.dateRange.endDate | date:'dd/MM/yyyy' }}
+                    </p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg text-[var(--color-primary)] mb-2">Totales del Período</h3>
+                    <p class="text-gray-700">
+                        <strong>Total Débitos:</strong>
+                        <span class="font-mono text-green-600">{{ vendorReport.periodTotals.totalDebits | currency:'COP':'symbol':'1.0-0' }}</span>
+                    </p>
+                    <p class="text-gray-700">
+                        <strong>Total Créditos:</strong>
+                        <span class="font-mono text-red-600">{{ vendorReport.periodTotals.totalCredits | currency:'COP':'symbol':'1.0-0' }}</span>
+                    </p>
+                    <p class="text-gray-700">
+                        <strong>Saldo Neto:</strong>
+                        <span class="font-mono font-bold" [ngClass]="getBalanceClass(vendorReport.periodTotals.netBalance)">
+                            {{ vendorReport.periodTotals.netBalance | currency:'COP':'symbol':'1.0-0' }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- TABLA DE TRANSACCIONES -->
+        <p-card header="Detalle de Transacciones">
+            <p-table
+                [value]="vendorReport.transactions"
+                styleClass="p-datatable-sm"
+                [scrollable]="true"
+                scrollHeight="400px">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Fecha Venc.</th>
+                        <th>Referencia</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th class="text-right">Débitos</th>
+                        <th class="text-right">Créditos</th>
+                        <th class="text-right">Saldo</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-transaction>
+                    <tr>
+                        <td>{{ transaction.date | date:'dd/MM/yyyy' }}</td>
+                        <td>
+                            <span *ngIf="transaction.dueDate">{{ transaction.dueDate | date:'dd/MM/yyyy' }}</span>
+                            <span *ngIf="!transaction.dueDate" class="text-gray-400">-</span>
+                        </td>
+                        <td>
+                            <span *ngIf="transaction.reference" class="text-blue-600 underline">{{ transaction.reference }}</span>
+                            <span *ngIf="!transaction.reference" class="text-gray-400">-</span>
+                        </td>
+                        <td>
+                            <p-tag
+                                [value]="getTransactionTypeTag(transaction.type).text"
+                                [severity]="getTransactionTypeTag(transaction.type).severity"
+                                styleClass="text-xs">
+                            </p-tag>
+                        </td>
+                        <td>
+                            <span *ngIf="transaction.description">{{ transaction.description }}</span>
+                            <span *ngIf="!transaction.description" class="text-gray-400">-</span>
+                        </td>
+                        <td class="text-right font-mono">
+                            <span *ngIf="transaction.debits > 0" class="text-green-600 font-semibold">
+                                {{ transaction.debits | currency:'COP':'symbol':'1.0-0' }}
+                            </span>
+                            <span *ngIf="transaction.debits === 0" class="text-gray-400">-</span>
+                        </td>
+                        <td class="text-right font-mono">
+                            <span *ngIf="transaction.credits > 0" class="text-red-600 font-semibold">
+                                {{ transaction.credits | currency:'COP':'symbol':'1.0-0' }}
+                            </span>
+                            <span *ngIf="transaction.credits === 0" class="text-gray-400">-</span>
+                        </td>
+                        <td class="text-right font-mono font-bold" [ngClass]="getBalanceClass(transaction.balance)">
+                            {{ transaction.balance | currency:'COP':'symbol':'1.0-0' }}
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="8" class="text-center py-8">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="pi pi-info-circle text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-600 text-lg">No hay transacciones en el período seleccionado</p>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </p-card>
+
+        <p-divider></p-divider>
+
+        <!-- RESUMEN FINAL -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+            <!-- TOTALES DEL PERÍODO -->
+            <p-card header="Totales del Período" styleClass="bg-gray-50">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium">Total Débitos:</span>
+                        <span class="font-mono text-green-600 font-bold">
+                            {{ vendorReport.periodTotals.totalDebits | currency:'COP':'symbol':'1.0-0' }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium">Total Créditos:</span>
+                        <span class="font-mono text-red-600 font-bold">
+                            {{ vendorReport.periodTotals.totalCredits | currency:'COP':'symbol':'1.0-0' }}
+                        </span>
+                    </div>
+                    <p-divider></p-divider>
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-lg">Saldo Total:</span>
+                        <span class="font-mono text-xl font-bold" [ngClass]="getBalanceClass(vendorReport.totalDue)">
+                            {{ vendorReport.totalDue | currency:'COP':'symbol':'1.0-0' }}
+                        </span>
+                    </div>
+                </div>
+            </p-card>
+
+            <!-- REPORTE DE ANTIGÜEDAD -->
+            <p-card header="Reporte de Antigüedad de Saldos">
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between items-center">
+                        <span>Pre-Pagado:</span>
+                        <span class="font-mono">{{ vendorReport.agingReport.prePaid | currency:'COP':'symbol':'1.0-0' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>Corriente:</span>
+                        <span class="font-mono">{{ vendorReport.agingReport.current | currency:'COP':'symbol':'1.0-0' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>0-30 días:</span>
+                        <span class="font-mono text-orange-600 font-semibold">{{ vendorReport.agingReport.days0to30 | currency:'COP':'symbol':'1.0-0' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>31-60 días:</span>
+                        <span class="font-mono">{{ vendorReport.agingReport.days31to60 | currency:'COP':'symbol':'1.0-0' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>61-90 días:</span>
+                        <span class="font-mono">{{ vendorReport.agingReport.days61to90 | currency:'COP':'symbol':'1.0-0' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>91+ días:</span>
+                        <span class="font-mono">{{ vendorReport.agingReport.days91Plus | currency:'COP':'symbol':'1.0-0' }}</span>
+                    </div>
+                    <p-divider></p-divider>
+                    <div class="flex justify-between items-center font-bold">
+                        <span>Total:</span>
+                        <span class="font-mono text-lg">{{ vendorReport.agingReport.total | currency:'COP':'symbol':'1.0-0' }}</span>
+                    </div>
+                </div>
+            </p-card>
+
+        </div>
+    </div>
+
+    <!-- MENSAJE SI NO HAY DATOS -->
+    <div *ngIf="!loading && !vendorReport" class="text-center py-12">
+        <i class="pi pi-info-circle text-6xl text-gray-400 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay datos para mostrar</h3>
+        <p class="text-gray-500">Seleccione un rango de fechas y haga clic en "Actualizar" para cargar el reporte</p>
+    </div>
+</div>
