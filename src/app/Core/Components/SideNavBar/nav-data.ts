@@ -125,7 +125,7 @@ export const navbarData: INavbarData[] = [
             label: 'Libros Auxiliares',
           },
           {
-            routeLink: 'TO DO',
+            routeLink: '/financial/reports/financial-statements/list',
             icon: 'article',
             label: 'Estados Financieros',
           },

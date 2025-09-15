@@ -12,7 +12,7 @@ export class MainViewComponent {
   reports = [
     {
       name: 'Estados Financieros',
-      route: '/financial/reports/financial-statements',
+      route: '/financial/reports/financial-statements/list',
       type: 'Estados',
       amount: 5,
       icon: 'docs',
