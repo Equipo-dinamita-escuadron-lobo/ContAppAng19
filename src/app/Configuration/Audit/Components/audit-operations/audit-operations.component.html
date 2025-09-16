@@ -1,0 +1,72 @@
+<div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+  <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+    <div class="items-center mb-6">
+      <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+        Auditoría de Operaciones
+      </h1>
+      <p class="font-family-sans font-normal text-sm mt-2">
+        Aquí podrás supervisar el detalle de las operaciones realizadas en el sistema
+      </p>
+    </div>
+  </div>
+
+  <p-table 
+    [value]="operaciones"
+    [paginator]="true" 
+    [rows]="10" 
+    [rowsPerPageOptions]="[5,10,20]"  
+    styleClass="p-datatable-striped font-family-sans" 
+    [tableStyle]="{'min-width': '50rem'}" 
+    responsiveLayout="scroll">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="usuario" class="font-semibold text-primary border-b-2 border-primary">
+          Usuario
+        </th>
+        <th pSortableColumn="rol" class="font-semibold text-primary border-b-2 border-primary">
+          Rol 
+        </th>
+        <th pSortableColumn="fecha" class="font-semibold text-primary border-b-2 border-primary">
+          Fecha y hora
+        </th>
+        <th pSortableColumn="empresa" class="font-semibold text-primary border-b-2 border-primary">
+          Empresa
+        </th>
+        <th pSortableColumn="tabla" class="font-semibold text-primary border-b-2 border-primary">
+          Tabla 
+        </th>
+        <th pSortableColumn="codigo" class="font-semibold text-primary border-b-2 border-primary">
+          Código
+        </th>
+        <th pSortableColumn="operacion" class="font-semibold text-primary border-b-2 border-primary">
+          Operación
+        </th>
+        <th pSortableColumn="datos" class="font-semibold text-primary border-b-2 border-primary">
+          Datos
+        </th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr class="text-neutral-20">
+        <td class="py-3">{{ row.usuario }}</td>
+        <td class="py-3">{{ row.rol }}</td>
+        <td class="py-3">{{ row.fecha }}</td>
+        <td class="py-3">{{ row.empresa }}</td>
+        <td class="py-3">{{ row.tabla }}</td>
+        <td class="py-3">{{ row.codigo }}</td>
+        <td class="py-3">{{ row.operacion }}</td>
+        <td class="py-3">{{ row.datos }}</td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
+          No se encontraron registros de operaciones.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

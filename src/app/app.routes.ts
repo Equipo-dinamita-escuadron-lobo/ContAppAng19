@@ -157,6 +157,59 @@ export const routes: Routes = [
               },
             ],
           },
+          {
+            path: 'audit',
+            data: {
+              breadcrumb: 'Auditoría',
+            },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-hub/audit-hub.component'
+                  ).then((m) => m.AuditHubComponent),
+              },
+              {
+                path: 'sessions',
+                data: { breadcrumb: 'Sesiones' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-session/audit-session.component'
+                  ).then((m) => m.AuditSessionComponent),
+              },
+              {
+                path: 'operations',
+                data: { breadcrumb: 'Operaciones' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-operations/audit-operations.component'
+                  ).then((m) => m.AuditOperationsComponent),
+              },
+              {
+                path: 'documents',
+                data: { breadcrumb: 'Documentos Contables' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-accounting-documents/audit-accounting-documents.component'
+                  ).then((m) => m.AuditAccountingDocumentsComponent),
+              },
+              {
+                path: 'consecutives',
+                data: { breadcrumb: 'Consecutivos' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-consecutive/audit-consecutive.component'
+                  ).then((m) => m.AuditConsecutiveComponent),
+              },
+            ]
+            ,
+          }
+          ,
         ],
       },
       {
