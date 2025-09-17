@@ -11,6 +11,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ProductService } from '../services/product.service';
 import { ProductResponse } from '../models/ProductResponse';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
+import { InventoryAdjustmentComponent } from '../inventory-adjustment/inventory-adjustment.component';
+import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
+import { MessageService } from 'primeng/api';
 
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
@@ -26,8 +30,12 @@ interface AutoCompleteCompleteEvent {
     AutoCompleteModule,
     FormsModule,
     DatePickerModule,
-    InputTextModule
+    InputTextModule,
+    InventoryAdjustmentComponent,
+    ToastModule,
+    TooltipModule
   ],
+  providers: [MessageService],
   templateUrl: './list-kardex-weighted-average.component.html',
   styleUrl: './list-kardex-weighted-average.component.css'
 })
@@ -35,7 +43,8 @@ export class ListKardexWeightedAverageComponent {
 
   constructor(
     private kardexService: KardexService,
-    private productService: ProductService
+    private productService: ProductService,
+    private messageService: MessageService
   ) {}
 
   localStorageMethods = new LocalStorageMethods();
@@ -53,6 +62,10 @@ export class ListKardexWeightedAverageComponent {
 
   startDate: Date | null = null;
   endDate: Date | null = null;
+
+  // Variables para el diálogo de ajuste de inventario
+  showInventoryAdjustment: boolean = false;
+  lastKardexRecord: KardexRow | null = null;
 
   onStartDateChange() {
     if (this.endDate && this.startDate && this.endDate < this.startDate) {
@@ -178,7 +191,60 @@ export class ListKardexWeightedAverageComponent {
 
       this.totalRecords = res.data.totalElements;
       this.loading = false;
+
+      // Actualizar el último registro para ajustes de inventario
+      this.updateLastKardexRecord();
     });
+  }
+
+  /**
+   * Actualiza el último registro del kardex para los ajustes de inventario
+   */
+  private updateLastKardexRecord() {
+    if (this.kardexList.length > 0) {
+      // El último registro debería ser el primer elemento ya que viene ordenado por fecha descendente
+      this.lastKardexRecord = this.kardexList[0];
+    } else {
+      this.lastKardexRecord = null;
+    }
+  }
+
+  /**
+   * Verifica si el botón de ajuste de inventario debe estar habilitado
+   */
+  isInventoryAdjustmentEnabled(): boolean {
+    return this.selectedProduct !== undefined && this.productId !== 0;
+  }
+
+  /**
+   * Abre el diálogo de ajuste de inventario
+   */
+  openInventoryAdjustment() {
+    if (this.isInventoryAdjustmentEnabled()) {
+      this.showInventoryAdjustment = true;
+    }
+  }
+
+  /**
+   * Maneja el evento cuando se completa un ajuste de inventario
+   */
+  onAdjustmentCompleted() {
+    this.showInventoryAdjustment = false;
+    // Recargar el kardex para mostrar los cambios
+    this.loadKardex({ first: this.first, rows: 5, sortField: '', sortOrder: 1 });
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Éxito',
+      detail: 'Ajuste de inventario completado. Los datos se han actualizado.'
+    });
+  }
+
+  /**
+   * Maneja el evento cuando se cierra el diálogo sin completar el ajuste
+   */
+  onAdjustmentDialogClosed() {
+    this.showInventoryAdjustment = false;
   }
 
 

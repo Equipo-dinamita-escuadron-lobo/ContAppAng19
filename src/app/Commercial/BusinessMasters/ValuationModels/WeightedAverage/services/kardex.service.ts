@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../../../../environments/environment';
 import { Observable } from 'rxjs';
 import { ResponseDto } from '../../models/ResponseDto';
+import { KardexPurchaseRequest } from '../models/KardexPurchaseRequest';
+import { KardexSaleRequest } from '../models/KardexSaleRequest';
 
 let API_URL = environment.API_URL + 'kardex/weighted-average/';
 
@@ -40,6 +42,20 @@ export class KardexService {
       }
 
     return this.http.get<ResponseDto<any>>(`${this.apiUrl}kardex-by-product`, { params });
+  }
+
+  /**
+   * Crea un ajuste de compra en el kardex
+   */
+  purchaseAdjustment(request: KardexPurchaseRequest): Observable<ResponseDto<any>> {
+    return this.http.post<ResponseDto<any>>(`${this.apiUrl}purchase-agreement`, request);
+  }
+
+  /**
+   * Crea un ajuste de venta en el kardex
+   */
+  saleAdjustment(request: KardexSaleRequest): Observable<ResponseDto<any>> {
+    return this.http.post<ResponseDto<any>>(`${this.apiUrl}sale-agreement`, request);
   }
 
 }

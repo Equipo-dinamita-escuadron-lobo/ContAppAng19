@@ -84,7 +84,11 @@
       <p-button
         label="Ajuste de inventario"
         icon="pi pi-sliders-h"
-      ></p-button>
+        [disabled]="!isInventoryAdjustmentEnabled()"
+        (onClick)="openInventoryAdjustment()"
+        [pTooltip]="!isInventoryAdjustmentEnabled() ? 'Debe seleccionar un producto para realizar ajustes de inventario' : ''"
+        tooltipPosition="top">
+      </p-button>
     </div>
   </div>
 
@@ -156,4 +160,16 @@
       </ng-template>
     </p-table>
   </div>
+
+  <!-- Toast para mensajes -->
+  <p-toast></p-toast>
+
+  <!-- Componente de ajuste de inventario -->
+  <app-inventory-adjustment
+    [visible]="showInventoryAdjustment"
+    [productData]="selectedProduct || null"
+    [lastKardexRecord]="lastKardexRecord"
+    (adjustmentCompleted)="onAdjustmentCompleted()"
+    (dialogClosed)="onAdjustmentDialogClosed()">
+  </app-inventory-adjustment>
 </div>
