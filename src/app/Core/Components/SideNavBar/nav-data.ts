@@ -132,20 +132,25 @@ export const navbarData: INavbarData[] = [
         ],
       },
       {
-        routeLink: 'TO DO',
+        routeLink: 'financial/treasury',
         icon: 'money_bag',
         label: 'Tesorería',
         items: [
           {
-            routeLink: 'TO DO',
-            icon: 'receipt_long',
-            label: 'Comprobantes de Egreso',
+            routeLink: 'financial/treasury/purchase-bills',
+            icon: 'description',
+            label: 'Facturas de Compra',
           },
-          {
-            routeLink: 'TO DO',
-            icon: 'analytics',
-            label: 'Reportes',
-          },
+            {
+              routeLink: 'financial/treasury/expense-receipts',
+              icon: 'receipt_long',
+              label: 'Comprobantes de Egreso',
+            },
+            {
+              routeLink: 'financial/treasury/reports/vendors',
+              icon: 'analytics',
+              label: 'Reportes de Proveedores',
+            },
         ],
       },
       {

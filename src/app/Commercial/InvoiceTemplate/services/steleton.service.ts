@@ -23,6 +23,10 @@ export class SteletonService {
     return this.http.post<void>(`${API_URL}/skeleton/sale`, facture);
   }
 
+  createSaleForReceiptSkeleton(facture: Facture2): Observable<void> {
+    return this.http.post<void>(`${API_URL}/skeleton/sale-for-receipt`, facture);
+  }
+
   createReturnOnSaleSkeleton(factCode: number, product: Product2): Observable<void> {
     return this.http.post<void>(`${API_URL}/skeleton/return-on-sale/${factCode}`, product);
   }

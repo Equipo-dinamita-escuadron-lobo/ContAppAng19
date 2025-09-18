@@ -99,6 +99,7 @@ export class CreateInvoiceComponent implements OnInit {
       factCode: [{ value: randomFactCode, disabled: true }, Validators.required],
       thId: ['', Validators.required],
       expirationDate: ['', Validators.required],
+      accountingAccount: ['', Validators.required],
       factProducts: this.formBuilder.array([this.createProductForm()]),
       totalValue: [{ value: '', disabled: true }],
       totalPay: ['', Validators.required],
@@ -224,13 +225,14 @@ export class CreateInvoiceComponent implements OnInit {
         totalValue: formValue.totalValue.toString(),
         totalPay: formValue.totalPay.toString(),
         pendingValue: formValue.pendingValue.toString(),
-        expirationDate: expirationDate
+        expirationDate: expirationDate,
+        accountingAccount: formValue.accountingAccount
       };
 
       // Llamar al servicio correspondiente según el tipo de factura
       const serviceCall = formValue.invoiceType === 'purchase'
         ? this.steletonService.createPurchaseSkeleton(factureData)
-        : this.steletonService.createSaleSkeleton(factureData);
+        : this.steletonService.createSaleSkeleton(factureData) && this.steletonService.createSaleForReceiptSkeleton(factureData);
 
       serviceCall.subscribe({
         next: (response) => {

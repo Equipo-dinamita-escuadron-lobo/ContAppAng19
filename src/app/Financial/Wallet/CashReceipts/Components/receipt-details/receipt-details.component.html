@@ -1,5 +1,8 @@
 <div class="w-full font-sans">
 
+    <p-toast></p-toast>
+    <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
     @if (errorMessage) {
     <div class="max-w-5xl mx-auto">
         <p-message severity="error" [text]="errorMessage"></p-message>
@@ -141,10 +144,46 @@
 
             <!-- Botones de Acción -->
             <div class="flex justify-center gap-4 p-6 ">
-                <p-button label="Anular" severity="secondary" (onClick)="annulReceipt()" icon="pi pi-times"></p-button>
+                <p-button label="Anular" severity="secondary" (onClick)="promptAnnulReceipt()" icon="pi pi-times" [disabled]="receipt.status === 'Anulado'"></p-button>
                 <p-button label="Contabilidad" (onClick)="generateAccounting()" icon="pi pi-calculator"></p-button>
             </div>
         </div>
     </div>
     }
 </div>
+
+<p-dialog 
+    header="Motivo de la Anulación" 
+    [(visible)]="displayAnnulDialog" 
+    [modal]="true" 
+    [style]="{width: '50vw'}" 
+    [draggable]="false" 
+    [resizable]="false">
+    
+    <div class="p-fluid">
+        <label for="annulReason" class="font-semibold block mb-2">Por favor, especifique el motivo para anular este recibo:</label>
+        <textarea 
+            id="annulReason" 
+            pInputTextarea 
+            [(ngModel)]="annulReason" 
+            rows="5" 
+            [autoResize]="true"
+            class="w-full">
+        </textarea>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button 
+            label="Cancelar" 
+            icon="pi pi-times" 
+            styleClass="p-button-text" 
+            (onClick)="cancelAnnulment()">
+        </p-button>
+        <p-button 
+            label="Confirmar Anulación" 
+            icon="pi pi-check" 
+            (onClick)="confirmAnnulment()"
+            [loading]="isSubmittingAnnulment">
+        </p-button>
+    </ng-template>
+</p-dialog>

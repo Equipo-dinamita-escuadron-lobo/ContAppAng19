@@ -1,0 +1,282 @@
+<!-- Purchase Bill Creation - Similar to GnuCash Bill Creation -->
+<div class="container-fluid p-4">
+    <!-- Page Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">Nueva Factura de Compra</h1>
+            <p class="text-gray-600">Crear una nueva factura de proveedor</p>
+        </div>
+        <div class="flex gap-2">
+            <p-button
+                label="Cancelar"
+                icon="pi pi-times"
+                severity="secondary"
+                (onClick)="onCancel()">
+            </p-button>
+        </div>
+    </div>
+
+    <!-- Bill Header Form -->
+    <p-card header="Información del Encabezado" class="mb-4">
+        <form [formGroup]="billHeaderForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Bill ID -->
+            <div class="flex flex-col gap-2">
+                <label for="billId" class="font-semibold text-[var(--color-primary)]">
+                    Bill ID <span class="text-red-500">*</span>
+                </label>
+                <input
+                    pInputText
+                    id="billId"
+                    formControlName="billId"
+                    placeholder="Ej: BILL-20250914-0001"
+                    [ngClass]="{'ng-invalid ng-dirty': billHeaderForm.get('billId')?.invalid && billHeaderForm.get('billId')?.touched}">
+                @if (billHeaderForm.get('billId')?.touched && billHeaderForm.get('billId')?.invalid) {
+                    <small class="p-error">El Bill ID es requerido.</small>
+                }
+            </div>
+
+            <!-- Date Opened -->
+            <div class="flex flex-col gap-2">
+                <label for="dateOpened" class="font-semibold text-[var(--color-primary)]">
+                    Fecha de Apertura <span class="text-red-500">*</span>
+                </label>
+                <p-calendar
+                    id="dateOpened"
+                    formControlName="dateOpened"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    appendTo="body"
+                    [ngClass]="{'ng-invalid ng-dirty': billHeaderForm.get('dateOpened')?.invalid && billHeaderForm.get('dateOpened')?.touched}">
+                </p-calendar>
+                @if (billHeaderForm.get('dateOpened')?.touched && billHeaderForm.get('dateOpened')?.invalid) {
+                    <small class="p-error">La fecha es requerida.</small>
+                }
+            </div>
+
+            <!-- Supplier -->
+            <div class="flex flex-col gap-2 md:col-span-2">
+                <label for="supplier" class="font-semibold text-[var(--color-primary)]">
+                    Proveedor <span class="text-red-500">*</span>
+                </label>
+                <p-autoComplete
+                    id="supplier"
+                    formControlName="supplier"
+                    [suggestions]="filteredSuppliers"
+                    (completeMethod)="searchSupplier($event)"
+                    field="name"
+                    placeholder="Buscar proveedor..."
+                    [dropdown]="true"
+                    appendTo="body"
+                    [ngClass]="{'ng-invalid ng-dirty': billHeaderForm.get('supplier')?.invalid && billHeaderForm.get('supplier')?.touched}">
+                </p-autoComplete>
+                @if (billHeaderForm.get('supplier')?.touched && billHeaderForm.get('supplier')?.invalid) {
+                    <small class="p-error">El proveedor es requerido.</small>
+                }
+            </div>
+
+            <!-- Notes -->
+            <div class="flex flex-col gap-2 md:col-span-2">
+                <label for="notes" class="font-semibold text-[var(--color-primary)]">
+                    Notas
+                </label>
+                <textarea
+                    pInputTextarea
+                    id="notes"
+                    formControlName="notes"
+                    rows="3"
+                    placeholder="Notas adicionales sobre la factura...">
+                </textarea>
+            </div>
+        </form>
+
+        <!-- Create Header Button -->
+        <div class="flex justify-end mt-4" *ngIf="!showLineItems">
+            <p-button
+                label="Crear Encabezado"
+                icon="pi pi-plus"
+                (onClick)="onCreateBillHeader()"
+                [disabled]="billHeaderForm.invalid">
+            </p-button>
+        </div>
+    </p-card>
+
+    <!-- Line Items Section (Similar to GnuCash) -->
+    <div *ngIf="showLineItems">
+        <p-card header="Elementos de Línea" class="mb-4">
+            <form [formGroup]="billLinesForm">
+                <!-- Add Line Item Button -->
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Líneas de la Factura</h3>
+                    <p-button
+                        label="Agregar Línea"
+                        icon="pi pi-plus"
+                        size="small"
+                        (onClick)="addLineItem()">
+                    </p-button>
+                </div>
+
+                <!-- Line Items Table -->
+                <p-table
+                    [value]="lineItemsFormArray.controls"
+                    styleClass="p-datatable-sm line-items-table">
+
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th style="width: 120px">Fecha</th>
+                            <th style="width: 200px">Descripción</th>
+                            <th style="width: 250px">Cuenta de Gasto</th>
+                            <th style="width: 100px">Cantidad</th>
+                            <th style="width: 120px">Precio Unit.</th>
+                            <th style="width: 120px">Total Línea</th>
+                            <th style="width: 80px">Acciones</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="body" let-control let-i="rowIndex">
+                        <tr [formGroup]="control">
+                            <!-- Date -->
+                            <td>
+                                <p-calendar
+                                    formControlName="date"
+                                    dateFormat="dd/mm/yy"
+                                    [showIcon]="true"
+                                    [style]="{'width': '100%'}"
+                                    appendTo="body">
+                                </p-calendar>
+                            </td>
+
+                            <!-- Description -->
+                            <td>
+                                <input
+                                    pInputText
+                                    formControlName="description"
+                                    placeholder="Descripción del item"
+                                    style="width: 100%;">
+                            </td>
+
+                            <!-- Expense Account -->
+                            <td>
+                                <p-dropdown
+                                    formControlName="expenseAccount"
+                                    [options]="expenseAccounts"
+                                    optionLabel="fullName"
+                                    optionValue="id"
+                                    placeholder="Seleccionar cuenta"
+                                    [style]="{'width': '100%'}"
+                                    [showClear]="true"
+                                    appendTo="body"
+                                    [ngClass]="{'p-invalid': control.get('expenseAccount')?.invalid && control.get('expenseAccount')?.touched}">
+                                </p-dropdown>
+                                @if (control.get('expenseAccount')?.invalid && control.get('expenseAccount')?.touched) {
+                                    <small class="p-error">Cuenta requerida</small>
+                                }
+                            </td>
+
+                            <!-- Quantity -->
+                            <td>
+                                <p-inputNumber
+                                    formControlName="quantity"
+                                    mode="decimal"
+                                    [minFractionDigits]="2"
+                                    [maxFractionDigits]="2"
+                                    [style]="{'width': '100%'}">
+                                </p-inputNumber>
+                            </td>
+
+                            <!-- Unit Price -->
+                            <td>
+                                <p-inputNumber
+                                    formControlName="unitPrice"
+                                    mode="currency"
+                                    currency="COP"
+                                    locale="es-CO"
+                                    [style]="{'width': '100%'}">
+                                </p-inputNumber>
+                            </td>
+
+                            <!-- Line Total (readonly) -->
+                            <td>
+                                <p-inputNumber
+                                    formControlName="lineTotal"
+                                    mode="currency"
+                                    currency="COP"
+                                    locale="es-CO"
+                                    [readonly]="true"
+                                    [style]="{'width': '100%', 'background-color': '#f8f9fa'}">
+                                </p-inputNumber>
+                            </td>
+
+                            <!-- Actions -->
+                            <td>
+                                <p-button
+                                    icon="pi pi-trash"
+                                    severity="danger"
+                                    size="small"
+                                    [text]="true"
+                                    (onClick)="removeLineItem(i)"
+                                    [disabled]="lineItemsFormArray.length === 1">
+                                </p-button>
+                            </td>
+                        </tr>
+                    </ng-template>
+
+                    <!-- Empty message -->
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                No hay líneas agregadas. Haga clic en "Agregar Línea" para comenzar.
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </form>
+        </p-card>
+
+        <!-- Totals Section -->
+        <p-card header="Resumen de Totales" class="mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex flex-col gap-2">
+                    <label class="font-semibold text-[var(--color-primary)]">Subtotal</label>
+                    <div class="p-3 border-2 border-gray-200 rounded-md bg-gray-50 font-semibold text-green-600 text-right">
+                        {{ formatCurrency(subtotal) }}
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="font-semibold text-[var(--color-primary)]">IVA (19%)</label>
+                    <div class="p-3 border-2 border-gray-200 rounded-md bg-gray-50 font-semibold text-blue-600 text-right">
+                        {{ formatCurrency(taxes) }}
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="font-semibold text-[var(--color-primary)]">Total</label>
+                    <div class="p-3 border-2 border-blue-300 rounded-md bg-blue-50 font-bold text-blue-800 text-right text-lg">
+                        {{ formatCurrency(total) }}
+                    </div>
+                </div>
+            </div>
+        </p-card>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end gap-2">
+            <p-button
+                label="Cancelar"
+                icon="pi pi-times"
+                severity="secondary"
+                (onClick)="onCancel()">
+            </p-button>
+
+            <p-button
+                label="Guardar Factura"
+                icon="pi pi-check"
+                [loading]="isCreatingBill"
+                [disabled]="!isFormValid()"
+                (onClick)="onSaveBill()">
+            </p-button>
+        </div>
+    </div>
+
+    <!-- Toast Messages -->
+    <p-toast></p-toast>
+</div>

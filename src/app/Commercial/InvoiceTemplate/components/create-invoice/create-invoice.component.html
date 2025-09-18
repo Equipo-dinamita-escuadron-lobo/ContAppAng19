@@ -81,24 +81,46 @@
                 </div>
 
                 <!-- Segunda fila: Fecha de vencimiento -->
-                <div class="mb-4">
-                    <label for="expirationDate" class="block mb-2 font-semibold">
-                        Fecha de Vencimiento <span class="text-red-500">*</span>
-                    </label>
-                    <p-datepicker
-                        id="expirationDate"
-                        formControlName="expirationDate"
-                        placeholder="Seleccione la fecha"
-                        class="w-full"
-                        dateFormat="dd/mm/yy">
-                    </p-datepicker>
+                <div class="flex gap-4 mb-4">
+                    <div class="w-1/2">
+                        <label for="expirationDate" class="block mb-2 font-semibold">
+                            Fecha de Vencimiento <span class="text-red-500">*</span>
+                        </label>
+                        <p-datepicker
+                            id="expirationDate"
+                            formControlName="expirationDate"
+                            placeholder="Seleccione la fecha"
+                            class="w-full"
+                            dateFormat="dd/mm/yy">
+                        </p-datepicker>
 
-                    @if (invoiceForm.get('expirationDate')?.touched && invoiceForm.get('expirationDate')?.invalid) {
-                        <p-message
-                            severity="error"
-                            text="La fecha de vencimiento es requerida"
-                        ></p-message>
-                    }
+                        @if (invoiceForm.get('expirationDate')?.touched && invoiceForm.get('expirationDate')?.invalid) {
+                            <p-message
+                                severity="error"
+                                text="La fecha de vencimiento es requerida"
+                            ></p-message>
+                        }
+                    </div>
+
+                    <div class="w-1/2">
+                        <label for="accountingAccount" class="block mb-2 font-semibold">
+                            Cuenta Contable
+                        </label>
+                        <input
+                            pInputText
+                            type="number"
+                            id="accountingAccount"
+                            formControlName="accountingAccount"
+                            placeholder="Ej: 110505"
+                            class="w-full"
+                        />
+                        @if (invoiceForm.get('accountingAccount')?.touched && invoiceForm.get('accountingAccount')?.invalid) {
+                            <p-message
+                                severity="error"
+                                text="La cuenta contable es requerida"
+                            ></p-message>
+                        }
+                    </div>
                 </div>
 
                 <!-- Sección de Productos -->
