@@ -79,8 +79,20 @@
       </div>
     </div>
 
-    <!-- Botón -->
-    <div class="min-w-[220px] flex justify-end mt-16">
+    <!-- Botones -->
+    <div class="min-w-[220px] flex justify-end gap-4 mt-16">
+      <!-- Botón Exportar -->
+      <p-button
+        label="Exportar Excel"
+        icon="pi pi-download"
+        [disabled]="!isInventoryAdjustmentEnabled()"
+        (onClick)="exportToExcel()"
+        [loading]="exportLoading"
+        [pTooltip]="!isInventoryAdjustmentEnabled() ? 'Debe seleccionar un producto para exportar los datos' : ''"
+        tooltipPosition="top">
+      </p-button>
+
+      <!-- Botón Ajuste de inventario -->
       <p-button
         label="Ajuste de inventario"
         icon="pi pi-sliders-h"

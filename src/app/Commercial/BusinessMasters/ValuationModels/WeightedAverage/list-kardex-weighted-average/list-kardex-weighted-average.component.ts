@@ -15,6 +15,7 @@ import { InventoryAdjustmentComponent } from '../inventory-adjustment/inventory-
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
+import { ExcelExportService } from '../services/excel-export.service';
 
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
@@ -44,7 +45,8 @@ export class ListKardexWeightedAverageComponent {
   constructor(
     private kardexService: KardexService,
     private productService: ProductService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private excelExportService: ExcelExportService
   ) {}
 
   localStorageMethods = new LocalStorageMethods();
@@ -66,6 +68,9 @@ export class ListKardexWeightedAverageComponent {
   // Variables para el diálogo de ajuste de inventario
   showInventoryAdjustment: boolean = false;
   lastKardexRecord: KardexRow | null = null;
+
+  // Variable para controlar el estado de carga de la exportación
+  exportLoading: boolean = false;
 
   onStartDateChange() {
     if (this.endDate && this.startDate && this.endDate < this.startDate) {
@@ -247,6 +252,63 @@ export class ListKardexWeightedAverageComponent {
     this.showInventoryAdjustment = false;
   }
 
+  /**
+   * Exporta todos los registros del kardex a un archivo Excel
+   */
+  exportToExcel() {
+    if (!this.isInventoryAdjustmentEnabled()) {
+      return;
+    }
 
+    this.exportLoading = true;
+
+    // Solo enviar fechas si ambas están seleccionadas
+    const startDateToSend = (this.startDate && this.endDate) ? this.startDate : null;
+    const endDateToSend = (this.startDate && this.endDate) ? this.endDate : null;
+
+    this.kardexService.getAllKardexForExport(this.productId, startDateToSend, endDateToSend).subscribe({
+      next: (res) => {
+        try {
+          const rawList = res.data.content;
+          
+          // Procesar los datos usando el servicio
+          const processedData = this.excelExportService.processKardexData(rawList);
+          
+          // Exportar usando el servicio
+          this.excelExportService.exportKardexToExcel(
+            processedData, 
+            this.selectedProduct!, 
+            startDateToSend, 
+            endDateToSend
+          );
+
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Archivo Excel exportado correctamente'
+          });
+
+        } catch (error) {
+          console.error('Error al generar el archivo Excel:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al generar el archivo Excel'
+          });
+        } finally {
+          this.exportLoading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener los datos para exportar:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al obtener los datos para exportar'
+        });
+        this.exportLoading = false;
+      }
+    });
+  }
 
 }
