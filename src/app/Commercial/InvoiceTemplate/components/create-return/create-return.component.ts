@@ -111,6 +111,9 @@ export class CreateReturnComponent implements OnInit {
             detail: `Devolución en ${formValue.returnType === 'sale' ? 'venta' : 'compra'} creada exitosamente`,
             life: 3000
           });
+
+          // Limpiar el formulario después de guardar exitosamente
+          this.clearForm();
         },
         error: (error) => {
           console.error('Error al crear devolución', error);
@@ -130,6 +133,25 @@ export class CreateReturnComponent implements OnInit {
     const selectedProductId = this.returnForm.get('productId')?.value;
     const product = this.allProducts.find(p => p.productId === selectedProductId);
     return product ? product.name : '';
+  }
+
+  /**
+   * Limpia el formulario y resetea las variables relacionadas
+   */
+  clearForm(): void {
+    this.returnForm.reset();
+    this.selectedProduct = undefined;
+    this.filteredProducts = [];
+
+    // Resetear el formulario con valores por defecto
+    this.returnForm = this.createReturnForm();
+  }
+
+  /**
+   * Maneja la acción de cancelar
+   */
+  cancelForm(): void {
+    this.clearForm();
   }
 
   /**
