@@ -93,7 +93,7 @@ export class CreateInvoiceComponent implements OnInit {
 
   private createInvoiceForm(): FormGroup {
     const randomFactCode = Math.floor(Math.random() * 10000) + 1;
-    
+
     return this.formBuilder.group({
       invoiceType: ['', Validators.required],
       factCode: [{ value: randomFactCode, disabled: true }, Validators.required],
@@ -232,7 +232,7 @@ export class CreateInvoiceComponent implements OnInit {
       // Llamar al servicio correspondiente según el tipo de factura
       const serviceCall = formValue.invoiceType === 'purchase'
         ? this.steletonService.createPurchaseSkeleton(factureData)
-        : this.steletonService.createSaleSkeleton(factureData) && this.steletonService.createSaleForReceiptSkeleton(factureData);
+        : this.steletonService.createSaleForReceiptSkeleton(factureData);
 
       serviceCall.subscribe({
         next: (response) => {
@@ -243,9 +243,8 @@ export class CreateInvoiceComponent implements OnInit {
             life: 3000
           });
 
-          setTimeout(() => {
-            this.goBack();
-          }, 1500);
+          // Limpiar el formulario después de guardar exitosamente
+          this.clearForm();
         },
         error: (error) => {
           console.error('Error al crear factura', error);
@@ -279,6 +278,26 @@ export class CreateInvoiceComponent implements OnInit {
         });
       }
     });
+  }
+
+  /**
+   * Limpia el formulario y resetea las variables relacionadas
+   */
+  clearForm(): void {
+    this.invoiceForm.reset();
+    this.selectedProduct = undefined;
+    this.filteredProducts = [];
+    this.selectedInvoiceType = '';
+
+    // Resetear el formulario con valores por defecto
+    this.invoiceForm = this.createInvoiceForm();
+  }
+
+  /**
+   * Maneja la acción de cancelar
+   */
+  cancelForm(): void {
+    this.clearForm();
   }
 
   /**

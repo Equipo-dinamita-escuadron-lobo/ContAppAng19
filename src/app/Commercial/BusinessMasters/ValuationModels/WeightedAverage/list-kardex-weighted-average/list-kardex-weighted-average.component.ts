@@ -207,8 +207,7 @@ export class ListKardexWeightedAverageComponent {
    */
   private updateLastKardexRecord() {
     if (this.kardexList.length > 0) {
-      // El último registro debería ser el primer elemento ya que viene ordenado por fecha descendente
-      this.lastKardexRecord = this.kardexList[0];
+      this.lastKardexRecord = this.kardexList[this.kardexList.length - 1];
     } else {
       this.lastKardexRecord = null;
     }
@@ -270,15 +269,15 @@ export class ListKardexWeightedAverageComponent {
       next: (res) => {
         try {
           const rawList = res.data.content;
-          
+
           // Procesar los datos usando el servicio
           const processedData = this.excelExportService.processKardexData(rawList);
-          
+
           // Exportar usando el servicio
           this.excelExportService.exportKardexToExcel(
-            processedData, 
-            this.selectedProduct!, 
-            startDateToSend, 
+            processedData,
+            this.selectedProduct!,
+            startDateToSend,
             endDateToSend
           );
 
