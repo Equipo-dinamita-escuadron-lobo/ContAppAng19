@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../../../../environments/environment';
 import { Observable } from 'rxjs';
 import { ResponseDto } from '../../models/ResponseDto';
+import { KardexPurchaseRequest } from '../models/KardexPurchaseRequest';
+import { KardexSaleRequest } from '../models/KardexSaleRequest';
 
 let API_URL = environment.API_URL + 'kardex/weighted-average/';
 
@@ -38,6 +40,41 @@ export class KardexService {
         const formattedEndDate = this.formatDate(endDate);
         params = params.set('endDate', formattedEndDate);
       }
+
+    return this.http.get<ResponseDto<any>>(`${this.apiUrl}kardex-by-product`, { params });
+  }
+
+  /**
+   * Crea un ajuste de compra en el kardex
+   */
+  purchaseAdjustment(request: KardexPurchaseRequest): Observable<ResponseDto<any>> {
+    return this.http.post<ResponseDto<any>>(`${this.apiUrl}purchase-agreement`, request);
+  }
+
+  /**
+   * Crea un ajuste de venta en el kardex
+   */
+  saleAdjustment(request: KardexSaleRequest): Observable<ResponseDto<any>> {
+    return this.http.post<ResponseDto<any>>(`${this.apiUrl}sale-agreement`, request);
+  }
+
+  /**
+   * Obtiene todos los registros del kardex para exportar (sin paginación)
+   */
+  getAllKardexForExport(productId: number, startDate: Date | null, endDate: Date | null): Observable<ResponseDto<any>> {
+    let params = new HttpParams()
+      .set('productId', productId)
+      .set('page', 0)
+      .set('size', 1000000);
+
+    if (startDate) {
+      const formattedStartDate = this.formatDate(startDate);
+      params = params.set('startDate', formattedStartDate);
+    }
+    if (endDate) {
+      const formattedEndDate = this.formatDate(endDate);
+      params = params.set('endDate', formattedEndDate);
+    }
 
     return this.http.get<ResponseDto<any>>(`${this.apiUrl}kardex-by-product`, { params });
   }
