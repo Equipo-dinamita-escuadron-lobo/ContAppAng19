@@ -1,21 +1,3 @@
-/**
- * @fileoverview Servicio para la gestión de departamentos/provincias
- *
- * Este servicio permite:
- * - Obtener listados de departamentos
- * - Manejar departamentos colombianos y extranjeros
- * - Gestionar consultas a la API de departamentos
- * - Proporcionar datos estáticos de departamentos
- *
- * Funcionalidades principales:
- * - Consulta de departamentos desde el backend
- * - Listado estático de departamentos colombianos
- * - Manejo de departamentos extranjeros
- * - Gestión de URLs según el entorno
- *
- * @author [CONTAPP]
- * @version 1.0.0
- */
 
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -23,8 +5,24 @@ import { Department } from '../models/Department';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+/** URL base de la API */
+let API_URL = '';
+
+/** 
+ * Configuración de la URL de la API según el tipo de microservicio
+ * Si el microservicio es 'enterprise', se usa la URL local
+ */
+
+/*
+if(environment.microservice == 'enterprise'){
+    API_URL = environment.API_LOCAL_URL;
+}
+else{
+    API_URL = environment.API_URL;
+}*/
+
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class DepartmentService {
   /** Lista estática de departamentos colombianos */
@@ -60,20 +58,22 @@ export class DepartmentService {
     { id: 29, name: 'Tolima' },
     { id: 30, name: 'Valle del Cauca' },
     { id: 31, name: 'Vaupés' },
-    { id: 32, name: 'Vichada' },
+    { id: 32, name: 'Vichada' }
   ];
 
   /** Lista de departamentos extranjeros */
-  extranjeroDepartments: Department[] = [{ id: 33, name: 'Extranjero' }];
+  extranjeroDepartments: Department[] = [
+    { id: 33, name: 'Extranjero' },
+  ];
 
   /** URL del endpoint de departamentos */
-  private apiUrl = environment.API_URL + 'address/departments';
+  private apiUrl = API_URL + 'address/departments';
 
   /**
    * Constructor del servicio
    * @param http Cliente HTTP para realizar peticiones
    */
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Obtiene la lista de departamentos desde el backend
@@ -91,7 +91,7 @@ export class DepartmentService {
   getDepartmentById(id: number) {
     if (id == 2) {
       return this.extranjeroDepartments;
-    } else {
+    }else{
       return this.colombianDepartments;
     }
   }
@@ -100,7 +100,7 @@ export class DepartmentService {
    * Obtiene la lista completa de departamentos colombianos
    * @returns Lista de departamentos colombianos
    */
-  getListDepartments() {
+  getListDepartments(){
     return this.colombianDepartments;
   }
 }

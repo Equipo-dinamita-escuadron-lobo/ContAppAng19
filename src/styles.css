@@ -912,3 +912,60 @@ body {
   transform: translateY(0) !important;
   box-shadow: none !important;
 }
+
+/* ================================
+   ESTILOS PARA P-TABS
+   ================================ */
+
+/* Fuente y estilo base */
+.p-tabs {
+  font-family: var(--font-family-sans) !important;
+}
+
+/* Color base de las pestañas inactivas */
+.p-tabs .p-tablist .p-tab {
+  color: var(--color-neutral-40) !important;
+  font-weight: 600 !important;
+}
+
+/* Hover para pestañas inactivas */
+.p-tabs .p-tablist .p-tab:not([aria-selected="true"]):hover {
+  color: var(--color-light) !important;
+}
+
+/* Pestaña activa: texto e icono en color primario */
+.p-tabs .p-tablist .p-tab[aria-selected="true"] {
+  color: var(--color-primary) !important;
+}
+
+.p-tabs .p-tablist .p-tab[aria-selected="false"] .pi {
+  color: var(--color-primary) !important;
+}
+
+/* Active bar (inkbar) del tablist: forzar color primario */
+.p-tabs .p-tablist-active-bar {
+  background: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+}
+
+/* Pseudo-elementos de transición: evitar color predeterminado durante animación */
+.p-tabs .p-tablist-active-bar::before,
+.p-tabs .p-tablist-active-bar::after {
+  background: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+}
+
+/* Forzar color primario en todos los estados de transición */
+.p-tabs .p-tablist .p-tab::before,
+.p-tabs .p-tablist .p-tab::after {
+  background: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Design tokens para controlar colores de transición */
+.p-tabs {
+  --p-tabs-active-bar-background: var(--color-primary) !important;
+  --p-tabs-tab-active-indicator-background: var(--color-primary) !important;
+  --p-tabs-tab-active-border-color: var(--color-primary) !important;
+}

@@ -113,7 +113,7 @@ export class CostCentersListComponent implements OnDestroy {
     // Calcular la página actual basada en el número de familias, no elementos individuales
     const currentPage = Math.floor(this.first / this.rows);
     
-    this.service.findAllHierarchical(this.getIdEnterprise(), currentPage, this.rows).subscribe({
+    this.service.findAll(this.getIdEnterprise(), currentPage, this.rows).subscribe({
       next: (page) => {
         this.totalRecords = page.totalElements;
         
@@ -126,8 +126,6 @@ export class CostCentersListComponent implements OnDestroy {
           status: cc.status ?? true // Default a true si no está definido
         } as CostCenterNode));
         
-        // El backend ya devuelve los datos jerárquicamente organizados
-        // Solo necesitamos construir la jerarquía
         this.allCenters = this.buildHierarchy(nodes);
         this.listCenters = this.allCenters;
         this.listCentersAux = this.allCenters;

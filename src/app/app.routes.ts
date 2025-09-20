@@ -276,8 +276,8 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
-                  ).then((m) => m.ThirdPartiesListComponent),
+                    './GeneralMasters/ThirdParties/Components/third-list/third-list.component'
+                  ).then((m) => m.ThirdListComponent),
               },
               {
                 path: 'create',
@@ -286,8 +286,8 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-create/third-parties-create.component'
-                  ).then((m) => m.ThirdPartiesCreateComponent),
+                    './GeneralMasters/ThirdParties/Components/third-creation/third-creation.component'
+                  ).then((m) => m.ThirdCreationComponent),
               },
               {
                 path: 'edit/:id',
@@ -296,8 +296,18 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-edit/third-parties-edit.component'
-                  ).then((m) => m.ThirdPartiesEditComponent),
+                    './GeneralMasters/ThirdParties/Components/third-edit/third-edit.component'
+                  ).then((m) => m.ThirdEditComponent),
+              },
+              {
+                path: 'configuration',
+                data: {
+                  breadcrumb: 'Configuración de Terceros',
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-config/third-config.component'
+                  ).then((m) => m.ThirdConfigComponent),
               },
             ],
           },
