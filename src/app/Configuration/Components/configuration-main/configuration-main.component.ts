@@ -33,6 +33,13 @@ export class ConfigurationMainComponent implements OnInit {
       amount: 8,
       icon: 'lock',
     },
+    {
+      name: 'Auditoria',
+      route: '/configuration/audit',
+
+      icon: 'history',
+    }
+    ,
   ];
 
   isAdmin: boolean = false;
