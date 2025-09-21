@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
-import { Invoice } from '../../Model/Models';
+import { Invoice } from '../../Model';
 
 
 @Component({

@@ -157,6 +157,59 @@ export const routes: Routes = [
               },
             ],
           },
+          {
+            path: 'audit',
+            data: {
+              breadcrumb: 'Auditoría',
+            },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-hub/audit-hub.component'
+                  ).then((m) => m.AuditHubComponent),
+              },
+              {
+                path: 'sessions',
+                data: { breadcrumb: 'Sesiones' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-session/audit-session.component'
+                  ).then((m) => m.AuditSessionComponent),
+              },
+              {
+                path: 'operations',
+                data: { breadcrumb: 'Operaciones' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-operations/audit-operations.component'
+                  ).then((m) => m.AuditOperationsComponent),
+              },
+              {
+                path: 'documents',
+                data: { breadcrumb: 'Documentos Contables' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-accounting-documents/audit-accounting-documents.component'
+                  ).then((m) => m.AuditAccountingDocumentsComponent),
+              },
+              {
+                path: 'consecutives',
+                data: { breadcrumb: 'Consecutivos' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-consecutive/audit-consecutive.component'
+                  ).then((m) => m.AuditConsecutiveComponent),
+              },
+            ]
+            ,
+          }
+          ,
         ],
       },
       {
@@ -223,8 +276,8 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
-                  ).then((m) => m.ThirdPartiesListComponent),
+                    './GeneralMasters/ThirdParties/Components/third-list/third-list.component'
+                  ).then((m) => m.ThirdListComponent),
               },
               {
                 path: 'create',
@@ -233,8 +286,8 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-create/third-parties-create.component'
-                  ).then((m) => m.ThirdPartiesCreateComponent),
+                    './GeneralMasters/ThirdParties/Components/third-creation/third-creation.component'
+                  ).then((m) => m.ThirdCreationComponent),
               },
               {
                 path: 'edit/:id',
@@ -243,8 +296,18 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-edit/third-parties-edit.component'
-                  ).then((m) => m.ThirdPartiesEditComponent),
+                    './GeneralMasters/ThirdParties/Components/third-edit/third-edit.component'
+                  ).then((m) => m.ThirdEditComponent),
+              },
+              {
+                path: 'configuration',
+                data: {
+                  breadcrumb: 'Configuración de Terceros',
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-config/third-config.component'
+                  ).then((m) => m.ThirdConfigComponent),
               },
             ],
           },

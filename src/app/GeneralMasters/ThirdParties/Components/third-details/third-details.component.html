@@ -1,0 +1,212 @@
+<p-dialog
+  [header]="inputData?.title || 'Detalles del Tercero'"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '800px' }"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onHide()">
+
+  <!-- Contenido del modal -->
+  <div class="p-fluid" *ngIf="!loading">
+    <!-- Sección superior con imagen e información básica -->
+    <div class="flex flex-column md:flex-row align-items-center gap-4 mb-4">
+      <!-- Imagen del tercero -->
+      <div class="flex-shrink-0">
+        <img 
+          src="../../../../../../assets/Iconos/third-parties/third-partie-icon-default.png" 
+          alt="Icono del Tercero" 
+          class="w-8rem h-8rem border-round shadow-2">
+      </div>
+      
+      <!-- Información básica -->
+      <div class="flex-1">
+        <div class="grid">
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label class="label-title">Tipo de ID:</label>
+              <p class="text-lg font-medium text-gray-800 mt-1">
+                {{ thirdData.typeId.typeId || 'NO APLICA' }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label class="label-title">Tipo de Persona:</label>
+              <p class="text-lg font-medium text-gray-800 mt-1">
+                {{ thirdData.personType }}
+              </p>
+            </div>
+          </div>
+          
+          <div class="col-12">
+            <div class="field">
+              <label class="label-title">Tipos de Tercero:</label>
+              <p class="text-lg font-medium text-gray-800 mt-1">
+                {{ getThirdTypesNames() }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Información detallada en grid -->
+    <div class="grid">
+      <!-- Información Personal/Empresa -->
+      <div class="col-12 md:col-6" *ngIf="isNaturalPerson()">
+        <div class="field">
+          <label class="label-title">Nombre Completo:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ getFullName() }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6" *ngIf="isJuridicPerson()">
+        <div class="field">
+          <label class="label-title">Razón Social:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ getSocialReason() }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6" *ngIf="isNaturalPerson()">
+        <div class="field">
+          <label class="label-title">Género:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ getGender() }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Información de Identificación -->
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Número de ID:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.idNumber }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Dígito de Verificación:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ getVerificationNumber() }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Estado:</label>
+          <p-tag 
+            [value]="getStateText()" 
+            [severity]="getStateSeverity()"
+            class="mt-1">
+          </p-tag>
+        </div>
+      </div>
+
+      <!-- Información de Ubicación -->
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">País:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.country || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Departamento:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.province || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Ciudad:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.city || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="field">
+          <label class="label-title">Dirección:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.address || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Información de Contacto -->
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Teléfono:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.phoneNumber || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Email:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ thirdData.email || 'NO APLICA' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Fechas -->
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Fecha de Creación:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ formatDate(thirdData.creationDate) }}
+          </p>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <label class="label-title">Fecha de Actualización:</label>
+          <p class="text-base font-medium text-gray-800 mt-1">
+            {{ formatDate(thirdData.updateDate) }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="flex justify-content-center align-items-center p-6">
+    <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
+    <span class="ml-3 text-lg">Cargando datos del tercero...</span>
+  </div>
+
+  <!-- Footer con botón de cerrar -->
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end">
+      <p-button 
+        label="Cerrar" 
+        icon="pi pi-times"
+        severity="secondary"
+        (onClick)="closePopUp()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

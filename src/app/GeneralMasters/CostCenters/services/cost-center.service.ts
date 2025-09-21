@@ -1,16 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { CostCenter } from '../models/cost-center.model';
-
-interface Page<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-}
+import { PageResponse, Page, convertToSimplePage } from '../models/page-response.model';
 
 const API_URL = environment.API_URL + 'config/cost-centers/';
 
@@ -20,14 +14,15 @@ export class CostCenterService {
 
   constructor(private http: HttpClient) {}
 
-  // Listar todos los centros de costo de una empresa (submetodo de findAllHierarchical)
-  findAll(enterpriseId: string, page = 0, size = 30000): Observable<Page<CostCenter>> {
-    return this.http.get<Page<CostCenter>>(`${this.apiURL}findAllHierarchical/${enterpriseId}?page=${page}&size=${size}`);
-  }
-  
   // Listado paginado jerárquico - mantiene familias completas juntas
-  findAllHierarchical(enterpriseId: string, page = 0, size = 30): Observable<Page<CostCenter>> {
-    return this.http.get<Page<CostCenter>>(`${this.apiURL}findAllHierarchical/${enterpriseId}?page=${page}&size=${size}`);
+  findAll(enterpriseId: string, page = 0, size = 30): Observable<Page<CostCenter>> {
+    return this.http.get<PageResponse<CostCenter>>(`${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`)
+      .pipe(
+        map(pageResponse => {
+          const simplePage = convertToSimplePage(pageResponse);
+          return simplePage;
+        })
+      );
   }
 
   // Crear

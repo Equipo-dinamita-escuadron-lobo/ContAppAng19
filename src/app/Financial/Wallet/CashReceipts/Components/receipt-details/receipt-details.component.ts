@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { ReceiptDetailsView } from '../../Model/ReceiptView';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CashReceiptService } from '../../Service/cash-receipt.service';
 import { CommonModule } from '@angular/common';
@@ -11,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { InputTextarea } from 'primeng/inputtextarea';
+import { ReceiptDetailsView } from '../../Model/view';
 
 @Component({
   selector: 'app-receipt-details',
