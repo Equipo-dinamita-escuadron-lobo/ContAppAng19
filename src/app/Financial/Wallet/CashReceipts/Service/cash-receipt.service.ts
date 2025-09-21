@@ -112,7 +112,7 @@ export class CashReceiptService {
 
   // --- MÉTODOS PARA EL CRUD DE RECIBOS ---
   getAllReceipts(): Observable<ReceiptView[]> {
-    const enterpriseId = "asdasdasfafa";
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
     if (!enterpriseId) {
       console.error("ID de empresa no encontrado. No se pueden cargar los recibos.");
       return of([]);
