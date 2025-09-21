@@ -1,0 +1,57 @@
+<div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+  <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+    <div class="items-center mb-6">
+      <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+        Auditoría de Sesiones
+      </h1>
+      <p class="font-family-sans font-normal text-sm mt-2">
+        Aquí podrás supervisar quién y cuándo se ingresó al sistema
+      </p>
+    </div>
+  </div>
+
+  <p-table 
+    [value]="usuarios"
+    [paginator]="true" 
+    [rows]="10" 
+    [rowsPerPageOptions]="[5,10,20]"  
+    [globalFilterFields]="['usuario','rol','entrada','salida']" 
+    styleClass="p-datatable-striped font-family-sans" 
+    [tableStyle]="{'min-width': '50rem'}" 
+    responsiveLayout="scroll">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="usuario" class="font-semibold text-primary border-b-2 border-primary">
+          Usuario <p-sortIcon field="usuario"></p-sortIcon>
+        </th>
+        <th pSortableColumn="rol" class="font-semibold text-primary border-b-2 border-primary">
+          Rol <p-sortIcon field="rol"></p-sortIcon>
+        </th>
+        <th pSortableColumn="entrada" class="font-semibold text-primary border-b-2 border-primary">
+          Fecha y hora de entrada <p-sortIcon field="entrada"></p-sortIcon>
+        </th>
+        <th pSortableColumn="salida" class="font-semibold text-primary border-b-2 border-primary">
+          Fecha y hora de salida <p-sortIcon field="salida"></p-sortIcon>
+        </th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr class="text-neutral-20">
+        <td class="py-3">{{ row.usuario }}</td>
+        <td class="py-3">{{ row.rol }}</td>
+        <td class="py-3">{{ row.entrada }}</td>
+        <td class="py-3">{{ row.salida }}</td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
+          No se encontraron registros de sesiones.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

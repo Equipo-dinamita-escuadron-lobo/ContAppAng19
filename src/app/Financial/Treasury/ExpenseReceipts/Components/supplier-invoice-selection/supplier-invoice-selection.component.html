@@ -1,0 +1,60 @@
+<div class="p-4">
+    <h3 class="text-lg font-semibold text-[var(--color-primary)] mb-4">Seleccionar Facturas para Pago</h3>
+
+    @if (availableInvoices && availableInvoices.length > 0) {
+        <p-table [value]="availableInvoices" [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Seleccionar</th>
+                    <th>Código de Factura</th>
+                    <th>Fecha de Vencimiento</th>
+                    <th>Valor Pendiente</th>
+                    <th>Monto a Pagar</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-invoice>
+                <tr>
+                    <td>
+                        <p-checkbox
+                            [ngModel]="isInvoiceSelected(invoice)"
+                            (onChange)="onInvoiceSelectionChange(invoice, $event.checked)">
+                        </p-checkbox>
+                    </td>
+                    <td>{{ invoice.factCode }}</td>
+                    <td>{{ invoice.expirationDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="text-right">{{ invoice.pendingValue | currency:'COP':'symbol':'1.0-0':'es-CO' }}</td>
+                    <td>
+                        <p-inputNumber
+                            [ngModel]="getSelectedInvoiceAmount(invoice)"
+                            mode="currency"
+                            currency="COP"
+                            locale="es-CO"
+                            [max]="invoice.pendingValue"
+                            [min]="0"
+                            [disabled]="!isInvoiceSelected(invoice)"
+                            (onInput)="onAmountChange(invoice, $event.value)"
+                            [styleClass]="'w-full'">
+                        </p-inputNumber>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    } @else {
+        <p-message severity="info" text="No hay facturas disponibles para seleccionar."></p-message>
+    }
+
+    <div class="flex justify-end gap-2 mt-6">
+        <p-button
+            label="Cancelar"
+            icon="pi pi-times"
+            styleClass="p-button-secondary"
+            (onClick)="cancelSelection()">
+        </p-button>
+        <p-button
+            label="Confirmar Selección"
+            icon="pi pi-check"
+            (onClick)="confirmSelection()"
+            [disabled]="selectedInvoices.length === 0">
+        </p-button>
+    </div>
+</div>

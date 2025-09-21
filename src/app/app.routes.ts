@@ -157,6 +157,59 @@ export const routes: Routes = [
               },
             ],
           },
+          {
+            path: 'audit',
+            data: {
+              breadcrumb: 'Auditoría',
+            },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-hub/audit-hub.component'
+                  ).then((m) => m.AuditHubComponent),
+              },
+              {
+                path: 'sessions',
+                data: { breadcrumb: 'Sesiones' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-session/audit-session.component'
+                  ).then((m) => m.AuditSessionComponent),
+              },
+              {
+                path: 'operations',
+                data: { breadcrumb: 'Operaciones' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-operations/audit-operations.component'
+                  ).then((m) => m.AuditOperationsComponent),
+              },
+              {
+                path: 'documents',
+                data: { breadcrumb: 'Documentos Contables' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-accounting-documents/audit-accounting-documents.component'
+                  ).then((m) => m.AuditAccountingDocumentsComponent),
+              },
+              {
+                path: 'consecutives',
+                data: { breadcrumb: 'Consecutivos' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-consecutive/audit-consecutive.component'
+                  ).then((m) => m.AuditConsecutiveComponent),
+              },
+            ]
+            ,
+          }
+          ,
         ],
       },
       {
@@ -223,8 +276,8 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
-                  ).then((m) => m.ThirdPartiesListComponent),
+                    './GeneralMasters/ThirdParties/Components/third-list/third-list.component'
+                  ).then((m) => m.ThirdListComponent),
               },
               {
                 path: 'create',
@@ -233,8 +286,8 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-create/third-parties-create.component'
-                  ).then((m) => m.ThirdPartiesCreateComponent),
+                    './GeneralMasters/ThirdParties/Components/third-creation/third-creation.component'
+                  ).then((m) => m.ThirdCreationComponent),
               },
               {
                 path: 'edit/:id',
@@ -243,8 +296,18 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-edit/third-parties-edit.component'
-                  ).then((m) => m.ThirdPartiesEditComponent),
+                    './GeneralMasters/ThirdParties/Components/third-edit/third-edit.component'
+                  ).then((m) => m.ThirdEditComponent),
+              },
+              {
+                path: 'configuration',
+                data: {
+                  breadcrumb: 'Configuración de Terceros',
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-config/third-config.component'
+                  ).then((m) => m.ThirdConfigComponent),
               },
             ],
           },
@@ -736,6 +799,103 @@ export const routes: Routes = [
                   ).then((m) => m.ReceiptAccountingComponent),
                 }
             ],
+          },
+          {
+            path: 'treasury',
+            data: {
+              breadcrumb: 'Tesorería',
+            },
+            children: [
+              {
+                path: 'expense-receipts',
+                data: {
+                  breadcrumb: 'Comprobantes de Egreso',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipts-list/expense-receipts-list.component'
+                  ).then((m) => m.ExpenseReceiptsListComponent),
+              },
+              {
+                path: 'expense-receipts/creation',
+                data: {
+                  breadcrumb: 'Creación de Comprobantes',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-creation/expense-receipt-creation.component'
+                  ).then((m) => m.ExpenseReceiptCreationComponent),
+              },
+              {
+                path: 'expense-receipts/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del Comprobante',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-details/expense-receipt-details.component'
+                  ).then((m) => m.ExpenseReceiptDetailsComponent),
+              },
+              {
+                path: 'expense-receipts/:id/accounting',
+                data: {
+                  breadcrumb: 'Contabilización del Comprobante',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-accounting/expense-receipt-accounting.component'
+                  ).then((m) => m.ExpenseReceiptAccountingComponent),
+              },
+              // Purchase Bills Routes
+              {
+                path: 'purchase-bills',
+                data: {
+                  breadcrumb: 'Facturas de Compra',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/PurchaseBills/Components/bill-list/bill-list.component'
+                  ).then((m) => m.BillListComponent),
+              },
+            {
+              path: 'purchase-bills/create',
+              data: {
+                breadcrumb: 'Nueva Factura de Compra',
+              },
+              loadComponent: () =>
+                import(
+                  './Financial/Treasury/PurchaseBills/Components/bill-creation/bill-creation.component'
+                ).then((m) => m.BillCreationComponent),
+            },
+            {
+              path: 'reports',
+              data: {
+                breadcrumb: 'Reportes',
+              },
+              children: [
+                {
+                  path: 'vendors',
+                  data: {
+                    breadcrumb: 'Reportes de Proveedores',
+                  },
+                  loadComponent: () =>
+                    import(
+                      './Financial/Treasury/Reports/VendorReports/Components/vendor-list/vendor-list.component'
+                    ).then((m) => m.VendorListComponent),
+                },
+                {
+                  path: 'vendor-report/:id',
+                  data: {
+                    breadcrumb: 'Reporte Individual',
+                  },
+                  loadComponent: () =>
+                    import(
+                      './Financial/Treasury/Reports/VendorReports/Components/vendor-report/vendor-report.component'
+                    ).then((m) => m.VendorReportComponent),
+                }
+              ]
+            }
+            ],
           }
         ],
       },
@@ -815,5 +975,3 @@ export const routes: Routes = [
     component: StyleGuideComponent,
   },
 ];
-
-

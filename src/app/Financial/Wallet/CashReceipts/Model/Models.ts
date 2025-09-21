@@ -18,9 +18,9 @@ export interface Client {
 // Interfaz para las facturas pendientes de un cliente
 export interface Invoice {
     id: number;
-    code: string;
-    dueDate: Date;
-    pendingBalance: number;
+    factCode: string;
+    expirationDate: Date;
+    pendingValue: number;
     selectedForPayment?: boolean; 
     amountToPay?: number; 
 }

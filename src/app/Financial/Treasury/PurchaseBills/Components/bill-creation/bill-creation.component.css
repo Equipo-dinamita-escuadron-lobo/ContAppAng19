@@ -1,0 +1,249 @@
+/* Purchase Bill Creation Styles */
+
+.container-fluid {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header styles */
+.page-header {
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* Card customizations */
+::ng-deep .p-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+::ng-deep .p-card-header {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  font-weight: 600;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Form styling */
+::ng-deep .p-inputtext,
+::ng-deep .p-dropdown,
+::ng-deep .p-calendar .p-inputtext,
+::ng-deep .p-inputnumber input,
+::ng-deep .p-autocomplete .p-inputtext {
+  border: 2px solid #e0e7ff;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+::ng-deep .p-inputtext:focus,
+::ng-deep .p-dropdown:focus,
+::ng-deep .p-calendar .p-inputtext:focus,
+::ng-deep .p-inputnumber input:focus,
+::ng-deep .p-autocomplete .p-inputtext:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Table styling */
+::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  border: none;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #e0e7ff;
+}
+
+/* Line items table specific styling - NO SCROLL */
+::ng-deep .line-items-table {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+::ng-deep .line-items-table .p-datatable-wrapper {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+::ng-deep .line-items-table .p-datatable-scrollable-wrapper {
+  overflow: visible !important;
+}
+
+::ng-deep .line-items-table .p-datatable-scrollable-body {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* Fix dropdown width in table cells */
+::ng-deep .line-items-table .p-dropdown {
+  width: 100% !important;
+  min-width: 200px;
+}
+
+::ng-deep .line-items-table .p-dropdown .p-dropdown-label {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ensure table cells have proper sizing */
+::ng-deep .line-items-table td {
+  padding: 0.5rem !important;
+  vertical-align: top;
+}
+
+/* Fix input widths in table */
+::ng-deep .line-items-table .p-inputnumber,
+::ng-deep .line-items-table .p-inputtext,
+::ng-deep .line-items-table .p-calendar {
+  width: 100% !important;
+}
+
+/* Button customizations */
+::ng-deep .p-button {
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+::ng-deep .p-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Totals section styling */
+.totals-section {
+  background: linear-gradient(135deg, #f8fafc, #e0e7ff);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+/* Error message styling */
+.p-error {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Validation styling */
+::ng-deep .ng-invalid.ng-dirty {
+  border-color: #dc2626 !important;
+}
+
+/* Loading state */
+::ng-deep .p-button[data-pc-section="root"][aria-disabled="true"] {
+  opacity: 0.7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container-fluid {
+    padding: 1rem;
+  }
+
+  ::ng-deep .p-datatable {
+    font-size: 0.875rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Remove horizontal scroll on mobile */
+  ::ng-deep .line-items-table {
+    overflow: visible;
+  }
+
+  ::ng-deep .line-items-table .p-datatable-wrapper {
+    overflow: visible;
+    min-width: auto;
+  }
+}
+
+/* Ensure dropdowns and calendars appear above everything */
+::ng-deep .p-dropdown-panel {
+  z-index: 9999 !important;
+}
+
+::ng-deep .p-datepicker {
+  z-index: 9999 !important;
+}
+
+::ng-deep .p-calendar-panel {
+  z-index: 9999 !important;
+}
+
+/* Ensure overlay components are positioned correctly */
+::ng-deep .p-component-overlay {
+  z-index: 9999 !important;
+}
+
+/* AutoComplete panel */
+::ng-deep .p-autocomplete-panel {
+  z-index: 9999 !important;
+}
+
+/* Ensure all overlay panels appear above everything */
+::ng-deep .p-overlaypanel {
+  z-index: 9999 !important;
+}
+
+/* Animation for adding/removing rows */
+.line-item-row {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Highlight totals */
+.total-highlight {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
+  font-weight: bold !important;
+}
+
+/* Step indicator (if needed later) */
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  border-radius: 20px;
+  margin: 0 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.step.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+.step.completed {
+  background: #10b981;
+  color: white;
+}

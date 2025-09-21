@@ -20,9 +20,9 @@ export interface Third {
     verificationNumber?: number;
     state: boolean;
     photoPath?: string;
-    country: number;
-    province: number;
-    city: number;
+    country: string;
+    province: string;
+    city: string;
     address: string;
     phoneNumber: string;
     email: string;

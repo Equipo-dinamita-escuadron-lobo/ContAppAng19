@@ -17,7 +17,7 @@ import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
 
 // Services
-import { ThirdPartyServiceService } from '../../../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
+import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
@@ -58,7 +58,7 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
     enterpriseService: EnterpriseService,
-    thirdService: ThirdPartyServiceService,
+    thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
     private datePipe: DatePipe

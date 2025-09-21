@@ -24,7 +24,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { SaleInvoiceSelectedProductsComponent } from '../sale-invoice-selected-products/sale-invoice-selected-products.component';
 import { DatePickerModule } from 'primeng/datepicker';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
-import { ThirdPartyServiceService } from '../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
+import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
 
 
 @Component({
@@ -107,11 +107,11 @@ export class SaleInvoiceCreationComponent {
   loadAllSuppliers() {
     const entId = this.localStorageMethods.getIdEnterprise();
     this.thirdService.getThirdList(entId).subscribe({
-      next: (data) => {
+      next: (data: any) => {
         this.allSuppliers = data;
         console.log(this.allSuppliers)
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading suppliers:', error);
       }
     });
@@ -255,7 +255,7 @@ export class SaleInvoiceCreationComponent {
     private enterpriseService: EnterpriseService, //Descomentar cuando este implementado
     private UnitMeasureService: UnitOfMeasureService,  //Descomentar cuando este implementado
     private dialogService: DialogService,
-    private thirdService: ThirdPartyServiceService, 
+    private thirdService: ThirdService, 
     private saleService: SaleInvoiceService,
     private router: Router,
     private localStorageMethods: LocalStorageMethods) { }
