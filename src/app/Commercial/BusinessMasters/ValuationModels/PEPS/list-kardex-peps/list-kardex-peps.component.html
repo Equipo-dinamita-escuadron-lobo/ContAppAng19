@@ -5,8 +5,6 @@
             <span class="border-b-4 border-secondary">Inventario</span> con PEPS
         </h1>
         <span class="ml-10 text-primary cursor-help">
-            pTooltip="Información sobre el cálculo del promedio ponderado."
-            tooltipPosition="top">
             <i class="pi pi-question-circle"></i>
         </span>
     </div>
@@ -56,27 +54,24 @@
                 @if (!startDate && endDate) {
                     <small style="color: var(--color-error-35);">Debe ingresar la fecha de finalización</small>
                 }
-            />
         </div>
 
     </div>
     
     <!---Fila 2 Botón + Info-->
     <div class="flex flex-wrap gap-4 mt-8 ">
+
         <div class="flex flex-wrap gap-4 flex-1">
-            <div class="flex flex-col mr-4">
-                <label class="font-normal text-primary mb-1">Referencia:</label>
-                <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.reference || ''" />
-            </div>
-            <div class="flex flex-col mr-4">
-                <label class="font-normal text-primary mb-1">Presentación:</label>
-                <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.presentation || ''" />
-            </div>
-            <div class="flex flex-col mr-4">
-                <label class="font-normal text-primary mb-1">Responsable:</label>
-                <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.manager || ''" />
-            </div>
-        </div>
+      <div class="flex flex-col mr-4">
+          <label class="font-normal text-primary mb-1">Referencia:</label>
+          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.reference" />
+      </div>
+      <div class="flex flex-col mr-4">
+          <label class="font-normal text-primary mb-1">Presentación:</label>
+          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.presentation" />
+      </div>
+    </div>
+
         <!---Botón-->
         <div class="min-w-[220px] flex justify-end mt-16">
             <p-button
