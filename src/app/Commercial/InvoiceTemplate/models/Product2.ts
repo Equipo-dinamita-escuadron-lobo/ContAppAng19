@@ -7,3 +7,9 @@ export interface Product2 {
   subtotal: number;
   taxPercentage: number[];
 }
+
+export interface ProductList2 {
+  id: number;
+  name: string;
+  enterpriseId: string;
+}
