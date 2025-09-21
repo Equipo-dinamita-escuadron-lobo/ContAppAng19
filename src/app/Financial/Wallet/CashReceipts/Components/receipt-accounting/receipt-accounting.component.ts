@@ -4,14 +4,8 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { CashReceiptService } from '../../Service/cash-receipt.service';
-import { AccountingEntryLine } from '../../Model/AccountinEntryLine';
 import { TableModule } from 'primeng/table'; // Importa TableModule para futuras mejoras si lo deseas
-
-
-interface AugmentedAccountingEntryLine extends AccountingEntryLine {
-  invoiceCreditDetails?: { invoiceCode: string; amount: number }[];
-  isInvoiceCreditLine?: boolean; 
-}
+import { AccountingEntryLine } from '../../Model';
 
 @Component({
   selector: 'app-receipt-accounting',

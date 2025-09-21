@@ -10,7 +10,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { CashReceiptService } from '../../Service/cash-receipt.service';
-import { DropdownOption, ReceiptView } from '../../Model/Models';
+import { DropdownOption } from '../../Model';
+import { ReceiptView } from '../../Model/view';
 
 @Component({
   selector: 'app-receipts-list',
