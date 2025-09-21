@@ -87,7 +87,7 @@ export class CreateReturnComponent implements OnInit {
 
       // Preparar datos del producto
       const productData: Product2 = {
-        productId: formValue.productId,
+        productId: formValue.productId.id,
         amount: formValue.amount,
         description: this.getSelectedProductDescription(),
         descount: 0,
