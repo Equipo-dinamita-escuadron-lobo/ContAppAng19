@@ -1,3 +1,7 @@
+/**
+ * Define la estructura del detalle de una factura pagada,
+ * tal como la devuelve la API en la respuesta de un recibo.
+ */
 export interface ReceiptDetailResponse {
     invoiceId: number;
     amountPaid: number;
@@ -5,6 +9,10 @@ export interface ReceiptDetailResponse {
     accountingAccount: number;
 }
 
+/**
+ * Define la estructura completa de un recibo de caja tal como la
+ * devuelve la API. Es la respuesta estándar para GET, POST y PUT.
+ */
 export interface ReceiptResponse {
     id: number;
     receiptCode: string;

@@ -14,27 +14,13 @@ import { InputTextarea } from 'primeng/inputtextarea';
 import { MessagesModule } from 'primeng/messages';
 import { MessageService } from 'primeng/api';
 import { Router } from '@angular/router';
-import { Receipt } from '../../Model/Receipt';
-import { ReceiptDetail } from '../../Model/ReceiptDetail';
 import { InvoiceSelectionComponent } from '../invoice-selection/invoice-selection.component';
 import { PaymentMethodsServiceService } from '../../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { PaymentMethod } from '../../../../../GeneralMasters/PaymentMethods/models/PaymentMethods';
 import { CashReceiptService } from '../../Service/cash-receipt.service';
-import { Invoice } from '../../Model/Models';
-import { ReceiptCreateRequest } from '../../Model/ReceiptCreateRequest';
-
-// Modelos adicionales para el frontend
-interface DropdownOption {
-  label: string;
-  value: string;
-}
-
-interface Client {
-  id: number;
-  name: string;
-  // Otros campos relevantes del cliente
-}
+import { Client, DropdownOption, Invoice } from '../../Model';
+import { ReceiptCreateRequest } from '../../Model/api';
 
 @Component({
   selector: 'app-receipt-creation',
@@ -101,16 +87,14 @@ export class ReceiptCreationComponent {
     this.cashReceiptForm = this.fb.group({
       receiptType: ['', Validators.required],
       paymentMethod: ['', Validators.required],
-      client: [null, Validators.required], // Se usará para el objeto Client completo
+      client: [null, Validators.required], 
       issueDate: [new Date(), Validators.required],
-      receiptTypeOption: ['', Validators.required], // 'debt_payment' o 'direct_income'
+      receiptTypeOption: ['', Validators.required], 
       observations: [''],
 
       // Campos condicionales para "Ingreso Directo"
       auxiliaryAccount: [null],
       directIncomeAmount: [null],
-
-      // La lógica de las facturas se manejará directamente en el componente para la tabla y el diálogo
     });
   }
 
@@ -145,13 +129,20 @@ export class ReceiptCreationComponent {
     });
   }
 
-  // Lógica para Autocomplete de Cliente
+  /**
+   * Búsqueda de clientes para el autocomplete
+   * @param event Evento del autocomplete 
+   */
   searchClient(event: any): void {
     this.cashReceiptService.getClients(event.query).subscribe(clients => {
       this.filteredClients = clients;
     });
   }
 
+  /**
+   * Manejador de selección de cliente, aqui se cargan las facturas pendientes del cliente seleccionado
+   * @param event Evento de selección del cliente en el autocomplete
+   */
   onClientSelect(event: any): void {
     const selectedClient: Client = event.value;
     this.cashReceiptForm.get('client')?.setValue(selectedClient);
@@ -160,14 +151,22 @@ export class ReceiptCreationComponent {
     this.updateTotalAmount();
   }
 
+  /**
+   * Carga las facturas pendientes de un cliente seleccionado
+   * @param clientId ID del cliente para cargar sus facturas pendientes
+   */
   loadClientInvoices(clientId: number): void {
     console.log(`Cargando facturas para el cliente ID: ${clientId}`);
     this.cashReceiptService.getInvoicesByClient(clientId).subscribe(invoices => {
       this.selectedClientInvoices = invoices;
-      this.availableInvoicesToSelect = [...this.selectedClientInvoices]; // Copia para el diálogo
+      this.availableInvoicesToSelect = [...this.selectedClientInvoices]; 
     });
   }
 
+  /**
+   * Manejador para el cambio en la opcion del tipo de recibo (Abono a Duda o ingreso directo)
+   * Resetea y limpia las validaciones de los campos condicionales y limpia la tabla de abono
+   */
   onReceiptTypeOptionChange(): void {
     const option = this.cashReceiptForm.get('receiptTypeOption')?.value;
 
@@ -193,7 +192,10 @@ export class ReceiptCreationComponent {
     this.updateTotalAmount();
   }
 
-  // Lógica para el checkbox de la tabla de abono
+  /**
+   * Manejador para el cambio en la seleccion de facturas en la tabla de abonos
+   * @param invoice Factura que fue seleccionada o deseleccionada en la tabla para el respectivo abono
+   */
   onInvoiceSelectionChange(invoice: Invoice, rowIndex: number): void {
     if (invoice.selectedForPayment) {
       invoice.amountToPay = invoice.pendingValue; // Inicializar con el saldo pendiente
@@ -205,7 +207,10 @@ export class ReceiptCreationComponent {
     this.updateTotalAmount();
   }
 
-  // Lógica para el cambio de monto a pagar en la tabla
+  /**
+   * Manejador para el cambio en el monto a abonar de una factura en la tabla
+   * @param invoice Factura cuyo monto a abonar fue modificado
+   */
   onAmountToPayChange(invoice: Invoice, rowIndex: number): void {
     if (invoice.amountToPay === null || invoice.amountToPay === undefined) {
       invoice.amountToPay = 0; // Asegurarse de que no sea null
@@ -224,6 +229,10 @@ export class ReceiptCreationComponent {
     this.displayInvoiceSelectionDialog = true;
   }
 
+  /**
+   * Manejador para cuando el hijo emite las facturas seleccionadas 
+   * @param selectedInvoicesFromDialog Facturas seleccionadas en el dialogo hijo
+   */
   handleInvoiceSelection(selectedInvoicesFromDialog: Invoice[]): void {
     // Mapeamos las selecciones previas para no perder los montos ya digitados
     const previousPayments = new Map(
@@ -244,20 +253,26 @@ export class ReceiptCreationComponent {
     this.updateTotalAmount(); // Recalculamos el total
   }
 
-  // ¡NUEVO! Manejador para cuando el hijo cancela
+  /**
+   * Manejador para cuando el hijo cancela
+   */
   handleSelectionCancel(): void {
     this.displayInvoiceSelectionDialog = false;
   }
 
+
+  /**
+   * Metodo para suscribirse a los cambios del formulario y actualizar el total en consecuencia 
+   */
   subscribeToFormChanges(): void {
     this.cashReceiptForm.valueChanges.subscribe(() => {
       this.updateTotalAmount();
     });
-    // También suscribirse a cambios en los montos de la tabla si no están en el formArray
-    // Esto es un poco más manual al no tener un FormArray para la tabla directamente.
-    // Podrías tener un evento (onAmountToPayChange) que lo dispare
   }
 
+  /**
+   * Calcula y actualiza el monto total del recibo basado en la opcion seleccionada y los monstos ingresados
+   */
   updateTotalAmount(): void {
     const receiptTypeOption = this.cashReceiptForm.get('receiptTypeOption')?.value;
     let calculatedTotal = 0;
@@ -273,6 +288,10 @@ export class ReceiptCreationComponent {
     this.totalAmount = calculatedTotal;
   }
 
+  /**
+   * Valida si el formulario es valido para ser enviado, 
+   * considerando las validaciones condicionales para cada tipo de recibo
+   */
   isFormValidForSubmission(): boolean {
     const receiptTypeOption = this.cashReceiptForm.get('receiptTypeOption')?.value;
 
@@ -287,17 +306,19 @@ export class ReceiptCreationComponent {
       const directIncomeAmount = this.cashReceiptForm.get('directIncomeAmount');
       return this.cashReceiptForm.valid && !!directIncomeAmount?.valid && directIncomeAmount?.value > 0;
     }
-    // Si no se ha seleccionado ninguna opción o es otro caso, la validación general del formulario
     return this.cashReceiptForm.valid;
   }
 
+  /**
+   * Manejador para el envio del formulario
+   * Valida el formulario, construye el objeto de solicitud y llama al servicio para crear el recibo
+   */
   onSubmit(): void {
     this.cashReceiptForm.markAllAsTouched();
 
     if (!this.isFormValidForSubmission()) {
       this.messageService.add({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, revise los campos del formulario.' });
 
-      // Mensaje específico si es abono a deuda y no hay facturas válidas seleccionadas
       if (this.cashReceiptForm.get('receiptTypeOption')?.value === 'debt_payment') {
         const hasValidPayment = this.selectedInvoicesForPayment.some(inv => inv.selectedForPayment && inv.amountToPay && inv.amountToPay > 0);
         if (!hasValidPayment) {
@@ -309,8 +330,7 @@ export class ReceiptCreationComponent {
 
     const formValue = this.cashReceiptForm.value;
     const client: Client = formValue.client;
-    //const enterpriseId = this.localStorageMethods.getIdEnterprise();
-    const enterpriseId = "asdasdasfafa"
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
 
     if (!enterpriseId) {
       this.messageService.add({ severity: 'error', summary: 'Error de Configuración', detail: 'No se encontró el ID de la empresa. Por favor, inicie sesión de nuevo.' });
@@ -325,11 +345,23 @@ export class ReceiptCreationComponent {
       typeOptionId = 2;
     }
 
-    // 1. Construir el objeto de solicitud para la API (ReceiptCreateRequest)
+    const accountingAccount = this.accountingAccountForPaymentMethod();
+
+    if (accountingAccount === null) {
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Configuración',
+            detail: 'El método de pago seleccionado no tiene una cuenta contable asociada. Por favor, revise la configuración.'
+        });
+        return; // Detenemos la ejecución.
+    }
+
+    // Construir el objeto de solicitud para la API (ReceiptCreateRequest)
     const requestData: ReceiptCreateRequest = {
       thirdPartyId: client.id,
       paymentMethodId: formValue.paymentMethod,
-      receiptTypeId: typeOptionId, // Asegúrate que el dropdown entrega el ID numérico
+      paymentMethodAccount: accountingAccount, 
+      receiptTypeId: typeOptionId, 
       observations: formValue.observations,
       ledgerAccountId: 123,
       enterpriseId: enterpriseId,
@@ -337,7 +369,7 @@ export class ReceiptCreationComponent {
       details: [],
     };
 
-    // 2. Llenar los detalles según el tipo de recibo
+    // Llenar los detalles según el tipo de recibo
     if (formValue.receiptTypeOption === 'debt_payment') {
       requestData.details = this.selectedInvoicesForPayment
         .filter(invoice => invoice.selectedForPayment && invoice.amountToPay && invoice.amountToPay > 0)
@@ -346,12 +378,12 @@ export class ReceiptCreationComponent {
           amountPaid: invoice.amountToPay!
         }));
     } else if (formValue.receiptTypeOption === 'direct_income') {
-      requestData.ledgerAccountId = formValue.auxiliaryAccount; // Asigna la cuenta para ingreso directo
+      requestData.ledgerAccountId = formValue.auxiliaryAccount; 
     }
 
     console.log('Enviando a la API:', requestData);
 
-    // 3. Llamar al servicio con el objeto correcto
+    // Llamar al servicio con el objeto correcto
     this.cashReceiptService.createReceipt(requestData).subscribe({
       next: (response) => {
         this.messageService.add({
@@ -377,7 +409,25 @@ export class ReceiptCreationComponent {
     });
   }
 
+  /**
+ * Busca el método de pago seleccionado y devuelve el numero de su cuenta contable.
+ * @returns La cuenta contable (number) o null si no se encuentra.
+ */
+  accountingAccountForPaymentMethod(): number | null {
+    const paymentMethodId = this.cashReceiptForm.get('paymentMethod')?.value;
+    
+    if (!paymentMethodId) 
+        return null;
+
+    const selectedPaymentMethod = this.paymentMethods.find(pm => pm.id === paymentMethodId);
+
+    if (selectedPaymentMethod && selectedPaymentMethod.accountingAccountId) 
+        return selectedPaymentMethod.accountingAccountId;
+
+    return null;
+}
+
   goBack(): void {
-    this.router.navigate(['/financial/wallet/receipts']); // Define la ruta a la que deseas volver
+    this.router.navigate(['/financial/wallet/receipts']); 
   }
 }
