@@ -157,9 +157,9 @@ export class CashReceiptService {
           receipt: of(receiptFromApi), // Pasamos el recibo original
           client: this.getClientById(receiptFromApi.thirdPartyId),
           // Para el método de pago, primero obtenemos todos y luego buscamos.
-          /*paymentMethod: this.getPaymentMethods().pipe(
+          paymentMethod: this.getPaymentMethods().pipe(
               map(methods => methods.find(m => m.id === receiptFromApi.paymentMethodId))
-          )*/
+          )
         });
       }),
       map(result => {
@@ -168,8 +168,7 @@ export class CashReceiptService {
           return undefined;
         }
 
-        //const { receipt, client, paymentMethod } = result;
-        const { receipt, client } = result;
+        const { receipt, client, paymentMethod } = result;
 
         // 3. Construimos el objeto final 'ReceiptDetailsView' que el componente necesita.
         const receiptDetailsView: ReceiptDetailsView = {
@@ -178,8 +177,8 @@ export class CashReceiptService {
           issueDate: new Date(receipt.issueDate), // Convertimos el string de la API a Date
           thirdPartyId: receipt.thirdPartyId,
           clientName: client ? client.name : 'Cliente no encontrado',
-          //paymentMethodName: paymentMethod ? paymentMethod.name : 'No especificado',
-          paymentMethodName: 'No especificado',
+          paymentMethodName: paymentMethod ? paymentMethod.name : 'No especificado',
+          ledgerAccountId: receipt.ledgerAccountId,
           status: receipt.status === 'FINALIZED' ? 'Activo' : 'Anulado',
           totalAmount: receipt.totalAmount,
           observations: receipt.observations,

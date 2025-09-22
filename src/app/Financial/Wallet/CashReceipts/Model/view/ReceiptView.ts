@@ -24,6 +24,7 @@ export interface ReceiptDetailsView {
     thirdPartyId: number; 
     clientName: string;
     paymentMethodName: string;
+    ledgerAccountId: number, 
     status: 'Activo' | 'Anulado';
     totalAmount: number;
     observations: string;
