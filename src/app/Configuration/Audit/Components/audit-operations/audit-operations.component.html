@@ -1,17 +1,109 @@
 <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
-  <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+
+  <!-- Titulo y descripción -->
+  <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-10">
     <div class="items-center mb-6">
       <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
         Auditoría de Operaciones
       </h1>
-      <p class="font-family-sans font-normal text-sm mt-2">
+      <p class="font-family-sans font-normal text-sm mt-10">
         Aquí podrás supervisar el detalle de las operaciones realizadas en el sistema
       </p>
     </div>
   </div>
 
+  <!-- Contenedor de filtros y botones-->
+   <div class="flex flex-col gap-4 mb-6">
+    <!-- Contenedor de cajas de filtros -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-14">
+      <div class="flex flex-col">
+        <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">Fecha inicial</label>
+        <p-datePicker 
+          id="fechaInicio"
+          [(ngModel)]="filtro.fechaInicio"
+          dateFormat="dd/mm/yy"
+          showIcon="true">
+        </p-datePicker>
+      </div>
+      <div class="flex flex-col">
+        <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">Fecha final</label>
+        <p-datePicker 
+          id="fechaFin"
+          [(ngModel)]="filtro.fechaFin"
+          dateFormat="dd/mm/yy"
+          showIcon="true">
+        </p-datePicker>
+      </div>
+      <div class="flex flex-col">
+        <label for="table" class="mb-1 text-sm font-medium text-gray-700">Tabla</label>
+        <p-dropdown
+          id="table"
+          [options]="tablas"
+          [(ngModel)]="filtro.tabla"
+          placeholder="Seleccione una tabla">
+        </p-dropdown>
+      </div>
+      <div class="flex flex-col">
+        <label for="rol" class="mb-1 text-sm font-medium text-gray-700">Rol</label>
+        <p-dropdown 
+          id="rol"
+          [options]="roles"
+          [(ngModel)]="filtro.rol"
+          placeholder="Seleccione un rol">
+        </p-dropdown>
+      </div>
+      <div class="flex flex-col mr-5">
+        <label for="usuario" class="mb-1 text-sm font-medium text-gray-700">Usuario</label>
+        <input
+          id="usuario"
+          type="text"
+          pInputText
+          [(ngModel)]="filtro.usuario">
+      </div>
+      <div class="flex flex-col">
+        <label for="operation" class="mb-1 text-sm font-medium text-gray-700">Operación</label>
+        <p-dropdown
+          id="operation"
+          [options]="operations"
+          [(ngModel)]="filtro.operation"
+          placeholder="Seleccione una operación">
+        </p-dropdown>
+      </div>
+      <div class="flex flex-col mr-5">
+        <label for="companyCode" class="mb-1 text-sm font-medium text-gray-700">Código de empresa</label>
+        <input
+          id="companyCode"
+          type="text"
+          pInputText
+          [(ngModel)]="filtro.companyCode"
+          placeholder="NIT">
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex justify-between items-center mt-20 mb-10">
+      <!-- Boton de aplicar filtros -->
+      <div>
+        <p-button 
+          label="Aplicar filtros" 
+          icon="pi pi-filter" 
+          severity="info"
+          (onClick)="applyFilters()">
+        </p-button>
+      </div>
+
+      <!-- Boton de exportar -->
+      <div>
+        <p-button 
+          label="Exportar Excel" 
+          icon="pi pi-file-excel">
+        </p-button>
+      </div>
+    </div>
+  </div>
+
   <p-table 
-    [value]="operaciones"
+    [value]="operationsFilters"
     [paginator]="true" 
     [rows]="10" 
     [rowsPerPageOptions]="[5,10,20]"  

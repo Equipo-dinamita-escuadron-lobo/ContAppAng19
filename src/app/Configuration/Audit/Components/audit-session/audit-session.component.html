@@ -15,7 +15,7 @@
   <!-- Contenedor de filtros y botones-->
   <div class="flex flex-col gap-4 mb-6">
     <!-- Contenedor de cajas de filtros -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       <div class="flex flex-col">
         <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">Fecha inicial</label>
         <p-datePicker 
@@ -34,15 +34,6 @@
           showIcon="true">
         </p-datePicker>
       </div>
-      <div class="flex flex-col mr-5">
-        <label for="usuario" class="mb-1 text-sm font-medium text-gray-700">Usuario</label>
-        <input
-          id="usuario"
-          type="text"
-          pInputText
-          [(ngModel)]="filtro.usuario"
-          placeholder="Usuario">
-      </div>
       <div class="flex flex-col">
         <label for="rol" class="mb-1 text-sm font-medium text-gray-700">Rol</label>
         <p-dropdown 
@@ -51,6 +42,14 @@
           [(ngModel)]="filtro.rol"
           placeholder="Seleccione un rol">
         </p-dropdown>
+      </div>
+      <div class="flex flex-col mr-5">
+        <label for="usuario" class="mb-1 text-sm font-medium text-gray-700">Usuario</label>
+        <input
+          id="usuario"
+          type="text"
+          pInputText
+          [(ngModel)]="filtro.usuario">
       </div>
     </div>
 
