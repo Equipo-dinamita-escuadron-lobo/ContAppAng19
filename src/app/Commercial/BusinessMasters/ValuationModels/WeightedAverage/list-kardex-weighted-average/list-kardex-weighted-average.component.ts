@@ -213,8 +213,6 @@ export class ListKardexWeightedAverageComponent {
     }
   }
 
-<<<<<<< HEAD
-=======
   /**
    * Verifica si el botón de ajuste de inventario debe estar habilitado
    */
@@ -312,5 +310,4 @@ export class ListKardexWeightedAverageComponent {
     });
   }
 
->>>>>>> 490236879bd7a89c8ec04875f25919e87cc896a2
 }

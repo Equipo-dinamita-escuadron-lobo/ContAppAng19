@@ -1,3 +1,4 @@
+import { ProductService } from '../../../../Commercial/InvoiceTemplate/services/product.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -16,7 +17,7 @@ import { SteletonService } from '../../services/steleton.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ProductResponse } from '../../../BusinessMasters/ValuationModels/WeightedAverage/models/ProductResponse';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ProductService } from '../../../BusinessMasters/ValuationModels/WeightedAverage/services/product.service';
+
 
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
@@ -89,6 +90,7 @@ export class CreateInvoiceComponent implements OnInit {
     this.productService.getAllProducts().subscribe(response => {
       this.allProducts = response.data;
     });
+
   }
 
   private createInvoiceForm(): FormGroup {

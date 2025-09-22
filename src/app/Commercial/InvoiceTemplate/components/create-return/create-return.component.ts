@@ -13,8 +13,7 @@ import { Product2 } from '../../models/Product2';
 import { SteletonService } from '../../services/steleton.service';
 import { ProductResponse } from '../../../BusinessMasters/ValuationModels/WeightedAverage/models/ProductResponse';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ProductService } from '../../../BusinessMasters/ValuationModels/WeightedAverage/services/product.service';
-
+import { ProductService } from '../../../../Commercial/InvoiceTemplate/services/product.service';
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
     query: string;

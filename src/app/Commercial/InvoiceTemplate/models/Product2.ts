@@ -7,3 +7,14 @@ export interface Product2 {
   subtotal: number;
   taxPercentage: number[];
 }
+
+export interface ProductResponse {
+  id: number;
+  productId: number;
+  reference: string;
+  name: string;
+  presentation: string;
+  manager: string;
+  enterpriseId: string;
+}
+
