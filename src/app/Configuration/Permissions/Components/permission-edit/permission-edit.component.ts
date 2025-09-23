@@ -144,9 +144,9 @@ export class PermissionEditComponent implements OnInit {
   private readonly MODULES = [
     'Unidad de Medida',
     'Empresa',
-    'Tipos de Producto',
-    'Categorias',
-    'Productos',
+    'Tipo de Producto',
+    'Categoria',
+    'Producto',
   ];
 
   private findModuleForPermission(permissionName: string): string {
