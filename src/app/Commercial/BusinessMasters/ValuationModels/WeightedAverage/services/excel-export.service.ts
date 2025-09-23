@@ -139,19 +139,19 @@ export class ExcelExportService {
       item.Fecha,
       item.Detalle,
       item.Cantidad,
-      item['Valor Unitario'],
+      { v: item['Valor Unitario'], t: 'n', z: '$#,##0.00' },
       item['Entrada - Cantidad'],
-      item['Entrada - Valor Unitario'],
-      item['Entrada - Valor Total'],
+      item['Entrada - Valor Unitario'] !== '' ? { v: item['Entrada - Valor Unitario'], t: 'n', z: '$#,##0.00' } : '',
+      item['Entrada - Valor Total'] !== '' ? { v: item['Entrada - Valor Total'], t: 'n', z: '$#,##0.00' } : '',
       item['Salida - Cantidad'],
-      item['Salida - Valor Unitario'],
-      item['Salida - Valor Total'],
+      item['Salida - Valor Unitario'] !== '' ? { v: item['Salida - Valor Unitario'], t: 'n', z: '$#,##0.00' } : '',
+      item['Salida - Valor Total'] !== '' ? { v: item['Salida - Valor Total'], t: 'n', z: '$#,##0.00' } : '',
       item['Saldo - Cantidad'],
-      item['Saldo - Valor Unitario'],
-      item['Saldo - Valor Total']
+      { v: item['Saldo - Valor Unitario'], t: 'n', z: '$#,##0.00' },
+      { v: item['Saldo - Valor Total'], t: 'n', z: '$#,##0.00' }
     ]);
 
-    XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A11' });
+    XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A11', cellDates: true });
 
     // Establecer el rango de la hoja
     const totalRows = headerInfo.length + 2 + tableData.length; // +2 por las dos filas de encabezados

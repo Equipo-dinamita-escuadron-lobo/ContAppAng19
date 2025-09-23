@@ -179,16 +179,30 @@ export class ProductEditComponent implements OnInit {
     // Combina los datos originales (id, state, etc.) con los datos actualizados del formulario
     const formData = { ...this.productForm.value };
     
-    // Asegurar que taxPercentage sea un número o 0 si es null
-    formData.taxPercentage = formData.taxPercentage !== null ? Number(formData.taxPercentage) : 0;
+    // Mapear los datos correctamente para el backend
+    const productData = {
+      name: formData.name,
+      description: formData.description,
+      reference: formData.reference,
+      presentation: formData.presentation,
+      quantity: Number(formData.quantity),
+      taxPercentage: formData.taxPercentage !== null ? [formData.taxPercentage.toString()] : ["0"],
+      cost: Number(formData.cost),
+      unitOfMeasureId: formData.unitOfMeasureId, 
+      categoryId: formData.categoryId, 
+      productTypeId: formData.productTypeId, 
+      creationDate: this.originalProductData.creationDate,
+      state: formData.state,
+      enterpriseId: this.originalProductData.enterpriseId
+    };
     
-    const payload: Product = {
+    const payload = {
       ...this.originalProductData,
-      ...formData
+      ...productData
     };
 
     // Llama al servicio con los dos argumentos correctos: (ID, DATOS)
-    this.productService.updateProduct(this.currentProductId, payload).subscribe({
+    this.productService.updateProduct(this.currentProductId, payload as any).subscribe({
       next: () => {
         Swal.fire({
           title: '¡Actualizado!',

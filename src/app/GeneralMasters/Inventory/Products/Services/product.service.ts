@@ -80,7 +80,7 @@ export class ProductService {
                 productType: productType,
                 productTypeName: productType?.name || 'N/A',
                 taxDisplayText: taxDisplayText,
-                state: product.state === 'true' // Convertir string a boolean
+                state: typeof product.state === 'boolean' ? product.state : product.state === 'true' // Manejar tanto boolean como string
               } as ProductList;
             });
 
@@ -146,5 +146,10 @@ export class ProductService {
   deleteProduct(id: number): Observable<Product> {
     const url = `${API_URL}products/delete/${id}`;
     return this.http.delete<Product>(url);
+  }
+
+  changeProductState(id: number): Observable<void> {
+    const url = `${API_URL}products/changeState/${id}`;
+    return this.http.put<void>(url, {});
   }
 }
