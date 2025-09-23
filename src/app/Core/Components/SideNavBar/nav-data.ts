@@ -193,7 +193,7 @@ export const navbarData: INavbarData[] = [
                  label: 'Inventario con Promedio Ponderado',
                },
                {
-                 routeLink: 'TO DO',
+                routeLink: '/commercial/business-masters/peps',
                  icon: '',
                  label: 'Inventario PEPS',
                },
