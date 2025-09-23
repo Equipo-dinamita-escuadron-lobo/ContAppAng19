@@ -77,16 +77,25 @@ export class UnitOfMeasureListComponent implements OnInit {
 
   getUnitOfMeasures(): void {
     console.log('Llamando al servicio con enterpriseId:', this.entData);
-    this.unitOfMeasureService.getUnitOfMeasures(this.entData).subscribe(
-      (data: UnitOfMeasure[]) => {
+    this.unitOfMeasureService.getUnitOfMeasures(this.entData).subscribe({
+      next: (data: UnitOfMeasure[]) => {
         console.log('Datos recibidos:', data);
-        this.unitOfMeasures = data;
+        // Asegurar que todas las unidades tengan un estado boolean definido
+        this.unitOfMeasures = data.map(unit => ({
+          ...unit,
+          state: unit.state ?? true // Garantizar valor boolean por defecto
+        }));
       },
-      error => {
+      error: (error: any) => {
         console.error('Error al obtener las unidades de medida:', error);
         console.error('URL llamada:', `${environment.API_URL}unit-measures/findAll/${this.entData}`);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las unidades de medida.'
+        });
       }
-    );
+    });
   }
 
 
@@ -144,11 +153,12 @@ export class UnitOfMeasureListComponent implements OnInit {
 
   // Método para cambiar el estado de la unidad de medida
   changeUnitState(unit: UnitOfMeasure): void {
+
+    const newState = unit.state;
+    const previousState = !newState;
+    
     this.unitOfMeasureService.unitOfMeasureChangeState(unit.id.toString()).subscribe({
       next: () => {
-        // Cambiar el estado localmente
-        const currentState = this.isActive(unit.state);
-        unit.state = currentState ? 'false' : 'true';
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -156,6 +166,8 @@ export class UnitOfMeasureListComponent implements OnInit {
         });
       },
       error: (error: any) => {
+        // Revertir el cambio si hay error
+        unit.state = previousState;
         console.error('Error al cambiar el estado de la unidad de medida:', error);
         this.messageService.add({
           severity: 'error',
@@ -167,19 +179,16 @@ export class UnitOfMeasureListComponent implements OnInit {
   }
 
   // Métodos para manejar el estado
-  getStateSeverity(state: string): 'success' | 'danger' {
-    if (!state) return 'danger';
-    return (state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active') ? 'success' : 'danger';
+  getStateSeverity(state: boolean): 'success' | 'danger' {
+    return state ? 'success' : 'danger';
   }
 
-  formatState(state: string): string {
-    if (!state) return 'Inactivo';
-    return (state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active') ? 'Activo' : 'Inactivo';
+  formatState(state: boolean): string {
+    return state ? 'Activo' : 'Inactivo';
   }
 
-  isActive(state: string): boolean {
-    if (!state) return false;
-    return state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active';
+  isActive(state: boolean): boolean {
+    return state;
   }
 
 }

@@ -1,10 +1,9 @@
-
 export interface ProductType {
   id: number; 
   name: string; 
   description: string;
   enterpriseId: string;
-  state?: boolean;
+  state: boolean; // Removido el opcional para garantizar que siempre tenga valor
 }
 
 export interface ProductTypeList {
@@ -12,6 +11,6 @@ export interface ProductTypeList {
   name: string;
   description: string;
   enterpriseId: string;
-  state?: boolean;
+  state: boolean; // Removido el opcional para consistencia
 }
   

@@ -98,7 +98,8 @@ export class ThirdEditComponent implements OnInit {
       entId: "0",
       typeId: "CC",
       typeIdname: "CC",
-      status: true
+      status: true,
+      classification: "NATURAL_PERSON"
     },
     thirdTypes: [],
     rutPath: undefined,

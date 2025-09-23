@@ -259,11 +259,14 @@ export class CategoryListComponent implements OnInit {
 
   // Método para cambiar el estado de la categoría
   changeCategoryState(category: Category): void {
+    if (!category.id) {
+      return;
+    }
+    
     this.categoryService.changeCategoryState(category.id).subscribe({
       next: () => {
         // Cambiar el estado localmente
-        const currentState = this.isActive(category.state);
-        category.state = currentState ? 'false' : 'true';
+        category.state = !category.state;
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -282,20 +285,15 @@ export class CategoryListComponent implements OnInit {
   }
 
   // Métodos para manejar el estado
-  getStateSeverity(state: string): 'success' | 'danger' {
-    if (!state) return 'danger';
-    return (state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active') ? 'success' : 'danger';
+  getStateSeverity(state: boolean): 'success' | 'danger' {
+    return state ? 'success' : 'danger';
   }
 
-  formatState(state: string): string {
-    if (!state) return 'Inactivo';
-    return (state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active') ? 'Activo' : 'Inactivo';
+  getStateLabel(state: boolean): string {
+    return state ? 'Activo' : 'Inactivo';
   }
 
-  isActive(state: string): boolean {
-    if (!state) return false;
-    return state === 'true' || state === '1' || state === 'ACTIVE' || state === 'active';
+  isActive(state: boolean): boolean {
+    return state;
   }
-
-
 }

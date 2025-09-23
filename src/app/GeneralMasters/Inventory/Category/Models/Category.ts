@@ -1,24 +1,25 @@
 export interface Category {
-    id: number; 
+    id?: number; 
     name: string; 
     description: string;
-    enterpriseId:string;
-    state:string;
-        //cuentas
-    inventoryId:number; //Todo: Agregar el atributo inventory de tipo inventario
-    costId:number //Todo: Agregar el atributo cost de tipo costo
-    saleId:number //Todo: Agregar el atributo Sale de tipo venta
-    returnId:number //Todo: Agregar el atributo return de tipo devolución
+    enterpriseId: string;
+    state: boolean; 
+    taxId?: number; 
+    // Cuentas contables
+    inventoryId: number; 
+    costId: number;
+    saleId: number;
+    returnId: number;
 }
 export interface CategoryList {
     id: number; 
     name: string; 
     description: string;
-    enterpriseId:string;
-    state:string;
-        //cuentas
-    inventoryName:string; 
-    costName:string 
-    saleName:string 
-    returnName:string 
+    enterpriseId: string;
+    state: boolean; // Cambiado de string a boolean para coincidir con backend
+    // Nombres de cuentas para visualización
+    inventoryName: string; 
+    costName: string;
+    saleName: string;
+    returnName: string;
 }

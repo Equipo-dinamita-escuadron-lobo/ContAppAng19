@@ -66,10 +66,10 @@ export class ProductTypeListComponent implements OnInit {
     
     this.productTypeService.getProductTypes(this.entData).subscribe({
       next: (data: ProductType[]) => {
-        // Asignar estado por defecto si no viene del backend
+        // Asegurar que todos los tipos de producto tengan un estado definido
         this.productTypes = data.map(productType => ({
           ...productType,
-          state: productType.state !== undefined ? productType.state : true
+          state: productType.state ?? true // Usar nullish coalescing para mayor claridad
         }));
         this.loading = false;
       },
@@ -125,9 +125,12 @@ export class ProductTypeListComponent implements OnInit {
 
   // Método para cambiar el estado del tipo de producto
   changeProductTypeState(productType: ProductType): void {
+    // Guardar el estado actual
+    const newState = productType.state;
+    const previousState = !newState; // El estado anterior es el opuesto al actual
+    
     this.productTypeService.changeProductTypeState(productType.id).subscribe({
       next: () => {
-        // El estado ya se actualiza automáticamente por el ngModel
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -136,7 +139,7 @@ export class ProductTypeListComponent implements OnInit {
       },
       error: (error: any) => {
         // Revertir el cambio si hay error
-        productType.state = !productType.state;
+        productType.state = previousState;
         console.error('Error al cambiar el estado del tipo de producto:', error);
         this.messageService.add({
           severity: 'error',
