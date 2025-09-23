@@ -624,11 +624,30 @@ export const routes: Routes = [
 
           {
             path: 'bank-accounts',
-            data: { breadcrumb: 'Banco y Cuentas Bancarias' },
-            loadComponent: () =>
-              import(
-                './GeneralMasters/Components/MenuCards/menu.component'
-              ).then((m) => m.MenuComponent),
+            data: { breadcrumb: 'Bancos y Cuentas Bancarias' },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list',
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-accounts-list/bank-accounts-list.component'
+                  ).then((m) => m.BankAccountsListComponent),
+              },
+              {
+                path: 'banks',
+                data: { breadcrumb: 'Gestión de Bancos' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-list/bank-list.component'
+                  ).then((m) => m.BankListComponent),
+              },
+            ],
           },
           {
             path: 'cost-centers',
