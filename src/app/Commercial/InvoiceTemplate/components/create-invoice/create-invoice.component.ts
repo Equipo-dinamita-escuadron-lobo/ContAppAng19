@@ -16,7 +16,7 @@ import { SteletonService } from '../../services/steleton.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ProductResponse } from '../../../BusinessMasters/ValuationModels/WeightedAverage/models/ProductResponse';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ProductService } from '../../../BusinessMasters/ValuationModels/WeightedAverage/services/product.service';
+
 
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
@@ -89,6 +89,7 @@ export class CreateInvoiceComponent implements OnInit {
     this.steletonService.getAllProductsByEnterpriseId().subscribe(response => {
       this.allProducts = response;
     });
+
   }
 
   private createInvoiceForm(): FormGroup {
