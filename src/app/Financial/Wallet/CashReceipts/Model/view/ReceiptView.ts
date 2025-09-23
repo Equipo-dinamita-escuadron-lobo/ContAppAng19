@@ -1,3 +1,4 @@
+import { PaymentMethod } from "../../../../../GeneralMasters/PaymentMethods/models/PaymentMethods";
 import { AccountingEntryLine } from "../AccountinEntryLine";
 
 /**
@@ -31,4 +32,7 @@ export interface ReceiptDetailsView {
     isDirectIncome: boolean;
     details: ReceiptDetailView[]; 
     accountingEntry?: AccountingEntryLine[];
+
+    //Campos para generar asiento contable
+    paymentMethod?: PaymentMethod; 
 }

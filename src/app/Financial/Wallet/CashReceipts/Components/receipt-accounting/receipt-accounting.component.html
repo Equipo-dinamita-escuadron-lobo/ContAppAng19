@@ -1,5 +1,6 @@
 <div class="w-full font-sans">
 
+    <!-- Mensaje de error (sin cambios) -->
     <div class="max-w-5xl mx-auto" *ngIf="errorMessage">
         <p-message severity="error" [text]="errorMessage"></p-message>
         <div class="mt-4">
@@ -9,14 +10,27 @@
     </div>
 
     <div class="max-w-5xl mx-auto" *ngIf="!errorMessage">
+        <!-- SECCIÓN DE CABECERA MEJORADA -->
         <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
             <div>
                 <h1
                     class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
                     Contabilización: <span class="text-[var(--color-accessibility)]">{{ receiptCode }}</span>
+
+                    <!-- CAMBIO 1: Etiqueta de Estado (Badge) 
+                    <ng-container *ngIf="receiptStatus">
+                        <span *ngIf="receiptStatus === 'Activo'"
+                            class="inline-block ml-4 px-3 py-1 text-sm font-bold rounded-full bg-green-100 text-green-800 align-middle">
+                            Activo
+                        </span>
+                        <span *ngIf="receiptStatus === 'Anulado'"
+                            class="inline-block ml-4 px-3 py-1 text-sm font-bold rounded-full bg-red-100 text-red-800 align-middle">
+                            Anulado
+                        </span>
+                    </ng-container>-->
                 </h1>
                 <p class="font-normal text-sm mt-2 text-gray-600" *ngIf="issueDate">
-                    Fecha: <span class="font-semibold">{{ issueDate | date:'dd/MM/yyyy' }}</span>
+                    Fecha de creación: <span class="font-semibold">{{ issueDate | date:'dd/MM/yyyy' }}</span>
                 </p>
             </div>
             <div>
@@ -29,37 +43,46 @@
 
         <div class="bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden">
             <div class="w-full">
+                <div *ngIf="receiptStatus === 'Anulado'" class="p-4">
+                    <p-message severity="warn" styleClass="w-full">
+                        <div class="ml-2 text-sm">
+                            <strong>Asiento de Reversión:</strong> Este recibo ha sido anulado. Las siguientes entradas contables revierten la transacción original.
+                        </div>
+                    </p-message>
+                </div>
+
                 <div class="bg-[var(--color-primary)] text-white font-['Titillium_Web'] font-bold p-3 text-center">
                     Asiento Contable
                 </div>
+
                 <div class="overflow-x-auto px-6 md:px-8 pb-8">
                     <table class="w-full min-w-[700px] border-collapse">
-                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
+                        <!-- CAMBIO 3: Cabecera de Tabla Dinámica -->
+                        <thead class="text-xs uppercase" >
                             <tr>
                                 <th class="p-3 text-left">Código Contable</th>
                                 <th class="p-3 text-left">Cuenta Contable</th>
-                                <th class="p-3 text-left">Tercero (ID)</th> <!-- Mostramos el ID del tercero si no tenemos el nombre directamente -->
                                 <th class="p-3 text-left">Descripción</th>
                                 <th class="p-3 text-right">Débito</th>
                                 <th class="p-3 text-right">Crédito</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let entry of accountingEntries" class="hover:bg-gray-50 text-sm">
+                            <!-- CAMBIO 4: Estilo de Fila Dinámico -->
+                            <tr *ngFor="let entry of accountingEntries" class="hover:bg-gray-100 text-sm">
                                 <td class="p-3">{{ entry.accountCode }}</td>
                                 <td class="p-3">{{ entry.accountName }}</td>
-                                <td class="p-3">{{ entry.thirdPartyId }}</td>
                                 <td class="p-3">{{ entry.description }}</td>
                                 <td class="p-3 text-right font-semibold">{{ entry.debit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                                 <td class="p-3 text-right font-semibold">{{ entry.credit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                             </tr>
                             <tr *ngIf="accountingEntries.length === 0">
-                                <td colspan="6" class="p-3 text-center text-gray-500">No hay líneas de asiento contable para mostrar.</td>
+                                <td colspan="5" class="p-3 text-center text-gray-500">No hay líneas de asiento contable para mostrar.</td>
                             </tr>
                         </tbody>
                         <tfoot>
                             <tr class="bg-gray-100 font-bold">
-                                <td colspan="4" class="p-3 text-right">Total:</td>
+                                <td colspan="3" class="p-3 text-right">Total:</td>
                                 <td class="p-3 text-right">{{ totalDebit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                                 <td class="p-3 text-right">{{ totalCredit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                             </tr>

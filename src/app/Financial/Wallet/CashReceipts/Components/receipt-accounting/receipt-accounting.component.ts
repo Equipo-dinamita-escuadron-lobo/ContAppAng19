@@ -28,6 +28,7 @@ export class ReceiptAccountingComponent implements OnInit {
   issueDate: Date | null = null;
   accountingEntries: AccountingEntryLine[] = [];
   errorMessage: string | null = null;
+  receiptStatus: 'Activo' | 'Anulado' | null = null; 
 
   constructor(
     private route: ActivatedRoute,
@@ -39,7 +40,6 @@ export class ReceiptAccountingComponent implements OnInit {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.receiptId = +idParam;
-      console.log('Cargando asiento contable para el recibo ID:', this.receiptId);
       this.loadAccountingEntries(this.receiptId);
     } else {
       this.errorMessage = 'No se proporcionó un ID de recibo para la contabilización.';
@@ -49,24 +49,19 @@ export class ReceiptAccountingComponent implements OnInit {
   loadAccountingEntries(id: number): void {
     this.errorMessage = null;
     this.cashReceiptService.getReceiptById(id).subscribe({
-      next: (data) => {
-        if (data && data.accountingEntry) {
-          this.receiptCode = data.receiptCode || 'N/A';
-          this.issueDate = data.issueDate || null;
-          this.accountingEntries = data.accountingEntry;
-        } else if (data) {
-          this.errorMessage = `El recibo ${data.receiptCode} no tiene un asiento contable asociado.`;
-          this.receiptCode = data.receiptCode || 'N/A';
-          this.issueDate = data.issueDate || null;
-          this.accountingEntries = [];
-        }
-        else {
+      next: (receiptData) => {
+        if (receiptData) {
+          this.receiptCode = receiptData.receiptCode;
+          this.issueDate = receiptData.issueDate;
+          this.receiptStatus = receiptData.status;
+          this.accountingEntries = receiptData.accountingEntry || [];
+        } else {
           this.errorMessage = `No se encontró un recibo con el ID ${id}.`;
           this.accountingEntries = [];
         }
       },
       error: (err) => {
-        this.errorMessage = 'Ocurrió un error al cargar el asiento contable del recibo.';
+        this.errorMessage = 'Ocurrió un error al cargar los detalles del recibo.';
         console.error(err);
         this.accountingEntries = [];
       }
@@ -92,5 +87,4 @@ export class ReceiptAccountingComponent implements OnInit {
   get totalCredit(): number {
     return this.accountingEntries.reduce((total, entry) => total + (entry.credit || 0), 0);
   }
-
 }
