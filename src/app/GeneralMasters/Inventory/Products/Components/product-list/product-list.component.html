@@ -90,6 +90,9 @@
             Tipo de Producto <p-sortIcon field="productTypeName"></p-sortIcon>
           </th>
           <th class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
+            Estado
+          </th>
+          <th class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
             Acciones
           </th>
         </tr>
@@ -109,8 +112,12 @@
           <td class="py-3 whitespace-nowrap">{{ product.categoryName }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.productTypeName }}</td>
           <td class="py-3 text-center whitespace-nowrap">
+            <p-tag [value]="formatState(product.state)" [severity]="getStateSeverity(product.state)">
+            </p-tag>
+          </td>
+          <td class="py-3 text-center whitespace-nowrap">
             <!-- 4. BOTONES DE ACCIÓN -->
-            <div class="flex justify-center gap-2">
+            <div class="flex justify-center gap-2 items-center">
               <p-button icon="pi pi-eye" pTooltip="Ver Detalles" tooltipPosition="top"
                 (click)="openDetailsModal(product)"
                 styleClass="p-button-rounded p-button-text text-primary-60"></p-button>
@@ -119,6 +126,14 @@
                 styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
               <p-button icon="pi pi-trash" pTooltip="Eliminar" (click)="deleteProduct(product.id)"
                 tooltipPosition="top" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
+              <p-toggleSwitch
+                [(ngModel)]="product.state"
+                (onChange)="changeProductState(product)"
+                pTooltip="Cambiar Estado"
+                tooltipPosition="top"
+                styleClass="p-toggleSwitch-sm"
+                [style]="{'transform': 'scale(0.8)'}"
+              ></p-toggleSwitch>
             </div>
           </td>
         </tr>
@@ -126,8 +141,8 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <!-- Se ajusta el colspan a 12 columnas -->
-          <td colspan="12" class="text-center py-6 font-family-sans text-neutral-50">
+          <!-- Se ajusta el colspan a 13 columnas -->
+          <td colspan="13" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron productos.
           </td>
         </tr>
@@ -135,8 +150,8 @@
 
       <ng-template pTemplate="loadingbody">
         <tr>
-          <!-- Se ajusta el colspan a 12 columnas -->
-          <td colspan="12" class="text-center py-6 font-family-sans text-neutral-50">
+          <!-- Se ajusta el colspan a 13 columnas -->
+          <td colspan="13" class="text-center py-6 font-family-sans text-neutral-50">
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             <p class="mt-2 text-primary">Cargando productos...</p>
           </td>
@@ -226,3 +241,6 @@
     <p-button label="Cerrar" styleClass="p-button-text" (click)="isDetailsDialogVisible = false"></p-button>
   </ng-template>
 </p-dialog>
+
+<!-- Toast para mensajes -->
+<p-toast></p-toast>
