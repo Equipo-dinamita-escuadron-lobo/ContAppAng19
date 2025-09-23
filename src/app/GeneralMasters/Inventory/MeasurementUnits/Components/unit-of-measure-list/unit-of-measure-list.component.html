@@ -124,7 +124,7 @@
                 styleClass="p-button-rounded p-button-text text-secondary"
               ></p-button>
               <p-toggleSwitch
-                [ngModel]="isActive(unit.state)"
+                [(ngModel)]="unit.state"
                 (onChange)="changeUnitState(unit)"
                 pTooltip="Cambiar Estado"
                 tooltipPosition="top"

@@ -4,6 +4,5 @@ export interface UnitOfMeasure {
     abbreviation: string; 
     description: string; 
     enterpriseId: string;
-    state: string;
+    state: boolean;
 }
-  
