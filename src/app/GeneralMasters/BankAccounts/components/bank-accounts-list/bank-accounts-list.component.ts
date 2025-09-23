@@ -16,6 +16,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
 
 // PrimeNG Services
 import { MessageService } from 'primeng/api';
@@ -81,7 +82,8 @@ interface BankAccountUpdateRequest {
     ConfirmDialogModule,
     IconFieldModule,
     InputIconModule,
-    TooltipModule
+    TooltipModule,
+    TagModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './bank-accounts-list.component.html',
