@@ -9,7 +9,7 @@ import { ResponseDto } from '../../models/ResponseDto';
 })
 export class KardexPepsService {
 
-  private readonly apiUrl = `${environment.API_URL}/kardex/peps/`;
+  private readonly apiUrl = `${environment.API_URL}kardex/peps/`;
 
   constructor(private readonly http: HttpClient) { }
 

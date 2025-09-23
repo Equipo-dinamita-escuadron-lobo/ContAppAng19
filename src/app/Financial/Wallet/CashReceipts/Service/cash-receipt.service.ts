@@ -1,17 +1,16 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { delay, forkJoin, map, Observable, of, switchMap } from 'rxjs';
-import { Client, DropdownOption, Invoice, ReceiptView } from '../Model/Models';
+import { forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { Receipt } from '../Model/Receipt';
-import { ReceiptDetailsView } from '../Model/ReceiptView';
+import { ReceiptDetailsView } from '../Model/view/ReceiptView';
 import { PaymentMethod } from '../../../../GeneralMasters/PaymentMethods/models/PaymentMethods';
 import { PaymentMethodsServiceService } from '../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { AccountingEntryLine } from '../Model/AccountinEntryLine';
 import { environment } from '../../../../../environments/environment';
-import { ReceiptResponse } from '../Model/ReceiptResponse';
-import { ReceiptCreateRequest } from '../Model/ReceiptCreateRequest';
-import { VoidReceiptRequest } from '../Model/VoidReceiptRequest';
+import { Client, DropdownOption, Invoice } from '../Model';
+import { ReceiptCreateRequest, ReceiptResponse, VoidReceiptRequest } from '../Model/api';
+import { ReceiptView } from '../Model/view';
 
 @Injectable({
   providedIn: 'root'
@@ -56,6 +55,7 @@ export class CashReceiptService {
     return this.paymentMethodsService.findAll(enterpriseId, 0, 100).pipe(
       map(page => {
         this.paymentMethodsCache = page.content;
+        console.log("Métodos de pago obtenidos:", this.paymentMethodsCache);
         return this.paymentMethodsCache;
       })
     );
@@ -112,7 +112,7 @@ export class CashReceiptService {
 
   // --- MÉTODOS PARA EL CRUD DE RECIBOS ---
   getAllReceipts(): Observable<ReceiptView[]> {
-    const enterpriseId = "asdasdasfafa";
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
     if (!enterpriseId) {
       console.error("ID de empresa no encontrado. No se pueden cargar los recibos.");
       return of([]);

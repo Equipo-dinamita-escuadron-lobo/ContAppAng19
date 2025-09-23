@@ -14,18 +14,19 @@
         <div class="flex-1 min-w-[200px]">
             <label for="producto" class="block text-primary  text-sm mb-1">Producto</label>
             <p-autocomplete
-                [(ngModel)]="selectedProduct"
-                [suggestions]="filteredProducts"
-                (completeMethod)="filterProducts($event)"
-                (onSelect)="onProductSelect($event.value)"
-                field="name"
-                [dropdown]="true"
-                [virtualScroll]="true"
-                [virtualScrollItemSize]="44"
-                placeholder="Escribe para buscar productos..."
-                styleClass="w-full"
-                inputId="product-ac"
-            />
+              [(ngModel)]="selectedProduct"
+              [suggestions]="filteredProducts"
+              (completeMethod)="filterProducts($event)"
+              (onSelect)="onProductSelect($event)"
+              field="name"
+              [dropdown]="true"
+              [virtualScroll]="true"
+              [virtualScrollItemSize]="44"
+              placeholder="Escribe para buscar productos..."
+              styleClass="w-full"
+              inputId="product-ac"
+          />
+
         </div>
         <!---Fecha de inicio-->
         <div class="flex-1 min-w-[200px]">
@@ -81,6 +82,7 @@
         </div>
     </div>
     <!---Tabla-->   
+    <!-- Tu plantilla HTML de la tabla, con la lógica corregida -->
     <div class="mt-16">
         <p-table
             [value]="kardexList"
@@ -88,89 +90,87 @@
             [rows]="5"
             [totalRecords]="totalRecords"
             [lazy]="true"
-            [first]="first"
-            (onLazyLoad)="loadKardex($event)"
+            (onPage)="loadKardex($event)"
             [rowsPerPageOptions]="[5, 10, 20]"
             styleClass="p-datatable-gridlines"
             [responsiveLayout]="'scroll'"
         >
-        <ng-template pTemplate="header">
-            <tr>
-              <th rowspan="2">Fecha</th>
-              <th rowspan="2">Detalle</th>
-              <th colspan="3" class="text-center">Entradas</th>
-              <th colspan="3" class="text-center">Salidas</th>
-              <th colspan="3" class="text-center">Saldo</th>
-            </tr>
-            <tr>
-              <th>Ct</th>
-              <th>Vr Unitario</th>
-              <th>Vr Total</th>
-    
-              <th>Ct</th>
-              <th>Vr Unitario</th>
-              <th>Vr Total</th>
-    
-              <th>Ct</th>
-              <th>Vr Unitario</th>
-              <th>Vr Total</th>
-            </tr>
-          </ng-template>
-    
-          <!-- Cuerpo -->
-          <ng-template pTemplate="body" let-kardex>
-            <tr *ngFor="let balance of kardex.balance; let i = index; trackBy: trackByIndex">
-              <!-- Solo mostrar fecha y detalle en la primera fila -->
-              <td *ngIf="i === 0" [rowSpan]="kardex.balance.length > 0 ? kardex.balance.length : 1">
-                {{ kardex.formattedDate }}
-              </td>
-              <td *ngIf="i === 0" [rowSpan]="kardex.balance.length > 0 ? kardex.balance.length : 1">
-                {{ kardex.detail }}
-              </td>
-    
-              <!-- Entradas - Solo mostrar en la primera fila -->
-              <td *ngIf="i === 0" [rowSpan]="kardex.balance.length > 0 ? kardex.balance.length : 1" class="entradas-column">
-                {{ kardex.entryAmount ?? '' }}
-              </td>
-              <td *ngIf="i === 0" [rowSpan]="kardex.balance.length > 0 ? kardex.balance.length : 1" class="entradas-column">
-                {{ kardex.entryUnitPrice ? (kardex.entryUnitPrice | currency:'$') : '' }}
-              </td>
-              <td *ngIf="i === 0" [rowSpan]="kardex.balance.length > 0 ? kardex.balance.length : 1" class="entradas-column">
-                {{ kardex.entryTotalPrice ? (kardex.entryTotalPrice | currency:'$') : '' }}
-              </td>
-    
-              <!-- Salidas - Solo mostrar en la primera fila -->
-              <td *ngIf="i === 0" [rowSpan]="kardex.balance.length > 0 ? kardex.balance.length : 1" class="salidas-column">
-                {{ kardex.outputAmount ?? '' }}
-              </td>
-              <td *ngIf="i === 0" [rowSpan]="kardex.balance.length > 0 ? kardex.balance.length : 1" class="salidas-column">
-                {{ kardex.outputUnitPrice ? (kardex.outputUnitPrice | currency:'$') : '' }}
-              </td>
-              <td *ngIf="i === 0" [rowSpan]="kardex.balance.length > 0 ? kardex.balance.length : 1" class="salidas-column">
-                {{ kardex.outputTotalPrice ? (kardex.outputTotalPrice | currency:'$') : '' }}
-              </td>
-    
-              <!-- Saldo - Mostrar cada capa de balance -->
-              <td [class]="i === 0 ? 'saldo-column' : 'saldo-column balance-layer'">{{ balance.amount }}</td>
-              <td [class]="i === 0 ? 'saldo-column' : 'saldo-column balance-layer'">{{ balance.unitPrice | currency:'$' }}</td>
-              <td [class]="i === 0 ? 'saldo-column' : 'saldo-column balance-layer'">{{ balance.totalPrice | currency:'$' }}</td>
-            </tr>
+            <ng-template pTemplate="header">
+                <tr>
+                  <th rowspan="2">Fecha</th>
+                  <th rowspan="2">Detalle</th>
+                  <th colspan="3" class="text-center">Entradas</th>
+                  <th colspan="3" class="text-center">Salidas</th>
+                  <th colspan="3" class="text-center">Saldo</th>
+                </tr>
+                <tr>
+                  <th>Ct</th>
+                  <th>Vr Unitario</th>
+                  <th>Vr Total</th>
+        
+                  <th>Ct</th>
+                  <th>Vr Unitario</th>
+                  <th>Vr Total</th>
+        
+                  <th>Ct</th>
+                  <th>Vr Unitario</th>
+                  <th>Vr Total</th>
+                </tr>
+            </ng-template>
+
+            <!-- Cuerpo de la Tabla -->
+            <ng-template pTemplate="body" let-kardexRow>
+                <!-- Lógica para renderizar filas con capas de saldo -->
+                <ng-container *ngIf="kardexRow.balance && kardexRow.balance.length > 0; else simpleRow">
+                    <tr *ngFor="let balanceItem of kardexRow.balance; let i = index; trackBy: trackByIndex">
+                        <!-- Columnas de Fecha y Detalle (solo en la primera fila del grupo) -->
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.formattedDate }}</td>
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.detail }}</td>
+
+                        <!-- Columnas de Entradas (solo en la primera fila del grupo) -->
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.entryQuantity }}</td>
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.entryUnitPrice | currency:'$' }}</td>
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.entryTotalPrice | currency:'$' }}</td>
+
+                        <!-- Columnas de Salidas (solo en la primera fila del grupo) -->
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.outputQuantity }}</td>
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.outputUnitPrice | currency:'$' }}</td>
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.outputTotalPrice | currency:'$' }}</td>
+
+                        <!-- Columnas de Saldo (una por cada capa del balance) -->
+                        <td>{{ balanceItem.amount }}</td>
+                        <td>{{ balanceItem.unitPrice | currency:'$' }}</td>
+                        <td>{{ balanceItem.totalPrice | currency:'$' }}</td>
+                    </tr>
+                </ng-container>
+
+                <!-- Plantilla para filas sin balance (ej. saldo inicial con 0) -->
+                <ng-template #simpleRow>
+                    <tr>
+                        <td>{{ kardexRow.formattedDate }}</td>
+                        <td>{{ kardexRow.detail }}</td>
+                        <!-- Entradas -->
+                        <td>{{ kardexRow.entryQuantity }}</td>
+                        <td>{{ kardexRow.entryUnitPrice | currency:'$' }}</td>
+                        <td>{{ kardexRow.entryTotalPrice | currency:'$' }}</td>
+                        <!-- Salidas -->
+                        <td>{{ kardexRow.outputQuantity }}</td>
+                        <td>{{ kardexRow.outputUnitPrice | currency:'$' }}</td>
+                        <td>{{ kardexRow.outputTotalPrice | currency:'$' }}</td>
+                        <!-- Saldo Totalizado -->
+                        <td>{{ kardexRow.totalBalanceQuantity }}</td>
+                        <td>-</td>
+                        <td>{{ kardexRow.totalBalanceValue | currency:'$' }}</td>
+                    </tr>
+                </ng-template>
+            </ng-template>
             
-            <!-- Si no hay balance, mostrar fila simple -->
-            <tr *ngIf="kardex.balance.length === 0">
-              <td>{{ kardex.formattedDate }}</td>
-              <td>{{ kardex.detail }}</td>
-              <td class="entradas-column">{{ kardex.entryAmount ?? '' }}</td>
-              <td class="entradas-column">{{ kardex.entryUnitPrice ? (kardex.entryUnitPrice | currency:'$') : '' }}</td>
-              <td class="entradas-column">{{ kardex.entryTotalPrice ? (kardex.entryTotalPrice | currency:'$') : '' }}</td>
-              <td class="salidas-column">{{ kardex.outputAmount ?? '' }}</td>
-              <td class="salidas-column">{{ kardex.outputUnitPrice ? (kardex.outputUnitPrice | currency:'$') : '' }}</td>
-              <td class="salidas-column">{{ kardex.outputTotalPrice ? (kardex.outputTotalPrice | currency:'$') : '' }}</td>
-              <td class="saldo-column">{{ kardex.totalBalanceAmount }}</td>
-              <td class="saldo-column">-</td>
-              <td class="saldo-column">{{ kardex.totalBalanceValue | currency:'$' }}</td>
-            </tr>
-          </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="11" class="text-center">No hay registros para mostrar. Por favor, seleccione un producto y un rango de fechas.</td>
+                </tr>
+            </ng-template>
         </p-table>
     </div>
+
 </div>

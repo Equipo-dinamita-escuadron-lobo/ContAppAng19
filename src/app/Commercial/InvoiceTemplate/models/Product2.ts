@@ -8,13 +8,8 @@ export interface Product2 {
   taxPercentage: number[];
 }
 
-export interface ProductResponse {
+export interface ProductList2 {
   id: number;
-  productId: number;
-  reference: string;
   name: string;
-  presentation: string;
-  manager: string;
   enterpriseId: string;
 }
-

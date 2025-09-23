@@ -922,9 +922,9 @@ export const routes: Routes = [
                   ).then((m) => m.ListKardexWeightedAverageComponent),
               },
               {
-                path: 'kardex-peps',
+                path: 'peps',
                 data: {
-                  breadcrumb: 'Kardex PEPS',
+                  breadcrumb: 'KardexPEPS',
                 },
                 loadComponent: () =>
                   import(

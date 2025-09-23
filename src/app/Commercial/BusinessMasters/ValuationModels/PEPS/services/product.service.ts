@@ -6,29 +6,29 @@ import { Observable } from 'rxjs';
 import { ResponseDto } from '../../models/ResponseDto';
 import { ProductResponse } from '../models/ProductResponse';
 
+const API_URL = environment.API_URL + 'kardex/peps/';
+
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
+  private apiUrl = API_URL;
+  private localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
+  private entData: EntData | null = this.localStorageMethods.loadEnterpriseData();
+  private enterpriseId: string = '';
 
-  private readonly apiUrl = `${environment.API_URL}/kardex/peps/`;
-  private readonly localStorageMethods = new LocalStorageMethods();
-  private readonly entData: EntData | null = this.localStorageMethods.loadEnterpriseData();
-  private readonly enterpriseId: string;
-
-  constructor(private readonly http: HttpClient) {
-    this.enterpriseId=this.getEnterpriseIdFromLocalStorage();
+  constructor(private http: HttpClient) {
+    this.enterpriseIdLocalStorage();
   }
 
   getAllProducts(): Observable<ResponseDto<ProductResponse[]>> {
     return this.http.get<ResponseDto<ProductResponse[]>>(`${this.apiUrl}products/${this.enterpriseId}`);
   }
 
-
-  private getEnterpriseIdFromLocalStorage(): string {
-    if (!this.entData?.id) {
+  private enterpriseIdLocalStorage() {
+    if (!this.entData) {
       throw new Error('Enterprise data not found in local storage');
     }
-    return this.entData.id;
+    this.enterpriseId = this.entData.id;
   }
 }

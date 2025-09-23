@@ -12,6 +12,9 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
 import { KardexRow } from '../models/KardexRow';
 import { ProductResponse } from '../models/ProductResponse';
 import { KardexRecordsDTOResponse } from '../models/KardexResponse';
+import { ResponseDto } from '../../models/ResponseDto';
+import { CurrencyPipe } from '@angular/common';
+
 
 interface AutoCompleteCompleteEvent {
   originalEvent: Event;
@@ -27,7 +30,8 @@ interface AutoCompleteCompleteEvent {
     AutoCompleteModule,
     FormsModule,
     DatePickerModule,
-    InputIconModule
+    InputIconModule,
+     CurrencyPipe
   ],
   templateUrl: './list-kardex-peps.component.html',
   styleUrl: './list-kardex-peps.component.css'
@@ -71,25 +75,64 @@ export class ListKardexPepsComponent {
     }
   }
 
-  filterProducts(event:AutoCompleteCompleteEvent) {
+  filterProducts(event: AutoCompleteCompleteEvent) {
     const query = event.query.toLowerCase();
+    
+    if (!this.allProducts || this.allProducts.length === 0) {
+      console.log('No hay productos disponibles para filtrar');
+      this.filteredProducts = [];
+      return;
+    }
+    
     this.filteredProducts = this.allProducts.filter(product => {
-      return product.name.toLowerCase().includes(query);
+      return product.name.toLowerCase().includes(query) ||
+            product.reference.toLowerCase().includes(query);
     });
+    
+    console.log('Productos filtrados:', this.filteredProducts); // Para debug
   }
+
   ngOnInit() {
     this.entData = this.localStorageMethods.loadEnterpriseData();
-    this.productService.getAllProducts().subscribe((response: any) => {
-      this.allProducts = response.data;
+    
+    if (!this.entData) {
+      console.error('No se encontraron datos de empresa en localStorage');
+      return;
+    }
+    
+    console.log('Enterprise ID:', this.entData.id); // Para debug
+    
+    this.productService.getAllProducts().subscribe({
+      next: (response: ResponseDto<ProductResponse[]>) => {
+        console.log('Respuesta completa:', response);
+        
+        if (response && response.data) {
+          this.allProducts = response.data;
+          console.log('Productos cargados exitosamente:', this.allProducts.length);
+        } else {
+          console.warn('La respuesta no contiene datos de productos');
+          this.allProducts = [];
+        }
+      },
+      error: (error) => {
+        console.error('Error detallado al cargar productos:', error);
+        this.allProducts = [];
+      }
     });
   }
-  onProductSelect(product: ProductResponse) {
-    this.selectedProduct = product;
-    this.productId = product.idProduct;
-    console.log('Producto seleccionado:', this.selectedProduct);
-    // Al seleccionar un producto se carga el kardex con la configuración actual de fechas
-    this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
+
+
+onProductSelect(event: any) {
+  // El valor seleccionado está en event.value
+  this.selectedProduct = event.value;
+  this.productId = event.value.id;
+  console.log('Producto seleccionado:', this.selectedProduct);
+  // Al seleccionar un producto se carga el kardex con la configuración actual de fechas
+  if (this.startDate && this.endDate) {
+    this.loadKardex({ first: 0, rows: 5 });
   }
+}
+
 
   trackByIndex(index: number, item: any): number {
     return index;
@@ -98,7 +141,7 @@ export class ListKardexPepsComponent {
   loadKardex(event: any) {
     this.loading = true;
 
-    if(this.productId === 0) {
+    if (this.productId === 0 || !this.startDate || !this.endDate) {
       this.kardexList = [];
       this.totalRecords = 0;
       this.loading = false;
@@ -108,31 +151,39 @@ export class ListKardexPepsComponent {
     const page = event.first / event.rows;
     const size = event.rows;
     this.first = event.first;
-    const sort = event.sortField ? `${event.sortField},${event.sortOrder === 1 ? 'asc' : 'desc'}` : '';
-    
-    //Solo enviar fechas si ambas estan seleccionadas, de lo contrario enviar null
-    const startDateToSend = (this.startDate && this.endDate) ? this.startDate : null;
-    const endDateToSend = (this.startDate && this.endDate) ? this.endDate : null;
-   
-    this.kardexPepsService.getKardexByProduc(this.productId, page, size, sort, this.startDate, this.endDate).subscribe((res) => {
-      const rawList = res.data;
+    const sort = event.sortField ? `${event.sortField},${event.sortOrder === 1 ? 'asc' : 'desc'}` : 'date,asc';
 
-      this.kardexList = rawList.map((item: KardexRecordsDTOResponse) => {
-        const formattedDate = new Date(item.date).toLocaleDateString('es-CO', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric'
-        }).replace(/ de /g, '-');
+    this.kardexPepsService.getKardexByProduc(this.productId, page, size, sort, this.startDate, this.endDate)
+      .subscribe({
+        next: (res) => {
+          // --- CORRECCIÓN AQUÍ ---
+          const pageData = res.data; // Objeto Page del backend
+          
+          if (pageData && pageData.content) {
+            // Mapea el contenido de la página
+            this.kardexList = pageData.content.map((item: KardexRecordsDTOResponse) => {
+              const formattedDate = new Date(item.date).toLocaleDateString('es-CO', {
+                day: '2-digit', month: 'long', year: 'numeric'
+              }).replace(/ de /g, '-');
+              return { ...item, formattedDate } as KardexRow;
+            });
 
-        return {
-          ...item,
-          formattedDate
-        } as KardexRow;
+            // Asigna el total de elementos para la paginación
+            this.totalRecords = pageData.totalElements;
+          } else {
+            this.kardexList = [];
+            this.totalRecords = 0;
+          }
+
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error("Error al cargar el Kardex:", err);
+          this.loading = false;
+          this.kardexList = [];
+          this.totalRecords = 0;
+        }
       });
-
-      this.totalRecords = rawList.length;
-      this.loading = false;
-    });
   }
 
 

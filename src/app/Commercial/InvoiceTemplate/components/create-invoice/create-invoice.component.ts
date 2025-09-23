@@ -1,4 +1,3 @@
-import { ProductService } from '../../../../Commercial/InvoiceTemplate/services/product.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,7 +11,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
 import { Facture2 } from '../../models/Facture2';
-import { Product2 } from '../../models/Product2';
+import { Product2, ProductList2 } from '../../models/Product2';
 import { SteletonService } from '../../services/steleton.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ProductResponse } from '../../../BusinessMasters/ValuationModels/WeightedAverage/models/ProductResponse';
@@ -58,9 +57,9 @@ export class CreateInvoiceComponent implements OnInit {
   productId: number = 0;
   totalRecords = 0;
   first = 0;
-  allProducts: ProductResponse[] = [];
-  filteredProducts: ProductResponse[] = [];
-  selectedProduct: ProductResponse | undefined;
+  allProducts: ProductList2[] = [];
+  filteredProducts: ProductList2[] = [];
+  selectedProduct: ProductList2 | undefined;
 
   invoiceTypes: InvoiceType[] = [
     { label: 'Factura de Compra', value: 'purchase' },
@@ -72,7 +71,7 @@ export class CreateInvoiceComponent implements OnInit {
     private formBuilder: FormBuilder,
     private messageService: MessageService,
     private steletonService: SteletonService,
-    private productService: ProductService
+
   ) {
     this.invoiceForm = this.createInvoiceForm();
   }
@@ -87,8 +86,8 @@ export class CreateInvoiceComponent implements OnInit {
       this.calculatePendingValue();
     });
 
-    this.productService.getAllProducts().subscribe(response => {
-      this.allProducts = response.data;
+    this.steletonService.getAllProductsByEnterpriseId().subscribe(response => {
+      this.allProducts = response;
     });
 
   }
@@ -330,7 +329,7 @@ export class CreateInvoiceComponent implements OnInit {
 
   onProductSelect(event: ProductResponse) {
     const productForm = this.factProducts.at(this.factProducts.length - 1);
-    productForm.get('productId')?.setValue(event.productId);
+    productForm.get('productId')?.setValue(event.id);
     productForm.get('description')?.setValue(event.name);
   }
 

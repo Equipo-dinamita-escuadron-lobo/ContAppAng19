@@ -1,4 +1,7 @@
-//Representa una línea del asiento contable
+/**
+ * Representa una única línea (débito o crédito) dentro de un asiento contable.
+ * Utilizado para mostrar el comprobante contable de un recibo.
+ */
 export interface AccountingEntryLine {
   accountCode: string;
   accountName: string;
