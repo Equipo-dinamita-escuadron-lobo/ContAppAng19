@@ -104,7 +104,7 @@ export class PermissionListComponent implements OnInit {
       'Empresa',
       'Tipo de Producto',
       'Categoria',
-      'Productos',
+      'Producto',
     ];
 
     const match = modules.find((m) =>
