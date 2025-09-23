@@ -206,10 +206,8 @@ export const routes: Routes = [
                     './Configuration/Audit/Components/audit-consecutive/audit-consecutive.component'
                   ).then((m) => m.AuditConsecutiveComponent),
               },
-            ]
-            ,
-          }
-          ,
+            ],
+          },
         ],
       },
       {
@@ -313,37 +311,39 @@ export const routes: Routes = [
           },
           //Rutas de etiquetas no comerciales
           {
-            path:'no-commercial-tags',
-            data:{Breadcrumb:'Etiquetas no comerciales'},
-            children:[
+            path: 'no-commercial-tags',
+            data: { Breadcrumb: 'Etiquetas no comerciales' },
+            children: [
               {
                 path: '',
                 redirectTo: 'list',
-                pathMatch: 'full'
+                pathMatch: 'full',
               },
               {
-                path:'list',
-                data:{breadcrumb:null},
-                loadComponent:()=>
-                  import('./GeneralMasters/noCommercialTags/Components/list-tag/list-tag.component')
-                    .then((m)=>m.ListTagComponent),
-              },
-              {
-                path:'create',
-                data:{Breadcrumb:'Crear Etiqueta No Comercial'},
+                path: 'list',
+                data: { breadcrumb: null },
                 loadComponent: () =>
-                  import('./GeneralMasters/noCommercialTags/Components/create-tag/create-tag.component')
-                    .then((m)=>m.CreateTagComponent),
+                  import(
+                    './GeneralMasters/noCommercialTags/Components/list-tag/list-tag.component'
+                  ).then((m) => m.ListTagComponent),
               },
               {
-                path:'edit/:id',
-                data:{Breadcrumb:'Editar Etiqueta No Comercial'},
-                loadComponent:()=>
-                  import('./GeneralMasters/noCommercialTags/Components/edit-tag/edit-tag.component')
-                    .then((m)=>m.EditTagComponent),
-              }
-
-            ]
+                path: 'create',
+                data: { Breadcrumb: 'Crear Etiqueta No Comercial' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/noCommercialTags/Components/create-tag/create-tag.component'
+                  ).then((m) => m.CreateTagComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { Breadcrumb: 'Editar Etiqueta No Comercial' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/noCommercialTags/Components/edit-tag/edit-tag.component'
+                  ).then((m) => m.EditTagComponent),
+              },
+            ],
           },
           // Rutas de Impuestos
           {
@@ -412,6 +412,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/Products/Components/product-creation/product-creation.component'
                       ).then((m) => m.ProductCreationComponent),
+                    canActivate: [hasPermissionGuard(['Create_Product'])],
                   },
                   {
                     path: 'edit/:id',
@@ -420,6 +421,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/Products/Components/product-edit/product-edit.component'
                       ).then((m) => m.ProductEditComponent),
+                    canActivate: [hasPermissionGuard(['Edit_Product'])],
                   },
                 ],
               },
@@ -442,6 +444,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/ProductTypes/Components/product-type-creation/product-type-creation.component'
                       ).then((m) => m.ProductTypeCreationComponent),
+                    canActivate: [hasPermissionGuard(['Create_Product_Type'])],
                   },
                   {
                     path: 'edit/:id',
@@ -450,6 +453,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/ProductTypes/Components/product-type-edit/product-type-edit.component'
                       ).then((m) => m.ProductTypeEditComponent),
+                    canActivate: [hasPermissionGuard(['Edit_Product_Type'])],
                   },
                 ],
               },
@@ -472,6 +476,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/Category/Components/category-creation/category-creation.component'
                       ).then((m) => m.CategoryCreationComponent),
+                    canActivate: [hasPermissionGuard(['Create_Category'])],
                   },
                   {
                     path: 'edit/:id',
@@ -480,6 +485,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/Category/Components/category-edit/category-edit.component'
                       ).then((m) => m.CategoryEditComponent),
+                    canActivate: [hasPermissionGuard(['Edit_Category'])],
                   },
                 ],
               },
@@ -513,6 +519,9 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-edit/unit-of-measure-edit.component'
                       ).then((m) => m.UnitOfMeasureEditComponent),
+                    canActivate: [
+                      hasPermissionGuard(['Edit_Unit_of_Measurement']),
+                    ],
                   },
                 ],
               },
@@ -797,7 +806,7 @@ export const routes: Routes = [
                   import(
                     './Financial/Wallet/CashReceipts/Components/receipt-accounting/receipt-accounting.component'
                   ).then((m) => m.ReceiptAccountingComponent),
-                }
+              },
             ],
           },
           {
@@ -857,46 +866,46 @@ export const routes: Routes = [
                     './Financial/Treasury/PurchaseBills/Components/bill-list/bill-list.component'
                   ).then((m) => m.BillListComponent),
               },
-            {
-              path: 'purchase-bills/create',
-              data: {
-                breadcrumb: 'Nueva Factura de Compra',
-              },
-              loadComponent: () =>
-                import(
-                  './Financial/Treasury/PurchaseBills/Components/bill-creation/bill-creation.component'
-                ).then((m) => m.BillCreationComponent),
-            },
-            {
-              path: 'reports',
-              data: {
-                breadcrumb: 'Reportes',
-              },
-              children: [
-                {
-                  path: 'vendors',
-                  data: {
-                    breadcrumb: 'Reportes de Proveedores',
-                  },
-                  loadComponent: () =>
-                    import(
-                      './Financial/Treasury/Reports/VendorReports/Components/vendor-list/vendor-list.component'
-                    ).then((m) => m.VendorListComponent),
+              {
+                path: 'purchase-bills/create',
+                data: {
+                  breadcrumb: 'Nueva Factura de Compra',
                 },
-                {
-                  path: 'vendor-report/:id',
-                  data: {
-                    breadcrumb: 'Reporte Individual',
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/PurchaseBills/Components/bill-creation/bill-creation.component'
+                  ).then((m) => m.BillCreationComponent),
+              },
+              {
+                path: 'reports',
+                data: {
+                  breadcrumb: 'Reportes',
+                },
+                children: [
+                  {
+                    path: 'vendors',
+                    data: {
+                      breadcrumb: 'Reportes de Proveedores',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Treasury/Reports/VendorReports/Components/vendor-list/vendor-list.component'
+                      ).then((m) => m.VendorListComponent),
                   },
-                  loadComponent: () =>
-                    import(
-                      './Financial/Treasury/Reports/VendorReports/Components/vendor-report/vendor-report.component'
-                    ).then((m) => m.VendorReportComponent),
-                }
-              ]
-            }
+                  {
+                    path: 'vendor-report/:id',
+                    data: {
+                      breadcrumb: 'Reporte Individual',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Treasury/Reports/VendorReports/Components/vendor-report/vendor-report.component'
+                      ).then((m) => m.VendorReportComponent),
+                  },
+                ],
+              },
             ],
-          }
+          },
         ],
       },
       {
@@ -952,7 +961,7 @@ export const routes: Routes = [
               import(
                 './Commercial/InvoiceTemplate/components/create-return/create-return.component'
               ).then((m) => m.CreateReturnComponent),
-          }
+          },
         ],
       },
     ],
