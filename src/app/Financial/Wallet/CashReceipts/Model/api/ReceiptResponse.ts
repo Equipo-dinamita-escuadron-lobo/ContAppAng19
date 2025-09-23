@@ -18,6 +18,7 @@ export interface ReceiptResponse {
     receiptCode: string;
     thirdPartyId: number;
     paymentMethodId: number;
+    ledgerAccountId: number, 
     
     status: string;
     issueDate: string;

@@ -174,19 +174,19 @@
                                         <p-checkbox [binary]="true" [(ngModel)]="invoice.selectedForPayment" [ngModelOptions]="{standalone: true}"
                                             (onChange)="onInvoiceSelectionChange(invoice, rowIndex)"></p-checkbox>
                                     </td>
-                                    <td>{{ invoice.code }}</td>
+                                    <td>{{ invoice.factCode }}</td>
                                     <td>{{ invoice.dueDate | date:'dd/MM/yyyy' }}</td>
-                                    <td>{{ invoice.pendingBalance}}</td>
+                                    <td>{{ invoice.pendingValue | currency:'COP':'symbol-narrow':'1.0-0'}}</td>
                                     <td class="align-top">
                                         <div class="flex flex-col gap-1">
                                             <p-inputNumber [(ngModel)]="invoice.amountToPay" mode="currency" currency="COP" [ngModelOptions]="{standalone: true}"
                                                 locale="es-CO" [min]="0" [max]="invoice.pendingBalance"
                                                 [disabled]="!invoice.selectedForPayment"
                                                 (onBlur)="onAmountToPayChange(invoice, rowIndex)" [ngClass]="{
-                                                'ng-invalid ng-dirty': invoice.selectedForPayment && (!invoice.amountToPay || invoice.amountToPay <= 0 || invoice.amountToPay > invoice.pendingBalance!)
+                                                'ng-invalid ng-dirty': invoice.selectedForPayment && (!invoice.amountToPay || invoice.amountToPay <= 0 || invoice.amountToPay > invoice.pendingValue!)
                                             }"></p-inputNumber>
-                                            @if (invoice.selectedForPayment && (!invoice.amountToPay || invoice.amountToPay <= 0 || invoice.amountToPay > invoice.pendingBalance!)) {
-                                                <small class="p-error error-message">Valor inválido.</small>
+                                            @if (invoice.selectedForPayment && (!invoice.amountToPay || invoice.amountToPay <= 0 || invoice.amountToPay > invoice.pendingValue!)) {
+                                                <small class="p-error error-message">El valor ingresado es invalido</small>
                                             }
                                         </div>
                                     </td>
