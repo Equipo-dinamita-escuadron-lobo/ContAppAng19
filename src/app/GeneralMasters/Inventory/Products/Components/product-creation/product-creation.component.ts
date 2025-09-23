@@ -142,16 +142,25 @@ export class ProductCreationComponent implements OnInit {
     }
 
     const formData = { ...this.productForm.value };
-    formData.enterpriseId = this.entData;
+    
+    const productData = {
+      name: formData.name,
+      description: formData.description,
+      reference: formData.reference,
+      presentation: formData.presentation,
+      quantity: Number(formData.quantity),
+      taxPercentage: formData.taxPercentage !== null ? [formData.taxPercentage.toString()] : ["0"],
+      cost: Number(formData.cost),
+      unitOfMeasureId: formData.unitOfMeasureId, // Ya es ID gracias a optionValue
+      categoryId: formData.categoryId, // Ya es ID gracias a optionValue
+      productTypeId: formData.productTypeId, // Ya es ID gracias a optionValue
+      creationDate: formData.creationDate,
+      state: formData.state,
+      enterpriseId: this.entData
+    };
 
-    // Asegurarse de que los valores numéricos se envíen como números
-    formData.cost = Number(formData.cost);
-    formData.quantity = Number(formData.quantity);
-    formData.taxPercentage = formData.taxPercentage !== null ? Number(formData.taxPercentage) : 0;
 
-    console.log('Datos del formulario:', formData);
-
-    this.productService.createProduct(formData).subscribe({
+    this.productService.createProduct(productData as any).subscribe({
       next: () => {
         Swal.fire({
           title: 'Creación exitosa',
