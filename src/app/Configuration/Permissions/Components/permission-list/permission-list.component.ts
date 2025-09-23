@@ -102,8 +102,8 @@ export class PermissionListComponent implements OnInit {
     const modules = [
       'Unidad de Medida',
       'Empresa',
-      'Tipos de Producto',
-      'Categorias',
+      'Tipo de Producto',
+      'Categoria',
       'Productos',
     ];
 
