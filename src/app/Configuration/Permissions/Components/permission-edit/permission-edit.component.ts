@@ -144,7 +144,9 @@ export class PermissionEditComponent implements OnInit {
   private readonly MODULES = [
     'Unidad de Medida',
     'Empresa',
-    // aquí puedes agregar más módulos como en permission-create
+    'Tipo de Producto',
+    'Categoria',
+    'Producto',
   ];
 
   private findModuleForPermission(permissionName: string): string {
