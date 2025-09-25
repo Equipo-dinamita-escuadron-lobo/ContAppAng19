@@ -21,19 +21,26 @@
     </div>
 
     <!-- 2. FORMULARIO DE FILTROS (sin bordes) -->
-    <form [formGroup]="filterForm" (ngSubmit)="applyFilters()" class="mb-10">
+    <form [formGroup]="filterForm" (ngSubmit)="applyFilters()" class="mb-20 mt-20">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 items-end">
             <!-- Filtro por Cliente con AutoComplete -->
             <div class="flex flex-col gap-2">
-                <label for="client" class="font-semibold text-sm text-[var(--color-primary)]">Cliente</label>
-                <p-autoComplete id="client" formControlName="client" [suggestions]="clientSuggestions" class="sm:w-full" [styleClass]="'w-full'"
-                    (completeMethod)="searchClient($event)" placeholder="Ingrese el nombre de un tercero">
+                <label for="client" class="font-semibold text-[var(--color-primary)]">Cliente</label>
+                <p-autoComplete id="client" formControlName="client" [suggestions]="clientSuggestions"
+                    (completeMethod)="searchClient($event)" field="name" [dropdown]="true" [forceSelection]="true"
+                    placeholder="Seleccione un cliente" [styleClass]="'w-full'" inputStyleClass="w-full">
+                    <!-- Plantilla para mostrar cada item en el desplegable -->
+                    <ng-template let-client pTemplate="item">
+                        <div class="flex flex-col">
+                            <span class="">{{ client }}</span>
+                        </div>
+                    </ng-template>
                 </p-autoComplete>
             </div>
 
             <!-- Filtro por Fecha Inicio -->
             <div class="flex flex-col gap-2">
-                <label for="startDate" class="font-semibold text-sm text-[var(--color-primary)]">Fecha
+                <label for="startDate" class="font-semibold  text-[var(--color-primary)]">Fecha
                     inicio</label>
                 <p-calendar id="startDate" formControlName="startDate" dateFormat="dd/mm/yy" [showIcon]="true"
                     placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
@@ -41,14 +48,14 @@
 
             <!-- Filtro por Fecha Fin -->
             <div class="flex flex-col gap-2">
-                <label for="endDate" class="font-semibold text-sm text-[var(--color-primary)]">Fecha fin</label>
+                <label for="endDate" class="font-semibold  text-[var(--color-primary)]">Fecha fin</label>
                 <p-calendar id="endDate" formControlName="endDate" dateFormat="dd/mm/yy" [showIcon]="true"
                     placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
             </div>
 
             <!-- Filtro por Estado -->
             <div class="flex flex-col gap-2">
-                <label for="status" class="font-semibold text-sm text-[var(--color-primary)]">Estado</label>
+                <label for="status" class="font-semibold  text-[var(--color-primary)]">Estado</label>
                 <p-dropdown id="status" formControlName="status" [options]="statusOptions" optionLabel="label"
                     optionValue="value" placeholder="Seleccione estado" [showClear]="true" [styleClass]="'w-full'">
                 </p-dropdown>
@@ -56,7 +63,7 @@
         </div>
 
         <!-- Botones de Acción de Filtros -->
-        <div class="flex justify-center gap-3 mt-6">
+        <div class="flex justify-center gap-3 mt-10">
             <p-button type="submit" label="Filtrar"></p-button>
             <p-button type="button" label="Limpiar filtros" styleClass="p-button-secondary" (onClick)="clearFilters()">
             </p-button>
@@ -83,20 +90,16 @@
                     <td>{{ receipt.issueDate | date:'dd/MM/yyyy' }}</td>
                     <td>{{ receipt.clientName }}</td>
                     <td>
-                        <span [ngClass]="{'status-anulado': receipt.status === 'Anulado'}">
+                        <span [ngClass]="{'text-green-600 font-bold': receipt.status === 'Activo','text-red-600 font-semibold': receipt.status === 'Anulado'}">
                             {{ receipt.status }}
                         </span>
                     </td>
-                    <td class="text-right" [ngClass]="{'status-anulado': receipt.status === 'Anulado'}">
-                        {{ receipt.totalAmount}}
+                    <td class="text-right" [ngClass]="{'text-red-600': receipt.status === 'Anulado', 'text-green-600': receipt.status === 'Activo'}">
+                        {{ receipt.totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}
                     </td>
                     <td class="text-center">
                         <p-button icon="pi pi-eye" styleClass="p-button-rounded p-button-text text-primary"
                             pTooltip="Ver detalles" (onClick)="viewReceiptDetails(receipt)"></p-button>
-                        <!-- Puedes agregar más botones aquí, por ejemplo:
-              <p-button icon="pi pi-times" styleClass="p-button-rounded p-button-text p-button-danger"
-                pTooltip="Anular recibo"></p-button>
-              -->
                     </td>
                 </tr>
             </ng-template>

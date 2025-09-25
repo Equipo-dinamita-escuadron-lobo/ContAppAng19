@@ -42,7 +42,7 @@ export class ThirdDetailsComponent implements OnInit {
   thirdData: Third = {
     thId: 0,
     entId: '',
-    typeId: { entId: '0', typeId: 'CC', typeIdname: 'CC', status: true },
+    typeId: { entId: '0', typeId: 'CC', typeIdname: 'CC', status: true, classification: 'NATURAL_PERSON' },
     thirdTypes: [],
     rutPath: undefined,
     personType: ePersonType.natural,

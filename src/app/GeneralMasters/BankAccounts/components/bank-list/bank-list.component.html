@@ -1,0 +1,215 @@
+<div class="flex w-full h-full font-titillium">
+    <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+        <p-toast></p-toast>
+        <p-confirmDialog></p-confirmDialog>
+
+        <!-- Header Section -->
+        <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+            <div class="items-center mb-6">
+                <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+                    Gestión de Bancos
+                </h1>
+                <p class="font-family-sans font-normal text-sm mt-2">
+                    Administración de entidades bancarias y sus configuraciones.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+                <div class="flex flex-wrap gap-3">
+                    <p-button label="Crear Banco" (click)="showCreateForm()"></p-button>
+                    <p-button label="Exportar" (click)="exportBanks()"></p-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Form Section -->
+        <div *ngIf="showForm" class="account-section mb-16">
+            <div class="floating-label">
+                <span class="section-title">{{ isEditing ? 'Editar Banco' : 'Crear Nuevo Banco' }}</span>
+            </div>
+
+            <form [formGroup]="bankForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <!-- Código -->
+                <div class="field-wrapper">
+                    <label class="label-title">Código *</label>
+                    <input 
+                        type="text" 
+                        formControlName="codigo"
+                        [readonly]="isEditing"
+                        class="input-base"
+                        placeholder="Ej: 001"
+                        maxlength="10">
+                    <div *ngIf="bankForm.get('codigo')?.invalid && bankForm.get('codigo')?.touched" class="error-message">
+                        <span *ngIf="bankForm.get('codigo')?.errors?.['required']">El código es requerido</span>
+                        <span *ngIf="bankForm.get('codigo')?.errors?.['pattern']">Solo se permiten números y letras</span>
+                        <span *ngIf="bankForm.get('codigo')?.errors?.['duplicateCode']">Este código ya existe</span>
+                    </div>
+                </div>
+
+                <!-- Nombre -->
+                <div class="field-wrapper">
+                    <label class="label-title">Nombre *</label>
+                    <input 
+                        type="text" 
+                        formControlName="nombre"
+                        class="input-base"
+                        placeholder="Ej: Banco de Bogotá"
+                        maxlength="100">
+                    <div *ngIf="bankForm.get('nombre')?.invalid && bankForm.get('nombre')?.touched" class="error-message">
+                        <span *ngIf="bankForm.get('nombre')?.errors?.['required']">El nombre es requerido</span>
+                        <span *ngIf="bankForm.get('nombre')?.errors?.['pattern']">Solo se permiten letras, números y espacios</span>
+                        <span *ngIf="bankForm.get('nombre')?.errors?.['duplicateName']">Este nombre ya existe</span>
+                    </div>
+                </div>
+
+                <!-- Moneda -->
+                <div class="field-wrapper">
+                    <label class="label-title">Moneda *</label>
+                    <p-dropdown 
+                        formControlName="moneda"
+                        [options]="currencies"
+                        optionLabel="description"
+                        optionValue="code"
+                        placeholder="Seleccionar moneda"
+                        class="dropdown-custom w-full">
+                    </p-dropdown>
+                    <div *ngIf="bankForm.get('moneda')?.invalid && bankForm.get('moneda')?.touched" class="error-message">
+                        <span *ngIf="bankForm.get('moneda')?.errors?.['required']">La moneda es requerida</span>
+                    </div>
+                </div>
+
+                <!-- Status (solo para edición) -->
+                <div *ngIf="isEditing" class="field-wrapper">
+                    <label class="label-title">Estado</label>
+                    <div class="flex items-center gap-3 mt-2">
+                        <p-toggleSwitch formControlName="status"></p-toggleSwitch>
+                        <span class="text-sm text-gray-600">
+                            {{ bankForm.get('status')?.value ? 'Activo' : 'Inactivo' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="col-span-1 sm:col-span-3 flex justify-end gap-3 mt-6">
+                    <p-button 
+                        label="Cancelar" 
+                        severity="secondary" 
+                        (click)="cancelForm()">
+                    </p-button>
+                    <p-button 
+                        label="{{ isEditing ? 'Actualizar' : 'Guardar' }}" 
+                        type="submit"
+                        [disabled]="bankForm.invalid || isSubmitting">
+                    </p-button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Field -->
+        <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+            <div class="w-full sm:w-[30rem]">
+                <p-iconfield iconPosition="left">
+                    <p-inputicon>
+                        <i class="pi pi-search text-gray-500"></i>
+                    </p-inputicon>
+                    <input
+                        pInputText
+                        type="text"
+                        [(ngModel)]="searchTerm"
+                        (input)="onSearch()"
+                        placeholder="Buscar banco (código/nombre)..."
+                        class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+                    />
+                </p-iconfield>
+            </div>
+        </div>
+
+        <!-- Banks Table -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <p-table 
+                [value]="filteredBanks" 
+                [paginator]="true" 
+                [rows]="pageSize"
+                [totalRecords]="totalRecords"
+                [loading]="loading"
+                [rowsPerPageOptions]="[5, 10, 20, 50]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} bancos"
+                responsiveLayout="scroll"
+                styleClass="p-datatable-sm">
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 15%">Código</th>
+                        <th style="width: 35%">Nombre</th>
+                        <th style="width: 20%">Moneda</th>
+                        <th style="width: 15%">Estado</th>
+                        <th style="width: 15%">Acciones</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-bank let-rowIndex="rowIndex">
+                    <tr>
+                        <td>
+                            <span class="font-medium text-gray-900">{{ bank.codigo }}</span>
+                        </td>
+                        <td>
+                            <span class="text-gray-900">{{ bank.nombre }}</span>
+                        </td>
+                        <td>
+                            <span class="text-gray-700">{{ getCurrencyDisplay(bank.moneda) }}</span>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <p-toggleSwitch 
+                                    [ngModel]="bank.status"
+                                    (ngModelChange)="toggleBankStatus(bank, $event)">
+                                </p-toggleSwitch>
+                                <span class="text-sm" [class]="bank.status ? 'text-green-600' : 'text-red-600'">
+                                    {{ bank.status ? 'Activo' : 'Inactivo' }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <p-button 
+                                    icon="pi pi-pencil" 
+                                    severity="info" 
+                                    size="small"
+                                    [text]="true"
+                                    pTooltip="Editar banco"
+                                    (click)="editBank(bank)">
+                                </p-button>
+                                <p-button 
+                                    icon="pi pi-trash" 
+                                    severity="danger" 
+                                    size="small"
+                                    [text]="true"
+                                    pTooltip="Eliminar banco"
+                                    (click)="confirmDelete(bank)">
+                                </p-button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="5" class="text-center py-8">
+                            <div class="flex flex-col items-center gap-3">
+                                <i class="pi pi-info-circle text-4xl text-gray-400"></i>
+                                <p class="text-gray-500">No se encontraron bancos</p>
+                                <p-button 
+                                    label="Crear primer banco" 
+                                    size="small"
+                                    (click)="showCreateForm()">
+                                </p-button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+</div>

@@ -147,39 +147,33 @@ export class CashReceiptService {
   getReceiptById(id: number): Observable<ReceiptDetailsView | undefined> {
     return this.http.get<ReceiptResponse>(`${this.apiUrl}/${id}`).pipe(
       switchMap(receiptFromApi => {
-
         if (!receiptFromApi) {
           return of(undefined);
         }
-
-        // 2. Preparamos las llamadas para obtener los datos adicionales. forkJoin las ejecutará en paralelo para mayor eficiencia.
         return forkJoin({
-          receipt: of(receiptFromApi), // Pasamos el recibo original
+          receipt: of(receiptFromApi),
           client: this.getClientById(receiptFromApi.thirdPartyId),
-          // Para el método de pago, primero obtenemos todos y luego buscamos.
-          /*paymentMethod: this.getPaymentMethods().pipe(
+          paymentMethod: this.getPaymentMethods().pipe(
               map(methods => methods.find(m => m.id === receiptFromApi.paymentMethodId))
-          )*/
+          ),
+          auxiliaryAccounts: this.getAuxiliaryAccounts() // Obtenemos las cuentas para buscar el nombre
         });
       }),
       map(result => {
-        // Si en el paso anterior algo falló, result será null.
-        if (!result) {
+        if (!result || !result.receipt) {
           return undefined;
         }
 
-        //const { receipt, client, paymentMethod } = result;
-        const { receipt, client } = result;
+        const { receipt, client, paymentMethod, auxiliaryAccounts } = result;
 
-        // 3. Construimos el objeto final 'ReceiptDetailsView' que el componente necesita.
+        // 1. Construimos el objeto base 'ReceiptDetailView'
         const receiptDetailsView: ReceiptDetailsView = {
           id: receipt.id,
           receiptCode: receipt.receiptCode,
-          issueDate: new Date(receipt.issueDate), // Convertimos el string de la API a Date
+          issueDate: new Date(receipt.issueDate),
           thirdPartyId: receipt.thirdPartyId,
-          clientName: client ? client.name : 'Cliente no encontrado',
-          //paymentMethodName: paymentMethod ? paymentMethod.name : 'No especificado',
-          paymentMethodName: 'No especificado',
+          clientName: client ? client.name : `ID: ${receipt.thirdPartyId}`,
+          paymentMethodName: paymentMethod ? paymentMethod.name : 'No especificado',
           status: receipt.status === 'FINALIZED' ? 'Activo' : 'Anulado',
           totalAmount: receipt.totalAmount,
           observations: receipt.observations,
@@ -190,8 +184,13 @@ export class CashReceiptService {
             invoiceCode: detail.invoiceCode,
             accountingAccount: detail.accountingAccount,
           })),
-          accountingEntry: [] // Lo dejamos vacío por ahora, ya que el backend no lo provee.
+          // --- Pasamos la información extra necesaria para la contabilidad ---
+          paymentMethod: paymentMethod,
+          ledgerAccountId: receipt.ledgerAccountId,
         };
+
+        // 2. Generamos el asiento contable y lo adjuntamos
+        receiptDetailsView.accountingEntry = this.generateAccountingEntry(receiptDetailsView, auxiliaryAccounts);
 
         return receiptDetailsView;
       })
@@ -207,51 +206,61 @@ export class CashReceiptService {
     return this.http.put<ReceiptResponse>(`${this.apiUrl}/${receiptId}/void`, requestBody);
 }
 
-  private _generateAccountingEntry(receipt: Receipt, paymentMethods: PaymentMethod[]): AccountingEntryLine[] {
+  public generateAccountingEntry(receipt: ReceiptDetailsView, auxAccounts: DropdownOption[]): AccountingEntryLine[] {
+    // --- PASO 1: Generar el asiento como si estuviera ACTIVO (usando tu lógica) ---
     const entry: AccountingEntryLine[] = [];
-    const total = receipt.totalAmount || 0;
-    const thirdPartyId = receipt.thirdPartyId || 0;
-    const client = this.mockClientsDB.find(c => c.id === thirdPartyId);
+    const total = receipt.totalAmount;
+    const thirdPartyName = receipt.clientName;
 
-    // LÍNEA DEL DÉBITO
-    const paymentMethod = paymentMethods.find(p => p.id === receipt.paymentMethodId);
-    if (!paymentMethod || !paymentMethod.accountingAccount) {
-      console.error("Método de pago o su cuenta contable no encontrados.");
-      return [];
-    }
-    entry.push({
-      accountCode: paymentMethod.accountingAccount,
-      accountName: paymentMethod.name, // <-- CAMBIO: Usamos el nombre directo (Ej: 'Caja')
-      debit: total,
-      credit: 0,
-      thirdPartyId: thirdPartyId,
-      description: receipt.observations || 'Efectivo' // <-- CAMBIO: Usamos las observaciones o un genérico
-    });
-
-    // LÍNEAS DEL CRÉDITO
-    const isDirectIncome = !receipt.details || receipt.details.length === 0;
-
-    if (isDirectIncome) {
-      // ... (lógica para ingreso directo)
-    } else {
-      if (!client) {
-        console.error("Cliente no encontrado para generar asiento de cartera.");
-        return [];
-      }
-      receipt.details?.forEach(detail => {
-        const invoice = this.mockInvoicesDB.find(inv => inv.id === detail.invoiceId);
-        const invoiceCode = invoice ? invoice.factCode : `ID ${detail.invoiceId}`;
-
+    // LÍNEA DEL DÉBITO (Lo que entra a la empresa)
+    if (receipt.paymentMethod && receipt.paymentMethod.accountingAccount) {
         entry.push({
-          accountCode: client.accountsReceivableAccount.code,
-          accountName: client.accountsReceivableAccount.name, // <-- Usará 'Cliente' del mock
-          debit: 0,
-          credit: detail.amountPaid,
-          thirdPartyId: thirdPartyId,
-          description: invoiceCode // <-- CAMBIO: La descripción es solo el código de la factura
+            accountCode: receipt.paymentMethod.accountingAccount,
+            accountName: receipt.paymentMethod.name,
+            thirdParty: thirdPartyName, 
+            debit: total,
+            credit: 0,
+            description: `Ingreso de dinero en ${receipt.paymentMethod.name}`
         });
-      });
+    } else {
+        console.error("No se pudo generar el débito: Método de pago o su cuenta no encontrados.");
     }
+
+    // LÍNEAS DEL CRÉDITO (El origen del dinero)
+    if (receipt.isDirectIncome) {
+        const auxAccount = auxAccounts.find(acc => acc.value === receipt.ledgerAccountId);
+        entry.push({
+            accountCode: receipt.ledgerAccountId?.toString() || 'N/A',
+            accountName: auxAccount ? auxAccount.label : 'Ingreso No Operacional',
+            thirdParty: thirdPartyName,
+            debit: 0,
+            credit: total,
+            description: `Ingreso directo ${receipt.receiptCode}`
+        });
+    } else {
+        receipt.details.forEach(detail => {
+            entry.push({
+                accountCode: detail.accountingAccount.toString(), 
+                accountName: 'Cuentas por Cobrar Clientes', 
+                thirdParty: thirdPartyName,
+                debit: 0,
+                credit: detail.amountPaid,
+                description: `Abono Factura ${detail.invoiceCode}`
+            });
+        });
+    }
+
+    // --- PASO 2: Si el recibo está anulado, INVERTIR el asiento generado ---
+    if (receipt.status === 'Anulado') {
+        const reversedEntry = entry.map(line => ({
+            ...line, // Copia todas las propiedades: accountCode, accountName, thirdParty
+            debit: line.credit, // El nuevo débito es el valor del crédito original
+            credit: line.debit, // El nuevo crédito es el valor del débito original
+            description: `Anulación: ${line.description}` // Se añade un prefijo para mayor claridad
+        }));
+        return reversedEntry;
+    }
+
     return entry;
-  }
+}
 }

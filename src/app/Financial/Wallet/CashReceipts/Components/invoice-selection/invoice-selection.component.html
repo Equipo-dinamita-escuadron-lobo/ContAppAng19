@@ -21,7 +21,7 @@
                 </td>
                 <td>{{ invoice.factCode }}</td>
                 <td>{{ invoice.expirationDate | date:'dd/MM/yyyy' }}</td>
-                <td>{{ invoice.pendingValue }}</td>
+                <td>{{ invoice.pendingValue | currency:'COP':'symbol-narrow':'1.0-0'}}</td>
             </tr>
         </ng-template>
         <ng-template pTemplate="empty">

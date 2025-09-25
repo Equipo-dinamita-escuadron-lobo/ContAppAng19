@@ -108,20 +108,20 @@
             <div class="flex justify-center gap-2 items-center">
               <p-button
                 icon="pi pi-pencil"
-                pTooltip="Editar Tipo de Producto"
+                pTooltip="Editar"
                 tooltipPosition="top"
                 (click)="redirectToEdit(productType.id)"
                 styleClass="p-button-rounded p-button-text text-complementary-green"
               ></p-button>
               <p-button
                 icon="pi pi-trash"
-                pTooltip="Eliminar Tipo de Producto"
+                pTooltip="Eliminar"
                 tooltipPosition="top"
                 (click)="deleteProductType(productType.id)"
                 styleClass="p-button-rounded p-button-text text-secondary"
               ></p-button>
               <p-toggleSwitch
-                [ngModel]="productType.state"
+                [(ngModel)]="productType.state"
                 (onChange)="changeProductTypeState(productType)"
                 pTooltip="Cambiar Estado"
                 tooltipPosition="top"

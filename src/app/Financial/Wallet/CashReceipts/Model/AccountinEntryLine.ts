@@ -5,7 +5,7 @@
 export interface AccountingEntryLine {
   accountCode: string;
   accountName: string;
-  thirdPartyId: number;
+  thirdParty: string;
   debit: number;
   credit: number;
   description: string;

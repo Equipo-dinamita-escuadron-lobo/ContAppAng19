@@ -18,6 +18,7 @@ import { TableModule } from 'primeng/table';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 // Models and Services
 import { ThirdService } from '../../Services/third.service';
@@ -45,7 +46,8 @@ import { TypeId } from '../../models/TypeId';
     TableModule,
     IconFieldModule,
     InputIconModule,
-    ToggleSwitchModule
+    ToggleSwitchModule,
+    RadioButtonModule
   ],
   providers: [MessageService, ConfirmationService, LocalStorageMethods],
   templateUrl: './third-config.component.html',
@@ -142,12 +144,14 @@ export class ThirdConfigComponent implements OnInit {
   ) {
     this.typeIdForm = this.fb.group({
       code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
-      name: ['', [Validators.required]]
+      name: ['', [Validators.required]],
+      classification: ['NATURAL_PERSON', [Validators.required]]
     });
     
     this.editTypeIdForm = this.fb.group({
       code: ['', [Validators.required]],
-      name: ['', [Validators.required]]
+      name: ['', [Validators.required]],
+      classification: ['NATURAL_PERSON', [Validators.required]]
     });
     
     this.thirdTypeForm = this.fb.group({
@@ -307,17 +311,23 @@ export class ThirdConfigComponent implements OnInit {
         return;
       }
 
+      const classification = this.typeIdForm.get('classification')?.value;
+      
       const newTypeId: TypeId = {
         entId: this.entData,
         typeId: code,
         typeIdname: name,
-        status: true
+        status: true,
+        classification: classification
       };
 
       this.thirdServiceConfiguration.createTypeId(newTypeId).subscribe({
         next: (response: TypeId) => {
           array.push(response);
           this.typeIdForm.reset();
+          this.typeIdForm.patchValue({
+            classification: 'NATURAL_PERSON'
+          });
           this.showInputTypeId = false;
           this.messageService.add({
             severity: 'success',
@@ -353,6 +363,9 @@ export class ThirdConfigComponent implements OnInit {
    */
   cancelAddTypeId(): void {
     this.typeIdForm.reset();
+    this.typeIdForm.patchValue({
+      classification: 'NATURAL_PERSON'
+    });
     this.showInputTypeId = false;
   }
 
@@ -371,12 +384,14 @@ export class ThirdConfigComponent implements OnInit {
     // Llenar el formulario con los datos actuales
     this.editTypeIdForm.patchValue({
       code: typeId.typeId,
-      name: typeId.typeIdname
+      name: typeId.typeIdname,
+      classification: typeId.classification
     });
     
     // Guardar valor inicial para detectar cambios
     this.initialTypeIdValue = {
-      name: typeId.typeIdname
+      name: typeId.typeIdname,
+      classification: typeId.classification
     };
     
     // Mostrar el formulario de edición
@@ -411,11 +426,14 @@ export class ThirdConfigComponent implements OnInit {
         return;
       }
 
+      const classification = this.editTypeIdForm.get('classification')?.value;
+      
       const updatedTypeId: TypeId = {
         entId: this.originalTypeId.entId,
         typeId: this.originalTypeId.typeId, // El código no cambia
         typeIdname: name,
-        status: this.originalTypeId.status // Mantener el estado actual
+        status: this.originalTypeId.status, // Mantener el estado actual
+        classification: classification
       };
 
       this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
@@ -460,7 +478,9 @@ export class ThirdConfigComponent implements OnInit {
    */
   hasTypeIdChanges(): boolean {
     const currentName = this.editTypeIdForm.get('name')?.value;
-    return this.initialTypeIdValue.name !== currentName;
+    const currentClassification = this.editTypeIdForm.get('classification')?.value;
+    return this.initialTypeIdValue.name !== currentName || 
+           this.initialTypeIdValue.classification !== currentClassification;
   }
 
   /**

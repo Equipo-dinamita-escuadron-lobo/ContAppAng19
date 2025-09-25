@@ -14,9 +14,10 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { FormsModule } from '@angular/forms';
 
 // --- Servicios y Modelos (asegúrate de que las rutas sean correctas) ---
-
 import { Product, ProductList } from '../../Models/Product';
 import { ProductService } from '../../Services/product.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
@@ -24,7 +25,6 @@ import { TagModule } from 'primeng/tag';
 import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
 import { TooltipModule } from 'primeng/tooltip';
-import Swal from 'sweetalert2';
 
 // --- Componente de Detalles (debe ser standalone también) ---
 // import { ProductDetailsComponent } from '../product-details/product-details.component';
@@ -44,8 +44,11 @@ import Swal from 'sweetalert2';
     TagModule,
     InputIcon,
     IconField,
-    TooltipModule
+    TooltipModule,
+    ToggleSwitchModule,
+    FormsModule
 ],
+  providers: [MessageService],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css'],
 })
@@ -68,7 +71,7 @@ export class ProductListComponent implements OnInit {
     private productService: ProductService,
     private router: Router,
     private localstorageMethods: LocalStorageMethods,
-
+    private messageService: MessageService
   ) { }
 
   ngOnInit(): void {
@@ -100,45 +103,23 @@ export class ProductListComponent implements OnInit {
   }
 
   // --- MÉTODO PARA ELIMINAR UN PRODUCTO ---
-   deleteProduct(productId: number): void {
-    // Utilizando SweetAlert para mostrar un cuadro de diálogo de confirmación
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: '¿Estás seguro de que deseas eliminar este producto?',
-      icon: 'warning',
-      confirmButtonColor: '#000066', // Color del botón de confirmación
-      cancelButtonColor: '#9D0311', // Color del botón de cancelación
-      showCancelButton: true,
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      // Si el usuario confirma la eliminación
-      if (result.isConfirmed) {
-        this.productService.deleteProduct(productId).subscribe(
-          (data: Product) => {
-            this.getProducts();
-            // Mostrar cuadro de diálogo de éxito
-            Swal.fire({
-              title: 'Eliminado con éxito',
-              text: 'El producto se ha eliminado correctamente.',
-              icon: 'success',
-              confirmButtonColor: '#000066',
-              confirmButtonText: 'Aceptar'
-            });
-            //this.router.navigate(['/general/operations/products']);
-          },
-          (error) => {
-            console.error('Error al eliminar el producto: ', error);
-            // Mostrar cuadro de diálogo de error
-            Swal.fire({
-              title: 'Error al eliminar',
-              text: 'Ha ocurrido un error al intentar eliminar el producto.',
-              icon: 'error',
-              confirmButtonColor: '#000066',
-              confirmButtonText: 'Aceptar'
-            });
-          }
-        );
+  deleteProduct(productId: number): void {
+    this.productService.deleteProduct(productId).subscribe({
+      next: (data: Product) => {
+        this.getProducts();
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'El producto se ha eliminado correctamente.'
+        });
+      },
+      error: (error: any) => {
+        console.error('Error al eliminar el producto: ', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Ha ocurrido un error al intentar eliminar el producto.'
+        });
       }
     });
   }
@@ -167,6 +148,33 @@ export class ProductListComponent implements OnInit {
 
   formatState(state: boolean): string {
     return state ? 'Activo' : 'Inactivo';
+  }
+
+  // Método para cambiar el estado del producto
+  changeProductState(product: ProductList): void {
+    // Guardar el estado actual
+    const newState = product.state;
+    const previousState = !newState; // El estado anterior es el opuesto al actual
+    
+    this.productService.changeProductState(product.id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado del producto "${product.name}" cambiado correctamente`
+        });
+      },
+      error: (error: any) => {
+        // Revertir el cambio si hay error
+        product.state = previousState;
+        console.error('Error al cambiar el estado del producto:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado del producto'
+        });
+      }
+    });
   }
 
 }
