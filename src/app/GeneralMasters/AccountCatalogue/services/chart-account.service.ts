@@ -5,7 +5,7 @@ import { NatureType } from '../models/NatureType';
 import { FinancialStateType } from '../models/FinancialStateType';
 import { ClasificationType } from '../models/ClasificationType';
 import { Observable, map, catchError, of } from 'rxjs';
-import { Account, AccountCatalogueListRes, ItemAccountCatalogueSearchRes, AccountCatalogueCreateRes, AccountCatalogueUpdateRes } from '../models/ChartAccount';
+import { Account, AccountCatalogueListRes, ItemAccountCatalogueSearchRes, AccountCatalogueCreateRes, AccountCatalogueUpdateRes, AuxiliaryAccountsApiResponse } from '../models/ChartAccount';
 
 
 let API_URL = environment.API_URL + 'accountCatalogue/';
@@ -78,6 +78,23 @@ export class ChartAccountService {
   getListAccounts(entId: string): Observable<Account[]> {
     return this.http.get<AccountCatalogueListRes[]>(this.apiURL + 'trees/' + entId).pipe(
       map(response => this.convertAccountCatalogueListResToAccount(response, entId))
+    );
+  }
+
+  /**
+   * Obtiene una lista de cuentas auxiliares para un ID de entidad dado.
+   * @param entId - El ID de la entidad para la cual se desean obtener las cuentas auxiliares.
+   * @returns Un observable que emite un array de cuentas auxiliares.
+   */
+  getListAuxiliaryAccounts(entId: string): Observable<Account[]> {
+    return this.http.get<AuxiliaryAccountsApiResponse>(this.apiURL + 'auxiliary/' + entId).pipe(
+      map(response => {
+        if (response && Array.isArray(response.auxiliaryAccounts)) {
+          return this.convertAccountCatalogueListResToAccount(response.auxiliaryAccounts, entId);
+        }
+        console.warn('La respuesta de cuentas auxiliares no tiene el formato esperado. Se recibió:', response);
+        return [];
+      })
     );
   }
 

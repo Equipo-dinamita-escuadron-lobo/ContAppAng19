@@ -49,11 +49,11 @@ import { ReceiptCreateRequest } from '../../Model/api';
 export class ReceiptCreationComponent {
   localStorageMethods = new LocalStorageMethods();
 
-  cashReceiptForm!: FormGroup;
-  receiptTypes: DropdownOption[] = [];
-  paymentMethods: PaymentMethod[] = [];
-  receiptTypeOptions: DropdownOption[] = [];
-  auxiliaryAccounts: DropdownOption[] = [];
+  cashReceiptForm!: FormGroup; // Formulario reactivo para el recibo de caja
+  receiptTypes: DropdownOption[] = []; // Tipos de recibo
+  paymentMethods: PaymentMethod[] = []; // Métodos de pago cargados desde el servicio
+  receiptTypeOptions: DropdownOption[] = []; // Opciones para el tipo de recibo (Abono a Deuda, Ingreso Directo)
+  auxiliaryAccounts: DropdownOption[] = []; // Cuentas auxiliares cargadas desde el servicio
 
   // Para Autocomplete de Cliente
   clients: Client[] = [];
@@ -101,7 +101,6 @@ export class ReceiptCreationComponent {
   loadDropdownOptions(): void {
     const enterpriseId = this.localStorageMethods.getIdEnterprise();
 
-    // CAMBIO: Cargar desde el servicio
     this.cashReceiptService.getReceiptTypes().subscribe(data => {
       this.receiptTypes = data;
     });
@@ -110,22 +109,14 @@ export class ReceiptCreationComponent {
       this.paymentMethods = page.content;
     });
 
-    if(this.paymentMethods.length === 0){
-      this.paymentMethods = [
-        { id: 1, name: 'Caja', accountingAccount: '110505', accountingAccountId: 1, status: true, idEnterprise: '' },
-        { id: 2, name: 'Banco', accountingAccount: '111005', accountingAccountId: 2, status: true, idEnterprise: '' },
-        { id: 3, name: 'Tarjeta de Crédito', accountingAccount: '112005', accountingAccountId: 3, status: true, idEnterprise: '' }
-      ];
-    }
-
     this.receiptTypeOptions = [
       { label: 'Abono a Deuda', value: 'debt_payment' },
       { label: 'Ingreso Directo', value: 'direct_income' },
     ];
 
-    // CAMBIO: Cargar desde el servicio
     this.cashReceiptService.getAuxiliaryAccounts().subscribe(data => {
       this.auxiliaryAccounts = data;
+      console.log('Cuentas Auxiliares cargadas:', this.auxiliaryAccounts);
     });
   }
 
@@ -363,7 +354,7 @@ export class ReceiptCreationComponent {
       paymentMethodAccount: accountingAccount, 
       receiptTypeId: typeOptionId, 
       observations: formValue.observations,
-      ledgerAccountId: 123,
+      ledgerAccountId: formValue.auxiliaryAccount,
       enterpriseId: enterpriseId,
       totalAmount: this.totalAmount,
       details: [],

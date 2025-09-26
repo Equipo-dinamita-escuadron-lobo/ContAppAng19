@@ -30,6 +30,12 @@ export interface AccountCatalogueListRes {
     children: AccountCatalogueListRes[];
 }
 
+export interface AuxiliaryAccountsApiResponse {
+    auxiliaryAccounts: AccountCatalogueListRes[];
+    totalCount: number;
+    idEnterprise: string;
+}
+
 // Interface para items individuales
 export interface ItemAccountCatalogueSearchRes {
     id: number;
