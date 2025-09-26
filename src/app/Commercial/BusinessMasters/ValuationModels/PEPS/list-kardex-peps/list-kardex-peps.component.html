@@ -59,7 +59,7 @@
 
     </div>
     
-    <!---Fila 2 Botón + Info-->
+    <!---Fila 2-->
     <div class="flex flex-wrap gap-4 mt-8 ">
 
         <div class="flex flex-wrap gap-4 flex-1">
@@ -81,8 +81,7 @@
             />
         </div>
     </div>
-    <!---Tabla-->   
-    <!-- Tu plantilla HTML de la tabla, con la lógica corregida -->
+    <!---Tabla inventario con PEPS-->   
     <div class="mt-16">
         <p-table
             [value]="kardexList"
@@ -97,80 +96,153 @@
         >
             <ng-template pTemplate="header">
                 <tr>
-                  <th rowspan="2">Fecha</th>
-                  <th rowspan="2">Detalle</th>
-                  <th colspan="3" class="text-center">Entradas</th>
-                  <th colspan="3" class="text-center">Salidas</th>
-                  <th colspan="3" class="text-center">Saldo</th>
+                <th rowspan="2">Fecha</th>
+                <th rowspan="2">Detalle</th>
+                <th rowspan="2">Ct</th>
+                <th rowspan="2">Vr Unitario</th>
+                <th colspan="3" class="text-center">Entradas</th>
+                <th colspan="3" class="text-center">Salidas</th>
+                <th colspan="3" class="text-center">Saldo</th>
                 </tr>
                 <tr>
-                  <th>Ct</th>
-                  <th>Vr Unitario</th>
-                  <th>Vr Total</th>
+                <th>Ct</th>
+                <th>Vr Unitario</th>
+                <th>Vr Total</th>
         
-                  <th>Ct</th>
-                  <th>Vr Unitario</th>
-                  <th>Vr Total</th>
+                <th>Ct</th>
+                <th>Vr Unitario</th>
+                <th>Vr Total</th>
         
-                  <th>Ct</th>
-                  <th>Vr Unitario</th>
-                  <th>Vr Total</th>
+                <th>Ct</th>
+                <th>Vr Unitario</th>
+                <th>Vr Total</th>
                 </tr>
             </ng-template>
 
-            <!-- Cuerpo de la Tabla -->
             <ng-template pTemplate="body" let-kardexRow>
-                <!-- Lógica para renderizar filas con capas de saldo -->
-                <ng-container *ngIf="kardexRow.balance && kardexRow.balance.length > 0; else simpleRow">
+                <!-- CASO 1: Múltiples detalles de salida -->
+                <ng-container *ngIf="kardexRow.outputDetails && kardexRow.outputDetails.length > 1">
+                    <ng-container *ngFor="let outputDetail of kardexRow.outputDetails; let i = index; let isFirst = first">
+                        <tr>
+                            <!-- Fecha y Detalle  -->
+                            <td *ngIf="isFirst" [attr.rowspan]="kardexRow.outputDetails.length">{{ kardexRow.formattedDate }}</td>
+                            <td *ngIf="isFirst" [attr.rowspan]="kardexRow.outputDetails.length">{{ kardexRow.detail }}</td>
+                            
+                            <!-- Ct y Vr Unitario -->
+                            <td *ngIf="isFirst" [attr.rowspan]="kardexRow.outputDetails.length">{{ kardexRow.outputQuantity }}</td>
+                            <td *ngIf="isFirst" [attr.rowspan]="kardexRow.outputDetails.length">-</td>
+                            
+                            <!-- Entradas -->
+                            <td *ngIf="isFirst" [attr.rowspan]="kardexRow.outputDetails.length">{{ kardexRow.entryQuantity || '' }}</td>
+                            <td *ngIf="isFirst" [attr.rowspan]="kardexRow.outputDetails.length">{{ kardexRow.entryUnitPrice | currency:'$' }}</td>
+                            <td *ngIf="isFirst" [attr.rowspan]="kardexRow.outputDetails.length">{{ kardexRow.entryTotalPrice | currency:'$' }}</td>
+                            
+                            <!-- Detalle de salida actual -->
+                            <td>{{ outputDetail.amountUsed }}</td>
+                            <td>{{ outputDetail.unitPrice | currency:'$' }}</td>
+                            <td>{{ outputDetail.totalPrice | currency:'$' }}</td>
+                            
+                            <!-- Balance -->
+                            <ng-container *ngIf="kardexRow.balance && kardexRow.balance[i]; else emptyBalanceCell">
+                                <td>{{ kardexRow.balance[i].amount }}</td>
+                                <td>{{ kardexRow.balance[i].unitPrice | currency:'$' }}</td>
+                                <td>{{ kardexRow.balance[i].totalPrice | currency:'$' }}</td>
+                            </ng-container>
+                            <ng-template #emptyBalanceCell>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </ng-template>
+                        </tr>
+                    </ng-container>
+                
+                    <ng-container *ngIf="kardexRow.balance && kardexRow.balance.length > kardexRow.outputDetails.length">
+                        <tr *ngFor="let balanceItem of kardexRow.balance.slice(kardexRow.outputDetails.length); let j = index">
+                            <td colspan="10"></td> 
+                            <td>{{ balanceItem.amount }}</td>
+                            <td>{{ balanceItem.unitPrice | currency:'$' }}</td>
+                            <td>{{ balanceItem.totalPrice | currency:'$' }}</td>
+                        </tr>
+                    </ng-container>
+                </ng-container>
+                
+                <!-- CASO 2: Salida simple con múltiples balances -->
+                <ng-container *ngIf="(!kardexRow.outputDetails || kardexRow.outputDetails.length <= 1) && kardexRow.balance && kardexRow.balance.length > 0">
                     <tr *ngFor="let balanceItem of kardexRow.balance; let i = index; trackBy: trackByIndex">
-                        <!-- Columnas de Fecha y Detalle (solo en la primera fila del grupo) -->
+                        <!-- Fecha y Detalle  -->
                         <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.formattedDate }}</td>
                         <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.detail }}</td>
-
-                        <!-- Columnas de Entradas (solo en la primera fila del grupo) -->
-                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.entryQuantity }}</td>
+                        
+                        <!--  Ct y Vr Unitario -->
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">
+                            {{ (kardexRow.entryQuantity || kardexRow.outputQuantity) || '' }}
+                        </td>
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">
+                            <span *ngIf="kardexRow.entryUnitPrice">{{ kardexRow.entryUnitPrice | currency:'$' }}</span>
+                            <span *ngIf="kardexRow.outputDetails && kardexRow.outputDetails.length === 1">{{ kardexRow.outputDetails[0].unitPrice | currency:'$' }}</span>
+                            <span *ngIf="!kardexRow.entryUnitPrice && (!kardexRow.outputDetails || kardexRow.outputDetails.length === 0)">-</span>
+                        </td>
+                        
+                        <!-- Entradas -->
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.entryQuantity || '' }}</td>
                         <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.entryUnitPrice | currency:'$' }}</td>
                         <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.entryTotalPrice | currency:'$' }}</td>
-
-                        <!-- Columnas de Salidas (solo en la primera fila del grupo) -->
-                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.outputQuantity }}</td>
-                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.outputUnitPrice | currency:'$' }}</td>
+                        
+                        <!-- Salidas -->
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.outputQuantity || '' }}</td>
+                        <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">
+                            <span *ngIf="kardexRow.outputDetails && kardexRow.outputDetails.length === 1">{{ kardexRow.outputDetails[0].unitPrice | currency:'$' }}</span>
+                            <span *ngIf="!kardexRow.outputDetails || kardexRow.outputDetails.length === 0">{{ '' }}</span>
+                        </td>
                         <td *ngIf="i === 0" [attr.rowspan]="kardexRow.balance.length">{{ kardexRow.outputTotalPrice | currency:'$' }}</td>
-
-                        <!-- Columnas de Saldo (una por cada capa del balance) -->
+                        
+                        <!-- Balance -->
                         <td>{{ balanceItem.amount }}</td>
                         <td>{{ balanceItem.unitPrice | currency:'$' }}</td>
                         <td>{{ balanceItem.totalPrice | currency:'$' }}</td>
                     </tr>
                 </ng-container>
-
-                <!-- Plantilla para filas sin balance (ej. saldo inicial con 0) -->
-                <ng-template #simpleRow>
-                    <tr>
-                        <td>{{ kardexRow.formattedDate }}</td>
-                        <td>{{ kardexRow.detail }}</td>
-                        <!-- Entradas -->
-                        <td>{{ kardexRow.entryQuantity }}</td>
-                        <td>{{ kardexRow.entryUnitPrice | currency:'$' }}</td>
-                        <td>{{ kardexRow.entryTotalPrice | currency:'$' }}</td>
-                        <!-- Salidas -->
-                        <td>{{ kardexRow.outputQuantity }}</td>
-                        <td>{{ kardexRow.outputUnitPrice | currency:'$' }}</td>
-                        <td>{{ kardexRow.outputTotalPrice | currency:'$' }}</td>
-                        <!-- Saldo Totalizado -->
-                        <td>{{ kardexRow.totalBalanceQuantity }}</td>
-                        <td>-</td>
-                        <td>{{ kardexRow.totalBalanceValue | currency:'$' }}</td>
-                    </tr>
-                </ng-template>
+                
+                <!-- CASO 3: Fila simple sin balance múltiple -->
+                <tr *ngIf="(!kardexRow.balance || kardexRow.balance.length === 0)">
+                    <td>{{ kardexRow.formattedDate }}</td>
+                    <td>{{ kardexRow.detail }}</td>
+                    
+                    <!--  Ct y Vr Unitario -->
+                    <td>{{ (kardexRow.entryQuantity || kardexRow.outputQuantity) || '' }}</td>
+                    <td>
+                        <span *ngIf="kardexRow.entryUnitPrice">{{ kardexRow.entryUnitPrice | currency:'$' }}</span>
+                        <span *ngIf="kardexRow.outputDetails && kardexRow.outputDetails.length === 1">{{ kardexRow.outputDetails[0].unitPrice | currency:'$' }}</span>
+                        <span *ngIf="!kardexRow.entryUnitPrice && (!kardexRow.outputDetails || kardexRow.outputDetails.length === 0)">-</span>
+                    </td>
+                    
+                    <!-- Entradas -->
+                    <td>{{ kardexRow.entryQuantity || '' }}</td>
+                    <td>{{ kardexRow.entryUnitPrice | currency:'$' }}</td>
+                    <td>{{ kardexRow.entryTotalPrice | currency:'$' }}</td>
+                    
+                    <!-- Salidas -->
+                    <td>{{ kardexRow.outputQuantity || '' }}</td>
+                    <td>
+                        <span *ngIf="kardexRow.outputDetails && kardexRow.outputDetails.length === 1">{{ kardexRow.outputDetails[0].unitPrice | currency:'$' }}</span>
+                        <span *ngIf="!kardexRow.outputDetails || kardexRow.outputDetails.length === 0">{{ '' }}</span>
+                    </td>
+                    <td>{{ kardexRow.outputTotalPrice | currency:'$' }}</td>
+                    
+                    <!-- Saldo totalizado -->
+                    <td>{{ kardexRow.totalBalanceQuantity }}</td>
+                    <td>-</td>
+                    <td>{{ kardexRow.totalBalanceValue | currency:'$' }}</td>
+                </tr>
             </ng-template>
-            
+
             <ng-template pTemplate="emptymessage">
                 <tr>
-                    <td colspan="11" class="text-center">No hay registros para mostrar. Por favor, seleccione un producto y un rango de fechas.</td>
+                    <td colspan="13" class="text-center">No hay registros para mostrar. Por favor, seleccione un producto y un rango de fechas.</td>
                 </tr>
             </ng-template>
         </p-table>
     </div>
+
 
 </div>
