@@ -1,16 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { forkJoin, map, Observable, of, switchMap } from 'rxjs';
-import { Receipt } from '../Model/Receipt';
 import { ReceiptDetailsView } from '../Model/view/ReceiptView';
 import { PaymentMethod } from '../../../../GeneralMasters/PaymentMethods/models/PaymentMethods';
 import { PaymentMethodsServiceService } from '../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { AccountingEntryLine } from '../Model/AccountinEntryLine';
 import { environment } from '../../../../../environments/environment';
-import { Client, DropdownOption, Invoice } from '../Model';
+import { AuxiliaryAccountOption, Client, DropdownOption, Invoice } from '../Model';
 import { ReceiptCreateRequest, ReceiptResponse, VoidReceiptRequest } from '../Model/api';
 import { ReceiptView } from '../Model/view';
+import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
+import { Account } from '../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
 
 @Injectable({
   providedIn: 'root'
@@ -29,18 +30,18 @@ export class CashReceiptService {
     { id: 6, name: 'Juliana Campo', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } }
   ];
 
-  private mockInvoicesDB: Invoice[] = [
-    { id: 1, factCode: 'FV-2-10000', expirationDate: new Date('2025-06-20'), pendingValue: 1200000 },
-    { id: 2, factCode: 'FV-2-10001', expirationDate: new Date('2025-07-15'), pendingValue: 500000 },
-    { id: 3, factCode: 'FV-2-10002', expirationDate: new Date('2025-08-10'), pendingValue: 750000 },
-  ];
-
   constructor(
     private http: HttpClient,
     private paymentMethodsService: PaymentMethodsServiceService,
+    private ChartAccountService: ChartAccountService,
     private localStorageMethods: LocalStorageMethods) { }
 
 
+  /**
+   * Obtiene los métodos de pago desde la API y los almacena en caché.
+   * Si ya están en caché, devuelve los datos almacenados.
+   * @returns Un Observable con un array de métodos de pago.
+   */
   private getPaymentMethods(): Observable<PaymentMethod[]> {
     if (this.paymentMethodsCache.length > 0) {
       return of(this.paymentMethodsCache);
@@ -61,26 +62,58 @@ export class CashReceiptService {
     );
   }
 
+  /**
+   * Obtiene las cuentas contables auxiliares y las transforma al formato DropdownOption.
+   * Este es el nuevo método que tu componente consumirá.
+   * @param enterpriseId - El ID de la empresa para la cual se buscan las cuentas.
+   * @returns Un Observable con un array de opciones para el dropdown.
+   */
+  getAuxiliaryAccountsCached(enterpriseId: string): Observable<AuxiliaryAccountOption[]> {
+    return this.ChartAccountService.getListAuxiliaryAccounts(enterpriseId).pipe(
+      map((accounts: Account[]) => {
+        return accounts
+          .filter(account => account.id !== undefined)
+          .map(account => ({
+            label: `${account.code} - ${account.description}`,
+            codeAccount: account.code,
+            description: account.description,
+            value: account.id as number
+          }));
+      })
+    );
+  }
+    
+
+  /**
+   *  Obtiene los tipos de recibo disponibles.
+   * @returns Un Observable con un array de tipos de recibo.
+   */
   getReceiptTypes(): Observable<DropdownOption[]> {
     const data: DropdownOption[] = [
       { label: 'RC-1 - Recibo de Caja', value: 'RC-1' },
       { label: 'RC-2 - Recibo Bancario', value: 'RC-2' },
     ];
     return of(data);
-    // TODO: Cuando conectes al backend:
-    // return this.http.get<DropdownOption[]>(`${this.apiUrl}/types`);
   }
 
+  /**
+   * Obtiene las cuentas auxiliares disponibles.
+   * @returns Un Observable con un array de cuentas auxiliares en formato DropdownOption.
+   */
   getAuxiliaryAccounts(): Observable<DropdownOption[]> {
-    const data: DropdownOption[] = [
-      { label: '413536 - Venta de servicios', value: 413536 },
-      { label: '421005 - Ingresos no operacionales', value: 421005 },
-    ];
-    return of(data);
-    // TODO: Cuando conectes al backend:
-    // return this.http.get<DropdownOption[]>(`${this.apiUrl}/auxiliary-accounts`);
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) {
+      console.error("No se encontró ID de la empresa en LocalStorage.");
+      return of([]);
+    }
+    return this.getAuxiliaryAccountsCached(enterpriseId);
   }
 
+  /**
+   * Obtiene los clientes que coinciden con la consulta.
+   * @param query La cadena de búsqueda para filtrar los clientes.
+   * @returns Un Observable con un array de clientes filtrados.
+   */
   getClients(query: string): Observable<Client[]> {
     const filteredClients = this.mockClientsDB.filter(client =>
       client.name.toLowerCase().includes(query.toLowerCase())
@@ -88,29 +121,37 @@ export class CashReceiptService {
     return of(filteredClients);
   }
 
+  /**
+   * Obtiene un cliente por su ID.
+   * @param id El ID del cliente a buscar.
+   * @returns Un Observable con el cliente encontrado o undefined.
+   */
   public getClientById(id: number): Observable<Client | undefined> {
     const client = this.mockClientsDB.find(c => c.id === id);
     return of(client);
   }
 
+  /**
+   * Obtiene las facturas pendientes de un cliente.
+   * @param clientId El ID del cliente cuyas facturas se desean obtener.
+   * @returns Un Observable con un array de facturas pendientes.
+   */
   getInvoicesByClient(clientId: number): Observable<Invoice[]> {
-    // 1. Hacemos la llamada HTTP a la nueva URL.
     return this.http.get<Invoice[]>(`${this.apiUrl}/pending/client/${clientId}`).pipe(
-      // 2. (Opcional pero recomendado) Transformamos los datos recibidos.
       map(invoicesFromApi => {
-        // La API envía las fechas como strings (ej: "2023-10-27").
-        // Es una buena práctica convertirlas a objetos Date de JS para que
-        // componentes como p-calendar funcionen correctamente.
         return invoicesFromApi.map(invoice => ({
           ...invoice,
-          dueDate: new Date(invoice.expirationDate) // Convertimos el string de fecha a un objeto Date
+          dueDate: new Date(invoice.expirationDate) 
         }));
       })
     );
   }
 
 
-  // --- MÉTODOS PARA EL CRUD DE RECIBOS ---
+  /**
+   * Obtiene todos los recibos de la empresa.
+   * @returns Un Observable con un array de recibos.
+   */
   getAllReceipts(): Observable<ReceiptView[]> {
     const enterpriseId = this.localStorageMethods.getIdEnterprise();
     if (!enterpriseId) {
@@ -144,6 +185,11 @@ export class CashReceiptService {
     );
   }
 
+  /**
+   * Obtiene un recibo por su ID.
+   * @param id El ID del recibo a buscar.
+   * @returns Un Observable con el recibo encontrado o undefined.
+   */
   getReceiptById(id: number): Observable<ReceiptDetailsView | undefined> {
     return this.http.get<ReceiptResponse>(`${this.apiUrl}/${id}`).pipe(
       switchMap(receiptFromApi => {
@@ -184,7 +230,6 @@ export class CashReceiptService {
             invoiceCode: detail.invoiceCode,
             accountingAccount: detail.accountingAccount,
           })),
-          // --- Pasamos la información extra necesaria para la contabilidad ---
           paymentMethod: paymentMethod,
           ledgerAccountId: receipt.ledgerAccountId,
         };
@@ -207,12 +252,10 @@ export class CashReceiptService {
 }
 
   public generateAccountingEntry(receipt: ReceiptDetailsView, auxAccounts: DropdownOption[]): AccountingEntryLine[] {
-    // --- PASO 1: Generar el asiento como si estuviera ACTIVO (usando tu lógica) ---
     const entry: AccountingEntryLine[] = [];
     const total = receipt.totalAmount;
     const thirdPartyName = receipt.clientName;
 
-    // LÍNEA DEL DÉBITO (Lo que entra a la empresa)
     if (receipt.paymentMethod && receipt.paymentMethod.accountingAccount) {
         entry.push({
             accountCode: receipt.paymentMethod.accountingAccount,
@@ -226,7 +269,6 @@ export class CashReceiptService {
         console.error("No se pudo generar el débito: Método de pago o su cuenta no encontrados.");
     }
 
-    // LÍNEAS DEL CRÉDITO (El origen del dinero)
     if (receipt.isDirectIncome) {
         const auxAccount = auxAccounts.find(acc => acc.value === receipt.ledgerAccountId);
         entry.push({
@@ -250,13 +292,12 @@ export class CashReceiptService {
         });
     }
 
-    // --- PASO 2: Si el recibo está anulado, INVERTIR el asiento generado ---
     if (receipt.status === 'Anulado') {
         const reversedEntry = entry.map(line => ({
-            ...line, // Copia todas las propiedades: accountCode, accountName, thirdParty
-            debit: line.credit, // El nuevo débito es el valor del crédito original
-            credit: line.debit, // El nuevo crédito es el valor del débito original
-            description: `Anulación: ${line.description}` // Se añade un prefijo para mayor claridad
+            ...line, 
+            debit: line.credit,
+            credit: line.debit,
+            description: `Anulación: ${line.description}`
         }));
         return reversedEntry;
     }

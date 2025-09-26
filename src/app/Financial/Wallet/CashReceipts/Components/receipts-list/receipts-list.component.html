@@ -1,10 +1,6 @@
-<!-- Contenedor Principal con fondo gris claro para resaltar la tarjeta -->
 <div class="w-full h-full p-4 md:p-10 font-sans">
-    <!-- Tarjeta de Contenido Principal, aplicando el nuevo estilo -->
 
-    <!-- 1. CABECERA: Título y Botón de Crear -->
     <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
-        <!-- Título con el estilo de marca -->
         <div>
             <h1
                 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
@@ -14,22 +10,21 @@
                 Consulte y gestione los recibos de caja registrados en el sistema.
             </p>
         </div>
-        <!-- Botón de Crear Recibo -->
         <div>
             <p-button label="Crear Recibo de Caja" icon="pi pi-plus" (onClick)="goToCreateReceipt()"></p-button>
         </div>
     </div>
 
-    <!-- 2. FORMULARIO DE FILTROS (sin bordes) -->
+    <!-- Seccion de filtros -->
     <form [formGroup]="filterForm" (ngSubmit)="applyFilters()" class="mb-20 mt-20">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 items-end">
-            <!-- Filtro por Cliente con AutoComplete -->
+
+
             <div class="flex flex-col gap-2">
                 <label for="client" class="font-semibold text-[var(--color-primary)]">Cliente</label>
                 <p-autoComplete id="client" formControlName="client" [suggestions]="clientSuggestions"
                     (completeMethod)="searchClient($event)" field="name" [dropdown]="true" [forceSelection]="true"
                     placeholder="Seleccione un cliente" [styleClass]="'w-full'" inputStyleClass="w-full">
-                    <!-- Plantilla para mostrar cada item en el desplegable -->
                     <ng-template let-client pTemplate="item">
                         <div class="flex flex-col">
                             <span class="">{{ client }}</span>
@@ -38,7 +33,6 @@
                 </p-autoComplete>
             </div>
 
-            <!-- Filtro por Fecha Inicio -->
             <div class="flex flex-col gap-2">
                 <label for="startDate" class="font-semibold  text-[var(--color-primary)]">Fecha
                     inicio</label>
@@ -46,14 +40,12 @@
                     placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
             </div>
 
-            <!-- Filtro por Fecha Fin -->
             <div class="flex flex-col gap-2">
                 <label for="endDate" class="font-semibold  text-[var(--color-primary)]">Fecha fin</label>
                 <p-calendar id="endDate" formControlName="endDate" dateFormat="dd/mm/yy" [showIcon]="true"
                     placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
             </div>
 
-            <!-- Filtro por Estado -->
             <div class="flex flex-col gap-2">
                 <label for="status" class="font-semibold  text-[var(--color-primary)]">Estado</label>
                 <p-dropdown id="status" formControlName="status" [options]="statusOptions" optionLabel="label"
@@ -62,7 +54,6 @@
             </div>
         </div>
 
-        <!-- Botones de Acción de Filtros -->
         <div class="flex justify-center gap-3 mt-10">
             <p-button type="submit" label="Filtrar"></p-button>
             <p-button type="button" label="Limpiar filtros" styleClass="p-button-secondary" (onClick)="clearFilters()">
@@ -70,7 +61,7 @@
         </div>
     </form>
 
-    <!-- 3. TABLA DE RESULTADOS (sin bordes) -->
+    <!-- tabla de resultados -->
     <div>
         <p-table [value]="filteredReceipts" [paginator]="true" [rows]="6" [rowsPerPageOptions]="[6, 10, 20]"
             [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-striped">

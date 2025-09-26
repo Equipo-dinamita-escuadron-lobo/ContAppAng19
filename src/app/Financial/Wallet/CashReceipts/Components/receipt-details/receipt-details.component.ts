@@ -46,6 +46,10 @@ export class ReceiptDetailsComponent {
     }
   }
 
+  /**
+   * Metodo para cargar los detalles del recibo
+   * @param id id del recibo
+   */
   loadReceiptDetails(id: number): void {
     this.errorMessage = null;
     this.cashReceiptService.getReceiptById(id).subscribe({
@@ -67,6 +71,11 @@ export class ReceiptDetailsComponent {
     this.router.navigate(['/financial/wallet/receipts']);
   }
 
+  /**
+   * Metodo para abrir el dialogo de anulación del recibo
+   * Este método muestra un cuadro de confirmación al usuario.
+   * Si el usuario confirma, se abre el diálogo para ingresar el motivo de anulación.
+   */
   promptAnnulReceipt(): void {
     this.confirmationService.confirm({
         message: `¿Está seguro de que desea anular el recibo <strong>${this.receipt?.receiptCode}</strong>? Esta acción no se puede deshacer.`,
@@ -113,7 +122,6 @@ export class ReceiptDetailsComponent {
   }
 
   generateAccounting(): void {
-    // Lógica para contabilizar
       if (this.receipt?.id) {
       this.router.navigate(['/financial/wallet/receipts', this.receipt.id, 'accounting']);
     } else {
