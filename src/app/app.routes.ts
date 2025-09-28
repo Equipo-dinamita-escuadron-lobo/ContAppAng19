@@ -826,6 +826,16 @@ export const routes: Routes = [
                     './Financial/Wallet/CashReceipts/Components/receipt-accounting/receipt-accounting.component'
                   ).then((m) => m.ReceiptAccountingComponent),
               },
+            {
+              path: 'accounting-entries',
+              data: {
+                breadcrumb: 'Asientos Contables',
+            },
+              loadComponent: () =>
+                import(
+                  './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
+                ).then((m) => m.ReceiptAccountingEntriesComponent),
+            },
             ],
           },
           {
