@@ -164,10 +164,16 @@ export const navbarData: INavbarData[] = [
             label: 'Recibos de Caja',
           },
           {
+            routeLink: '/financial/wallet/accounting-entries',
+            icon: 'description',
+            label: 'Asientos Contables',
+          },
+          {
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',
           },
+          
         ],
       },
     ],
