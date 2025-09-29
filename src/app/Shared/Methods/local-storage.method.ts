@@ -30,9 +30,11 @@ export class LocalStorageMethods {
     if (enterpriseData) {
       const parsedData = JSON.parse(enterpriseData);
       const id = parsedData.id;
-      return String(id);
+      //return String(id);
+      return 'f1ec3d7b-613e-4f06-ac6e-aabecf3cc31b'
     }
-    return '';
+    return 'f1ec3d7b-613e-4f06-ac6e-aabecf3cc31b'
+    //return '';
   }
 
   public clearLocalStorage(): void {
