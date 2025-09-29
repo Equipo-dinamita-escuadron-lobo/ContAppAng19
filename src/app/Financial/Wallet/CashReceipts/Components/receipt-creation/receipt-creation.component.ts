@@ -406,17 +406,27 @@ export class ReceiptCreationComponent {
  */
   accountingAccountForPaymentMethod(): number | null {
     const paymentMethodId = this.cashReceiptForm.get('paymentMethod')?.value;
-    
-    if (!paymentMethodId) 
-        return null;
+
+    console.log('ID del método de pago seleccionado:', paymentMethodId);
+
+    if (!paymentMethodId)
+      return null;
 
     const selectedPaymentMethod = this.paymentMethods.find(pm => pm.id === paymentMethodId);
 
-    if (selectedPaymentMethod && selectedPaymentMethod.accountingAccountId) 
-        return selectedPaymentMethod.accountingAccountId;
+    console.log('Método de pago seleccionado:', selectedPaymentMethod);
+
+    if (selectedPaymentMethod && selectedPaymentMethod.accountingAccountId) {
+
+      const accountingAccountString = selectedPaymentMethod.accountingAccount;
+      const accountNumberMatch = accountingAccountString.match(/^(\d+)\s*-/);
+      if (accountNumberMatch && accountNumberMatch[1]) {
+        return Number(accountNumberMatch[1]);
+      }
+    }
 
     return null;
-}
+  }
 
   goBack(): void {
     this.router.navigate(['/financial/wallet/receipts']); 

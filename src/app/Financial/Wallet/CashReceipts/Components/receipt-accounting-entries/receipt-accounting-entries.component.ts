@@ -53,6 +53,7 @@ export class ReceiptAccountingEntriesComponent implements OnInit {
       this.cashReceiptService.getAccountingEntryViewByReceiptId(receipt.id).subscribe({
         next: (accountingEntryView) => {
           receipt.accountingEntry = accountingEntryView;
+          console.log(`Asientos cargados para el recibo ${receipt.receiptCode}:`, accountingEntryView);
         },
         error: (err) => {
           console.error(`Error al cargar asientos para el recibo ${receipt.receiptCode}:`, err);
