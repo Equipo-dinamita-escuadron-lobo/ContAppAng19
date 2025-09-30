@@ -12,4 +12,5 @@ export interface AuxiliaryAccountOption{
     codeAccount: string;
     description: string;
     value: number; 
+    costCenter?: boolean | null;
 }
