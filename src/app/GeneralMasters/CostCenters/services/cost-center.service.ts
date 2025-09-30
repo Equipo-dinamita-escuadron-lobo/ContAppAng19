@@ -50,6 +50,12 @@ export class CostCenterService {
     const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
     return this.http.patch<any>(url, {});
   }
+
+
+  //Lista de centros de costo auxiliares activos   
+  findActiveAuxiliary(enterpriseId: string): Observable<CostCenter[]> {
+    return this.http.get<CostCenter[]>(`${this.apiURL}findAuxiliary/${enterpriseId}`);
+  }
 }
 
 
