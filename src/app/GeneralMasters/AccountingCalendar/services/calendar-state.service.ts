@@ -124,11 +124,10 @@ export class CalendarStateService {
       return;
     }
 
-    this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, this.currentState.selectedYear)
+    this.calendarService.findAllByYear(enterpriseId, this.currentState.selectedYear)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const calendarData = response?.content || [];
+        next: (calendarData) => {
           this.updateCalendarWithData(calendarData);
         },
         error: (error: any) => {
@@ -213,12 +212,11 @@ export class CalendarStateService {
 
     const activeEntriesMap = this.calendarData.getActiveEntriesMap();
     
-    // Operación en el backend
+  
     this.calendarOperations.toggleDate(day, enterpriseId, selectedYear, activeEntriesMap)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const calendarData = response?.content || [];
+        next: (calendarData) => {
           // Sincronizar con el backend
           this.updateCalendarWithData(calendarData);
         },
@@ -284,8 +282,7 @@ export class CalendarStateService {
     this.calendarOperations.changeMonthState(month, enterpriseId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const calendarData = response?.content || [];
+        next: (calendarData) => {
           // Sincronizar con el backend
           this.updateCalendarWithData(calendarData);
         },
@@ -330,15 +327,15 @@ export class CalendarStateService {
 
     this.updateState({
       ...this.currentState,
-      calendarMonths: updatedMonths
+      calendarMonths: updatedMonths,
+      error: null
     });
 
     // Proceder con la llamada al backend
     this.calendarOperations.changeAllPeriodsState(openAll, enterpriseId, selectedYear)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const calendarData = response?.content || [];
+        next: (calendarData) => {
           this.updateCalendarWithData(calendarData);
         },
         error: () => {

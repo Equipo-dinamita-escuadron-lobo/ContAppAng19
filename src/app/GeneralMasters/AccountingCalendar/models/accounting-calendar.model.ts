@@ -16,15 +16,13 @@ export interface AccountingCalendar {
   id?: number;
   idEnterprise: string;
   tenantId?: string;
-  date: string;        
-  status: boolean;     // true: OPEN, false: CLOSED
+  date: string;
 }
 
 export interface AccountingCalendarCreateMonthReq {
   idEnterprise: string;
   year: number;
   month: number;
-  status: boolean;
 }
 
 export interface AccountingCalendarDeleteMonthReq {
@@ -36,7 +34,6 @@ export interface AccountingCalendarDeleteMonthReq {
 export interface AccountingCalendarCreateYearReq {
   idEnterprise: string;
   year: number;
-  status: boolean;
 }
 
 export interface AccountingCalendarDeleteYearReq {

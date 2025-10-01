@@ -64,18 +64,18 @@ export class CalendarDataService {
   }
 
   /**
-   * Determina si una fecha está seleccionada
+   * Determina si una fecha está abierta (existe en BD)
    * @param date Fecha a verificar
    * @param calendarData Datos del calendario
-   * @returns true si la fecha está seleccionada
+   * @returns true si la fecha existe (abierta/verde), false si no existe (cerrada/rojo)
    */
   private isDateSelected(date: Date, calendarData: AccountingCalendar[]): boolean {
-    // Si no hay datos, por defecto no está seleccionada (rojo)
+    // Si no hay datos, la fecha no existe = cerrada (rojo)
     if (!calendarData || calendarData.length === 0) {
       return false;
     }
 
-    // Buscar una fecha que coincida exactamente
+    // Buscar si la fecha existe en los datos del backend
     const matchingDate = calendarData.find(period => {
       try {
         const periodDate = parseDateFromBackend(period.date);
@@ -89,14 +89,9 @@ export class CalendarDataService {
       }
     });
 
-    // Si no hay una fecha coincidente, no está seleccionada
-    if (!matchingDate) {
-      return false;
-    }
-
-    // Retornar el estado (true = seleccionada, false = no seleccionada)
-    const result = matchingDate.status;
-    return result;
+    // Si la fecha existe en BD = true (abierta/verde)
+    // Si no existe = false (cerrada/rojo)
+    return !!matchingDate;
   }
 
   /**

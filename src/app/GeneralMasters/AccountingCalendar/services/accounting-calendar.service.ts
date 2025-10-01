@@ -76,24 +76,15 @@ export class AccountingCalendarService {
   // ========== MÉTODOS DE CONSULTA ==========
 
   /**
-   * Obtiene las fechas activas por empresa y año con paginación
+   * Obtiene todas las fechas creadas por empresa y año
    * @param enterpriseId ID de la empresa
    * @param year Año del calendario
-   * @param page Número de página (por defecto 0)
-   * @param size Tamaño de página (por defecto 1000)
    */
-  findActiveByEnterpriseAndYear(
-    enterpriseId: string, 
-    year: number, 
-    page: number = PAGINATION_CONSTANTS.DEFAULT_PAGE, 
-    size: number = PAGINATION_CONSTANTS.DEFAULT_PAGE_SIZE
-  ): Observable<Page<AccountingCalendar>> {
-    const params = new HttpParams()
-      .set('year', year.toString())
-      .set('page', page.toString())
-      .set('size', size.toString());
-    
-    return this.http.get<Page<AccountingCalendar>>(`${this.apiURL}active/${enterpriseId}`, { params });
+  findAllByYear(enterpriseId: string, year: number): Observable<AccountingCalendar[]> {
+    const params = new HttpParams().set('year', year.toString());
+    return this.http.get<AccountingCalendar[]>(`${this.apiURL}year/${enterpriseId}`, { params }).pipe(
+      map(content => content || [])
+    );
   }
 
   // ========== MÉTODOS DE UTILIDAD ==========
@@ -102,43 +93,28 @@ export class AccountingCalendarService {
 
   /**
    * Toggle de fecha: si existe se elimina, si no existe se crea
+   * IMPORTANTE: El backend ya NO maneja status
+   * - Crear fecha = Abrirla (verde)
+   * - Eliminar fecha = Cerrarla (rojo)
    * @param enterpriseId ID de la empresa
    * @param date Fecha a toggle (formato YYYY-MM-DD)
    */
   toggleDate(enterpriseId: string, date: string): Observable<void> {
-    
     const normalizedInputDate = this.normalizeDateString(date);
     
-    // Estrategia: buscar primero si la fecha existe para determinar la acción
-    // Como el backend no tiene endpoint para buscar todas las fechas, usamos una estrategia diferente
-    
-    // 1. Intentar crear la fecha con status = true
+    // 1. Intentar crear la fecha (sin status, el backend ya no lo usa)
     const payload = {
       idEnterprise: enterpriseId,
-      date: normalizedInputDate,
-      status: true
+      date: normalizedInputDate
     };
+    
     return this.create(payload).pipe(
-      map(() => {
-        return;
-      }),
+      map(() => undefined),
       catchError(error => {
         if (error?.status === 400 && error?.error?.code === 'ACCOUNTING_CALENDAR_DATE_EXISTS') {
-          
-          // La fecha ya existe, necesitamos eliminarla
-          // Como no tenemos endpoint para buscar todas las fechas, usamos una estrategia diferente
-          // Vamos a intentar eliminar usando el endpoint de eliminación por fecha
-          
-          // Estrategia: usar el endpoint delete-month para eliminar solo esa fecha específica
-          const deleteRequest = {
-            idEnterprise: enterpriseId,
-            year: new Date(normalizedInputDate).getFullYear(),
-            month: new Date(normalizedInputDate).getMonth() + 1,
-            specificDate: normalizedInputDate // Agregamos fecha específica
-          };
-          
-          // Retornar un error más descriptivo
-          return throwError(() => new Error(`La fecha ${normalizedInputDate} ya existe. Se requiere implementar funcionalidad adicional en el backend para el toggle automático.`));
+          // La fecha ya existe, retornar error descriptivo
+          // El frontend deberá manejar la eliminación por separado
+          return throwError(() => new Error(`La fecha ${normalizedInputDate} ya existe. Use la funcionalidad de eliminar para cerrarla.`));
         }
         
         // Para otros tipos de error, propagar
@@ -179,10 +155,10 @@ export class AccountingCalendarService {
   }
 
   /**
-   * Verifica qué años tienen periodos contables abiertos
+   * Verifica qué años tienen fechas creadas (periodos abiertos)
    * @param enterpriseId ID de la empresa
    * @param years Lista de años a verificar
-   * @returns Observable con la lista de años que tienen periodos abiertos
+   * @returns Observable con la lista de años que tienen fechas creadas
    */
   getYearsWithOpenPeriods(enterpriseId: string, years: number[]): Observable<number[]> {
     if (!years || years.length === 0) {
@@ -191,8 +167,8 @@ export class AccountingCalendarService {
 
     // Crear observables para verificar cada año
     const yearChecks = years.map(year => 
-      this.findActiveByEnterpriseAndYear(enterpriseId, year, 0, 1).pipe(
-        map(response => response.totalElements > 0 ? year : null),
+      this.findAllByYear(enterpriseId, year).pipe(
+        map(dates => dates.length > 0 ? year : null),
         catchError(() => of(null))
       )
     );
