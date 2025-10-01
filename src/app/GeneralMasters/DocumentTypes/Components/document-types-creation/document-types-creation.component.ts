@@ -57,11 +57,11 @@ export class DocumentTypesCreationComponent {
     });
 
     if (enterpriseId) {
-      // Cargar todas las clases activas de una vez para dropdown (usar un size alto pero controlado)
+      // Cargar todas las clases activas de una vez para dropdown
       this.classesService.findAllActive(enterpriseId, 0, 200).subscribe((page: any) => {
         const content = page?.content || page || [];
-        // Solo cargar clases activas (status = true) y no eliminadas (isDeleted = false)
-        const activeClasses = content.filter((c: any) => c.status === true && c.isDeleted !== true);
+        // Solo cargar clases activas (status = true)
+        const activeClasses = content.filter((c: any) => c.status === true);
         this.classesOptions = activeClasses.map((c: any) => ({ label: c.name, value: c.id }));
       });
     }
