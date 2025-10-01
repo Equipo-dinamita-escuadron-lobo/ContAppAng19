@@ -24,7 +24,7 @@ export class CalendarDataService {
     const updatedMonths = [...calendarMonths];
     
     if (!calendarData || calendarData.length === 0) {
-      // Si no hay datos, el calendario se mantiene rojo (cerrado)
+      // Si no hay datos, el calendario se mantiene cerrado
       this.clearActiveEntriesMap();
       return updatedMonths;
     }
@@ -87,12 +87,12 @@ export class CalendarDataService {
       return;
     }
     
-    const selectedDays = currentMonthDays.filter(d => !d.isClosed); // !isClosed = seleccionada
+    const selectedDays = currentMonthDays.filter(d => !d.isClosed);
     
     if (selectedDays.length === currentMonthDays.length) {
-      month.status = MonthStatus.FULLY_OPEN; // Todo abierto
+      month.status = MonthStatus.FULLY_OPEN;
     } else {
-      month.status = MonthStatus.FULLY_CLOSED; // Todo cerrado
+      month.status = MonthStatus.FULLY_CLOSED; 
     }
   }
 

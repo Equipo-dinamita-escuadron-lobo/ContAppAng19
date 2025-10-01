@@ -188,7 +188,6 @@ export class CalendarOperationsService {
       return this.calendarService.delete(entry.id, enterpriseId);
     }
     
-    // Fallback: si por alguna razón no está en el mapa, recuperar activos y buscar ID
     return this.calendarService
       .findAllByYear(enterpriseId, selectedYear)
       .pipe(
