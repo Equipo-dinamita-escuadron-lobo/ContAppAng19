@@ -66,32 +66,13 @@ export class CalendarDataService {
   /**
    * Determina si una fecha está abierta (existe en BD)
    * @param date Fecha a verificar
-   * @param calendarData Datos del calendario
+   * @param calendarData Datos del calendario (no usado, mantenido por compatibilidad)
    * @returns true si la fecha existe (abierta/verde), false si no existe (cerrada/rojo)
    */
   private isDateSelected(date: Date, calendarData: AccountingCalendar[]): boolean {
-    // Si no hay datos, la fecha no existe = cerrada (rojo)
-    if (!calendarData || calendarData.length === 0) {
-      return false;
-    }
-
-    // Buscar si la fecha existe en los datos del backend
-    const matchingDate = calendarData.find(period => {
-      try {
-        const periodDate = parseDateFromBackend(period.date);
-        const isMatch = periodDate.getDate() === date.getDate() &&
-                       periodDate.getMonth() === date.getMonth() &&
-                       periodDate.getFullYear() === date.getFullYear();
-        
-        return isMatch;
-      } catch (e) {
-        return false;
-      }
-    });
-
-    // Si la fecha existe en BD = true (abierta/verde)
-    // Si no existe = false (cerrada/rojo)
-    return !!matchingDate;
+    // Usar el Map de cache para búsqueda
+    const dateKey = toDateKey(date);
+    return this.activeEntriesByDate.has(dateKey);
   }
 
   /**

@@ -120,42 +120,9 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
       return true;
     }
     
-    // Cambios en los meses del calendario son significativos
+    // Cambios en longitud de meses
     if (this.calendarMonths.length !== newState.calendarMonths.length) {
       return true;
-    }
-    
-    // Verificar si hay cambios en el estado de los meses
-    for (let i = 0; i < this.calendarMonths.length; i++) {
-      const oldMonth = this.calendarMonths[i];
-      const newMonth = newState.calendarMonths[i];
-      
-      if (!oldMonth || !newMonth) {
-        return true;
-      }
-      
-      if (oldMonth.status !== newMonth.status) {
-        return true;
-      }
-      
-      // Verificar cambios en días individuales
-      if (oldMonth.days.length !== newMonth.days.length) {
-        return true;
-      }
-      
-      for (let j = 0; j < oldMonth.days.length; j++) {
-        const oldDay = oldMonth.days[j];
-        const newDay = newMonth.days[j];
-        
-        if (!oldDay || !newDay) {
-          return true;
-        }
-        
-        if (oldDay.isClosed !== newDay.isClosed || 
-            oldDay.isToday !== newDay.isToday) {
-          return true;
-        }
-      }
     }
     
     // Cambios en errores son significativos
@@ -163,7 +130,25 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
       return true;
     }
     
-    return false;
+    // Usar hash simple para comparación rápida de estados
+    // Hash basado en: mes-status-díasAbiertos
+    const oldHash = this.calculateStateHash(this.calendarMonths);
+    const newHash = this.calculateStateHash(newState.calendarMonths);
+    
+    return oldHash !== newHash;
+  }
+
+  /**
+   * Calcula un hash simple del estado del calendario
+   * @param months Meses del calendario
+   * @returns Hash string representando el estado
+   */
+  private calculateStateHash(months: CalendarMonth[]): string {
+    return months.map(m => {
+      // Contar días abiertos del mes actual
+      const openDays = m.days.filter(d => d.isCurrentMonth && !d.isClosed).length;
+      return `${m.month}-${m.status}-${openDays}`;
+    }).join('|');
   }
 
   /**
