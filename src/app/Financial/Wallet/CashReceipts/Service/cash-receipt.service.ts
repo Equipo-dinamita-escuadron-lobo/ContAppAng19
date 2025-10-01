@@ -374,6 +374,7 @@ export class CashReceiptService {
               totalDebit,
               totalCredit
             };
+            console.log("Asiento contable enriquecido:", entryView);
             return entryView;
           })
         );

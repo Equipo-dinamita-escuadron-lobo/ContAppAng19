@@ -3,7 +3,7 @@ export interface AccountingEntryView {
   code: string;
   date: string;
   description: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'ANULADO';
+  status: 'ACTIVE' | 'VOIDED';
   sourceDocumentId: number;
   movements: AccountingMovementView[];
   totalDebit: number;
