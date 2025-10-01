@@ -26,19 +26,17 @@
             
             <ng-template pTemplate="header">
                 <tr>
-                    <th style="width: 5rem"></th> <!-- Para el botón de expansión -->
-                    <th>Secuencia</th>
+                    <th style="width: 5rem"></th>
+                    <!-- "Secuencia" ha sido removida -->
                     <th>Fecha elaboración</th>
-                    <th>Código contable</th>
-                    <th>Cuenta contable</th>
-                    <!-- "Identificación" ha sido removida -->
+                    <th>Cuenta Contable</th>
                     <th>Nombre del tercero</th>
+                    <th>Descripción</th>
                     <th class="text-right">Débito</th>
                     <th class="text-right">Crédito</th>
                 </tr>
             </ng-template>
             
-            <!-- Fila principal (comprobante) -->
             <ng-template pTemplate="body" let-receipt let-expanded="expanded">
                 <tr class="font-semibold bg-gray-100">
                     <td>
@@ -47,8 +45,8 @@
                             [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
                         </button>
                     </td>
-                    <!-- Colspan ajustado de 6 a 5 -->
-                    <td colspan="5">
+                    <!-- Colspan ajustado de 5 a 4 -->
+                    <td colspan="4">
                         <span>Comprobante: {{ receipt.receiptCode }}</span>
                     </td>
                     <td class="text-right">{{ receipt.totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
@@ -56,26 +54,24 @@
                 </tr>
             </ng-template>
 
-            <!-- Fila expandida con el detalle de movimientos -->
             <ng-template pTemplate="expandedrow" let-receipt>
                 <!-- Estado de Carga -->
                 <tr *ngIf="receipt.isDetailLoading">
-                    <!-- Colspan ajustado de 9 a 8 -->
-                    <td colspan="8" class="text-center p-3 border-b border-gray-200">
+                    <!-- Colspan ajustado de 8 a 7 -->
+                    <td colspan="7" class="text-center p-3 border-b border-gray-200">
                         <i class="pi pi-spin pi-spinner mr-2"></i> Cargando movimientos...
                     </td>
                 </tr>
                 
                 <!-- Movimientos del Asiento Contable -->
                 <ng-container *ngIf="receipt.accountingEntry">
-                    <tr *ngFor="let movement of receipt.accountingEntry.movements; let i = index">
+                    <tr *ngFor="let movement of receipt.accountingEntry.movements">
                         <td></td> <!-- Celda vacía -->
-                        <td>{{ i + 1 }}</td>
+                        <!-- Celda de "Secuencia" removida -->
                         <td>{{ receipt.issueDate | date:'dd/MM/yyyy' }}</td>
-                        <td>{{ movement.accountCode }}</td>
-                        <td>{{ movement.accountName }}</td>
-                        <!-- Celda de "Identificación" removida -->
+                        <td>{{ movement.accountCode }} - {{ movement.accountName }}</td>
                         <td>{{ movement.thirdPartyName }}</td>
+                        <td>{{ movement.description }}</td>
                         <td class="text-right">{{ movement.debit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                         <td class="text-right">{{ movement.credit | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                     </tr>
@@ -83,8 +79,8 @@
 
                 <!-- Mensaje si no hay asiento contable -->
                 <tr *ngIf="!receipt.isDetailLoading && !receipt.accountingEntry">
-                     <!-- Colspan ajustado de 9 a 8 -->
-                     <td colspan="8" class="text-center p-3 text-gray-500 border-b border-gray-200">
+                     <!-- Colspan ajustado de 8 a 7 -->
+                     <td colspan="7" class="text-center p-3 text-gray-500 border-b border-gray-200">
                         No se encontraron movimientos contables para este comprobante.
                     </td>
                 </tr>
@@ -92,8 +88,8 @@
 
             <ng-template pTemplate="empty">
                 <tr>
-                    <!-- Colspan ajustado de 9 a 8 -->
-                    <td colspan="8" class="text-center py-8">
+                    <!-- Colspan ajustado de 8 a 7 -->
+                    <td colspan="7" class="text-center py-8">
                         <i class="pi pi-inbox text-2xl text-gray-400 mb-2"></i>
                         <p class="font-semibold">No se encontraron comprobantes.</p>
                     </td>
