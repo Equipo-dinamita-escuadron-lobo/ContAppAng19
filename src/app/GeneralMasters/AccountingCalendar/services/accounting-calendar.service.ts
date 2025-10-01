@@ -85,6 +85,18 @@ export class AccountingCalendarService {
     );
   }
 
+  /**
+   * Verifica si existe una fecha específica en el calendario contable
+   * @param enterpriseId ID de la empresa
+   * @param date Fecha a verificar (formato: YYYY-MM-DD)
+   * @returns Observable<boolean> true si la fecha existe (está abierta), false en caso contrario
+   * 
+   */
+  existsByDate(enterpriseId: string, date: string): Observable<boolean> {
+    const params = new HttpParams().set('date', date);
+    return this.http.get<boolean>(`${this.apiURL}exists/${enterpriseId}`, { params });
+  }
+
   // ========== MÉTODOS DE UTILIDAD ==========
 
   /**

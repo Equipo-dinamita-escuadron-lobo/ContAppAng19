@@ -22,17 +22,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
 export class DocumentTypesCreationComponent {
   form: FormGroup;
   classesOptions: { label: string; value: number }[] = [];
-  readonly allowedModules: string[] = [
-    'Inventario promedio ponderado',
-    'Inventario PEPS',
-    'Comercial',
-    'Tesorería',
-    'Cartera',
-    'Contable comercial',
-    'Contable cartera',
-    'Estados financieros'
-  ];
-  modulesOptions = this.allowedModules.map(m => ({ label: m, value: m }));
+  modulesOptions: { label: string; value: string }[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -52,6 +42,20 @@ export class DocumentTypesCreationComponent {
   ngOnInit(): void {
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
+    
+    this.service.getAllModules().subscribe({
+      next: (modules) => {
+        this.modulesOptions = modules.map(m => ({ label: m.name, value: m.name }));
+      },
+      error: (err) => {
+        this.messageService.add({ 
+          severity: 'error', 
+          summary: 'Error', 
+          detail: 'No se pudieron cargar los módulos disponibles' 
+        });
+      }
+    });
+
     if (enterpriseId) {
       // Cargar todas las clases activas de una vez para dropdown (usar un size alto pero controlado)
       this.classesService.findAllActive(enterpriseId, 0, 200).subscribe((page: any) => {

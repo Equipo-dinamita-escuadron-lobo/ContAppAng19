@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { DocumentType } from '../models/DocumentTypes';
+import { DocumentModule } from '../models/DocumentModule';
 
 interface Page<T> {
   content: T[];
@@ -47,5 +48,10 @@ export class DocumentTypesServiceService {
   changeState(id: number, enterpriseId: string, status: boolean): Observable<any> {
     const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
     return this.http.patch<any>(url, {});
+  }
+
+  getAllModules(): Observable<DocumentModule[]> {
+    const url = `${this.apiURL}modules`;
+    return this.http.get<DocumentModule[]>(url);
   }
 }
