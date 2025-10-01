@@ -155,27 +155,11 @@ export class AccountingCalendarService {
   }
 
   /**
-   * Verifica qué años tienen fechas creadas (periodos abiertos)
+   * Obtiene los años que tienen fechas creadas (periodos abiertos)
    * @param enterpriseId ID de la empresa
-   * @param years Lista de años a verificar
    * @returns Observable con la lista de años que tienen fechas creadas
    */
-  getYearsWithOpenPeriods(enterpriseId: string, years: number[]): Observable<number[]> {
-    if (!years || years.length === 0) {
-      return of([]);
-    }
-
-    // Crear observables para verificar cada año
-    const yearChecks = years.map(year => 
-      this.findAllByYear(enterpriseId, year).pipe(
-        map(dates => dates.length > 0 ? year : null),
-        catchError(() => of(null))
-      )
-    );
-
-    // Ejecutar todas las verificaciones en paralelo
-    return forkJoin(yearChecks).pipe(
-      map(results => results.filter(year => year !== null) as number[])
-    );
+  getYearsWithOpenPeriods(enterpriseId: string): Observable<number[]> {
+    return this.http.get<number[]>(`${this.apiURL}years/${enterpriseId}`);
   }
 }
