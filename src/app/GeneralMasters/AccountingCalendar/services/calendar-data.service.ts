@@ -25,7 +25,7 @@ export class CalendarDataService {
     
     if (!calendarData || calendarData.length === 0) {
       // Si no hay datos, el calendario se mantiene cerrado
-      this.clearActiveEntriesMap();
+      this.clearCache();
       return updatedMonths;
     }
     
@@ -142,25 +142,9 @@ export class CalendarDataService {
 
 
   /**
-   * Limpia el cache completo
+   * Limpia el cache completo (mapa de entradas activas)
    */
   clearCache(): void {
     this.activeEntriesByDate.clear();
   }
-
-  /**
-   * Limpia solo el mapa de entradas activas
-   */
-  clearActiveEntries(): void {
-    this.activeEntriesByDate.clear();
-  }
-
-  /**
-   * Limpia solo el mapa de entradas activas
-   */
-  private clearActiveEntriesMap(): void {
-    this.activeEntriesByDate.clear();
-  }
-
-
 }

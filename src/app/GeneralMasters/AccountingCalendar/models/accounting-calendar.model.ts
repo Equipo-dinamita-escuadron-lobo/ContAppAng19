@@ -1,11 +1,6 @@
 import { CALENDAR_CONSTANTS, NAME_CONSTANTS } from '../constants/calendar.constants';
 
-// Enums para estados del calendario
-export enum CalendarStatus {
-  OPEN = 'open',
-  CLOSED = 'closed'
-}
-
+// Enum para estados del mes
 export enum MonthStatus {
   FULLY_OPEN = 'fully_open',
   FULLY_CLOSED = 'fully_closed'

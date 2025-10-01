@@ -92,7 +92,7 @@ export class CalendarStateService {
    */
   changeYear(year: number): void {
     // Limpiar cache del año anterior
-    this.calendarData.clearActiveEntries();
+    this.calendarData.clearCache();
     
     this.updateState({
       ...this.currentState,
