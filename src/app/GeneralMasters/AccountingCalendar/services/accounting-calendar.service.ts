@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, forkJoin, of, throwError } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { 
   AccountingCalendar, 
@@ -10,8 +10,6 @@ import {
   AccountingCalendarCreateYearReq,
   AccountingCalendarDeleteYearReq
 } from '../models/accounting-calendar.model';
-import { PAGINATION_CONSTANTS } from '../constants/calendar.constants';
-import { Page } from '../types/calendar.types';
 
 @Injectable({
   providedIn: 'root'
@@ -88,71 +86,6 @@ export class AccountingCalendarService {
   }
 
   // ========== MÉTODOS DE UTILIDAD ==========
-
-
-
-  /**
-   * Toggle de fecha: si existe se elimina, si no existe se crea
-   * IMPORTANTE: El backend ya NO maneja status
-   * - Crear fecha = Abrirla (verde)
-   * - Eliminar fecha = Cerrarla (rojo)
-   * @param enterpriseId ID de la empresa
-   * @param date Fecha a toggle (formato YYYY-MM-DD)
-   */
-  toggleDate(enterpriseId: string, date: string): Observable<void> {
-    const normalizedInputDate = this.normalizeDateString(date);
-    
-    // 1. Intentar crear la fecha (sin status, el backend ya no lo usa)
-    const payload = {
-      idEnterprise: enterpriseId,
-      date: normalizedInputDate
-    };
-    
-    return this.create(payload).pipe(
-      map(() => undefined),
-      catchError(error => {
-        if (error?.status === 400 && error?.error?.code === 'ACCOUNTING_CALENDAR_DATE_EXISTS') {
-          // La fecha ya existe, retornar error descriptivo
-          // El frontend deberá manejar la eliminación por separado
-          return throwError(() => new Error(`La fecha ${normalizedInputDate} ya existe. Use la funcionalidad de eliminar para cerrarla.`));
-        }
-        
-        // Para otros tipos de error, propagar
-        return throwError(() => error);
-      })
-    );
-  }
-
-  /**
-   * Normaliza una fecha string para comparación consistente
-   * @param dateString Fecha en formato string
-   * @returns Fecha normalizada en formato YYYY-MM-DD
-   */
-  private normalizeDateString(dateString: string): string {
-    if (!dateString) return '';
-    
-    try {
-      // Si ya está en formato YYYY-MM-DD, retornarlo
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-        return dateString;
-      }
-      
-      // Si es una fecha ISO, convertirla
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return '';
-      }
-      
-      // Formatear como YYYY-MM-DD
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      
-      return `${year}-${month}-${day}`;
-    } catch (error) {
-      return '';
-    }
-  }
 
   /**
    * Obtiene los años que tienen fechas creadas (periodos abiertos)
