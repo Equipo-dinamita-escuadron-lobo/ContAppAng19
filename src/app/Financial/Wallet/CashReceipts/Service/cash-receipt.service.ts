@@ -8,8 +8,8 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { AccountingEntryLine } from '../Model/AccountinEntryLine';
 import { environment } from '../../../../../environments/environment';
 import { AuxiliaryAccountOption, Client, DropdownOption, Invoice } from '../Model';
-import { ReceiptCreateRequest, ReceiptResponse, VoidReceiptRequest } from '../Model/api';
-import { ReceiptView } from '../Model/view';
+import { AccountingEntryResponse, ReceiptCreateRequest, ReceiptResponse, VoidReceiptRequest } from '../Model/api';
+import { AccountingEntryView, AccountingMovementView, ReceiptView } from '../Model/view';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
 
@@ -18,6 +18,7 @@ import { Account } from '../../../../GeneralMasters/AccountCatalogue/models/Char
 })
 export class CashReceiptService {
   private apiUrl = environment.API_URL + 'payments';
+  private accountingApiUrl = environment.API_URL + 'accountCatalogue/accounting'; // Nuevo URL para asientos contables
 
   private paymentMethodsCache: PaymentMethod[] = [];
 
@@ -82,7 +83,7 @@ export class CashReceiptService {
       })
     );
   }
-    
+
 
   /**
    *  Obtiene los tipos de recibo disponibles.
@@ -141,7 +142,7 @@ export class CashReceiptService {
       map(invoicesFromApi => {
         return invoicesFromApi.map(invoice => ({
           ...invoice,
-          dueDate: new Date(invoice.expirationDate) 
+          dueDate: new Date(invoice.expirationDate)
         }));
       })
     );
@@ -200,7 +201,7 @@ export class CashReceiptService {
           receipt: of(receiptFromApi),
           client: this.getClientById(receiptFromApi.thirdPartyId),
           paymentMethod: this.getPaymentMethods().pipe(
-              map(methods => methods.find(m => m.id === receiptFromApi.paymentMethodId))
+            map(methods => methods.find(m => m.id === receiptFromApi.paymentMethodId))
           ),
           auxiliaryAccounts: this.getAuxiliaryAccounts() // Obtenemos las cuentas para buscar el nombre
         });
@@ -249,7 +250,7 @@ export class CashReceiptService {
   voidReceipt(receiptId: number, reason: string): Observable<ReceiptResponse> {
     const requestBody: VoidReceiptRequest = { reason };
     return this.http.put<ReceiptResponse>(`${this.apiUrl}/${receiptId}/void`, requestBody);
-}
+  }
 
   public generateAccountingEntry(receipt: ReceiptDetailsView, auxAccounts: DropdownOption[]): AccountingEntryLine[] {
     const entry: AccountingEntryLine[] = [];
@@ -257,51 +258,127 @@ export class CashReceiptService {
     const thirdPartyName = receipt.clientName;
 
     if (receipt.paymentMethod && receipt.paymentMethod.accountingAccount) {
-        entry.push({
-            accountCode: receipt.paymentMethod.accountingAccount,
-            accountName: receipt.paymentMethod.name,
-            thirdParty: thirdPartyName, 
-            debit: total,
-            credit: 0,
-            description: `Ingreso de dinero en ${receipt.paymentMethod.name}`
-        });
+      entry.push({
+        accountCode: receipt.paymentMethod.accountingAccount,
+        accountName: receipt.paymentMethod.name,
+        thirdParty: thirdPartyName,
+        debit: total,
+        credit: 0,
+        description: `Ingreso de dinero en ${receipt.paymentMethod.name}`
+      });
     } else {
-        console.error("No se pudo generar el débito: Método de pago o su cuenta no encontrados.");
+      console.error("No se pudo generar el débito: Método de pago o su cuenta no encontrados.");
     }
 
     if (receipt.isDirectIncome) {
-        const auxAccount = auxAccounts.find(acc => acc.value === receipt.ledgerAccountId);
-        entry.push({
-            accountCode: receipt.ledgerAccountId?.toString() || 'N/A',
-            accountName: auxAccount ? auxAccount.label : 'Ingreso No Operacional',
-            thirdParty: thirdPartyName,
-            debit: 0,
-            credit: total,
-            description: `Ingreso directo ${receipt.receiptCode}`
-        });
+      const auxAccount = auxAccounts.find(acc => acc.value === receipt.ledgerAccountId);
+      entry.push({
+        accountCode: receipt.ledgerAccountId?.toString() || 'N/A',
+        accountName: auxAccount ? auxAccount.label : 'Ingreso No Operacional',
+        thirdParty: thirdPartyName,
+        debit: 0,
+        credit: total,
+        description: `Ingreso directo ${receipt.receiptCode}`
+      });
     } else {
-        receipt.details.forEach(detail => {
-            entry.push({
-                accountCode: detail.accountingAccount.toString(), 
-                accountName: 'Cuentas por Cobrar Clientes', 
-                thirdParty: thirdPartyName,
-                debit: 0,
-                credit: detail.amountPaid,
-                description: `Abono Factura ${detail.invoiceCode}`
-            });
+      receipt.details.forEach(detail => {
+        entry.push({
+          accountCode: detail.accountingAccount.toString(),
+          accountName: 'Cuentas por Cobrar Clientes',
+          thirdParty: thirdPartyName,
+          debit: 0,
+          credit: detail.amountPaid,
+          description: `Abono Factura ${detail.invoiceCode}`
         });
+      });
     }
 
     if (receipt.status === 'Anulado') {
-        const reversedEntry = entry.map(line => ({
-            ...line, 
-            debit: line.credit,
-            credit: line.debit,
-            description: `Anulación: ${line.description}`
-        }));
-        return reversedEntry;
+      const reversedEntry = entry.map(line => ({
+        ...line,
+        debit: line.credit,
+        credit: line.debit,
+        description: `Anulación: ${line.description}`
+      }));
+      return reversedEntry;
     }
 
     return entry;
-}
+  }
+
+  
+   private getAccountingEntryByReceiptIdApi(receiptId: number): Observable<AccountingEntryResponse> {
+    return this.http.get<AccountingEntryResponse>(`${this.accountingApiUrl}/entries/by-receipt/${receiptId}`);
+  }
+
+  /**
+   * MÉTODO ORQUESTADOR: Obtiene el asiento contable por ID de recibo y enriquece
+   * cada movimiento con el nombre de la cuenta y del tercero. Este es el método que el componente debe consumir.
+   * @param receiptId - El ID del recibo de caja.
+   * @returns Un Observable con el asiento contable listo para la vista.
+   */
+  getAccountingEntryViewByReceiptId(receiptId: number): Observable<AccountingEntryView> {
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();;
+    if (!enterpriseId) {
+      return of({} as AccountingEntryView); // Manejar error apropiadamente
+    }
+
+    // 1. Obtener el asiento contable de la API
+    return this.getAccountingEntryByReceiptIdApi(receiptId).pipe(
+      switchMap(entryApi => {
+        // 2. Extraer los IDs únicos de cuentas y terceros de los movimientos
+        const accountIds = [...new Set(entryApi.movements.map(m => m.account))];
+        const thirdPartyIds = [...new Set(entryApi.movements.map(m => m.thirdPartyId))];
+
+        // 3. Realizar llamadas en paralelo para obtener los datos de enriquecimiento
+        return forkJoin({
+          entry: of(entryApi),
+          accounts: this.getAuxiliaryAccountsCached(enterpriseId),
+          thirdParties: forkJoin(thirdPartyIds.map(id => this.getClientById(id)))
+        }).pipe(
+          map(({ entry, accounts, thirdParties }) => {
+            // 4. Mapear los datos para un acceso rápido
+            const accountsMap = new Map(accounts.map(acc => [acc.value, acc]));
+            const thirdPartiesMap = new Map(thirdParties.filter(tp => !!tp).map(tp => [tp!.id, tp!]));
+
+            // 5. Enriquecer cada movimiento
+            const enrichedMovements: AccountingMovementView[] = entry.movements.map(movement => {
+              const accountInfo = accountsMap.get(movement.account);
+              const thirdPartyInfo = thirdPartiesMap.get(movement.thirdPartyId);
+
+              return {
+                id: movement.id,
+                accountId: movement.account,
+                accountCode: accountInfo?.codeAccount || 'N/A',
+                accountName: accountInfo?.description || 'Cuenta no encontrada',
+                thirdPartyId: movement.thirdPartyId,
+                thirdPartyName: thirdPartyInfo?.name || 'Tercero no encontrado',
+                description: movement.description,
+                debit: movement.debit,
+                credit: movement.credit,
+              };
+            });
+
+            const totalDebit = enrichedMovements.reduce((sum, m) => sum + m.debit, 0);
+            const totalCredit = enrichedMovements.reduce((sum, m) => sum + m.credit, 0);
+
+            // 6. Construir y devolver el objeto de vista final
+            const entryView: AccountingEntryView = {
+              id: entry.id,
+              code: entry.code,
+              date: entry.date,
+              description: entry.description,
+              status: entry.status,
+              sourceDocumentId: entry.sourceDocumentId,
+              movements: enrichedMovements,
+              totalDebit,
+              totalCredit
+            };
+            console.log("Asiento contable enriquecido:", entryView);
+            return entryView;
+          })
+        );
+      })
+    );
+  }
 }
