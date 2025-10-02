@@ -54,7 +54,7 @@ export class CostCentersListComponent implements OnDestroy {
 
   // Pagination
   first: number = 0;
-  rows: number = 30;
+  rows: number = 10;
   totalRecords: number = 0;
 
   // UI State
@@ -65,6 +65,7 @@ export class CostCentersListComponent implements OnDestroy {
   currentLevel: 'costo' | 'subcosto' | 'auxiliar costo' = 'costo';
   isCreatingRoot = false;
   isLoading = false;
+  isInitialLoad = true;
   private sliderTimeout: any;
 
   // Forms
@@ -141,6 +142,7 @@ export class CostCentersListComponent implements OnDestroy {
         }
         
         this.isLoading = false;
+        this.isInitialLoad = false;
       },
       error: (err) => {
         console.error('No se pudo cargar Centros de Costo:', err);
@@ -217,6 +219,7 @@ export class CostCentersListComponent implements OnDestroy {
   onFilterChange() {
     // Resetear a la primera página cuando se busca
     this.first = 0;
+    this.isInitialLoad = true;
     // Recargar datos con el nuevo término de búsqueda
     this.loadTree();
   }

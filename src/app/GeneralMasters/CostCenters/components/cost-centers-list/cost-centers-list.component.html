@@ -4,10 +4,12 @@
     <p-confirmDialog></p-confirmDialog>
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <div class="items-center mb-6">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+        <h1
+          class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
           Centros de costo
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">Lista de todos los centros de costo configurados en el sistema.</p>
+        <p class="font-family-sans font-normal text-sm mt-2">Lista de todos los centros de costo configurados en el
+          sistema.</p>
       </div>
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
@@ -23,92 +25,74 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" [(ngModel)]="filterAccount" (ngModelChange)="onFilterChange()" placeholder="Buscar centro (código/nombre)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
+          <input pInputText type="text" [(ngModel)]="filterAccount" (ngModelChange)="onFilterChange()"
+            placeholder="Buscar centro (código/nombre)..."
+            class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
         </p-iconfield>
       </div>
     </div>
-
+    
     <!-- Paginador -->
     <div class="flex items-center justify-start mt-20 mb-6">
       <div class="flex justify-center items-center gap-12">
         <span class="font-medium text-sm">Elementos por página:</span>
-        <p-slider [(ngModel)]="rows" (ngModelChange)="onSliderChange()" [style]="{ width: '10rem' }" [min]="10" [max]="120" [step]="10" [disabled]="isLoading" />
+        <p-slider [(ngModel)]="rows" (ngModelChange)="onSliderChange()" [style]="{ width: '10rem' }" [min]="10"
+          [max]="50" [step]="10" [disabled]="isLoading" />
         <span class="text-sm text-gray-600">{{rows}}</span>
+        <div *ngIf="!isInitialLoad && isLoading" class="ml-4">
+          <div class="animate-spin rounded-full h-4 w-4 border-2 border-blue-950 border-t-transparent"></div>
+        </div>
       </div>
-      <p-paginator 
-        (onPageChange)="onPageChange($event)" 
-        [first]="first" 
-        [rows]="rows" 
-        [totalRecords]="totalRecords" 
-        [showFirstLastIcon]="false"
-        [showCurrentPageReport]="true" 
-        currentPageReportTemplate="Página {currentPage} de {totalPages}" 
-        class="ml-6">
+      <p-paginator (onPageChange)="onPageChange($event)" [first]="first" [rows]="rows" [totalRecords]="totalRecords"
+        [showFirstLastIcon]="false" [showCurrentPageReport]="true"
+        currentPageReportTemplate="Página {currentPage} de {totalPages}" class="ml-6">
       </p-paginator>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 font-family-sans text-sm mt-20">
       <!-- Lista (árbol) -->
-      <div class="list-account overscroll-auto border-r-4 sm:border-blue-950 sm:mr-6 sm:p-3" [class.opacity-50]="isLoading">
+      <div class="list-account overscroll-auto border-r-4 sm:border-blue-950 sm:mr-6 sm:p-3"
+        [class.opacity-50]="isInitialLoad && isLoading">
         <div class="w-full flex text-blue-950">
           <div class="w-1/3 border-b-2 border-blue-950 font-semibold">Código</div>
           <div class="w-1/3 border-b-2 border-blue-950 font-semibold">Nombre</div>
           <div class="w-1/3 border-b-2 border-blue-950 font-semibold">Estado</div>
         </div>
-        
-        <!-- Indicador de carga -->
-        <div *ngIf="isLoading" class="flex justify-center items-center py-8">
+
+        <!-- Indicador de carga solo en carga inicial -->
+        <div *ngIf="isInitialLoad && isLoading" class="flex justify-center items-center py-8">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-950"></div>
           <span class="ml-3 text-blue-950">Cargando...</span>
         </div>
-        
-        <div class="w-full flex" *ngIf="!isLoading">
+
+        <div class="w-full flex" *ngIf="!isInitialLoad || !isLoading">
           <ul class="w-full mt-3">
             <li class="mb-2" *ngFor="let c1 of listCentersAux">
               <div
-                class="flex items-center w-full transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
-              >
-                <button
-                  class="w-full text-start flex"
-                  (click)="toggle(c1); select(c1); $event.stopPropagation()"
-                >
+                class="flex items-center w-full transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
+                <button class="w-full text-start flex" (click)="toggle(c1); select(c1); $event.stopPropagation()">
                   <div class="code w-1/3 flex">
-                    <svg
-                      class="h-16 w-16 mt-1 transform"
-                      [ngClass]="{
+                    <svg class="h-16 w-16 mt-1 transform" [ngClass]="{
                         'text-transparent': !c1.children,
                         'rotate-90': c1.showChildren
-                      }"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      stroke-width="1"
-                      stroke="currentColor"
-                      fill="none"
-                      stroke-linejoin="round"
-                    >
+                      }" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none"
+                      stroke-linejoin="round">
                       <path stroke="none" d="M0 0h24v24H0z" />
                       <polyline points="9 6 15 12 9 18" />
                     </svg>
                     {{ c1.code }}
                   </div>
-                  <div class="name w-1/3 text-left break-words overflow-hidden max-w-[200px] leading-tight">{{ c1.name }}</div>
+                  <div class="name w-1/3 text-left break-words overflow-hidden max-w-[200px] leading-tight">{{ c1.name
+                    }}</div>
                   <div class="status w-1/3 flex items-center justify-start">
-                    <p-tag
-                      [value]="c1.status ? 'Activo' : 'Inactivo'"
-                      [severity]="c1.status ? 'success' : 'danger'"
-                    ></p-tag>
+                    <p-tag [value]="c1.status ? 'Activo' : 'Inactivo'"
+                      [severity]="c1.status ? 'success' : 'danger'"></p-tag>
                   </div>
                 </button>
                 <div *ngIf="c1.showChildren" class="flex items-center gap-2 pr-4">
-                  <p-toggleswitch
-                    [(ngModel)]="c1.status"
-                    (ngModelChange)="changeCostCenterState(c1)"
-                    (click)="$event.stopPropagation()"
-                    [style]="{ transform: 'scale(0.8)' }"
-                    pTooltip="Cambiar Estado"
-                    tooltipPosition="top"
-                  >
+                  <p-toggleswitch [(ngModel)]="c1.status" (ngModelChange)="changeCostCenterState(c1)"
+                    (click)="$event.stopPropagation()" [style]="{ transform: 'scale(0.8)' }" pTooltip="Cambiar Estado"
+                    tooltipPosition="top">
                   </p-toggleswitch>
                 </div>
               </div>
@@ -116,49 +100,30 @@
               <ul class="ml-12 mt-3" *ngIf="c1.showChildren">
                 <li class="mb-2" *ngFor="let c2 of c1.children">
                   <div
-                    class="flex items-center w-full transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
-                  >
-                    <button
-                      class="w-full text-start flex"
-                      (click)="toggle(c2); select(c2); $event.stopPropagation()"
-                    >
+                    class="flex items-center w-full transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
+                    <button class="w-full text-start flex" (click)="toggle(c2); select(c2); $event.stopPropagation()">
                       <div class="code w-1/3 flex">
-                        <svg
-                          class="h-16 w-16 mt-1 transform"
-                          [ngClass]="{
+                        <svg class="h-16 w-16 mt-1 transform" [ngClass]="{
                             'text-transparent': !c2.children || c2.children.length === 0,
                             'rotate-90': c2.showChildren
-                          }"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          stroke-width="1"
-                          stroke="currentColor"
-                          fill="none"
-                          stroke-linejoin="round"
-                        >
+                          }" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"
+                          fill="none" stroke-linejoin="round">
                           <path stroke="none" d="M0 0h24v24H0z" />
                           <polyline points="9 6 15 12 9 18" />
                         </svg>
                         {{ c2.code }}
                       </div>
-                      <div class="name w-1/3 -ml-3 text-left break-words overflow-hidden max-w-[200px] leading-tight">{{ c2.name }}</div>
+                      <div class="name w-1/3 -ml-3 text-left break-words overflow-hidden max-w-[200px] leading-tight">{{
+                        c2.name }}</div>
                       <div class="status w-1/3 flex items-center justify-start">
-                        <p-tag
-                          [value]="c2.status ? 'Activo' : 'Inactivo'"
-                          [severity]="c2.status ? 'success' : 'danger'"
-                        ></p-tag>
+                        <p-tag [value]="c2.status ? 'Activo' : 'Inactivo'"
+                          [severity]="c2.status ? 'success' : 'danger'"></p-tag>
                       </div>
                     </button>
                     <div *ngIf="c1.showChildren" class="flex items-center gap-2 pr-4">
-                      <p-toggleswitch
-                        [(ngModel)]="c2.status"
-                        (ngModelChange)="changeCostCenterState(c2)"
-                        (click)="$event.stopPropagation()"
-                        [style]="{ transform: 'scale(0.8)' }"
-                        pTooltip="Cambiar Estado"
-                        tooltipPosition="top"
-                      >
+                      <p-toggleswitch [(ngModel)]="c2.status" (ngModelChange)="changeCostCenterState(c2)"
+                        (click)="$event.stopPropagation()" [style]="{ transform: 'scale(0.8)' }"
+                        pTooltip="Cambiar Estado" tooltipPosition="top">
                       </p-toggleswitch>
                     </div>
                   </div>
@@ -166,30 +131,21 @@
                   <ul class="ml-12 mt-3" *ngIf="c2.showChildren">
                     <li class="mb-2" *ngFor="let c3 of c2.children">
                       <div
-                        class="flex items-center w-full transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
-                      >
-                        <button
-                          class="w-full text-start flex"
-                          (click)="select(c3); $event.stopPropagation()"
-                        >
+                        class="flex items-center w-full transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
+                        <button class="w-full text-start flex" (click)="select(c3); $event.stopPropagation()">
                           <div class="code w-1/3 flex">{{ c3.code }}</div>
-                          <div class="name w-1/3 -ml-6 text-left break-words overflow-hidden max-w-[200px] leading-tight">{{ c3.name }}</div>
+                          <div
+                            class="name w-1/3 -ml-6 text-left break-words overflow-hidden max-w-[200px] leading-tight">
+                            {{ c3.name }}</div>
                           <div class="status w-1/3 flex items-center justify-start">
-                            <p-tag
-                              [value]="c3.status ? 'Activo' : 'Inactivo'"
-                              [severity]="c3.status ? 'success' : 'danger'"
-                            ></p-tag>
+                            <p-tag [value]="c3.status ? 'Activo' : 'Inactivo'"
+                              [severity]="c3.status ? 'success' : 'danger'"></p-tag>
                           </div>
                         </button>
                         <div *ngIf="c2.showChildren" class="flex items-center gap-2 pr-4">
-                          <p-toggleswitch
-                            [(ngModel)]="c3.status"
-                            (ngModelChange)="changeCostCenterState(c3)"
-                            (click)="$event.stopPropagation()"
-                            [style]="{ transform: 'scale(0.8)' }"
-                            pTooltip="Cambiar Estado"
-                            tooltipPosition="top"
-                          >
+                          <p-toggleswitch [(ngModel)]="c3.status" (ngModelChange)="changeCostCenterState(c3)"
+                            (click)="$event.stopPropagation()" [style]="{ transform: 'scale(0.8)' }"
+                            pTooltip="Cambiar Estado" tooltipPosition="top">
                           </p-toggleswitch>
                         </div>
                       </div>
@@ -207,8 +163,8 @@
         <div class="mb-4">
           <!-- Formulario encadenado para crear (cuenta → subcuenta → auxiliar) -->
           <div *ngIf="isCreatingRoot && !showPrincipalForm">
-            <app-cost-centers-form [currentLevel]="currentLevel" [parent]="null"
-                                   (submitted)="onChildSubmitted($event)" (cancelar)="cancelChild()" />
+            <app-cost-centers-form [currentLevel]="currentLevel" [parent]="null" (submitted)="onChildSubmitted($event)"
+              (cancelar)="cancelChild()" />
           </div>
 
           <!-- Panel de edición/eliminación: muestra camino completo (cuenta, subcuenta, auxiliar) -->
@@ -221,41 +177,40 @@
                       <label class="col-span-1 mr-4 mt-1">{{ getPathParentPrefix(i) }}</label>
                       <!-- Código: readonly para niveles anteriores, editable en el seleccionado -->
                       <ng-container *ngIf="i !== selectedPath.length - 1 || addChild; else editableCode">
-                        <input type="text" [value]="getPathSegment(i)" placeholder="Código" class="input-base mb-2 sm:mb-0 cursor-not-allowed" disabled />
+                        <input type="text" [value]="getPathSegment(i)" placeholder="Código"
+                          class="input-base mb-2 sm:mb-0 cursor-not-allowed" disabled />
                       </ng-container>
                       <ng-template #editableCode>
-                        <input
-                          type="text"
-                          formControlName="codeSegment"
-                          placeholder="Código"
+                        <input type="text" formControlName="codeSegment" placeholder="Código"
                           class="input-base mb-2 sm:mb-0"
                           [attr.inputmode]="currentLevel === 'auxiliar costo' ? null : 'numeric'"
                           [attr.pattern]="currentLevel === 'auxiliar costo' ? null : '[0-9]*'"
-                          (keydown)="onEditCodeKeyDown($event)"
-                          (input)="onEditCodeInput($event)"
-                          [attr.maxlength]="currentLevel === 'auxiliar costo' ? 28 : 2"
-                        />
+                          (keydown)="onEditCodeKeyDown($event)" (input)="onEditCodeInput($event)"
+                          [attr.maxlength]="currentLevel === 'auxiliar costo' ? 28 : 2" />
                       </ng-template>
                     </div>
                     <div class="w-full sm:w-auto">
                       <!-- Nombre: readonly para niveles anteriores, editable en el seleccionado -->
                       <ng-container *ngIf="i !== selectedPath.length - 1 || addChild; else editableName">
-                        <input type="text" [value]="node.name" placeholder="Nombre" class="input-base sm:ml-1 cursor-not-allowed" disabled />
+                        <input type="text" [value]="node.name" placeholder="Nombre"
+                          class="input-base sm:ml-1 cursor-not-allowed" disabled />
                       </ng-container>
                       <ng-template #editableName>
-                        <input type="text" formControlName="name" placeholder="Nombre" class="input-base sm:ml-1" (keydown)="onNameKeyDown($event)" />
+                        <input type="text" formControlName="name" placeholder="Nombre" class="input-base sm:ml-1"
+                          (keydown)="onNameKeyDown($event)" />
                       </ng-template>
                     </div>
-                    <div class="floating-label">{{ i === 0 ? 'Costo' : (i === 1 ? 'Subcosto' : 'Auxiliar costo') }}</div>
+                    <div class="floating-label">{{ i === 0 ? 'Costo' : (i === 1 ? 'Subcosto' : 'Auxiliar costo') }}
+                    </div>
                   </div>
                   <div *ngIf="i === selectedPath.length - 1" style="position: absolute; right: -0.5rem; top: -0.5rem;">
                     <button class="delete-button" (click)="confirmDeleteSelected(node)" title="Eliminar"
-                        pTooltip="Eliminar"
-                        tooltipPosition="top"
-                    >
-                        <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                      pTooltip="Eliminar" tooltipPosition="top">
+                      <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                      </svg>
                     </button>
                   </div>
                 </div>
@@ -264,12 +219,16 @@
               <!-- Form de creación encajado debajo del nivel correspondiente -->
               <div *ngIf="addChild" class="mb-4">
                 <app-cost-centers-form [currentLevel]="currentLevel" [parent]="selected"
-                                       (submitted)="onChildSubmitted($event)" (cancelar)="cancelChild()" />
+                  (submitted)="onChildSubmitted($event)" (cancelar)="cancelChild()" />
               </div>
 
               <div class="flex flex-wrap justify-center items-center gap-4 mt-4" *ngIf="!addChild">
-                <p-button label="Actualizar" (click)="updateSelected()" [disabled]="form.invalid || !hasChanges()" styleClass="p-button-raised"></p-button>
-                <p-button *ngIf="selected && !isCreatingRoot && currentLevel !== 'auxiliar costo'" [label]="currentLevel === 'costo' ? 'Agregar Subcosto' : 'Agregar Auxiliar costo'" styleClass="p-button-secondary" (click)="addNewChild(currentLevel === 'costo' ? 'subcosto' : 'auxiliar costo')"></p-button>
+                <p-button label="Actualizar" (click)="updateSelected()" [disabled]="form.invalid || !hasChanges()"
+                  styleClass="p-button-raised"></p-button>
+                <p-button *ngIf="selected && !isCreatingRoot && currentLevel !== 'auxiliar costo'"
+                  [label]="currentLevel === 'costo' ? 'Agregar Subcosto' : 'Agregar Auxiliar costo'"
+                  styleClass="p-button-secondary"
+                  (click)="addNewChild(currentLevel === 'costo' ? 'subcosto' : 'auxiliar costo')"></p-button>
               </div>
             </form>
           </div>
