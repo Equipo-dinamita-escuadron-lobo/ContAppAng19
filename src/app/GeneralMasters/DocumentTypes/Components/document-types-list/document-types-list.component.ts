@@ -140,9 +140,6 @@ export class DocumentTypesListComponent {
           className: this.getClassName(dt.documentClassId)
         }));
         this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
-      },
-      error: (error) => {
-        console.error('Error al recargar tipos de documentos:', error);
       }
     });
   }
