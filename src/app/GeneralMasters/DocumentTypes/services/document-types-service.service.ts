@@ -20,8 +20,11 @@ export class DocumentTypesServiceService {
   private readonly http = inject(HttpClient);
   private readonly apiURL = environment.API_URL + 'config/document-types/';
 
-  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'name', sortOrder = 'asc'): Observable<Page<DocumentType>> {
-    const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
+  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'name', sortOrder = 'asc', search = ''): Observable<Page<DocumentType>> {
+    let url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
+    if (search && search.trim().length > 0) {
+      url += `&search=${encodeURIComponent(search.trim())}`;
+    }
     return this.http.get<Page<DocumentType>>(url);
   }
 
