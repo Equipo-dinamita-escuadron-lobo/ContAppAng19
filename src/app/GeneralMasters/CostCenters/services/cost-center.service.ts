@@ -15,8 +15,12 @@ export class CostCenterService {
   constructor(private http: HttpClient) {}
 
   // Listado paginado jerárquico - mantiene familias completas juntas
-  findAll(enterpriseId: string, page = 0, size = 30): Observable<Page<CostCenter>> {
-    return this.http.get<PageResponse<CostCenter>>(`${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`)
+  findAll(enterpriseId: string, page = 0, size = 30, search = ''): Observable<Page<CostCenter>> {
+    let url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
+    if (search && search.trim().length > 0) {
+      url += `&search=${encodeURIComponent(search.trim())}`;
+    }
+    return this.http.get<PageResponse<CostCenter>>(url)
       .pipe(
         map(pageResponse => {
           const simplePage = convertToSimplePage(pageResponse);

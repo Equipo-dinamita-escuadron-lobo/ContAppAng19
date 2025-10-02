@@ -113,7 +113,7 @@ export class CostCentersListComponent implements OnDestroy {
     // Calcular la página actual basada en el número de familias, no elementos individuales
     const currentPage = Math.floor(this.first / this.rows);
     
-    this.service.findAll(this.getIdEnterprise(), currentPage, this.rows).subscribe({
+    this.service.findAll(this.getIdEnterprise(), currentPage, this.rows, this.filterAccount).subscribe({
       next: (page) => {
         this.totalRecords = page.totalElements;
         
@@ -215,29 +215,14 @@ export class CostCentersListComponent implements OnDestroy {
   }
 
   onFilterChange() {
-    const term = (this.filterAccount || '').toLowerCase().trim();
-    if (!term) {
-      this.listCentersAux = this.allCenters;
-    } else {
-      const filterRecursive = (nodes: CostCenterNode[]): CostCenterNode[] => {
-        const result: CostCenterNode[] = [];
-        for (const n of nodes) {
-          const children = n.children ? filterRecursive(n.children) : [];
-          const matches = n.code.toLowerCase().includes(term) || n.name.toLowerCase().includes(term);
-          if (matches || children.length) {
-            const copy: CostCenterNode = { ...n, children };
-            copy.showChildren = children.length > 0;
-            result.push(copy);
-          }
-        }
-        return result;
-      };
-      this.listCentersAux = filterRecursive(this.allCenters);
-    }
+    // Resetear a la primera página cuando se busca
+    this.first = 0;
+    // Recargar datos con el nuevo término de búsqueda
+    this.loadTree();
   }
 
   /**
-   * Actualiza los datos - ahora solo aplica filtros ya que la paginación es del backend
+   * Actualiza los datos 
    */
   updatePaginatedData() {
     this.loadTree();
