@@ -124,6 +124,22 @@ body.login-page {
     font-weight: bold !important;
 }
 
+.forgot-password-text {
+    text-align: center;
+    margin-top: 12px;
+}
+
+.forgot-password-link {
+    color: #003DA5;
+    font-weight: 500;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.forgot-password-link:hover {
+    text-decoration: underline;
+}
+
 .new-user-text {
     font-weight: bold;
     color: #000066;
