@@ -363,6 +363,10 @@ export class CostCentersListComponent implements OnDestroy {
 
     this.service.changeState(costCenter.id, enterpriseId, newStatus).subscribe({
       next: () => {
+        // Si se está activando, activar también todos los padres
+        if (newStatus) {
+          this.updateParentStatusRecursively(costCenter, true);
+        }
         // Actualizar recursivamente el estado de todos los hijos en la UI
         this.updateChildrenStatusRecursively(costCenter, newStatus);
         this.messageService.add({
@@ -397,6 +401,46 @@ export class CostCentersListComponent implements OnDestroy {
         this.updateChildrenStatusRecursively(child, status);
       }
     }
+  }
+
+  /**
+   * Actualiza recursivamente el estado de todos los centros de costo padres
+   * @param child Centro de costo hijo
+   * @param status Nuevo estado a aplicar (debe ser true para activar padres)
+   */
+  private updateParentStatusRecursively(child: CostCenterNode, status: boolean): void {
+    if (!child.parentId) {
+      return;
+    }
+    
+    // Buscar el padre en la jerarquía
+    const parent = this.findNodeById(child.parentId, this.listCenters);
+    if (parent && !parent.status) {
+      parent.status = status;
+      // Actualizar recursivamente los padres de este padre
+      this.updateParentStatusRecursively(parent, status);
+    }
+  }
+
+  /**
+   * Busca un nodo por ID en la jerarquía
+   * @param id ID del nodo a buscar
+   * @param nodes Lista de nodos donde buscar
+   * @returns El nodo encontrado o undefined
+   */
+  private findNodeById(id: number, nodes: CostCenterNode[]): CostCenterNode | undefined {
+    for (const node of nodes) {
+      if (node.id === id) {
+        return node;
+      }
+      if (node.children && node.children.length > 0) {
+        const found = this.findNodeById(id, node.children);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return undefined;
   }
 
   cancelChild() {
