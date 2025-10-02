@@ -71,8 +71,8 @@ export class ReceiptCreationComponent {
   totalAmount: number = 0;
 
   // Propiedades para el Centro de Costo
-  costCenters: CostCenter[] = []; 
-  showCostCenterField: boolean = false; 
+  costCenters: CostCenter[] = [];
+  showCostCenterField: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -94,15 +94,15 @@ export class ReceiptCreationComponent {
     this.cashReceiptForm = this.fb.group({
       receiptType: ['', Validators.required],
       paymentMethod: ['', Validators.required],
-      client: [null, Validators.required], 
+      client: [null, Validators.required],
       issueDate: [new Date(), Validators.required],
-      receiptTypeOption: ['', Validators.required], 
+      receiptTypeOption: ['', Validators.required],
       observations: [''],
 
       // Campos condicionales para "Ingreso Directo"
       auxiliaryAccount: [null],
       directIncomeAmount: [null],
-      costCenter: [null] 
+      costCenter: [null]
     });
   }
 
@@ -158,7 +158,7 @@ export class ReceiptCreationComponent {
     console.log(`Cargando facturas para el cliente ID: ${clientId}`);
     this.cashReceiptService.getInvoicesByClient(clientId).subscribe(invoices => {
       this.selectedClientInvoices = invoices;
-      this.availableInvoicesToSelect = [...this.selectedClientInvoices]; 
+      this.availableInvoicesToSelect = [...this.selectedClientInvoices];
     });
   }
 
@@ -174,7 +174,7 @@ export class ReceiptCreationComponent {
     this.cashReceiptForm.get('auxiliaryAccount')?.updateValueAndValidity();
     this.cashReceiptForm.get('directIncomeAmount')?.clearValidators();
     this.cashReceiptForm.get('directIncomeAmount')?.updateValueAndValidity();
-    
+
     this.resetCostCenterField(); // Reseteamos el campo de centro de costo
 
     this.selectedInvoicesForPayment = []; // Limpiar tabla de abono
@@ -307,7 +307,7 @@ export class ReceiptCreationComponent {
     if (selectedAccount && selectedAccount.costCenter) {
       this.showCostCenterField = true;
       this.cashReceiptForm.get('centerCost')?.setValidators(Validators.required);
-      this.loadCostCenters(); 
+      this.loadCostCenters();
     }
 
     this.cashReceiptForm.get('centerCost')?.updateValueAndValidity();
@@ -318,7 +318,7 @@ export class ReceiptCreationComponent {
    */
   loadCostCenters(): void {
     const enterpriseId = this.localStorageMethods.getIdEnterprise();
-    if (!enterpriseId) return; 
+    if (!enterpriseId) return;
 
     this.costCenterService.findActiveAuxiliary(enterpriseId).subscribe(data => {
       this.costCenters = data;
@@ -399,20 +399,20 @@ export class ReceiptCreationComponent {
     const accountingAccount = this.accountingAccountForPaymentMethod();
 
     if (accountingAccount === null) {
-        this.messageService.add({
-            severity: 'error',
-            summary: 'Error de Configuración',
-            detail: 'El método de pago seleccionado no tiene una cuenta contable asociada. Por favor, revise la configuración.'
-        });
-        return; // Detenemos la ejecución.
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de Configuración',
+        detail: 'El método de pago seleccionado no tiene una cuenta contable asociada. Por favor, revise la configuración.'
+      });
+      return; // Detenemos la ejecución.
     }
 
     // Construir el objeto de solicitud para la API (ReceiptCreateRequest)
     const requestData: ReceiptCreateRequest = {
       thirdPartyId: client.id,
       paymentMethodId: formValue.paymentMethod,
-      paymentMethodAccount: accountingAccount, 
-      receiptTypeId: typeOptionId, 
+      paymentMethodAccount: accountingAccount,
+      receiptTypeId: typeOptionId,
       observations: formValue.observations,
       ledgerAccountId: formValue.auxiliaryAccount,
       enterpriseId: enterpriseId,
@@ -430,10 +430,10 @@ export class ReceiptCreationComponent {
         }));
     } else if (formValue.receiptTypeOption === 'direct_income') {
       requestData.ledgerAccountId = formValue.auxiliaryAccount;
-      
+
       if (this.showCostCenterField) {
-        requestData.centerCostId = formValue.centerCost; 
-       console.log('Centro de costo seleccionado:', formValue.centerCost);
+        requestData.centerCostId = formValue.centerCost;
+        console.log('Centro de costo seleccionado:', formValue.centerCost);
       }
 
     }
@@ -495,6 +495,6 @@ export class ReceiptCreationComponent {
   }
 
   goBack(): void {
-    this.router.navigate(['/financial/wallet/receipts']); 
+    this.router.navigate(['/financial/wallet/receipts']);
   }
 }
