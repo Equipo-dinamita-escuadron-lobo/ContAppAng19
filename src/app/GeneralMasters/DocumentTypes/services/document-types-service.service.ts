@@ -57,4 +57,9 @@ export class DocumentTypesServiceService {
     const url = `${this.apiURL}modules`;
     return this.http.get<DocumentModule[]>(url);
   }
+
+  findAllByModule(enterpriseId: string, moduleId: number): Observable<DocumentType[]> {
+    const url = `${this.apiURL}findAllByModule/${enterpriseId}?moduleId=${moduleId}`;
+    return this.http.get<DocumentType[]>(url);
+  }
 }
