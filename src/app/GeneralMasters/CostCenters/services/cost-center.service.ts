@@ -60,6 +60,15 @@ export class CostCenterService {
   findActiveAuxiliary(enterpriseId: string): Observable<CostCenter[]> {
     return this.http.get<CostCenter[]>(`${this.apiURL}findAuxiliary/${enterpriseId}`);
   }
+
+  // Exportar centros de costo a Excel
+  exportToExcel(enterpriseId: string, companyName: string, status?: boolean): Observable<Blob> {
+    let url = `${this.apiURL}export/excel/${enterpriseId}?companyName=${encodeURIComponent(companyName)}`;
+    if (status !== undefined && status !== null) {
+      url += `&status=${status}`;
+    }
+    return this.http.get(url, { responseType: 'blob' });
+  }
 }
 
 

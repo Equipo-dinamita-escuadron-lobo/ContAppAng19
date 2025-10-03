@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -17,6 +17,8 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
 import { SliderModule } from 'primeng/slider';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 @Component({
   selector: 'app-cost-centers-list',
@@ -36,7 +38,8 @@ import { SliderModule } from 'primeng/slider';
     TagModule,
     TooltipModule,
     PaginatorModule,
-    SliderModule
+    SliderModule,
+    RadioButtonModule
   ],
   templateUrl: './cost-centers-list.component.html',
   styleUrl: './cost-centers-list.component.css',
@@ -68,6 +71,16 @@ export class CostCentersListComponent implements OnDestroy {
   isInitialLoad = true;
   private sliderTimeout: any;
 
+  // Export filter
+  exportStatusFilter: string | null = null;
+  exportDialogMessage = '¿Qué tipo de centros de costo desea exportar?';
+  exportStatusOptions = [
+    { label: 'Todos', value: null },
+    { label: 'Activos', value: 'active' },
+    { label: 'Inactivos', value: 'inactive' }
+  ];
+
+
   // Forms
   form: FormGroup;
   private initialName: string = '';
@@ -77,7 +90,8 @@ export class CostCentersListComponent implements OnDestroy {
     private fb: FormBuilder,
     private service: CostCenterService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private localStorageMethods: LocalStorageMethods
   ) {
     this.form = this.fb.group({
       codeSegment: [''],
@@ -655,5 +669,54 @@ export class CostCentersListComponent implements OnDestroy {
     if (allowed.includes(event.key)) return;
     const pattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d10-9,.()\/\-+&%]$/;
     if (!pattern.test(event.key)) event.preventDefault();
+  }
+
+  showExportConfirmDialog() {
+    this.exportStatusFilter = null; // "Todos" por defecto
+    
+    this.confirmationService.confirm({
+      key: 'exportDialog',
+      header: 'Exportar',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Aceptar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-success',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        const status = this.exportStatusFilter === 'active' ? true : this.exportStatusFilter === 'inactive' ? false : undefined;
+        this.exportCostCenters(status);
+      }
+    });
+  }
+
+  private exportCostCenters(status?: boolean) {
+    const entData = this.localStorageMethods.loadEnterpriseData();
+    const enterpriseId = entData?.id || this.getIdEnterprise();
+    const companyName = entData?.name || '';
+
+    this.service.exportToExcel(enterpriseId, companyName, status).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.click();
+        window.URL.revokeObjectURL(url);
+
+        const statusText = status === true ? 'activos' : status === false ? 'inactivos' : 'todos';
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Exportación Exitosa',
+          detail: `Se han exportado los centros de costo ${statusText} correctamente`
+        });
+      },
+      error: (err) => {
+        console.error('Error al exportar:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de Exportación',
+          detail: err.error?.message || 'No se pudo exportar los centros de costo'
+        });
+      }
+    });
   }
 }
