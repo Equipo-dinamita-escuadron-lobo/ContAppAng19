@@ -676,7 +676,6 @@ export class CostCentersListComponent implements OnDestroy {
     this.confirmationService.confirm({
       key: 'exportDialog',
       header: 'Exportar',
-      icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Aceptar',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-success',
