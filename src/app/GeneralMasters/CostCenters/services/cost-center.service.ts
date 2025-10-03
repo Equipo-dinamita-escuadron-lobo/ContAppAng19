@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -55,20 +55,38 @@ export class CostCenterService {
     return this.http.patch<any>(url, {});
   }
 
-
   //Lista de centros de costo auxiliares activos   
   findActiveAuxiliary(enterpriseId: string): Observable<CostCenter[]> {
     return this.http.get<CostCenter[]>(`${this.apiURL}findAuxiliary/${enterpriseId}`);
   }
 
-  // Exportar centros de costo a Excel
-  exportToExcel(enterpriseId: string, companyName: string, status?: boolean): Observable<Blob> {
-    let url = `${this.apiURL}export/excel/${enterpriseId}?companyName=${encodeURIComponent(companyName)}`;
+  /**
+   * Exporta centros de costo a Excel.
+   * 
+   * @param enterpriseId ID de la empresa
+   * @param companyName Nombre de la empresa (usado en el nombre del archivo)
+   * @param status Estado del filtro (true=activos, false=inactivos, undefined=todos)
+   * @returns Observable con la respuesta HTTP que contiene el blob del archivo Excel
+   */
+  exportToExcel(enterpriseId: string, companyName: string, status?: boolean): Observable<HttpResponse<Blob>> {
+    let url = `${this.apiURL}export/excel/${enterpriseId}`;
+    const params: string[] = [];
+    
+    // Agregar status si está definido (incluyendo false)
     if (status !== undefined && status !== null) {
-      url += `&status=${status}`;
+      params.push(`status=${status}`);
     }
-    return this.http.get(url, { responseType: 'blob' });
+    
+    // Agregar companyName si existe y no está vacío
+    if (companyName && companyName.trim()) {
+      params.push(`companyName=${encodeURIComponent(companyName.trim())}`);
+    }
+    
+    // Construir URL final con parámetros
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+    
+    return this.http.get(url, { responseType: 'blob', observe: 'response' });
   }
 }
-
-

@@ -80,7 +80,6 @@ export class CostCentersListComponent implements OnDestroy {
     { label: 'Inactivos', value: 'inactive' }
   ];
 
-
   // Forms
   form: FormGroup;
   private initialName: string = '';
@@ -695,13 +694,16 @@ export class CostCentersListComponent implements OnDestroy {
     const companyName = entData?.name || '';
 
     this.service.exportToExcel(enterpriseId, companyName, status).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.click();
-        window.URL.revokeObjectURL(url);
-
+      next: (response) => {
+        if (!response.body) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Exportación',
+            detail: 'No se recibió el archivo del servidor'
+          });
+          return;
+        }
+        this.downloadFile(response);
         const statusText = status === true ? 'activos' : status === false ? 'inactivos' : 'todos';
         this.messageService.add({
           severity: 'success',
@@ -710,13 +712,48 @@ export class CostCentersListComponent implements OnDestroy {
         });
       },
       error: (err) => {
-        console.error('Error al exportar:', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error de Exportación',
-          detail: err.error?.message || 'No se pudo exportar los centros de costo'
-        });
+        // Cuando la respuesta es un blob, el error también puede ser un blob que necesita ser leído
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const errorData = JSON.parse(reader.result as string);
+            const errorMessage = errorData.message || 'No se pudo exportar los centros de costo.';
+            this.messageService.add({ severity: 'error', summary: 'Error de Exportación', detail: errorMessage });
+          } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error de Exportación', detail: 'Ocurrió un error inesperado.' });
+          }
+        };
+        reader.onerror = () => {
+          this.messageService.add({ severity: 'error', summary: 'Error de Exportación', detail: 'No se pudo leer el mensaje de error.' });
+        };
+        reader.readAsText(err.error);
       }
     });
+  }
+
+  /**
+   * Procesa la respuesta HTTP para descargar el archivo.
+   * @param response La respuesta HTTP que contiene el blob y las cabeceras.
+   */
+  private downloadFile(response: any): void {
+    const blob = response.body;
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'centros_costo.xlsx'; // Nombre por defecto
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   }
 }
