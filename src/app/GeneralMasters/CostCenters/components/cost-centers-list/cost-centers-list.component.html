@@ -10,7 +10,7 @@
           <div class="flex items-center gap-2 mb-20">
             <p>{{ exportDialogMessage }}</p>
           </div>          
-          <div class="flex justify-start gap-8 mb-12">
+          <div class="flex justify-start gap-12 mb-12">
             <div *ngFor="let option of exportStatusOptions" class="flex items-center mt-4">
               <p-radioButton 
                 [inputId]="option.label" 
@@ -24,6 +24,7 @@
         </div>
       </ng-template>
     </p-confirmDialog>
+    
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <div class="items-center mb-6">
         <h1

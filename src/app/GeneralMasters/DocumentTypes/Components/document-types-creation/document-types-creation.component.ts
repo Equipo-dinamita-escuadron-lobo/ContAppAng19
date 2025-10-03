@@ -22,7 +22,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
 export class DocumentTypesCreationComponent {
   form: FormGroup;
   classesOptions: { label: string; value: number }[] = [];
-  modulesOptions: { label: string; value: string }[] = [];
+  modulesOptions: { label: string; value: number }[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -35,7 +35,7 @@ export class DocumentTypesCreationComponent {
       prefix: ['', [Validators.required, Validators.maxLength(10), Validators.pattern('^[a-zA-Z0-9]+$')]],
       name: ['', [Validators.required]],
       documentClassId: [null, [Validators.required]],
-      module: [null, [Validators.required]]
+      moduleId: [null, [Validators.required, Validators.min(1), Validators.max(8)]]
     });
   }
 
@@ -45,7 +45,7 @@ export class DocumentTypesCreationComponent {
     
     this.service.getAllModules().subscribe({
       next: (modules) => {
-        this.modulesOptions = modules.map(m => ({ label: m.name, value: m.name }));
+        this.modulesOptions = modules.map(m => ({ label: m.name, value: m.id }));
       },
       error: (err) => {
         this.messageService.add({ 

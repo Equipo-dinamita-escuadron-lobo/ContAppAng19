@@ -26,18 +26,7 @@ export class DocumentTypesEditComponent implements OnInit {
   form: FormGroup;
   id!: number;
   classesOptions: { label: string; value: number }[] = [];
-  readonly allowedModules: string[] = [
-    'Inventario promedio ponderado',
-    'Inventario PEPS',
-    'Comercial',
-    'Tesorería',
-    'Cartera',
-    'Contable comercial',
-    'Contable cartera',
-    'Libros Auxiliares',
-    'Estados financieros'
-  ];
-  modulesOptions = this.allowedModules.map(m => ({ label: m, value: m }));
+  modulesOptions: { label: string; value: number }[] = [];
   initialValue: any = {};
 
   constructor(
@@ -52,7 +41,7 @@ export class DocumentTypesEditComponent implements OnInit {
       prefix: ['', [Validators.required, Validators.maxLength(10), Validators.pattern('^[a-zA-Z0-9]+$')]],
       name: ['', [Validators.required]],
       documentClassId: [null, [Validators.required]],
-      module: [null, [Validators.required]]
+      moduleId: [null, [Validators.required, Validators.min(1), Validators.max(8)]]
     });
   }
 
@@ -61,6 +50,20 @@ export class DocumentTypesEditComponent implements OnInit {
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
     if (!enterpriseId || !this.id) return;
+
+    // Cargar módulos disponibles
+    this.service.getAllModules().subscribe({
+      next: (modules) => {
+        this.modulesOptions = modules.map(m => ({ label: m.name, value: m.id }));
+      },
+      error: (err) => {
+        this.messageService.add({ 
+          severity: 'error', 
+          summary: 'Error', 
+          detail: 'No se pudieron cargar los módulos disponibles' 
+        });
+      }
+    });
 
     // Cargar todas las clases activas de una vez para dropdown
     this.classesService.findAllActive(enterpriseId, 0, 200).subscribe((page: any) => {
@@ -75,7 +78,7 @@ export class DocumentTypesEditComponent implements OnInit {
         prefix: dt.prefix,
         name: dt.name,
         documentClassId: dt.documentClassId,
-        module: dt.module
+        moduleId: dt.moduleId
       });
       this.initialValue = this.form.getRawValue();
     });

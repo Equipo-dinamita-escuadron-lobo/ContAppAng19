@@ -41,7 +41,7 @@
           <th pSortableColumn="prefix" class="font-semibold text-primary border-b-2 border-primary">Prefijo <p-sortIcon field="prefix"></p-sortIcon></th>
           <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">Nombre <p-sortIcon field="name"></p-sortIcon></th>
           <th class="font-semibold text-primary border-b-2 border-primary">Clase</th>
-          <th pSortableColumn="module" class="font-semibold text-primary border-b-2 border-primary">Módulo <p-sortIcon field="module"></p-sortIcon></th>
+          <th class="font-semibold text-primary border-b-2 border-primary">Módulo</th>
           <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
           <th class="font-semibold text-primary border-b-2 border-primary text-center">Acciones</th>
         </tr>
@@ -52,7 +52,7 @@
           <td class="py-3">{{ row.prefix }}</td>
           <td class="py-3">{{ row.name }}</td>
           <td class="py-3">{{ row.className }}</td>
-          <td class="py-3">{{ row.module }}</td>
+          <td class="py-3">{{ row.moduleName }}</td>
           <td class="py-3 text-center">
             <p-tag [value]="formatState(row.status)" [severity]="getStateSeverity(row.status)"></p-tag>
           </td>

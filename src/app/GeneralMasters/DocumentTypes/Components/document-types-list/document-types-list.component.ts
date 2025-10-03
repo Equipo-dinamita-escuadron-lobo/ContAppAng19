@@ -43,6 +43,7 @@ export class DocumentTypesListComponent {
   list: DocumentTypeList[] = [];
   filtered: DocumentTypeList[] = [];
   classIdToName = new Map<number, string>();
+  moduleIdToName = new Map<number, string>();
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
@@ -59,6 +60,7 @@ export class DocumentTypesListComponent {
   ) {}
 
   ngOnInit(): void {
+    this.loadModuleNames(); // Cargar nombres de módulos para mapeo
     this.loadClassNames(); // Cargar nombres de clases para mapeo
   }
 
@@ -68,6 +70,23 @@ export class DocumentTypesListComponent {
       try { return JSON.parse(entData).id; } catch {}
     }
     return '';
+  }
+
+  private loadModuleNames(): void {
+    this.service.getAllModules().subscribe({
+      next: (modules) => {
+        modules.forEach(m => this.moduleIdToName.set(m.id, m.name));
+      },
+      error: (error) => {
+        console.error('Error al cargar nombres de módulos:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los módulos. Inténtelo nuevamente.',
+          life: 5000
+        });
+      }
+    });
   }
 
   private loadClassNames(): void {
@@ -112,7 +131,8 @@ export class DocumentTypesListComponent {
         const content: DocumentType[] = page.content || [];
         this.list = content.map(dt => ({
           ...dt,
-          className: this.getClassName(dt.documentClassId)
+          className: this.getClassName(dt.documentClassId),
+          moduleName: this.getModuleName(dt.moduleId)
         }));
         this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
       },
@@ -137,7 +157,8 @@ export class DocumentTypesListComponent {
         const content: DocumentType[] = page.content || [];
         this.list = content.map(dt => ({
           ...dt,
-          className: this.getClassName(dt.documentClassId)
+          className: this.getClassName(dt.documentClassId),
+          moduleName: this.getModuleName(dt.moduleId)
         }));
         this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
       }
@@ -154,6 +175,11 @@ export class DocumentTypesListComponent {
   getClassName(classId?: number): string {
     if (classId == null) return '';
     return this.classIdToName.get(classId) || '';
+  }
+
+  getModuleName(moduleId?: number): string {
+    if (moduleId == null) return '';
+    return this.moduleIdToName.get(moduleId) || '';
   }
 
 

@@ -4,11 +4,12 @@ export interface DocumentType {
   prefix: string;
   name: string;
   documentClassId: number;
-  module: string;
+  moduleId: number;
   status: boolean;
 }
 
 export interface DocumentTypeList extends DocumentType {
   className?: string;
+  moduleName?: string;
 }
 
