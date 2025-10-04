@@ -1,0 +1,126 @@
+<div class="w-full h-full p-4 md:p-10 font-sans">
+    <p-toast></p-toast>
+    <!-- Encabezado -->
+    <div class="mb-10">
+        <h1
+            class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            Crear Castigo de Cartera
+        </h1>
+        <p class="font-normal text-sm mt-2 text-black">
+            Registre los datos iniciales para generar un borrador del castigo de cartera.
+        </p>
+    </div>
+
+    <form [formGroup]="writeOffForm" (ngSubmit)="onSubmit()">
+        <!-- Sección de Datos Generales -->
+        <div class="p-card p-component shadow-md rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold text-[var(--color-primary)] mb-6">Datos del Castigo</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+
+                <!-- Cliente -->
+                <div class="flex flex-col gap-2">
+                    <label for="client" class="font-semibold text-[var(--color-primary)]">Cliente <span
+                            class="text-red-500">*</span></label>
+                    <p-autoComplete id="client" formControlName="client" [suggestions]="filteredClients"
+                        (completeMethod)="searchClient($event)" (onSelect)="onClientSelect($event)"
+                        (onClear)="onClientClear()" field="name" [forceSelection]="true" [dropdown]="true"
+                        placeholder="Busque y seleccione un cliente" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': writeOffForm.get('client')?.invalid && writeOffForm.get('client')?.touched}">
+                    </p-autoComplete>
+                </div>
+
+                <!-- Fecha del Castigo -->
+                <div class="flex flex-col gap-2">
+                    <label for="writeOffDate" class="font-semibold text-[var(--color-primary)]">Fecha del Castigo <span
+                            class="text-red-500">*</span></label>
+                    <p-calendar id="writeOffDate" formControlName="writeOffDate" dateFormat="dd/mm/yy" [showIcon]="true"
+                        placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
+                </div>
+
+                <!-- Cuenta Auxiliar Débito -->
+                <div class="flex flex-col gap-2">
+                    <label for="debitAuxiliaryAccount" class="font-semibold text-[var(--color-primary)]">Cuenta de Gasto
+                        <span class="text-red-500">*</span></label>
+                    <p-dropdown id="debitAuxiliaryAccount" formControlName="debitAuxiliaryAccount"
+                        [options]="auxiliaryAccounts" optionLabel="name" optionValue="id"
+                        placeholder="Seleccione la cuenta contable" [showClear]="true" [styleClass]="'w-full'">
+                    </p-dropdown>
+                </div>
+
+                <!-- Justificación -->
+                <div class="flex flex-col gap-2 md:col-span-2">
+                    <label for="justification" class="font-semibold text-[var(--color-primary)]">Justificación <span
+                            class="text-red-500">*</span></label>
+                    <textarea id="justification" formControlName="justification" pInputTextarea rows="3"
+                        placeholder="Describa el motivo del castigo de cartera..." class="w-full"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Selección de Facturas (Condicional) -->
+        @if (clientInvoices.length > 0) {
+        <div class="p-card p-component shadow-md rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold text-[var(--color-primary)] mb-6">Facturas Pendientes del Cliente</h2>
+
+            <p-table [value]="clientInvoices" dataKey="id" [(selection)]="selectedInvoices"
+                (selectionChange)="calculateSummary()" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]"
+                [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-striped">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th style="width: 4rem"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
+                        <th>Código Factura</th>
+                        <th>Fecha Elaboración</th>
+                        <th>Fecha Vencimiento</th>
+                        <th class="text-right">Valor Total</th>
+                        <th class="text-right">Saldo Pendiente</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-invoice>
+                    <tr>
+                        <td><p-tableCheckbox [value]="invoice"></p-tableCheckbox></td>
+                        <td>{{ invoice.factCode }}</td>
+                        <td>{{ invoice.issueDate | date:'dd/MM/yyyy' }}</td>
+                        <td>{{ invoice.expirationDate | date:'dd/MM/yyyy' }}</td>
+                        <td class="text-right">{{ invoice.totalValue | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                        <td class="text-right font-semibold">{{ invoice.pendingValue |
+                            currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                    </tr>
+                </ng-template>
+            </p-table>
+
+            <!-- Recuadro de Resumen -->
+            <div
+                class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg flex flex-wrap justify-around items-center gap-4">
+                <div class="text-center">
+                    <p class="text-sm text-gray-500">Facturas Seleccionadas</p>
+                    <p class="text-xl font-bold text-[var(--color-primary)]">{{ summary.count }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-500">Total Saldo Pendiente</p>
+                    <p class="text-xl font-bold text-green-600">{{ summary.totalPending |
+                        currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-500">Total Valor Facturas</p>
+                    <p class="text-xl font-bold text-gray-700">{{ summary.totalValue |
+                        currency:'COP':'symbol-narrow':'1.0-0' }}</p>
+                </div>
+            </div>
+        </div>
+        } @else if (writeOffForm.get('client')?.value) {
+        <div class="p-message p-message-info my-4">
+            <div class="p-message-wrapper">
+                <span class="p-message-icon pi pi-info-circle"></span>
+                <span class="p-message-text">El cliente seleccionado no tiene facturas con saldo pendiente.</span>
+            </div>
+        </div>
+        }
+
+        <!-- Botones de Acción -->
+        <div class="flex justify-center gap-4 pt-8 border-t border-gray-200 mt-8">
+            <p-button type="button" label="Cancelar" styleClass="p-button-secondary" (onClick)="goBack()"></p-button>
+            <p-button type="submit" label="Guardar Borrador"
+                [disabled]="writeOffForm.invalid || selectedInvoices.length === 0"></p-button>
+        </div>
+    </form>
+</div>

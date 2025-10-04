@@ -826,6 +826,26 @@ export const routes: Routes = [
                     './Financial/Wallet/CashReceipts/Components/receipt-accounting/receipt-accounting.component'
                   ).then((m) => m.ReceiptAccountingComponent),
               },
+              {
+                path: 'write-offs',
+                data: {
+                  breadcrumb: 'Castigos de cartera',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-list/write-off-list.component'
+                  ).then((m) => m.WriteOffListComponent),
+              },
+              {
+                path: 'write-offs/creation',
+                data: {
+                  breadcrumb: 'Creación de castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-creation/write-off-creation.component'
+                  ).then((m) => m.WriteOffCreationComponent),
+              },
             {
               path: 'accounting-entries',
               data: {
@@ -836,6 +856,7 @@ export const routes: Routes = [
                   './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
                 ).then((m) => m.ReceiptAccountingEntriesComponent),
             },
+            
             ],
           },
           {
