@@ -53,8 +53,6 @@ export class HeaderComponent implements OnInit {
     this.router.navigate(['/configuration']);
   }
   logout(): void {
-    console.log(
-      'Cerrar sesión'
-    ); /* this.auth.logout(); this.router.navigate(['/login']); */
+    this.auth.logout().subscribe();
   }
 }
