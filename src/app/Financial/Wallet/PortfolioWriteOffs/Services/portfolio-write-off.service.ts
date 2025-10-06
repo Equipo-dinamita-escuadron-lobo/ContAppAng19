@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { map, Observable, tap } from 'rxjs';
 import { CreateWriteOffRequestDto, PortfolioWriteOffResponseDto, PortfolioWriteOffView } from '../Models';
 
 @Injectable({
@@ -18,7 +18,9 @@ export class PortfolioWriteOffService {
   * @returns Un Observable con la respuesta del castigo creado.
   */
   createWriteOff(request: CreateWriteOffRequestDto): Observable<PortfolioWriteOffResponseDto> {
-    return this.http.post<PortfolioWriteOffResponseDto>(this.apiUrl, request);
+    console.log('Creating write-off with request:', request);
+    const url = `${this.apiUrl}/`;
+    return this.http.post<PortfolioWriteOffResponseDto>(url, request);
   }
 
   /**
@@ -60,7 +62,6 @@ export class PortfolioWriteOffService {
    */
   getWriteOffsByEnterprise(enterpriseId: string): Observable<PortfolioWriteOffView[]> {
     const url = `${this.apiUrl}/by-enterprise/${enterpriseId}`;
-    console.log('Fetching write-offs for enterprise ID:', enterpriseId);
     return this.http.get<PortfolioWriteOffResponseDto[]>(url).pipe(
       map(dtos => dtos.map(dto => this.mapDtoToView(dto)))
     );
@@ -72,16 +73,19 @@ export class PortfolioWriteOffService {
    * @returns El modelo de vista listo para ser usado por los componentes.
    */
   private mapDtoToView(dto: PortfolioWriteOffResponseDto): PortfolioWriteOffView {
-    return {
-      ...dto,
-      writeOffDate: new Date(dto.writeOffDate), // Conversión de string a Date
-      details: dto.details.map(detailDto => ({
-        ...detailDto,
-        invoice: {
-          ...detailDto.invoice,
-          expirationDate: new Date(detailDto.invoice.expirationDate) // Conversión de string a Date
-        }
-      }))
-    };
-  }
+  return {
+    ...dto,
+    writeOffDate: new Date(dto.writeOffDate),
+    // ¡AQUÍ ESTÁ LA CORRECIÓN!
+    // Comprobamos si dto.details existe antes de mapearlo. Si es null, devolvemos un array vacío.
+    details: dto.details ? dto.details.map(detailDto => ({
+      ...detailDto,
+      invoice: {
+        ...detailDto.invoice,
+        // También nos aseguramos de que la factura exista antes de acceder a sus propiedades
+        expirationDate: detailDto.invoice ? new Date(detailDto.invoice.expirationDate) : new Date()
+      }
+    })) : []
+  };
+}
 }

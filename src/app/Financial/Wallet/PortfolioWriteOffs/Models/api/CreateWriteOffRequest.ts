@@ -6,6 +6,7 @@ export interface CreateWriteOffRequestDto {
     justification: string;
     writeOffDate: string; // Formato ISO: "YYYY-MM-DD"
     debitAuxiliaryAccount: number;
+    debitAuxiliaryAccountId: number;
     enterpriseId: string;
     details: WriteOffDetailRequestDto[];
 }

@@ -7,6 +7,7 @@ import { WriteOffStatus } from "../enum/WriteOffStatus";
 export interface PortfolioWriteOffResponseDto {
     id: number;
     justification: string;
+    totalAmount: number;
     writeOffDate: string; 
     debitAuxiliaryAccount: number;
     status: WriteOffStatus;

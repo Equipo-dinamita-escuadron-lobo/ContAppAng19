@@ -42,7 +42,7 @@
                     <label for="debitAuxiliaryAccount" class="font-semibold text-[var(--color-primary)]">Cuenta de Gasto
                         <span class="text-red-500">*</span></label>
                     <p-dropdown id="debitAuxiliaryAccount" formControlName="debitAuxiliaryAccount"
-                        [options]="auxiliaryAccounts" optionLabel="name" optionValue="id"
+                        [options]="auxiliaryAccounts" optionLabel="label" optionValue="value"
                         placeholder="Seleccione la cuenta contable" [showClear]="true" [styleClass]="'w-full'">
                     </p-dropdown>
                 </div>

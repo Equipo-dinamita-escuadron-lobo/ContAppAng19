@@ -14,7 +14,7 @@ import { InputTextarea } from 'primeng/inputtextarea';
 import { ToastModule } from 'primeng/toast';
 import { CashReceiptService } from '../../../CashReceipts/Service/cash-receipt.service';
 import { PortfolioWriteOffService } from '../../Services/portfolio-write-off.service';
-import { Client, Invoice } from '../../../CashReceipts/Model';
+import { AuxiliaryAccountOption, Client, Invoice } from '../../../CashReceipts/Model';
 import { CreateWriteOffRequestDto, SelectionSummary } from '../../Models';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 
@@ -50,11 +50,7 @@ export class WriteOffCreationComponent {
   // Resumen de selección
   summary: SelectionSummary = { count: 0, totalPending: 0, totalValue: 0 };
 
-  // TODO: Cargar estas opciones desde un servicio
-  auxiliaryAccounts: any[] = [
-    { name: 'Cuenta de Gastos 1 (519901)', id: 519901 },
-    { name: 'Cuenta de Gastos 2 (519902)', id: 519902 }
-  ];
+  auxiliaryAccounts: AuxiliaryAccountOption[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -67,6 +63,7 @@ export class WriteOffCreationComponent {
 
   ngOnInit(): void {
     this.initForm();
+    this.loadDropdownOptions();
   }
 
   private initForm(): void {
@@ -75,6 +72,14 @@ export class WriteOffCreationComponent {
       writeOffDate: [new Date(), Validators.required],
       debitAuxiliaryAccount: [null, Validators.required],
       client: [null, Validators.required],
+    });
+  }
+
+  loadDropdownOptions(): void {
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    this.cashReceiptService.getAuxiliaryAccountsCached(enterpriseId).subscribe(data => {
+      this.auxiliaryAccounts = data;
+      console.log('Cuentas Auxiliares cargadas:', this.auxiliaryAccounts);
     });
   }
 
@@ -119,14 +124,16 @@ export class WriteOffCreationComponent {
     }
 
     const formValue = this.writeOffForm.value;
-    
-    // TODO: Obtener el enterpriseId del servicio de sesión
-    const enterpriseId = 'a1b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6'; // Placeholder
+
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    const debitAuxiliaryAccount = this.auxiliaryAccounts.find(acc => acc.value === formValue.debitAuxiliaryAccount);
+    const debitAuxiliaryAccountCode = debitAuxiliaryAccount?.codeAccount;
 
     const request: CreateWriteOffRequestDto = {
       justification: formValue.justification,
       writeOffDate: formValue.writeOffDate.toISOString().split('T')[0], // Formato YYYY-MM-DD
-      debitAuxiliaryAccount: formValue.debitAuxiliaryAccount,
+      debitAuxiliaryAccount: debitAuxiliaryAccountCode ? Number(debitAuxiliaryAccountCode) : 0,
+      debitAuxiliaryAccountId: formValue.debitAuxiliaryAccount,
       enterpriseId: enterpriseId,
       details: this.selectedInvoices.map(inv => ({ invoiceId: inv.id })),
     };

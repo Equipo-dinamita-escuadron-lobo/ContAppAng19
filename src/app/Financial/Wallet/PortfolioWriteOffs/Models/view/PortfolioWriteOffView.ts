@@ -11,7 +11,7 @@ export interface PortfolioWriteOffView {
     debitAuxiliaryAccount: number; // Podríamos enriquecerlo con el nombre de la cuenta si es necesario
     status: WriteOffStatus;
     enterpriseId: string;
-    details: WriteOffDetailView[];
+    details?: WriteOffDetailView[];
 }
 
 /**
@@ -19,7 +19,7 @@ export interface PortfolioWriteOffView {
  */
 export interface WriteOffDetailView {
     amountWrittenOff: number;
-    invoice: InvoiceSummaryView;
+    invoice?: InvoiceSummaryView;
 }
 
 /**
