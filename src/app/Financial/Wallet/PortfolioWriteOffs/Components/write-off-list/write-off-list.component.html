@@ -20,8 +20,11 @@
             <!-- Filtro Cliente (Placeholder) -->
             <div class="flex flex-col gap-2">
                 <label for="client" class="font-semibold text-[var(--color-primary)]">Cliente</label>
-                <!-- TODO: Implementar p-autoComplete cuando la lógica del cliente esté lista -->
-                <input id="client" type="text" pInputText placeholder="Filtro por implementar" class="p-inputtext p-component w-full" formControlName="client" [disabled]="true" />
+                <p-autoComplete id="client" formControlName="client" 
+                    [suggestions]="clientSuggestions" (completeMethod)="searchClient($event)" 
+                    field="name" [dropdown]="true" [forceSelection]="true" 
+                    placeholder="Busque por nombre" [showClear]="true" [styleClass]="'w-full'">
+                </p-autoComplete>
             </div>
 
             <!-- Filtro Fecha Inicio -->
@@ -42,7 +45,7 @@
                 <p-dropdown id="status" formControlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" placeholder="Todos los estados" [showClear]="true" [styleClass]="'w-full'"></p-dropdown>
             </div>
         </div>
-        <div class="flex justify-start gap-3 mt-10">
+        <div class="flex justify-center gap-3 mt-10">
             <p-button type="button" label="Limpiar filtros" styleClass="p-button-secondary" (onClick)="clearFilters()"></p-button>
         </div>
     </form>
@@ -64,7 +67,7 @@
                 <td>{{ writeOff.code }}</td>
                 <td>{{ writeOff.writeOffDate | date:'dd/MM/yyyy' }}</td>
                 <td>{{ writeOff.totalAmount | currency:'COP':'symbol':'1.0-0' }}</td>
-                <td>{{ writeOff.thirdId }}</td>
+                <td>{{ writeOff.thirdName || 'N/A' }}</td>
                 <td>
                     <p-tag [value]="getStatusLabel(writeOff.status)" [severity]="getStatusSeverity(writeOff.status)"></p-tag>
                 </td>
