@@ -88,6 +88,8 @@ export class WriteOffListComponent {
     this.portfolioWriteOffService.getWriteOffsByEnterprise(enterpriseId).subscribe({
       next: (data) => {
         this.allWriteOffs = data;
+        //Necesito ver que de devolvio en la data
+        console.log('Castigos de cartera cargados:', data);
         this.filteredWriteOffs = data;
       },
       error: (err) => console.error('Error al cargar castigos de cartera:', err),

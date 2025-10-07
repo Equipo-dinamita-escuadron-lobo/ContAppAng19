@@ -76,13 +76,10 @@ export class PortfolioWriteOffService {
   return {
     ...dto,
     writeOffDate: new Date(dto.writeOffDate),
-    // ¡AQUÍ ESTÁ LA CORRECIÓN!
-    // Comprobamos si dto.details existe antes de mapearlo. Si es null, devolvemos un array vacío.
     details: dto.details ? dto.details.map(detailDto => ({
       ...detailDto,
       invoice: {
         ...detailDto.invoice,
-        // También nos aseguramos de que la factura exista antes de acceder a sus propiedades
         expirationDate: detailDto.invoice ? new Date(detailDto.invoice.expirationDate) : new Date()
       }
     })) : []

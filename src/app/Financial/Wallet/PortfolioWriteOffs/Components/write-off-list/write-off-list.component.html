@@ -53,6 +53,7 @@
             <tr>
                 <th>Código Castigo</th>
                 <th>Fecha de Creación</th>
+                <th>Total castigado</th>
                 <th>Cliente</th>
                 <th>Estado</th>
                 <th class="text-center">Acciones</th>
@@ -60,9 +61,10 @@
         </ng-template>
         <ng-template pTemplate="body" let-writeOff>
             <tr>
-                <td>WRITE-{{ writeOff.id }}</td>
+                <td>{{ writeOff.code }}</td>
                 <td>{{ writeOff.writeOffDate | date:'dd/MM/yyyy' }}</td>
-                <td>-- Por Implementar --</td>
+                <td>{{ writeOff.totalAmount | currency:'COP':'symbol':'1.0-0' }}</td>
+                <td>{{ writeOff.thirdId }}</td>
                 <td>
                     <p-tag [value]="getStatusLabel(writeOff.status)" [severity]="getStatusSeverity(writeOff.status)"></p-tag>
                 </td>

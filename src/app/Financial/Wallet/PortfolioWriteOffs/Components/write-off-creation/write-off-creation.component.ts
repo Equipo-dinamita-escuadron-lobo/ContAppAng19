@@ -134,6 +134,7 @@ export class WriteOffCreationComponent {
       writeOffDate: formValue.writeOffDate.toISOString().split('T')[0], // Formato YYYY-MM-DD
       debitAuxiliaryAccount: debitAuxiliaryAccountCode ? Number(debitAuxiliaryAccountCode) : 0,
       debitAuxiliaryAccountId: formValue.debitAuxiliaryAccount,
+      thirdId: formValue.client.id,
       enterpriseId: enterpriseId,
       details: this.selectedInvoices.map(inv => ({ invoiceId: inv.id })),
     };

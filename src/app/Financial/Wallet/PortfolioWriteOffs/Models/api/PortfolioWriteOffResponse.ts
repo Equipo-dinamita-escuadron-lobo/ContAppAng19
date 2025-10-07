@@ -6,10 +6,13 @@ import { WriteOffStatus } from "../enum/WriteOffStatus";
  */
 export interface PortfolioWriteOffResponseDto {
     id: number;
+    code: string;
     justification: string;
     totalAmount: number;
     writeOffDate: string; 
     debitAuxiliaryAccount: number;
+    debitAuxiliaryAccountId: number;
+    thirdId: number;
     status: WriteOffStatus;
     enterpriseId: string;
     details: WriteOffDetailResponseDto[];

@@ -6,9 +6,14 @@ import { WriteOffStatus } from "../enum/WriteOffStatus";
  */
 export interface PortfolioWriteOffView {
     id: number;
+    code: string; 
+    totalAmount: number;
     justification: string;
-    writeOffDate: Date; // Convertido a objeto Date para la UI
-    debitAuxiliaryAccount: number; // Podríamos enriquecerlo con el nombre de la cuenta si es necesario
+    writeOffDate: Date; 
+    debitAuxiliaryAccount: number; 
+    debitAuxiliaryAccountId: number;
+    thirdId: number;
+    thirdName?: string;
     status: WriteOffStatus;
     enterpriseId: string;
     details?: WriteOffDetailView[];
@@ -30,5 +35,5 @@ export interface InvoiceSummaryView {
     factCode: string;
     totalValue: number;
     pendingValue: number;
-    expirationDate: Date; // Convertido a objeto Date para la UI
+    expirationDate: Date; 
 }
