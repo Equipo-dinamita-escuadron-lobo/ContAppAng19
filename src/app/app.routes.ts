@@ -846,6 +846,16 @@ export const routes: Routes = [
                     './Financial/Wallet/PortfolioWriteOffs/Components/write-off-creation/write-off-creation.component'
                   ).then((m) => m.WriteOffCreationComponent),
               },
+              {
+                path: 'write-offs/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-details/write-off-details.component'
+                  ).then((m) => m.WriteOffDetailsComponent),
+              },
             {
               path: 'accounting-entries',
               data: {

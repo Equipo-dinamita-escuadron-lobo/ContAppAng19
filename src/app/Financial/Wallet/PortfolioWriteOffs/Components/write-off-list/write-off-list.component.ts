@@ -170,7 +170,7 @@ export class WriteOffListComponent {
   }
 
   viewDetails(writeOff: PortfolioWriteOffView): void {
-    this.router.navigate(['/financial/wallet/write-offs', writeOff.id]);
+    this.router.navigate(['/financial/wallet/write-offs/details/', writeOff.id]);
   }
 
   getStatusSeverity(status: WriteOffStatus): 'success' | 'warning' | 'danger' {
