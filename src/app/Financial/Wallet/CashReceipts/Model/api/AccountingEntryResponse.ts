@@ -3,7 +3,7 @@ export interface AccountingEntryResponse {
   code: string;
   date: string; // O Date si prefieres manejarlo como objeto Date
   description: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'ANULADO'; // Ajusta los estados según tu enum de backend
+  status: 'ACTIVE' | 'VOIDED';
   sourceDocumentId: number;
   movements: AccountingMovementResponse[];
 }

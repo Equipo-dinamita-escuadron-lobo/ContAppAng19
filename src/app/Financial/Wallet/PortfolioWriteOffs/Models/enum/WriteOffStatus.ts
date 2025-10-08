@@ -1,0 +1,5 @@
+export enum WriteOffStatus {
+    PENDING_CONFIRMATION = 'PENDING_CONFIRMATION',
+    CONFIRMED = 'CONFIRMED',
+    VOIDED = 'VOIDED',
+}

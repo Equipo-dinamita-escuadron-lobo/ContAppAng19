@@ -11,4 +11,5 @@ export interface Invoice {
     // Propiedades opcionales añadidas por el frontend para la interacción del usuario.
     selectedForPayment?: boolean; 
     amountToPay?: number; 
+    totalValue?: number;
 }

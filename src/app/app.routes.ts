@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
 import { StyleGuideComponent } from './Shared/Components/style-guide/style-guide.component';
 import { LoginComponent } from './Core/auth/login/login.component';
+import { ForgotPasswordComponent } from './Core/auth/forgot-password/forgot-password.component';
+import { RegisterComponent } from './Core/auth/register/register.component';
+import { ResetPasswordComponent } from './Core/auth/reset-password/reset-password.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
 import { hasRoleChildGuard, hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
@@ -16,6 +19,18 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
+  },
+  {
+    path: 'register',
+    component: RegisterComponent,
+  },
+  {
+    path: 'forgot-password',
+    component: ForgotPasswordComponent,
+  },
+  {
+    path: 'reset-password',
+    component: ResetPasswordComponent,
   },
   {
     path: 'enterprise/list',
@@ -826,6 +841,36 @@ export const routes: Routes = [
                     './Financial/Wallet/CashReceipts/Components/receipt-accounting/receipt-accounting.component'
                   ).then((m) => m.ReceiptAccountingComponent),
               },
+              {
+                path: 'write-offs',
+                data: {
+                  breadcrumb: 'Castigos de cartera',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-list/write-off-list.component'
+                  ).then((m) => m.WriteOffListComponent),
+              },
+              {
+                path: 'write-offs/creation',
+                data: {
+                  breadcrumb: 'Creación de castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-creation/write-off-creation.component'
+                  ).then((m) => m.WriteOffCreationComponent),
+              },
+              {
+                path: 'write-offs/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-details/write-off-details.component'
+                  ).then((m) => m.WriteOffDetailsComponent),
+              },
             {
               path: 'accounting-entries',
               data: {
@@ -836,6 +881,7 @@ export const routes: Routes = [
                   './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
                 ).then((m) => m.ReceiptAccountingEntriesComponent),
             },
+            
             ],
           },
           {

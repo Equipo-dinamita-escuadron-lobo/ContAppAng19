@@ -78,7 +78,8 @@ export class CashReceiptService {
             label: `${account.code} - ${account.description}`,
             codeAccount: account.code,
             description: account.description,
-            value: account.id as number
+            value: account.id as number,
+            costCenter: account.costCenter || null
           }));
       })
     );
@@ -306,8 +307,8 @@ export class CashReceiptService {
     return entry;
   }
 
-  
-   private getAccountingEntryByReceiptIdApi(receiptId: number): Observable<AccountingEntryResponse> {
+
+  private getAccountingEntryByReceiptIdApi(receiptId: number): Observable<AccountingEntryResponse> {
     return this.http.get<AccountingEntryResponse>(`${this.accountingApiUrl}/entries/by-receipt/${receiptId}`);
   }
 
@@ -318,7 +319,8 @@ export class CashReceiptService {
    * @returns Un Observable con el asiento contable listo para la vista.
    */
   getAccountingEntryViewByReceiptId(receiptId: number): Observable<AccountingEntryView> {
-    const enterpriseId = this.localStorageMethods.getIdEnterprise();;
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    console.log('Enterprise ID obtenido para obtener asientos contables:', enterpriseId);
     if (!enterpriseId) {
       return of({} as AccountingEntryView); // Manejar error apropiadamente
     }
@@ -330,6 +332,7 @@ export class CashReceiptService {
         const accountIds = [...new Set(entryApi.movements.map(m => m.account))];
         const thirdPartyIds = [...new Set(entryApi.movements.map(m => m.thirdPartyId))];
 
+        console.log(`Cuentas involucradas en el asiento del recibo ${receiptId}:`, accountIds);
         // 3. Realizar llamadas en paralelo para obtener los datos de enriquecimiento
         return forkJoin({
           entry: of(entryApi),
@@ -374,6 +377,7 @@ export class CashReceiptService {
               totalDebit,
               totalCredit
             };
+            console.log("Asiento contable enriquecido:", entryView);
             return entryView;
           })
         );

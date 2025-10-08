@@ -1,5 +1,5 @@
 /* Estilos generales */
-body.login-page {
+body.register-page {
     font-family: 'Open Sans', Arial, sans-serif;
     margin: 0;
     padding: 0;
@@ -10,7 +10,7 @@ body.login-page {
 }
 
 /* Encabezado */
-.login-header {
+.register-header {
     position: absolute;
     top: 30px;
     left: 30px;
@@ -44,7 +44,7 @@ body.login-page {
     min-height: 0;
 }
 
-.login-form-container {
+.register-form-container {
     width: 100%;
     display: flex;
     align-items: center;
@@ -52,18 +52,18 @@ body.login-page {
 }
 
 @media (min-width: 768px) {
-    .login-form-container {
+    .register-form-container {
         width: 50%;
     }
 }
 
-.login-form {
+.register-form {
     width: 100%;
     max-width: 448px;
     padding: 32px;
 }
 
-.login-title {
+.register-title {
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 32px;
@@ -115,39 +115,19 @@ body.login-page {
     color: #003DA5;
 }
 
-.input-icon.pi-eye {
-    cursor: pointer;
-}
-
-.loginfields {
+.registerfields {
     color: #000066 !important;
     font-weight: bold !important;
 }
 
-.forgot-password-text {
-    text-align: center;
-    margin-top: 12px;
-}
-
-.forgot-password-link {
-    color: #003DA5;
-    font-weight: 500;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.forgot-password-link:hover {
-    text-decoration: underline;
-}
-
-.new-user-text {
+.existing-user-text {
     font-weight: bold;
     color: #000066;
     margin-top: 16px;
     text-align: center;
 }
 
-.register-link {
+.login-link {
     color: #DB141C;
     font-weight: bold;
     text-decoration: none;
@@ -178,7 +158,7 @@ body.login-page {
 }
 
 /* Imagen derecha */
-.login-image {
+.register-image {
     display: none;
     width: 50%;
     align-items: center;
@@ -189,12 +169,12 @@ body.login-page {
 }
 
 @media (min-width: 1024px) {
-    .login-image {
+    .register-image {
         display: flex;
     }
 }
 
-.login-image img {
+.register-image img {
     object-fit: cover;
     width: 100%;
     height: 100%;
@@ -286,4 +266,29 @@ body.login-page {
   width: 2px;
   background: #ccc;
   margin: 0 20px;
+}
+
+/* Mensajes */
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #c3e6cb;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border: 1px solid #f5c6cb;
+}
+
+.error-text {
+    color: #EF4444;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
 }
