@@ -1,0 +1,89 @@
+<div class="w-full h-full p-4 md:p-10 font-sans">
+    <!-- Encabezado -->
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
+        <div>
+            <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+                Castigos de Cartera
+            </h1>
+            <p class="font-normal text-sm mt-2 text-black">
+                Consulte y gestione los castigos de cartera de facturas registrados en el sistema.
+            </p>
+        </div>
+        <div>
+            <p-button label="Crear Castigo de Cartera" icon="pi pi-plus" (onClick)="goToCreateWriteOff()"></p-button>
+        </div>
+    </div>
+
+    <!-- Sección de filtros -->
+    <form [formGroup]="filterForm" class="mb-12 mt-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 items-end">
+            <!-- Filtro Cliente (Placeholder) -->
+            <div class="flex flex-col gap-2">
+                <label for="client" class="font-semibold text-[var(--color-primary)]">Cliente</label>
+                <p-autoComplete id="client" formControlName="client" 
+                    [suggestions]="clientSuggestions" (completeMethod)="searchClient($event)" 
+                    field="name" [dropdown]="true" [forceSelection]="true" 
+                    placeholder="Busque por nombre" [showClear]="true" [styleClass]="'w-full'">
+                </p-autoComplete>
+            </div>
+
+            <!-- Filtro Fecha Inicio -->
+            <div class="flex flex-col gap-2">
+                <label for="startDate" class="font-semibold text-[var(--color-primary)]">Fecha Desde</label>
+                <p-calendar id="startDate" formControlName="startDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
+            </div>
+
+            <!-- Filtro Fecha Fin -->
+            <div class="flex flex-col gap-2">
+                <label for="endDate" class="font-semibold text-[var(--color-primary)]">Fecha Hasta</label>
+                <p-calendar id="endDate" formControlName="endDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
+            </div>
+
+            <!-- Filtro Estado -->
+            <div class="flex flex-col gap-2">
+                <label for="status" class="font-semibold text-[var(--color-primary)]">Estado</label>
+                <p-dropdown id="status" formControlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" placeholder="Todos los estados" [showClear]="true" [styleClass]="'w-full'"></p-dropdown>
+            </div>
+        </div>
+        <div class="flex justify-center gap-3 mt-10">
+            <p-button type="button" label="Limpiar filtros" styleClass="p-button-secondary" (onClick)="clearFilters()"></p-button>
+        </div>
+    </form>
+
+    <!-- Tabla de resultados -->
+    <p-table [value]="filteredWriteOffs" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-striped">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Código Castigo</th>
+                <th>Fecha de Creación</th>
+                <th>Total castigado</th>
+                <th>Cliente</th>
+                <th>Estado</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-writeOff>
+            <tr>
+                <td>{{ writeOff.code }}</td>
+                <td>{{ writeOff.writeOffDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ writeOff.totalAmount | currency:'COP':'symbol':'1.0-0' }}</td>
+                <td>{{ writeOff.thirdName || 'N/A' }}</td>
+                <td>
+                    <p-tag [value]="getStatusLabel(writeOff.status)" [severity]="getStatusSeverity(writeOff.status)"></p-tag>
+                </td>
+                <td class="text-center">
+                    <p-button icon="pi pi-eye" styleClass="p-button-rounded p-button-text text-primary" pTooltip="Ver detalles" (onClick)="viewDetails(writeOff)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="empty">
+            <tr>
+                <td colspan="5" class="text-center py-8">
+                    <i class="pi pi-inbox text-2xl text-gray-400 mb-2"></i>
+                    <p class="font-semibold">No se encontraron castigos de cartera</p>
+                    <p class="text-sm text-gray-500">Intente ajustar los filtros o cree un nuevo castigo.</p>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>

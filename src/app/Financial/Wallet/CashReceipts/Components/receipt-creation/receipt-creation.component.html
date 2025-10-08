@@ -116,7 +116,7 @@
                 <div class="w-full md:w-2/3">
                     <p-dropdown id="auxiliaryAccount" formControlName="auxiliaryAccount" [options]="auxiliaryAccounts"
                         optionLabel="label" optionValue="codeAccount" placeholder="Seleccione una cuenta"
-                        [styleClass]="'w-full'"
+                        [styleClass]="'w-full'" (onChange)="onAuxiliaryAccountChange()"
                         [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('auxiliaryAccount')?.invalid && cashReceiptForm.get('auxiliaryAccount')?.touched}">
                     </p-dropdown>
                     @if (cashReceiptForm.get('auxiliaryAccount')?.touched &&
@@ -125,6 +125,8 @@
                     }
                 </div>
             </div>
+
+
 
             <!-- Valor del Ingreso -->
             <div class="flex flex-col gap-2">
@@ -142,6 +144,24 @@
                     }
                 </div>
             </div>
+
+            @if (showCostCenterField == true) {
+            <div class="flex flex-col gap-2">
+                <label for="costCenter" class="font-semibold text-[var(--color-primary)]">
+                    Centro de Costo <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown id="costCenter" formControlName="centerCost" [options]="costCenters" optionLabel="name"
+                        optionValue="id" placeholder="Seleccione un centro de costo" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('centerCost')?.invalid && cashReceiptForm.get('centerCost')?.touched}">
+                    </p-dropdown>
+                    @if (cashReceiptForm.get('centerCost')?.touched &&
+                    cashReceiptForm.get('centerCost')?.invalid) {
+                    <small class="p-error error-message">El centro de costo es requerido.</small>
+                    }
+                </div>
+            </div>
+            }
             }
         </div>
 

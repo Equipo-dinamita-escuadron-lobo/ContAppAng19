@@ -842,15 +842,46 @@ export const routes: Routes = [
                   ).then((m) => m.ReceiptAccountingComponent),
               },
               {
-                path: 'accounting-entries',
+                path: 'write-offs',
                 data: {
-                  breadcrumb: 'Asientos Contables',
-              },
+                  breadcrumb: 'Castigos de cartera',
+                },
                 loadComponent: () =>
                   import(
-                    './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
-                  ).then((m) => m.ReceiptAccountingEntriesComponent),
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-list/write-off-list.component'
+                  ).then((m) => m.WriteOffListComponent),
               },
+              {
+                path: 'write-offs/creation',
+                data: {
+                  breadcrumb: 'Creación de castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-creation/write-off-creation.component'
+                  ).then((m) => m.WriteOffCreationComponent),
+              },
+              {
+                path: 'write-offs/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-details/write-off-details.component'
+                  ).then((m) => m.WriteOffDetailsComponent),
+              },
+            {
+              path: 'accounting-entries',
+              data: {
+                breadcrumb: 'Asientos Contables',
+            },
+              loadComponent: () =>
+                import(
+                  './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
+                ).then((m) => m.ReceiptAccountingEntriesComponent),
+            },
+            
             ],
           },
           {

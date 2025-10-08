@@ -19,8 +19,10 @@ import { PaymentMethodsServiceService } from '../../../../../GeneralMasters/Paym
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { PaymentMethod } from '../../../../../GeneralMasters/PaymentMethods/models/PaymentMethods';
 import { CashReceiptService } from '../../Service/cash-receipt.service';
-import { Client, DropdownOption, Invoice } from '../../Model';
+import { AuxiliaryAccountOption, Client, DropdownOption, Invoice } from '../../Model';
 import { ReceiptCreateRequest } from '../../Model/api';
+import { CostCenter } from '../../../../../GeneralMasters/CostCenters/models/cost-center.model';
+import { CostCenterService } from '../../../../../GeneralMasters/CostCenters/services/cost-center.service';
 
 @Component({
   selector: 'app-receipt-creation',
@@ -53,7 +55,7 @@ export class ReceiptCreationComponent {
   receiptTypes: DropdownOption[] = []; // Tipos de recibo
   paymentMethods: PaymentMethod[] = []; // Métodos de pago cargados desde el servicio
   receiptTypeOptions: DropdownOption[] = []; // Opciones para el tipo de recibo (Abono a Deuda, Ingreso Directo)
-  auxiliaryAccounts: DropdownOption[] = []; // Cuentas auxiliares cargadas desde el servicio
+  auxiliaryAccounts: AuxiliaryAccountOption[] = []; // Cuentas auxiliares cargadas desde el servicio
 
   // Para Autocomplete de Cliente
   clients: Client[] = [];
@@ -68,12 +70,17 @@ export class ReceiptCreationComponent {
 
   totalAmount: number = 0;
 
+  // Propiedades para el Centro de Costo
+  costCenters: CostCenter[] = [];
+  showCostCenterField: boolean = false;
+
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
     private router: Router,
     private paymentMethodService: PaymentMethodsServiceService,
-    private cashReceiptService: CashReceiptService
+    private cashReceiptService: CashReceiptService,
+    private costCenterService: CostCenterService
   ) { }
 
   ngOnInit(): void {
@@ -87,14 +94,15 @@ export class ReceiptCreationComponent {
     this.cashReceiptForm = this.fb.group({
       receiptType: ['', Validators.required],
       paymentMethod: ['', Validators.required],
-      client: [null, Validators.required], 
+      client: [null, Validators.required],
       issueDate: [new Date(), Validators.required],
-      receiptTypeOption: ['', Validators.required], 
+      receiptTypeOption: ['', Validators.required],
       observations: [''],
 
       // Campos condicionales para "Ingreso Directo"
       auxiliaryAccount: [null],
       directIncomeAmount: [null],
+      costCenter: [null]
     });
   }
 
@@ -114,7 +122,7 @@ export class ReceiptCreationComponent {
       { label: 'Ingreso Directo', value: 'direct_income' },
     ];
 
-    this.cashReceiptService.getAuxiliaryAccounts().subscribe(data => {
+    this.cashReceiptService.getAuxiliaryAccountsCached(enterpriseId).subscribe(data => {
       this.auxiliaryAccounts = data;
       console.log('Cuentas Auxiliares cargadas:', this.auxiliaryAccounts);
     });
@@ -150,7 +158,7 @@ export class ReceiptCreationComponent {
     console.log(`Cargando facturas para el cliente ID: ${clientId}`);
     this.cashReceiptService.getInvoicesByClient(clientId).subscribe(invoices => {
       this.selectedClientInvoices = invoices;
-      this.availableInvoicesToSelect = [...this.selectedClientInvoices]; 
+      this.availableInvoicesToSelect = [...this.selectedClientInvoices];
     });
   }
 
@@ -166,6 +174,8 @@ export class ReceiptCreationComponent {
     this.cashReceiptForm.get('auxiliaryAccount')?.updateValueAndValidity();
     this.cashReceiptForm.get('directIncomeAmount')?.clearValidators();
     this.cashReceiptForm.get('directIncomeAmount')?.updateValueAndValidity();
+
+    this.resetCostCenterField(); // Reseteamos el campo de centro de costo
 
     this.selectedInvoicesForPayment = []; // Limpiar tabla de abono
 
@@ -280,6 +290,56 @@ export class ReceiptCreationComponent {
   }
 
   /**
+   * Se activa al cambiar la cuenta auxiliar.
+   * Verifica si la cuenta seleccionada requiere centro de costo.
+   */
+  onAuxiliaryAccountChange(): void {
+    const accountCode = this.cashReceiptForm.get('auxiliaryAccount')?.value;
+    this.resetCostCenterField(); // Reseteamos por si cambian de opción
+
+    if (!accountCode) {
+      return;
+    }
+
+    const selectedAccount = this.auxiliaryAccounts.find(acc => acc.codeAccount === accountCode);
+
+    console.log('Cuenta Auxiliar seleccionada:', selectedAccount);
+    if (selectedAccount && selectedAccount.costCenter) {
+      this.showCostCenterField = true;
+      this.cashReceiptForm.get('centerCost')?.setValidators(Validators.required);
+      this.loadCostCenters();
+    }
+
+    this.cashReceiptForm.get('centerCost')?.updateValueAndValidity();
+  }
+
+  /**
+   * Carga los centros de costo desde el servicio.
+   */
+  loadCostCenters(): void {
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) return;
+
+    this.costCenterService.findActiveAuxiliary(enterpriseId).subscribe(data => {
+      this.costCenters = data;
+    });
+
+    console.log('Centros de costo cargados:', this.costCenters);
+  }
+
+  /**
+   * Método para resetear el estado del campo de centro de costo.
+   */
+  private resetCostCenterField(): void {
+    this.showCostCenterField = false;
+    this.costCenters = [];
+    const costCenterControl = this.cashReceiptForm.get('centerCost');
+    costCenterControl?.clearValidators();
+    costCenterControl?.setValue(null);
+    costCenterControl?.updateValueAndValidity();
+  }
+
+  /**
    * Valida si el formulario es valido para ser enviado, 
    * considerando las validaciones condicionales para cada tipo de recibo
    */
@@ -339,20 +399,20 @@ export class ReceiptCreationComponent {
     const accountingAccount = this.accountingAccountForPaymentMethod();
 
     if (accountingAccount === null) {
-        this.messageService.add({
-            severity: 'error',
-            summary: 'Error de Configuración',
-            detail: 'El método de pago seleccionado no tiene una cuenta contable asociada. Por favor, revise la configuración.'
-        });
-        return; // Detenemos la ejecución.
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de Configuración',
+        detail: 'El método de pago seleccionado no tiene una cuenta contable asociada. Por favor, revise la configuración.'
+      });
+      return; // Detenemos la ejecución.
     }
 
     // Construir el objeto de solicitud para la API (ReceiptCreateRequest)
     const requestData: ReceiptCreateRequest = {
       thirdPartyId: client.id,
       paymentMethodId: formValue.paymentMethod,
-      paymentMethodAccount: accountingAccount, 
-      receiptTypeId: typeOptionId, 
+      paymentMethodAccount: accountingAccount,
+      receiptTypeId: typeOptionId,
       observations: formValue.observations,
       ledgerAccountId: formValue.auxiliaryAccount,
       enterpriseId: enterpriseId,
@@ -369,7 +429,13 @@ export class ReceiptCreationComponent {
           amountPaid: invoice.amountToPay!
         }));
     } else if (formValue.receiptTypeOption === 'direct_income') {
-      requestData.ledgerAccountId = formValue.auxiliaryAccount; 
+      requestData.ledgerAccountId = formValue.auxiliaryAccount;
+
+      if (this.showCostCenterField) {
+        requestData.centerCostId = formValue.centerCost;
+        console.log('Centro de costo seleccionado:', formValue.centerCost);
+      }
+
     }
 
     console.log('Enviando a la API:', requestData);
@@ -429,6 +495,6 @@ export class ReceiptCreationComponent {
   }
 
   goBack(): void {
-    this.router.navigate(['/financial/wallet/receipts']); 
+    this.router.navigate(['/financial/wallet/receipts']);
   }
 }

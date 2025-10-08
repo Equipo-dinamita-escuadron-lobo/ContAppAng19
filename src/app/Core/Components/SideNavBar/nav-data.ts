@@ -169,6 +169,11 @@ export const navbarData: INavbarData[] = [
             label: 'Asientos Contables',
           },
           {
+            routeLink: '/financial/wallet/write-offs',
+            icon: 'gavel',
+            label: 'Castigos de cartera',
+          },
+          {
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',
