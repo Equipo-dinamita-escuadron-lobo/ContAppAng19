@@ -208,9 +208,16 @@ export class ThirdExportComponent implements OnInit {
             try {
               const errorData = JSON.parse(reader.result as string);
               const errorMessage = errorData.message || 'No se pudo exportar los terceros.';
+              
+              // Determinar si es un caso informativo o un error real
+              const isInfoCase = errorMessage.toLowerCase().includes('no se encontraron') || 
+                                 errorMessage.toLowerCase().includes('no hay') ||
+                                 errorMessage.toLowerCase().includes('sin terceros') ||
+                                 err.status === 404;
+              
               this.messageService.add({
-                severity: 'error',
-                summary: 'Error de Exportación',
+                severity: isInfoCase ? 'info' : 'error',
+                summary: isInfoCase ? 'Información' : 'Error de Exportación',
                 detail: errorMessage
               });
             } catch (e) {
@@ -231,9 +238,16 @@ export class ThirdExportComponent implements OnInit {
           reader.readAsText(err.error);
         } else {
           const errorMessage = err.error?.message || 'No se pudo exportar los terceros.';
+          
+          // Determinar si es un caso informativo o un error real
+          const isInfoCase = errorMessage.toLowerCase().includes('no se encontraron') || 
+                             errorMessage.toLowerCase().includes('no hay') ||
+                             errorMessage.toLowerCase().includes('sin terceros') ||
+                             err.status === 404;
+          
           this.messageService.add({
-            severity: 'error',
-            summary: 'Error de Exportación',
+            severity: isInfoCase ? 'info' : 'error',
+            summary: isInfoCase ? 'Información' : 'Error de Exportación',
             detail: errorMessage
           });
         }
