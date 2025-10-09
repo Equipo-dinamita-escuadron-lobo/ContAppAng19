@@ -3,151 +3,98 @@
 
 <!-- Modal Dialog de PrimeNG para exportación -->
 <p-dialog
-  [header]="inputData?.title || 'Exportar Terceros'"
+  header="Exportar Terceros"
   [(visible)]="visible"
   [modal]="true"
   [closable]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '90vw', maxWidth: '600px' }"
+  [style]="{ width: '90vw', maxWidth: '950px' }"
+  styleClass="font-family-sans"
   (onHide)="onHide()">
   
-  <!-- Contenido del modal -->
   <div class="p-6">
-    
-    <!-- Información sobre la exportación -->
-    <div class="mb-6">
-      <h4 class="section-title">Exportación de Terceros</h4>
-      <p class="text-gray-600 text-sm mb-4">
-        Esta función le permite exportar todos los terceros de su empresa a un archivo Excel (.xlsx) 
-        con el formato estándar para respaldo o análisis.
+    <!-- Descripción -->
+    <div class="mb-30">
+      <p class="font-family-sans text-base leading-relaxed text-neutral-30">
+        Seleccione los campos opcionales que desea incluir en su exportación y el estado de los terceros.
       </p>
     </div>
-    
-    <!-- Estado de carga o información -->
-    <div class="mb-6" *ngIf="!loading; else loadingTemplate">
-      <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-400">
-        <div class="flex items-start">
-          <i class="pi pi-info-circle text-blue-400 mr-2 mt-0.5"></i>
-          <div>
-            <p class="text-sm text-blue-800 font-semibold">Información del archivo</p>
-            <ul class="text-xs text-blue-700 mt-2 space-y-1">
-              <li>• Formato: Excel (.xlsx)</li>
-              <li>• Incluye todos los campos de terceros</li>
-              <li>• Se descargará automáticamente</li>
-              <li>• Compatible con Excel 2007 o superior</li>
-            </ul>
+
+    <!-- Campos obligatorios y opcionales en dos columnas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Campos obligatorios -->
+      <div class="border border-neutral-80 rounded-lg overflow-hidden">
+        <div class="flex items-center gap-8 bg-neutral-95 px-4 py-3 border-b border-neutral-80">
+          <i class="pi pi-check-circle text-complementary-green text-xl"></i>
+          <span class="font-family-sans font-bold text-lg text-neutral-20">Campos Obligatorios</span>
+        </div>
+        <div class="p-4 bg-white">
+          <ul class="list-none p-0 m-0 max-h-96 overflow-y-auto">
+            <li *ngFor="let field of requiredFields" class="flex items-center gap-3 py-2">
+              <i class="pi pi-angle-right text-neutral-50 text-sm"></i>
+              <span class="font-family-sans text-sm text-neutral-30">{{ field }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Campos opcionales -->
+      <div class="border border-neutral-80 rounded-lg overflow-hidden">
+        <div class="flex items-center gap-8 bg-neutral-95 px-4 py-3 border-b border-neutral-80">
+          <i class="pi pi-info-circle text-tertiary text-xl"></i>
+          <span class="font-family-sans font-bold text-lg text-neutral-20">Campos Opcionales</span>
+        </div>
+        <div class="p-4 bg-white">
+          <ul class="list-none p-0 m-0 max-h-96 overflow-y-auto">
+            <li *ngFor="let field of optionalFields" class="flex items-center gap-3 py-2">
+              <p-checkbox 
+                [binary]="true" 
+                [(ngModel)]="field.selected"
+                [inputId]="field.value"
+                styleClass="mr-2">
+              </p-checkbox>
+              <label [for]="field.value" class="font-family-sans text-sm text-neutral-30 cursor-pointer">
+                {{ field.label }}
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtro de estado -->
+    <div class="mb-6">
+      <div class="border border-neutral-80 rounded-lg p-4 bg-neutral-95">
+        <label class="font-family-sans font-bold text-base text-neutral-20 mb-3 block">
+          Estado de terceros a exportar:
+        </label>
+        <div class="flex flex-wrap gap-12">
+          <div *ngFor="let option of statusOptions" class="flex items-center">
+            <p-radioButton 
+              [inputId]="option.label" 
+              [value]="option.value" 
+              [(ngModel)]="statusFilter"
+              name="statusFilter">
+            </p-radioButton>
+            <label [for]="option.label" class="font-family-sans text-sm text-neutral-30 ml-4 cursor-pointer">
+              {{ option.label }}
+            </label>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Template de carga -->
-    <ng-template #loadingTemplate>
-      <div class="flex flex-col items-center justify-center py-8">
-        <p-progressSpinner styleClass="w-12 h-12 mb-4"></p-progressSpinner>
-        <p class="text-gray-600 text-sm">Procesando terceros...</p>
-        <p class="text-gray-500 text-xs mt-1">Por favor espere mientras se genera el archivo</p>
-      </div>
-    </ng-template>
-    
-    <!-- Campos que se incluirán en la exportación -->
-    <div class="mb-6" *ngIf="!loading">
-      <h5 class="text-sm font-semibold text-gray-700 mb-3">Campos incluidos en la exportación:</h5>
-      <div class="grid grid-cols-2 gap-2 text-xs text-gray-600">
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Tipo persona</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Tipos de tercero</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Nombres</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Apellidos</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Razón social</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Género</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Tipo ID</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Identificación</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Número de verificación</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Estado</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>País</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Departamento</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Ciudad</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Dirección</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Teléfono</span>
-        </div>
-        <div class="flex items-center">
-          <i class="pi pi-check text-green-500 mr-2"></i>
-          <span>Correo</span>
-        </div>
-      </div>
+    <!-- Botón de exportación -->
+    <div class="flex justify-end mt-30">
+      <p-button 
+        label="Exportar"
+        [loading]="loading"
+        [disabled]="loading"
+        (click)="startExport()"
+        icon="pi pi-download"
+        styleClass="p-button-success p-button-lg font-family-sans">
+      </p-button>
     </div>
   </div>
-  
-  <!-- Footer del modal -->
-  <ng-template pTemplate="footer">
-    <div class="flex justify-between items-center w-full">
-      <div class="text-sm text-gray-500">
-        <i class="pi pi-file-excel text-green-500 mr-1"></i>
-        Archivo Excel (.xlsx)
-      </div>
-      
-      <div class="flex gap-2">
-        <p-button
-          label="Exportar"
-          icon="pi pi-download"
-          [loading]="loading"
-          [disabled]="loading"
-          (click)="startExport()">
-        </p-button>
-        
-        <p-button
-          label="Cancelar"
-          icon="pi pi-times"
-          severity="secondary"
-          [disabled]="loading"
-          (click)="closeModal()">
-        </p-button>
-      </div>
-    </div>
-  </ng-template>
 </p-dialog>

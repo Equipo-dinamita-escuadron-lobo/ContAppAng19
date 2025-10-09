@@ -168,4 +168,41 @@ export class ThirdService {
       })
     );
   }
+
+  /**
+   * Exporta los terceros a un archivo Excel
+   * @param entId ID de la empresa
+   * @param companyName Nombre de la empresa
+   * @param status Estado de los terceros (true: activos, false: inactivos, null: todos)
+   * @param optionalFields Array con los campos opcionales a incluir
+   * @returns Observable con la respuesta HTTP que contiene el archivo Excel
+   */
+  exportToExcel(entId: string, companyName: string, status: boolean | null, optionalFields: string[]): Observable<any> {
+    let params = new HttpParams()
+      .set('entId', entId)
+      .set('companyName', companyName);
+
+    // Agregar el filtro de estado si está definido
+    if (status !== null) {
+      params = params.set('status', status.toString());
+    }
+
+    // Agregar los campos opcionales si existen
+    if (optionalFields && optionalFields.length > 0) {
+      optionalFields.forEach(field => {
+        params = params.append('optionalFields', field);
+      });
+    }
+
+    return this.http.get(this.thirdApiUrl + 'export/excel', {
+      params,
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error) => {
+        console.error('Error al exportar terceros:', error);
+        return throwError(() => error);
+      })
+    );
+  }
 }
