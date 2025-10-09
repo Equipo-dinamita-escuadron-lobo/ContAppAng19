@@ -205,4 +205,34 @@ export class ThirdService {
       })
     );
   }
+
+  /**
+   * Importa terceros masivamente desde un archivo Excel
+   * @param entId ID de la empresa
+   * @param file Archivo Excel con los terceros a importar
+   * @returns Observable con la respuesta de importación
+   */
+  importFromExcel(entId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+
+    let params = new HttpParams().set('entId', entId);
+
+    const url = this.thirdApiUrl + 'import/excel';
+    console.log('URL de importación:', url);
+    console.log('Parámetros:', { entId });
+    console.log('Archivo:', file.name);
+
+    return this.http.post(url, formData, {
+      params,
+      observe: 'response'
+    }).pipe(
+      catchError((error) => {
+        console.error('Error al importar terceros:', error);
+        console.error('Status:', error.status);
+        console.error('Error completo:', JSON.stringify(error, null, 2));
+        return throwError(() => error);
+      })
+    );
+  }
 }
