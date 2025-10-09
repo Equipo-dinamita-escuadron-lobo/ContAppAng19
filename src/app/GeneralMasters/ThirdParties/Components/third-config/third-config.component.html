@@ -444,6 +444,13 @@
                       (onClick)="editThirdType(thirdType, i)" 
                       styleClass="p-button-rounded p-button-text">
                     </p-button>
+                    <p-button 
+                      icon="pi pi-trash" 
+                      pTooltip="Eliminar" 
+                      tooltipPosition="top" 
+                      (onClick)="confirmDeleteThirdType(thirdType, i)" 
+                      styleClass="p-button-rounded p-button-text p-button-danger">
+                    </p-button>
                     <p-toggleSwitch 
                       [ngModel]="thirdType.status"
                       (onChange)="toggleThirdTypeStatus(thirdType, i)"
