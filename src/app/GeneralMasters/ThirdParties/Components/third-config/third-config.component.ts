@@ -241,7 +241,15 @@ export class ThirdConfigComponent implements OnInit {
     const newStatus = !typeId.status;
     const action = newStatus ? 'activar' : 'desactivar';
     
-    const updatedTypeId = { ...typeId, status: newStatus };
+    // Asegurarnos de incluir todos los campos, especialmente el id
+    const updatedTypeId: TypeId = {
+      id: typeId.id,
+      entId: typeId.entId,
+      typeId: typeId.typeId,
+      typeIdname: typeId.typeIdname,
+      status: newStatus,
+      classification: typeId.classification
+    };
     
     this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
       next: (response: TypeId) => {
@@ -270,7 +278,13 @@ export class ThirdConfigComponent implements OnInit {
     const newStatus = !thirdType.status;
     const action = newStatus ? 'activar' : 'desactivar';
     
-    const updatedThirdType = { ...thirdType, status: newStatus };
+
+    const updatedThirdType: ThirdType = {
+      entId: this.entData,
+      thirdTypeId: thirdType.thirdTypeId,
+      thirdTypeName: thirdType.thirdTypeName,
+      status: newStatus
+    };
     
     this.thirdServiceConfiguration.updateThirdType(updatedThirdType).subscribe({
       next: (response: ThirdType) => {
