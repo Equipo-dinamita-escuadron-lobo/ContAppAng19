@@ -22,31 +22,33 @@
     </div>
 
     <!-- Campos obligatorios y opcionales en dos columnas -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-30">
       <!-- Campos obligatorios -->
-      <div class="border border-neutral-80 rounded-lg overflow-hidden">
-        <div class="flex items-center gap-8 bg-neutral-95 px-4 py-3 border-b border-neutral-80">
-          <i class="pi pi-check-circle text-complementary-green text-xl"></i>
-          <span class="font-family-sans font-bold text-lg text-neutral-20">Campos Obligatorios</span>
+      <div class="border border-neutral-80 rounded-lg overflow-hidden bg-neutral-95 flex flex-col">
+        <div class="flex items-center gap-8 px-14 py-11 border-b border-neutral-80">
+          <i class="pi pi-check-circle text-complementary-green"></i>
+          <span class="font-family-titillium font-semibold">Campos Obligatorios</span>
         </div>
-        <div class="p-4 bg-white">
-          <ul class="list-none p-0 m-0 max-h-96 overflow-y-auto">
-            <li *ngFor="let field of requiredFields" class="flex items-center gap-3 py-2">
-              <i class="pi pi-angle-right text-neutral-50 text-sm"></i>
-              <span class="font-family-sans text-sm text-neutral-30">{{ field }}</span>
-            </li>
-          </ul>
+        <div class="bg-white flex-1 flex flex-col">
+          <div class="px-14 py-11 flex-1 overflow-y-auto">
+            <ul class="list-none p-0 m-0">
+              <li *ngFor="let field of requiredFields" class="flex items-center gap-3 py-2">
+                <i class="pi pi-angle-right text-neutral-50 text-sm"></i>
+                <span class="font-family-sans text-sm text-neutral-30">{{ field }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
       <!-- Campos opcionales -->
-      <div class="border border-neutral-80 rounded-lg overflow-hidden">
-        <div class="flex items-center gap-8 bg-neutral-95 px-4 py-3 border-b border-neutral-80">
-          <i class="pi pi-info-circle text-tertiary text-xl"></i>
-          <span class="font-family-sans font-bold text-lg text-neutral-20">Campos Opcionales</span>
+      <div class="border border-neutral-80 rounded-lg overflow-hidden bg-neutral-95 flex flex-col">
+        <div class="flex items-center gap-8 px-14 py-11 border-b border-neutral-80">
+          <i class="pi pi-info-circle text-tertiary"></i>
+          <span class="font-family-titillium font-semibold">Campos Opcionales</span>
         </div>
-        <div class="p-4 bg-white">
-          <ul class="list-none p-0 m-0 max-h-96 overflow-y-auto">
+        <div class="px-14 py-11 bg-white flex-1">
+          <ul class="list-none p-0 m-0">
             <li *ngFor="let field of optionalFields" class="flex items-center gap-3 py-2">
               <p-checkbox 
                 [binary]="true" 
@@ -65,11 +67,11 @@
 
     <!-- Filtro de estado -->
     <div class="mb-6">
-      <div class="border border-neutral-80 rounded-lg p-4 bg-neutral-95">
-        <label class="font-family-sans font-bold text-base text-neutral-20 mb-3 block">
+      <div class="border border-neutral-80 rounded-lg px-14 py-11 bg-neutral-95">
+        <label class="font-family-titillium font-semibold mb-16 block">
           Estado de terceros a exportar:
         </label>
-        <div class="flex flex-wrap gap-12">
+        <div class="flex flex-wrap gap-12 mb-8 mt-12">
           <div *ngFor="let option of statusOptions" class="flex items-center">
             <p-radioButton 
               [inputId]="option.label" 

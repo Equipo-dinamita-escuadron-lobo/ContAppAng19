@@ -50,13 +50,13 @@ export class ThirdExportComponent implements OnInit {
   requiredFields: string[] = [
     'Tipo persona',
     'Tipos de tercero',
-    'Nombres',
-    'Apellidos',
-    'Razón social',
+    'Nombre, Apellido / Razón social',
     'Tipo ID',
-    'Identificación',
-    'Número de verificación',
-    'Estado'
+    'Número de Identificación',
+    'Dígito de verificación (DV)',
+    'Dirección',
+    'Teléfono',
+    'Correo'
   ];
 
   /** Campos opcionales con checkbox */
