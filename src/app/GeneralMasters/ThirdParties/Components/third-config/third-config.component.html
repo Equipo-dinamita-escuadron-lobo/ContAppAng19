@@ -79,7 +79,7 @@
             <form [formGroup]="typeIdForm" (ngSubmit)="addTypeId(typesId)">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Tipo ID *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Tipo ID</label>
                   <input 
                     pInputText 
                     formControlName="code" 
@@ -91,7 +91,7 @@
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('code')?.touched && typeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
                 </div>
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
                   <input 
                     pInputText 
                     formControlName="name" 
@@ -102,7 +102,7 @@
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('name')?.touched && typeIdForm.get('name')?.invalid">Nombre requerido</small>
                 </div>
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Clasificación *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Clasificación</label>
                   <div class="flex flex-col gap-3">
                     <div class="flex items-center">
                       <p-radioButton 
@@ -150,7 +150,7 @@
             <form [formGroup]="editTypeIdForm" (ngSubmit)="updateTypeId()">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Tipo ID *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Tipo ID</label>
                   <input 
                     pInputText 
                     formControlName="code" 
@@ -162,7 +162,7 @@
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('code')?.touched && editTypeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
                 </div>
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
                   <input 
                     pInputText 
                     formControlName="name" 
@@ -173,7 +173,7 @@
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('name')?.touched && editTypeIdForm.get('name')?.invalid">Nombre requerido</small>
                 </div>
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Clasificación *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Clasificación</label>
                   <div class="flex flex-col gap-3">
                     <div class="flex items-center">
                       <p-radioButton 
@@ -245,10 +245,7 @@
                 <td class="font-medium">{{ typeId.typeId }}</td>
                 <td>{{ typeId.typeIdname }}</td>
                 <td class="text-center">
-                  <p-tag 
-                    [value]="typeId.classification === 'NATURAL_PERSON' ? 'Persona Natural' : 'Persona Jurídica'" 
-                    [severity]="typeId.classification === 'NATURAL_PERSON' ? 'info' : 'warning'">
-                  </p-tag>
+                  {{ typeId.classification === 'NATURAL_PERSON' ? 'Persona Natural' : 'Persona Jurídica' }}
                 </td>
                 <td class="text-center">
                   <p-tag 
@@ -338,7 +335,7 @@
             <form [formGroup]="thirdTypeForm" (ngSubmit)="addThirdType(thirdTypes)">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
                   <input 
                     pInputText 
                     formControlName="name" 
@@ -377,7 +374,7 @@
             <form [formGroup]="editThirdTypeForm" (ngSubmit)="updateThirdType()">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
                   <input 
                     pInputText 
                     formControlName="name" 
