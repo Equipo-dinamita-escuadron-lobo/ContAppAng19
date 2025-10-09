@@ -79,7 +79,7 @@
             <form [formGroup]="typeIdForm" (ngSubmit)="addTypeId(typesId)">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Código *</label>
+                  <label class="font-semibold text-primary block mb-2">Tipo ID *</label>
                   <input 
                     pInputText 
                     formControlName="code" 
@@ -150,20 +150,16 @@
             <form [formGroup]="editTypeIdForm" (ngSubmit)="updateTypeId()">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary flex items-center gap-2 mb-2">
-                    Código
-                    <i class="pi pi-lock text-gray-500"
-                       pTooltip="El código no se puede modificar después de crear el tipo de identificación"
-                       tooltipPosition="top"></i>
-                  </label>
+                  <label class="font-semibold text-primary block mb-2">Tipo ID *</label>
                   <input 
                     pInputText 
                     formControlName="code" 
                     placeholder="Ej: CC, TI, CE"
                     class="w-full mb-6"
                     maxlength="10"
-                    [readonly]="true"
-                    style="background-color: #f5f5f5;">
+                    (keydown.enter)="updateTypeId()"
+                    (keydown.escape)="cancelEditTypeId()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('code')?.touched && editTypeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
                 </div>
                 <div class="relative">
                   <label class="font-semibold text-primary block mb-2">Nombre *</label>
@@ -227,7 +223,7 @@
             <ng-template pTemplate="header">
               <tr>
                 <th pSortableColumn="typeId" class="font-semibold text-primary border-b-2 border-primary">
-                  Código <p-sortIcon field="typeId"></p-sortIcon>
+                  Tipo ID <p-sortIcon field="typeId"></p-sortIcon>
                 </th>
                 <th pSortableColumn="typeIdname" class="font-semibold text-primary border-b-2 border-primary">
                   Nombre <p-sortIcon field="typeIdname"></p-sortIcon>
