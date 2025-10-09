@@ -100,4 +100,42 @@ export class ThirdServiceConfigurationService {
       })
     );
   }
+
+  /**
+   * Elimina un tipo de identificación
+   * @param typeIdId ID del tipo de identificación
+   * @param entId ID de la empresa
+   * @returns Observable con el resultado de la eliminación
+   */
+  deleteTypeId(typeIdId: number, entId: string): Observable<boolean> {
+    let params = new HttpParams()
+      .set('typeIdId', typeIdId.toString())
+      .set('entId', entId);
+
+    return this.http.delete<boolean>(this.thirdApiUrl + "typeid/delete", { params }).pipe(
+      catchError((error) => {
+        console.error('Error occurred: ', error);
+        return throwError(() => new Error('Error occurred while deleting type id'));
+      })
+    );
+  }
+
+  /**
+   * Elimina un tipo de tercero
+   * @param thirdTypeId ID del tipo de tercero
+   * @param entId ID de la empresa
+   * @returns Observable con el resultado de la eliminación
+   */
+  deleteThirdType(thirdTypeId: number, entId: string): Observable<boolean> {
+    let params = new HttpParams()
+      .set('thirdTypeId', thirdTypeId.toString())
+      .set('entId', entId);
+
+    return this.http.delete<boolean>(this.thirdApiUrl + "thirdtype/delete", { params }).pipe(
+      catchError((error) => {
+        console.error('Error occurred: ', error);
+        return throwError(() => new Error('Error occurred while deleting third type'));
+      })
+    );
+  }
 }

@@ -495,6 +495,78 @@ export class ThirdConfigComponent implements OnInit {
   }
 
   /**
+   * Solicita confirmación para eliminar un tipo de identificación
+   */
+  confirmDeleteTypeId(typeId: TypeId, index: number): void {
+    this.confirmationService.confirm({
+      message: `¿Está seguro que desea eliminar el tipo de identificación "${typeId.typeIdname}"?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.deleteTypeId(typeId, index);
+      }
+    });
+  }
+
+  /**
+   * Elimina un tipo de identificación
+   */
+  deleteTypeId(typeId: TypeId, index: number): void {
+    // Validar que el typeId tenga un id
+    if (!typeId.id) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se puede eliminar el tipo de identificación: ID no disponible'
+      });
+      return;
+    }
+
+    this.thirdServiceConfiguration.deleteTypeId(typeId.id, this.entData).subscribe({
+      next: (response: boolean) => {
+        if (response) {
+          this.typesId.splice(index, 1);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tipo de identificación eliminado correctamente'
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo eliminar el tipo de identificación'
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('Error deleting type ID:', error);
+        
+        // Manejo específico de errores según el código de error del backend
+        let errorMessage = 'Error al eliminar el tipo de identificación';
+        
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.status === 404) {
+          errorMessage = 'El tipo de identificación no existe';
+        } else if (error.status === 409) {
+          errorMessage = 'El tipo de identificación está siendo utilizado por terceros existentes';
+        } else if (error.status === 500) {
+          errorMessage = 'Error interno del servidor al eliminar el tipo de identificación';
+        }
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage
+        });
+      }
+    });
+  }
+
+  /**
    * Agrega un nuevo tipo de tercero
    */
   addThirdType(array: ThirdType[]): void {
