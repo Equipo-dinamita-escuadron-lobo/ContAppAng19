@@ -100,6 +100,8 @@ export class ThirdListComponent implements OnInit {
   // Variables para manejar errores de importación
   importErrors: ImportError[] = [];
   totalErrors = 0;
+  totalRecordsImported = 0;
+  failedImportsCount = 0;
 
   /** Datos para el modal de detalles */
   detailsModalData: any = null;
@@ -325,30 +327,45 @@ export class ThirdListComponent implements OnInit {
         if (importResult) {
           const { status, totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = importResult;
           
-          // Si hay errores, mostrar modal de errores
+          // Si hay errores, mostrar modal de errores Y notificación de resumen
           if (errors && errors.length > 0) {
-            this.showImportErrorsModal(errors, importResult.fileName || file.name);
+           
+            let detail = `Total procesados: ${totalRecords || 0}\n`;
+            detail += `Exitosos: ${successfulImports || 0}\n`;
+            detail += `Fallidos: ${failedImports}\n`;
+            if (duplicatesSkipped > 0) {
+              detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
+            }
+            
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Importación Completada con Errores',
+              detail,
+              life: 8000
+            });
+            
+            // Mostrar modal con detalles de errores
+            this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports);
+            
+            // Recargar lista si hubo importaciones exitosas
+            if (successfulImports > 0) {
+              this.loadThirds();
+            }
             return;
           }
           
-          // Si no hay errores, mostrar resumen de importación
+          // Si no hay errores, mostrar resumen de importación exitosa
           let severity: 'success' | 'info' | 'warn' | 'error' = 'success';
           let summary = 'Importación Exitosa';
           
           if (status === 'FAILED') {
             severity = 'error';
             summary = 'Error en Importación';
-          } else if (status === 'COMPLETED_WITH_ERRORS') {
-            severity = 'warn';
-            summary = 'Importación Completada con Errores';
           }
           
           // Construir mensaje detallado
           let detail = `Total procesados: ${totalRecords || 0}\n`;
           detail += `Exitosos: ${successfulImports || 0}\n`;
-          if (failedImports > 0) {
-            detail += `Fallidos: ${failedImports}\n`;
-          }
           if (duplicatesSkipped > 0) {
             detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
           }
@@ -377,7 +394,12 @@ export class ThirdListComponent implements OnInit {
           
           if (errors && errors.length > 0) {
             // Mostrar modal de errores
-            this.showImportErrorsModal(errors, errorResponse.fileName || file.name);
+            this.showImportErrorsModal(
+              errors, 
+              errorResponse.fileName || file.name,
+              errorResponse.totalRecords,
+              errorResponse.failedImports
+            );
             return;
           }
         }
@@ -428,9 +450,12 @@ export class ThirdListComponent implements OnInit {
   /**
    * Muestra el modal de errores de importación
    */
-  private showImportErrorsModal(errors: ImportError[], fileName: string): void {
+  private showImportErrorsModal(errors: ImportError[], fileName: string, totalRecords?: number, failedImports?: number): void {
     this.importErrors = errors;
     this.totalErrors = errors.length;
+    this.totalRecordsImported = totalRecords || 0;
+    this.failedImportsCount = failedImports || errors.length;
+    
     this.showErrorModal = true;
   }
 

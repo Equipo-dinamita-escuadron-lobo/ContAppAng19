@@ -213,7 +213,10 @@
               margin-bottom: 1rem;
               font-family: var(--font-family-sans);">
     <p style="font-weight: 700; margin-bottom: 0.5rem; color: var(--color-notification-error-title);">Se encontraron errores en la importación</p>
-    <p style="font-size: 0.875rem; color: var(--color-notification-error-text);">No se pudieron importar los terceros debido a los siguientes errores:</p>
+    <p style="font-size: 0.875rem; color: var(--color-notification-error-text);">No se pudieron importar los terceros debido a los siguientes errores presentados en la tabla.</p>
+    <p style="font-size: 0.875rem; color: var(--color-notification-error-text); margin-top: 0.5rem; font-weight: 600;">
+      <span>{{ failedImportsCount }} de {{ totalRecordsImported }} filas de registros fallaron.</span>
+    </p>
   </div>
 
   <div style="background-color: var(--color-notification-info-container); 
@@ -230,6 +233,8 @@
                padding-left: 1.5rem; 
                font-size: 0.875rem; 
                color: var(--color-notification-info-text);">
+      <li style="margin-bottom: 0.25rem;">El sistema ingresó todos los registros correctos y solo muestra los que presentaron errores.</li>
+      <li style="margin-bottom: 0.25rem;">Los registros duplicados (tanto en el sistema como en el archivo Excel) fueron omitidos automáticamente.</li>
       <li style="margin-bottom: 0.25rem;">Cada fila de error indica el número de fila del Excel, la columna, el campo afectado y el error específico.</li>
       <li>Corrija los errores en su archivo Excel según las indicaciones y vuelva a importar.</li>
     </ul>
