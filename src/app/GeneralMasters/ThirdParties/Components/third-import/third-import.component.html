@@ -22,90 +22,34 @@
     <!-- Campos obligatorios y opcionales en dos columnas -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <!-- Campos obligatorios -->
-      <div class="p-20 rounded-lg border border-neutral-70 bg-white shadow-sm">
-        <div class="flex items-center mb-6">
-          <i class="pi pi-check-circle text-complementary-green text-xl mr-8"></i>
-          <h3 class="font-family-sans font-bold text-lg text-neutral-20">
-            Campos Obligatorios
-          </h3>
+      <div class="border border-neutral-80 rounded-lg overflow-hidden">
+        <div class="flex items-center gap-8 bg-neutral-95 px-4 py-3 border-b border-neutral-80">
+          <i class="pi pi-check-circle text-complementary-green text-xl"></i>
+          <span class="font-family-sans font-bold text-lg text-neutral-20">Campos Obligatorios</span>
         </div>
-        <div class="space-y-2">
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Tipo persona</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Tipos de tercero</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Nombre</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Apellido</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Razón social</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Tipo ID</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Identificación</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Dígito de Verificación (DV)</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Estado</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Dirección</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Teléfono</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Correo</span>
-          </div>
+        <div class="p-4 bg-white">
+          <ul class="list-none p-0 m-0 max-h-96 overflow-y-auto">
+            <li *ngFor="let field of requiredFields" class="flex items-center gap-3 py-2">
+              <i class="pi pi-angle-right text-neutral-50 text-sm"></i>
+              <span class="font-family-sans text-sm text-neutral-30">{{ field }}</span>
+            </li>
+          </ul>
         </div>
       </div>
 
       <!-- Campos opcionales -->
-      <div class="p-20 rounded-lg border border-neutral-70 bg-white shadow-sm">
-        <div class="flex items-center mb-6">
-          <i class="pi pi-info-circle text-tertiary text-xl mr-8"></i>
-          <h3 class="font-family-sans font-bold text-lg text-neutral-20">
-            Campos Opcionales
-          </h3>
+      <div class="border border-neutral-80 rounded-lg overflow-hidden">
+        <div class="flex items-center gap-8 bg-neutral-95 px-4 py-3 border-b border-neutral-80">
+          <i class="pi pi-info-circle text-tertiary text-xl"></i>
+          <span class="font-family-sans font-bold text-lg text-neutral-20">Campos Opcionales</span>
         </div>
-        <div class="space-y-2">
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Género</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">País</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Departamento</span>
-          </div>
-          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
-            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
-            <span class="font-family-sans text-sm text-neutral-30">Ciudad</span>
-          </div>
+        <div class="p-4 bg-white">
+          <ul class="list-none p-0 m-0 max-h-96 overflow-y-auto">
+            <li *ngFor="let field of optionalFields" class="flex items-center gap-3 py-2">
+              <i class="pi pi-angle-right text-neutral-50 text-sm"></i>
+              <span class="font-family-sans text-sm text-neutral-30">{{ field }}</span>
+            </li>
+          </ul>
         </div>
       </div>
     </div>

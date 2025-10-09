@@ -6,6 +6,8 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { ListboxModule } from 'primeng/listbox';
+import { PanelModule } from 'primeng/panel';
 
 // Services
 import { ThirdService } from '../../Services/third.service';
@@ -18,7 +20,9 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
     CommonModule,
     DialogModule,
     ButtonModule,
-    ToastModule
+    ToastModule,
+    ListboxModule,
+    PanelModule
   ],
   providers: [MessageService],
   templateUrl: './third-import.component.html',
@@ -41,6 +45,27 @@ export class ThirdImportComponent implements OnInit {
 
   /** Estado de carga de la descarga */
   downloading: boolean = false;
+
+  /** Lista de campos obligatorios */
+  requiredFields: string[] = [
+    'Tipo persona',
+    'Tipos de tercero',
+    'Nombre, Apellido / Razón social',
+    'Tipo ID',
+    'Identificación',
+    'Dígito de Verificación (DV)',
+    'Dirección',
+    'Teléfono',
+    'Correo'
+  ];
+
+  /** Lista de campos opcionales */
+  optionalFields: string[] = [
+    'Género',
+    'País',
+    'Departamento',
+    'Ciudad'
+  ];
 
   constructor(
     private thirdService: ThirdService,
