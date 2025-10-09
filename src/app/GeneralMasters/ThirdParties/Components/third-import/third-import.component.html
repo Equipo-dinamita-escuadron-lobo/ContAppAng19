@@ -1,68 +1,124 @@
 <!-- Toast para notificaciones -->
 <p-toast></p-toast>
 <p-dialog
-  [header]="inputData?.title || 'Plantilla de Importación'"
+  header="Plantilla de Importación de Terceros"
   [(visible)]="visible"
   [modal]="true"
   [closable]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '90vw', maxWidth: '1000px' }"
+  [style]="{ width: '90vw', maxWidth: '950px' }"
+  styleClass="font-family-sans"
   (onHide)="onHide()">
   
-  <div class="grid grid-cols-1 sm:grid-cols-2 p-7">
-    
-    <div class="p-2">
-      <p>Querido usuario, asegurese de que el archivo que usted desea importar contenga lo siguientes campos
-        obligatorios:</p>
-      <ol class="mt-2">
-        <li> - Tipo persona</li>
-        <li> - Tipos de tercero</li>
-        <li> - Nombre</li>
-        <li> - Apellido</li>
-        <li> - Razon social</li>
-        <li> - Genero</li>
-        <li> - Tipo ID</li>
-        <li> - Identificion</li>
-        <li> - Numero de verificacion</li>
-        <li> - Estado</li>
-        <li> - Pais</li>
-        <li> - Departamento</li>
-        <li> - Ciudad</li>
-        <li> - Direccion</li>
-        <li> - Telefono</li>
-        <li> - Correo</li>
-        <!--Otros campos-->
-      </ol>
+  <div class="p-6">
+    <!-- Mensaje principal -->
+    <div class="mb-30">
+      <p class="font-family-sans text-base leading-relaxed text-neutral-30">
+        Querido usuario, asegúrese de que el archivo que usted desea importar contenga los siguientes campos:
+      </p>
     </div>
-    
-    <!-- Columna derecha - Conservando el diseño original con imagen de fondo -->
-    <div class="flex justify-center items-center p-2"
-      style="background-image: url('../../../../../../assets/Iconos/helpImportThirds.png'); background-size: contain; background-position: center; background-repeat: no-repeat;">
-      
-      <!-- Botón de descarga original adaptado a PrimeNG -->
+
+    <!-- Campos obligatorios y opcionales en dos columnas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Campos obligatorios -->
+      <div class="p-20 rounded-lg border border-neutral-70 bg-white shadow-sm">
+        <div class="flex items-center mb-6">
+          <i class="pi pi-check-circle text-complementary-green text-xl mr-8"></i>
+          <h3 class="font-family-sans font-bold text-lg text-neutral-20">
+            Campos Obligatorios
+          </h3>
+        </div>
+        <div class="space-y-2">
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Tipo persona</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Tipos de tercero</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Nombre</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Apellido</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Razón social</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Tipo ID</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Identificación</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Dígito de Verificación (DV)</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Estado</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Dirección</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Teléfono</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Correo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos opcionales -->
+      <div class="p-20 rounded-lg border border-neutral-70 bg-white shadow-sm">
+        <div class="flex items-center mb-6">
+          <i class="pi pi-info-circle text-tertiary text-xl mr-8"></i>
+          <h3 class="font-family-sans font-bold text-lg text-neutral-20">
+            Campos Opcionales
+          </h3>
+        </div>
+        <div class="space-y-2">
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Género</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">País</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Departamento</span>
+          </div>
+          <div class="flex items-center p-3 hover:bg-neutral-hover rounded transition-colors">
+            <i class="pi pi-angle-right text-neutral-50 text-sm mr-3"></i>
+            <span class="font-family-sans text-sm text-neutral-30">Ciudad</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón de descarga centrado -->
+    <div class="flex justify-end mt-30">
       <p-button 
+        label="Descargar Plantilla"
+        [loading]="downloading"
         (click)="downloadExcel()"
-        styleClass="download bg-green-600 rounded-full flex items-center justify-center text-white hover:bg-gradient-to-r from-green-600 to-green-800 hover:shadow-md transition duration-300 ease-in-out">
-        <svg class="h-12 w-12" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-          fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <path stroke="none" d="M0 0h24v24H0z" />
-          <circle cx="12" cy="12" r="9" />
-          <line x1="8" y1="12" x2="12" y2="16" />
-          <line x1="12" y1="8" x2="12" y2="16" />
-          <line x1="16" y1="12" x2="12" y2="16" />
-        </svg>
-        <span class="ml-2 mr-3 font-sans font-bold">Descargar plantilla</span>
+        icon="pi pi-download"
+        styleClass="p-button-success p-button-lg font-family-sans">
       </p-button>
     </div>
   </div>
-  
-  <!-- Footer original -->
-  <ng-template pTemplate="footer">
-    <div class="flex items-center justify-center p-6 border-t border-gray-200">
-      <div>
-        Gracias por usar nuestros servicios
-      </div>
-    </div>
-  </ng-template>
 </p-dialog>

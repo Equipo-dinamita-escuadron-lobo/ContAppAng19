@@ -7,6 +7,10 @@ import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
+// Services
+import { ThirdService } from '../../Services/third.service';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+
 @Component({
   selector: 'app-third-import',
   standalone: true,
@@ -32,7 +36,19 @@ export class ThirdImportComponent implements OnInit {
   /** Evento emitido al cerrar el modal */
   @Output() close = new EventEmitter<void>();
 
-  constructor(private messageService: MessageService) {}
+  /** ID de la empresa */
+  private entData: string = '';
+
+  /** Estado de carga de la descarga */
+  downloading: boolean = false;
+
+  constructor(
+    private thirdService: ThirdService,
+    private messageService: MessageService,
+    private localStorageMethods: LocalStorageMethods
+  ) {
+    this.entData = this.localStorageMethods.getIdEnterprise();
+  }
 
   ngOnInit(): void {
     // Inicialización si es necesaria
@@ -47,34 +63,50 @@ export class ThirdImportComponent implements OnInit {
   }
 
   /**
-   * Descarga la plantilla Excel para importación de terceros
-   * Utiliza un enlace temporal para la descarga del archivo
+   * Descarga la plantilla Excel desde el backend
+   * La plantilla incluye validaciones de datos según la configuración de la empresa
    */
   downloadExcel(): void {
-    try {
-      const fileUrl = '../../../../../../assets/data/thirds-parties/plantillaThirds.xlsx';
-      const a = document.createElement('a');
-      a.href = fileUrl;
-      a.download = 'plantillaThirds.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      // Mostrar mensaje de éxito
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Descarga iniciada',
-        detail: 'La plantilla se está descargando...'
-      });
-      
-    } catch (error) {
-      console.error('Error al descargar la plantilla:', error);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error de descarga',
-        detail: 'No se pudo descargar la plantilla. Intente nuevamente.'
-      });
+    if (this.downloading) {
+      return;
     }
+
+    this.downloading = true;
+    
+    this.thirdService.downloadThirdTemplate(this.entData).subscribe({
+      next: (blob: Blob) => {
+        // Crear un enlace temporal para descargar el archivo
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Plantilla_Terceros_${new Date().getTime()}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Limpiar recursos
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        this.downloading = false;
+        
+        // Mostrar mensaje de éxito
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Descarga exitosa',
+          detail: 'La plantilla se ha descargado correctamente'
+        });
+      },
+      error: (error) => {
+        console.error('Error al descargar la plantilla:', error);
+        this.downloading = false;
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de descarga',
+          detail: 'No se pudo descargar la plantilla. Intente nuevamente.'
+        });
+      }
+    });
   }
 
   /**

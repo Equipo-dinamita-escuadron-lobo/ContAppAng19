@@ -150,4 +150,22 @@ export class ThirdService {
     .set('thId', thId);
     return this.http.put<any>(this.thirdApiUrl,null,{params})
   }
+
+  /**
+   * Descarga la plantilla de importación de terceros con validaciones
+   * @param entId ID de la empresa
+   * @returns Observable con el Blob del archivo Excel
+   */
+  downloadThirdTemplate(entId: string): Observable<Blob> {
+    let params = new HttpParams().set('entId', entId);
+    return this.http.get(this.thirdApiUrl + 'template/excel', {
+      params,
+      responseType: 'blob'
+    }).pipe(
+      catchError((error) => {
+        console.error('Error al descargar la plantilla:', error);
+        return throwError(() => new Error('Error al descargar la plantilla de terceros'));
+      })
+    );
+  }
 }
