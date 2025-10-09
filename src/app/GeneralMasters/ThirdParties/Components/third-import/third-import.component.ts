@@ -52,7 +52,7 @@ export class ThirdImportComponent implements OnInit {
     'Tipos de tercero',
     'Nombre, Apellido / Razón social',
     'Tipo ID',
-    'Identificación',
+    'Número de identificación',
     'Dígito de Verificación (DV)',
     'Dirección',
     'Teléfono',
