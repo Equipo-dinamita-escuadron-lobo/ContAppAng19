@@ -189,9 +189,9 @@
 </div>
 
 <!-- Componente de importación de terceros -->
-<app-third-import [visible]="showTemplateModal" [inputData]="{ title: 'Plantilla de Importación de Terceros' }"
+<app-third-template [visible]="showTemplateModal" [inputData]="{ title: 'Plantilla de Importación de Terceros' }"
   (close)="closeTemplateModal()">
-</app-third-import>
+</app-third-template>
 
 <!-- Componente de exportación de terceros -->
 <app-third-export [visible]="showExportModal" (close)="closeExportModal()">

@@ -20,7 +20,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
 
 // Componentes internos
-import { ThirdImportComponent } from '../third-import/third-import.component';
+import { ThirdTemplateComponent } from '../third-template/third-template.component';
 import { ThirdExportComponent } from '../third-export/third-export.component';
 import { ThirdDetailsComponent } from '../third-details/third-details.component';
 import { ThirdCreationPdfRUTComponent } from '../third-creation-pdf-rut/third-creation-pdf-rut.component';
@@ -64,7 +64,7 @@ interface ImportError {
     DialogModule,
     TooltipModule,
     PaginatorModule,
-    ThirdImportComponent,
+    ThirdTemplateComponent,
     ThirdExportComponent,
     ThirdDetailsComponent,
     ThirdCreationPdfRUTComponent

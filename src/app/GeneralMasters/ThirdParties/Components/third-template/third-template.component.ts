@@ -14,7 +14,7 @@ import { ThirdService } from '../../Services/third.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 @Component({
-  selector: 'app-third-import',
+  selector: 'app-third-template',
   standalone: true,
   imports: [
     CommonModule,
@@ -25,10 +25,10 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
     PanelModule
   ],
   providers: [MessageService],
-  templateUrl: './third-import.component.html',
-  styleUrl: './third-import.component.css'
+  templateUrl: './third-template.component.html',
+  styleUrl: './third-template.component.css'
 })
-export class ThirdImportComponent implements OnInit {
+export class ThirdTemplateComponent implements OnInit {
   /** Control de visibilidad del modal */
   @Input() visible: boolean = false;
   
