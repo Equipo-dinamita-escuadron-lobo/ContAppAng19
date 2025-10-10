@@ -550,4 +550,22 @@ export class ThirdListComponent implements OnInit {
   closeCreatePDFRunt(): void {
     this.createPdfRUT = false;
   }
+
+  /**
+   * Convierte un número de columna a letra de Excel
+   * @param columnNumber Número de columna (1-based: 1=A, 2=B, ..., 26=Z, 27=AA, etc.)
+   * @returns Letra(s) de columna correspondiente en Excel
+   */
+  getExcelColumnLetter(columnNumber: number): string {
+    let columnLetter = '';
+    let temp = columnNumber;
+    
+    while (temp > 0) {
+      const remainder = (temp - 1) % 26;
+      columnLetter = String.fromCharCode(65 + remainder) + columnLetter;
+      temp = Math.floor((temp - 1) / 26);
+    }
+    
+    return columnLetter;
+  }
 }

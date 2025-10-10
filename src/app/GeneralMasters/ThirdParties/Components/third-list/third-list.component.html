@@ -260,7 +260,7 @@
     <ng-template pTemplate="body" let-error>
       <tr>
         <td style="font-family: var(--font-family-sans); font-size: 0.875rem;">{{ error.rowNumber }}</td>
-        <td style="font-family: var(--font-family-sans); font-size: 0.875rem;">{{ error.columnNumber }}</td>
+        <td style="font-family: var(--font-family-sans); font-size: 0.875rem;">{{ getExcelColumnLetter(error.columnNumber) }}</td>
         <td style="font-family: var(--font-family-sans); font-size: 0.875rem; font-weight: 600;">{{ error.columnName }}</td>
         <td style="font-family: var(--font-family-sans); font-size: 0.875rem; color: var(--color-neutral-50);">{{ error.fieldValue || '(vacío)' }}</td>
         <td style="font-family: var(--font-family-sans); font-size: 0.875rem; color: var(--color-error);">{{ error.errorMessage }}</td>
