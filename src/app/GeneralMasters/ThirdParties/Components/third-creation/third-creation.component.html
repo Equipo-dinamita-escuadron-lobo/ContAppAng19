@@ -50,7 +50,7 @@
                   <label for="natural" class="ml-5">Natural</label>
                 </div>
               </div>
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('personType')?.touched) && createdThirdForm.get('personType')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('personType')?.touched) && createdThirdForm.get('personType')?.invalid">
                 Seleccione un Tipo de Persona (Jurídica o Natural)
               </small>
             </div>
@@ -64,7 +64,7 @@
                 placeholder="Seleccione tipos de tercero"
                 class="max-w-sm">
               </p-multiSelect>
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('thirdTypes')?.touched) && createdThirdForm.get('thirdTypes')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('thirdTypes')?.touched) && createdThirdForm.get('thirdTypes')?.invalid">
                 Seleccione al menos un tipo de tercero
               </small>
             </div>
@@ -97,7 +97,7 @@
                   <div>{{ option.typeId }}</div>
                 </ng-template>
               </p-select>
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('typeId')?.touched) && createdThirdForm.get('typeId')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('typeId')?.touched) && createdThirdForm.get('typeId')?.invalid">
                 Seleccione un tipo de identificación
               </small>
             </div>
@@ -110,7 +110,7 @@
                 [useGrouping]="false"
                 class="max-w-sm">
               </p-inputNumber>
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('idNumber')?.touched) && createdThirdForm.get('idNumber')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('idNumber')?.touched) && createdThirdForm.get('idNumber')?.invalid">
                 <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['required']">
                   El número de identificación es requerido
                 </ng-container>
@@ -147,7 +147,7 @@
                 formControlName="names"
                 placeholder="Ingrese nombres"
                 class="max-w-sm">
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('names')?.touched) && createdThirdForm.get('names')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('names')?.touched) && createdThirdForm.get('names')?.invalid">
                 Los nombres son requeridos para persona natural
               </small>
             </div>
@@ -159,7 +159,7 @@
                 formControlName="lastNames"
                 placeholder="Ingrese apellidos"
                 class="max-w-sm">
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('lastNames')?.touched) && createdThirdForm.get('lastNames')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('lastNames')?.touched) && createdThirdForm.get('lastNames')?.invalid">
                 Los apellidos son requeridos para persona natural
               </small>
             </div>
@@ -174,9 +174,6 @@
                 placeholder="Seleccione género"
                 class="max-w-sm">
               </p-dropdown>
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('gender')?.touched) && createdThirdForm.get('gender')?.invalid">
-                El género es requerido para persona natural
-              </small>
             </div>
           </div>
         </div>
@@ -194,7 +191,7 @@
                 formControlName="socialReason"
                 placeholder="Ingrese razón social"
                 class="max-w-lg">
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('socialReason')?.touched) && createdThirdForm.get('socialReason')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('socialReason')?.touched) && createdThirdForm.get('socialReason')?.invalid">
                 La razón social es requerida para persona jurídica
               </small>
             </div>
@@ -228,9 +225,6 @@
                   <div>{{ option.label }}</div>
                 </ng-template>
               </p-select>
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('country')?.touched) && createdThirdForm.get('country')?.invalid">
-                Seleccione un país
-              </small>
             </div>
 
             <div class="flex flex-col gap-2">
@@ -255,9 +249,6 @@
                   <div>{{ option.label }}</div>
                 </ng-template>
               </p-select>
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('province')?.touched) && createdThirdForm.get('province')?.invalid">
-                Seleccione un departamento
-              </small>
             </div>
 
             <div class="flex flex-col gap-2">
@@ -282,9 +273,6 @@
                   <div>{{ option.label }}</div>
                 </ng-template>
               </p-select>
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('city')?.touched) && createdThirdForm.get('city')?.invalid">
-                Seleccione una ciudad
-              </small>
             </div>
 
             <div class="flex flex-col gap-2">
@@ -294,7 +282,7 @@
                 formControlName="address"
                 placeholder="Ingrese dirección"
                 class="max-w-sm">
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('address')?.touched) && createdThirdForm.get('address')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('address')?.touched) && createdThirdForm.get('address')?.invalid">
                 La dirección es requerida
               </small>
             </div>
@@ -314,7 +302,7 @@
                 formControlName="phoneNumber"
                 placeholder="Ingrese número de teléfono"
                 class="max-w-sm">
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('phoneNumber')?.touched) && createdThirdForm.get('phoneNumber')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('phoneNumber')?.touched) && createdThirdForm.get('phoneNumber')?.invalid">
                 El número de teléfono es requerido
               </small>
             </div>
@@ -326,7 +314,7 @@
                 formControlName="email"
                 placeholder="Ingrese correo electrónico"
                 class="max-w-sm">
-              <small class="text-red-500" *ngIf="(submitted || createdThirdForm.get('email')?.touched) && createdThirdForm.get('email')?.invalid">
+              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('email')?.touched) && createdThirdForm.get('email')?.invalid">
                 <ng-container *ngIf="createdThirdForm.get('email')?.errors?.['required']">
                   El correo electrónico es requerido
                 </ng-container>
