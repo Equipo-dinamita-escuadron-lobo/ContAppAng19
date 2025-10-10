@@ -303,7 +303,8 @@ export class SaleInvoiceCreationComponent {
    */
   getSupplier(thirdId: any) {
     if (thirdId) {
-      this.thirdService.getThirdPartie(thirdId).subscribe({
+      const entId = this.localStorageMethods.getIdEnterprise();
+      this.thirdService.getThirdPartie(thirdId, entId).subscribe({
         next: (response: Third) => {
           this.supplierS = response;
         }

@@ -13,6 +13,7 @@ import { ThirdService } from '../../Services/third.service';
 import { Third } from '../../models/Third';
 import { TypeId } from '../../models/TypeId';
 import { ePersonType } from '../../models/ePersonType';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 @Component({
   selector: 'app-third-details',
@@ -25,6 +26,7 @@ import { ePersonType } from '../../models/ePersonType';
     TagModule,
     DividerModule
   ],
+  providers: [LocalStorageMethods],
   templateUrl: './third-details.component.html',
   styleUrl: './third-details.component.css'
 })
@@ -70,9 +72,11 @@ export class ThirdDetailsComponent implements OnInit {
   /**
    * Constructor del componente
    * @param thirdService Servicio para gestionar terceros
+   * @param localStorageMethods Métodos para acceder al local storage
    */
   constructor(
-    private thirdService: ThirdService
+    private thirdService: ThirdService,
+    private localStorageMethods: LocalStorageMethods
   ) { }
 
   /**
@@ -97,7 +101,8 @@ export class ThirdDetailsComponent implements OnInit {
   private loadThirdData(): void {
     if (this.inputData?.thId && this.inputData.thId > 0) {
       this.loading = true;
-      this.thirdService.getThirdPartie(this.inputData.thId).subscribe({
+      const entId = this.localStorageMethods.getIdEnterprise();
+      this.thirdService.getThirdPartie(this.inputData.thId, entId).subscribe({
         next: (third: Third) => {
           this.thirdData = third;
           this.loading = false;

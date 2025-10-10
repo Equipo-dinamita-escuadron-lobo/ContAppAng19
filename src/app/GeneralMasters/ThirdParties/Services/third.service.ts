@@ -124,10 +124,11 @@ export class ThirdService {
   /**
    * Obtiene un tercero específico por su ID
    * @param thId ID del tercero
+   * @param entId ID de la empresa
    * @returns Observable con los datos del tercero
    */
-  getThirdPartie(thId:number): Observable<Third>{
-    return this.http.get<any>(this.thirdApiUrl+`third?thId=${thId}`)
+  getThirdPartie(thId: number, entId: string): Observable<Third>{
+    return this.http.get<any>(this.thirdApiUrl+`third?thId=${thId}&entId=${entId}`)
   }
 
   /**
