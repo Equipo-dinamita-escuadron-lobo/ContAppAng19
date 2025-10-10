@@ -60,58 +60,58 @@ import { catchError, map, Observable, of } from 'rxjs';
   styleUrl: './third-creation.component.css'
 })
 export class ThirdCreationComponent implements OnInit {
-  
+
   /** Formulario principal para la creación de terceros */
   createdThirdForm!: FormGroup;
 
   /** Contenido extraído del PDF RUT */
   contendPDFRUT: string | null = null;
-  
+
   /** Información del tercero extraída del RUT */
   infoThird: string[] | null = null;
-  
+
   /** Tipos de tercero seleccionados */
   selectedThirdTypes: ThirdType[] = [];
-  
+
   /** Indica si el formulario ha sido enviado */
   submitted = false;
-  
+
   /** Estado del botón de persona jurídica */
   button1Checked = false;
-  
+
   /** Estado del botón de persona natural */
   button2Checked = false;
-  
+
   /** Controla la visibilidad de div adicional */
   showAdditionalDiv = false;
-  
+
   /** Lista de países disponibles */
   countries: any[] = [];
-  
+
   /** Lista de estados/departamentos disponibles */
   states: any[] = [];
-  
+
   /** Lista de tipos de tercero disponibles */
   thirdTypes: ThirdType[] = [];
-  
+
   /** Lista de tipos de identificación disponibles */
   typeIds: TypeId[] = [];
-  
+
   /** Lista de ciudades disponibles */
   cities: any[] = [];
-  
+
   /** Código del país seleccionado */
   selectedCountryCode: string = 'COL';
-  
+
   /** Código del estado/departamento seleccionado */
   selectedStateCode: string = '';
-  
+
   /** Fecha actual del sistema */
   currentDate = new Date();
-  
+
   /** ID de la empresa */
   entData: string = '';
-  
+
   /** Datos del tercero por defecto */
   thirdData: Third = {
     thId: 0,
@@ -166,7 +166,7 @@ export class ThirdCreationComponent implements OnInit {
     private datePipe: DatePipe,
     private messageService: MessageService,
     private localStorageMethods: LocalStorageMethods
-  ) { 
+  ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
   }
@@ -217,23 +217,55 @@ export class ThirdCreationComponent implements OnInit {
         lastNamesControl?.setValidators([Validators.required]);
         socialReasonControl?.clearValidators();
         genderControl?.setValidators([Validators.required]);
-        
+
         this.button2Checked = true;
         this.button1Checked = false;
+
+        // Limpiar DV para persona natural
+        this.createdThirdForm.get('verificationNumber')?.setValue(null);
       } else if (value === ePersonType.juridica) {
         socialReasonControl?.setValidators([Validators.required]);
         namesControl?.clearValidators();
         lastNamesControl?.clearValidators();
         genderControl?.clearValidators();
-        
+
         this.button1Checked = true;
         this.button2Checked = false;
+
+        // Calcular DV si ya hay número de identificación y el tipo es NIT
+        const idNumber = this.createdThirdForm.get('idNumber')?.value;
+        if (this.shouldCalculateDV() && idNumber) {
+          this.calculateVerificationDigit(idNumber);
+        }
       }
 
       namesControl?.updateValueAndValidity();
       lastNamesControl?.updateValueAndValidity();
       socialReasonControl?.updateValueAndValidity();
       genderControl?.updateValueAndValidity();
+    });
+
+    // Calcular DV automáticamente cuando cambie el número de identificación (solo para persona jurídica con NIT)
+    this.createdThirdForm.get('idNumber')?.valueChanges.subscribe(idNumber => {
+      if (this.shouldCalculateDV()) {
+        if (idNumber && idNumber > 0) {
+          this.calculateVerificationDigit(idNumber);
+        } else {
+          // Limpiar DV si no hay número válido
+          this.createdThirdForm.get('verificationNumber')?.setValue(null);
+        }
+      }
+    });
+
+    // Calcular DV cuando cambie el tipo de identificación
+    this.createdThirdForm.get('typeId')?.valueChanges.subscribe(() => {
+      const idNumber = this.createdThirdForm.get('idNumber')?.value;
+      if (this.shouldCalculateDV() && idNumber && idNumber > 0) {
+        this.calculateVerificationDigit(idNumber);
+      } else if (!this.shouldCalculateDV()) {
+        // Limpiar DV si cambió a un tipo que no requiere cálculo automático
+        this.createdThirdForm.get('verificationNumber')?.setValue(null);
+      }
     });
   }
 
@@ -419,7 +451,7 @@ export class ThirdCreationComponent implements OnInit {
     });
   }
 
-// Tooltips removidos
+  // Tooltips removidos
 
   /**
    * Maneja el cambio de departamento
@@ -453,7 +485,7 @@ export class ThirdCreationComponent implements OnInit {
 
     if (this.createdThirdForm.valid) {
       const formData = this.createdThirdForm.value;
-      
+
       const newThird: Third = {
         ...this.thirdData,
         ...formData,
@@ -469,10 +501,10 @@ export class ThirdCreationComponent implements OnInit {
             summary: 'Éxito',
             detail: 'Tercero creado correctamente'
           });
-          
+
           // Limpiar datos del RUT si existen
           this.thirdService.clearInfoThirdRUT();
-          
+
           setTimeout(() => {
             this.router.navigate(['/gen-masters/third-parties/list']);
           }, 2000);
@@ -495,6 +527,41 @@ export class ThirdCreationComponent implements OnInit {
     }
   }
 
+  /**
+   * Calcula el dígito de verificación del NIT según el algoritmo módulo 11 de la DIAN
+   * @param idNumber Número de identificación (NIT sin DV)
+   * @returns El dígito de verificación (0-9)
+   */
+  private calculateVerificationDigit(idNumber: number): void {
+    // Convertir el número a string para procesar dígito por dígito
+    const idString = idNumber.toString();
+    const digits = idString.split('').map(d => parseInt(d, 10)).reverse();
+
+    // Multiplicadores según la DIAN: 3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71
+    const multipliers = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+
+    // 1. Multiplicar cada dígito por su multiplicador correspondiente
+    let sum = 0;
+    for (let i = 0; i < digits.length; i++) {
+      sum += digits[i] * multipliers[i];
+    }
+
+    // 2. Calcular el residuo de dividir la suma entre 11
+    const remainder = sum % 11;
+
+    // 3. Restar el residuo de 11
+    let dv = 11 - remainder;
+
+    // 4. Si el resultado es 11, el DV es 0. Si es 10, el DV es 1
+    if (dv === 11) {
+      dv = 0;
+    } else if (dv === 10) {
+      dv = 1;
+    }
+
+    // Actualizar el campo del formulario
+    this.createdThirdForm.get('verificationNumber')?.setValue(dv.toString());
+  }
   /**
    * Cancela la creación y regresa a la lista
    */
@@ -531,6 +598,43 @@ export class ThirdCreationComponent implements OnInit {
    */
   isJuridicPerson(): boolean {
     return this.createdThirdForm.get('personType')?.value === ePersonType.juridica;
+  }
+
+  /**
+   * Verifica si se debe calcular el DV automáticamente
+   * Solo cuando es persona jurídica y el tipo de ID es NIT
+   */
+  shouldCalculateDV(): boolean {
+    const isJuridic = this.isJuridicPerson();
+    const typeId = this.createdThirdForm.get('typeId')?.value;
+    const isNIT = typeId && typeId.typeId === 'NIT';
+    return isJuridic && isNIT;
+  }
+
+  /**
+   * Verifica si el campo DV debe estar en solo lectura
+   * Solo está bloqueado cuando se calcula automáticamente (NIT)
+   */
+  isDVReadonly(): boolean {
+    return this.shouldCalculateDV();
+  }
+
+  /**
+   * Permite solo la entrada de números (0-9) en el input de DV
+   * Filtra cualquier carácter que no sea número
+   * @param event Evento del input
+   */
+  onlyNumbersInput(event: Event): void {
+    // Si el campo está en modo readonly, no hacer nada
+    if (this.isDVReadonly()) {
+      return;
+    }
+
+    const input = event.target as HTMLInputElement;
+    // Reemplazar cualquier carácter que no sea número (0-9)
+    input.value = input.value.replace(/[^0-9]/g, '');
+    // Actualizar el valor del formulario
+    this.createdThirdForm.get('verificationNumber')?.setValue(input.value);
   }
 }
 

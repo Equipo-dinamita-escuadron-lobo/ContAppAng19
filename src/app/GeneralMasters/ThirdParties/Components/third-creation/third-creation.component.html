@@ -76,8 +76,8 @@
           <h3 class="text-lg font-semibold text-primary mb-24 border-b border-primary pb-2 text-center">
             Información de Identificación
           </h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <div class="flex flex-col gap-2">
+          <div class="flex flex-wrap gap-12 items-start">
+            <div class="flex flex-col gap-2 flex-1 min-w-[200px]">
               <label class="font-semibold text-primary label-required">Tipo de Identificación</label>
               <p-select 
                 [options]="typeIds" 
@@ -87,7 +87,7 @@
                 [filter]="true"
                 filterBy="typeId"
                 [showClear]="true"
-                class="max-w-sm">
+                class="w-full">
                 <ng-template pTemplate="selectedItem" let-selectedOption>
                   <div *ngIf="selectedOption">
                     {{ selectedOption.typeId }}
@@ -102,13 +102,13 @@
               </small>
             </div>
 
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-2 flex-1 min-w-[250px]">
               <label class="font-semibold text-primary label-required">Número de Identificación</label>
               <p-inputNumber 
                 formControlName="idNumber"
                 placeholder="Ingrese número de identificación"
                 [useGrouping]="false"
-                class="max-w-sm">
+                class="w-full">
               </p-inputNumber>
               <small class="error-message" *ngIf="(submitted || createdThirdForm.get('idNumber')?.touched) && createdThirdForm.get('idNumber')?.invalid">
                 <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['required']">
@@ -123,13 +123,17 @@
               </small>
             </div>
 
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-2" *ngIf="isJuridicPerson()">
               <label class="font-semibold text-primary">DV</label>
               <input 
                 pInputText 
                 formControlName="verificationNumber"
-                placeholder="DV"
-                class="max-w-sm">
+                [placeholder]="isDVReadonly() ? 'Auto' : '0-9'"
+                maxlength="1"
+                [readonly]="isDVReadonly()"
+                (input)="onlyNumbersInput($event)"
+                class="w-90 text-center"
+                [ngClass]="{'bg-neutral-95 cursor-not-allowed': isDVReadonly()}">
             </div>
           </div>
         </div>
