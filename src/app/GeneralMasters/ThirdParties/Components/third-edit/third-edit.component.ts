@@ -201,17 +201,12 @@ export class ThirdEditComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('ThirdEditComponent - ngOnInit');
-    
     this.route.params.subscribe(params => {
-      console.log('Parámetros de la ruta:', params);
       this.thirdId = +params['id'];
-      console.log('ID del tercero obtenido:', this.thirdId);
       
       if (this.thirdId) {
         this.loadThirdData();
       } else {
-        console.error('No se obtuvo un ID válido del tercero');
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -369,22 +364,12 @@ export class ThirdEditComponent implements OnInit {
    * Carga los datos del tercero a editar
    */
   private loadThirdData(): void {
-    console.log('Cargando tercero con ID:', this.thirdId);
-    console.log('ID de empresa:', this.entData);
-    console.log('URL que se llamará:', this.thirdService['thirdApiUrl'] + `third?thId=${this.thirdId}&entId=${this.entData}`);
-    
     this.thirdService.getThirdPartie(this.thirdId, this.entData).subscribe({
       next: (third: Third) => {
-        console.log('Tercero cargado exitosamente:', third);
         this.thirdEdit = third;
         this.populateForm(third);
       },
       error: (error: any) => {
-        console.error('Error loading third data:', error);
-        console.error('Error status:', error.status);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error.error);
-        
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
