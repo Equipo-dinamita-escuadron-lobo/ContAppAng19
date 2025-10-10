@@ -280,8 +280,9 @@
   </ng-template>
 </p-dialog>
 
-<!-- PDF RUT Component (if needed) -->
-<div *ngIf="createPdfRUT">
-  <!-- TODO: Add PDF RUT component here -->
-  <!-- <app-third-create-pdf-rut (close)="closeCreatePDFRunt()"></app-third-create-pdf-rut> -->
-</div>
+<!-- Componente de creación de tercero desde PDF RUT -->
+<app-third-creation-pdf-rut 
+  [visible]="createPdfRUT" 
+  [inputData]="{ title: 'Crear Tercero a partir del RUT' }"
+  (close)="closeCreatePDFRunt()">
+</app-third-creation-pdf-rut>

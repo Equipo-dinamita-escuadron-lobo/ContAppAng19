@@ -23,6 +23,7 @@ import { PaginatorModule } from 'primeng/paginator';
 import { ThirdImportComponent } from '../third-import/third-import.component';
 import { ThirdExportComponent } from '../third-export/third-export.component';
 import { ThirdDetailsComponent } from '../third-details/third-details.component';
+import { ThirdCreationPdfRUTComponent } from '../third-creation-pdf-rut/third-creation-pdf-rut.component';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 // Models and Services
@@ -65,7 +66,8 @@ interface ImportError {
     PaginatorModule,
     ThirdImportComponent,
     ThirdExportComponent,
-    ThirdDetailsComponent
+    ThirdDetailsComponent,
+    ThirdCreationPdfRUTComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './third-list.component.html',
