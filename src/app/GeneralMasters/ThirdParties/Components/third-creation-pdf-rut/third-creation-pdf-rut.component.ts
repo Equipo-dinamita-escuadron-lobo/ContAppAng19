@@ -79,11 +79,20 @@ export class ThirdCreationPdfRUTComponent {
           detail: 'PDF seleccionado correctamente'
         });
       } else {
+        // Limpiar mensajes automáticos de PrimeNG
+        this.messageService.clear();
+        
         this.messageService.add({
           severity: 'error',
           summary: 'Archivo inválido',
           detail: 'Por favor, selecciona un archivo PDF válido'
         });
+        
+        // Limpiar el archivo seleccionado
+        this.selectedFile = null;
+        if (this.fileUpload) {
+          this.fileUpload.clear();
+        }
       }
     }
   }
@@ -92,11 +101,24 @@ export class ThirdCreationPdfRUTComponent {
    * Maneja errores en la carga de archivos
    */
   onFileError(event: any): void {
-    this.messageService.add({
-      severity: 'error',
-      summary: 'Error de carga',
-      detail: 'Error al cargar el archivo'
-    });
+    // Limpiar el mensaje de error automático de PrimeNG
+    this.messageService.clear();
+    
+    // Mostrar mensaje personalizado según el tipo de error
+    if (event.error) {
+      // Error de validación (tipo de archivo, tamaño, etc.)
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo inválido',
+        detail: 'Por favor, selecciona un archivo PDF válido'
+      });
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de carga',
+        detail: 'Error al cargar el archivo'
+      });
+    }
   }
 
   /**
