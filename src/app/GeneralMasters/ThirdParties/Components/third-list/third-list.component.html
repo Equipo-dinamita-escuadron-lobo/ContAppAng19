@@ -23,9 +23,10 @@
           <p-button label="Crear" icon="pi pi-plus" [style]="{'white-space': 'nowrap'}" (click)="navigateToCreate()">
           </p-button>
 
-          <p-button label="PDF RUT" icon="pi pi-file-pdf" [style]="{'white-space': 'nowrap'}"
-            (click)="openCreatePDFRunt()">
+          <p-button label="PDF RUT" icon="pi pi-file-pdf" [loading]="loadingPdfRut" [style]="{'white-space': 'nowrap'}"
+            (click)="pdfRutInput.click()">
           </p-button>
+          <input #pdfRutInput type="file" accept=".pdf" (change)="onPdfRutSelect($event)" style="display: none;">
           
           <p-button label="Importar" icon="pi pi-upload" [style]="{'white-space': 'nowrap'}" (click)="fileInput.click()">
           </p-button>
@@ -279,9 +280,3 @@
     </div>
   </ng-template>
 </p-dialog>
-
-<!-- Componente de creación de tercero desde PDF RUT -->
-<app-third-creation-pdf-rut 
-  [visible]="createPdfRUT" 
-  (close)="closeCreatePDFRunt()">
-</app-third-creation-pdf-rut>

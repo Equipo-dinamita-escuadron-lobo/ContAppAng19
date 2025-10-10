@@ -23,7 +23,6 @@ import { PaginatorModule } from 'primeng/paginator';
 import { ThirdTemplateComponent } from '../third-template/third-template.component';
 import { ThirdExportComponent } from '../third-export/third-export.component';
 import { ThirdDetailsComponent } from '../third-details/third-details.component';
-import { ThirdCreationPdfRUTComponent } from '../third-creation-pdf-rut/third-creation-pdf-rut.component';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 // Models and Services
@@ -66,8 +65,7 @@ interface ImportError {
     PaginatorModule,
     ThirdTemplateComponent,
     ThirdExportComponent,
-    ThirdDetailsComponent,
-    ThirdCreationPdfRUTComponent
+    ThirdDetailsComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './third-list.component.html',
@@ -84,6 +82,7 @@ export class ThirdListComponent implements OnInit {
   
   // UI State
   loading = false;
+  loadingPdfRut = false;
   showDetailView = false;
   globalFilterValue = '';
   
@@ -111,10 +110,12 @@ export class ThirdListComponent implements OnInit {
 
   /** Datos para el modal de detalles */
   detailsModalData: any = null;
-  createPdfRUT = false;
   
   // Company data
   entData: string = '';
+
+  // Constantes
+  private readonly EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
 
   constructor(
     private thirdService: ThirdService,
@@ -547,12 +548,71 @@ export class ThirdListComponent implements OnInit {
     this.detailsModalData = null;
   }
 
-  openCreatePDFRunt(): void {
-    this.createPdfRUT = true;
-  }
+  /**
+   * Maneja la selección de un archivo PDF RUT
+   * Procesa el archivo y redirige a la creación del tercero
+   */
+  onPdfRutSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (!file) {
+      return;
+    }
 
-  closeCreatePDFRunt(): void {
-    this.createPdfRUT = false;
+    // Validar que sea un PDF
+    if (file.type !== 'application/pdf') {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo inválido',
+        detail: 'Por favor, selecciona un archivo PDF válido'
+      });
+      input.value = '';
+      return;
+    }
+
+    this.loadingPdfRut = true;
+    
+    this.thirdService.ExtractInfoPDFRUT(file).subscribe({
+      next: (response) => {
+        const pdfContent = response.content;
+        
+        if (pdfContent === this.EMPTY_PDF_CONTENT) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Sin información',
+            detail: 'No se encontró información para crear un tercero'
+          });
+          this.loadingPdfRut = false;
+        } else {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Archivo procesado correctamente'
+          });
+          
+          // Redirigir a la creación del tercero
+          this.thirdService.setInfoThirdRUT(pdfContent);
+          this.router.navigate(['/gen-masters/third-parties/create']);
+        }
+        
+        // Limpiar el input
+        input.value = '';
+      },
+      error: (err) => {
+        this.loadingPdfRut = false;
+        const errorMessage = err?.error?.message || 'No se pudo procesar el archivo PDF';
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de procesamiento',
+          detail: errorMessage
+        });
+        
+        // Limpiar el input
+        input.value = '';
+      }
+    });
   }
 
   /**
