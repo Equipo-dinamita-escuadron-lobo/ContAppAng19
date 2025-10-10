@@ -25,10 +25,12 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
-import { CityService } from '../../Services/city.service';
-import { DepartmentService } from '../../Services/department.service';
+import { GeographyService } from '../../Services/geography.service';
 import { eThirdGender } from '../../models/eThirdGender';
 import { ePersonType } from '../../models/ePersonType';
+import { Country } from '../../models/Country';
+import { Department } from '../../models/Department';
+import { City } from '../../models/City';
 
 // External libraries
 import { catchError, map, Observable, of } from 'rxjs';
@@ -99,7 +101,7 @@ export class ThirdCreationComponent implements OnInit {
   cities: any[] = [];
   
   /** Código del país seleccionado */
-  selectedCountryCode: string = '';
+  selectedCountryCode: string = 'COL';
   
   /** Código del estado/departamento seleccionado */
   selectedStateCode: string = '';
@@ -126,9 +128,9 @@ export class ThirdCreationComponent implements OnInit {
     verificationNumber: 0,
     state: true,
     photoPath: undefined,
-    country: "0",
-    province: "0",
-    city: "0",
+    country: "",
+    province: "",
+    city: "",
     address: '',
     phoneNumber: '',
     email: '',
@@ -159,8 +161,7 @@ export class ThirdCreationComponent implements OnInit {
     private fb: FormBuilder,
     private thirdService: ThirdService,
     private thirdServiceConfigurationService: ThirdServiceConfigurationService,
-    private cityService: CityService,
-    private departmentService: DepartmentService,
+    private geographyService: GeographyService,
     private router: Router,
     private datePipe: DatePipe,
     private messageService: MessageService,
@@ -283,14 +284,15 @@ export class ThirdCreationComponent implements OnInit {
         address: this.infoThird[6],
         phoneNumber: this.infoThird[7],
         email: this.infoThird[8],
-        country: parseInt(this.infoThird[9]) || 0,
-        province: parseInt(this.infoThird[10]) || 0,
-        city: parseInt(this.infoThird[11]) || 0
+        country: this.infoThird[9] || 'COL',
+        province: this.infoThird[10],
+        city: this.infoThird[11]
       });
 
       // Cargar ciudades si hay departamento seleccionado
       if (this.infoThird[10]) {
-        this.loadCities(parseInt(this.infoThird[10]));
+        const countryCode = this.infoThird[9] || 'COL';
+        this.loadCities(this.infoThird[10], countryCode);
       }
     }
   }
@@ -340,52 +342,70 @@ export class ThirdCreationComponent implements OnInit {
   }
 
   /**
-   * Carga los países
+   * Carga los países desde el backend
    */
   private loadCountries(): Promise<void> {
-    return new Promise((resolve) => {
-      this.countries = [
-        { label: 'Colombia', value: 1 },
-        { label: 'Estados Unidos', value: 2 },
-        { label: 'México', value: 3 }
-      ];
-      resolve();
-    });
-  }
-
-  /**
-   * Carga los departamentos/estados
-   */
-  private loadStates(): Promise<void> {
     return new Promise((resolve, reject) => {
-      try {
-        const departments = this.departmentService.getListDepartments();
-        this.states = departments.map(dept => ({
-          label: dept.name,
-          value: dept.id
-        }));
-        resolve();
-      } catch (error) {
-        console.error('Error loading departments:', error);
-        reject(error);
-      }
+      this.geographyService.getAllCountries().subscribe({
+        next: (countries: Country[]) => {
+          this.countries = countries.map(country => ({
+            label: country.countryName,
+            value: country.countryCode
+          }));
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('Error loading countries:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al cargar los países'
+          });
+          reject(error);
+        }
+      });
     });
   }
 
   /**
-   * Carga las ciudades de un departamento
+   * Carga los departamentos/estados desde el backend
+   * Por defecto carga los de Colombia (COL)
    */
-  private loadCities(departmentId: number): void {
-    this.cityService.getListCitiesByDepartment(departmentId).subscribe({
-      next: (cities: any) => {
-        if (Array.isArray(cities)) {
-          this.cities = cities.map((city: any) => ({
-            label: city.name,
-            value: city.id
+  private loadStates(countryCode: string = 'COL'): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.geographyService.getStatesByCountry(countryCode).subscribe({
+        next: (states: Department[]) => {
+          this.states = states.map(state => ({
+            label: state.stateName,
+            value: state.stateCode
           }));
-    } else {
-          this.cities = [];
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('Error loading states:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al cargar los departamentos'
+          });
+          reject(error);
         }
+      });
+    });
+  }
+
+  /**
+   * Carga las ciudades de un departamento desde el backend
+   * @param stateCode Código del departamento
+   * @param countryCode Código del país (por defecto COL)
+   */
+  private loadCities(stateCode: string, countryCode: string = 'COL'): void {
+    this.geographyService.getCitiesByState(stateCode, countryCode).subscribe({
+      next: (cities: City[]) => {
+        this.cities = cities.map(city => ({
+          label: city.cityName,
+          value: city.cityCode
+        }));
       },
       error: (error: any) => {
         console.error('Error loading cities:', error);
@@ -403,12 +423,14 @@ export class ThirdCreationComponent implements OnInit {
 
   /**
    * Maneja el cambio de departamento
+   * @param stateCode Código del departamento seleccionado
    */
-  onStateChange(departmentId: number): void {
+  onStateChange(stateCode: string): void {
     this.createdThirdForm.get('city')?.setValue('');
     this.cities = [];
-    if (departmentId) {
-      this.loadCities(departmentId);
+    if (stateCode) {
+      const countryCode = this.createdThirdForm.get('country')?.value || 'COL';
+      this.loadCities(stateCode, countryCode);
     }
   }
 

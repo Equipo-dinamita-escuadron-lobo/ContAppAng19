@@ -27,9 +27,11 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
-import { CityService } from '../../Services/city.service';
-import { DepartmentService } from '../../Services/department.service';
+import { GeographyService } from '../../Services/geography.service';
 import { eThirdGender } from '../../models/eThirdGender';
+import { Country } from '../../models/Country';
+import { Department } from '../../models/Department';
+import { City } from '../../models/City';
 // import { buttonColors } from '../../../../Shared/buttonColors';
 
 // External libraries
@@ -182,8 +184,7 @@ export class ThirdEditComponent implements OnInit {
     private fb: FormBuilder,
     private thirdService: ThirdService,
     private thirdConfigurationService: ThirdServiceConfigurationService,
-    private cityService: CityService,
-    private departmentService: DepartmentService,
+    private geographyService: GeographyService,
     private router: Router,
     private route: ActivatedRoute,
     private datePipe: DatePipe,
@@ -394,55 +395,70 @@ export class ThirdEditComponent implements OnInit {
   }
 
   /**
-   * Carga los países
+   * Carga los países desde el backend
    */
   private loadCountries(): Promise<void> {
-    return new Promise((resolve) => {
-      // Lista básica de países - se puede expandir según necesidades
-      this.countries = [
-        { label: 'Colombia', value: 1 },
-        { label: 'Estados Unidos', value: 2 },
-        { label: 'México', value: 3 },
-        // Agregar más países según sea necesario
-      ];
-      resolve();
-    });
-  }
-
-  /**
-   * Carga los departamentos
-   */
-  private loadDepartments(): Promise<void> {
-    return new Promise((resolve) => {
-      try {
-        const departments = this.departmentService.getListDepartments();
-        this.departments = departments.map(dept => ({
-          label: dept.name,
-          value: dept.id
-        }));
-        resolve();
-      } catch (error) {
-        console.error('Error loading departments:', error);
-        resolve(); // Continuar aunque falle
-      }
-    });
-  }
-
-  /**
-   * Carga las ciudades de un departamento
-   */
-  private loadCities(departmentId: number | string): void {
-    const depId = typeof departmentId === 'string' ? parseInt(departmentId, 10) : departmentId;
-    this.cityService.getListCitiesByDepartment(depId).subscribe({
-      next: (cities: any) => {
-        if (Array.isArray(cities)) {
-          this.cities = cities.map((city: any) => ({
-            label: city.name,
-            value: city.id
+    return new Promise((resolve, reject) => {
+      this.geographyService.getAllCountries().subscribe({
+        next: (countries: Country[]) => {
+          this.countries = countries.map(country => ({
+            label: country.countryName,
+            value: country.countryCode
           }));
-    } else {
-          this.cities = [];
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('Error loading countries:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al cargar los países'
+          });
+          reject(error);
         }
+      });
+    });
+  }
+
+  /**
+   * Carga los departamentos desde el backend
+   * Por defecto carga los de Colombia (COL)
+   */
+  private loadDepartments(countryCode: string = 'COL'): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.geographyService.getStatesByCountry(countryCode).subscribe({
+        next: (states: Department[]) => {
+          this.departments = states.map(state => ({
+            label: state.stateName,
+            value: state.stateCode
+          }));
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('Error loading departments:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al cargar los departamentos'
+          });
+          reject(error);
+        }
+      });
+    });
+  }
+
+  /**
+   * Carga las ciudades de un departamento desde el backend
+   * @param stateCode Código del departamento
+   * @param countryCode Código del país (por defecto COL)
+   */
+  private loadCities(stateCode: string, countryCode: string = 'COL'): void {
+    this.geographyService.getCitiesByState(stateCode, countryCode).subscribe({
+      next: (cities: City[]) => {
+        this.cities = cities.map(city => ({
+          label: city.cityName,
+          value: city.cityCode
+        }));
       },
       error: (error: any) => {
         console.error('Error loading cities:', error);
@@ -458,12 +474,14 @@ export class ThirdEditComponent implements OnInit {
 
   /**
    * Maneja el cambio de departamento
+   * @param stateCode Código del departamento seleccionado
    */
-  onDepartmentChange(departmentId: number): void {
+  onDepartmentChange(stateCode: string): void {
     this.createdThirdForm.get('city')?.setValue('');
     this.cities = [];
-    if (departmentId) {
-      this.loadCities(departmentId);
+    if (stateCode) {
+      const countryCode = this.createdThirdForm.get('country')?.value || 'COL';
+      this.loadCities(stateCode, countryCode);
     }
   }
 
