@@ -1,16 +1,13 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 
 // PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
-import { FileUploadModule } from 'primeng/fileupload';
+import { FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 // Services
 import { ThirdService } from '../../Services/third.service';
@@ -23,8 +20,7 @@ import { ThirdService } from '../../Services/third.service';
     DialogModule,
     ButtonModule,
     FileUploadModule,
-    ToastModule,
-    ProgressSpinnerModule
+    ToastModule
   ],
   providers: [MessageService],
   templateUrl: './third-creation-pdf-rut.component.html',
@@ -40,14 +36,11 @@ export class ThirdCreationPdfRUTComponent {
   /** Evento para cerrar el componente */
   @Output() close = new EventEmitter<void>();
 
-  /** URL segura del PDF cargado */
-  pdfUrl: SafeResourceUrl | null = null;
+  /** Referencia al componente de carga de archivos */
+  @ViewChild('fileUpload') fileUpload!: FileUpload;
 
   /** Archivo PDF seleccionado */
   selectedFile: File | null = null;
-
-  /** Indica si se ha cargado un archivo */
-  isFileLoaded = false;
 
   /** Estado de carga durante el procesamiento */
   loading = false;
@@ -56,8 +49,6 @@ export class ThirdCreationPdfRUTComponent {
    * Constructor del componente
    */
   constructor(
-    private sanitizer: DomSanitizer, 
-    private http: HttpClient, 
     private thirdService: ThirdService, 
     private router: Router,
     private messageService: MessageService
@@ -67,12 +58,13 @@ export class ThirdCreationPdfRUTComponent {
    * Se ejecuta cuando se oculta el diálogo
    */
   onHide(): void {
+    this.resetComponent();
     this.close.emit();
   }
 
   /**
    * Maneja el cambio de archivo seleccionado
-   * Verifica que sea un PDF y lo carga para su visualización
+   * Verifica que sea un PDF y lo carga
    */
   onFileSelect(event: any): void {
     const files = event.files;
@@ -80,17 +72,11 @@ export class ThirdCreationPdfRUTComponent {
       const file = files[0];
       if (file.type === 'application/pdf') {
         this.selectedFile = file;
-        const reader = new FileReader();
-        reader.onload = () => {
-          this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(reader.result as string);
-          this.isFileLoaded = true;
-        };
-        reader.readAsDataURL(file);
         
         this.messageService.add({
           severity: 'success',
           summary: 'Archivo cargado',
-          detail: 'PDF cargado correctamente para vista previa'
+          detail: 'PDF seleccionado correctamente'
         });
       } else {
         this.messageService.add({
@@ -131,7 +117,6 @@ export class ThirdCreationPdfRUTComponent {
     
     this.thirdService.ExtractInfoPDFRUT(this.selectedFile).subscribe({
       next: (response) => {
-        console.log('Respuesta del servicio:', response);
         const pdfContent = response.content;
         
         this.messageService.add({
@@ -146,18 +131,18 @@ export class ThirdCreationPdfRUTComponent {
             summary: 'Sin información',
             detail: 'No se encontró información para crear un tercero'
           });
+          this.loading = false;
         } else {
           this.redirectToCreateThird(pdfContent);
         }
-        
-        this.loading = false;
       },
       error: (err) => {
         this.loading = false;
+        const errorMessage = err?.error?.message || 'No se pudo procesar el archivo PDF';
         this.messageService.add({
           severity: 'error',
           summary: 'Error de procesamiento',
-          detail: 'Error al procesar el archivo: ' + (err.message || 'Error desconocido')
+          detail: errorMessage
         });
       }
     });
@@ -175,10 +160,12 @@ export class ThirdCreationPdfRUTComponent {
    * Reinicia el estado del componente
    */
   private resetComponent(): void {
-    this.pdfUrl = null;
     this.selectedFile = null;
-    this.isFileLoaded = false;
     this.loading = false;
+    
+    if (this.fileUpload) {
+      this.fileUpload.clear();
+    }
   }
 
   /**

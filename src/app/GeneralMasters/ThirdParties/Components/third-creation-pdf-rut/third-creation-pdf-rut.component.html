@@ -5,7 +5,7 @@
   [header]="inputData?.title || 'Crear Tercero a partir del RUT'"
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: isFileLoaded ? '90vw' : '500px', maxWidth: '1000px' }"
+  [style]="{ width: '500px', maxWidth: '90vw' }"
   [closable]="true"
   [draggable]="false"
   [resizable]="false"
@@ -24,6 +24,7 @@
     <!-- Upload de archivo -->
     <div class="mb-30">
       <p-fileUpload
+        #fileUpload
         mode="basic"
         name="pdfFile[]"
         accept="application/pdf"
@@ -34,17 +35,6 @@
         (onError)="onFileError($event)"
         class="w-full">
       </p-fileUpload>
-    </div>
-
-    <!-- Vista previa del PDF -->
-    <div *ngIf="pdfUrl" class="mt-4">
-      <h4 class="text-lg font-semibold text-gray-900 mb-3">Vista previa del PDF:</h4>
-      <div class="border border-gray-300 rounded-lg overflow-hidden shadow-lg">
-        <iframe 
-          [src]="pdfUrl" 
-          class="w-full h-96 border-0">
-        </iframe>
-      </div>
     </div>
   </div>
 
