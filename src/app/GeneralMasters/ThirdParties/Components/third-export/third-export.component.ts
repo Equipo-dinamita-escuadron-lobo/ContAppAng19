@@ -209,16 +209,17 @@ export class ThirdExportComponent implements OnInit {
               const errorData = JSON.parse(reader.result as string);
               const errorMessage = errorData.message || 'No se pudo exportar los terceros.';
               
-              // Determinar si es un caso informativo o un error real
-              const isInfoCase = errorMessage.toLowerCase().includes('no se encontraron') || 
-                                 errorMessage.toLowerCase().includes('no hay') ||
-                                 errorMessage.toLowerCase().includes('sin terceros') ||
-                                 err.status === 404;
+              // Determinar si es un caso informativo (sin datos) o un error real
+              const isNoDataCase = errorMessage.toLowerCase().includes('no hay terceros') ||
+                                   errorMessage.toLowerCase().includes('no se encontraron terceros') ||
+                                   errorMessage.toLowerCase().includes('sin terceros') ||
+                                   err.status === 404;
               
               this.messageService.add({
-                severity: isInfoCase ? 'info' : 'error',
-                summary: isInfoCase ? 'Información' : 'Error de Exportación',
-                detail: errorMessage
+                severity: isNoDataCase ? 'info' : 'error',
+                summary: isNoDataCase ? 'Información' : 'Error de Exportación',
+                detail: errorMessage,
+                life: 5000
               });
             } catch (e) {
               this.messageService.add({
@@ -239,16 +240,17 @@ export class ThirdExportComponent implements OnInit {
         } else {
           const errorMessage = err.error?.message || 'No se pudo exportar los terceros.';
           
-          // Determinar si es un caso informativo o un error real
-          const isInfoCase = errorMessage.toLowerCase().includes('no se encontraron') || 
-                             errorMessage.toLowerCase().includes('no hay') ||
-                             errorMessage.toLowerCase().includes('sin terceros') ||
-                             err.status === 404;
+          // Determinar si es un caso informativo (sin datos) o un error real
+          const isNoDataCase = errorMessage.toLowerCase().includes('no hay terceros') ||
+                               errorMessage.toLowerCase().includes('no se encontraron terceros') ||
+                               errorMessage.toLowerCase().includes('sin terceros') ||
+                               err.status === 404;
           
           this.messageService.add({
-            severity: isInfoCase ? 'info' : 'error',
-            summary: isInfoCase ? 'Información' : 'Error de Exportación',
-            detail: errorMessage
+            severity: isNoDataCase ? 'info' : 'error',
+            summary: isNoDataCase ? 'Información' : 'Error de Exportación',
+            detail: errorMessage,
+            life: 5000
           });
         }
 
