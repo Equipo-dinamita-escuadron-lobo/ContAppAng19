@@ -5,12 +5,17 @@ import { Router } from '@angular/router';
 // PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
-import { FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { FileUpload, FileUploadModule, FileSelectEvent, FileUploadErrorEvent } from 'primeng/fileupload';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 // Services
 import { ThirdService } from '../../Services/third.service';
+
+// Constantes
+const DIALOG_TITLE = 'Crear Tercero a partir del RUT';
+const EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
+const MAX_FILE_SIZE = 50000000; // 50 MB
 
 @Component({
   selector: 'app-third-creation-pdf-rut',
@@ -30,9 +35,6 @@ export class ThirdCreationPdfRUTComponent {
   /** Control de visibilidad del modal */
   @Input() visible: boolean = false;
   
-  /** Datos de entrada del componente */
-  @Input() inputData: any = { title: 'Crear Tercero a partir del RUT' };
-  
   /** Evento para cerrar el componente */
   @Output() close = new EventEmitter<void>();
 
@@ -44,6 +46,9 @@ export class ThirdCreationPdfRUTComponent {
 
   /** Estado de carga durante el procesamiento */
   loading = false;
+
+  /** Título del diálogo (constante para el template) */
+  readonly dialogTitle = DIALOG_TITLE;
 
   /**
    * Constructor del componente
@@ -66,33 +71,16 @@ export class ThirdCreationPdfRUTComponent {
    * Maneja el cambio de archivo seleccionado
    * Verifica que sea un PDF y lo carga
    */
-  onFileSelect(event: any): void {
+  onFileSelect(event: FileSelectEvent): void {
     const files = event.files;
     if (files && files.length > 0) {
       const file = files[0];
       if (file.type === 'application/pdf') {
         this.selectedFile = file;
         
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Archivo cargado',
-          detail: 'PDF seleccionado correctamente'
-        });
+        this.showSuccessMessage('Archivo cargado', 'PDF seleccionado correctamente');
       } else {
-        // Limpiar mensajes automáticos de PrimeNG
-        this.messageService.clear();
-        
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Archivo inválido',
-          detail: 'Por favor, selecciona un archivo PDF válido'
-        });
-        
-        // Limpiar el archivo seleccionado
-        this.selectedFile = null;
-        if (this.fileUpload) {
-          this.fileUpload.clear();
-        }
+        this.handleInvalidFileType();
       }
     }
   }
@@ -100,24 +88,26 @@ export class ThirdCreationPdfRUTComponent {
   /**
    * Maneja errores en la carga de archivos
    */
-  onFileError(event: any): void {
-    // Limpiar el mensaje de error automático de PrimeNG
+  onFileError(event: FileUploadErrorEvent): void {
     this.messageService.clear();
     
-    // Mostrar mensaje personalizado según el tipo de error
     if (event.error) {
-      // Error de validación (tipo de archivo, tamaño, etc.)
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Archivo inválido',
-        detail: 'Por favor, selecciona un archivo PDF válido'
-      });
+      this.showErrorMessage('Archivo inválido', 'Por favor, selecciona un archivo PDF válido');
     } else {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error de carga',
-        detail: 'Error al cargar el archivo'
-      });
+      this.showErrorMessage('Error de carga', 'Error al cargar el archivo');
+    }
+  }
+
+  /**
+   * Maneja el caso de tipo de archivo inválido
+   */
+  private handleInvalidFileType(): void {
+    this.messageService.clear();
+    this.showErrorMessage('Archivo inválido', 'Por favor, selecciona un archivo PDF válido');
+    this.selectedFile = null;
+    
+    if (this.fileUpload) {
+      this.fileUpload.clear();
     }
   }
 
@@ -127,11 +117,7 @@ export class ThirdCreationPdfRUTComponent {
    */
   uploadFile(): void {
     if (!this.selectedFile) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Archivo requerido',
-        detail: 'Por favor selecciona un archivo PDF'
-      });
+      this.showWarningMessage('Archivo requerido', 'Por favor selecciona un archivo PDF');
       return;
     }
 
@@ -141,32 +127,52 @@ export class ThirdCreationPdfRUTComponent {
       next: (response) => {
         const pdfContent = response.content;
         
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Archivo procesado correctamente'
-        });
-
-        if (pdfContent === ";;0;;;;;;;;;0") {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Sin información',
-            detail: 'No se encontró información para crear un tercero'
-          });
+        if (pdfContent === EMPTY_PDF_CONTENT) {
+          this.showErrorMessage('Sin información', 'No se encontró información para crear un tercero');
           this.loading = false;
         } else {
+          this.showSuccessMessage('Éxito', 'Archivo procesado correctamente');
           this.redirectToCreateThird(pdfContent);
         }
       },
       error: (err) => {
         this.loading = false;        
         const errorMessage = err?.error?.message || 'No se pudo procesar el archivo PDF';        
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error de procesamiento',
-          detail: errorMessage
-        });
+        this.showErrorMessage('Error de procesamiento', errorMessage);
       }
+    });
+  }
+
+  /**
+   * Muestra un mensaje de éxito
+   */
+  private showSuccessMessage(summary: string, detail: string): void {
+    this.messageService.add({
+      severity: 'success',
+      summary,
+      detail
+    });
+  }
+
+  /**
+   * Muestra un mensaje de error
+   */
+  private showErrorMessage(summary: string, detail: string): void {
+    this.messageService.add({
+      severity: 'error',
+      summary,
+      detail
+    });
+  }
+
+  /**
+   * Muestra un mensaje de advertencia
+   */
+  private showWarningMessage(summary: string, detail: string): void {
+    this.messageService.add({
+      severity: 'warn',
+      summary,
+      detail
     });
   }
 
