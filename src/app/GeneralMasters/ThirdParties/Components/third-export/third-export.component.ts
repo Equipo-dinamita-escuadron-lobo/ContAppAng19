@@ -183,12 +183,11 @@ export class ThirdExportComponent implements OnInit {
         }
 
         this.downloadFile(response);
-
-        const statusText = this.statusFilter === true ? 'activos' : this.statusFilter === false ? 'inactivos' : 'todos';
+        
         this.messageService.add({
           severity: 'success',
-          summary: 'Exportación Exitosa',
-          detail: `Se han exportado los terceros ${statusText} correctamente`
+          summary: 'Estamos generando tu archivo',
+          detail: `El archivo se descargará automáticamente en unos segundos.`
         });
 
         this.loading = false;
