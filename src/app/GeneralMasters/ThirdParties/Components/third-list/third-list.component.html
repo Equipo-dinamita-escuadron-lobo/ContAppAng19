@@ -270,7 +270,12 @@
 
   <ng-template pTemplate="footer">
     <div class="flex justify-center gap-3">
-      <p-button label="Cerrar" styleClass="p-button-secondary" (click)="closeErrorModal()"></p-button>
+      <p-button 
+        label="Exportar Errores" 
+        icon="pi pi-download" 
+        styleClass="p-button-success" 
+        (click)="exportImportErrors()">
+      </p-button>
     </div>
   </ng-template>
 </p-dialog>

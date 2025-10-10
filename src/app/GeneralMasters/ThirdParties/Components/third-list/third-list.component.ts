@@ -2,6 +2,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 // PrimeNG Imports
 import { TableModule, Table } from 'primeng/table';
@@ -567,5 +569,121 @@ export class ThirdListComponent implements OnInit {
     }
     
     return columnLetter;
+  }
+
+  /**
+   * Exporta los errores de importación a un archivo Excel
+   * Genera un archivo con formato estructurado incluyendo resumen de estadísticas y detalle de errores
+   */
+  exportImportErrors(): void {
+    try {
+      // Validar que existan errores para exportar
+      if (!this.importErrors || this.importErrors.length === 0) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Sin Errores',
+          detail: 'No hay errores para exportar'
+        });
+        return;
+      }
+
+      // Crear el workbook y worksheet
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      const ws: XLSX.WorkSheet = {};
+
+      // Información del encabezado
+      const headerInfo = [
+        ['ERRORES DE IMPORTACIÓN DE TERCEROS'],
+        [''],
+        ['Fecha de exportación:', new Date().toLocaleDateString('es-CO', { 
+          day: '2-digit', 
+          month: 'long', 
+          year: 'numeric' 
+        })],
+        ['Hora:', new Date().toLocaleTimeString('es-CO')],
+        [''],
+        ['RESUMEN DE IMPORTACIÓN'],
+        ['Total procesados:', this.totalRecordsImported],
+        ['Exitosos:', this.successfulImports],
+        ['Fallidos:', this.failedImportsCount],
+        ['Duplicados omitidos:', this.duplicatesOmitted],
+        [''],
+        ['DETALLE DE ERRORES']
+      ];
+
+      // Agregar la información del encabezado
+      XLSX.utils.sheet_add_aoa(ws, headerInfo, { origin: 'A1' });
+
+      // Encabezados de la tabla
+      const tableHeaders = [
+        ['Fila', 'Columna', 'Campo', 'Valor', 'Error']
+      ];
+
+      // Agregar encabezados de la tabla
+      XLSX.utils.sheet_add_aoa(ws, tableHeaders, { origin: 'A14' });
+
+      // Preparar los datos de la tabla
+      const tableData = this.importErrors.map(error => [
+        error.rowNumber,
+        this.getExcelColumnLetter(error.columnNumber),
+        error.columnName,
+        error.fieldValue || '(vacío)',
+        error.errorMessage
+      ]);
+
+      // Agregar los datos de la tabla
+      XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A15' });
+
+      // Establecer el rango de la hoja
+      const totalRows = headerInfo.length + 2 + tableData.length;
+      ws['!ref'] = `A1:E${totalRows}`;
+
+      // Configurar anchos de columnas
+      ws['!cols'] = [
+        { wch: 8 },  // A - Fila
+        { wch: 10 }, // B - Columna
+        { wch: 25 }, // C - Campo
+        { wch: 25 }, // D - Valor
+        { wch: 60 }  // E - Error
+      ];
+
+      // Combinar celdas para el título
+      if (!ws['!merges']) ws['!merges'] = [];
+      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }); // A1:E1 (Título)
+
+      // Agregar el worksheet al workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Errores Importación');
+
+      // Generar el nombre del archivo con fecha local
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const timestamp = `${year}-${month}-${day}`;
+      const fileName = `Errores_Importacion_Terceros_${timestamp}.xlsx`;
+
+      // Generar el archivo y descargarlo
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      saveAs(blob, fileName);
+
+      // Cerrar el modal
+      this.closeErrorModal();
+
+      // Mostrar notificación de éxito
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Estamos generando tu archivo',
+        detail: `El archivo se descargará automáticamente en unos segundos.`
+      });
+
+    } catch (error) {
+      console.error('Error al exportar errores:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de Exportación',
+        detail: 'No se pudo exportar el archivo de errores. Por favor, intente nuevamente.'
+      });
+    }
   }
 }
