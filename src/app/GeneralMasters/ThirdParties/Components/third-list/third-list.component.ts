@@ -101,7 +101,9 @@ export class ThirdListComponent implements OnInit {
   importErrors: ImportError[] = [];
   totalErrors = 0;
   totalRecordsImported = 0;
+  successfulImports = 0;
   failedImportsCount = 0;
+  duplicatesOmitted = 0;
 
   /** Datos para el modal de detalles */
   detailsModalData: any = null;
@@ -345,7 +347,7 @@ export class ThirdListComponent implements OnInit {
             });
             
             // Mostrar modal con detalles de errores
-            this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports);
+            this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
             
             // Recargar lista si hubo importaciones exitosas
             if (successfulImports > 0) {
@@ -398,7 +400,9 @@ export class ThirdListComponent implements OnInit {
               errors, 
               errorResponse.fileName || file.name,
               errorResponse.totalRecords,
-              errorResponse.failedImports
+              errorResponse.failedImports,
+              errorResponse.successfulImports,
+              errorResponse.duplicatesSkipped
             );
             return;
           }
@@ -450,11 +454,13 @@ export class ThirdListComponent implements OnInit {
   /**
    * Muestra el modal de errores de importación
    */
-  private showImportErrorsModal(errors: ImportError[], fileName: string, totalRecords?: number, failedImports?: number): void {
+  private showImportErrorsModal(errors: ImportError[], fileName: string, totalRecords?: number, failedImports?: number, successfulImports?: number, duplicatesSkipped?: number): void {
     this.importErrors = errors;
     this.totalErrors = errors.length;
     this.totalRecordsImported = totalRecords || 0;
     this.failedImportsCount = failedImports || errors.length;
+    this.successfulImports = successfulImports || 0;
+    this.duplicatesOmitted = duplicatesSkipped || 0;
     
     this.showErrorModal = true;
   }
