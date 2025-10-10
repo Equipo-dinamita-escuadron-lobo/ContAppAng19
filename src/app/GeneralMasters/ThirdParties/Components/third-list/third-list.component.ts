@@ -305,8 +305,8 @@ export class ThirdListComponent implements OnInit {
     if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'El archivo debe ser de tipo xlsx'
+        summary: 'Archivo inválido',
+        detail: 'Por favor, selecciona un archivo EXCEL válido'
       });
       return;
     }
