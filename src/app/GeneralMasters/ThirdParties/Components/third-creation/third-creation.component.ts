@@ -191,9 +191,9 @@ export class ThirdCreationComponent implements OnInit {
       lastNames: [null],
       socialReason: [null],
       gender: [null],
-      country: [null, Validators.required],
-      province: [null, Validators.required],
-      city: [null, Validators.required],
+      country: [null],
+      province: [null],
+      city: [null],
       address: [null, Validators.required],
       phoneNumber: [null, Validators.required],
       email: [null, [Validators.required, Validators.email]]
@@ -223,6 +223,14 @@ export class ThirdCreationComponent implements OnInit {
 
         // Limpiar DV para persona natural
         this.createdThirdForm.get('verificationNumber')?.setValue(null);
+        
+        // Restaurar validaciones básicas del número de identificación
+        const idNumberControl = this.createdThirdForm.get('idNumber');
+        idNumberControl?.setValidators([Validators.required, Validators.min(1)]);
+        idNumberControl?.setAsyncValidators([
+          this.thirdExistsValidator(this.thirdService, this.entData)
+        ]);
+        idNumberControl?.updateValueAndValidity();
       } else if (value === ePersonType.juridica) {
         socialReasonControl?.setValidators([Validators.required]);
         namesControl?.clearValidators();
@@ -231,6 +239,9 @@ export class ThirdCreationComponent implements OnInit {
 
         this.button1Checked = true;
         this.button2Checked = false;
+
+        // Actualizar validaciones del número de identificación si hay tipo seleccionado
+        this.updateIdNumberValidations();
 
         // Calcular DV si ya hay número de identificación y el tipo es NIT
         const idNumber = this.createdThirdForm.get('idNumber')?.value;
@@ -257,8 +268,10 @@ export class ThirdCreationComponent implements OnInit {
       }
     });
 
-    // Calcular DV cuando cambie el tipo de identificación
+    // Calcular DV cuando cambie el tipo de identificación y aplicar validaciones
     this.createdThirdForm.get('typeId')?.valueChanges.subscribe(() => {
+      this.updateIdNumberValidations();
+      
       const idNumber = this.createdThirdForm.get('idNumber')?.value;
       if (this.shouldCalculateDV() && idNumber && idNumber > 0) {
         this.calculateVerificationDigit(idNumber);
@@ -267,6 +280,37 @@ export class ThirdCreationComponent implements OnInit {
         this.createdThirdForm.get('verificationNumber')?.setValue(null);
       }
     });
+  }
+
+  /**
+   * Actualiza las validaciones del número de identificación según el tipo seleccionado
+   */
+  private updateIdNumberValidations(): void {
+    const idNumberControl = this.createdThirdForm.get('idNumber');
+    const typeId = this.createdThirdForm.get('typeId')?.value;
+    const isNIT = typeId && typeId.typeId === 'NIT';
+
+    if (isNIT) {
+      // Para NIT: debe empezar con 8 o 9 y tener exactamente 9 dígitos
+      idNumberControl?.setValidators([
+        Validators.required,
+        Validators.min(1),
+        this.nitValidator()
+      ]);
+    } else {
+      // Para otros tipos: solo requerido y mayor a 0
+      idNumberControl?.setValidators([
+        Validators.required,
+        Validators.min(1)
+      ]);
+    }
+
+    // Mantener el validador asíncrono
+    idNumberControl?.setAsyncValidators([
+      this.thirdExistsValidator(this.thirdService, this.entData)
+    ]);
+
+    idNumberControl?.updateValueAndValidity();
   }
 
   /**
@@ -583,6 +627,33 @@ export class ThirdCreationComponent implements OnInit {
         map(exists => exists ? { thirdExists: true } : null),
         catchError(() => of(null))
       );
+    };
+  }
+
+  /**
+   * Validador personalizado para NIT
+   * Verifica que el NIT empiece con 8 o 9 y tenga exactamente 9 dígitos
+   */
+  private nitValidator(): (control: AbstractControl) => ValidationErrors | null {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) {
+        return null;
+      }
+
+      const nitString = control.value.toString();
+      const firstDigit = nitString.charAt(0);
+
+      // Validar que empiece con 8 o 9
+      if (firstDigit !== '8' && firstDigit !== '9') {
+        return { nitInvalidStart: true };
+      }
+
+      // Validar que tenga exactamente 9 dígitos
+      if (nitString.length !== 9) {
+        return { nitInvalidLength: true };
+      }
+
+      return null;
     };
   }
 
