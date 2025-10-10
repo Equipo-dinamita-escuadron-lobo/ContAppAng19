@@ -159,8 +159,8 @@ export class ThirdCreationPdfRUTComponent {
         }
       },
       error: (err) => {
-        this.loading = false;
-        const errorMessage = err?.error?.message || 'No se pudo procesar el archivo PDF';
+        this.loading = false;        
+        const errorMessage = err?.error?.message || 'No se pudo procesar el archivo PDF';        
         this.messageService.add({
           severity: 'error',
           summary: 'Error de procesamiento',

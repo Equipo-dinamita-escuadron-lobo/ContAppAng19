@@ -68,11 +68,11 @@ export class ThirdService {
   ExtractInfoPDFRUT(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file, file.name);
-    console.log('Request Body:', formData);
     return this.http.post<any>(this.thirdApiUrl+"content-PDF-RUT", formData).pipe(
       catchError((error) => {
         console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while uploading the file'));
+
+        return throwError(() => error);
       })
     );
   }
