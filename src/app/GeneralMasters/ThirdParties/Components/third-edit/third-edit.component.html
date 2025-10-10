@@ -342,7 +342,7 @@
       <!-- Botones de acción -->
       <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button type="button" label="Cancelar" severity="secondary" (onClick)="onCancel()"></p-button>
-        <p-button type="submit" label="Actualizar Tercero" [disabled]="createdThirdForm.invalid"></p-button>
+        <p-button type="submit" label="Guardar Cambios" [disabled]="createdThirdForm.invalid || !hasChanges"></p-button>
       </div>
     </form>
   </div>

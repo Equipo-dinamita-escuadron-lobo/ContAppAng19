@@ -142,6 +142,12 @@ export class ThirdEditComponent implements OnInit {
   /** Indica si el formulario ha sido enviado */
   submitted = false;
 
+  /** Indica si el formulario tiene cambios sin guardar */
+  hasChanges = false;
+
+  /** Valores iniciales del formulario para comparación */
+  private initialFormValue: any = null;
+
   /** Estados de los botones de tipo de persona */
   button1Checked = false; // Jurídica
   button2Checked = false; // Natural
@@ -405,6 +411,57 @@ export class ThirdEditComponent implements OnInit {
     if (third.province) {
       this.loadCities(third.province);
     }
+
+    // Guardar valores iniciales para detectar cambios
+    setTimeout(() => {
+      this.initialFormValue = this.createdThirdForm.value;
+      this.setupChangeDetection();
+    }, 100);
+  }
+
+  /**
+   * Configura la detección de cambios en el formulario
+   */
+  private setupChangeDetection(): void {
+    this.createdThirdForm.valueChanges.subscribe(() => {
+      this.hasChanges = this.formHasChanges();
+    });
+  }
+
+  /**
+   * Verifica si el formulario tiene cambios respecto a los valores iniciales
+   */
+  private formHasChanges(): boolean {
+    if (!this.initialFormValue) {
+      return false;
+    }
+
+    const currentValue = this.createdThirdForm.value;
+    
+    // Comparar cada campo
+    return JSON.stringify(this.normalizeFormValue(currentValue)) !== 
+           JSON.stringify(this.normalizeFormValue(this.initialFormValue));
+  }
+
+  /**
+   * Normaliza los valores del formulario para comparación
+   */
+  private normalizeFormValue(value: any): any {
+    const normalized = { ...value };
+    
+    // Normalizar arrays de objetos (thirdTypes) comparando por IDs
+    if (normalized.thirdTypes && Array.isArray(normalized.thirdTypes)) {
+      normalized.thirdTypes = normalized.thirdTypes
+        .map((t: any) => t.thirdTypeId)
+        .sort();
+    }
+    
+    // Normalizar typeId (comparar solo el ID)
+    if (normalized.typeId && typeof normalized.typeId === 'object') {
+      normalized.typeId = normalized.typeId.typeId;
+    }
+    
+    return normalized;
   }
 
   /**
