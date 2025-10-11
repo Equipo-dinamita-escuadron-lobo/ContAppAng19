@@ -183,8 +183,10 @@ export class ThirdCreationComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadInitialData();
-    this.checkForRUTData();
+    this.loadInitialData().then(() => {
+      // Esperar a que se carguen los datos antes de procesar el RUT
+      this.checkForRUTData();
+    });
   }
 
   /**
@@ -204,13 +206,29 @@ export class ThirdCreationComponent implements OnInit {
       gender: [null],
       country: [null],
       province: [null],
-      city: [null],
+      city: [{ value: null, disabled: true }], // Inicialmente deshabilitado
       address: [null, Validators.required],
       phoneNumber: [null, Validators.required],
       email: [null, [Validators.required, Validators.email]]
     });
 
     this.setupDynamicValidations();
+    this.setupProvinceChangeHandler();
+  }
+
+  /**
+   * Configura el manejador de cambios del departamento para habilitar/deshabilitar ciudad
+   */
+  private setupProvinceChangeHandler(): void {
+    this.createdThirdForm.get('province')?.valueChanges.subscribe(value => {
+      const cityControl = this.createdThirdForm.get('city');
+      if (value) {
+        cityControl?.enable();
+      } else {
+        cityControl?.disable();
+        cityControl?.setValue(null);
+      }
+    });
   }
 
   /**
@@ -386,28 +404,158 @@ export class ThirdCreationComponent implements OnInit {
    * Prellena el formulario con datos del RUT
    */
   private prefillFormWithRUTData(): void {
-    if (this.infoThird && this.infoThird.length >= 12) {
+    if (this.infoThird && this.infoThird.length >= 12) {      
+      // Determinar el tipo de persona
+      const personTypeStr = this.infoThird[0]?.toLowerCase() || '';
+      let personType = ePersonType.natural; // Por defecto natural
+      
+      if (personTypeStr.includes('jurídica') || personTypeStr.includes('juridica')) {
+        personType = ePersonType.juridica;
+      }
+
+      // Buscar el tipo de identificación que coincida
+      const typeIdStr = this.infoThird[1]?.trim() || '';
+      let matchedTypeId = null;
+      
+      if (typeIdStr) {
+        matchedTypeId = this.typeIds.find(t => 
+          t.typeIdname?.toLowerCase().includes(typeIdStr.toLowerCase()) ||
+          t.typeId?.toLowerCase() === typeIdStr.toLowerCase()
+        );
+      }
+
+      // Buscar el código del departamento por su nombre
+      const departmentName = this.infoThird[7]?.trim() || '';
+      const departmentCode = this.findDepartmentCodeByName(departmentName);
+
+      // Buscar el código del país por su nombre
+      const countryName = this.infoThird[6]?.trim() || '';
+      const countryCode = this.findCountryCodeByName(countryName) || 'COL';
+
+      // Buscar el código de la ciudad por su nombre (se hará después de cargar las ciudades)
+      const cityName = this.infoThird[8]?.trim() || '';
+
       this.createdThirdForm.patchValue({
-        personType: this.infoThird[0] || ePersonType.natural,
-        names: this.infoThird[1],
-        lastNames: this.infoThird[2],
-        socialReason: this.infoThird[3],
-        idNumber: parseInt(this.infoThird[4]) || 0,
-        verificationNumber: this.infoThird[5],
-        address: this.infoThird[6],
-        phoneNumber: this.infoThird[7],
-        email: this.infoThird[8],
-        country: this.infoThird[9] || 'COL',
-        province: this.infoThird[10],
-        city: this.infoThird[11]
+        personType: personType,
+        typeId: matchedTypeId,
+        idNumber: parseInt(this.infoThird[2]) || 0,
+        verificationNumber: this.infoThird[3] || null,
+        lastNames: this.infoThird[4]?.trim() || null,
+        names: this.infoThird[5]?.trim() || null,
+        socialReason: personType === ePersonType.juridica ? this.infoThird[4]?.trim() : null,
+        country: countryCode,
+        province: departmentCode,
+        address: this.infoThird[9]?.trim() || null,
+        email: this.infoThird[10]?.trim() || null,
+        phoneNumber: this.infoThird[11]?.trim() || null
       });
 
       // Cargar ciudades si hay departamento seleccionado
-      if (this.infoThird[10]) {
-        const countryCode = this.infoThird[9] || 'COL';
-        this.loadCities(this.infoThird[10], countryCode);
+      if (departmentCode) {
+        // Habilitar el control de ciudad
+        this.createdThirdForm.get('city')?.enable();
+        
+        // Cargar ciudades y luego asignar la ciudad correspondiente
+        this.geographyHelper.loadCitiesAsOptions(departmentCode, countryCode).subscribe({
+          next: (cities) => {
+            this.cities = cities;
+            
+            // Buscar el código de la ciudad por su nombre
+            if (cityName) {
+              const cityCode = this.findCityCodeByName(cityName, cities);
+              if (cityCode) {
+                this.createdThirdForm.patchValue({ city: cityCode });
+              }
+            }
+          },
+          error: (error) => {
+            console.error('Error al cargar ciudades desde RUT:', error);
+            this.cities = [];
+          }
+        });
       }
     }
+  }
+
+  /**
+   * Normaliza un string removiendo acentos y caracteres especiales
+   * @param str String a normalizar
+   * @returns String normalizado
+   */
+  private normalizeString(str: string): string {
+    return str
+      .toLowerCase()
+      .trim()
+      .normalize('NFD') // Descompone caracteres con acentos
+      .replace(/[\u0300-\u036f]/g, '') // Remueve los acentos
+      .replace(/[^a-z0-9\s]/g, ''); // Remueve caracteres especiales excepto espacios
+  }
+
+  /**
+   * Busca el código del país por su nombre
+   * @param countryName Nombre del país
+   * @returns Código del país o null
+   */
+  private findCountryCodeByName(countryName: string): string | null {
+    if (!countryName) return null;
+    
+    const normalized = this.normalizeString(countryName);
+    const country = this.countries.find(c => 
+      this.normalizeString(c.label) === normalized
+    );
+    
+    if (country) {
+      console.log(`País encontrado: "${countryName}" -> ${country.value}`);
+      return country.value;
+    }
+    
+    console.warn(`No se encontró el país: "${countryName}"`);
+    return null;
+  }
+
+  /**
+   * Busca el código del departamento por su nombre
+   * @param departmentName Nombre del departamento
+   * @returns Código del departamento o null
+   */
+  private findDepartmentCodeByName(departmentName: string): string | null {
+    if (!departmentName) return null;
+    
+    const normalized = this.normalizeString(departmentName);
+    const department = this.states.find(state => 
+      this.normalizeString(state.label) === normalized
+    );
+    
+    if (department) {
+      console.log(`Departamento encontrado: "${departmentName}" -> ${department.value}`);
+      return department.value;
+    }
+    
+    console.warn(`No se encontró el departamento: "${departmentName}"`);
+    return null;
+  }
+
+  /**
+   * Busca el código de la ciudad por su nombre
+   * @param cityName Nombre de la ciudad
+   * @param cities Lista de opciones de ciudades
+   * @returns Código de la ciudad o null
+   */
+  private findCityCodeByName(cityName: string, cities: any[]): string | null {
+    if (!cityName) return null;
+    
+    const normalized = this.normalizeString(cityName);
+    const city = cities.find(c => 
+      this.normalizeString(c.label) === normalized
+    );
+    
+    if (city) {
+      console.log(`Ciudad encontrada: "${cityName}" -> ${city.value}`);
+      return city.value;
+    }
+    
+    console.warn(`No se encontró la ciudad: "${cityName}"`);
+    return null;
   }
 
   /**

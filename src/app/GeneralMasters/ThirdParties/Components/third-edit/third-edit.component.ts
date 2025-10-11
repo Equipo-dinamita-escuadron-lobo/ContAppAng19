@@ -249,7 +249,7 @@ export class ThirdEditComponent implements OnInit {
       gender: [''],
       country: [''],
       province: [''],
-      city: [''],
+      city: [{ value: '', disabled: true }], 
       address: ['', Validators.required],
       phoneNumber: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]]
@@ -257,6 +257,22 @@ export class ThirdEditComponent implements OnInit {
 
     // Configurar validaciones dinámicas
     this.setupDynamicValidations();
+    this.setupProvinceChangeHandler();
+  }
+
+  /**
+   * Configura el manejador de cambios del departamento para habilitar/deshabilitar ciudad
+   */
+  private setupProvinceChangeHandler(): void {
+    this.createdThirdForm.get('province')?.valueChanges.subscribe(value => {
+      const cityControl = this.createdThirdForm.get('city');
+      if (value) {
+        cityControl?.enable();
+      } else {
+        cityControl?.disable();
+        cityControl?.setValue('');
+      }
+    });
   }
 
   /**
@@ -431,8 +447,10 @@ export class ThirdEditComponent implements OnInit {
       email: third.email
     });
 
-    // Cargar ciudades del departamento seleccionado
+    // Cargar ciudades del departamento seleccionado y habilitar el campo ciudad
     if (third.province) {
+      // Habilitar el control de ciudad
+      this.createdThirdForm.get('city')?.enable();
       this.loadCities(third.province);
     }
 
