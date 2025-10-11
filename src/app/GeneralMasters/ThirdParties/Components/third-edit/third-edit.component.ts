@@ -661,10 +661,25 @@ export class ThirdEditComponent implements OnInit {
           }, 2000);
         },
         error: (error: any) => {
+          // Extraer el mensaje de error más específico disponible
+          const errorMessage = error.error?.message || error.message || 'Error al actualizar el tercero';
+          
+          // Determinar el título según el tipo de error
+          let errorTitle = 'Error';
+          if (error.status === 409) {
+            errorTitle = 'Tercero Duplicado';
+          } else if (error.status === 400) {
+            errorTitle = 'Datos Inválidos';
+          } else if (error.status === 404) {
+            errorTitle = 'No Encontrado';
+          } else if (error.status >= 500) {
+            errorTitle = 'Error del Servidor';
+          }
+
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al actualizar el tercero'
+            summary: errorTitle,
+            detail: errorMessage
           });
         }
       });
