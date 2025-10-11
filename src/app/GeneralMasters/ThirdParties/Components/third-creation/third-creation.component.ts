@@ -224,16 +224,23 @@ export class ThirdCreationComponent implements OnInit {
       const genderControl = this.createdThirdForm.get('gender');
 
       if (value === ePersonType.natural) {
+        // Configurar validadores para persona natural
         namesControl?.setValidators([Validators.required]);
         lastNamesControl?.setValidators([Validators.required]);
+        genderControl?.clearValidators();
         socialReasonControl?.clearValidators();
-        genderControl?.setValidators([Validators.required]);
+
+        // Limpiar campos específicos de persona jurídica
+        socialReasonControl?.setValue(null);
 
         this.button2Checked = true;
         this.button1Checked = false;
 
         // Filtrar tipos de identificación para persona natural
         this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds, 'NATURAL_PERSON');
+
+        // Limpiar tipo de identificación ya que los disponibles cambian
+        this.createdThirdForm.get('typeId')?.setValue(null);
 
         // Limpiar DV para persona natural
         this.thirdFormService.clearVerificationDigit(this.createdThirdForm);
@@ -246,16 +253,25 @@ export class ThirdCreationComponent implements OnInit {
         ]);
         idNumberControl?.updateValueAndValidity();
       } else if (value === ePersonType.juridica) {
+        // Configurar validadores para persona jurídica
         socialReasonControl?.setValidators([Validators.required]);
         namesControl?.clearValidators();
         lastNamesControl?.clearValidators();
         genderControl?.clearValidators();
+
+        // Limpiar campos específicos de persona natural
+        namesControl?.setValue(null);
+        lastNamesControl?.setValue(null);
+        genderControl?.setValue(null);
 
         this.button1Checked = true;
         this.button2Checked = false;
 
         // Filtrar tipos de identificación para persona jurídica
         this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds, 'LEGAL_ENTITY');
+
+        // Limpiar tipo de identificación ya que los disponibles cambian
+        this.createdThirdForm.get('typeId')?.setValue(null);
 
         // Actualizar validaciones del número de identificación si hay tipo seleccionado
         const typeId = this.thirdFormService.getTypeId(this.createdThirdForm);
