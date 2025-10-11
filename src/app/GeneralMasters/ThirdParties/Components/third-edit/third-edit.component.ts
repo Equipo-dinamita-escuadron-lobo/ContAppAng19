@@ -33,6 +33,9 @@ import { eThirdGender } from '../../models/eThirdGender';
 import { Country } from '../../models/Country';
 import { Department } from '../../models/Department';
 import { City } from '../../models/City';
+import { ThirdFormService } from '../../Services/third-form.service';
+import { ThirdValidationService } from '../../Services/third-validation.service';
+import { GeographyHelperService } from '../../Services/geography-helper.service';
 // import { buttonColors } from '../../../../Shared/buttonColors';
 
 // External libraries
@@ -202,7 +205,10 @@ export class ThirdEditComponent implements OnInit {
     private datePipe: DatePipe,
     private http: HttpClient,
     private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods
+    private localStorageMethods: LocalStorageMethods,
+    private thirdFormService: ThirdFormService,
+    private thirdValidationService: ThirdValidationService,
+    private geographyHelperService: GeographyHelperService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
@@ -306,7 +312,8 @@ export class ThirdEditComponent implements OnInit {
         // Calcular DV si ya hay número de identificación y el tipo es NIT
         const idNumber = this.createdThirdForm.get('idNumber')?.value;
         if (this.shouldCalculateDV() && idNumber) {
-          this.calculateVerificationDigit(idNumber);
+          const dv = this.thirdFormService.calculateVerificationDigit(idNumber);
+          this.thirdFormService.setVerificationDigit(this.createdThirdForm, dv);
         }
       }
 
@@ -320,10 +327,11 @@ export class ThirdEditComponent implements OnInit {
     this.createdThirdForm.get('idNumber')?.valueChanges.subscribe(idNumber => {
       if (this.shouldCalculateDV()) {
         if (idNumber && idNumber > 0) {
-          this.calculateVerificationDigit(idNumber);
+          const dv = this.thirdFormService.calculateVerificationDigit(idNumber);
+          this.thirdFormService.setVerificationDigit(this.createdThirdForm, dv);
         } else {
           // Limpiar DV si no hay número válido
-          this.createdThirdForm.get('verificationNumber')?.setValue(null);
+          this.thirdFormService.clearVerificationDigit(this.createdThirdForm);
         }
       }
     });
@@ -334,10 +342,11 @@ export class ThirdEditComponent implements OnInit {
       
       const idNumber = this.createdThirdForm.get('idNumber')?.value;
       if (this.shouldCalculateDV() && idNumber && idNumber > 0) {
-        this.calculateVerificationDigit(idNumber);
+        const dv = this.thirdFormService.calculateVerificationDigit(idNumber);
+        this.thirdFormService.setVerificationDigit(this.createdThirdForm, dv);
       } else if (!this.shouldCalculateDV()) {
         // Limpiar DV si cambió a un tipo que no requiere cálculo automático
-        this.createdThirdForm.get('verificationNumber')?.setValue(null);
+        this.thirdFormService.clearVerificationDigit(this.createdThirdForm);
       }
     });
   }
@@ -521,7 +530,7 @@ export class ThirdEditComponent implements OnInit {
    * @param classification Clasificación del tipo de persona: 'NATURAL_PERSON' o 'LEGAL_ENTITY'
    */
   private filterTypeIdsByPersonType(classification: 'NATURAL_PERSON' | 'LEGAL_ENTITY'): void {
-    this.filteredTypeIds = this.typeIds.filter(typeId => typeId.classification === classification);
+    this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds, classification);
     
     // Limpiar el tipo de identificación seleccionado si no está en la lista filtrada
     const currentTypeId = this.createdThirdForm.get('typeId')?.value;
@@ -725,152 +734,54 @@ export class ThirdEditComponent implements OnInit {
    * Actualiza las validaciones del número de identificación según el tipo seleccionado
    */
   private updateIdNumberValidations(): void {
-    const idNumberControl = this.createdThirdForm.get('idNumber');
-    const typeId = this.createdThirdForm.get('typeId')?.value;
-    const isNIT = typeId && typeId.typeId === 'NIT';
-
-    if (isNIT) {
-      // Para NIT: debe empezar con 8 o 9 y tener exactamente 9 dígitos
-      idNumberControl?.setValidators([
-        Validators.required,
-        Validators.min(1),
-        this.nitValidator()
-      ]);
-    } else {
-      // Para otros tipos: solo requerido y mayor a 0
-      idNumberControl?.setValidators([
-        Validators.required,
-        Validators.min(1)
-      ]);
-    }
-
-    idNumberControl?.updateValueAndValidity();
+    this.thirdValidationService.updateIdNumberValidations(
+      this.createdThirdForm,
+      this.thirdFormService.getTypeId(this.createdThirdForm),
+      this.thirdFormService.getPersonType(this.createdThirdForm),
+      this.entData,
+      this.thirdService
+    );
   }
 
   /**
-   * Calcula el dígito de verificación del NIT según el algoritmo módulo 11 de la DIAN
-   * @param idNumber Número de identificación (NIT sin DV)
-   */
-  private calculateVerificationDigit(idNumber: number): void {
-    // Convertir el número a string para procesar dígito por dígito
-    const idString = idNumber.toString();
-    const digits = idString.split('').map(d => parseInt(d, 10)).reverse();
-
-    // Multiplicadores según la DIAN: 3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71
-    const multipliers = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
-
-    // 1. Multiplicar cada dígito por su multiplicador correspondiente
-    let sum = 0;
-    for (let i = 0; i < digits.length; i++) {
-      sum += digits[i] * multipliers[i];
-    }
-
-    // 2. Calcular el residuo de dividir la suma entre 11
-    const remainder = sum % 11;
-
-    // 3. Restar el residuo de 11
-    let dv = 11 - remainder;
-
-    // 4. Si el resultado es 11, el DV es 0. Si es 10, el DV es 1
-    if (dv === 11) {
-      dv = 0;
-    } else if (dv === 10) {
-      dv = 1;
-    }
-
-    // Actualizar el campo del formulario
-    this.createdThirdForm.get('verificationNumber')?.setValue(dv.toString());
-  }
-
-  /**
-   * Validador personalizado para NIT
-   * Verifica que el NIT empiece con 8 o 9 y tenga exactamente 9 dígitos
-   */
-  private nitValidator(): (control: AbstractControl) => ValidationErrors | null {
-    return (control: AbstractControl): ValidationErrors | null => {
-      if (!control.value) {
-        return null;
-      }
-
-      const nitString = control.value.toString();
-      const firstDigit = nitString.charAt(0);
-
-      // Validar que empiece con 8 o 9
-      if (firstDigit !== '8' && firstDigit !== '9') {
-        return { nitInvalidStart: true };
-      }
-
-      // Validar que tenga exactamente 9 dígitos
-      if (nitString.length !== 9) {
-        return { nitInvalidLength: true };
-      }
-
-      return null;
-    };
-  }
-
   /**
    * Verifica si es persona natural
    */
   isNaturalPerson(): boolean {
-    return this.createdThirdForm.get('personType')?.value === ePersonType.natural;
+    return this.thirdFormService.isNaturalPerson(this.createdThirdForm);
   }
 
   /**
    * Verifica si es persona jurídica
    */
   isJuridicPerson(): boolean {
-    return this.createdThirdForm.get('personType')?.value === ePersonType.juridica;
+    return this.thirdFormService.isJuridicPerson(this.createdThirdForm);
   }
 
   /**
    * Verifica si se debe calcular el DV automáticamente
-   * Solo cuando es persona jurídica y el tipo de ID es NIT
    */
   shouldCalculateDV(): boolean {
-    const isJuridic = this.isJuridicPerson();
-    const typeId = this.createdThirdForm.get('typeId')?.value;
-    const isNIT = typeId && typeId.typeId === 'NIT';
-    return isJuridic && isNIT;
+    return this.thirdFormService.shouldCalculateDV(
+      this.thirdFormService.getPersonType(this.createdThirdForm),
+      this.thirdFormService.getTypeId(this.createdThirdForm)
+    );
   }
 
   /**
    * Verifica si el campo DV debe estar en solo lectura
-   * Solo está bloqueado cuando se calcula automáticamente (NIT)
    */
   isDVReadonly(): boolean {
-    return this.shouldCalculateDV();
+    return this.thirdFormService.isDVReadonly(
+      this.thirdFormService.getPersonType(this.createdThirdForm),
+      this.thirdFormService.getTypeId(this.createdThirdForm)
+    );
   }
 
   /**
    * Permite solo la entrada de números (0-9) en el input de DV
-   * Filtra cualquier carácter que no sea número
-   * @param event Evento del input
    */
   onlyNumbersInput(event: Event): void {
-    // Si el campo está en modo readonly, no hacer nada
-    if (this.isDVReadonly()) {
-      return;
-    }
-
-    const input = event.target as HTMLInputElement;
-    // Reemplazar cualquier carácter que no sea número (0-9)
-    input.value = input.value.replace(/[^0-9]/g, '');
-    // Actualizar el valor del formulario
-    this.createdThirdForm.get('verificationNumber')?.setValue(input.value);
-  }
-
-  // Validador asíncrono para verificar si el tercero existe
-  thirdExistsValidator(thirdService: ThirdService, entId: string): AsyncValidatorFn {
-    return (control: AbstractControl): Observable<ValidationErrors | null> => {
-      if (!control.value) {
-        return of(null);
-      }
-
-      return thirdService.existThird(control.value, entId).pipe(
-        map(exists => exists ? { thirdExists: true } : null),
-        catchError(() => of(null))
-      );
-    };
+    this.thirdFormService.onlyNumbersInput(event as KeyboardEvent);
   }
 }
