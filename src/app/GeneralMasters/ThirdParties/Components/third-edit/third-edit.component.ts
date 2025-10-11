@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AbstractControl, AsyncValidatorFn, FormBuilder, FormGroup, ValidationErrors, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -21,26 +21,19 @@ import { SelectModule } from 'primeng/select';
 
 // Models and Services
 import { Third } from '../../models/Third';
-import { eTypeId } from '../../models/eTypeId';
 import { ePersonType } from '../../models/ePersonType';
 import { ThirdService } from '../../Services/third.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
-import { GeographyService } from '../../Services/geography.service';
 import { eThirdGender } from '../../models/eThirdGender';
-import { Country } from '../../models/Country';
-import { Department } from '../../models/Department';
-import { City } from '../../models/City';
 import { ThirdFormService } from '../../Services/third-form.service';
 import { ThirdValidationService } from '../../Services/third-validation.service';
 import { GeographyHelperService } from '../../Services/geography-helper.service';
-// import { buttonColors } from '../../../../Shared/buttonColors';
 
 // External libraries
-import { catchError, map, Observable, of, throwError } from 'rxjs';
-import Swal from 'sweetalert2';
+
 
 @Component({
   selector: 'app-third-edit',
@@ -199,7 +192,6 @@ export class ThirdEditComponent implements OnInit {
     private fb: FormBuilder,
     private thirdService: ThirdService,
     private thirdConfigurationService: ThirdServiceConfigurationService,
-    private geographyService: GeographyService,
     private router: Router,
     private route: ActivatedRoute,
     private datePipe: DatePipe,
@@ -375,7 +367,6 @@ export class ThirdEditComponent implements OnInit {
         this.loadDepartments()
       ]);
     } catch (error) {
-      console.error('Error loading initial data:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -500,7 +491,6 @@ export class ThirdEditComponent implements OnInit {
           resolve();
         },
         error: (error: any) => {
-          console.error('Error loading third types:', error);
           reject(error);
         }
       });
@@ -518,7 +508,6 @@ export class ThirdEditComponent implements OnInit {
           resolve();
         },
         error: (error: any) => {
-          console.error('Error loading type IDs:', error);
           reject(error);
         }
       });
@@ -550,16 +539,12 @@ export class ThirdEditComponent implements OnInit {
    */
   private loadCountries(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.geographyService.getAllCountries().subscribe({
-        next: (countries: Country[]) => {
-          this.countries = countries.map(country => ({
-            label: country.countryName,
-            value: country.countryCode
-          }));
+      this.geographyHelperService.loadCountriesAsOptions().subscribe({
+        next: (countries) => {
+          this.countries = countries;
           resolve();
         },
-        error: (error: any) => {
-          console.error('Error loading countries:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -577,16 +562,12 @@ export class ThirdEditComponent implements OnInit {
    */
   private loadDepartments(countryCode: string = 'COL'): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.geographyService.getStatesByCountry(countryCode).subscribe({
-        next: (states: Department[]) => {
-          this.departments = states.map(state => ({
-            label: state.stateName,
-            value: state.stateCode
-          }));
+      this.geographyHelperService.loadDepartmentsAsOptions(countryCode).subscribe({
+        next: (departments) => {
+          this.departments = departments;
           resolve();
         },
-        error: (error: any) => {
-          console.error('Error loading departments:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -604,15 +585,11 @@ export class ThirdEditComponent implements OnInit {
    * @param countryCode Código del país (por defecto COL)
    */
   private loadCities(stateCode: string, countryCode: string = 'COL'): void {
-    this.geographyService.getCitiesByState(stateCode, countryCode).subscribe({
-      next: (cities: City[]) => {
-        this.cities = cities.map(city => ({
-          label: city.cityName,
-          value: city.cityCode
-        }));
+    this.geographyHelperService.loadCitiesAsOptions(stateCode, countryCode).subscribe({
+      next: (cities) => {
+        this.cities = cities;
       },
-      error: (error: any) => {
-        console.error('Error loading cities:', error);
+      error: (error) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -676,7 +653,6 @@ export class ThirdEditComponent implements OnInit {
           }, 2000);
         },
         error: (error: any) => {
-          console.error('Error updating third:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',

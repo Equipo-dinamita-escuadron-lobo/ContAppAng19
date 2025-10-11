@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AbstractControl, AsyncValidatorFn, FormBuilder, FormGroup, ValidationErrors, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 
@@ -25,20 +25,13 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
-import { GeographyService } from '../../Services/geography.service';
 import { eThirdGender } from '../../models/eThirdGender';
 import { ePersonType } from '../../models/ePersonType';
-import { Country } from '../../models/Country';
-import { Department } from '../../models/Department';
-import { City } from '../../models/City';
 
 // Shared Services
 import { ThirdFormService } from '../../Services/third-form.service';
 import { ThirdValidationService } from '../../Services/third-validation.service';
 import { GeographyHelperService } from '../../Services/geography-helper.service';
-
-// External libraries
-import { catchError, map, Observable, of } from 'rxjs';
 
 @Component({
   selector: 'app-third-creation',
@@ -169,7 +162,6 @@ export class ThirdCreationComponent implements OnInit {
     private fb: FormBuilder,
     private thirdService: ThirdService,
     private thirdServiceConfigurationService: ThirdServiceConfigurationService,
-    private geographyService: GeographyService,
     private router: Router,
     private datePipe: DatePipe,
     private messageService: MessageService,
@@ -347,7 +339,6 @@ export class ThirdCreationComponent implements OnInit {
         this.loadStates()
       ]);
     } catch (error) {
-      console.error('Error loading initial data:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -446,16 +437,12 @@ export class ThirdCreationComponent implements OnInit {
    */
   private loadCountries(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.geographyService.getAllCountries().subscribe({
-        next: (countries: Country[]) => {
-          this.countries = countries.map(country => ({
-            label: country.countryName,
-            value: country.countryCode
-          }));
+      this.geographyHelper.loadCountriesAsOptions().subscribe({
+        next: (countries) => {
+          this.countries = countries;
           resolve();
         },
-        error: (error: any) => {
-          console.error('Error loading countries:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -473,16 +460,12 @@ export class ThirdCreationComponent implements OnInit {
    */
   private loadStates(countryCode: string = 'COL'): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.geographyService.getStatesByCountry(countryCode).subscribe({
-        next: (states: Department[]) => {
-          this.states = states.map(state => ({
-            label: state.stateName,
-            value: state.stateCode
-          }));
+      this.geographyHelper.loadDepartmentsAsOptions(countryCode).subscribe({
+        next: (departments) => {
+          this.states = departments;
           resolve();
         },
-        error: (error: any) => {
-          console.error('Error loading states:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -500,15 +483,11 @@ export class ThirdCreationComponent implements OnInit {
    * @param countryCode Código del país (por defecto COL)
    */
   private loadCities(stateCode: string, countryCode: string = 'COL'): void {
-    this.geographyService.getCitiesByState(stateCode, countryCode).subscribe({
-      next: (cities: City[]) => {
-        this.cities = cities.map(city => ({
-          label: city.cityName,
-          value: city.cityCode
-        }));
+    this.geographyHelper.loadCitiesAsOptions(stateCode, countryCode).subscribe({
+      next: (cities) => {
+        this.cities = cities;
       },
-      error: (error: any) => {
-        console.error('Error loading cities:', error);
+      error: (error) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -578,7 +557,6 @@ export class ThirdCreationComponent implements OnInit {
           }, 2000);
         },
         error: (error: any) => {
-          console.error('Error creating third:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
