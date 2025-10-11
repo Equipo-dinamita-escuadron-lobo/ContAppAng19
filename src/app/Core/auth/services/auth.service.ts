@@ -102,7 +102,7 @@ export class AuthService {
   }
 
   public register(user: RegisterUser): Observable<any> {
-    return this.http.post<any>(`${keycloakUrl}create`, user).pipe(
+    return this.http.post<any>(`${keycloakUrl}register`, user).pipe(
       tap((createdUser) => console.log('Usuario registrado exitosamente:', createdUser)),
       catchError((error) => {
         console.error('Error en registro:', error);
@@ -193,7 +193,7 @@ export class AuthService {
     }
 
     const headers = { Authorization: `Bearer ${token}` };
-    return this.http.post<void>(`${keycloakUrlToken}logout`, {}, { headers }).pipe(
+    return this.http.post<void>(`${keycloakUrl}token/logout`, {}, { headers }).pipe(
       tap(() => {
         this.removeToken();
         this._currentUser.next(null);
