@@ -121,9 +121,9 @@ export class ThirdEditComponent implements OnInit {
     verificationNumber: 0,
     state: true,
     photoPath: undefined,
-    country: "0",
-    province: "0",
-    city: "0",
+    country: null,
+    province: null,
+    city: null,
     address: '',
     phoneNumber: '',
     email: '',
@@ -439,9 +439,9 @@ export class ThirdEditComponent implements OnInit {
       lastNames: third.lastNames,
       socialReason: third.socialReason,
       gender: third.gender,
-      country: third.country,
-      province: third.province,
-      city: third.city,
+      country: third.country?.countryCode || null,
+      province: third.province?.stateCode || null,
+      city: third.city?.cityCode || null,
       address: third.address,
       phoneNumber: third.phoneNumber,
       email: third.email
@@ -451,7 +451,7 @@ export class ThirdEditComponent implements OnInit {
     if (third.province) {
       // Habilitar el control de ciudad
       this.createdThirdForm.get('city')?.enable();
-      this.loadCities(third.province);
+      this.loadCities(third.province.stateCode);
     }
 
     // Guardar valores iniciales para detectar cambios
@@ -659,9 +659,16 @@ export class ThirdEditComponent implements OnInit {
     if (this.createdThirdForm.valid) {
       const formData = this.createdThirdForm.value;
       
-      const updatedThird: Third = {
+      // Preparar datos para enviar al backend con códigos geográficos
+      const updatedThird: any = {
         ...this.thirdEdit,
         ...formData,
+        countryCode: formData.country,
+        stateCode: formData.province,
+        cityCode: formData.city,
+        country: undefined,
+        province: undefined,
+        city: undefined,
         state: this.thirdEdit.state, // Mantener el estado original
         updateDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!
       };

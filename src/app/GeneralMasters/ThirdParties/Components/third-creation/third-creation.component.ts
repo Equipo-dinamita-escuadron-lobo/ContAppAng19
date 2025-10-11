@@ -137,9 +137,9 @@ export class ThirdCreationComponent implements OnInit {
     verificationNumber: 0,
     state: true,
     photoPath: undefined,
-    country: "",
-    province: "",
-    city: "",
+    country: null,
+    province: null,
+    city: null,
     address: '',
     phoneNumber: '',
     email: '',
@@ -705,10 +705,17 @@ export class ThirdCreationComponent implements OnInit {
     if (this.createdThirdForm.valid) {
       const formData = this.createdThirdForm.value;
 
-      const newThird: Third = {
+      // Preparar datos para enviar al backend con códigos geográficos
+      const newThird: any = {
         ...this.thirdData,
         ...formData,
         entId: this.entData,
+        countryCode: formData.country,
+        stateCode: formData.province,
+        cityCode: formData.city,
+        country: undefined,
+        province: undefined,
+        city: undefined,
         creationDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!,
         updateDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!
       };
@@ -759,6 +766,7 @@ export class ThirdCreationComponent implements OnInit {
       });
     }
   }
+
   /**
    * Cancela la creación y regresa a la lista
    */

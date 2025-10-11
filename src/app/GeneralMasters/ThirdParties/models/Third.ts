@@ -3,6 +3,9 @@ import { TypeId } from "./TypeId";
 import { ePersonType } from "./ePersonType";
 import { eThirdGender } from "./eThirdGender";
 import { eTypeId } from "./eTypeId";
+import { Country } from "./Country";
+import { Department } from "./Department";
+import { City } from "./City";
 
 
 export interface Third {
@@ -20,9 +23,9 @@ export interface Third {
     verificationNumber?: number;
     state: boolean;
     photoPath?: string;
-    country: string;
-    province: string;
-    city: string;
+    country?: Country | null;
+    province?: Department | null;
+    city?: City | null;
     address: string;
     phoneNumber: string;
     email: string;
