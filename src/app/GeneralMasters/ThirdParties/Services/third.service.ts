@@ -55,7 +55,7 @@ export class ThirdService {
     return this.http.post<Third>(this.thirdApiUrl,Third).pipe(
       catchError((error) => {
         console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while adding a hero'));
+        return throwError(() => error);
       })
     );
   }
@@ -87,7 +87,7 @@ export class ThirdService {
     return this.http.post<Third>(this.thirdApiUrl+"update",Third).pipe(
       catchError((error) => {
         console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while adding a hero'));
+        return throwError(() => error);
       })
     );
   }
