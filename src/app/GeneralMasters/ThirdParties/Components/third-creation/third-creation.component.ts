@@ -97,6 +97,9 @@ export class ThirdCreationComponent implements OnInit {
   /** Lista de tipos de identificación disponibles */
   typeIds: TypeId[] = [];
 
+  /** Lista de tipos de identificación filtrados según el tipo de persona */
+  filteredTypeIds: TypeId[] = [];
+
   /** Lista de ciudades disponibles */
   cities: any[] = [];
 
@@ -221,6 +224,9 @@ export class ThirdCreationComponent implements OnInit {
         this.button2Checked = true;
         this.button1Checked = false;
 
+        // Filtrar tipos de identificación para persona natural
+        this.filterTypeIdsByPersonType('NATURAL_PERSON');
+
         // Limpiar DV para persona natural
         this.createdThirdForm.get('verificationNumber')?.setValue(null);
         
@@ -239,6 +245,9 @@ export class ThirdCreationComponent implements OnInit {
 
         this.button1Checked = true;
         this.button2Checked = false;
+
+        // Filtrar tipos de identificación para persona jurídica
+        this.filterTypeIdsByPersonType('LEGAL_ENTITY');
 
         // Actualizar validaciones del número de identificación si hay tipo seleccionado
         this.updateIdNumberValidations();
@@ -403,6 +412,8 @@ export class ThirdCreationComponent implements OnInit {
       this.thirdServiceConfigurationService.getTypeIds(this.entData).subscribe({
         next: (types: TypeId[]) => {
           this.typeIds = types;
+          // Inicializar filteredTypeIds con persona natural por defecto
+          this.filterTypeIdsByPersonType('NATURAL_PERSON');
           resolve();
         },
         error: (error: any) => {
@@ -415,6 +426,26 @@ export class ThirdCreationComponent implements OnInit {
         }
       });
     });
+  }
+
+  /**
+   * Filtra los tipos de identificación según el tipo de persona
+   * @param classification Clasificación del tipo de persona: 'NATURAL_PERSON' o 'LEGAL_ENTITY'
+   */
+  private filterTypeIdsByPersonType(classification: 'NATURAL_PERSON' | 'LEGAL_ENTITY'): void {
+    this.filteredTypeIds = this.typeIds.filter(typeId => typeId.classification === classification);
+    
+    // Limpiar el tipo de identificación seleccionado si no está en la lista filtrada
+    const currentTypeId = this.createdThirdForm.get('typeId')?.value;
+    if (currentTypeId) {
+      const isValidTypeId = this.filteredTypeIds.some(
+        typeId => typeId.typeId === (typeof currentTypeId === 'object' ? currentTypeId.typeId : currentTypeId)
+      );
+      
+      if (!isValidTypeId) {
+        this.createdThirdForm.get('typeId')?.setValue(null);
+      }
+    }
   }
 
   /**

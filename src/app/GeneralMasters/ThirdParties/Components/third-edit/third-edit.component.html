@@ -81,7 +81,7 @@
             <div class="flex flex-col gap-2 flex-1 min-w-[200px]">
               <label class="font-semibold text-primary label-required">Tipo de Identificación</label>
               <p-select 
-                [options]="typeIds" 
+                [options]="filteredTypeIds" 
                 formControlName="typeId"
                 optionLabel="typeId"
                 placeholder="Seleccione tipo de ID"
