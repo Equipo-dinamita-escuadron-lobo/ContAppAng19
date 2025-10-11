@@ -33,6 +33,11 @@ import { ThirdFormService } from '../../Services/third-form.service';
 import { ThirdValidationService } from '../../Services/third-validation.service';
 import { GeographyHelperService } from '../../Services/geography-helper.service';
 
+// Shared Components
+import { FormFieldLabelComponent } from '../shared/form-field-label.component';
+import { FormPanelComponent } from '../shared/form-panel.component';
+import { FormFieldErrorComponent } from '../shared/form-field-error.component';
+
 @Component({
   selector: 'app-third-creation',
   standalone: true,
@@ -51,7 +56,10 @@ import { GeographyHelperService } from '../../Services/geography-helper.service'
     TooltipModule,
     InputNumberModule,
     CheckboxModule,
-    SelectModule
+    SelectModule,
+    FormFieldLabelComponent,
+    FormPanelComponent,
+    FormFieldErrorComponent
   ],
   providers: [MessageService, DatePipe, LocalStorageMethods],
   templateUrl: './third-creation.component.html',

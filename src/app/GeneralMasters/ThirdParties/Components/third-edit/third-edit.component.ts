@@ -32,8 +32,13 @@ import { ThirdFormService } from '../../Services/third-form.service';
 import { ThirdValidationService } from '../../Services/third-validation.service';
 import { GeographyHelperService } from '../../Services/geography-helper.service';
 
-// External libraries
+// Shared Components
+import { FormFieldLabelComponent } from '../shared/form-field-label.component';
+import { FormPanelComponent } from '../shared/form-panel.component';
+import { FormFieldErrorComponent } from '../shared/form-field-error.component';
 
+// External libraries
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-third-edit',
@@ -52,7 +57,10 @@ import { GeographyHelperService } from '../../Services/geography-helper.service'
     DividerModule,
     TooltipModule,
     InputNumberModule,
-    SelectModule
+    SelectModule,
+    FormFieldLabelComponent,
+    FormPanelComponent,
+    FormFieldErrorComponent
   ],
   providers: [MessageService, DatePipe],
   templateUrl: './third-edit.component.html',
