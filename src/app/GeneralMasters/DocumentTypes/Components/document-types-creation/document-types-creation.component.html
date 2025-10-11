@@ -41,8 +41,8 @@
 
         <div class="flex flex-col gap-2">
           <label class="font-semibold text-primary">Módulo</label>
-          <p-select [options]="modulesOptions" formControlName="module" placeholder="Seleccione módulo" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
-          <small class="text-red-500" *ngIf="form.get('module')?.touched && form.get('module')?.invalid">Seleccione un módulo</small>
+          <p-select [options]="modulesOptions" formControlName="moduleId" placeholder="Seleccione módulo" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
+          <small class="text-red-500" *ngIf="form.get('moduleId')?.touched && form.get('moduleId')?.invalid">Seleccione un módulo</small>
         </div>
 
       </div>

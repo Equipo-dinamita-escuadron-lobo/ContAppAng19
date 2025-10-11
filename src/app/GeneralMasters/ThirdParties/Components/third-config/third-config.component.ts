@@ -241,7 +241,15 @@ export class ThirdConfigComponent implements OnInit {
     const newStatus = !typeId.status;
     const action = newStatus ? 'activar' : 'desactivar';
     
-    const updatedTypeId = { ...typeId, status: newStatus };
+    // Asegurarnos de incluir todos los campos, especialmente el id
+    const updatedTypeId: TypeId = {
+      id: typeId.id,
+      entId: typeId.entId,
+      typeId: typeId.typeId,
+      typeIdname: typeId.typeIdname,
+      status: newStatus,
+      classification: typeId.classification
+    };
     
     this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
       next: (response: TypeId) => {
@@ -270,7 +278,13 @@ export class ThirdConfigComponent implements OnInit {
     const newStatus = !thirdType.status;
     const action = newStatus ? 'activar' : 'desactivar';
     
-    const updatedThirdType = { ...thirdType, status: newStatus };
+
+    const updatedThirdType: ThirdType = {
+      entId: this.entData,
+      thirdTypeId: thirdType.thirdTypeId,
+      thirdTypeName: thirdType.thirdTypeName,
+      status: newStatus
+    };
     
     this.thirdServiceConfiguration.updateThirdType(updatedThirdType).subscribe({
       next: (response: ThirdType) => {
@@ -495,6 +509,78 @@ export class ThirdConfigComponent implements OnInit {
   }
 
   /**
+   * Solicita confirmación para eliminar un tipo de identificación
+   */
+  confirmDeleteTypeId(typeId: TypeId, index: number): void {
+    this.confirmationService.confirm({
+      message: `¿Está seguro que desea eliminar el tipo de identificación "${typeId.typeIdname}"?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.deleteTypeId(typeId, index);
+      }
+    });
+  }
+
+  /**
+   * Elimina un tipo de identificación
+   */
+  deleteTypeId(typeId: TypeId, index: number): void {
+    // Validar que el typeId tenga un id
+    if (!typeId.id) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se puede eliminar el tipo de identificación: ID no disponible'
+      });
+      return;
+    }
+
+    this.thirdServiceConfiguration.deleteTypeId(typeId.id, this.entData).subscribe({
+      next: (response: boolean) => {
+        if (response) {
+          this.typesId.splice(index, 1);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tipo de identificación eliminado correctamente'
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo eliminar el tipo de identificación'
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('Error deleting type ID:', error);
+        
+        // Manejo específico de errores según el código de error del backend
+        let errorMessage = 'Error al eliminar el tipo de identificación';
+        
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.status === 404) {
+          errorMessage = 'El tipo de identificación no existe';
+        } else if (error.status === 409) {
+          errorMessage = 'El tipo de identificación está siendo utilizado por terceros existentes';
+        } else if (error.status === 500) {
+          errorMessage = 'Error interno del servidor al eliminar el tipo de identificación';
+        }
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage
+        });
+      }
+    });
+  }
+
+  /**
    * Agrega un nuevo tipo de tercero
    */
   addThirdType(array: ThirdType[]): void {
@@ -660,6 +746,78 @@ export class ThirdConfigComponent implements OnInit {
     this.editingThirdTypeIndex = -1;
     this.originalThirdType = null;
     this.initialThirdTypeValue = {};
+  }
+
+  /**
+   * Solicita confirmación para eliminar un tipo de tercero
+   */
+  confirmDeleteThirdType(thirdType: ThirdType, index: number): void {
+    this.confirmationService.confirm({
+      message: `¿Está seguro que desea eliminar el tipo de tercero "${thirdType.thirdTypeName}"?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.deleteThirdType(thirdType, index);
+      }
+    });
+  }
+
+  /**
+   * Elimina un tipo de tercero
+   */
+  deleteThirdType(thirdType: ThirdType, index: number): void {
+    // Validar que el thirdType tenga un id
+    if (!thirdType.thirdTypeId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se puede eliminar el tipo de tercero: ID no disponible'
+      });
+      return;
+    }
+
+    this.thirdServiceConfiguration.deleteThirdType(thirdType.thirdTypeId, this.entData).subscribe({
+      next: (response: boolean) => {
+        if (response) {
+          this.thirdTypes.splice(index, 1);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tipo de tercero eliminado correctamente'
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo eliminar el tipo de tercero'
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('Error deleting third type:', error);
+        
+        // Manejo específico de errores según el código de error del backend
+        let errorMessage = 'Error al eliminar el tipo de tercero';
+        
+        if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.status === 404) {
+          errorMessage = 'El tipo de tercero no existe';
+        } else if (error.status === 409) {
+          errorMessage = 'El tipo de tercero está siendo utilizado por terceros existentes';
+        } else if (error.status === 500) {
+          errorMessage = 'Error interno del servidor al eliminar el tipo de tercero';
+        }
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage
+        });
+      }
+    });
   }
 
   /**

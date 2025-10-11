@@ -23,9 +23,10 @@
           <p-button label="Crear" icon="pi pi-plus" [style]="{'white-space': 'nowrap'}" (click)="navigateToCreate()">
           </p-button>
 
-          <p-button label="PDF RUT" icon="pi pi-file-pdf" [style]="{'white-space': 'nowrap'}"
-            (click)="openCreatePDFRunt()">
+          <p-button label="PDF RUT" icon="pi pi-file-pdf" [loading]="loadingPdfRut" [style]="{'white-space': 'nowrap'}"
+            (click)="pdfRutInput.click()">
           </p-button>
+          <input #pdfRutInput type="file" accept=".pdf" (change)="onPdfRutSelect($event)" style="display: none;">
           
           <p-button label="Importar" icon="pi pi-upload" [style]="{'white-space': 'nowrap'}" (click)="fileInput.click()">
           </p-button>
@@ -189,13 +190,12 @@
 </div>
 
 <!-- Componente de importación de terceros -->
-<app-third-import [visible]="showTemplateModal" [inputData]="{ title: 'Plantilla de Importación de Terceros' }"
+<app-third-template [visible]="showTemplateModal" [inputData]="{ title: 'Plantilla de Importación de Terceros' }"
   (close)="closeTemplateModal()">
-</app-third-import>
+</app-third-template>
 
 <!-- Componente de exportación de terceros -->
-<app-third-export [visible]="showExportModal" [inputData]="{ title: 'Exportar Terceros a Excel' }"
-  (close)="closeExportModal()">
+<app-third-export [visible]="showExportModal" (close)="closeExportModal()">
 </app-third-export>
 
 
@@ -203,8 +203,80 @@
 <app-third-details [visible]="showDetailsModal" [inputData]="detailsModalData" (close)="closeDetailsModal()">
 </app-third-details>
 
-<!-- PDF RUT Component (if needed) -->
-<div *ngIf="createPdfRUT">
-  <!-- TODO: Add PDF RUT component here -->
-  <!-- <app-third-create-pdf-rut (close)="closeCreatePDFRunt()"></app-third-create-pdf-rut> -->
-</div>
+<!-- Modal de Errores de Importación -->
+<p-dialog header="Errores de Importación" [modal]="true" [(visible)]="showErrorModal"
+  [style]="{ width: '90rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"
+  (onHide)="closeErrorModal()">
+
+  <div style="background-color: var(--color-notification-error-container); 
+              border-left: 4px solid var(--color-notification-error-border); 
+              padding: 1rem; 
+              margin-bottom: 1rem;
+              font-family: var(--font-family-sans);">
+    <p style="font-weight: 700; margin-bottom: 0.5rem; color: var(--color-notification-error-title);">Se encontraron errores en la importación</p>
+    <p style="font-size: 0.875rem; color: var(--color-notification-error-text); margin-bottom: 0.75rem;">No se pudieron importar algunos terceros debido a los siguientes errores presentados en la tabla.</p>
+    
+    <p style="font-weight: 700; margin-bottom: 0.25rem; color: var(--color-notification-error-title);">Resumen:</p>
+    <p style="font-size: 0.875rem; color: var(--color-notification-error-text); margin: 0;">Total procesados: {{ totalRecordsImported }}</p>
+    <p style="font-size: 0.875rem; color: var(--color-notification-error-text); margin: 0;">Exitosos: {{ successfulImports }}</p>
+    <p style="font-size: 0.875rem; color: var(--color-notification-error-text); margin: 0;">Fallidos: {{ failedImportsCount }}</p>
+    <p style="font-size: 0.875rem; color: var(--color-notification-error-text); margin: 0;">Duplicados omitidos: {{ duplicatesOmitted }}</p>
+  </div>
+
+  <div style="background-color: var(--color-notification-info-container); 
+              border: 1px solid var(--color-notification-info-border); 
+              border-radius: 0.5rem; 
+              padding: 1rem; 
+              margin-bottom: 1rem;
+              font-family: var(--font-family-sans);">
+    <h4 style="font-weight: 700; 
+               font-size: 1rem; 
+               color: var(--color-notification-info-title); 
+               margin-bottom: 0.75rem;">Información:</h4>
+    <ul style="list-style-type: disc; 
+               padding-left: 1.5rem; 
+               font-size: 0.875rem; 
+               color: var(--color-notification-info-text);">
+      <li style="margin-bottom: 0.25rem;">El sistema ingresó todos los registros correctos y solo muestra los que presentaron errores.</li>
+      <li style="margin-bottom: 0.25rem;">Los registros duplicados (tanto en el sistema como en el archivo Excel) serán omitidos automáticamente.</li>
+      <li style="margin-bottom: 0.25rem;">Cada fila de error indica el número de fila del Excel, la columna, el campo afectado y el error específico.</li>
+      <li>Corrija los errores en su archivo Excel según las indicaciones y vuelva a importar.</li>
+    </ul>
+  </div>
+
+  <p-table [value]="importErrors" [paginator]="true" [rows]="10" [totalRecords]="totalErrors"
+    [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} errores"
+    styleClass="p-datatable-sm" [tableStyle]="{'min-width': '70rem'}">
+    
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 8%">Fila</th>
+        <th style="width: 10%">Columna</th>
+        <th style="width: 18%">Campo</th>
+        <th style="width: 18%">Valor</th>
+        <th style="width: 46%">Error</th>
+      </tr>
+    </ng-template>
+    
+    <ng-template pTemplate="body" let-error>
+      <tr>
+        <td style="font-family: var(--font-family-sans); font-size: 0.875rem;">{{ error.rowNumber }}</td>
+        <td style="font-family: var(--font-family-sans); font-size: 0.875rem;">{{ getExcelColumnLetter(error.columnNumber) }}</td>
+        <td style="font-family: var(--font-family-sans); font-size: 0.875rem; font-weight: 600;">{{ error.columnName }}</td>
+        <td style="font-family: var(--font-family-sans); font-size: 0.875rem; color: var(--color-neutral-50);">{{ error.fieldValue || '(vacío)' }}</td>
+        <td style="font-family: var(--font-family-sans); font-size: 0.875rem; color: var(--color-error);">{{ error.errorMessage }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-center gap-3">
+      <p-button 
+        label="Exportar Errores" 
+        icon="pi pi-download" 
+        styleClass="p-button-success" 
+        (click)="exportImportErrors()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

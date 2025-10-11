@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { DocumentType } from '../models/DocumentTypes';
+import { DocumentModule } from '../models/DocumentModule';
 
 interface Page<T> {
   content: T[];
@@ -19,8 +20,11 @@ export class DocumentTypesServiceService {
   private readonly http = inject(HttpClient);
   private readonly apiURL = environment.API_URL + 'config/document-types/';
 
-  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'name', sortOrder = 'asc'): Observable<Page<DocumentType>> {
-    const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
+  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'name', sortOrder = 'asc', search = ''): Observable<Page<DocumentType>> {
+    let url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
+    if (search && search.trim().length > 0) {
+      url += `&search=${encodeURIComponent(search.trim())}`;
+    }
     return this.http.get<Page<DocumentType>>(url);
   }
 
@@ -47,5 +51,15 @@ export class DocumentTypesServiceService {
   changeState(id: number, enterpriseId: string, status: boolean): Observable<any> {
     const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
     return this.http.patch<any>(url, {});
+  }
+
+  getAllModules(): Observable<DocumentModule[]> {
+    const url = `${this.apiURL}modules`;
+    return this.http.get<DocumentModule[]>(url);
+  }
+
+  findAllByModule(enterpriseId: string, moduleId: number): Observable<DocumentType[]> {
+    const url = `${this.apiURL}findAllByModule/${enterpriseId}?moduleId=${moduleId}`;
+    return this.http.get<DocumentType[]>(url);
   }
 }

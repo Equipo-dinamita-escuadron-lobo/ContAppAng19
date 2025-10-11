@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ThirdImportComponent } from './third-import.component';
+import { ThirdTemplateComponent } from './third-template.component';
 
-describe('ThirdImportComponent', () => {
-  let component: ThirdImportComponent;
-  let fixture: ComponentFixture<ThirdImportComponent>;
+describe('ThirdTemplateComponent', () => {
+  let component: ThirdTemplateComponent;
+  let fixture: ComponentFixture<ThirdTemplateComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ThirdImportComponent]
+      imports: [ThirdTemplateComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ThirdImportComponent);
+    fixture = TestBed.createComponent(ThirdTemplateComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

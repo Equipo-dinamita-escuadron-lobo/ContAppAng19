@@ -3,6 +3,5 @@ export interface DocumentClass {
   name: string;
   idEnterprise: string;
   status: boolean;
-  isDeleted: boolean;
 }
 

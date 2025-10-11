@@ -1,6 +1,8 @@
-
+/**
+ * Interface for Country data
+ * Matches backend CountryResponse structure
+ */
 export interface Country {
-    id: number;
-    name: string;
-  }
-  
+  countryCode: string;
+  countryName: string;
+}

@@ -1,12 +1,10 @@
-
-
-export interface City{
-  id: number;
-  name: string;
-  cities: { id: number, name: string }[];
-}
-
-export interface CityShort{
-  id: number;
-  name: string;
+/**
+ * Interface for City data
+ * Matches backend CityResponse structure
+ */
+export interface City {
+  cityCode: string;
+  cityName: string;
+  stateCode: string;
+  countryCode: string;
 }

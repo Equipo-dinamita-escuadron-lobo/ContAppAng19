@@ -79,30 +79,28 @@
             <form [formGroup]="typeIdForm" (ngSubmit)="addTypeId(typesId)">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Código *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Tipo ID</label>
                   <input 
                     pInputText 
                     formControlName="code" 
                     placeholder="Ej: CC, TI, CE"
                     class="w-full mb-6"
                     maxlength="10"
-                    (keydown.enter)="addTypeId(typesId)"
                     (keydown.escape)="cancelAddTypeId()">
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('code')?.touched && typeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
                 </div>
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
                   <input 
                     pInputText 
                     formControlName="name" 
                     placeholder="Ej: Cédula de Ciudadanía"
                     class="w-full mb-6"
-                    (keydown.enter)="addTypeId(typesId)"
                     (keydown.escape)="cancelAddTypeId()">
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('name')?.touched && typeIdForm.get('name')?.invalid">Nombre requerido</small>
                 </div>
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Clasificación *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Clasificación</label>
                   <div class="flex flex-col gap-3">
                     <div class="flex items-center">
                       <p-radioButton 
@@ -150,34 +148,28 @@
             <form [formGroup]="editTypeIdForm" (ngSubmit)="updateTypeId()">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary flex items-center gap-2 mb-2">
-                    Código
-                    <i class="pi pi-lock text-gray-500"
-                       pTooltip="El código no se puede modificar después de crear el tipo de identificación"
-                       tooltipPosition="top"></i>
-                  </label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Tipo ID</label>
                   <input 
                     pInputText 
                     formControlName="code" 
                     placeholder="Ej: CC, TI, CE"
                     class="w-full mb-6"
                     maxlength="10"
-                    [readonly]="true"
-                    style="background-color: #f5f5f5;">
+                    (keydown.escape)="cancelEditTypeId()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('code')?.touched && editTypeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
                 </div>
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
                   <input 
                     pInputText 
                     formControlName="name" 
                     placeholder="Ej: Cédula de Ciudadanía"
                     class="w-full mb-6"
-                    (keydown.enter)="updateTypeId()"
                     (keydown.escape)="cancelEditTypeId()">
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('name')?.touched && editTypeIdForm.get('name')?.invalid">Nombre requerido</small>
                 </div>
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Clasificación *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Clasificación</label>
                   <div class="flex flex-col gap-3">
                     <div class="flex items-center">
                       <p-radioButton 
@@ -227,7 +219,7 @@
             <ng-template pTemplate="header">
               <tr>
                 <th pSortableColumn="typeId" class="font-semibold text-primary border-b-2 border-primary">
-                  Código <p-sortIcon field="typeId"></p-sortIcon>
+                  Tipo ID <p-sortIcon field="typeId"></p-sortIcon>
                 </th>
                 <th pSortableColumn="typeIdname" class="font-semibold text-primary border-b-2 border-primary">
                   Nombre <p-sortIcon field="typeIdname"></p-sortIcon>
@@ -249,10 +241,7 @@
                 <td class="font-medium">{{ typeId.typeId }}</td>
                 <td>{{ typeId.typeIdname }}</td>
                 <td class="text-center">
-                  <p-tag 
-                    [value]="typeId.classification === 'NATURAL_PERSON' ? 'Persona Natural' : 'Persona Jurídica'" 
-                    [severity]="typeId.classification === 'NATURAL_PERSON' ? 'info' : 'warning'">
-                  </p-tag>
+                  {{ typeId.classification === 'NATURAL_PERSON' ? 'Persona Natural' : 'Persona Jurídica' }}
                 </td>
                 <td class="text-center">
                   <p-tag 
@@ -268,6 +257,13 @@
                       tooltipPosition="top" 
                       (onClick)="editTypeId(typeId, i)" 
                       styleClass="p-button-rounded p-button-text">
+                    </p-button>
+                    <p-button 
+                      icon="pi pi-trash" 
+                      pTooltip="Eliminar" 
+                      tooltipPosition="top" 
+                      (onClick)="confirmDeleteTypeId(typeId, i)" 
+                      styleClass="p-button-rounded p-button-text p-button-danger">
                     </p-button>
                     <p-toggleSwitch 
                       [ngModel]="typeId.status"
@@ -342,14 +338,13 @@
             <form [formGroup]="thirdTypeForm" (ngSubmit)="addThirdType(thirdTypes)">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
                   <input 
                     pInputText 
                     formControlName="name" 
                     placeholder="Ej: Cliente, Proveedor, Empleado"
                     class="w-full mb-6"
                     maxlength="100"
-                    (keydown.enter)="addThirdType(thirdTypes)"
                     (keydown.escape)="cancelAddThirdType()">
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('required')">Nombre requerido</small>
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('pattern')">Solo se permiten letras y espacios</small>
@@ -381,14 +376,13 @@
             <form [formGroup]="editThirdTypeForm" (ngSubmit)="updateThirdType()">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-15 p-15 items-start">
                 <div class="relative">
-                  <label class="font-semibold text-primary block mb-2">Nombre *</label>
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
                   <input 
                     pInputText 
                     formControlName="name" 
                     placeholder="Ej: Cliente, Proveedor, Empleado"
                     class="w-full mb-6"
                     maxlength="100"
-                    (keydown.enter)="updateThirdType()"
                     (keydown.escape)="cancelEditThirdType()">
                   <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editThirdTypeForm.get('name')?.touched && editThirdTypeForm.get('name')?.invalid">Nombre requerido</small>
                 </div>
@@ -449,6 +443,13 @@
                       tooltipPosition="top" 
                       (onClick)="editThirdType(thirdType, i)" 
                       styleClass="p-button-rounded p-button-text">
+                    </p-button>
+                    <p-button 
+                      icon="pi pi-trash" 
+                      pTooltip="Eliminar" 
+                      tooltipPosition="top" 
+                      (onClick)="confirmDeleteThirdType(thirdType, i)" 
+                      styleClass="p-button-rounded p-button-text p-button-danger">
                     </p-button>
                     <p-toggleSwitch 
                       [ngModel]="thirdType.status"

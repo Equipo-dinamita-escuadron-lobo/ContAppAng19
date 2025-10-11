@@ -18,6 +18,9 @@ export interface ColombianHoliday {
   providedIn: 'root'
 })
 export class ColombianHolidaysService {
+  // Cache de festivos por año para evitar recálculos
+  private holidaysCache = new Map<number, Set<string>>();
+  private holidaysDataCache = new Map<number, ColombianHoliday[]>();
 
   /**
    * Obtiene todos los días festivos para un año específico
@@ -38,28 +41,38 @@ export class ColombianHolidaysService {
 
   /**
    * Verifica si una fecha específica es festiva
+   * OPTIMIZADO: Usa cache de Set para búsqueda O(1)
    * @param date Fecha a verificar
    * @returns true si es festiva
    */
   isHoliday(date: Date): boolean {
     const year = date.getFullYear();
-    const holidays = this.getHolidaysForYear(year);
     
-    return holidays.some(holiday => 
-      holiday.date.getDate() === date.getDate() &&
-      holiday.date.getMonth() === date.getMonth() &&
-      holiday.date.getFullYear() === date.getFullYear()
-    );
+    // Lazy load: cargar festivos solo cuando se necesitan
+    if (!this.holidaysCache.has(year)) {
+      this.loadHolidaysForYear(year);
+    }
+    
+    // Búsqueda O(1) en Set
+    const dateKey = this.getDateKey(date);
+    return this.holidaysCache.get(year)!.has(dateKey);
   }
 
   /**
    * Obtiene el festivo para una fecha específica
+   * OPTIMIZADO: Usa cache para evitar recálculos
    * @param date Fecha a verificar
    * @returns Festivo si existe, null si no
    */
   getHolidayForDate(date: Date): ColombianHoliday | null {
     const year = date.getFullYear();
-    const holidays = this.getHolidaysForYear(year);
+    
+    // Lazy load: cargar festivos solo cuando se necesitan
+    if (!this.holidaysDataCache.has(year)) {
+      this.loadHolidaysForYear(year);
+    }
+    
+    const holidays = this.holidaysDataCache.get(year)!;
     
     return holidays.find(holiday => 
       holiday.date.getDate() === date.getDate() &&
@@ -295,5 +308,43 @@ export class ColombianHolidaysService {
     mondayDate.setDate(date.getDate() + daysToAdd);
     
     return mondayDate;
+  }
+
+  /**
+   * Carga los festivos de un año en el cache
+   * @param year Año a cargar
+   */
+  private loadHolidaysForYear(year: number): void {
+    const holidays = this.getHolidaysForYear(year);
+    
+    // Crear Set de claves de fecha para búsqueda rápida
+    const holidaySet = new Set<string>();
+    holidays.forEach(holiday => {
+      const key = this.getDateKey(holiday.date);
+      holidaySet.add(key);
+    });
+    
+    this.holidaysCache.set(year, holidaySet);
+    this.holidaysDataCache.set(year, holidays);
+  }
+
+  /**
+   * Genera una clave única para una fecha (YYYY-MM-DD)
+   * @param date Fecha
+   * @returns Clave string
+   */
+  private getDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Limpia el cache de festivos
+   */
+  clearCache(): void {
+    this.holidaysCache.clear();
+    this.holidaysDataCache.clear();
   }
 }

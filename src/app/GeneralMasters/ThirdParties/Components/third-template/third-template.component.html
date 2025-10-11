@@ -1,9 +1,7 @@
 <!-- Toast para notificaciones -->
 <p-toast></p-toast>
-
-<!-- Modal Dialog de PrimeNG para exportación -->
 <p-dialog
-  header="Exportar Terceros"
+  header="Plantilla de Importación de Terceros"
   [(visible)]="visible"
   [modal]="true"
   [closable]="true"
@@ -14,10 +12,10 @@
   (onHide)="onHide()">
   
   <div class="p-6">
-    <!-- Descripción -->
+    <!-- Mensaje principal -->
     <div class="mb-30">
       <p class="font-family-sans text-base leading-relaxed text-neutral-30">
-        Seleccione los campos opcionales que desea incluir en su exportación y el estado de los terceros.
+        Querido usuario, asegúrese de que el archivo que usted desea importar contenga los siguientes campos:
       </p>
     </div>
 
@@ -50,50 +48,20 @@
         <div class="px-14 py-11 bg-white flex-1">
           <ul class="list-none p-0 m-0">
             <li *ngFor="let field of optionalFields" class="flex items-center gap-3 py-2">
-              <p-checkbox 
-                [binary]="true" 
-                [(ngModel)]="field.selected"
-                [inputId]="field.value"
-                styleClass="mr-2">
-              </p-checkbox>
-              <label [for]="field.value" class="font-family-sans text-sm text-neutral-30 cursor-pointer">
-                {{ field.label }}
-              </label>
+              <i class="pi pi-angle-right text-neutral-50 text-sm"></i>
+              <span class="font-family-sans text-sm text-neutral-30">{{ field }}</span>
             </li>
           </ul>
         </div>
       </div>
     </div>
 
-    <!-- Filtro de estado -->
-    <div class="mb-6">
-      <div class="border border-neutral-80 rounded-lg px-14 py-11">
-        <label class="font-family-titillium font-semibold mb-16 block">
-          Estado de terceros a exportar:
-        </label>
-        <div class="flex flex-wrap gap-12 mb-8 mt-12">
-          <div *ngFor="let option of statusOptions" class="flex items-center">
-            <p-radioButton 
-              [inputId]="option.label" 
-              [value]="option.value" 
-              [(ngModel)]="statusFilter"
-              name="statusFilter">
-            </p-radioButton>
-            <label [for]="option.label" class="font-family-sans text-sm text-neutral-30 ml-4 cursor-pointer">
-              {{ option.label }}
-            </label>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Botón de exportación -->
+    <!-- Botón de descarga centrado -->
     <div class="flex justify-end mt-30">
       <p-button 
-        label="Exportar"
-        [loading]="loading"
-        [disabled]="loading"
-        (click)="startExport()"
+        label="Descargar Plantilla"
+        [loading]="downloading"
+        (click)="downloadExcel()"
         icon="pi pi-download"
         styleClass="p-button-success p-button-lg font-family-sans">
       </p-button>
