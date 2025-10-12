@@ -674,7 +674,7 @@ export class ThirdEditComponent implements OnInit {
         next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización exitosa',
             detail: 'Tercero actualizado correctamente'
           });
           

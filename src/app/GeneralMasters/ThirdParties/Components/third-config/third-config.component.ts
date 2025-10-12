@@ -345,7 +345,7 @@ export class ThirdConfigComponent implements OnInit {
           this.showInputTypeId = false;
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro exitoso',
             detail: 'Tipo de identificación creado correctamente'
           });
         },
@@ -460,12 +460,11 @@ export class ThirdConfigComponent implements OnInit {
           
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización exitosa',
             detail: 'Tipo de identificación actualizado correctamente'
           });
         },
         error: (error: any) => {
-          console.error('Error updating type ID:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -603,7 +602,7 @@ export class ThirdConfigComponent implements OnInit {
           this.showInputThirdType = false;
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro exitoso',
             detail: 'Tipo de tercero creado correctamente'
           });
         },
@@ -712,12 +711,11 @@ export class ThirdConfigComponent implements OnInit {
           
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización exitosa',
             detail: 'Tipo de tercero actualizado correctamente'
           });
         },
         error: (error: any) => {
-          console.error('Error updating third type:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',

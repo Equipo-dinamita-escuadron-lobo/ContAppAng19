@@ -720,7 +720,7 @@ export class ThirdCreationComponent implements OnInit {
         next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro exitoso',
             detail: 'Tercero creado correctamente'
           });
 
