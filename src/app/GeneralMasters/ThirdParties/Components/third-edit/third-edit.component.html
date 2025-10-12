@@ -164,7 +164,7 @@
             </div>
 
             <div class="flex flex-col gap-2">
-              <app-form-field-label label="Género" [required]="true"></app-form-field-label>
+              <app-form-field-label label="Género"></app-form-field-label>
               <p-dropdown 
                 [options]="genders" 
                 formControlName="gender"
@@ -173,9 +173,6 @@
                 placeholder="Seleccione género"
                 class="max-w-sm">
               </p-dropdown>
-              <app-form-field-error [form]="createdThirdForm" fieldName="gender" [submitted]="submitted">
-                El género es requerido para persona natural
-              </app-form-field-error>
             </div>
           </div>
         </app-form-panel>
