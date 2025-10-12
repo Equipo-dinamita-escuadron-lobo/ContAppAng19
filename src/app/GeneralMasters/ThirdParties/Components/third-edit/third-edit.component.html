@@ -113,10 +113,10 @@
                 <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['min']">
                   El número de identificación debe ser mayor a 0
                 </ng-container>
-                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitInvalidStart']">
+                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitStart']">
                   El NIT debe empezar con 8 o 9
                 </ng-container>
-                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitInvalidLength']">
+                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitLength']">
                   El NIT debe tener exactamente 9 dígitos
                 </ng-container>
               </small>
