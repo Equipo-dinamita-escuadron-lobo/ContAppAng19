@@ -18,6 +18,7 @@ import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // Componentes internos
 import { ThirdTemplateComponent } from '../third-template/third-template.component';
@@ -63,6 +64,7 @@ interface ImportError {
     DialogModule,
     TooltipModule,
     PaginatorModule,
+    ToggleSwitchModule,
     ThirdTemplateComponent,
     ThirdExportComponent,
     ThirdDetailsComponent
@@ -236,32 +238,22 @@ export class ThirdListComponent implements OnInit {
    */
   changeThirdState(third: Third): void {
     const action = third.state ? 'desactivar' : 'activar';
-    const severity = third.state ? 'warn' : 'info';
     
-    this.confirmationService.confirm({
-      message: `¿Está seguro que desea ${action} este tercero?`,
-      header: 'Confirmación',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí',
-      rejectLabel: 'No',
-      accept: () => {
-        this.thirdService.changeThirdPartieState(third.thId).subscribe({
-          next: () => {
-            third.state = !third.state;
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: `Tercero ${action} correctamente`
-            });
-          },
-          error: (error) => {
-            console.error('Error changing third state:', error);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: `Error al ${action} el tercero`
-            });
-          }
+    this.thirdService.changeThirdPartieState(third.thId).subscribe({
+      next: () => {
+        third.state = !third.state;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Tercero ${action} correctamente`
+        });
+      },
+      error: (error) => {
+        console.error('Error changing third state:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al ${action} el tercero`
         });
       }
     });
