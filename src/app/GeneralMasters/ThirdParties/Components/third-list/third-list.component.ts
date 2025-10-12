@@ -282,7 +282,7 @@ export class ThirdListComponent implements OnInit {
             this.thirds = this.thirds.filter(t => t.thId !== third.thId);
             this.messageService.add({
               severity: 'success',
-              summary: 'Éxito',
+              summary: 'Eliminado',
               detail: 'Tercero eliminado correctamente'
             });
           },
