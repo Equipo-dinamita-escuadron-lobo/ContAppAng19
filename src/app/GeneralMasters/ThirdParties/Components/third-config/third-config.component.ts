@@ -695,7 +695,7 @@ export class ThirdConfigComponent implements OnInit {
       }
 
       const updatedThirdType: ThirdType = {
-        entId: this.originalThirdType.entId,
+        entId: this.entData,
         thirdTypeId: this.originalThirdType.thirdTypeId,
         thirdTypeName: name,
         status: this.originalThirdType.status // Mantener el estado actual
