@@ -237,11 +237,12 @@ export class ThirdListComponent implements OnInit {
    * Cambia el estado de un tercero
    */
   changeThirdState(third: Third): void {
-    const action = third.state ? 'desactivar' : 'activar';
+    const previousState = third.state;
+    const action = previousState ? 'desactivado' : 'activado';
     
     this.thirdService.changeThirdPartieState(third.thId).subscribe({
       next: () => {
-        third.state = !third.state;
+        third.state = !previousState;
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -253,7 +254,7 @@ export class ThirdListComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `Error al ${action} el tercero`
+          detail: `Error al cambiar el estado del tercero`
         });
       }
     });
