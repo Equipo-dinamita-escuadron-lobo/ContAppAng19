@@ -142,9 +142,7 @@ export class ThirdCreationComponent implements OnInit {
     city: null,
     address: '',
     phoneNumber: '',
-    email: '',
-    creationDate: '',
-    updateDate: ''
+    email: ''
   };
 
   /** Lista de géneros para dropdown */
@@ -715,9 +713,7 @@ export class ThirdCreationComponent implements OnInit {
         cityCode: formData.city,
         country: undefined,
         province: undefined,
-        city: undefined,
-        creationDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!,
-        updateDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!
+        city: undefined
       };
 
       this.thirdService.createThird(newThird).subscribe({

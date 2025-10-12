@@ -126,9 +126,7 @@ export class ThirdEditComponent implements OnInit {
     city: null,
     address: '',
     phoneNumber: '',
-    email: '',
-    creationDate: '',
-    updateDate: ''
+    email: ''
   };
 
   /** Textos de ayuda para los tooltips */
@@ -669,8 +667,7 @@ export class ThirdEditComponent implements OnInit {
         country: undefined,
         province: undefined,
         city: undefined,
-        state: this.thirdEdit.state, // Mantener el estado original
-        updateDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!
+        state: this.thirdEdit.state // Mantener el estado original
       };
 
       this.thirdService.UpdateThird(updatedThird).subscribe({
