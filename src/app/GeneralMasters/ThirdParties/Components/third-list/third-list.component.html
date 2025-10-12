@@ -129,9 +129,9 @@
           </td>
 
           <!-- Información geográfica (solo vista detallada) -->
-          <td *ngIf="showDetailView">{{ third.country }}</td>
-          <td *ngIf="showDetailView">{{ third.province }}</td>
-          <td *ngIf="showDetailView">{{ third.city }}</td>
+          <td *ngIf="showDetailView">{{ third.country?.countryName || 'N/A' }}</td>
+          <td *ngIf="showDetailView">{{ third.province?.stateName || 'N/A' }}</td>
+          <td *ngIf="showDetailView">{{ third.city?.cityName || 'N/A' }}</td>
           <td *ngIf="showDetailView">{{ third.address }}</td>
           <td *ngIf="showDetailView">{{ third.phoneNumber }}</td>
 
