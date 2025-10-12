@@ -214,10 +214,11 @@ export class ThirdEditComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe(async params => {
       this.thirdId = +params['id'];
       
       if (this.thirdId) {
+        await this.loadInitialData();
         this.loadThirdData();
       } else {
         this.messageService.add({
@@ -227,8 +228,6 @@ export class ThirdEditComponent implements OnInit {
         });
       }
     });
-    
-    this.loadInitialData();
   }
 
   /**
@@ -426,11 +425,21 @@ export class ThirdEditComponent implements OnInit {
     } else if (third.personType === ePersonType.juridica) {
       this.filterTypeIdsByPersonType('LEGAL_ENTITY');
     }
+    
+    let selectedTypeId = third.typeId;
+    if (third.typeId && this.filteredTypeIds.length > 0) {
+      const foundTypeId = this.filteredTypeIds.find(
+        t => t.typeId === third.typeId.typeId
+      );
+      if (foundTypeId) {
+        selectedTypeId = foundTypeId;
+      }
+    }
 
     this.createdThirdForm.patchValue({
       personType: third.personType,
       thirdTypes: third.thirdTypes,
-      typeId: third.typeId,
+      typeId: selectedTypeId,
       idNumber: third.idNumber,
       verificationNumber: third.verificationNumber,
       names: third.names,
