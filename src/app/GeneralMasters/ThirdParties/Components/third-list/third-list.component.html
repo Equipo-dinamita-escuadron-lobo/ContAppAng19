@@ -97,8 +97,7 @@
         <tr>
           <!-- Tipo Persona -->
           <td>
-            <p-tag [value]="third.personType" [severity]="third.personType === 'natural' ? 'info' : 'warning'">
-            </p-tag>
+            <span>{{ third.personType }}</span>
           </td>
 
           <!-- Tipos de Tercero -->
@@ -126,7 +125,7 @@
 
           <!-- Correo -->
           <td>
-            <span class="text-sm text-blue-600">{{ third.email }}</span>
+            <span>{{ third.email }}</span>
           </td>
 
           <!-- Información geográfica (solo vista detallada) -->
