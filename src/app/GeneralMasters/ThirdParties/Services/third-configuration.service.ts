@@ -12,8 +12,6 @@ import { TypeId } from '../models/TypeId';
 export class ThirdServiceConfigurationService {
   /** URL base para las operaciones de configuración de terceros */
   private thirdApiUrl = environment.API_URL + 'thirds/configuration/'
-  //cambiar para desarrollo local
-  //private thirdApiUrl = 'http://localhost:8081/api/thirds/configuration/'
 
   /**
    * Constructor del servicio
@@ -53,8 +51,7 @@ export class ThirdServiceConfigurationService {
   createTypeId(TypeId:TypeId): Observable<TypeId>{
     return this.http.post<TypeId>(this.thirdApiUrl+"typeid",TypeId).pipe(
       catchError((error) => {
-        console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while adding a hero'));
+        return throwError(() => new Error('Ha ocurrido un error al agregar el tipo de identificación'));
       })
     );
   }
@@ -67,8 +64,7 @@ export class ThirdServiceConfigurationService {
   createThirdType(ThirdType:ThirdType): Observable<ThirdType>{
     return this.http.post<ThirdType>(this.thirdApiUrl+"thirdtype",ThirdType).pipe(
       catchError((error) => {
-        console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while adding a hero'));
+        return throwError(() => new Error('Ha ocurrido un error al agregar el tipo de tercero'));
       })
     );
   }
@@ -81,8 +77,7 @@ export class ThirdServiceConfigurationService {
   updateThirdType(ThirdType: ThirdType): Observable<ThirdType> {
     return this.http.post<ThirdType>(this.thirdApiUrl + "thirdtype/update", ThirdType).pipe(
       catchError((error) => {
-        console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while updating third type'));
+        return throwError(() => new Error('Ha ocurrido un error al actualizar el tipo de tercero'));
       })
     );
   }
@@ -95,8 +90,7 @@ export class ThirdServiceConfigurationService {
   updateTypeId(TypeId: TypeId): Observable<TypeId> {
     return this.http.post<TypeId>(this.thirdApiUrl + "typeid/update", TypeId).pipe(
       catchError((error) => {
-        console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while updating type id'));
+        return throwError(() => new Error('Ha ocurrido un error al actualizar el tipo de identificación'));
       })
     );
   }
@@ -114,8 +108,7 @@ export class ThirdServiceConfigurationService {
 
     return this.http.delete<boolean>(this.thirdApiUrl + "typeid/delete", { params }).pipe(
       catchError((error) => {
-        console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while deleting type id'));
+        return throwError(() => error);
       })
     );
   }
@@ -133,8 +126,7 @@ export class ThirdServiceConfigurationService {
 
     return this.http.delete<boolean>(this.thirdApiUrl + "thirdtype/delete", { params }).pipe(
       catchError((error) => {
-        console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while deleting third type'));
+        return throwError(() => error);
       })
     );
   }

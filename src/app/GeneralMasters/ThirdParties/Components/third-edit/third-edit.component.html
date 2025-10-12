@@ -78,6 +78,7 @@
                 [options]="filteredTypeIds" 
                 formControlName="typeId"
                 optionLabel="typeId"
+                [dataKey]="'typeId'"
                 placeholder="Seleccione tipo de ID"
                 [filter]="true"
                 filterBy="typeId"
@@ -112,10 +113,10 @@
                 <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['min']">
                   El número de identificación debe ser mayor a 0
                 </ng-container>
-                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitInvalidStart']">
+                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitStart']">
                   El NIT debe empezar con 8 o 9
                 </ng-container>
-                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitInvalidLength']">
+                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitLength']">
                   El NIT debe tener exactamente 9 dígitos
                 </ng-container>
               </small>
@@ -164,7 +165,7 @@
             </div>
 
             <div class="flex flex-col gap-2">
-              <app-form-field-label label="Género" [required]="true"></app-form-field-label>
+              <app-form-field-label label="Género"></app-form-field-label>
               <p-dropdown 
                 [options]="genders" 
                 formControlName="gender"
@@ -173,9 +174,6 @@
                 placeholder="Seleccione género"
                 class="max-w-sm">
               </p-dropdown>
-              <app-form-field-error [form]="createdThirdForm" fieldName="gender" [submitted]="submitted">
-                El género es requerido para persona natural
-              </app-form-field-error>
             </div>
           </div>
         </app-form-panel>

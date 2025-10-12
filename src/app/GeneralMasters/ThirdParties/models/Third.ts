@@ -29,6 +29,4 @@ export interface Third {
     address: string;
     phoneNumber: string;
     email: string;
-    creationDate: string;
-    updateDate: string;
   }

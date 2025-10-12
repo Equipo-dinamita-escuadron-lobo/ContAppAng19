@@ -345,7 +345,7 @@ export class ThirdConfigComponent implements OnInit {
           this.showInputTypeId = false;
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro exitoso',
             detail: 'Tipo de identificación creado correctamente'
           });
         },
@@ -460,12 +460,11 @@ export class ThirdConfigComponent implements OnInit {
           
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización exitosa',
             detail: 'Tipo de identificación actualizado correctamente'
           });
         },
         error: (error: any) => {
-          console.error('Error updating type ID:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -556,24 +555,15 @@ export class ThirdConfigComponent implements OnInit {
         }
       },
       error: (error: any) => {
-        console.error('Error deleting type ID:', error);
-        
-        // Manejo específico de errores según el código de error del backend
         let errorMessage = 'Error al eliminar el tipo de identificación';
         
-        if (error.error && error.error.message) {
+        if (error.error?.message) {
           errorMessage = error.error.message;
-        } else if (error.status === 404) {
-          errorMessage = 'El tipo de identificación no existe';
-        } else if (error.status === 409) {
-          errorMessage = 'El tipo de identificación está siendo utilizado por terceros existentes';
-        } else if (error.status === 500) {
-          errorMessage = 'Error interno del servidor al eliminar el tipo de identificación';
         }
         
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
+          summary: 'No se puede eliminar',
           detail: errorMessage
         });
       }
@@ -612,7 +602,7 @@ export class ThirdConfigComponent implements OnInit {
           this.showInputThirdType = false;
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro exitoso',
             detail: 'Tipo de tercero creado correctamente'
           });
         },
@@ -705,7 +695,7 @@ export class ThirdConfigComponent implements OnInit {
       }
 
       const updatedThirdType: ThirdType = {
-        entId: this.originalThirdType.entId,
+        entId: this.entData,
         thirdTypeId: this.originalThirdType.thirdTypeId,
         thirdTypeName: name,
         status: this.originalThirdType.status // Mantener el estado actual
@@ -721,12 +711,11 @@ export class ThirdConfigComponent implements OnInit {
           
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización exitosa',
             detail: 'Tipo de tercero actualizado correctamente'
           });
         },
         error: (error: any) => {
-          console.error('Error updating third type:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -796,24 +785,16 @@ export class ThirdConfigComponent implements OnInit {
         }
       },
       error: (error: any) => {
-        console.error('Error deleting third type:', error);
-        
-        // Manejo específico de errores según el código de error del backend
         let errorMessage = 'Error al eliminar el tipo de tercero';
         
-        if (error.error && error.error.message) {
+        // Capturar el mensaje del backend
+        if (error.error?.message) {
           errorMessage = error.error.message;
-        } else if (error.status === 404) {
-          errorMessage = 'El tipo de tercero no existe';
-        } else if (error.status === 409) {
-          errorMessage = 'El tipo de tercero está siendo utilizado por terceros existentes';
-        } else if (error.status === 500) {
-          errorMessage = 'Error interno del servidor al eliminar el tipo de tercero';
         }
         
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
+          summary: 'No se puede eliminar',
           detail: errorMessage
         });
       }

@@ -126,9 +126,7 @@ export class ThirdEditComponent implements OnInit {
     city: null,
     address: '',
     phoneNumber: '',
-    email: '',
-    creationDate: '',
-    updateDate: ''
+    email: ''
   };
 
   /** Textos de ayuda para los tooltips */
@@ -216,10 +214,11 @@ export class ThirdEditComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe(async params => {
       this.thirdId = +params['id'];
       
       if (this.thirdId) {
+        await this.loadInitialData();
         this.loadThirdData();
       } else {
         this.messageService.add({
@@ -229,8 +228,6 @@ export class ThirdEditComponent implements OnInit {
         });
       }
     });
-    
-    this.loadInitialData();
   }
 
   /**
@@ -428,11 +425,21 @@ export class ThirdEditComponent implements OnInit {
     } else if (third.personType === ePersonType.juridica) {
       this.filterTypeIdsByPersonType('LEGAL_ENTITY');
     }
+    
+    let selectedTypeId = third.typeId;
+    if (third.typeId && this.filteredTypeIds.length > 0) {
+      const foundTypeId = this.filteredTypeIds.find(
+        t => t.typeId === third.typeId.typeId
+      );
+      if (foundTypeId) {
+        selectedTypeId = foundTypeId;
+      }
+    }
 
     this.createdThirdForm.patchValue({
       personType: third.personType,
       thirdTypes: third.thirdTypes,
-      typeId: third.typeId,
+      typeId: selectedTypeId,
       idNumber: third.idNumber,
       verificationNumber: third.verificationNumber,
       names: third.names,
@@ -669,15 +676,14 @@ export class ThirdEditComponent implements OnInit {
         country: undefined,
         province: undefined,
         city: undefined,
-        state: this.thirdEdit.state, // Mantener el estado original
-        updateDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!
+        state: this.thirdEdit.state // Mantener el estado original
       };
 
       this.thirdService.UpdateThird(updatedThird).subscribe({
         next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización exitosa',
             detail: 'Tercero actualizado correctamente'
           });
           

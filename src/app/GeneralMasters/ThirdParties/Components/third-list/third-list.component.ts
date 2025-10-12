@@ -18,6 +18,7 @@ import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // Componentes internos
 import { ThirdTemplateComponent } from '../third-template/third-template.component';
@@ -63,6 +64,7 @@ interface ImportError {
     DialogModule,
     TooltipModule,
     PaginatorModule,
+    ToggleSwitchModule,
     ThirdTemplateComponent,
     ThirdExportComponent,
     ThirdDetailsComponent
@@ -235,33 +237,55 @@ export class ThirdListComponent implements OnInit {
    * Cambia el estado de un tercero
    */
   changeThirdState(third: Third): void {
-    const action = third.state ? 'desactivar' : 'activar';
-    const severity = third.state ? 'warn' : 'info';
+    const previousState = third.state;
+    const action = previousState ? 'desactivado' : 'activado';
+    
+    this.thirdService.changeThirdPartieState(third.thId).subscribe({
+      next: () => {
+        third.state = !previousState;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Tercero ${action} correctamente`
+        });
+      },
+      error: (error) => {
+        console.error('Error changing third state:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al cambiar el estado del tercero`
+        });
+      }
+    });
+  }
+
+  /**
+   * Confirma y elimina un tercero
+   */
+  confirmDelete(third: Third): void {
+    const displayName = this.getDisplayName(third);
     
     this.confirmationService.confirm({
-      message: `¿Está seguro que desea ${action} este tercero?`,
-      header: 'Confirmación',
+      message: `¿Desea eliminar a "${displayName}"? Esta acción no se puede deshacer.`,
+      header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí',
-      rejectLabel: 'No',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
       accept: () => {
-        this.thirdService.changeThirdPartieState(third.thId).subscribe({
+        this.thirdService.deleteThird(third.thId, this.entData).subscribe({
           next: () => {
-            third.state = !third.state;
+            this.thirds = this.thirds.filter(t => t.thId !== third.thId);
             this.messageService.add({
               severity: 'success',
-              summary: 'Éxito',
-              detail: `Tercero ${action} correctamente`
+              summary: 'Eliminado',
+              detail: 'Tercero eliminado correctamente'
             });
           },
-          error: (error) => {
-            console.error('Error changing third state:', error);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: `Error al ${action} el tercero`
-            });
-          }
         });
       }
     });
