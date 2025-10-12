@@ -267,7 +267,7 @@ export class ThirdListComponent implements OnInit {
     const displayName = this.getDisplayName(third);
     
     this.confirmationService.confirm({
-      message: `¿Está seguro de eliminar el tercero "${displayName}"? Esta acción no se puede deshacer.`,
+      message: `¿Desea eliminar a "${displayName}"? Esta acción no se puede deshacer.`,
       header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
@@ -277,7 +277,7 @@ export class ThirdListComponent implements OnInit {
       defaultFocus: 'reject',
       closeOnEscape: true,
       accept: () => {
-        this.thirdService.deleteThird(third.thId).subscribe({
+        this.thirdService.deleteThird(third.thId, this.entData).subscribe({
           next: () => {
             this.thirds = this.thirds.filter(t => t.thId !== third.thId);
             this.messageService.add({
@@ -286,13 +286,6 @@ export class ThirdListComponent implements OnInit {
               detail: 'Tercero eliminado correctamente'
             });
           },
-          error: (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Error al eliminar el tercero. Es posible que tenga datos asociados.'
-            });
-          }
         });
       }
     });

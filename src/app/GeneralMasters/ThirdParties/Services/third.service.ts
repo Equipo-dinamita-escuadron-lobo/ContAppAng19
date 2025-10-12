@@ -155,11 +155,14 @@ export class ThirdService {
   /**
    * Elimina un tercero del sistema
    * @param thId ID del tercero
+   * @param entId ID de la empresa
    * @returns Observable con el resultado de la eliminación
    */
-  deleteThird(thId: number): Observable<boolean> {
-    let params = new HttpParams().set('thId', thId);
-    return this.http.delete<boolean>(this.thirdApiUrl, { params }).pipe(
+  deleteThird(thId: number, entId: string): Observable<boolean> {
+    let params = new HttpParams()
+      .set('thirdId', thId)
+      .set('entId', entId);
+    return this.http.delete<boolean>(this.thirdApiUrl + 'delete', { params }).pipe(
       catchError((error) => {
         console.error('Error al eliminar tercero:', error);
         return throwError(() => error);
