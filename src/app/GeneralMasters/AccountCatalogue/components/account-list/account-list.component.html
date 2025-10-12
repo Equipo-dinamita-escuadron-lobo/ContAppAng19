@@ -18,13 +18,13 @@
             <!-- Contenedor de botones con alineación -->
             <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
                 <div class="flex flex-wrap gap-3">
-                    <p-button label="Crear" type="submit" (click)="showFormAddNewClass()"></p-button>
-                    <p-button label="Exportar" type="submit" (click)="exportAccountsToExcel()"></p-button>
+                    <p-button label="Crear" icon="pi pi-plus" type="submit" (click)="showFormAddNewClass()"></p-button>
+                    <p-button label="Exportar" icon="pi pi-download" type="submit" (click)="exportAccountsToExcel()"></p-button>
 
-                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" accept=".xlsx" [auto]="true"
+                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" chooseIcon="pi pi-upload" accept=".xlsx" [auto]="true"
                         (onSelect)="onFileSelect($event)" class="p-button-primeng">
                     </p-fileUpload>
-                    <p-button label="Plantilla" (click)="openTemplateModal()"></p-button>
+                    <p-button label="Plantilla" icon="pi pi-download" (click)="openTemplateModal()"></p-button>
                 </div>
             </div>
 
