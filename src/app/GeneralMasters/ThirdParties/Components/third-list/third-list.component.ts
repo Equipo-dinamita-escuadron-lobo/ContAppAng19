@@ -261,6 +261,44 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
+   * Confirma y elimina un tercero
+   */
+  confirmDelete(third: Third): void {
+    const displayName = this.getDisplayName(third);
+    
+    this.confirmationService.confirm({
+      message: `¿Está seguro de eliminar el tercero "${displayName}"? Esta acción no se puede deshacer.`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
+      accept: () => {
+        this.thirdService.deleteThird(third.thId).subscribe({
+          next: () => {
+            this.thirds = this.thirds.filter(t => t.thId !== third.thId);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: 'Tercero eliminado correctamente'
+            });
+          },
+          error: (error) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Error al eliminar el tercero. Es posible que tenga datos asociados.'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  /**
    * Obtiene el nombre completo o razón social
    */
   getDisplayName(third: Third): string {

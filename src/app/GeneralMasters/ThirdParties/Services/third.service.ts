@@ -153,6 +153,21 @@ export class ThirdService {
   }
 
   /**
+   * Elimina un tercero del sistema
+   * @param thId ID del tercero
+   * @returns Observable con el resultado de la eliminación
+   */
+  deleteThird(thId: number): Observable<boolean> {
+    let params = new HttpParams().set('thId', thId);
+    return this.http.delete<boolean>(this.thirdApiUrl, { params }).pipe(
+      catchError((error) => {
+        console.error('Error al eliminar tercero:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Descarga la plantilla de importación de terceros con validaciones
    * @param entId ID de la empresa
    * @returns Observable con el Blob del archivo Excel

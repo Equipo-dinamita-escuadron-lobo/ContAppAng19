@@ -143,15 +143,20 @@
 
           <!-- Acciones -->
           <td>
-            <div class="flex gap-2 items-center">
+            <div class="flex justify-center gap-2 items-center">
               <!-- Botón Ver (solo vista resumida) -->
-              <p-button *ngIf="!showDetailView" icon="pi pi-eye" size="small" severity="info" [text]="true"
-                pTooltip="Ver detalles" tooltipPosition="top" (click)="openDetailsModal(third)">
+              <p-button *ngIf="!showDetailView" icon="pi pi-eye" pTooltip="Ver detalles" tooltipPosition="top" 
+                (click)="openDetailsModal(third)" styleClass="p-button-rounded p-button-text text-primary">
               </p-button>
 
               <!-- Botón Editar -->
-              <p-button icon="pi pi-pencil" size="small" severity="warn" [text]="true" pTooltip="Editar"
-                tooltipPosition="top" (click)="navigateToEdit(third.thId)">
+              <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" 
+                (click)="navigateToEdit(third.thId)" styleClass="p-button-rounded p-button-text text-complementary-green">
+              </p-button>
+
+              <!-- Botón Eliminar -->
+              <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" 
+                (click)="confirmDelete(third)" styleClass="p-button-rounded p-button-text text-tertiary">
               </p-button>
 
               <!-- Toggle Cambiar Estado -->
