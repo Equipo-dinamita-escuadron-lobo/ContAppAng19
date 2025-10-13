@@ -65,8 +65,9 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   dataTable: any;
 
-  totalDebit: number = 0;
-  totalCredit: number = 0;
+  // ✅ CORREGIDO: Se inicializan en null para diferenciar entre "no calculado" y un total de "0".
+  totalDebit: number | null = null;
+  totalCredit: number | null = null;
 
   refDialog: DynamicDialogRef | undefined;
 
@@ -405,7 +406,21 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     return !(this.datePeriod[0].getTime() > this.datePeriod[1].getTime());
   }
 
-  showExportDialog(data: any) {
+  showExportDialog() {
+    // ✅ CORREGIDO: Se añaden los totales al objeto de datos del diálogo.
+    var data = {
+      reportTitle: this.auxiliaryBookInfo.name,
+      criteria: this.criteria,
+      dataTable: this.dataTable,
+      headerConfig: (this as any).headerConfig || [], // Se usa 'as any' para acceder a la propiedad del hijo
+      // Pasamos un objeto con los totales calculados.
+      totals: {
+        totalDebit: this.totalDebit,
+        totalCredit: this.totalCredit,
+        // Aquí se podrían añadir otros totales si fueran necesarios en el futuro.
+      },
+    };
+
     this.refDialog = this.dialogService.open(ExportAuxiliaryBookComponent, {
       data: data,
     });

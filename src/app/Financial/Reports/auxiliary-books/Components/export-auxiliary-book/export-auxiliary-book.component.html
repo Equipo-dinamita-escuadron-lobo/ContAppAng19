@@ -1,29 +1,48 @@
-<!-- Botón de cierre en la parte superior derecha -->
-<div class="flex justify-between items-center mb-4">
-  <h2 class="text-xl font-semibold">Exportar Reporte</h2>
-  <button type="button" styleClass="p-button-secondary" (click)="closeModal()">
-    ✕
-  </button>
-</div>
+<div class="p-fluid p-4 md:p-6">
+  <!-- Encabezado -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Exportar Reporte Auxiliar</h2>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-times"
+      (click)="closeModal()"
+      class="p-button-text p-button-secondary p-button-rounded"
+      aria-label="Cerrar modal"
+    ></button>
+  </div>
 
-<p-splitter
-  [panelSizes]="[50, 50]"
-  [style]="{ height: '500px' }"
-  styleClass="mb-8"
->
-  <!-- Panel de vista previa -->
-  <ng-template #panel>
-    <div class="flex items-center justify-center h-full">
-      <span class="text-gray-400">Vista previa del reporte</span>
+  <!-- Contenido Principal (Layout 60/40) -->
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+    <!-- ✅ CONTENEDOR DE VISTA PREVIA MÁS GRANDE (3 de 5 columnas) -->
+    <div
+      class="lg:col-span-3 w-full h-full rounded-lg border border-gray-200 overflow-auto"
+    >
+      <app-report-preview
+        [reportTitle]="reportTitle"
+        [companyName]="companyName"
+        [generationDate]="generationDate"
+        [criteria]="criteria"
+        [headerConfig]="headerConfig"
+        [previewData]="previewData"
+        [totals]="totals"
+        [styles]="styles"
+        [format]="formatSelected"
+      >
+      </app-report-preview>
     </div>
-  </ng-template>
-  <!-- Panel de opciones -->
-  <ng-template #panel>
-    <div class="p-4 space-y-6">
-      <!-- Selección de plantillas -->
+
+    <!-- ✅ Panel de Opciones (2 de 5 columnas) -->
+    <div
+      class="lg:col-span-2 flex flex-col space-y-6 overflow-y-auto max-h-[70vh] pr-2"
+    >
+      <!-- Plantilla -->
       <div>
-        <h3 class="text-lg font-medium mb-2">Plantilla</h3>
+        <label for="template-select" class="text-lg font-medium mb-2 block"
+          >Plantilla</label
+        >
         <p-select
+          inputId="template-select"
           [options]="templates"
           [(ngModel)]="selectedTemplate"
           optionLabel="name"
@@ -31,123 +50,129 @@
           filterBy="name"
           [showClear]="true"
           placeholder="Selecciona una plantilla"
-          class="w-full"
+          styleClass="w-full"
+          [appendTo]="'body'"
         >
-          <ng-template #selectedItem let-selectedOption>
+          <ng-template pTemplate="selectedItem" let-selectedOption>
+            <div *ngIf="selectedOption" class="flex items-center gap-2">
+              <span>{{ selectedOption.name }}</span>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="item" let-option>
             <div class="flex items-center gap-2">
-              <div>{{ selectedOption.name }}</div>
+              <span>{{ option.name }}</span>
             </div>
           </ng-template>
         </p-select>
-        <small class="text-gray-500">
-          Si modificas alguna opción, la configuración se guardará como
+        <small class="text-gray-500 mt-2 block">
+          Si modificas una opción, la plantilla se marcará como
           <b>Personalizada</b>.
         </small>
       </div>
 
-      <!-- Formato del documento -->
-      <div>
-        <h3 class="text-lg font-medium mb-2">Formato</h3>
-        <p-selectbutton
+      <!-- Formato -->
+      <p-fieldset legend="Formato">
+        <p-selectButton
           [options]="formatOptions"
           [(ngModel)]="formatSelected"
-          optionLabel="label"
           optionValue="value"
+          [allowEmpty]="false"
         >
-          <ng-template #item let-item>
-            <div class="flex items-center gap-2">
+          <ng-template let-item pTemplate="item">
+            <div class="flex items-center justify-center gap-2 px-2">
               <i [class]="item.icon"></i>
               <span>{{ item.label }}</span>
             </div>
           </ng-template>
-        </p-selectbutton>
-      </div>
+        </p-selectButton>
+      </p-fieldset>
 
-      <!-- Opciones personalizadas -->
-      <h3 class="text-lg font-medium mb-2">Configuracion de Encabezados</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Alineación de encabezados -->
-        <div>
-          <h3 class="text-md font-medium mb-2">Alineación</h3>
-          <p-selectbutton
-            [options]="alignOptions"
-            [(ngModel)]="selectedAlign"
-            optionLabel="align"
-          >
-            <ng-template #item let-item>
-              <i [class]="item.icon"></i>
-            </ng-template>
-          </p-selectbutton>
+      <!-- Estilos del Encabezado -->
+      <p-fieldset legend="Estilos del Encabezado">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="font-medium mb-2 block">Alineación</label>
+            <p-selectButton
+              [options]="alignOptions"
+              [ngModel]="styles.align"
+              (ngModelChange)="updateStyles({ align: $event })"
+              optionValue="value"
+            >
+              <ng-template let-item pTemplate="item">
+                <i
+                  [class]="item.icon"
+                  [pTooltip]="item.tooltip"
+                  tooltipPosition="top"
+                ></i>
+              </ng-template>
+            </p-selectButton>
+          </div>
+          <div>
+            <label class="font-medium mb-2 block">Color de Cabecera</label>
+            <p-colorPicker
+              [ngModel]="styles.color"
+              (ngModelChange)="updateStyles({ color: $event })"
+            ></p-colorPicker>
+          </div>
         </div>
+      </p-fieldset>
 
-        <div>
-          <h3 class="text-md font-medium mb-2">Color</h3>
-          <p-colorPicker
-            [(ngModel)]="selectedColor"
-            [style]="{ width: '100%' }"
-          ></p-colorPicker>
+      <!-- Estilos del Contenido -->
+      <p-fieldset legend="Estilos del Contenido">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="font-select" class="font-medium mb-2 block"
+              >Fuente</label
+            >
+            <p-select
+              inputId="font-select"
+              [options]="fonts"
+              [ngModel]="styles.font"
+              (ngModelChange)="updateStyles({ font: $event })"
+              optionLabel="name"
+              optionValue="value"
+              placeholder="Selecciona una fuente"
+              styleClass="w-full"
+              [appendTo]="'body'"
+            >
+              <ng-template let-font pTemplate="item">
+                <div [style.font-family]="font.value">{{ font.name }}</div>
+              </ng-template>
+              <ng-template let-font pTemplate="selectedItem">
+                <div *ngIf="font" [style.font-family]="font.value">
+                  {{ font.name }}
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+          <div>
+            <label for="fontsize-select" class="font-medium mb-2 block"
+              >Tamaño</label
+            >
+            <p-select
+              inputId="fontsize-select"
+              [options]="fontSizes"
+              [ngModel]="styles.fontSize"
+              (ngModelChange)="updateStyles({ fontSize: $event })"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Ej: 12px"
+              styleClass="w-full"
+              [appendTo]="'body'"
+            />
+          </div>
         </div>
-      </div>
-
-      <!-- Fuente -->
-      <h3 class="text-lg font-medium mb-2">Configuracion de Texto</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h3 class="text-md font-medium mb-2">Fuente</h3>
-          <p-select
-            [options]="fonts"
-            [(ngModel)]="selectedFont"
-            optionLabel="name"
-            optionValue="value"
-            placeholder="Selecciona una fuente"
-            class="w-full"
-          >
-            <!-- Opción en el dropdown -->
-            <ng-template let-font #item>
-              <div [ngStyle]="{ 'font-family': font.value }">
-                {{ font.name }}
-              </div>
-            </ng-template>
-
-            <!-- Fuente seleccionada -->
-            <ng-template let-selectedFont #selectedItem>
-              <div [ngStyle]="{ 'font-family': selectedFont.value }">
-                {{ selectedFont.name }}
-              </div>
-            </ng-template>
-          </p-select>
-        </div>
-        <!-- Tamaño de fuente -->
-        <div>
-          <h3 class="text-md font-medium mb-2">Tamaño de fuente</h3>
-          <p-select
-            [options]="fontSizes"
-            [(ngModel)]="selectedFontSize"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Selecciona tamaño"
-            class="w-full"
-          />
-        </div>
-      </div>
-
-      <div class="flex justify-end">
-        <p-button
-          label="Guardar Configuración"
-          (click)="saveConfiguration()"
-          styleClass="p-button-secondary p-button-sm"
-        />
-      </div>
+      </p-fieldset>
     </div>
-  </ng-template>
-</p-splitter>
+  </div>
 
-<!-- Footer con botones -->
-<div class="flex justify-end gap-4 mt-4">
-  <p-button
-    label="Cancelar"
-    styleClass="p-button-secondary"
-    (click)="closeModal()"
-  />
-  <p-button label="Exportar" (click)="exportReport()" />
+  <!-- Footer con Botones de Acción -->
+  <div class="flex justify-end gap-3 mt-8 border-t border-gray-200 pt-4">
+    <p-button
+      label="Cancelar"
+      styleClass="p-button-outlined p-button-secondary"
+      (click)="closeModal()"
+    />
+    <p-button label="Exportar" icon="pi pi-download" (click)="exportReport()" />
+  </div>
 </div>

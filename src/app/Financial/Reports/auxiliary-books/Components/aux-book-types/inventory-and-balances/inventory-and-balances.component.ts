@@ -15,6 +15,7 @@ import { TableModule } from 'primeng/table';
 import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 
 // Services
 import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
@@ -52,6 +53,32 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
 
   override dataTable: InventoryAndBalancesResponse[] = [];
 
+  /**
+   * ✅ NUEVO: Define la configuración de las cabeceras para la previsualización.
+   * Esta estructura debe coincidir con la tabla mostrada en el HTML.
+   */
+  headerConfig: ColumnDefinition[][] = [
+    // Fila 1 de la cabecera
+    [
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        // Los 'children' se usan para calcular las columnas de datos (flatColumns)
+        children: [
+          { header: 'Código', field: 'accountCode' },
+          { header: 'Descripción', field: 'accountDescription' },
+        ],
+      },
+      { header: 'Descripción', field: 'description', rowspan: 2 },
+      { header: 'Valor', field: 'value', type: 'number', rowspan: 2 },
+    ],
+    // ✅ CORREGIDO: Fila 2 de la cabecera, contiene los hijos de 'Cuenta'
+    [
+      // Estas columnas se renderizarán debajo de 'Cuenta'
+      { header: 'Código', field: 'accountCode' },
+      { header: 'Descripción', field: 'accountDescription' },
+    ],
+  ];
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
     enterpriseService: EnterpriseService,

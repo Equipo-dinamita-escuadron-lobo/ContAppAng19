@@ -14,14 +14,14 @@ export class MainViewComponent {
       name: 'Estados Financieros',
       route: '/financial/reports/financial-statements',
       type: 'Estados',
-      amount: 4,
+      amount: 5,
       icon: 'docs',
     },
     {
       name: 'Libros Auxiliares',
       route: '/financial/reports/auxiliary-books/list',
       type: 'Libros',
-      amount: 7,
+      amount: 6,
       icon: 'book_5',
     },
   ];

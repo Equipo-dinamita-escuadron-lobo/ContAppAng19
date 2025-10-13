@@ -22,9 +22,9 @@
     </div>
 
     <!-- Derecha: Botón Exportar -->
-    <div *ngIf="isReportGenerated" class="flex items-start">
+    <div class="flex items-start" *ngIf="isReportGenerated">
       <p-button
-        (click)="showExportDialog(dataTable)"
+        (click)="showExportDialog()"
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"

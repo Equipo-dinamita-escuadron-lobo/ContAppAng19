@@ -21,6 +21,7 @@ import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Serv
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 
 @Component({
   selector: 'app-diary',
@@ -48,6 +49,35 @@ export class DiaryComponent extends BaseAuxiliaryBookComponent {
   };
 
   override dataTable: DiaryResponse[] = [];
+
+  /**
+   * ✅ NUEVO: Define la configuración de las cabeceras para la previsualización.
+   * Esta estructura debe coincidir con la tabla que se muestra en el HTML.
+   */
+  headerConfig: ColumnDefinition[][] = [
+    // Fila 1 de la cabecera
+    [
+      { header: 'Fecha', field: 'date', rowspan: 2 },
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        children: [
+          { header: 'Código', field: 'accountCode' },
+          { header: 'Descripción', field: 'accountDescription' },
+        ],
+      },
+      { header: 'Débito', field: 'debit', type: 'number', rowspan: 2 },
+      { header: 'Crédito', field: 'credit', type: 'number', rowspan: 2 },
+    ],
+    // Fila 2 de la cabecera (columnas anidadas)
+    [
+      // Estas columnas se renderizarán debajo de 'Cuenta'
+      { header: 'Código', field: 'accountCode' },
+      { header: 'Descripción', field: 'accountDescription' },
+      // Nota: He omitido 'Comprobante' ya que no está en los datos de la respuesta (DiaryResponse)
+      // Si se añade en el futuro, se puede agregar aquí de forma similar a 'Cuenta'.
+    ],
+  ];
 
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
