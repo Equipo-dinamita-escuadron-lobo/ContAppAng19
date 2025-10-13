@@ -28,7 +28,28 @@ export class ThirdServiceConfigurationService {
     let params = new HttpParams()
     .set('entId', entId.toString());
 
-    return this.http.get<ThirdType[]>(this.thirdApiUrl+"thirdtype", {params});
+    return this.http.get<ThirdType[]>(this.thirdApiUrl+"thirdtype", {params}).pipe(
+      map(response => {
+        // Asegurar que siempre retornamos un array
+        if (Array.isArray(response)) {
+          return response;
+        }
+        // Si la respuesta es un objeto, intentar extraer el array
+        if (response && typeof response === 'object') {
+          // Buscar propiedades comunes que puedan contener el array
+          const possibleArrays = ['content', 'data', 'items', 'results', 'thirdTypes'];
+          for (const key of possibleArrays) {
+            if (Array.isArray((response as any)[key])) {
+              return (response as any)[key];
+            }
+          }
+        }
+        return [];
+      }),
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
@@ -40,7 +61,28 @@ export class ThirdServiceConfigurationService {
     let params = new HttpParams()
     .set('entId', entId.toString());
 
-    return this.http.get<TypeId[]>(this.thirdApiUrl+"typeid", {params});
+    return this.http.get<TypeId[]>(this.thirdApiUrl+"typeid", {params}).pipe(
+      map(response => {
+        // Asegurar que siempre retornamos un array
+        if (Array.isArray(response)) {
+          return response;
+        }
+        // Si la respuesta es un objeto, intentar extraer el array
+        if (response && typeof response === 'object') {
+          // Buscar propiedades comunes que puedan contener el array
+          const possibleArrays = ['content', 'data', 'items', 'results', 'typeIds'];
+          for (const key of possibleArrays) {
+            if (Array.isArray((response as any)[key])) {
+              return (response as any)[key];
+            }
+          }
+        }
+        return [];
+      }),
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
   }
 
   /**

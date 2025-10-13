@@ -196,11 +196,11 @@ export class ThirdConfigComponent implements OnInit {
     this.loadingThirdTypes = true;
     this.thirdServiceConfiguration.getThirdTypes(this.entData).subscribe({
       next: (response: ThirdType[]) => {
-        this.thirdTypes = response;
+        this.thirdTypes = Array.isArray(response) ? response : [];
         this.loadingThirdTypes = false;
       },
       error: (error: any) => {
-        console.error('Error loading third types:', error);
+        this.thirdTypes = [];
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -218,11 +218,11 @@ export class ThirdConfigComponent implements OnInit {
     this.loadingTypeIds = true;
     this.thirdServiceConfiguration.getTypeIds(this.entData).subscribe({
       next: (response: TypeId[]) => {
-        this.typesId = response;
+        this.typesId = Array.isArray(response) ? response : [];
         this.loadingTypeIds = false;
       },
       error: (error: any) => {
-        console.error('Error loading type IDs:', error);
+        this.typesId = [];
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
