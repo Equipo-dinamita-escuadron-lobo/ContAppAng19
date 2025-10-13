@@ -1,8 +1,8 @@
 
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, tap, throwError } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, catchError, map, throwError } from 'rxjs';
 import { ThirdType } from '../models/ThirdType';
 import { TypeId } from '../models/TypeId';
 
@@ -11,7 +11,31 @@ import { TypeId } from '../models/TypeId';
 })
 export class ThirdServiceConfigurationService {
   /** URL base para las operaciones de configuración de terceros */
-  private thirdApiUrl = environment.API_URL + 'thirds/configuration/'
+  private thirdApiUrl = environment.API_URL + 'thirds/configuration/';
+
+  /**
+   * Método genérico para extraer arrays de respuestas que pueden venir en diferentes formatos
+   * @param response Respuesta del backend
+   * @param possibleKeys Claves posibles donde puede estar el array
+   * @returns Array extraído o array vacío
+   */
+  private extractArrayFromResponse<T>(response: any, possibleKeys: string[] = []): T[] {
+    // Si la respuesta ya es un array, retornarlo directamente
+    if (Array.isArray(response)) {
+      return response;
+    }
+    
+    // Si la respuesta es un objeto, buscar el array en las claves posibles
+    if (response && typeof response === 'object') {
+      for (const key of possibleKeys) {
+        if (Array.isArray(response[key])) {
+          return response[key];
+        }
+      }
+    }
+    
+    return [];
+  }
 
   /**
    * Constructor del servicio
@@ -25,30 +49,12 @@ export class ThirdServiceConfigurationService {
    * @returns Observable con el array de tipos de terceros
    */
   getThirdTypes(entId: String): Observable<ThirdType[]> {
-    let params = new HttpParams()
-    .set('entId', entId.toString());
+    const params = new HttpParams().set('entId', entId.toString());
+    const possibleKeys = ['content', 'data', 'items', 'results', 'thirdTypes'];
 
-    return this.http.get<ThirdType[]>(this.thirdApiUrl+"thirdtype", {params}).pipe(
-      map(response => {
-        // Asegurar que siempre retornamos un array
-        if (Array.isArray(response)) {
-          return response;
-        }
-        // Si la respuesta es un objeto, intentar extraer el array
-        if (response && typeof response === 'object') {
-          // Buscar propiedades comunes que puedan contener el array
-          const possibleArrays = ['content', 'data', 'items', 'results', 'thirdTypes'];
-          for (const key of possibleArrays) {
-            if (Array.isArray((response as any)[key])) {
-              return (response as any)[key];
-            }
-          }
-        }
-        return [];
-      }),
-      catchError((error) => {
-        return throwError(() => error);
-      })
+    return this.http.get<ThirdType[]>(this.thirdApiUrl + "thirdtype", {params}).pipe(
+      map(response => this.extractArrayFromResponse<ThirdType>(response, possibleKeys)),
+      catchError((error) => throwError(() => error))
     );
   }
 
@@ -58,30 +64,12 @@ export class ThirdServiceConfigurationService {
    * @returns Observable con el array de tipos de identificación
    */
   getTypeIds(entId: String): Observable<TypeId[]> {
-    let params = new HttpParams()
-    .set('entId', entId.toString());
+    const params = new HttpParams().set('entId', entId.toString());
+    const possibleKeys = ['content', 'data', 'items', 'results', 'typeIds'];
 
-    return this.http.get<TypeId[]>(this.thirdApiUrl+"typeid", {params}).pipe(
-      map(response => {
-        // Asegurar que siempre retornamos un array
-        if (Array.isArray(response)) {
-          return response;
-        }
-        // Si la respuesta es un objeto, intentar extraer el array
-        if (response && typeof response === 'object') {
-          // Buscar propiedades comunes que puedan contener el array
-          const possibleArrays = ['content', 'data', 'items', 'results', 'typeIds'];
-          for (const key of possibleArrays) {
-            if (Array.isArray((response as any)[key])) {
-              return (response as any)[key];
-            }
-          }
-        }
-        return [];
-      }),
-      catchError((error) => {
-        return throwError(() => error);
-      })
+    return this.http.get<TypeId[]>(this.thirdApiUrl + "typeid", {params}).pipe(
+      map(response => this.extractArrayFromResponse<TypeId>(response, possibleKeys)),
+      catchError((error) => throwError(() => error))
     );
   }
 
