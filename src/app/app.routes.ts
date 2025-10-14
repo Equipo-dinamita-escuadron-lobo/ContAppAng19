@@ -698,6 +698,14 @@ export const routes: Routes = [
                     './GeneralMasters/HelpCenter/components/help-center-list/help-center-list.component'
                   ).then((m) => m.HelpCenterListComponent),
               },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Centro de Ayuda' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-creation/help-center-creation.component'
+                  ).then((m) => m.HelpCenterCreationComponent),
+              },
             ],
           },
           {
