@@ -62,7 +62,7 @@
               <p-toggleSwitch
                 [ngModel]="isActive(row.status)"
                 (onChange)="changeHelpCenterState(row)"
-                pTooltip="Cambiar Estado"
+                [pTooltip]="(row.status ? 'Activo' : 'Inactivo')"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"
