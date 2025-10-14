@@ -91,28 +91,32 @@
       <p-fieldset legend="Estilos del Encabezado">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="font-medium mb-2 block">Alineación</label>
-            <p-selectButton
-              [options]="alignOptions"
-              [ngModel]="styles.align"
-              (ngModelChange)="updateStyles({ align: $event })"
-              optionValue="value"
-            >
-              <ng-template let-item pTemplate="item">
-                <i
-                  [class]="item.icon"
-                  [pTooltip]="item.tooltip"
-                  tooltipPosition="top"
-                ></i>
-              </ng-template>
-            </p-selectButton>
+            <label class="font-medium mb-2 block"
+              >Alineación
+              <p-selectButton
+                [options]="alignOptions"
+                [ngModel]="styles.align"
+                (ngModelChange)="updateStyles({ align: $event })"
+                optionValue="value"
+              >
+                <ng-template let-item pTemplate="item">
+                  <i
+                    [class]="item.icon"
+                    [pTooltip]="item.tooltip"
+                    tooltipPosition="top"
+                  ></i>
+                </ng-template>
+              </p-selectButton>
+            </label>
           </div>
           <div>
-            <label class="font-medium mb-2 block">Color de Cabecera</label>
-            <p-colorPicker
-              [ngModel]="styles.color"
-              (ngModelChange)="updateStyles({ color: $event })"
-            ></p-colorPicker>
+            <label class="font-medium mb-2 block"
+              >Color de Cabecera
+              <p-colorPicker
+                [ngModel]="styles.color"
+                (ngModelChange)="updateStyles({ color: $event })"
+              ></p-colorPicker>
+            </label>
           </div>
         </div>
       </p-fieldset>
@@ -171,12 +175,14 @@
     <p-button
       label="Cancelar"
       styleClass="p-button-outlined p-button-secondary"
+      (keydown.enter)="closeModal()"
       (click)="closeModal()"
     />
     <p-button
       label="Exportar"
       icon="pi pi-download"
       (click)="exportReport()"
+      (keydown.enter)="exportReport()"
       type="button"
     />
   </div>

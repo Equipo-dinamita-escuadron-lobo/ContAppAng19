@@ -25,6 +25,7 @@
     <div class="flex items-start" *ngIf="isReportGenerated">
       <p-button
         (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
@@ -160,6 +161,7 @@
           pButton
           type="button"
           label="Generar Reporte"
+          (keydown.enter)="generateReport()"
           (click)="generateReport()"
         ></button>
       </div>

@@ -172,7 +172,7 @@ export class ExportAuxiliaryBookComponent implements OnInit {
         const a = document.createElement('a');
         a.href = url;
         const extension = this.formatSelected.toLowerCase();
-        const fileName = `${this.reportTitle.replaceAll(/ /g, '_')}_${new Date()
+        const fileName = `${this.reportTitle.replaceAll(' ', '_')}_${new Date()
           .toISOString()
           .slice(0, 10)}.${extension}`;
         a.download = fileName;
