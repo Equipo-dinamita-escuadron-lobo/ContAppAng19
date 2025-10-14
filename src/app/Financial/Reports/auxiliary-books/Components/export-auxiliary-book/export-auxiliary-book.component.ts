@@ -87,12 +87,12 @@ export class ExportAuxiliaryBookComponent implements OnInit {
   constructor(
     public ref: DynamicDialogRef,
     public config: DynamicDialogConfig,
-    private auxiliaryBookService: AuxiliaryBooksServiceService,
-    private messageService: MessageService
+    private readonly auxiliaryBookService: AuxiliaryBooksServiceService,
+    private readonly messageService: MessageService
   ) {}
 
   // ✅ NUEVO: Diccionarios para la traducción de criterios.
-  private criteriaKeyMap: { [key: string]: string } = {
+  private readonly criteriaKeyMap: { [key: string]: string } = {
     criteriaType: 'Tipo de Nivel',
     criteriaRange: 'Rango de Cuentas',
     thirdPartyId: 'Tercero',
@@ -100,7 +100,7 @@ export class ExportAuxiliaryBookComponent implements OnInit {
     endDate: 'Fecha de Corte',
   };
 
-  private criteriaValueMap: { [key: string]: string } = {
+  private readonly criteriaValueMap: { [key: string]: string } = {
     NUMBER_CLASS: 'Clase',
     GROUP: 'Grupo',
     ACCOUNT: 'Cuenta',
@@ -168,17 +168,17 @@ export class ExportAuxiliaryBookComponent implements OnInit {
 
     this.auxiliaryBookService.exportAuxiliaryBook(request).subscribe({
       next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         const extension = this.formatSelected.toLowerCase();
-        const fileName = `${this.reportTitle.replace(/ /g, '_')}_${new Date()
+        const fileName = `${this.reportTitle.replaceAll(/ /g, '_')}_${new Date()
           .toISOString()
           .slice(0, 10)}.${extension}`;
         a.download = fileName;
         document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         a.remove();
 
         this.messageService.add({

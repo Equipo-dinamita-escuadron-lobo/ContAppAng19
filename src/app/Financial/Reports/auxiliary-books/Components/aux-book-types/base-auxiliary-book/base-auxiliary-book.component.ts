@@ -408,7 +408,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   showExportDialog() {
     // ✅ CORREGIDO: Se añaden los totales al objeto de datos del diálogo.
-    var data = {
+    let data = {
       reportTitle: this.auxiliaryBookInfo.name,
       auxBookType: this.auxiliaryBookInfo.type,
       criteria: this.criteria,
@@ -428,7 +428,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   }
 
   formatMoneyAligned(value: number | null | undefined): string {
-    if (value == null || isNaN(value)) {
+    if (value == null || Number.isNaN(value)) {
       return '';
     }
 

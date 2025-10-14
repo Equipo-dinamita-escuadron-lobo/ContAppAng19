@@ -53,7 +53,9 @@ export class ReportPreviewComponent {
     if (this.headerConfig && this.headerConfig.length > 0) {
       const getLeafNodes = (node: ColumnDefinition) => {
         if (node.children && node.children.length > 0) {
-          node.children.forEach(getLeafNodes);
+          for (let i = 0; i < node.children.length; i++) {
+            getLeafNodes(node.children[i]);
+          }
         } else {
           // Solo añadimos columnas que tienen un 'field' para evitar añadir
           // cabeceras de agrupación que no tienen datos asociados.
@@ -62,7 +64,9 @@ export class ReportPreviewComponent {
           }
         }
       };
-      this.headerConfig[0].forEach(getLeafNodes);
+      for (let i = 0; i < this.headerConfig[0].length; i++) {
+        getLeafNodes(this.headerConfig[0][i]);
+      }
     }
     return flat;
   }
@@ -134,11 +138,13 @@ export class ReportPreviewComponent {
 
   getHeaderTextColor(hexColor: string): string {
     if (!hexColor) return '#000000';
-    const hex = hexColor.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    const luminosity = (r * 299 + g * 587 + b * 114) / 1000;
-    return luminosity < 128 ? '#FFFFFF' : '#000000';
+    else {
+      const hex = hexColor.replace('#', '');
+      const r = Number.parseInt(hex.substring(0, 2), 16);
+      const g = Number.parseInt(hex.substring(2, 4), 16);
+      const b = Number.parseInt(hex.substring(4, 6), 16);
+      const luminosity = (r * 299 + g * 587 + b * 114) / 1000;
+      return luminosity < 128 ? '#FFFFFF' : '#000000';
+    }
   }
 }
