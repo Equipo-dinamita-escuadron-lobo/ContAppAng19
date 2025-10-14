@@ -79,7 +79,7 @@
           <th>Tipo(s) Tercero</th>
           <th>Nombre/Razón Social</th>
           <th>Tipo ID</th>
-          <th>Número de Documento</th>
+          <th>Número de Identificación</th>
           <th *ngIf="showDetailView">Dígito de Verificación</th>
           <th>Correo</th>
           <th *ngIf="showDetailView">País</th>
@@ -214,7 +214,7 @@
   [style]="{ width: '90rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"
   (onHide)="closeErrorModal()">
 
-  <div class="bg-notification-error-container border-l-4 border-notification-error-border p-4 mb-4 font-family-sans">
+  <div class="bg-notification-error-container border-l-4 border-notification-error-border px-15 py-15 mb-15 font-family-sans">
     <p class="font-bold mb-2 text-notification-error-title">Se encontraron errores en la importación</p>
     <p class="text-sm text-notification-error-text mb-3">No se pudieron importar algunos terceros debido a los siguientes errores presentados en la tabla.</p>
     
@@ -225,12 +225,12 @@
     <p class="text-sm text-notification-error-text m-0">Duplicados omitidos: {{ duplicatesOmitted }}</p>
   </div>
 
-  <div class="bg-notification-info-container border border-notification-info-border rounded-lg p-4 mb-4 font-family-sans">
-    <h4 class="font-bold text-base text-notification-info-title mb-3">Información:</h4>
-    <ul class="list-disc pl-6 text-sm text-notification-info-text">
-      <li class="mb-1">El sistema ingresó todos los registros correctos y solo muestra los que presentaron errores.</li>
-      <li class="mb-1">Los registros duplicados (tanto en el sistema como en el archivo Excel) serán omitidos automáticamente.</li>
-      <li class="mb-1">Cada fila de error indica el número de fila del Excel, la columna, el campo afectado y el error específico.</li>
+  <div class="bg-notification-info-container border border-notification-info-border rounded-lg px-15 py-15 mb-15 font-family-sans">
+    <h4 class="font-bold text-base text-notification-info-title mb-2">Información:</h4>
+    <ul class="list-disc list-inside text-sm text-notification-info-text space-y-1">
+      <li>El sistema ingresa todos los registros correctos y solo muestra los que presentaron errores.</li>
+      <li>Los registros duplicados (tanto en el sistema como en el archivo Excel) serán omitidos automáticamente.</li>
+      <li>Cada fila de error indica el número de fila del Excel, la columna, el campo afectado y el error específico.</li>
       <li>Corrija los errores en su archivo Excel según las indicaciones y vuelva a importar.</li>
     </ul>
   </div>
