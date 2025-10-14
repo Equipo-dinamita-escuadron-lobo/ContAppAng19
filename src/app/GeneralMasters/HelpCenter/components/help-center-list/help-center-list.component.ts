@@ -93,9 +93,9 @@ export class HelpCenterListComponent {
         const content: HelpCenter[] = page.content || [];
         this.list = content.map(hc => ({
           ...hc,
-          moduleName: this.getModuleName(hc.moduleId)
+          moduleName: hc.moduleName || this.getModuleName(hc.moduleId)
         }));
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page?.page?.totalElements || 0;
       },
       error: (error: any) => {
         console.error('Error al cargar centros de ayuda:', error);
@@ -115,9 +115,9 @@ export class HelpCenterListComponent {
         const content: HelpCenter[] = page.content || [];
         this.list = content.map(hc => ({
           ...hc,
-          moduleName: this.getModuleName(hc.moduleId)
+          moduleName: hc.moduleName || this.getModuleName(hc.moduleId)
         }));
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page?.page?.totalElements || 0;
       }
     });
   }
