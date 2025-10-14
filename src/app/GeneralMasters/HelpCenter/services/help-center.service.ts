@@ -58,4 +58,9 @@ export class HelpCenterServiceService {
     const url = `${this.apiURL}findAllByModule?moduleId=${moduleId}`;
     return this.http.get<HelpCenter[]>(url);
   }
+
+  getModules(): Observable<any[]> {
+    const url = `${this.apiURL}modules`;
+    return this.http.get<any[]>(url);
+  }
 }
