@@ -26,8 +26,6 @@ import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 import { CostCenterService } from '../../../../../../GeneralMasters/CostCenters/services/cost-center.service';
 import { CostCenter } from '../../../../../../GeneralMasters/CostCenters/models/cost-center.model';
-import { Page } from '../../../../../../GeneralMasters/AccountingCalendar/types/calendar.types';
-import { DialogService } from 'primeng/dynamicdialog';
 import { AccountingCalendarService } from '../../../../../../GeneralMasters/AccountingCalendar/services/accounting-calendar.service';
 
 // Interface para respuestas paginadas
