@@ -90,27 +90,30 @@
       <!-- Estilos del Encabezado -->
       <p-fieldset legend="Estilos del Encabezado">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- ✅ CORREGIDO: Label asociado con for/id -->
           <div>
-            <label class="font-medium mb-2 block"
-              >Alineación
-              <p-selectButton
-                [options]="alignOptions"
-                [ngModel]="styles.align"
-                (ngModelChange)="updateStyles({ align: $event })"
-                optionValue="value"
-              >
-                <ng-template let-item pTemplate="item">
-                  <i
-                    [class]="item.icon"
-                    [pTooltip]="item.tooltip"
-                    tooltipPosition="top"
-                  ></i>
-                </ng-template>
-              </p-selectButton>
-            </label>
+            <label for="align-select" class="font-medium mb-2 block"
+              >Alineación</label
+            >
+            <p-selectButton
+              id="align-select"
+              [options]="alignOptions"
+              [ngModel]="styles.align"
+              (ngModelChange)="updateStyles({ align: $event })"
+              optionValue="value"
+            >
+              <ng-template let-item pTemplate="item">
+                <i
+                  [class]="item.icon"
+                  [pTooltip]="item.tooltip"
+                  tooltipPosition="top"
+                ></i>
+              </ng-template>
+            </p-selectButton>
           </div>
+          <!-- ✅ CORREGIDO: Label asociado con for/id -->
           <div>
-            <label class="font-medium mb-2 block"
+            <label for="header-color-picker" class="font-medium mb-2 block"
               >Color de Cabecera
               <p-colorPicker
                 [ngModel]="styles.color"
@@ -125,6 +128,7 @@
       <p-fieldset legend="Estilos del Contenido">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
+            <!-- ✅ CORREGIDO: Label asociado y appendTo para el dropdown -->
             <label for="font-select" class="font-medium mb-2 block"
               >Fuente
               <p-select
@@ -150,6 +154,7 @@
             </label>
           </div>
           <div>
+            <!-- ✅ CORREGIDO: Label asociado y appendTo para el dropdown -->
             <label for="fontsize-select" class="font-medium mb-2 block"
               >Tamaño
               <p-select
