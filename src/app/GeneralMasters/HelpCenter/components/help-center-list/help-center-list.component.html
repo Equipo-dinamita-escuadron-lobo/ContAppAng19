@@ -28,17 +28,17 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Buscar centro de ayuda (nombre)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
+          <input pInputText type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Buscar centro de ayuda (ID módulo, módulo, nombre o descripción)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
         </p-iconfield>
       </div>
     </div>
 
     <!-- Tabla -->
-    <p-table #helpCentersTable [value]="list" [lazy]="true" (onLazyLoad)="loadHelpCentersLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+        <p-table #helpCentersTable [value]="list" [lazy]="true" (onLazyLoad)="loadHelpCentersLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th class="font-semibold text-primary border-b-2 border-primary">ID Módulo</th>
-          <th class="font-semibold text-primary border-b-2 border-primary">Módulo</th>
+          <th pSortableColumn="moduleId" class="font-semibold text-primary border-b-2 border-primary">ID Módulo <p-sortIcon field="moduleId"></p-sortIcon></th>
+          <th pSortableColumn="module" class="font-semibold text-primary border-b-2 border-primary">Módulo <p-sortIcon field="module"></p-sortIcon></th>
           <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">Nombre <p-sortIcon field="name"></p-sortIcon></th>
           <th class="font-semibold text-primary border-b-2 border-primary">Descripción</th>
           <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
