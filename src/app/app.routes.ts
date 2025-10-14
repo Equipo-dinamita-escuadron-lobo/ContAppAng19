@@ -682,6 +682,33 @@ export const routes: Routes = [
               ).then((m) => m.MenuComponent),
           },
           {
+            path: 'help-center',
+            data: { breadcrumb: 'Centro de Ayuda' },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list',
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-list/help-center-list.component'
+                  ).then((m) => m.HelpCenterListComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Centro de Ayuda' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-creation/help-center-creation.component'
+                  ).then((m) => m.HelpCenterCreationComponent),
+              },
+            ],
+          },
+          {
             path: 'accounting-calendar',
             data: { breadcrumb: 'Calendario Contable' },
             loadComponent: () =>

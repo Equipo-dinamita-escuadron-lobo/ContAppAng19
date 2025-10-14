@@ -1,0 +1,67 @@
+<div class="flex w-full h-full font-titillium">
+  <p-toast></p-toast>
+
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+
+    <!-- Header -->
+    <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+      <div class="items-center mb-6">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+          Crear Centro de Ayuda
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-2">Complete los campos para crear un nuevo centro de ayuda.</p>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+        <div class="flex flex-wrap gap-3">
+          <p-button label="Guardar" icon="pi pi-save" (onClick)="onSubmit()" [disabled]="!form.valid"></p-button>
+          <p-button icon="pi pi-arrow-left" (onClick)="onCancel()" styleClass="p-button-secondary"></p-button>    
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="form">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
+        <!-- Nombre -->
+        <div class="flex flex-col gap-2">
+          <label for="name" class="font-semibold text-primary label-required mt-2">Nombre</label>
+          <input
+            pInputText
+            id="name"
+            formControlName="name"
+            placeholder="Ingrese el nombre del centro de ayuda"
+            class="w-full md:w-2/3"
+          />
+        </div>
+
+        <!-- Módulo -->
+        <div class="flex flex-col gap-2">
+          <label for="moduleId" class="font-semibold text-primary label-required mt-2">Módulo</label>
+          <p-dropdown
+            id="moduleId"
+            formControlName="moduleId"
+            [options]="modules"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Seleccione un módulo"
+            class="w-full md:w-2/3"
+            [style]="{'border-radius': '8px'}"
+          ></p-dropdown>
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="flex flex-col gap-2 mt-40">
+        <label for="description" class="font-semibold text-primary label-required mt-2">Descripción</label>
+        <p-editor
+          formControlName="description"
+          [style]="{'height': '200px'}"
+          placeholder="Ingrese la descripción del centro de ayuda"
+        ></p-editor>
+      </div>
+    </form>
+
+  </div>
+</div>
