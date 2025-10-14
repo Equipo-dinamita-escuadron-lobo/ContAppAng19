@@ -86,7 +86,7 @@ export const navbarData: INavbarData[] = [
         label:'Etiquetas no comerciales'
       },
       {
-        routeLink: '/gen-masters/help-panels',
+        routeLink: '/gen-masters/help-center/list',
         icon: 'help',
         label: 'Centro de Ayuda',
       },
