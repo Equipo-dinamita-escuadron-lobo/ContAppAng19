@@ -4,6 +4,7 @@ export interface HelpCenter {
   name: string;
   description: string;
   status: boolean;
+  moduleName?: string;
 }
 
 export interface HelpCenterList extends HelpCenter {
