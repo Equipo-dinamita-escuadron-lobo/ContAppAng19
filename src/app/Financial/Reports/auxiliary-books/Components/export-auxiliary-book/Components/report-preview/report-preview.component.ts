@@ -43,29 +43,20 @@ export class ReportPreviewComponent {
   @Input() styles: ReportStyles | null = null;
   @Input() format: 'pdf' | 'excel' = 'pdf';
 
-  // --- LÓGICA INTERNA ---
-
-  // Devuelve las columnas finales (las que no tienen hijos) para renderizar las celdas de datos
   get flatColumns(): ColumnDefinition[] {
     const flat: ColumnDefinition[] = [];
-    // ✅ CORREGIDO: Procesamos solo la primera fila para obtener la jerarquía completa
-    // a través de la propiedad 'children' y evitar duplicados.
     if (this.headerConfig && this.headerConfig.length > 0) {
       const getLeafNodes = (node: ColumnDefinition) => {
         if (node.children && node.children.length > 0) {
-          for (let i = 0; i < node.children.length; i++) {
-            getLeafNodes(node.children[i]);
+          for (let childNode of node.children) {
+            getLeafNodes(childNode);
           }
-        } else {
-          // Solo añadimos columnas que tienen un 'field' para evitar añadir
-          // cabeceras de agrupación que no tienen datos asociados.
-          if (node.field) {
-            flat.push(node);
-          }
+        } else if (node.field) {
+          flat.push(node);
         }
       };
-      for (let i = 0; i < this.headerConfig[0].length; i++) {
-        getLeafNodes(this.headerConfig[0][i]);
+      for (let node of this.headerConfig[0]) {
+        getLeafNodes(node);
       }
     }
     return flat;
@@ -137,7 +128,7 @@ export class ReportPreviewComponent {
   }
 
   getHeaderTextColor(hexColor: string): string {
-    if (!hexColor) return '#000000';
+    if (hexColor.length === 0) return '#000000';
     else {
       const hex = hexColor.replace('#', '');
       const r = Number.parseInt(hex.substring(0, 2), 16);
