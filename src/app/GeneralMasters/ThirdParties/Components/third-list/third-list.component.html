@@ -1,0 +1,273 @@
+<!-- Toast y Dialog de confirmación -->
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="flex w-full h-full font-titillium">
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+
+    <!-- Header Section -->
+    <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+      <div class="items-center mb-6">
+        <h1
+          class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+          Terceros
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-2">
+          Lista de todos los terceros configurados en su empresa.
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+        <div class="flex gap-1 flex-nowrap whitespace-nowrap">
+          <p-button label="Crear" icon="pi pi-plus" [style]="{'white-space': 'nowrap'}" (click)="navigateToCreate()">
+          </p-button>
+
+          <p-button label="PDF RUT" icon="pi pi-file-pdf" [loading]="loadingPdfRut" [style]="{'white-space': 'nowrap'}"
+            (click)="pdfRutInput.click()">
+          </p-button>
+          <input #pdfRutInput type="file" accept=".pdf" (change)="onPdfRutSelect($event)" style="display: none;">
+          
+          <p-button label="Importar" icon="pi pi-upload" [style]="{'white-space': 'nowrap'}" (click)="fileInput.click()">
+          </p-button>
+          <input #fileInput type="file" accept=".xlsx" (change)="onFileSelect($event)" style="display: none;">
+
+          <p-button label="Exportar" icon="pi pi-download" [style]="{'white-space': 'nowrap'}"
+            (click)="openExportModal()">
+          </p-button>
+
+          <p-button label="Plantilla" icon="pi pi-download" [style]="{'white-space': 'nowrap'}"
+            (click)="openTemplateModal()">
+          </p-button>
+
+          <p-button label="Configuración" icon="pi pi-cog" [style]="{'white-space': 'nowrap'}"
+            (click)="openConfigModal()">
+          </p-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16 gap-12 items-center">
+      <div class="w-full sm:w-[30rem]">
+        <p-iconfield iconPosition="left">
+          <p-inputicon>
+            <i class="pi pi-search text-gray-500"></i>
+          </p-inputicon>
+          <input pInputText type="text" placeholder="Buscar terceros..."
+            class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+            [(ngModel)]="globalFilterValue" (input)="applyGlobalFilter($event)">
+        </p-iconfield>
+      </div>
+
+      <p-button [label]="showDetailView ? 'Vista resumida' : 'Vista completa'" icon="pi pi-eye" severity="secondary"
+        (click)="toggleDetailView()">
+      </p-button>
+    </div>
+
+
+    <!-- Data Table -->
+    <p-table #dt [value]="thirds" [loading]="loading" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
+      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      [globalFilterFields]="['names', 'lastNames', 'socialReason', 'idNumber', 'email', 'typeId.typeId']"
+      styleClass="p-datatable-gridlines" [responsiveLayout]="'scroll'">
+
+      <!-- Table Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Tipo Persona</th>
+          <th>Tipo(s) Tercero</th>
+          <th>Nombre/Razón Social</th>
+          <th>Tipo ID</th>
+          <th>Número de Documento</th>
+          <th *ngIf="showDetailView">Dígito de Verificación</th>
+          <th>Correo</th>
+          <th *ngIf="showDetailView">País</th>
+          <th *ngIf="showDetailView">Departamento</th>
+          <th *ngIf="showDetailView">Ciudad</th>
+          <th *ngIf="showDetailView">Dirección</th>
+          <th *ngIf="showDetailView">Teléfono</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+
+      <!-- Table Body -->
+      <ng-template pTemplate="body" let-third>
+        <tr>
+          <!-- Tipo Persona -->
+          <td>
+            <span>{{ third.personType }}</span>
+          </td>
+
+          <!-- Tipos de Tercero -->
+          <td>
+            <span class="text-sm">
+              {{ showDetailView ? getThirdTypesText(third.thirdTypes) : (third.thirdTypes[0]?.thirdTypeName || 'N/A') }}
+            </span>
+          </td>
+
+          <!-- Nombre/Razón Social -->
+          <td>
+            <span class="font-semibold">{{ getDisplayName(third) }}</span>
+          </td>
+
+          <!-- Tipo ID -->
+          <td>{{ third.typeId.typeId }}</td>
+
+          <!-- Número de Documento -->
+          <td>{{ third.idNumber }}</td>
+
+          <!-- Dígito de Verificación (solo vista detallada) -->
+          <td *ngIf="showDetailView">
+            {{ third.verificationNumber || 'NO APLICA' }}
+          </td>
+
+          <!-- Correo -->
+          <td>
+            <span>{{ third.email }}</span>
+          </td>
+
+          <!-- Información geográfica (solo vista detallada) -->
+          <td *ngIf="showDetailView">{{ third.country?.countryName || 'N/A' }}</td>
+          <td *ngIf="showDetailView">{{ third.province?.stateName || 'N/A' }}</td>
+          <td *ngIf="showDetailView">{{ third.city?.cityName || 'N/A' }}</td>
+          <td *ngIf="showDetailView">{{ third.address }}</td>
+          <td *ngIf="showDetailView">{{ third.phoneNumber }}</td>
+
+          <!-- Estado -->
+          <td>
+            <p-tag [value]="getStateText(third.state)" [severity]="getStateSeverity(third.state)">
+            </p-tag>
+          </td>
+
+          <!-- Acciones -->
+          <td>
+            <div class="flex justify-center gap-2 items-center">
+              <!-- Botón Ver (solo vista resumida) -->
+              <p-button *ngIf="!showDetailView" icon="pi pi-eye" pTooltip="Ver detalles" tooltipPosition="top" 
+                (click)="openDetailsModal(third)" styleClass="p-button-rounded p-button-text text-primary">
+              </p-button>
+
+              <!-- Botón Editar -->
+              <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" 
+                (click)="navigateToEdit(third.thId)" styleClass="p-button-rounded p-button-text text-complementary-green">
+              </p-button>
+
+              <!-- Botón Eliminar -->
+              <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" 
+                (click)="confirmDelete(third)" styleClass="p-button-rounded p-button-text text-tertiary">
+              </p-button>
+
+              <!-- Toggle Cambiar Estado -->
+              <p-toggleswitch 
+                [(ngModel)]="third.state" 
+                (onChange)="changeThirdState(third)"
+                [pTooltip]="third.state ? 'Activo' : 'Inactivo'" 
+                tooltipPosition="top"
+                [style]="{'transform': 'scale(0.8)'}">
+              </p-toggleswitch>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty State -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="showDetailView ? 14 : 8" class="text-center py-6 font-family-sans text-neutral-50">No se
+            encontraron terceros.</td>
+        </tr>
+      </ng-template>
+
+      <!-- Loading State -->
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td [attr.colspan]="showDetailView ? 14 : 8" class="text-center py-8">
+            <div class="flex flex-col items-center gap-3">
+              <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
+              <p class="text-gray-500">Cargando terceros...</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Componente de importación de terceros -->
+<app-third-template [visible]="showTemplateModal" [inputData]="{ title: 'Plantilla de Importación de Terceros' }"
+  (close)="closeTemplateModal()">
+</app-third-template>
+
+<!-- Componente de exportación de terceros -->
+<app-third-export [visible]="showExportModal" (close)="closeExportModal()">
+</app-third-export>
+
+
+<!-- Componente de detalles de terceros -->
+<app-third-details [visible]="showDetailsModal" [inputData]="detailsModalData" (close)="closeDetailsModal()">
+</app-third-details>
+
+<!-- Modal de Errores de Importación -->
+<p-dialog header="Errores de Importación" [modal]="true" [(visible)]="showErrorModal"
+  [style]="{ width: '90rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"
+  (onHide)="closeErrorModal()">
+
+  <div class="bg-notification-error-container border-l-4 border-notification-error-border p-4 mb-4 font-family-sans">
+    <p class="font-bold mb-2 text-notification-error-title">Se encontraron errores en la importación</p>
+    <p class="text-sm text-notification-error-text mb-3">No se pudieron importar algunos terceros debido a los siguientes errores presentados en la tabla.</p>
+    
+    <p class="font-bold mb-1 text-notification-error-title">Resumen:</p>
+    <p class="text-sm text-notification-error-text m-0">Total procesados: {{ totalRecordsImported }}</p>
+    <p class="text-sm text-notification-error-text m-0">Exitosos: {{ successfulImports }}</p>
+    <p class="text-sm text-notification-error-text m-0">Fallidos: {{ failedImportsCount }}</p>
+    <p class="text-sm text-notification-error-text m-0">Duplicados omitidos: {{ duplicatesOmitted }}</p>
+  </div>
+
+  <div class="bg-notification-info-container border border-notification-info-border rounded-lg p-4 mb-4 font-family-sans">
+    <h4 class="font-bold text-base text-notification-info-title mb-3">Información:</h4>
+    <ul class="list-disc pl-6 text-sm text-notification-info-text">
+      <li class="mb-1">El sistema ingresó todos los registros correctos y solo muestra los que presentaron errores.</li>
+      <li class="mb-1">Los registros duplicados (tanto en el sistema como en el archivo Excel) serán omitidos automáticamente.</li>
+      <li class="mb-1">Cada fila de error indica el número de fila del Excel, la columna, el campo afectado y el error específico.</li>
+      <li>Corrija los errores en su archivo Excel según las indicaciones y vuelva a importar.</li>
+    </ul>
+  </div>
+
+  <p-table [value]="importErrors" [paginator]="true" [rows]="10" [totalRecords]="totalErrors"
+    [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} errores"
+    styleClass="p-datatable-sm" [tableStyle]="{'min-width': '70rem'}">
+    
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="w-[8%]">Fila</th>
+        <th class="w-[10%]">Columna</th>
+        <th class="w-[18%]">Campo</th>
+        <th class="w-[18%]">Valor</th>
+        <th class="w-[46%]">Error</th>
+      </tr>
+    </ng-template>
+    
+    <ng-template pTemplate="body" let-error>
+      <tr>
+        <td class="font-family-sans text-sm">{{ error.rowNumber }}</td>
+        <td class="font-family-sans text-sm">{{ getExcelColumnLetter(error.columnNumber) }}</td>
+        <td class="font-family-sans text-sm font-semibold">{{ error.columnName }}</td>
+        <td class="font-family-sans text-sm text-neutral-50">{{ error.fieldValue || '(vacío)' }}</td>
+        <td class="font-family-sans text-sm text-error">{{ error.errorMessage }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-center gap-3">
+      <p-button 
+        label="Exportar Errores" 
+        icon="pi pi-download" 
+        styleClass="p-button-success" 
+        (click)="exportImportErrors()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -10,7 +10,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { CashReceiptService } from '../../Service/cash-receipt.service';
-import { DropdownOption, ReceiptView } from '../../Model/Models';
+import { DropdownOption } from '../../Model';
+import { ReceiptView } from '../../Model/view';
 
 @Component({
   selector: 'app-receipts-list',
@@ -59,7 +60,7 @@ export class ReceiptsListComponent {
 
   initializeForm(): void {
     this.filterForm = this.fb.group({
-      client: [''], // El valor será un string simple
+      client: [''], 
       startDate: [null],
       endDate: [null],
       status: [null]
@@ -75,7 +76,10 @@ export class ReceiptsListComponent {
     });
   }
 
-  // Método para el evento (completeMethod) del AutoComplete
+  /**
+   * Método para buscar clientes en el AutoComplete
+   * @param event Evento del AutoComplete
+   */
   searchClient(event: any): void {
     const query = event.query.toLowerCase();
     this.clientSuggestions = this.allClients.filter(client =>
@@ -83,9 +87,11 @@ export class ReceiptsListComponent {
     );
   }
 
+  /**
+   * Método para aplicar los filtros al listado de recibos
+   * Utiliza el valor del AutoComplete directamente.
+   */
   applyFilters(): void {
-    // La lógica de applyFilters sigue siendo la misma y funciona perfectamente
-    // con el string que provee el AutoComplete.
     const filters = this.filterForm.value;
     let results = [...this.allReceipts];
 

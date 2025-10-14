@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Component, OnDestroy } from '@angular/core';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -15,6 +15,10 @@ import { CostCentersFormComponent } from '../cost-centers-form/cost-centers-form
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { PaginatorModule } from 'primeng/paginator';
+import { SliderModule } from 'primeng/slider';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 @Component({
   selector: 'app-cost-centers-list',
@@ -32,20 +36,29 @@ import { TooltipModule } from 'primeng/tooltip';
     CostCentersFormComponent,
     ToggleSwitchModule,
     TagModule,
-    TooltipModule
+    TooltipModule,
+    PaginatorModule,
+    SliderModule,
+    RadioButtonModule
   ],
   templateUrl: './cost-centers-list.component.html',
   styleUrl: './cost-centers-list.component.css',
   providers: [MessageService, ConfirmationService]
 })
-export class CostCentersListComponent {
+export class CostCentersListComponent implements OnDestroy {
   filterAccount: string = '';
 
   // Data
   listCenters: CostCenterNode[] = [];
   listCentersAux: CostCenterNode[] = [];
+  allCenters: CostCenterNode[] = []; // Lista completa de la página actual
   selected?: CostCenterNode;
   selectedPath: CostCenterNode[] = [];
+
+  // Pagination
+  first: number = 0;
+  rows: number = 10;
+  totalRecords: number = 0;
 
   // UI State
   showPrincipalForm = false;
@@ -54,6 +67,18 @@ export class CostCentersListComponent {
   addChild = false;
   currentLevel: 'costo' | 'subcosto' | 'auxiliar costo' = 'costo';
   isCreatingRoot = false;
+  isLoading = false;
+  isInitialLoad = true;
+  private sliderTimeout: any;
+
+  // Export filter
+  exportStatusFilter: string | null = null;
+  exportDialogMessage = '¿Qué tipo de centros de costo desea exportar?';
+  exportStatusOptions = [
+    { label: 'Todos', value: null },
+    { label: 'Activos', value: 'active' },
+    { label: 'Inactivos', value: 'inactive' }
+  ];
 
   // Forms
   form: FormGroup;
@@ -64,7 +89,8 @@ export class CostCentersListComponent {
     private fb: FormBuilder,
     private service: CostCenterService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private localStorageMethods: LocalStorageMethods
   ) {
     this.form = this.fb.group({
       codeSegment: [''],
@@ -76,6 +102,13 @@ export class CostCentersListComponent {
     this.loadTree();
   }
 
+  ngOnDestroy(): void {
+    // Limpiar timeout para evitar memory leaks
+    if (this.sliderTimeout) {
+      clearTimeout(this.sliderTimeout);
+    }
+  }
+
   private getIdEnterprise(): string {
     const entData = localStorage.getItem('entData');
     if (entData) {
@@ -85,8 +118,19 @@ export class CostCentersListComponent {
   }
 
   private loadTree(expandCode?: string, selectCodeAfter?: string) {
-    this.service.findAll(this.getIdEnterprise()).subscribe({
+    // Evitar múltiples llamadas simultáneas
+    if (this.isLoading) {
+      return;
+    }
+    
+    this.isLoading = true;
+    // Calcular la página actual basada en el número de familias, no elementos individuales
+    const currentPage = Math.floor(this.first / this.rows);
+    
+    this.service.findAll(this.getIdEnterprise(), currentPage, this.rows, this.filterAccount).subscribe({
       next: (page) => {
+        this.totalRecords = page.totalElements;
+        
         const list = page.content || [];
         const nodes = list.map(cc => ({
           ...cc,
@@ -95,8 +139,10 @@ export class CostCentersListComponent {
           showChildren: false,
           status: cc.status ?? true // Default a true si no está definido
         } as CostCenterNode));
-        this.listCenters = this.buildHierarchy(nodes);
-        this.listCentersAux = this.listCenters;
+        
+        this.allCenters = this.buildHierarchy(nodes);
+        this.listCenters = this.allCenters;
+        this.listCentersAux = this.allCenters;
 
         if (expandCode) {
           this.expandByCode(expandCode);
@@ -107,11 +153,17 @@ export class CostCentersListComponent {
             this.select(found);
           }
         }
+        
+        this.isLoading = false;
+        this.isInitialLoad = false;
       },
       error: (err) => {
         console.error('No se pudo cargar Centros de Costo:', err);
         this.listCenters = [];
+        this.allCenters = [];
         this.listCentersAux = [];
+        this.totalRecords = 0;
+        this.isLoading = false;
       }
     });
   }
@@ -178,25 +230,45 @@ export class CostCentersListComponent {
   }
 
   onFilterChange() {
-    const term = (this.filterAccount || '').toLowerCase().trim();
-    if (!term) {
-      this.listCentersAux = this.listCenters;
-      return;
+    // Resetear a la primera página cuando se busca
+    this.first = 0;
+    this.isInitialLoad = true;
+    // Recargar datos con el nuevo término de búsqueda
+    this.loadTree();
+  }
+
+  /**
+   * Actualiza los datos 
+   */
+  updatePaginatedData() {
+    this.loadTree();
+  }
+
+  /**
+   * Maneja el cambio en el slider de elementos por página con debounce
+   */
+  onSliderChange() {
+    // Cancelar timeout anterior si existe
+    if (this.sliderTimeout) {
+      clearTimeout(this.sliderTimeout);
     }
-    const filterRecursive = (nodes: CostCenterNode[]): CostCenterNode[] => {
-      const result: CostCenterNode[] = [];
-      for (const n of nodes) {
-        const children = n.children ? filterRecursive(n.children) : [];
-        const matches = n.code.toLowerCase().includes(term) || n.name.toLowerCase().includes(term);
-        if (matches || children.length) {
-          const copy: CostCenterNode = { ...n, children };
-          copy.showChildren = children.length > 0;
-          result.push(copy);
-        }
-      }
-      return result;
-    };
-    this.listCentersAux = filterRecursive(this.listCenters);
+    
+    // Aplicar debounce de 300ms para evitar múltiples llamadas
+    this.sliderTimeout = setTimeout(() => {
+      this.first = 0; // Resetear a la primera página
+      this.loadTree(); // Cargar con el nuevo tamaño
+    }, 300);
+  }
+
+
+
+  /**
+   * Maneja el cambio de página del paginador
+   */
+  onPageChange(event: any) {
+    this.first = event.first;
+    this.rows = event.rows;
+    this.loadTree();
   }
 
   updateSelected() {
@@ -307,6 +379,10 @@ export class CostCentersListComponent {
 
     this.service.changeState(costCenter.id, enterpriseId, newStatus).subscribe({
       next: () => {
+        // Si se está activando, activar también todos los padres
+        if (newStatus) {
+          this.updateParentStatusRecursively(costCenter, true);
+        }
         // Actualizar recursivamente el estado de todos los hijos en la UI
         this.updateChildrenStatusRecursively(costCenter, newStatus);
         this.messageService.add({
@@ -341,6 +417,46 @@ export class CostCentersListComponent {
         this.updateChildrenStatusRecursively(child, status);
       }
     }
+  }
+
+  /**
+   * Actualiza recursivamente el estado de todos los centros de costo padres
+   * @param child Centro de costo hijo
+   * @param status Nuevo estado a aplicar (debe ser true para activar padres)
+   */
+  private updateParentStatusRecursively(child: CostCenterNode, status: boolean): void {
+    if (!child.parentId) {
+      return;
+    }
+    
+    // Buscar el padre en la jerarquía
+    const parent = this.findNodeById(child.parentId, this.listCenters);
+    if (parent && !parent.status) {
+      parent.status = status;
+      // Actualizar recursivamente los padres de este padre
+      this.updateParentStatusRecursively(parent, status);
+    }
+  }
+
+  /**
+   * Busca un nodo por ID en la jerarquía
+   * @param id ID del nodo a buscar
+   * @param nodes Lista de nodos donde buscar
+   * @returns El nodo encontrado o undefined
+   */
+  private findNodeById(id: number, nodes: CostCenterNode[]): CostCenterNode | undefined {
+    for (const node of nodes) {
+      if (node.id === id) {
+        return node;
+      }
+      if (node.children && node.children.length > 0) {
+        const found = this.findNodeById(id, node.children);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return undefined;
   }
 
   cancelChild() {
@@ -552,5 +668,91 @@ export class CostCentersListComponent {
     if (allowed.includes(event.key)) return;
     const pattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d10-9,.()\/\-+&%]$/;
     if (!pattern.test(event.key)) event.preventDefault();
+  }
+
+  showExportConfirmDialog() {
+    this.exportStatusFilter = null; // "Todos" por defecto
+    
+    this.confirmationService.confirm({
+      key: 'exportDialog',
+      header: 'Exportar',
+      acceptLabel: 'Aceptar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-success',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        const status = this.exportStatusFilter === 'active' ? true : this.exportStatusFilter === 'inactive' ? false : undefined;
+        this.exportCostCenters(status);
+      }
+    });
+  }
+
+  private exportCostCenters(status?: boolean) {
+    const entData = this.localStorageMethods.loadEnterpriseData();
+    const enterpriseId = entData?.id || this.getIdEnterprise();
+    const companyName = entData?.name || '';
+
+    this.service.exportToExcel(enterpriseId, companyName, status).subscribe({
+      next: (response) => {
+        if (!response.body) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Exportación',
+            detail: 'No se recibió el archivo del servidor'
+          });
+          return;
+        }
+        this.downloadFile(response);
+        const statusText = status === true ? 'activos' : status === false ? 'inactivos' : 'todos';
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Exportación Exitosa',
+          detail: `Se han exportado los centros de costo ${statusText} correctamente`
+        });
+      },
+      error: (err) => {
+        // Cuando la respuesta es un blob, el error también puede ser un blob que necesita ser leído
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const errorData = JSON.parse(reader.result as string);
+            const errorMessage = errorData.message || 'No se pudo exportar los centros de costo.';
+            this.messageService.add({ severity: 'error', summary: 'Error de Exportación', detail: errorMessage });
+          } catch (e) {
+            this.messageService.add({ severity: 'error', summary: 'Error de Exportación', detail: 'Ocurrió un error inesperado.' });
+          }
+        };
+        reader.onerror = () => {
+          this.messageService.add({ severity: 'error', summary: 'Error de Exportación', detail: 'No se pudo leer el mensaje de error.' });
+        };
+        reader.readAsText(err.error);
+      }
+    });
+  }
+
+  /**
+   * Procesa la respuesta HTTP para descargar el archivo.
+   * @param response La respuesta HTTP que contiene el blob y las cabeceras.
+   */
+  private downloadFile(response: any): void {
+    const blob = response.body;
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'centros_costo.xlsx'; // Nombre por defecto
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   }
 }

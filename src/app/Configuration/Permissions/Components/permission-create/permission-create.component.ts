@@ -50,7 +50,9 @@ export class PermissionCreateComponent implements OnInit {
   private readonly MODULES = [
     'Unidad de Medida',
     'Empresa',
-    // Agrega más módulos aquí si los tienes: 'Usuarios', 'Roles', 'Permisos', ...
+    'Tipo de Producto',
+    'Categoria',
+    'Producto',
   ];
 
   constructor() {

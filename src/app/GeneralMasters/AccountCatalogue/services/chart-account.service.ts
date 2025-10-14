@@ -5,7 +5,7 @@ import { NatureType } from '../models/NatureType';
 import { FinancialStateType } from '../models/FinancialStateType';
 import { ClasificationType } from '../models/ClasificationType';
 import { Observable, map, catchError, of } from 'rxjs';
-import { Account, AccountCatalogueListRes, ItemAccountCatalogueSearchRes, AccountCatalogueCreateRes, AccountCatalogueUpdateRes } from '../models/ChartAccount';
+import { Account, AccountCatalogueListRes, ItemAccountCatalogueSearchRes, AccountCatalogueCreateRes, AccountCatalogueUpdateRes, AuxiliaryAccountsApiResponse } from '../models/ChartAccount';
 
 
 let API_URL = environment.API_URL + 'accountCatalogue/';
@@ -82,6 +82,23 @@ export class ChartAccountService {
   }
 
   /**
+   * Obtiene una lista de cuentas auxiliares para un ID de entidad dado.
+   * @param entId - El ID de la entidad para la cual se desean obtener las cuentas auxiliares.
+   * @returns Un observable que emite un array de cuentas auxiliares.
+   */
+  getListAuxiliaryAccounts(entId: string): Observable<Account[]> {
+    return this.http.get<AuxiliaryAccountsApiResponse>(this.apiURL + 'auxiliary/' + entId).pipe(
+      map(response => {
+        if (response && Array.isArray(response.auxiliaryAccounts)) {
+          return this.convertAccountCatalogueListResToAccount(response.auxiliaryAccounts, entId);
+        }
+        console.warn('La respuesta de cuentas auxiliares no tiene el formato esperado. Se recibió:', response);
+        return [];
+      })
+    );
+  }
+
+  /**
    * Convierte la respuesta del backend AccountCatalogueListRes[] a Account[]
    * 
    * @param accountList - Lista de cuentas del backend
@@ -114,19 +131,35 @@ export class ChartAccountService {
       classification: item.classification,
       parent: item.parent,
       children: item.children ? item.children.map(child => this.mapAccountCatalogueToAccount(child, entId)) : [],
-      showSubAccounts: false
+      showSubAccounts: false,
+      crossing: item.crossing,
+      costCenter: item.costCenter,
+      status: item.status ?? true // Default a true si no está definido
     };
   }
 
   /**
      * Elimina una cuenta por su ID y empresa.
-     * 
+     *
      * @param id - El ID de la cuenta a eliminar.
      * @param idEnterprise - El ID de la empresa.
      * @returns Un observable que indica si la eliminación fue exitosa.
      */
   deleteAccount(id: string, idEnterprise: string): Observable<void> {
     return this.http.delete<void>(`${this.apiURL}${id}/${idEnterprise}`);
+  }
+
+  /**
+   * Cambia el estado de una cuenta.
+   *
+   * @param id - El ID de la cuenta.
+   * @param idEnterprise - El ID de la empresa.
+   * @param status - El nuevo estado de la cuenta.
+   * @returns Un observable que indica si el cambio fue exitoso.
+   */
+  changeState(id: number, idEnterprise: string, status: boolean): Observable<any> {
+    const url = `${this.apiURL}changeState/${id}/${idEnterprise}?status=${status}`;
+    return this.http.patch<any>(url, {});
   }
 
   /**
@@ -158,7 +191,10 @@ export class ChartAccountService {
       classification: item.classification,
       parent: item.parent,
       children: [],
-      showSubAccounts: false
+      showSubAccounts: false,
+      crossing: item.crossing,
+      costCenter: item.costCenter,
+      status: item.status ?? true // Default a true si no está definido
     };
   }
 
@@ -193,7 +229,10 @@ export class ChartAccountService {
       classification: item.classification,
       parent: item.parent,
       children: [],
-      showSubAccounts: false
+      showSubAccounts: false,
+      crossing: item.crossing,
+      costCenter: item.costCenter,
+      status: item.status ?? true // Default a true si no está definido
     };
   }
 
@@ -289,5 +328,19 @@ export class ChartAccountService {
    */
   getFinancialStateType(): FinancialStateType[] {
     return this.listFinancialState;
+  }
+
+  /**
+   * Descarga la plantilla de catálogo de cuentas.
+   * 
+   * @returns Un observable con el blob de la plantilla para descarga.
+   */
+  downloadTemplate(): Observable<Blob> {
+    return this.http.get(`${this.apiURL}template`, { 
+      responseType: 'blob',
+      headers: new HttpHeaders({
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+    });
   }
 }

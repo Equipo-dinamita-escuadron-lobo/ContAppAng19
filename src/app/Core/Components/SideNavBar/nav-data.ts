@@ -132,20 +132,25 @@ export const navbarData: INavbarData[] = [
         ],
       },
       {
-        routeLink: 'TO DO',
+        routeLink: 'financial/treasury',
         icon: 'money_bag',
         label: 'Tesorería',
         items: [
           {
-            routeLink: 'TO DO',
-            icon: 'receipt_long',
-            label: 'Comprobantes de Egreso',
+            routeLink: 'financial/treasury/purchase-bills',
+            icon: 'description',
+            label: 'Facturas de Compra',
           },
-          {
-            routeLink: 'TO DO',
-            icon: 'analytics',
-            label: 'Reportes',
-          },
+            {
+              routeLink: 'financial/treasury/expense-receipts',
+              icon: 'receipt_long',
+              label: 'Comprobantes de Egreso',
+            },
+            {
+              routeLink: 'financial/treasury/reports/vendors',
+              icon: 'analytics',
+              label: 'Reportes de Proveedores',
+            },
         ],
       },
       {
@@ -159,10 +164,21 @@ export const navbarData: INavbarData[] = [
             label: 'Recibos de Caja',
           },
           {
+            routeLink: '/financial/wallet/accounting-entries',
+            icon: 'description',
+            label: 'Asientos Contables',
+          },
+          {
+            routeLink: '/financial/wallet/write-offs',
+            icon: 'gavel',
+            label: 'Castigos de cartera',
+          },
+          {
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',
           },
+          
         ],
       },
     ],
@@ -188,7 +204,7 @@ export const navbarData: INavbarData[] = [
                  label: 'Inventario con Promedio Ponderado',
                },
                {
-                 routeLink: 'TO DO',
+                routeLink: '/commercial/business-masters/peps',
                  icon: '',
                  label: 'Inventario PEPS',
                },

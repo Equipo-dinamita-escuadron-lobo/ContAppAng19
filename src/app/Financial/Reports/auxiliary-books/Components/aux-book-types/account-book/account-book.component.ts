@@ -18,7 +18,7 @@ import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
 
 // Services
-import { ThirdPartyServiceService } from '../../../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
+import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
@@ -28,6 +28,16 @@ import { CostCenterService } from '../../../../../../GeneralMasters/CostCenters/
 import { CostCenter } from '../../../../../../GeneralMasters/CostCenters/models/cost-center.model';
 import { Page } from '../../../../../../GeneralMasters/AccountingCalendar/types/calendar.types';
 import { DialogService } from 'primeng/dynamicdialog';
+import { AccountingCalendarService } from '../../../../../../GeneralMasters/AccountingCalendar/services/accounting-calendar.service';
+
+// Interface para respuestas paginadas
+interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
 
 @Component({
   selector: 'app-account-book',
@@ -75,7 +85,7 @@ export class AccountBookComponent extends BaseAuxiliaryBookComponent {
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
     enterpriseService: EnterpriseService,
-    thirdService: ThirdPartyServiceService,
+    thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,

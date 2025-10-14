@@ -10,4 +10,5 @@ export interface Facture2 {
   totalPay: string;
   pendingValue: string;
   expirationDate: string;
+  accountingAccount: number;
 }

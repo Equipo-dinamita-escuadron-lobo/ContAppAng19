@@ -223,6 +223,16 @@ body {
   --spacing: 1px;
 }
 
+/* ================================
+   ESTILOS PARA LABELS REQUERIDOS
+   ================================ */
+
+/* Estilo para asteriscos requeridos en labels */
+.label-required::after {
+  content: ' *';
+  color: var(--color-error);
+}
+
 /* Botón principal */
 .p-button {
   background-color: var(--color-button-primary) !important;
@@ -651,6 +661,63 @@ body {
 }
 
 /* ================================
+   ESTILOS PARA P-PAGINATOR
+   ================================ */
+
+.p-paginator {
+  background-color: transparent;
+  border: none;
+  padding: 1rem 0;
+}
+
+.p-paginator .p-paginator-current {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin: 0 1rem;
+}
+
+/* Mejorar espaciado entre elementos del paginador */
+.p-paginator .p-paginator-element {
+  margin: 0 0.25rem;
+}
+
+/* ================================
+   ESTILOS PARA P-SLIDER
+   ================================ */
+
+/* 🎚️ Slider para elementos por página */
+.p-slider {
+  background-color: var(--color-neutral-90);
+  border-radius: 0.375rem;
+  height: 0.5rem;
+}
+
+.p-slider .p-slider-handle {
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.p-slider .p-slider-handle:hover {
+  background-color: var(--color-light);
+  border-color: var(--color-light);
+  transform: scale(1.1);
+}
+
+.p-slider .p-slider-range {
+  background-color: var(--color-primary);
+  border-radius: 0.375rem;
+}
+
+.p-slider:hover .p-slider-range {
+  background-color: var(--color-light);
+}
+
+/* ================================
    ESTILOS PARA P-TOGGLESWITCH
    ================================ */
 
@@ -659,6 +726,64 @@ body {
   --p-toggleswitch-checked-hover-background: var(--color-complementary-green) !important;
   --p-toggleswitch-handle-background: var(--color-primary-100) !important;
   --p-toggleswitch-handle-checked-background: var(--color-primary-100) !important;
+}
+
+/* ================================
+   ESTILOS PARA P-CHECKBOX
+   ================================ */
+
+/* Contenedor del checkbox */
+.p-checkbox {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+/* Caja del checkbox */
+.p-checkbox .p-checkbox-box {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border: 1px solid var(--color-neutral-60) !important;
+  border-radius: 0.25rem !important;
+  background-color: var(--color-primary-100) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Caja del checkbox en hover */
+.p-checkbox:not(.p-disabled):hover .p-checkbox-box {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-95) !important;
+}
+
+/* Caja del checkbox cuando está checked */
+.p-checkbox.p-checkbox-checked .p-checkbox-box {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Caja del checkbox cuando está checked en hover */
+.p-checkbox.p-checkbox-checked:not(.p-disabled):hover .p-checkbox-box {
+  background-color: var(--color-light) !important;
+  border-color: var(--color-light) !important;
+}
+
+/* Ícono del checkbox (checkmark) */
+.p-checkbox .p-checkbox-box .p-checkbox-icon {
+  color: var(--color-primary-100) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+}
+
+/* Checkbox en estado focus */
+.p-checkbox:not(.p-disabled) .p-checkbox-box.p-focus {
+  outline: 2px solid var(--color-primary-90) !important;
+  outline-offset: 2px !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Checkbox deshabilitado */
+.p-checkbox.p-disabled .p-checkbox-box {
+  background-color: var(--color-neutral-95) !important;
+  border-color: var(--color-neutral-80) !important;
 }
 
 /* ================================
@@ -796,4 +921,61 @@ body {
 .p-confirm-dialog .p-button.p-button-secondary:active {
   transform: translateY(0) !important;
   box-shadow: none !important;
+}
+
+/* ================================
+   ESTILOS PARA P-TABS
+   ================================ */
+
+/* Fuente y estilo base */
+.p-tabs {
+  font-family: var(--font-family-sans) !important;
+}
+
+/* Color base de las pestañas inactivas */
+.p-tabs .p-tablist .p-tab {
+  color: var(--color-neutral-40) !important;
+  font-weight: 600 !important;
+}
+
+/* Hover para pestañas inactivas */
+.p-tabs .p-tablist .p-tab:not([aria-selected="true"]):hover {
+  color: var(--color-light) !important;
+}
+
+/* Pestaña activa: texto e icono en color primario */
+.p-tabs .p-tablist .p-tab[aria-selected="true"] {
+  color: var(--color-primary) !important;
+}
+
+.p-tabs .p-tablist .p-tab[aria-selected="false"] .pi {
+  color: var(--color-primary) !important;
+}
+
+/* Active bar (inkbar) del tablist: forzar color primario */
+.p-tabs .p-tablist-active-bar {
+  background: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+}
+
+/* Pseudo-elementos de transición: evitar color predeterminado durante animación */
+.p-tabs .p-tablist-active-bar::before,
+.p-tabs .p-tablist-active-bar::after {
+  background: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+}
+
+/* Forzar color primario en todos los estados de transición */
+.p-tabs .p-tablist .p-tab::before,
+.p-tabs .p-tablist .p-tab::after {
+  background: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Design tokens para controlar colores de transición */
+.p-tabs {
+  --p-tabs-active-bar-background: var(--color-primary) !important;
+  --p-tabs-tab-active-indicator-background: var(--color-primary) !important;
+  --p-tabs-tab-active-border-color: var(--color-primary) !important;
 }

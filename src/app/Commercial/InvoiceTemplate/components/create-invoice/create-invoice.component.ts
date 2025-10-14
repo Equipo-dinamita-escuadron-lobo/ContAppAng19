@@ -11,12 +11,12 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
 import { Facture2 } from '../../models/Facture2';
-import { Product2 } from '../../models/Product2';
+import { Product2, ProductList2 } from '../../models/Product2';
 import { SteletonService } from '../../services/steleton.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ProductResponse } from '../../../BusinessMasters/ValuationModels/WeightedAverage/models/ProductResponse';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ProductService } from '../../../BusinessMasters/ValuationModels/WeightedAverage/services/product.service';
+
 
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
@@ -57,9 +57,9 @@ export class CreateInvoiceComponent implements OnInit {
   productId: number = 0;
   totalRecords = 0;
   first = 0;
-  allProducts: ProductResponse[] = [];
-  filteredProducts: ProductResponse[] = [];
-  selectedProduct: ProductResponse | undefined;
+  allProducts: ProductList2[] = [];
+  filteredProducts: ProductList2[] = [];
+  selectedProduct: ProductList2 | undefined;
 
   invoiceTypes: InvoiceType[] = [
     { label: 'Factura de Compra', value: 'purchase' },
@@ -71,7 +71,7 @@ export class CreateInvoiceComponent implements OnInit {
     private formBuilder: FormBuilder,
     private messageService: MessageService,
     private steletonService: SteletonService,
-    private productService: ProductService
+
   ) {
     this.invoiceForm = this.createInvoiceForm();
   }
@@ -86,17 +86,21 @@ export class CreateInvoiceComponent implements OnInit {
       this.calculatePendingValue();
     });
 
-    this.productService.getAllProducts().subscribe(response => {
-      this.allProducts = response.data;
+    this.steletonService.getAllProductsByEnterpriseId().subscribe(response => {
+      this.allProducts = response;
     });
+
   }
 
   private createInvoiceForm(): FormGroup {
+    const randomFactCode = Math.floor(Math.random() * 10000) + 1;
+
     return this.formBuilder.group({
       invoiceType: ['', Validators.required],
-      factCode: ['', Validators.required],
+      factCode: [{ value: randomFactCode, disabled: true }, Validators.required],
       thId: ['', Validators.required],
       expirationDate: ['', Validators.required],
+      accountingAccount: ['', Validators.required],
       factProducts: this.formBuilder.array([this.createProductForm()]),
       totalValue: [{ value: '', disabled: true }],
       totalPay: ['', Validators.required],
@@ -222,13 +226,14 @@ export class CreateInvoiceComponent implements OnInit {
         totalValue: formValue.totalValue.toString(),
         totalPay: formValue.totalPay.toString(),
         pendingValue: formValue.pendingValue.toString(),
-        expirationDate: expirationDate
+        expirationDate: expirationDate,
+        accountingAccount: formValue.accountingAccount
       };
 
       // Llamar al servicio correspondiente según el tipo de factura
       const serviceCall = formValue.invoiceType === 'purchase'
         ? this.steletonService.createPurchaseSkeleton(factureData)
-        : this.steletonService.createSaleSkeleton(factureData);
+        : this.steletonService.createSaleForReceiptSkeleton(factureData);
 
       serviceCall.subscribe({
         next: (response) => {
@@ -239,9 +244,8 @@ export class CreateInvoiceComponent implements OnInit {
             life: 3000
           });
 
-          setTimeout(() => {
-            this.goBack();
-          }, 1500);
+          // Limpiar el formulario después de guardar exitosamente
+          this.clearForm();
         },
         error: (error) => {
           console.error('Error al crear factura', error);
@@ -278,6 +282,26 @@ export class CreateInvoiceComponent implements OnInit {
   }
 
   /**
+   * Limpia el formulario y resetea las variables relacionadas
+   */
+  clearForm(): void {
+    this.invoiceForm.reset();
+    this.selectedProduct = undefined;
+    this.filteredProducts = [];
+    this.selectedInvoiceType = '';
+
+    // Resetear el formulario con valores por defecto
+    this.invoiceForm = this.createInvoiceForm();
+  }
+
+  /**
+   * Maneja la acción de cancelar
+   */
+  cancelForm(): void {
+    this.clearForm();
+  }
+
+  /**
    * Navega de vuelta a la lista
    */
   goBack(): void {
@@ -305,7 +329,7 @@ export class CreateInvoiceComponent implements OnInit {
 
   onProductSelect(event: ProductResponse) {
     const productForm = this.factProducts.at(this.factProducts.length - 1);
-    productForm.get('productId')?.setValue(event.productId);
+    productForm.get('productId')?.setValue(event.id);
     productForm.get('description')?.setValue(event.name);
   }
 

@@ -45,6 +45,8 @@ export class ClassesOfDocumentsListComponent {
   currentSize: number = 10;
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
+  searchTerm: string = '';
+  searchTimeout: any;
 
   constructor(
     private service: ClassesOfDocumentsServiceService,
@@ -52,9 +54,30 @@ export class ClassesOfDocumentsListComponent {
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
-
   ngOnInit(): void {
-    // La tabla lazy se carga automáticamente con onLazyLoad
+    // Cargar datos iniciales
+    this.loadInitialData();
+  }
+
+  private loadInitialData(): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.service.findAll(enterpriseId, 0, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
+        this.list = page?.content || [];
+        this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
+      },
+      error: (error) => {
+        console.error('Error al cargar datos iniciales:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las clases de documentos. Inténtelo nuevamente.',
+          life: 5000
+        });
+      }
+    });
   }
 
   private getEnterpriseId(): string {
@@ -79,10 +102,11 @@ export class ClassesOfDocumentsListComponent {
       this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
     }
     
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.list = page?.content || [];
-        this.totalRecords = page?.totalElements || 0;
+        // El backend retorna la estructura: { content: [], page: { totalElements, totalPages, ... } }
+        this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
       },
       error: (error) => {
         console.error('Error al cargar clases de documentos:', error);
@@ -100,10 +124,11 @@ export class ClassesOfDocumentsListComponent {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.list = page?.content || [];
-        this.totalRecords = page?.totalElements || 0;
+        // El backend retorna la estructura: { content: [], page: { totalElements, totalPages, ... } }
+        this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
       },
       error: (error) => {
         console.error('Error al recargar clases de documentos:', error);
@@ -111,8 +136,11 @@ export class ClassesOfDocumentsListComponent {
     });
   }
 
-  filterGlobal(event: Event, table: any) {
-    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  onSearchChange(): void {
+    // Resetear a la primera página cuando se busca
+    this.currentPage = 0;
+    // Recargar datos con el nuevo término de búsqueda
+    this.loadInitialData();
   }
 
   goToTypes() {

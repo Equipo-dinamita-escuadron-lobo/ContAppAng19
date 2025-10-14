@@ -22,18 +22,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
 export class DocumentTypesCreationComponent {
   form: FormGroup;
   classesOptions: { label: string; value: number }[] = [];
-  readonly allowedModules: string[] = [
-    'Inventario promedio ponderado',
-    'Inventario PEPS',
-    'Comercial',
-    'Tesorería',
-    'Cartera',
-    'Contable comercial',
-    'Contable cartera',
-    'Libros Auxiliares',
-    'Estados financieros'
-  ];
-  modulesOptions = this.allowedModules.map(m => ({ label: m, value: m }));
+  modulesOptions: { label: string; value: number }[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -46,19 +35,33 @@ export class DocumentTypesCreationComponent {
       prefix: ['', [Validators.required, Validators.maxLength(10), Validators.pattern('^[a-zA-Z0-9]+$')]],
       name: ['', [Validators.required]],
       documentClassId: [null, [Validators.required]],
-      module: [null, [Validators.required]]
+      moduleId: [null, [Validators.required, Validators.min(1), Validators.max(8)]]
     });
   }
 
   ngOnInit(): void {
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
+    
+    this.service.getAllModules().subscribe({
+      next: (modules) => {
+        this.modulesOptions = modules.map(m => ({ label: m.name, value: m.id }));
+      },
+      error: (err) => {
+        this.messageService.add({ 
+          severity: 'error', 
+          summary: 'Error', 
+          detail: 'No se pudieron cargar los módulos disponibles' 
+        });
+      }
+    });
+
     if (enterpriseId) {
-      // Cargar todas las clases activas de una vez para dropdown (usar un size alto pero controlado)
+      // Cargar todas las clases activas de una vez para dropdown
       this.classesService.findAllActive(enterpriseId, 0, 200).subscribe((page: any) => {
         const content = page?.content || page || [];
-        // Solo cargar clases activas (status = true) y no eliminadas (isDeleted = false)
-        const activeClasses = content.filter((c: any) => c.status === true && c.isDeleted !== true);
+        // Solo cargar clases activas (status = true)
+        const activeClasses = content.filter((c: any) => c.status === true);
         this.classesOptions = activeClasses.map((c: any) => ({ label: c.name, value: c.id }));
       });
     }

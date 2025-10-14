@@ -102,10 +102,9 @@ export class PermissionListComponent implements OnInit {
     const modules = [
       'Unidad de Medida',
       'Empresa',
-      'Tipo de Movimiento',
-      'Bodega',
+      'Tipo de Producto',
+      'Categoria',
       'Producto',
-      'Usuarios',
     ];
 
     const match = modules.find((m) =>

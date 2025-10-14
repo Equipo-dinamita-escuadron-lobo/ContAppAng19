@@ -19,8 +19,8 @@ export class PaymentMethodsServiceService {
   private readonly http = inject(HttpClient);
   private readonly apiURL = environment.API_URL + 'accountCatalogue/payment-methods/';
 
-  findAll(enterpriseId: string, page = 0, size = 10): Observable<Page<PaymentMethod>> {
-    const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
+  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'name', sortOrder = 'asc'): Observable<Page<PaymentMethod>> {
+    const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
     return this.http.get<Page<PaymentMethod>>(url);
   }
 

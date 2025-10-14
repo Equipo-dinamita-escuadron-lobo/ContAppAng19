@@ -9,6 +9,7 @@ import { Login } from '../models/login';
 import { UserProfile } from '../models/user-profile';
 import { DecodedToken } from '../models/decoded-token';
 import { Permission } from '../models/permission';
+import { RegisterUser } from '../models/register-user';
 
 const keycloakUrl = environment.keycloak_url;
 const keycloakUrlToken = environment.keycloak_url_token;
@@ -73,7 +74,7 @@ export class AuthService {
         // Este catchError atraparía errores que *no* fueron manejados por el catchError interno
         // de fetchAndSetUser.
         console.error('AuthService Init: Unhandled error during fetch:', err);
-        this.logout(); // Asegura el logout en caso de cualquier error de inicialización
+        this.logout().subscribe(); // Asegura el logout en caso de cualquier error de inicialización
         this.isAuthenticated.set(false);
         this._currentUser.next(null);
         return of(null); // Asegura que el observable complete correctamente
@@ -98,6 +99,36 @@ export class AuthService {
           return of(null);
         })
       );
+  }
+
+  public register(user: RegisterUser): Observable<any> {
+    return this.http.post<any>(`${keycloakUrl}register`, user).pipe(
+      tap((createdUser) => console.log('Usuario registrado exitosamente:', createdUser)),
+      catchError((error) => {
+        console.error('Error en registro:', error);
+        throw error;
+      })
+    );
+  }
+
+  public forgotPassword(email: string): Observable<void> {
+    return this.http.post<void>(`${keycloakUrl}forgot-password`, { email }).pipe(
+      tap(() => console.log('Email de recuperación enviado')),
+      catchError((error) => {
+        console.error('Error enviando email de recuperación:', error);
+        throw error;
+      })
+    );
+  }
+
+  public resetPassword(token: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${keycloakUrl}reset-password`, { token, newPassword }).pipe(
+      tap(() => console.log('Contraseña reseteada exitosamente')),
+      catchError((error) => {
+        console.error('Error reseteando contraseña:', error);
+        throw error;
+      })
+    );
   }
 
   // Obtiene el usuario del backend usando el token actual y actualiza el BehaviorSubject
@@ -152,10 +183,33 @@ export class AuthService {
   }
 
   // Cierra sesión
-  public logout(): void {
-    this.removeToken();
-    this._currentUser.next(null);
-    this.isAuthenticated.set(false);
+  public logout(): Observable<void> {
+    const token = this.getToken();
+    if (!token) {
+      this.removeToken();
+      this._currentUser.next(null);
+      this.isAuthenticated.set(false);
+      return of(void 0);
+    }
+
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.post<void>(`${keycloakUrl}token/logout`, {}, { headers }).pipe(
+      tap(() => {
+        this.removeToken();
+        this._currentUser.next(null);
+        this.isAuthenticated.set(false);
+        this.router.navigate(['/login']);
+      }),
+      catchError((error) => {
+        console.error('Error en logout:', error);
+        // Limpia localmente incluso si falla el backend
+        this.removeToken();
+        this._currentUser.next(null);
+        this.isAuthenticated.set(false);
+        this.router.navigate(['/login']);
+        return of(void 0);
+      })
+    );
   }
 
   // Remueve el token

@@ -18,7 +18,7 @@ import { Third } from '../../../../../../GeneralMasters/ThirdParties/models/Thir
 import { ThirdPartyBookResponse } from '../../../Models/Responses/ThirdPartyBookResponse';
 
 // Services
-import { ThirdPartyServiceService } from '../../../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
+import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
@@ -58,7 +58,7 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
     enterpriseService: EnterpriseService,
-    thirdService: ThirdPartyServiceService,
+    thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,

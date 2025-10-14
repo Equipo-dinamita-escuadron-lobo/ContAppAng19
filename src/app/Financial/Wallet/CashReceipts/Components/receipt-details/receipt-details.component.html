@@ -1,5 +1,8 @@
 <div class="w-full font-sans">
 
+    <p-toast></p-toast>
+    <p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
     @if (errorMessage) {
     <div class="max-w-5xl mx-auto">
         <p-message severity="error" [text]="errorMessage"></p-message>
@@ -47,10 +50,10 @@
                     <div class="w-full md:w-auto md:text-center order-3">
                         <div
                             class="sm:bg-gray-200 p-3 sm:rounded-bl-md  text-sm space-y-1 inline-block text-center px-20">
-                            <p><strong>Código:</strong> <span class="">{{ receipt.receiptCode }}</span></p>
-                            <p><strong>Fecha de elaboración:</strong> <span class="">{{ receipt.issueDate |
+                            <p><strong  class="text-[var(--color-primary)]">Código:</strong> <span class=""> {{ receipt.receiptCode }}</span></p>
+                            <p><strong  class="text-[var(--color-primary)]">Fecha de elaboración:</strong> <span class=""> {{ receipt.issueDate |
                                     date:'dd/MM/yyyy' }}</span></p>
-                            <p><strong>Método de pago:</strong> <span class="">{{ receipt.paymentMethodName }}</span>
+                            <p><strong  class="text-[var(--color-primary)]">Método de pago:</strong> <span class=""> {{ receipt.paymentMethodName }}</span>
                             </p>
                         </div>
                         <div class="mt-2 text-center">
@@ -109,7 +112,7 @@
                                 <tr>
                                     <th class="p-3 text-left">Descripción</th>
                                     <th class="p-3 text-left">Documento Relacionado</th>
-                                    <th class="p-3 text-left">Detalle Adicional</th>
+                                    <th class="p-3 text-left">Cuenta Contable</th>
                                     <th class="p-3 text-right">Valor</th>
                                 </tr>
                             </thead>
@@ -119,8 +122,8 @@
                                 @for (detail of receipt.details; track detail.invoiceId) {
                                 <tr class="hover:bg-gray-50 text-sm">
                                     <td class="p-3">Abono a factura</td>
-                                    <td class="p-3">{{ detail.invoiceCode }}</td>
-                                    <td class="p-3"> </td>
+                                    <td class="p-3">Cod. Factura: {{ detail.invoiceCode }}</td>
+                                    <td class="p-3"> {{detail.accountingAccount}} </td>
                                     <td class="p-3 text-right font-semibold">{{ detail.amountPaid |
                                         currency:'COP':'$':'1.0-0' }}</td>
                                 </tr>
@@ -128,7 +131,9 @@
                                 } @else {
                                 <!-- Caso 2: Ingreso Directo -->
                                 <tr class="hover:bg-gray-50 text-sm">
-                                    <td class="p-3" colspan="3">Ingreso Directo</td>
+                                    <td class="p-3">Ingreso Directo</td>
+                                    <td class="p-3"> No Aplica</td>
+                                    <td class="p-3"> {{receipt.ledgerAccountId}}</td>
                                     <td class="p-3 text-right font-semibold">{{ receipt.totalAmount |
                                         currency:'COP':'$':'1.0-0' }}</td>
                                 </tr>
@@ -141,10 +146,46 @@
 
             <!-- Botones de Acción -->
             <div class="flex justify-center gap-4 p-6 ">
-                <p-button label="Anular" severity="secondary" (onClick)="annulReceipt()" icon="pi pi-times"></p-button>
+                <p-button label="Anular" severity="secondary" (onClick)="promptAnnulReceipt()" icon="pi pi-times" [disabled]="receipt.status === 'Anulado'"></p-button>
                 <p-button label="Contabilidad" (onClick)="generateAccounting()" icon="pi pi-calculator"></p-button>
             </div>
         </div>
     </div>
     }
 </div>
+
+<p-dialog 
+    header="Motivo de la Anulación" 
+    [(visible)]="displayAnnulDialog" 
+    [modal]="true" 
+    [style]="{width: '50vw'}" 
+    [draggable]="false" 
+    [resizable]="false">
+    
+    <div class="p-fluid">
+        <label for="annulReason" class="font-semibold block mb-2">Por favor, especifique el motivo para anular este recibo:</label>
+        <textarea 
+            id="annulReason" 
+            pInputTextarea 
+            [(ngModel)]="annulReason" 
+            rows="5" 
+            [autoResize]="true"
+            class="w-full">
+        </textarea>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <p-button 
+            label="Cancelar" 
+            icon="pi pi-times" 
+            styleClass="p-button-text" 
+            (onClick)="cancelAnnulment()">
+        </p-button>
+        <p-button 
+            label="Confirmar Anulación" 
+            icon="pi pi-check" 
+            (onClick)="confirmAnnulment()"
+            [loading]="isSubmittingAnnulment">
+        </p-button>
+    </ng-template>
+</p-dialog>

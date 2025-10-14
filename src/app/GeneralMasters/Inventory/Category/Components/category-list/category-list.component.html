@@ -139,7 +139,7 @@
              </span>
            </td>
            <td class="py-3 text-center">
-             <p-tag [value]="formatState(cat.state)" [severity]="getStateSeverity(cat.state)">
+             <p-tag [value]="getStateLabel(cat.state)" [severity]="getStateSeverity(cat.state)">
              </p-tag>
            </td>
           <td class="py-3 text-center whitespace-nowrap">
@@ -147,14 +147,14 @@
             <div class="flex justify-center gap-2 items-center">
               <p-button
                 icon="pi pi-pencil"
-                pTooltip="Editar Categoría"
+                pTooltip="Editar"
                 tooltipPosition="top"
                 (click)="redirectToEdit(cat.id)"
                 styleClass="p-button-rounded p-button-text text-complementary-green"
               ></p-button>
               <p-button
                 icon="pi pi-trash"
-                pTooltip="Eliminar Categoría"
+                pTooltip="Eliminar"
                 tooltipPosition="top"
                 (click)="deleteCategory(cat.id)"
                 styleClass="p-button-rounded p-button-text text-secondary"

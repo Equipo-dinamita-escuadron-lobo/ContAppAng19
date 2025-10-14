@@ -1,0 +1,255 @@
+<div class="flex w-full h-full font-titillium">
+    <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+        <p-toast></p-toast>
+        <p-confirmDialog></p-confirmDialog>
+
+        <!-- Header Section -->
+        <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+            <div class="items-center mb-6">
+                <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+                    Bancos y Cuentas Bancarias
+                </h1>
+                <p class="font-family-sans font-normal text-sm mt-2">
+                    Administración de cuentas bancarias y sus configuraciones.
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+                <div class="flex flex-wrap gap-3">
+                    <p-button 
+                        label="Bancos" 
+                        icon="pi pi-list"
+                        severity="primary"
+                        (click)="navigateToBanks()">
+                    </p-button>
+                    <p-button label="Crear" icon="pi pi-plus" (click)="showCreateForm()"></p-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Form Section -->
+        <div *ngIf="showForm" class="account-section mb-16">
+            <div class="floating-label">
+                <span class="section-title">{{ isEditing ? 'Editar Cuenta Bancaria' : 'Crear Nueva Cuenta Bancaria' }}</span>
+            </div>
+
+            <form [formGroup]="bankAccountForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <!-- Número de Cuenta -->
+                <div class="field-wrapper">
+                    <label class="label-title">Número de Cuenta *</label>
+                    <input 
+                        type="number" 
+                        formControlName="accountNumber"
+                        [readonly]="isEditing"
+                        class="input-base"
+                        placeholder="Ej: 1234567890"
+                        maxlength="20">
+                    <div *ngIf="bankAccountForm.get('accountNumber')?.invalid && bankAccountForm.get('accountNumber')?.touched" class="error-message">
+                        <span *ngIf="bankAccountForm.get('accountNumber')?.errors?.['required']">El número de cuenta es requerido</span>
+                        <span *ngIf="bankAccountForm.get('accountNumber')?.errors?.['pattern']">Solo se permiten números</span>
+                        <span *ngIf="bankAccountForm.get('accountNumber')?.errors?.['duplicateAccount']">Este número de cuenta ya existe</span>
+                    </div>
+                </div>
+
+                <!-- Banco -->
+                <div class="field-wrapper">
+                    <label class="label-title">Banco *</label>
+                    <p-dropdown 
+                        formControlName="bankId"
+                        [options]="banks"
+                        optionLabel="nombre"
+                        optionValue="id"
+                        placeholder="Seleccionar banco"
+                        [filter]="true"
+                        filterBy="nombre,codigo"
+                        class="dropdown-custom w-full">
+                        <ng-template pTemplate="selectedItem" let-selectedBank>
+                            <div *ngIf="selectedBank" class="flex items-center gap-2">
+                                <span class="font-medium">{{ selectedBank.codigo }}</span>
+                                <span>-</span>
+                                <span>{{ selectedBank.nombre }}</span>
+                            </div>
+                        </ng-template>
+                        <ng-template pTemplate="item" let-bank>
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium">{{ bank.codigo }}</span>
+                                <span>-</span>
+                                <span>{{ bank.nombre }}</span>
+                            </div>
+                        </ng-template>
+                    </p-dropdown>
+                    <div *ngIf="bankAccountForm.get('bankId')?.invalid && bankAccountForm.get('bankId')?.touched" class="error-message">
+                        <span *ngIf="bankAccountForm.get('bankId')?.errors?.['required']">El banco es requerido</span>
+                    </div>
+                </div>
+
+                <!-- Tipo de Cuenta -->
+                <div class="field-wrapper">
+                    <label class="label-title">Tipo de Cuenta *</label>
+                    <p-dropdown 
+                        formControlName="accountType"
+                        [options]="accountTypes"
+                        optionLabel="description"
+                        optionValue="code"
+                        placeholder="Seleccionar tipo"
+                        class="dropdown-custom w-full">
+                    </p-dropdown>
+                    <div *ngIf="bankAccountForm.get('accountType')?.invalid && bankAccountForm.get('accountType')?.touched" class="error-message">
+                        <span *ngIf="bankAccountForm.get('accountType')?.errors?.['required']">El tipo de cuenta es requerido</span>
+                    </div>
+                </div>
+
+                <!-- Cuenta Contable -->
+                <div class="field-wrapper">
+                    <label class="label-title">Cuenta Contable *</label>
+                    <input 
+                        type="text" 
+                        formControlName="cuentaContable"
+                        class="input-base"
+                        placeholder="Ej: 1110050001"
+                        maxlength="50">
+                    <div *ngIf="bankAccountForm.get('cuentaContable')?.invalid && bankAccountForm.get('cuentaContable')?.touched" class="error-message">
+                        <span *ngIf="bankAccountForm.get('cuentaContable')?.errors?.['required']">La cuenta contable es requerida</span>
+                        <span *ngIf="bankAccountForm.get('cuentaContable')?.errors?.['pattern']">Solo se permiten números y letras</span>
+                    </div>
+                </div>
+
+                <!-- Status (solo para edición) -->
+                <div *ngIf="isEditing" class="field-wrapper">
+                    <label class="label-title">Estado</label>
+                    <div class="flex items-center gap-3 mt-2">
+                        <p-toggleSwitch formControlName="status"></p-toggleSwitch>
+                        <span class="text-sm text-gray-600">
+                            {{ bankAccountForm.get('status')?.value ? 'Activo' : 'Inactivo' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="col-span-1 sm:col-span-3 flex justify-end gap-3 mt-6">
+                    <p-button 
+                        label="Cancelar" 
+                        severity="secondary" 
+                        (click)="cancelForm()">
+                    </p-button>
+                    <p-button 
+                        label="{{ isEditing ? 'Actualizar' : 'Guardar' }}" 
+                        type="submit"
+                        [disabled]="bankAccountForm.invalid || isSubmitting">
+                    </p-button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Field -->
+        <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+            <div class="w-full sm:w-[30rem]">
+                <p-iconfield iconPosition="left">
+                    <p-inputicon>
+                        <i class="pi pi-search text-gray-500"></i>
+                    </p-inputicon>
+                    <input
+                        pInputText
+                        type="text"
+                        [(ngModel)]="searchTerm"
+                        (input)="onSearch()"
+                        placeholder="Buscar cuenta (número/banco/cuenta contable)..."
+                        class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+                    />
+                </p-iconfield>
+            </div>
+        </div>
+
+        <!-- Bank Accounts Table -->
+        <p-table 
+            [value]="filteredBankAccounts" 
+            [paginator]="true" 
+            [rows]="pageSize"
+            [totalRecords]="totalRecords"
+            [loading]="loading"
+            [rowsPerPageOptions]="[5, 10, 20, 50]"
+            responsiveLayout="scroll"
+            [globalFilterFields]="['accountNumber', 'bank.nombre', 'bank.codigo', 'accountType', 'cuentaContable']"
+            styleClass="p-datatable-striped font-family-sans"
+            [tableStyle]="{'min-width': '50rem'}">
+            
+            <ng-template pTemplate="header">
+                <tr>
+                    <th pSortableColumn="accountNumber" class="font-semibold text-primary border-b-2 border-primary">
+                        Número de Cuenta
+                        <p-sortIcon field="accountNumber"></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="bank.nombre" class="font-semibold text-primary border-b-2 border-primary">
+                        Banco
+                        <p-sortIcon field="bank.nombre"></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="accountType" class="font-semibold text-primary border-b-2 border-primary">
+                        Tipo de Cuenta
+                        <p-sortIcon field="accountType"></p-sortIcon>
+                    </th>
+                    <th pSortableColumn="cuentaContable" class="font-semibold text-primary border-b-2 border-primary">
+                        Cuenta Contable
+                        <p-sortIcon field="cuentaContable"></p-sortIcon>
+                    </th>
+                    <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
+                    <th class="font-semibold text-primary border-b-2 border-primary text-center">Acciones</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-account>
+                <tr class="text-neutral-20">
+                    <td class="py-3">{{ account.accountNumber }}</td>
+                    <td class="py-3">
+                        <div class="flex flex-col">
+                            <span class="font-medium">{{ account.bank?.nombre }}</span>
+                            <span class="text-sm text-gray-500">{{ account.bank?.codigo }}</span>
+                        </div>
+                    </td>
+                    <td class="py-3">{{ getAccountTypeDisplay(account.accountType) }}</td>
+                    <td class="py-3">{{ account.cuentaContable }}</td>
+                    <td class="py-3 text-center">
+                        <p-tag 
+                            [value]="account.status ? 'Activo' : 'Inactivo'" 
+                            [severity]="account.status ? 'success' : 'danger'">
+                        </p-tag>
+                    </td>
+                    <td class="py-3 text-center">
+                        <div class="flex justify-center gap-2 items-center">
+                            <p-button 
+                                icon="pi pi-pencil" 
+                                pTooltip="Editar" 
+                                tooltipPosition="top"
+                                (click)="editBankAccount(account)" 
+                                styleClass="p-button-rounded p-button-text text-complementary-green">
+                            </p-button>
+                            <p-button 
+                                icon="pi pi-trash" 
+                                pTooltip="Eliminar" 
+                                tooltipPosition="top"
+                                (click)="confirmDelete(account)" 
+                                styleClass="p-button-rounded p-button-text text-secondary">
+                            </p-button>
+                            <p-toggleSwitch
+                                [ngModel]="account.status"
+                                (onChange)="toggleAccountStatus(account, $event.checked)"
+                                pTooltip="Cambiar Estado"
+                                tooltipPosition="top"
+                                styleClass="p-toggleSwitch-sm"
+                                [style]="{'transform': 'scale(0.8)'}">
+                            </p-toggleSwitch>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="6" class="text-center py-6 font-family-sans text-neutral-50">
+                        No se encontraron cuentas bancarias.
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>

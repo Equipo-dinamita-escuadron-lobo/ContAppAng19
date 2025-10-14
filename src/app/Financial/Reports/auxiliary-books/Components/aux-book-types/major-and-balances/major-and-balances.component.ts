@@ -16,7 +16,7 @@ import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
-import { ThirdPartyServiceService } from '../../../../../../GeneralMasters/ThirdParties/Services/third-party-service.service';
+import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
 import { MajorAndBalancesResponse } from '../../../Models/Responses/MajorAndBalancesBookResponse';
@@ -51,7 +51,7 @@ export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
     enterpriseService: EnterpriseService,
-    thirdService: ThirdPartyServiceService,
+    thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,

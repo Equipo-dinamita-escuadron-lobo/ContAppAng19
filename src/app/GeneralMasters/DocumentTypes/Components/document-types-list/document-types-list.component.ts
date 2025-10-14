@@ -43,11 +43,13 @@ export class DocumentTypesListComponent {
   list: DocumentTypeList[] = [];
   filtered: DocumentTypeList[] = [];
   classIdToName = new Map<number, string>();
+  moduleIdToName = new Map<number, string>();
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
+  searchTerm: string = '';
 
   constructor(
     private service: DocumentTypesServiceService,
@@ -58,6 +60,7 @@ export class DocumentTypesListComponent {
   ) {}
 
   ngOnInit(): void {
+    this.loadModuleNames(); // Cargar nombres de módulos para mapeo
     this.loadClassNames(); // Cargar nombres de clases para mapeo
   }
 
@@ -67,6 +70,23 @@ export class DocumentTypesListComponent {
       try { return JSON.parse(entData).id; } catch {}
     }
     return '';
+  }
+
+  private loadModuleNames(): void {
+    this.service.getAllModules().subscribe({
+      next: (modules) => {
+        modules.forEach(m => this.moduleIdToName.set(m.id, m.name));
+      },
+      error: (error) => {
+        console.error('Error al cargar nombres de módulos:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los módulos. Inténtelo nuevamente.',
+          life: 5000
+        });
+      }
+    });
   }
 
   private loadClassNames(): void {
@@ -106,14 +126,15 @@ export class DocumentTypesListComponent {
       this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
     }
     
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
-      next: (page) => {
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
         const content: DocumentType[] = page.content || [];
         this.list = content.map(dt => ({
           ...dt,
-          className: this.getClassName(dt.documentClassId)
+          className: this.getClassName(dt.documentClassId),
+          moduleName: this.getModuleName(dt.moduleId)
         }));
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
       },
       error: (error) => {
         console.error('Error al cargar tipos de documentos:', error);
@@ -131,19 +152,24 @@ export class DocumentTypesListComponent {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
-      next: (page) => {
+    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
         const content: DocumentType[] = page.content || [];
         this.list = content.map(dt => ({
           ...dt,
-          className: this.getClassName(dt.documentClassId)
+          className: this.getClassName(dt.documentClassId),
+          moduleName: this.getModuleName(dt.moduleId)
         }));
-        this.totalRecords = page?.totalElements || 0;
-      },
-      error: (error) => {
-        console.error('Error al recargar tipos de documentos:', error);
+        this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
       }
     });
+  }
+
+  onSearchChange(): void {
+    // Resetear a la primera página cuando se busca
+    this.currentPage = 0;
+    // Recargar datos con el nuevo término de búsqueda
+    this.loadTypesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
   }
 
   getClassName(classId?: number): string {
@@ -151,9 +177,11 @@ export class DocumentTypesListComponent {
     return this.classIdToName.get(classId) || '';
   }
 
-  filterGlobal(event: Event, table: any) {
-    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  getModuleName(moduleId?: number): string {
+    if (moduleId == null) return '';
+    return this.moduleIdToName.get(moduleId) || '';
   }
+
 
   createType() {
     this.router.navigate(['/gen-masters/document-types/create']);

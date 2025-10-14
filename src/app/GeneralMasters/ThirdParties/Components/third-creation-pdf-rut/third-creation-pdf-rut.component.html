@@ -1,0 +1,60 @@
+<!-- Toast para notificaciones -->
+<p-toast></p-toast>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '500px', maxWidth: '90vw' }"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="font-family-sans"
+  (onHide)="onHide()">
+
+  <!-- Contenido del modal -->
+  <div class="p-fluid">
+    
+    <!-- Descripción -->
+    <div class="text-center mb-30">
+      <p class="font-family-sans text-base leading-relaxed text-neutral-30">
+        Por favor, selecciona un archivo PDF (máx. 50 MB) para cargar. Asegúrate de que el archivo tenga la información con la cual se va a crear el nuevo tercero.
+      </p>
+    </div>
+
+    <!-- Upload de archivo -->
+    <div class="mb-30">
+      <p-fileUpload
+        #fileUpload
+        mode="basic"
+        name="pdfFile[]"
+        accept="application/pdf"
+        [maxFileSize]="50000000"
+        chooseLabel="Seleccionar PDF"
+        [auto]="false"
+        (onSelect)="onFileSelect($event)"
+        (onError)="onFileError($event)"
+        class="w-full">
+      </p-fileUpload>
+    </div>
+  </div>
+
+  <!-- Footer con botones -->
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button 
+        label="Cancelar" 
+        severity="secondary"
+        (onClick)="closePopUp()"
+        [disabled]="loading">
+      </p-button>
+      
+      <p-button 
+        label="Crear Tercero" 
+        (onClick)="uploadFile()"
+        [disabled]="!selectedFile || loading"
+        [loading]="loading">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

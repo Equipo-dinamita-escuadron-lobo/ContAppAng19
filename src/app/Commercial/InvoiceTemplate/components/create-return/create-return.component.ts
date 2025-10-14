@@ -9,12 +9,10 @@ import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
-import { Product2 } from '../../models/Product2';
+import { Product2, ProductList2 } from '../../models/Product2';
 import { SteletonService } from '../../services/steleton.service';
 import { ProductResponse } from '../../../BusinessMasters/ValuationModels/WeightedAverage/models/ProductResponse';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { ProductService } from '../../../BusinessMasters/ValuationModels/WeightedAverage/services/product.service';
-
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
     query: string;
@@ -47,9 +45,9 @@ interface ReturnType {
 export class CreateReturnComponent implements OnInit {
   returnForm: FormGroup;
 
-  allProducts: ProductResponse[] = [];
-  filteredProducts: ProductResponse[] = [];
-  selectedProduct: ProductResponse | undefined;
+  allProducts: ProductList2[] = [];
+  filteredProducts: ProductList2[] = [];
+  selectedProduct: ProductList2 | undefined;
 
   returnTypes: ReturnType[] = [
     { label: 'Devolución en Venta', value: 'sale' },
@@ -57,11 +55,9 @@ export class CreateReturnComponent implements OnInit {
   ];
 
   constructor(
-    private router: Router,
     private formBuilder: FormBuilder,
     private messageService: MessageService,
     private steletonService: SteletonService,
-    private productService: ProductService
   ) {
     this.returnForm = this.createReturnForm();
   }
@@ -69,8 +65,8 @@ export class CreateReturnComponent implements OnInit {
   ngOnInit(): void {
     console.log('Componente de creación de devolución inicializado');
 
-    this.productService.getAllProducts().subscribe(response => {
-      this.allProducts = response.data;
+    this.steletonService.getAllProductsByEnterpriseId().subscribe(response => {
+      this.allProducts = response
     });
   }
 
@@ -89,7 +85,7 @@ export class CreateReturnComponent implements OnInit {
 
       // Preparar datos del producto
       const productData: Product2 = {
-        productId: formValue.productId,
+        productId: formValue.productId.id,
         amount: formValue.amount,
         description: this.getSelectedProductDescription(),
         descount: 0,
@@ -111,6 +107,9 @@ export class CreateReturnComponent implements OnInit {
             detail: `Devolución en ${formValue.returnType === 'sale' ? 'venta' : 'compra'} creada exitosamente`,
             life: 3000
           });
+
+          // Limpiar el formulario después de guardar exitosamente
+          this.clearForm();
         },
         error: (error) => {
           console.error('Error al crear devolución', error);
@@ -127,9 +126,28 @@ export class CreateReturnComponent implements OnInit {
   }
 
   private getSelectedProductDescription(): string {
-    const selectedProductId = this.returnForm.get('productId')?.value;
-    const product = this.allProducts.find(p => p.productId === selectedProductId);
+    const selectedProductId = this.returnForm.get('id')?.value;
+    const product = this.allProducts.find(p => p.id === selectedProductId);
     return product ? product.name : '';
+  }
+
+  /**
+   * Limpia el formulario y resetea las variables relacionadas
+   */
+  clearForm(): void {
+    this.returnForm.reset();
+    this.selectedProduct = undefined;
+    this.filteredProducts = [];
+
+    // Resetear el formulario con valores por defecto
+    this.returnForm = this.createReturnForm();
+  }
+
+  /**
+   * Maneja la acción de cancelar
+   */
+  cancelForm(): void {
+    this.clearForm();
   }
 
   /**
@@ -159,7 +177,7 @@ export class CreateReturnComponent implements OnInit {
   }
 
   onProductSelect(event: ProductResponse) {
-    this.returnForm.get('productId')?.setValue(event.productId);
+    this.returnForm.get('id')?.setValue(event.id);
     this.selectedProduct = event;
   }
 

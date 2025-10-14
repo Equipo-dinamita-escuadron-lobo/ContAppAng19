@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
 import { StyleGuideComponent } from './Shared/Components/style-guide/style-guide.component';
 import { LoginComponent } from './Core/auth/login/login.component';
+import { ForgotPasswordComponent } from './Core/auth/forgot-password/forgot-password.component';
+import { RegisterComponent } from './Core/auth/register/register.component';
+import { ResetPasswordComponent } from './Core/auth/reset-password/reset-password.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
 import { hasRoleChildGuard, hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
@@ -16,6 +19,18 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
+  },
+  {
+    path: 'register',
+    component: RegisterComponent,
+  },
+  {
+    path: 'forgot-password',
+    component: ForgotPasswordComponent,
+  },
+  {
+    path: 'reset-password',
+    component: ResetPasswordComponent,
   },
   {
     path: 'enterprise/list',
@@ -157,6 +172,57 @@ export const routes: Routes = [
               },
             ],
           },
+          {
+            path: 'audit',
+            data: {
+              breadcrumb: 'Auditoría',
+            },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-hub/audit-hub.component'
+                  ).then((m) => m.AuditHubComponent),
+              },
+              {
+                path: 'sessions',
+                data: { breadcrumb: 'Sesiones' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-session/audit-session.component'
+                  ).then((m) => m.AuditSessionComponent),
+              },
+              {
+                path: 'operations',
+                data: { breadcrumb: 'Operaciones' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-operations/audit-operations.component'
+                  ).then((m) => m.AuditOperationsComponent),
+              },
+              {
+                path: 'documents',
+                data: { breadcrumb: 'Documentos Contables' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-accounting-documents/audit-accounting-documents.component'
+                  ).then((m) => m.AuditAccountingDocumentsComponent),
+              },
+              {
+                path: 'consecutives',
+                data: { breadcrumb: 'Consecutivos' },
+                loadComponent: () =>
+                  import(
+                    './Configuration/Audit/Components/audit-consecutive/audit-consecutive.component'
+                  ).then((m) => m.AuditConsecutiveComponent),
+              },
+            ],
+          },
         ],
       },
       {
@@ -223,8 +289,8 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-list/third-parties-list.component'
-                  ).then((m) => m.ThirdPartiesListComponent),
+                    './GeneralMasters/ThirdParties/Components/third-list/third-list.component'
+                  ).then((m) => m.ThirdListComponent),
               },
               {
                 path: 'create',
@@ -233,8 +299,8 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-create/third-parties-create.component'
-                  ).then((m) => m.ThirdPartiesCreateComponent),
+                    './GeneralMasters/ThirdParties/Components/third-creation/third-creation.component'
+                  ).then((m) => m.ThirdCreationComponent),
               },
               {
                 path: 'edit/:id',
@@ -243,44 +309,56 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './GeneralMasters/ThirdParties/Components/third-parties-edit/third-parties-edit.component'
-                  ).then((m) => m.ThirdPartiesEditComponent),
+                    './GeneralMasters/ThirdParties/Components/third-edit/third-edit.component'
+                  ).then((m) => m.ThirdEditComponent),
+              },
+              {
+                path: 'configuration',
+                data: {
+                  breadcrumb: 'Configuración de Terceros',
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/ThirdParties/Components/third-config/third-config.component'
+                  ).then((m) => m.ThirdConfigComponent),
               },
             ],
           },
           //Rutas de etiquetas no comerciales
           {
-            path:'no-commercial-tags',
-            data:{Breadcrumb:'Etiquetas no comerciales'},
-            children:[
+            path: 'no-commercial-tags',
+            data: { Breadcrumb: 'Etiquetas no comerciales' },
+            children: [
               {
                 path: '',
                 redirectTo: 'list',
-                pathMatch: 'full'
+                pathMatch: 'full',
               },
               {
-                path:'list',
-                data:{breadcrumb:null},
-                loadComponent:()=>
-                  import('./GeneralMasters/noCommercialTags/Components/list-tag/list-tag.component')
-                    .then((m)=>m.ListTagComponent),
-              },
-              {
-                path:'create',
-                data:{Breadcrumb:'Crear Etiqueta No Comercial'},
+                path: 'list',
+                data: { breadcrumb: null },
                 loadComponent: () =>
-                  import('./GeneralMasters/noCommercialTags/Components/create-tag/create-tag.component')
-                    .then((m)=>m.CreateTagComponent),
+                  import(
+                    './GeneralMasters/noCommercialTags/Components/list-tag/list-tag.component'
+                  ).then((m) => m.ListTagComponent),
               },
               {
-                path:'edit/:id',
-                data:{Breadcrumb:'Editar Etiqueta No Comercial'},
-                loadComponent:()=>
-                  import('./GeneralMasters/noCommercialTags/Components/edit-tag/edit-tag.component')
-                    .then((m)=>m.EditTagComponent),
-              }
-
-            ]
+                path: 'create',
+                data: { Breadcrumb: 'Crear Etiqueta No Comercial' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/noCommercialTags/Components/create-tag/create-tag.component'
+                  ).then((m) => m.CreateTagComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { Breadcrumb: 'Editar Etiqueta No Comercial' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/noCommercialTags/Components/edit-tag/edit-tag.component'
+                  ).then((m) => m.EditTagComponent),
+              },
+            ],
           },
           // Rutas de Impuestos
           {
@@ -349,6 +427,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/Products/Components/product-creation/product-creation.component'
                       ).then((m) => m.ProductCreationComponent),
+                    canActivate: [hasPermissionGuard(['Create_Product'])],
                   },
                   {
                     path: 'edit/:id',
@@ -357,6 +436,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/Products/Components/product-edit/product-edit.component'
                       ).then((m) => m.ProductEditComponent),
+                    canActivate: [hasPermissionGuard(['Edit_Product'])],
                   },
                 ],
               },
@@ -379,6 +459,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/ProductTypes/Components/product-type-creation/product-type-creation.component'
                       ).then((m) => m.ProductTypeCreationComponent),
+                    canActivate: [hasPermissionGuard(['Create_Product_Type'])],
                   },
                   {
                     path: 'edit/:id',
@@ -387,6 +468,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/ProductTypes/Components/product-type-edit/product-type-edit.component'
                       ).then((m) => m.ProductTypeEditComponent),
+                    canActivate: [hasPermissionGuard(['Edit_Product_Type'])],
                   },
                 ],
               },
@@ -409,6 +491,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/Category/Components/category-creation/category-creation.component'
                       ).then((m) => m.CategoryCreationComponent),
+                    canActivate: [hasPermissionGuard(['Create_Category'])],
                   },
                   {
                     path: 'edit/:id',
@@ -417,6 +500,7 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/Category/Components/category-edit/category-edit.component'
                       ).then((m) => m.CategoryEditComponent),
+                    canActivate: [hasPermissionGuard(['Edit_Category'])],
                   },
                 ],
               },
@@ -450,6 +534,9 @@ export const routes: Routes = [
                       import(
                         './GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-edit/unit-of-measure-edit.component'
                       ).then((m) => m.UnitOfMeasureEditComponent),
+                    canActivate: [
+                      hasPermissionGuard(['Edit_Unit_of_Measurement']),
+                    ],
                   },
                 ],
               },
@@ -552,11 +639,30 @@ export const routes: Routes = [
 
           {
             path: 'bank-accounts',
-            data: { breadcrumb: 'Banco y Cuentas Bancarias' },
-            loadComponent: () =>
-              import(
-                './GeneralMasters/Components/MenuCards/menu.component'
-              ).then((m) => m.MenuComponent),
+            data: { breadcrumb: 'Bancos y Cuentas Bancarias' },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list',
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-accounts-list/bank-accounts-list.component'
+                  ).then((m) => m.BankAccountsListComponent),
+              },
+              {
+                path: 'banks',
+                data: { breadcrumb: 'Gestión de Bancos' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-list/bank-list.component'
+                  ).then((m) => m.BankListComponent),
+              },
+            ],
           },
           {
             path: 'cost-centers',
@@ -734,9 +840,147 @@ export const routes: Routes = [
                   import(
                     './Financial/Wallet/CashReceipts/Components/receipt-accounting/receipt-accounting.component'
                   ).then((m) => m.ReceiptAccountingComponent),
-                }
+              },
+              {
+                path: 'write-offs',
+                data: {
+                  breadcrumb: 'Castigos de cartera',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-list/write-off-list.component'
+                  ).then((m) => m.WriteOffListComponent),
+              },
+              {
+                path: 'write-offs/creation',
+                data: {
+                  breadcrumb: 'Creación de castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-creation/write-off-creation.component'
+                  ).then((m) => m.WriteOffCreationComponent),
+              },
+              {
+                path: 'write-offs/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-details/write-off-details.component'
+                  ).then((m) => m.WriteOffDetailsComponent),
+              },
+            {
+              path: 'accounting-entries',
+              data: {
+                breadcrumb: 'Asientos Contables',
+            },
+              loadComponent: () =>
+                import(
+                  './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
+                ).then((m) => m.ReceiptAccountingEntriesComponent),
+            },
+            
             ],
-          }
+          },
+          {
+            path: 'treasury',
+            data: {
+              breadcrumb: 'Tesorería',
+            },
+            children: [
+              {
+                path: 'expense-receipts',
+                data: {
+                  breadcrumb: 'Comprobantes de Egreso',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipts-list/expense-receipts-list.component'
+                  ).then((m) => m.ExpenseReceiptsListComponent),
+              },
+              {
+                path: 'expense-receipts/creation',
+                data: {
+                  breadcrumb: 'Creación de Comprobantes',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-creation/expense-receipt-creation.component'
+                  ).then((m) => m.ExpenseReceiptCreationComponent),
+              },
+              {
+                path: 'expense-receipts/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del Comprobante',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-details/expense-receipt-details.component'
+                  ).then((m) => m.ExpenseReceiptDetailsComponent),
+              },
+              {
+                path: 'expense-receipts/:id/accounting',
+                data: {
+                  breadcrumb: 'Contabilización del Comprobante',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/ExpenseReceipts/Components/expense-receipt-accounting/expense-receipt-accounting.component'
+                  ).then((m) => m.ExpenseReceiptAccountingComponent),
+              },
+              // Purchase Bills Routes
+              {
+                path: 'purchase-bills',
+                data: {
+                  breadcrumb: 'Facturas de Compra',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/PurchaseBills/Components/bill-list/bill-list.component'
+                  ).then((m) => m.BillListComponent),
+              },
+              {
+                path: 'purchase-bills/create',
+                data: {
+                  breadcrumb: 'Nueva Factura de Compra',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Treasury/PurchaseBills/Components/bill-creation/bill-creation.component'
+                  ).then((m) => m.BillCreationComponent),
+              },
+              {
+                path: 'reports',
+                data: {
+                  breadcrumb: 'Reportes',
+                },
+                children: [
+                  {
+                    path: 'vendors',
+                    data: {
+                      breadcrumb: 'Reportes de Proveedores',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Treasury/Reports/VendorReports/Components/vendor-list/vendor-list.component'
+                      ).then((m) => m.VendorListComponent),
+                  },
+                  {
+                    path: 'vendor-report/:id',
+                    data: {
+                      breadcrumb: 'Reporte Individual',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Treasury/Reports/VendorReports/Components/vendor-report/vendor-report.component'
+                      ).then((m) => m.VendorReportComponent),
+                  },
+                ],
+              },
+            ],
+          },
         ],
       },
       {
@@ -761,6 +1005,16 @@ export const routes: Routes = [
                     './Commercial/BusinessMasters/ValuationModels/WeightedAverage/list-kardex-weighted-average/list-kardex-weighted-average.component'
                   ).then((m) => m.ListKardexWeightedAverageComponent),
               },
+              {
+                path: 'peps',
+                data: {
+                  breadcrumb: 'KardexPEPS',
+                },
+                loadComponent: () =>
+                  import(
+                    './Commercial/BusinessMasters/ValuationModels/PEPS/list-kardex-peps/list-kardex-peps.component'
+                  ).then((m) => m.ListKardexPepsComponent),
+              }
             ],
           },
           {
@@ -792,7 +1046,7 @@ export const routes: Routes = [
               import(
                 './Commercial/InvoiceTemplate/components/create-return/create-return.component'
               ).then((m) => m.CreateReturnComponent),
-          }
+          },
         ],
       },
     ],
@@ -805,5 +1059,3 @@ export const routes: Routes = [
     component: StyleGuideComponent,
   },
 ];
-
-

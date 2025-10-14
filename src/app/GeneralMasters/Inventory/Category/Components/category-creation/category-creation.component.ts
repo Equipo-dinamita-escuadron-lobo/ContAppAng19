@@ -90,15 +90,14 @@ export class CategoryCreationComponent implements OnInit {
     
     // Mapear los IDs correctamente
     const categoryData = {
-      id: 0, // Will be set by backend
       name: formData.name,
       description: formData.description,
-      inventoryId: parseInt(formData.inventory, 10),
-      costId: parseInt(formData.cost, 10),
-      saleId: parseInt(formData.sale, 10),
-      returnId: parseInt(formData.return, 10),
+      inventoryId: formData.inventory,
+      costId: formData.cost,
+      saleId: formData.sale,
+      returnId: formData.return,
       enterpriseId: this.entData?.id || this.localStorageMethods.getIdEnterprise(),
-      state: 'ACTIVE'
+      state: true 
     };
 
     console.log('Datos de categoría a enviar:', categoryData);

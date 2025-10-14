@@ -113,7 +113,7 @@
                             <span class="font-medium">Nombre:</span> {{ selectedProduct.name }}
                         </p>
                         <p class="text-blue-700">
-                            <span class="font-medium">ID:</span> {{ selectedProduct.productId }}
+                            <span class="font-medium">ID:</span> {{ selectedProduct.id }}
                         </p>
                     </div>
                 }
@@ -124,7 +124,7 @@
                         type="button"
                         label="Cancelar"
                         severity="secondary"
-                        >
+                        (onClick)="cancelForm()">
                     </p-button>
                     <p-button
                         type="submit"
