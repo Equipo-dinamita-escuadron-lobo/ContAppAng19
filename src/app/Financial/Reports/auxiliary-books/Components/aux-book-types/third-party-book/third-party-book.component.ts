@@ -12,7 +12,7 @@ import { SplitButtonModule } from 'primeng/splitbutton';
 import { TableModule } from 'primeng/table';
 
 // Models
-import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
+import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { Third } from '../../../../../../GeneralMasters/ThirdParties/models/Third';
 import { ThirdPartyBookResponse } from '../../../Models/Responses/ThirdPartyBookResponse';

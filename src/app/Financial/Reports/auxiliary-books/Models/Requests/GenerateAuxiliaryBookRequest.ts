@@ -1,5 +1,5 @@
-import { Criteria } from './Criteria';
-import { AuxiliaryBookType } from './eAuxiliaryBookType';
+import { Criteria } from '../Criteria';
+import { AuxiliaryBookType } from '../eAuxiliaryBookType';
 
 export interface GenerateAuxiliaryBookRequest {
   entId: string;

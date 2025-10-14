@@ -22,7 +22,7 @@
         [reportTitle]="reportTitle"
         [companyName]="companyName"
         [generationDate]="generationDate"
-        [criteria]="criteria"
+        [criteria]="criteriaForPreview"
         [headerConfig]="headerConfig"
         [previewData]="previewData"
         [totals]="totals"
@@ -173,6 +173,11 @@
       styleClass="p-button-outlined p-button-secondary"
       (click)="closeModal()"
     />
-    <p-button label="Exportar" icon="pi pi-download" (click)="exportReport()" />
+    <p-button
+      label="Exportar"
+      icon="pi pi-download"
+      (click)="exportReport()"
+      type="button"
+    />
   </div>
 </div>

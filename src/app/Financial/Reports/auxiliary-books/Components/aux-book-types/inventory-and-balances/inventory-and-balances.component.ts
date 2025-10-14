@@ -12,7 +12,7 @@ import { SplitButtonModule } from 'primeng/splitbutton';
 import { TableModule } from 'primeng/table';
 
 // Models
-import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
+import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
 import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
@@ -101,6 +101,7 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
   protected loadConfig(): void {
     this.auxiliaryBookInfo = {
       name: 'Libro de Inventarios y Balances',
+      type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
       description:
         'Presenta los activos, pasivos y patrimonio de la empresa en un momento determinado.',
       icon: 'inventory_2',

@@ -15,6 +15,12 @@ import { SelectModule } from 'primeng/select';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { FieldsetModule } from 'primeng/fieldset';
+import { AuxiliaryBooksServiceService } from '../../Services/auxiliary-books-service.service';
+import {
+  ExportAuxiliaryBookRequest,
+  InfoReportTemplate,
+} from '../../Models/Requests/ExportAuxiliaryBookRequest';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-export-auxiliary-book',
@@ -30,6 +36,7 @@ import { FieldsetModule } from 'primeng/fieldset';
     FieldsetModule,
     ReportPreviewComponent,
   ],
+  providers: [MessageService],
   templateUrl: './export-auxiliary-book.component.html',
 })
 export class ExportAuxiliaryBookComponent implements OnInit {
@@ -39,7 +46,7 @@ export class ExportAuxiliaryBookComponent implements OnInit {
   reportTitle: string = 'Reporte Auxiliar';
   companyName: string = 'Mi Empresa S.A.S';
   generationDate: Date = new Date();
-  criteria: { key: string; value: string }[] = [];
+  criteriaForPreview: { key: string; value: string }[] = [];
   totals: any = {}; // ✅ NUEVO: Propiedad para almacenar los totales.
 
   // --- ESTADO DE LAS OPCIONES ---
@@ -79,7 +86,9 @@ export class ExportAuxiliaryBookComponent implements OnInit {
 
   constructor(
     public ref: DynamicDialogRef,
-    public config: DynamicDialogConfig
+    public config: DynamicDialogConfig,
+    private auxiliaryBookService: AuxiliaryBooksServiceService,
+    private messageService: MessageService
   ) {}
 
   // ✅ NUEVO: Diccionarios para la traducción de criterios.
@@ -109,13 +118,13 @@ export class ExportAuxiliaryBookComponent implements OnInit {
       this.companyName = this.config.data.companyName || this.companyName;
       this.generationDate = this.config.data.generationDate || new Date();
       this.totals = this.config.data.totals || {}; // ✅ NUEVO: Recibimos los totales.
-
-      console.log('Data received for preview:', this.previewData);
+      this.reportTitle = this.config.data.reportTitle;
 
       // ✅ CORREGIDO: Procesa y traduce los criterios antes de asignarlos.
       if (this.config.data.criteria) {
-        this.criteria = this.translateAndFormatCriteria(
-          this.config.data.criteria
+        this.criteriaForPreview = this.translateAndFormatCriteria(
+          this.config.data.criteria,
+          this.config.data.thirdPartyInfo
         );
       }
     }
@@ -130,10 +139,62 @@ export class ExportAuxiliaryBookComponent implements OnInit {
   }
 
   exportReport() {
-    this.ref.close({
-      format: this.formatSelected,
-      styles: this.styles,
-      template: this.selectedTemplate?.code,
+    console.log('Entrando al hpta export');
+
+    const infoTemplate: InfoReportTemplate = {
+      id: this.selectedTemplate?.id || 0,
+      name: this.reportTitle,
+      pathLogotype:
+        'https://static.rfstat.com/renderforest/images/v2/logo-homepage/logo-5-1.png', // URL del logo
+      alienation: this.styles.align.toUpperCase() as
+        | 'LEFT'
+        | 'CENTER'
+        | 'RIGHT',
+      font: this.styles.font,
+      fontSize: this.styles.fontSize,
+      mainColor: this.styles.color,
+    };
+
+    const request: ExportAuxiliaryBookRequest = {
+      format: this.formatSelected.toUpperCase() as 'PDF' | 'EXCEL',
+      entName: this.companyName,
+      criteriaUsed: this.config.data.criteria,
+      auxBookType: this.config.data.auxBookType,
+      auxBookData: this.previewData,
+      infoReportTemplate: infoTemplate,
+    };
+
+    console.log('Export Request:', request); // Para depuración
+
+    this.auxiliaryBookService.exportAuxiliaryBook(request).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const extension = this.formatSelected.toLowerCase();
+        const fileName = `${this.reportTitle.replace(/ /g, '_')}_${new Date()
+          .toISOString()
+          .slice(0, 10)}.${extension}`;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'El reporte ha sido generado y descargado.',
+        });
+        this.ref.close();
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo generar el reporte. ' + err.message,
+        });
+      },
     });
   }
 
@@ -147,7 +208,8 @@ export class ExportAuxiliaryBookComponent implements OnInit {
    * ✅ NUEVO: Traduce y formatea el objeto de criterios para mostrarlo en la UI.
    */
   private translateAndFormatCriteria(
-    criteria: any
+    criteria: any,
+    thirdPartyInfo: any
   ): { key: string; value: string }[] {
     return Object.keys(criteria)
       .filter((key) => criteria[key] != null)
@@ -164,6 +226,11 @@ export class ExportAuxiliaryBookComponent implements OnInit {
         // 2. Formatear el objeto 'criteriaRange'
         if (key === 'criteriaRange' && typeof criteria[key] === 'object') {
           formattedValue = `Desde ${criteria[key].from} hasta ${criteria[key].to}`;
+        }
+
+        // Formatear tercero
+        if (key === 'thirdPartyId' && thirdPartyInfo) {
+          formattedValue = `${thirdPartyInfo.name} (${thirdPartyInfo.typeId})`;
         }
 
         // 3. Formatear fechas (si son strings en formato YYYY-MM-DD)

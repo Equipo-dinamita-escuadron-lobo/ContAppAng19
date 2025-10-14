@@ -410,6 +410,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     // ✅ CORREGIDO: Se añaden los totales al objeto de datos del diálogo.
     var data = {
       reportTitle: this.auxiliaryBookInfo.name,
+      auxBookType: this.auxiliaryBookInfo.type,
       criteria: this.criteria,
       dataTable: this.dataTable,
       headerConfig: (this as any).headerConfig || [], // Se usa 'as any' para acceder a la propiedad del hijo
@@ -424,5 +425,50 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     this.refDialog = this.dialogService.open(ExportAuxiliaryBookComponent, {
       data: data,
     });
+  }
+
+  formatMoneyAligned(value: number | null | undefined): string {
+    if (value == null || isNaN(value)) {
+      return '';
+    }
+
+    const locale = 'es-CO';
+    const currency = 'COP';
+
+    const parts = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).formatToParts(Math.abs(value));
+
+    const integer = parts
+      .filter((p) => p.type === 'integer' || p.type === 'group')
+      .map((p) => p.value)
+      .join('');
+
+    const decimal = parts.find((p) => p.type === 'decimal')?.value ?? ',';
+    const fraction = parts.find((p) => p.type === 'fraction')?.value ?? '00';
+    const symbol =
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+        .formatToParts(Math.abs(value))
+        .find((p) => p.type === 'currency')?.value ?? '$';
+
+    const isNegative = value < 0;
+    const sign = isNegative ? '-' : '';
+
+    // Clase condicional si el valor es negativo
+    const colorClass = isNegative ? 'negative' : '';
+
+    return `
+    <span class="money font-mono ${colorClass}">
+      <span class="symbol">${symbol}</span>
+      <span class="integer">${sign}${integer}</span>
+      <span class="decimal">${decimal}${fraction}</span>
+    </span>
+  `;
   }
 }

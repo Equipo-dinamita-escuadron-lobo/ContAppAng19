@@ -13,7 +13,7 @@ import { TableModule } from 'primeng/table';
 
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
-import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
+import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
 import { DiaryResponse } from '../../../Models/Responses/DiaryBookResponse';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
