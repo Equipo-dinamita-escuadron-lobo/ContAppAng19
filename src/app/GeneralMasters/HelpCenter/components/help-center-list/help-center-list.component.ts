@@ -13,7 +13,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { FormsModule } from '@angular/forms';
-import { HelpCenterServiceService } from '../../services/help-center-service.service';
+import { HelpCenterServiceService } from '../../services/help-center.service';
 import { DocumentTypesServiceService } from '../../../DocumentTypes/services/document-types-service.service';
 import { HelpCenter, HelpCenterList } from '../../models/HelpCenter';
 import { DocumentModule } from '../../../DocumentTypes/models/DocumentModule';
@@ -65,9 +65,9 @@ export class HelpCenterListComponent {
     this.modulesService.getAllModules().subscribe({
       next: (modules) => {
         modules.forEach(m => this.moduleIdToName.set(m.id, m.name));
-        this.loadHelpCentersLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
+                this.loadHelpCentersLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 }); // Cargar centros de ayuda después de cargar las clases
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al cargar nombres de módulos:', error);
         this.messageService.add({
           severity: 'error',
@@ -97,7 +97,7 @@ export class HelpCenterListComponent {
         }));
         this.totalRecords = page?.totalElements || 0;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al cargar centros de ayuda:', error);
         this.messageService.add({
           severity: 'error',
@@ -205,7 +205,7 @@ export class HelpCenterListComponent {
         });
         this.reloadCurrentPage();
       },
-      error: (err) => {
+      error: (err: any) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
