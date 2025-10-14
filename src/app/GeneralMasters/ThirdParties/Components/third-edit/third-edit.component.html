@@ -23,13 +23,10 @@
       <div class="space-y-8 font-family-sans max-w-4xl mx-auto mt-40">
 
         <!-- Panel: Información Básica -->
-        <div class="rounded-lg p-20 shadow-sm mb-20 border border-neutral-80">
-          <h3 class="text-lg font-semibold text-primary mb-24 border-b border-primary pb-2 text-center">
-            Información Básica
-          </h3>
+        <app-form-panel title="Información Básica">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary label-required">Tipo Persona</label>
+              <app-form-field-label label="Tipo Persona" [required]="true"></app-form-field-label>
               <div class="flex space-x-4 mt-8">
                 <div class="flex items-center">
                   <p-radioButton 
@@ -50,13 +47,13 @@
                   <label for="natural" class="ml-5">Natural</label>
                 </div>
               </div>
-              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('personType')?.touched) && createdThirdForm.get('personType')?.invalid">
+              <app-form-field-error [form]="createdThirdForm" fieldName="personType" [submitted]="submitted">
                 Seleccione un Tipo de Persona (Jurídica o Natural)
-              </small>
+              </app-form-field-error>
             </div>
 
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary label-required">Tipos de Tercero</label>
+              <app-form-field-label label="Tipos de Tercero" [required]="true"></app-form-field-label>
               <p-multiSelect 
                 [options]="thirdTypes" 
                 formControlName="thirdTypes"
@@ -65,25 +62,23 @@
                 placeholder="Seleccione tipos de tercero"
                 class="max-w-sm">
               </p-multiSelect>
-              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('thirdTypes')?.touched) && createdThirdForm.get('thirdTypes')?.invalid">
+              <app-form-field-error [form]="createdThirdForm" fieldName="thirdTypes" [submitted]="submitted">
                 Seleccione al menos un tipo de tercero
-              </small>
+              </app-form-field-error>
             </div>
           </div>
-        </div>
+        </app-form-panel>
 
         <!-- Panel: Información de Identificación -->
-        <div class="rounded-lg p-20 shadow-sm mb-20 border border-neutral-80">
-          <h3 class="text-lg font-semibold text-primary mb-24 border-b border-primary pb-2 text-center">
-            Información de Identificación
-          </h3>
+        <app-form-panel title="Información de Identificación">
           <div class="flex flex-wrap gap-12 items-start">
             <div class="flex flex-col gap-2 flex-1 min-w-[200px]">
-              <label class="font-semibold text-primary label-required">Tipo de Identificación</label>
+              <app-form-field-label label="Tipo de Identificación" [required]="true"></app-form-field-label>
               <p-select 
                 [options]="filteredTypeIds" 
                 formControlName="typeId"
                 optionLabel="typeId"
+                [dataKey]="'typeId'"
                 placeholder="Seleccione tipo de ID"
                 [filter]="true"
                 filterBy="typeId"
@@ -98,13 +93,13 @@
                   <div>{{ option.typeId }}</div>
                 </ng-template>
               </p-select>
-              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('typeId')?.touched) && createdThirdForm.get('typeId')?.invalid">
+              <app-form-field-error [form]="createdThirdForm" fieldName="typeId" [submitted]="submitted">
                 Seleccione un tipo de identificación
-              </small>
+              </app-form-field-error>
             </div>
 
             <div class="flex flex-col gap-2 flex-1 min-w-[250px]">
-              <label class="font-semibold text-primary label-required">Número de Identificación</label>
+              <app-form-field-label label="Número de Identificación" [required]="true"></app-form-field-label>
               <p-inputNumber 
                 formControlName="idNumber"
                 placeholder="Ingrese número de identificación"
@@ -118,17 +113,17 @@
                 <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['min']">
                   El número de identificación debe ser mayor a 0
                 </ng-container>
-                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitInvalidStart']">
+                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitStart']">
                   El NIT debe empezar con 8 o 9
                 </ng-container>
-                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitInvalidLength']">
+                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitLength']">
                   El NIT debe tener exactamente 9 dígitos
                 </ng-container>
               </small>
             </div>
 
             <div class="flex flex-col gap-2" *ngIf="isJuridicPerson()">
-              <label class="font-semibold text-primary">DV</label>
+              <app-form-field-label label="DV"></app-form-field-label>
               <input 
                 pInputText 
                 formControlName="verificationNumber"
@@ -140,40 +135,37 @@
                 [ngClass]="{'bg-neutral-95 cursor-not-allowed': isDVReadonly()}">
             </div>
           </div>
-        </div>
+        </app-form-panel>
 
         <!-- Panel: Información Personal (Persona Natural) -->
-        <div class="rounded-lg p-20 shadow-sm mb-20 border border-neutral-80" *ngIf="isNaturalPerson()">
-          <h3 class="text-lg font-semibold text-primary mb-24 border-b border-primary pb-2 text-center">
-            Información Personal
-          </h3>
+        <app-form-panel title="Información Personal" *ngIf="isNaturalPerson()">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary label-required">Nombres</label>
+              <app-form-field-label label="Nombres" [required]="true"></app-form-field-label>
               <input 
                 pInputText 
                 formControlName="names"
                 placeholder="Ingrese nombres"
                 class="max-w-sm">
-              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('names')?.touched) && createdThirdForm.get('names')?.invalid">
+              <app-form-field-error [form]="createdThirdForm" fieldName="names" [submitted]="submitted">
                 Los nombres son requeridos para persona natural
-              </small>
+              </app-form-field-error>
             </div>
 
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary label-required">Apellidos</label>
+              <app-form-field-label label="Apellidos" [required]="true"></app-form-field-label>
               <input 
                 pInputText 
                 formControlName="lastNames"
                 placeholder="Ingrese apellidos"
                 class="max-w-sm">
-              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('lastNames')?.touched) && createdThirdForm.get('lastNames')?.invalid">
+              <app-form-field-error [form]="createdThirdForm" fieldName="lastNames" [submitted]="submitted">
                 Los apellidos son requeridos para persona natural
-              </small>
+              </app-form-field-error>
             </div>
 
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary label-required">Género</label>
+              <app-form-field-label label="Género"></app-form-field-label>
               <p-dropdown 
                 [options]="genders" 
                 formControlName="gender"
@@ -182,41 +174,32 @@
                 placeholder="Seleccione género"
                 class="max-w-sm">
               </p-dropdown>
-              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('gender')?.touched) && createdThirdForm.get('gender')?.invalid">
-                El género es requerido para persona natural
-              </small>
             </div>
           </div>
-        </div>
+        </app-form-panel>
 
         <!-- Panel: Información de Empresa (Persona Jurídica) -->
-        <div class="rounded-lg p-20 shadow-sm mb-20 border border-neutral-80" *ngIf="isJuridicPerson()">
-          <h3 class="text-lg font-semibold text-primary mb-24 border-b border-primary pb-2 text-center">
-            Información de Empresa
-          </h3>
+        <app-form-panel title="Información de Empresa" *ngIf="isJuridicPerson()">
           <div class="grid grid-cols-1 gap-12">
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary label-required">Razón Social</label>
+              <app-form-field-label label="Razón Social" [required]="true"></app-form-field-label>
               <input 
                 pInputText 
                 formControlName="socialReason"
                 placeholder="Ingrese razón social"
                 class="max-w-lg">
-              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('socialReason')?.touched) && createdThirdForm.get('socialReason')?.invalid">
+              <app-form-field-error [form]="createdThirdForm" fieldName="socialReason" [submitted]="submitted">
                 La razón social es requerida para persona jurídica
-              </small>
+              </app-form-field-error>
             </div>
           </div>
-        </div>
+        </app-form-panel>
 
         <!-- Panel: Información de Ubicación -->
-        <div class="rounded-lg p-20 shadow-sm mb-20 border border-neutral-80">
-          <h3 class="text-lg font-semibold text-primary mb-24 border-b border-primary pb-2 text-center">
-            Información de Ubicación
-          </h3>
+        <app-form-panel title="Información de Ubicación">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary">País</label>
+              <app-form-field-label label="País"></app-form-field-label>
               <p-select 
                 [options]="countries" 
                 formControlName="country"
@@ -239,7 +222,7 @@
             </div>
 
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary">Departamento</label>
+              <app-form-field-label label="Departamento"></app-form-field-label>
               <p-select 
                 [options]="departments" 
                 formControlName="province"
@@ -263,14 +246,13 @@
             </div>
 
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary">Ciudad</label>
+              <app-form-field-label label="Ciudad"></app-form-field-label>
               <p-select 
                 [options]="cities" 
                 formControlName="city"
                 optionLabel="label"
                 optionValue="value"
                 placeholder="Seleccione ciudad"
-                [disabled]="!createdThirdForm.get('province')?.value"
                 [filter]="true"
                 filterBy="label,value"
                 [showClear]="true"
@@ -287,39 +269,36 @@
             </div>
 
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary label-required">Dirección</label>
+              <app-form-field-label label="Dirección" [required]="true"></app-form-field-label>
               <input 
                 pInputText 
                 formControlName="address"
                 placeholder="Ingrese dirección"
                 class="max-w-sm">
-              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('address')?.touched) && createdThirdForm.get('address')?.invalid">
+              <app-form-field-error [form]="createdThirdForm" fieldName="address" [submitted]="submitted">
                 La dirección es requerida
-              </small>
+              </app-form-field-error>
             </div>
           </div>
-        </div>
+        </app-form-panel>
 
         <!-- Panel: Información de Contacto -->
-        <div class="rounded-lg p-20 shadow-sm mb-20 border border-neutral-80">
-          <h3 class="text-lg font-semibold text-primary mb-24 border-b border-primary pb-2 text-center">
-            Información de Contacto
-          </h3>
+        <app-form-panel title="Información de Contacto">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary label-required">Teléfono</label>
+              <app-form-field-label label="Teléfono" [required]="true"></app-form-field-label>
               <input 
                 pInputText 
                 formControlName="phoneNumber"
                 placeholder="Ingrese número de teléfono"
                 class="max-w-sm">
-              <small class="error-message" *ngIf="(submitted || createdThirdForm.get('phoneNumber')?.touched) && createdThirdForm.get('phoneNumber')?.invalid">
+              <app-form-field-error [form]="createdThirdForm" fieldName="phoneNumber" [submitted]="submitted">
                 El número de teléfono es requerido
-              </small>
+              </app-form-field-error>
             </div>
 
             <div class="flex flex-col gap-2">
-              <label class="font-semibold text-primary label-required">Correo Electrónico</label>
+              <app-form-field-label label="Correo Electrónico" [required]="true"></app-form-field-label>
               <input 
                 pInputText 
                 formControlName="email"
@@ -335,7 +314,7 @@
               </small>
             </div>
           </div>
-        </div>
+        </app-form-panel>
 
       </div>
 

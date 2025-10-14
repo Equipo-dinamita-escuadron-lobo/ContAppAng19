@@ -55,7 +55,7 @@ export class ThirdService {
     return this.http.post<Third>(this.thirdApiUrl,Third).pipe(
       catchError((error) => {
         console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while adding a hero'));
+        return throwError(() => error);
       })
     );
   }
@@ -87,7 +87,7 @@ export class ThirdService {
     return this.http.post<Third>(this.thirdApiUrl+"update",Third).pipe(
       catchError((error) => {
         console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while adding a hero'));
+        return throwError(() => error);
       })
     );
   }
@@ -150,6 +150,24 @@ export class ThirdService {
     let params = new HttpParams()
     .set('thId', thId);
     return this.http.put<any>(this.thirdApiUrl,null,{params})
+  }
+
+  /**
+   * Elimina un tercero del sistema
+   * @param thId ID del tercero
+   * @param entId ID de la empresa
+   * @returns Observable con el resultado de la eliminación
+   */
+  deleteThird(thId: number, entId: string): Observable<boolean> {
+    let params = new HttpParams()
+      .set('thirdId', thId)
+      .set('entId', entId);
+    return this.http.delete<boolean>(this.thirdApiUrl + 'delete', { params }).pipe(
+      catchError((error) => {
+        console.error('Error al eliminar tercero:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**

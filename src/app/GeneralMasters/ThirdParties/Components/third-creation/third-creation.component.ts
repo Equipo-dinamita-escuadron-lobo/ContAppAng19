@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AbstractControl, AsyncValidatorFn, FormBuilder, FormGroup, ValidationErrors, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 
@@ -25,15 +25,18 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
-import { GeographyService } from '../../Services/geography.service';
 import { eThirdGender } from '../../models/eThirdGender';
 import { ePersonType } from '../../models/ePersonType';
-import { Country } from '../../models/Country';
-import { Department } from '../../models/Department';
-import { City } from '../../models/City';
 
-// External libraries
-import { catchError, map, Observable, of } from 'rxjs';
+// Shared Services
+import { ThirdFormService } from '../../Services/third-form.service';
+import { ThirdValidationService } from '../../Services/third-validation.service';
+import { GeographyHelperService } from '../../Services/geography-helper.service';
+
+// Shared Components
+import { FormFieldLabelComponent } from '../shared/form-field-label.component';
+import { FormPanelComponent } from '../shared/form-panel.component';
+import { FormFieldErrorComponent } from '../shared/form-field-error.component';
 
 @Component({
   selector: 'app-third-creation',
@@ -53,7 +56,10 @@ import { catchError, map, Observable, of } from 'rxjs';
     TooltipModule,
     InputNumberModule,
     CheckboxModule,
-    SelectModule
+    SelectModule,
+    FormFieldLabelComponent,
+    FormPanelComponent,
+    FormFieldErrorComponent
   ],
   providers: [MessageService, DatePipe, LocalStorageMethods],
   templateUrl: './third-creation.component.html',
@@ -131,14 +137,12 @@ export class ThirdCreationComponent implements OnInit {
     verificationNumber: 0,
     state: true,
     photoPath: undefined,
-    country: "",
-    province: "",
-    city: "",
+    country: null,
+    province: null,
+    city: null,
     address: '',
     phoneNumber: '',
-    email: '',
-    creationDate: '',
-    updateDate: ''
+    email: ''
   };
 
   /** Lista de géneros para dropdown */
@@ -164,19 +168,23 @@ export class ThirdCreationComponent implements OnInit {
     private fb: FormBuilder,
     private thirdService: ThirdService,
     private thirdServiceConfigurationService: ThirdServiceConfigurationService,
-    private geographyService: GeographyService,
     private router: Router,
     private datePipe: DatePipe,
     private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods
+    private localStorageMethods: LocalStorageMethods,
+    private thirdFormService: ThirdFormService,
+    private thirdValidationService: ThirdValidationService,
+    private geographyHelper: GeographyHelperService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
   }
 
   ngOnInit(): void {
-    this.loadInitialData();
-    this.checkForRUTData();
+    this.loadInitialData().then(() => {
+      // Esperar a que se carguen los datos antes de procesar el RUT
+      this.checkForRUTData();
+    });
   }
 
   /**
@@ -188,7 +196,7 @@ export class ThirdCreationComponent implements OnInit {
       state: [true, Validators.required],
       thirdTypes: [[], Validators.required],
       typeId: [null, Validators.required],
-      idNumber: [null, [Validators.required, Validators.min(1)], [this.thirdExistsValidator(this.thirdService, this.entData)]],
+      idNumber: [null, [Validators.required, Validators.min(1)], [this.thirdValidationService.thirdExistsValidator(this.thirdService, this.entData)]],
       verificationNumber: [null],
       names: [null],
       lastNames: [null],
@@ -196,13 +204,29 @@ export class ThirdCreationComponent implements OnInit {
       gender: [null],
       country: [null],
       province: [null],
-      city: [null],
+      city: [{ value: null, disabled: true }], // Inicialmente deshabilitado
       address: [null, Validators.required],
       phoneNumber: [null, Validators.required],
       email: [null, [Validators.required, Validators.email]]
     });
 
     this.setupDynamicValidations();
+    this.setupProvinceChangeHandler();
+  }
+
+  /**
+   * Configura el manejador de cambios del departamento para habilitar/deshabilitar ciudad
+   */
+  private setupProvinceChangeHandler(): void {
+    this.createdThirdForm.get('province')?.valueChanges.subscribe(value => {
+      const cityControl = this.createdThirdForm.get('city');
+      if (value) {
+        cityControl?.enable();
+      } else {
+        cityControl?.disable();
+        cityControl?.setValue(null);
+      }
+    });
   }
 
   /**
@@ -216,46 +240,71 @@ export class ThirdCreationComponent implements OnInit {
       const genderControl = this.createdThirdForm.get('gender');
 
       if (value === ePersonType.natural) {
+        // Configurar validadores para persona natural
         namesControl?.setValidators([Validators.required]);
         lastNamesControl?.setValidators([Validators.required]);
+        genderControl?.clearValidators();
         socialReasonControl?.clearValidators();
-        genderControl?.setValidators([Validators.required]);
+
+        // Limpiar campos específicos de persona jurídica
+        socialReasonControl?.setValue(null);
 
         this.button2Checked = true;
         this.button1Checked = false;
 
         // Filtrar tipos de identificación para persona natural
-        this.filterTypeIdsByPersonType('NATURAL_PERSON');
+        this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds, 'NATURAL_PERSON');
+
+        // Limpiar tipo de identificación ya que los disponibles cambian
+        this.createdThirdForm.get('typeId')?.setValue(null);
 
         // Limpiar DV para persona natural
-        this.createdThirdForm.get('verificationNumber')?.setValue(null);
+        this.thirdFormService.clearVerificationDigit(this.createdThirdForm);
         
         // Restaurar validaciones básicas del número de identificación
         const idNumberControl = this.createdThirdForm.get('idNumber');
         idNumberControl?.setValidators([Validators.required, Validators.min(1)]);
         idNumberControl?.setAsyncValidators([
-          this.thirdExistsValidator(this.thirdService, this.entData)
+          this.thirdValidationService.thirdExistsValidator(this.thirdService, this.entData)
         ]);
         idNumberControl?.updateValueAndValidity();
       } else if (value === ePersonType.juridica) {
+        // Configurar validadores para persona jurídica
         socialReasonControl?.setValidators([Validators.required]);
         namesControl?.clearValidators();
         lastNamesControl?.clearValidators();
         genderControl?.clearValidators();
 
+        // Limpiar campos específicos de persona natural
+        namesControl?.setValue(null);
+        lastNamesControl?.setValue(null);
+        genderControl?.setValue(null);
+
         this.button1Checked = true;
         this.button2Checked = false;
 
         // Filtrar tipos de identificación para persona jurídica
-        this.filterTypeIdsByPersonType('LEGAL_ENTITY');
+        this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds, 'LEGAL_ENTITY');
+
+        // Limpiar tipo de identificación ya que los disponibles cambian
+        this.createdThirdForm.get('typeId')?.setValue(null);
 
         // Actualizar validaciones del número de identificación si hay tipo seleccionado
-        this.updateIdNumberValidations();
+        const typeId = this.thirdFormService.getTypeId(this.createdThirdForm);
+        const personType = this.thirdFormService.getPersonType(this.createdThirdForm);
+        this.thirdValidationService.updateIdNumberValidations(
+          this.createdThirdForm, 
+          typeId, 
+          personType,
+          this.entData,
+          this.thirdService
+        );
 
         // Calcular DV si ya hay número de identificación y el tipo es NIT
         const idNumber = this.createdThirdForm.get('idNumber')?.value;
-        if (this.shouldCalculateDV() && idNumber) {
-          this.calculateVerificationDigit(idNumber);
+        if (this.thirdFormService.shouldCalculateDV(personType, typeId) && idNumber) {
+          const dv = this.thirdFormService.calculateVerificationDigit(idNumber);
+          this.thirdFormService.setVerificationDigit(this.createdThirdForm, dv);
         }
       }
 
@@ -267,26 +316,40 @@ export class ThirdCreationComponent implements OnInit {
 
     // Calcular DV automáticamente cuando cambie el número de identificación (solo para persona jurídica con NIT)
     this.createdThirdForm.get('idNumber')?.valueChanges.subscribe(idNumber => {
-      if (this.shouldCalculateDV()) {
+      const personType = this.thirdFormService.getPersonType(this.createdThirdForm);
+      const typeId = this.thirdFormService.getTypeId(this.createdThirdForm);
+      
+      if (this.thirdFormService.shouldCalculateDV(personType, typeId)) {
         if (idNumber && idNumber > 0) {
-          this.calculateVerificationDigit(idNumber);
+          const dv = this.thirdFormService.calculateVerificationDigit(idNumber);
+          this.thirdFormService.setVerificationDigit(this.createdThirdForm, dv);
         } else {
           // Limpiar DV si no hay número válido
-          this.createdThirdForm.get('verificationNumber')?.setValue(null);
+          this.thirdFormService.clearVerificationDigit(this.createdThirdForm);
         }
       }
     });
 
     // Calcular DV cuando cambie el tipo de identificación y aplicar validaciones
     this.createdThirdForm.get('typeId')?.valueChanges.subscribe(() => {
-      this.updateIdNumberValidations();
+      const typeId = this.thirdFormService.getTypeId(this.createdThirdForm);
+      const personType = this.thirdFormService.getPersonType(this.createdThirdForm);
+      
+      this.thirdValidationService.updateIdNumberValidations(
+        this.createdThirdForm,
+        typeId,
+        personType,
+        this.entData,
+        this.thirdService
+      );
       
       const idNumber = this.createdThirdForm.get('idNumber')?.value;
-      if (this.shouldCalculateDV() && idNumber && idNumber > 0) {
-        this.calculateVerificationDigit(idNumber);
-      } else if (!this.shouldCalculateDV()) {
+      if (this.thirdFormService.shouldCalculateDV(personType, typeId) && idNumber && idNumber > 0) {
+        const dv = this.thirdFormService.calculateVerificationDigit(idNumber);
+        this.thirdFormService.setVerificationDigit(this.createdThirdForm, dv);
+      } else if (!this.thirdFormService.shouldCalculateDV(personType, typeId)) {
         // Limpiar DV si cambió a un tipo que no requiere cálculo automático
-        this.createdThirdForm.get('verificationNumber')?.setValue(null);
+        this.thirdFormService.clearVerificationDigit(this.createdThirdForm);
       }
     });
   }
@@ -295,31 +358,13 @@ export class ThirdCreationComponent implements OnInit {
    * Actualiza las validaciones del número de identificación según el tipo seleccionado
    */
   private updateIdNumberValidations(): void {
-    const idNumberControl = this.createdThirdForm.get('idNumber');
-    const typeId = this.createdThirdForm.get('typeId')?.value;
-    const isNIT = typeId && typeId.typeId === 'NIT';
-
-    if (isNIT) {
-      // Para NIT: debe empezar con 8 o 9 y tener exactamente 9 dígitos
-      idNumberControl?.setValidators([
-        Validators.required,
-        Validators.min(1),
-        this.nitValidator()
-      ]);
-    } else {
-      // Para otros tipos: solo requerido y mayor a 0
-      idNumberControl?.setValidators([
-        Validators.required,
-        Validators.min(1)
-      ]);
-    }
-
-    // Mantener el validador asíncrono
-    idNumberControl?.setAsyncValidators([
-      this.thirdExistsValidator(this.thirdService, this.entData)
-    ]);
-
-    idNumberControl?.updateValueAndValidity();
+    this.thirdValidationService.updateIdNumberValidations(
+      this.createdThirdForm,
+      this.thirdFormService.getTypeId(this.createdThirdForm),
+      this.thirdFormService.getPersonType(this.createdThirdForm),
+      this.entData,
+      this.thirdService
+    );
   }
 
   /**
@@ -334,7 +379,6 @@ export class ThirdCreationComponent implements OnInit {
         this.loadStates()
       ]);
     } catch (error) {
-      console.error('Error loading initial data:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
@@ -358,28 +402,158 @@ export class ThirdCreationComponent implements OnInit {
    * Prellena el formulario con datos del RUT
    */
   private prefillFormWithRUTData(): void {
-    if (this.infoThird && this.infoThird.length >= 12) {
+    if (this.infoThird && this.infoThird.length >= 12) {      
+      // Determinar el tipo de persona
+      const personTypeStr = this.infoThird[0]?.toLowerCase() || '';
+      let personType = ePersonType.natural; // Por defecto natural
+      
+      if (personTypeStr.includes('jurídica') || personTypeStr.includes('juridica')) {
+        personType = ePersonType.juridica;
+      }
+
+      // Buscar el tipo de identificación que coincida
+      const typeIdStr = this.infoThird[1]?.trim() || '';
+      let matchedTypeId = null;
+      
+      if (typeIdStr) {
+        matchedTypeId = this.typeIds.find(t => 
+          t.typeIdname?.toLowerCase().includes(typeIdStr.toLowerCase()) ||
+          t.typeId?.toLowerCase() === typeIdStr.toLowerCase()
+        );
+      }
+
+      // Buscar el código del departamento por su nombre
+      const departmentName = this.infoThird[7]?.trim() || '';
+      const departmentCode = this.findDepartmentCodeByName(departmentName);
+
+      // Buscar el código del país por su nombre
+      const countryName = this.infoThird[6]?.trim() || '';
+      const countryCode = this.findCountryCodeByName(countryName) || 'COL';
+
+      // Buscar el código de la ciudad por su nombre (se hará después de cargar las ciudades)
+      const cityName = this.infoThird[8]?.trim() || '';
+
       this.createdThirdForm.patchValue({
-        personType: this.infoThird[0] || ePersonType.natural,
-        names: this.infoThird[1],
-        lastNames: this.infoThird[2],
-        socialReason: this.infoThird[3],
-        idNumber: parseInt(this.infoThird[4]) || 0,
-        verificationNumber: this.infoThird[5],
-        address: this.infoThird[6],
-        phoneNumber: this.infoThird[7],
-        email: this.infoThird[8],
-        country: this.infoThird[9] || 'COL',
-        province: this.infoThird[10],
-        city: this.infoThird[11]
+        personType: personType,
+        typeId: matchedTypeId,
+        idNumber: parseInt(this.infoThird[2]) || 0,
+        verificationNumber: this.infoThird[3] || null,
+        lastNames: this.infoThird[4]?.trim() || null,
+        names: this.infoThird[5]?.trim() || null,
+        socialReason: personType === ePersonType.juridica ? this.infoThird[4]?.trim() : null,
+        country: countryCode,
+        province: departmentCode,
+        address: this.infoThird[9]?.trim() || null,
+        email: this.infoThird[10]?.trim() || null,
+        phoneNumber: this.infoThird[11]?.trim() || null
       });
 
       // Cargar ciudades si hay departamento seleccionado
-      if (this.infoThird[10]) {
-        const countryCode = this.infoThird[9] || 'COL';
-        this.loadCities(this.infoThird[10], countryCode);
+      if (departmentCode) {
+        // Habilitar el control de ciudad
+        this.createdThirdForm.get('city')?.enable();
+        
+        // Cargar ciudades y luego asignar la ciudad correspondiente
+        this.geographyHelper.loadCitiesAsOptions(departmentCode, countryCode).subscribe({
+          next: (cities) => {
+            this.cities = cities;
+            
+            // Buscar el código de la ciudad por su nombre
+            if (cityName) {
+              const cityCode = this.findCityCodeByName(cityName, cities);
+              if (cityCode) {
+                this.createdThirdForm.patchValue({ city: cityCode });
+              }
+            }
+          },
+          error: (error) => {
+            console.error('Error al cargar ciudades desde RUT:', error);
+            this.cities = [];
+          }
+        });
       }
     }
+  }
+
+  /**
+   * Normaliza un string removiendo acentos y caracteres especiales
+   * @param str String a normalizar
+   * @returns String normalizado
+   */
+  private normalizeString(str: string): string {
+    return str
+      .toLowerCase()
+      .trim()
+      .normalize('NFD') // Descompone caracteres con acentos
+      .replace(/[\u0300-\u036f]/g, '') // Remueve los acentos
+      .replace(/[^a-z0-9\s]/g, ''); // Remueve caracteres especiales excepto espacios
+  }
+
+  /**
+   * Busca el código del país por su nombre
+   * @param countryName Nombre del país
+   * @returns Código del país o null
+   */
+  private findCountryCodeByName(countryName: string): string | null {
+    if (!countryName) return null;
+    
+    const normalized = this.normalizeString(countryName);
+    const country = this.countries.find(c => 
+      this.normalizeString(c.label) === normalized
+    );
+    
+    if (country) {
+      console.log(`País encontrado: "${countryName}" -> ${country.value}`);
+      return country.value;
+    }
+    
+    console.warn(`No se encontró el país: "${countryName}"`);
+    return null;
+  }
+
+  /**
+   * Busca el código del departamento por su nombre
+   * @param departmentName Nombre del departamento
+   * @returns Código del departamento o null
+   */
+  private findDepartmentCodeByName(departmentName: string): string | null {
+    if (!departmentName) return null;
+    
+    const normalized = this.normalizeString(departmentName);
+    const department = this.states.find(state => 
+      this.normalizeString(state.label) === normalized
+    );
+    
+    if (department) {
+      console.log(`Departamento encontrado: "${departmentName}" -> ${department.value}`);
+      return department.value;
+    }
+    
+    console.warn(`No se encontró el departamento: "${departmentName}"`);
+    return null;
+  }
+
+  /**
+   * Busca el código de la ciudad por su nombre
+   * @param cityName Nombre de la ciudad
+   * @param cities Lista de opciones de ciudades
+   * @returns Código de la ciudad o null
+   */
+  private findCityCodeByName(cityName: string, cities: any[]): string | null {
+    if (!cityName) return null;
+    
+    const normalized = this.normalizeString(cityName);
+    const city = cities.find(c => 
+      this.normalizeString(c.label) === normalized
+    );
+    
+    if (city) {
+      console.log(`Ciudad encontrada: "${cityName}" -> ${city.value}`);
+      return city.value;
+    }
+    
+    console.warn(`No se encontró la ciudad: "${cityName}"`);
+    return null;
   }
 
   /**
@@ -413,7 +587,7 @@ export class ThirdCreationComponent implements OnInit {
         next: (types: TypeId[]) => {
           this.typeIds = types;
           // Inicializar filteredTypeIds con persona natural por defecto
-          this.filterTypeIdsByPersonType('NATURAL_PERSON');
+          this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(types, 'NATURAL_PERSON');
           resolve();
         },
         error: (error: any) => {
@@ -429,40 +603,16 @@ export class ThirdCreationComponent implements OnInit {
   }
 
   /**
-   * Filtra los tipos de identificación según el tipo de persona
-   * @param classification Clasificación del tipo de persona: 'NATURAL_PERSON' o 'LEGAL_ENTITY'
-   */
-  private filterTypeIdsByPersonType(classification: 'NATURAL_PERSON' | 'LEGAL_ENTITY'): void {
-    this.filteredTypeIds = this.typeIds.filter(typeId => typeId.classification === classification);
-    
-    // Limpiar el tipo de identificación seleccionado si no está en la lista filtrada
-    const currentTypeId = this.createdThirdForm.get('typeId')?.value;
-    if (currentTypeId) {
-      const isValidTypeId = this.filteredTypeIds.some(
-        typeId => typeId.typeId === (typeof currentTypeId === 'object' ? currentTypeId.typeId : currentTypeId)
-      );
-      
-      if (!isValidTypeId) {
-        this.createdThirdForm.get('typeId')?.setValue(null);
-      }
-    }
-  }
-
-  /**
    * Carga los países desde el backend
    */
   private loadCountries(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.geographyService.getAllCountries().subscribe({
-        next: (countries: Country[]) => {
-          this.countries = countries.map(country => ({
-            label: country.countryName,
-            value: country.countryCode
-          }));
+      this.geographyHelper.loadCountriesAsOptions().subscribe({
+        next: (countries) => {
+          this.countries = countries;
           resolve();
         },
-        error: (error: any) => {
-          console.error('Error loading countries:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -480,16 +630,12 @@ export class ThirdCreationComponent implements OnInit {
    */
   private loadStates(countryCode: string = 'COL'): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.geographyService.getStatesByCountry(countryCode).subscribe({
-        next: (states: Department[]) => {
-          this.states = states.map(state => ({
-            label: state.stateName,
-            value: state.stateCode
-          }));
+      this.geographyHelper.loadDepartmentsAsOptions(countryCode).subscribe({
+        next: (departments) => {
+          this.states = departments;
           resolve();
         },
-        error: (error: any) => {
-          console.error('Error loading states:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -507,15 +653,11 @@ export class ThirdCreationComponent implements OnInit {
    * @param countryCode Código del país (por defecto COL)
    */
   private loadCities(stateCode: string, countryCode: string = 'COL'): void {
-    this.geographyService.getCitiesByState(stateCode, countryCode).subscribe({
-      next: (cities: City[]) => {
-        this.cities = cities.map(city => ({
-          label: city.cityName,
-          value: city.cityCode
-        }));
+    this.geographyHelper.loadCitiesAsOptions(stateCode, countryCode).subscribe({
+      next: (cities) => {
+        this.cities = cities;
       },
-      error: (error: any) => {
-        console.error('Error loading cities:', error);
+      error: (error) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -561,19 +703,24 @@ export class ThirdCreationComponent implements OnInit {
     if (this.createdThirdForm.valid) {
       const formData = this.createdThirdForm.value;
 
-      const newThird: Third = {
+      // Preparar datos para enviar al backend con códigos geográficos
+      const newThird: any = {
         ...this.thirdData,
         ...formData,
         entId: this.entData,
-        creationDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!,
-        updateDate: this.datePipe.transform(this.currentDate, 'yyyy-MM-dd')!
+        countryCode: formData.country,
+        stateCode: formData.province,
+        cityCode: formData.city,
+        country: undefined,
+        province: undefined,
+        city: undefined
       };
 
       this.thirdService.createThird(newThird).subscribe({
         next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro exitoso',
             detail: 'Tercero creado correctamente'
           });
 
@@ -585,11 +732,25 @@ export class ThirdCreationComponent implements OnInit {
           }, 2000);
         },
         error: (error: any) => {
-          console.error('Error creating third:', error);
+          // Extraer el mensaje de error más específico disponible
+          const errorMessage = error.error?.message || error.message || 'Error al crear el tercero';
+          
+          // Determinar el título según el tipo de error
+          let errorTitle = 'Error';
+          if (error.status === 409) {
+            errorTitle = 'Tercero Duplicado';
+          } else if (error.status === 400) {
+            errorTitle = 'Datos Inválidos';
+          } else if (error.status === 404) {
+            errorTitle = 'No Encontrado';
+          } else if (error.status >= 500) {
+            errorTitle = 'Error del Servidor';
+          }
+
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al crear el tercero'
+            summary: errorTitle,
+            detail: errorMessage
           });
         }
       });
@@ -603,41 +764,6 @@ export class ThirdCreationComponent implements OnInit {
   }
 
   /**
-   * Calcula el dígito de verificación del NIT según el algoritmo módulo 11 de la DIAN
-   * @param idNumber Número de identificación (NIT sin DV)
-   * @returns El dígito de verificación (0-9)
-   */
-  private calculateVerificationDigit(idNumber: number): void {
-    // Convertir el número a string para procesar dígito por dígito
-    const idString = idNumber.toString();
-    const digits = idString.split('').map(d => parseInt(d, 10)).reverse();
-
-    // Multiplicadores según la DIAN: 3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71
-    const multipliers = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
-
-    // 1. Multiplicar cada dígito por su multiplicador correspondiente
-    let sum = 0;
-    for (let i = 0; i < digits.length; i++) {
-      sum += digits[i] * multipliers[i];
-    }
-
-    // 2. Calcular el residuo de dividir la suma entre 11
-    const remainder = sum % 11;
-
-    // 3. Restar el residuo de 11
-    let dv = 11 - remainder;
-
-    // 4. Si el resultado es 11, el DV es 0. Si es 10, el DV es 1
-    if (dv === 11) {
-      dv = 0;
-    } else if (dv === 10) {
-      dv = 1;
-    }
-
-    // Actualizar el campo del formulario
-    this.createdThirdForm.get('verificationNumber')?.setValue(dv.toString());
-  }
-  /**
    * Cancela la creación y regresa a la lista
    */
   onCancel(): void {
@@ -645,104 +771,44 @@ export class ThirdCreationComponent implements OnInit {
     this.router.navigate(['/gen-masters/third-parties/list']);
   }
 
-  // Métodos de tooltips removidos
-
-  // Validador asíncrono para verificar si el tercero existe
-  thirdExistsValidator(thirdService: ThirdService, entId: string): AsyncValidatorFn {
-    return (control: AbstractControl): Observable<ValidationErrors | null> => {
-      if (!control.value) {
-        return of(null);
-      }
-
-      return thirdService.existThird(control.value, entId).pipe(
-        map(exists => exists ? { thirdExists: true } : null),
-        catchError(() => of(null))
-      );
-    };
-  }
-
-  /**
-   * Validador personalizado para NIT
-   * Verifica que el NIT empiece con 8 o 9 y tenga exactamente 9 dígitos
-   */
-  private nitValidator(): (control: AbstractControl) => ValidationErrors | null {
-    return (control: AbstractControl): ValidationErrors | null => {
-      if (!control.value) {
-        return null;
-      }
-
-      const nitString = control.value.toString();
-      const firstDigit = nitString.charAt(0);
-
-      // Validar que empiece con 8 o 9
-      if (firstDigit !== '8' && firstDigit !== '9') {
-        return { nitInvalidStart: true };
-      }
-
-      // Validar que tenga exactamente 9 dígitos
-      if (nitString.length !== 9) {
-        return { nitInvalidLength: true };
-      }
-
-      return null;
-    };
-  }
-
   /**
    * Verifica si es persona natural
    */
   isNaturalPerson(): boolean {
-    return this.createdThirdForm.get('personType')?.value === ePersonType.natural;
+    return this.thirdFormService.isNaturalPerson(this.createdThirdForm);
   }
 
   /**
    * Verifica si es persona jurídica
    */
   isJuridicPerson(): boolean {
-    return this.createdThirdForm.get('personType')?.value === ePersonType.juridica;
+    return this.thirdFormService.isJuridicPerson(this.createdThirdForm);
   }
 
   /**
    * Verifica si se debe calcular el DV automáticamente
-   * Solo cuando es persona jurídica y el tipo de ID es NIT
    */
   shouldCalculateDV(): boolean {
-    const isJuridic = this.isJuridicPerson();
-    const typeId = this.createdThirdForm.get('typeId')?.value;
-    const isNIT = typeId && typeId.typeId === 'NIT';
-    return isJuridic && isNIT;
+    return this.thirdFormService.shouldCalculateDV(
+      this.thirdFormService.getPersonType(this.createdThirdForm),
+      this.thirdFormService.getTypeId(this.createdThirdForm)
+    );
   }
 
   /**
    * Verifica si el campo DV debe estar en solo lectura
-   * Solo está bloqueado cuando se calcula automáticamente (NIT)
    */
   isDVReadonly(): boolean {
-    return this.shouldCalculateDV();
+    return this.thirdFormService.isDVReadonly(
+      this.thirdFormService.getPersonType(this.createdThirdForm),
+      this.thirdFormService.getTypeId(this.createdThirdForm)
+    );
   }
 
   /**
    * Permite solo la entrada de números (0-9) en el input de DV
-   * Filtra cualquier carácter que no sea número
-   * @param event Evento del input
    */
   onlyNumbersInput(event: Event): void {
-    // Si el campo está en modo readonly, no hacer nada
-    if (this.isDVReadonly()) {
-      return;
-    }
-
-    const input = event.target as HTMLInputElement;
-    // Reemplazar cualquier carácter que no sea número (0-9)
-    input.value = input.value.replace(/[^0-9]/g, '');
-    // Actualizar el valor del formulario
-    this.createdThirdForm.get('verificationNumber')?.setValue(input.value);
+    this.thirdFormService.onlyNumbersInput(event as KeyboardEvent);
   }
 }
-
-
-
-
-
-
-
