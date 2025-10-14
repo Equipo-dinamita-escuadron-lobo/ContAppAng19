@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../environments/environment.local';
+import { environment } from '../../../../../environments/environment.dev';
 import { auxBookResponse } from '../Models/Responses/BookResponse';
 import { ExportAuxiliaryBookRequest } from '../Models/Requests/ExportAuxiliaryBookRequest';
 
