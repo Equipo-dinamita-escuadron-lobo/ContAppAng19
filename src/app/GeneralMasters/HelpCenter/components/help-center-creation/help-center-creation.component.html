@@ -15,18 +15,30 @@
       <!-- Botones -->
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
-          <p-button label="Cancelar" icon="pi pi-times" (onClick)="onCancel()" styleClass="p-button-secondary"></p-button>
-          <p-button label="Crear" icon="pi pi-check" (onClick)="onSubmit()" [disabled]="!form.valid"></p-button>
+          <p-button label="Guardar" icon="pi pi-save" (onClick)="onSubmit()" [disabled]="!form.valid"></p-button>
+          <p-button icon="pi pi-arrow-left" (onClick)="onCancel()" styleClass="p-button-secondary"></p-button>    
         </div>
       </div>
     </div>
 
     <!-- Formulario -->
-    <form [formGroup]="form" class="space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form [formGroup]="form">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
+        <!-- Nombre -->
+        <div class="flex flex-col gap-2">
+          <label for="name" class="font-semibold text-primary label-required mt-2">Nombre</label>
+          <input
+            pInputText
+            id="name"
+            formControlName="name"
+            placeholder="Ingrese el nombre del centro de ayuda"
+            class="w-full md:w-2/3"
+          />
+        </div>
+
         <!-- Módulo -->
-        <div class="flex flex-col">
-          <label for="moduleId" class="font-semibold text-primary mb-2">Módulo *</label>
+        <div class="flex flex-col gap-2">
+          <label for="moduleId" class="font-semibold text-primary label-required mt-2">Módulo</label>
           <p-dropdown
             id="moduleId"
             formControlName="moduleId"
@@ -34,27 +46,15 @@
             optionLabel="name"
             optionValue="id"
             placeholder="Seleccione un módulo"
-            class="w-full"
+            class="w-full md:w-2/3"
             [style]="{'border-radius': '8px'}"
           ></p-dropdown>
-        </div>
-
-        <!-- Nombre -->
-        <div class="flex flex-col">
-          <label for="name" class="font-semibold text-primary mb-2">Nombre *</label>
-          <input
-            pInputText
-            id="name"
-            formControlName="name"
-            placeholder="Ingrese el nombre del centro de ayuda"
-            class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
-          />
         </div>
       </div>
 
       <!-- Descripción -->
-      <div class="flex flex-col">
-        <label for="description" class="font-semibold text-primary mb-2">Descripción *</label>
+      <div class="flex flex-col gap-2 mt-40">
+        <label for="description" class="font-semibold text-primary label-required mt-2">Descripción</label>
         <p-editor
           formControlName="description"
           [style]="{'height': '200px'}"
