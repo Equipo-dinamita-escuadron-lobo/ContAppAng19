@@ -115,10 +115,12 @@ export class HelpCenterEditComponent implements OnInit {
         next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización exitosa',
             detail: 'Centro de ayuda actualizado correctamente.'
           });
-          this.router.navigate(['/gen-masters/help-center/list']);
+          setTimeout(() => {
+            this.router.navigate(['/gen-masters/help-center/list']);
+          }, 1000);
         },
         error: (error: any) => {
           let errorMessage = 'No se pudo actualizar el centro de ayuda.';
