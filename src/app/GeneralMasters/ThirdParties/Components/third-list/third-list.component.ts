@@ -237,8 +237,13 @@ export class ThirdListComponent implements OnInit {
    * Maneja el cambio de ordenamiento
    */
   onSort(event: any): void {
-    this.sortField = event.sortField;
-    this.sortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
+    // Evitar llamadas recursivas si el ordenamiento no cambió
+    if (this.sortField === event.field && this.sortOrder === (event.order === 1 ? 'asc' : 'desc')) {
+      return;
+    }
+
+    this.sortField = event.field;
+    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
     this.loadThirds();
   }
 
@@ -378,10 +383,6 @@ export class ThirdListComponent implements OnInit {
   private importThirdsFromExcel(file: File): void {
     this.loading = true;
     
-    console.log('Iniciando importación de terceros...');
-    console.log('Archivo:', file.name, 'Tamaño:', file.size, 'bytes');
-    console.log('ID Empresa:', this.entData);
-    
     this.thirdService.importFromExcel(this.entData, file).subscribe({
       next: (response) => {
         this.loading = false;
@@ -447,7 +448,6 @@ export class ThirdListComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error completo:', error);
         this.loading = false;
         
         // Extraer los errores del backend
