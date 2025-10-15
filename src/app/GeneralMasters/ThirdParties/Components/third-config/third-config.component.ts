@@ -404,7 +404,8 @@ export class ThirdConfigComponent implements OnInit {
     
     // Guardar valor inicial para detectar cambios
     this.initialTypeIdValue = {
-      name: typeId.typeIdname,
+      code: typeId.typeId?.trim(),
+      name: typeId.typeIdname?.trim(),
       classification: typeId.classification
     };
     
@@ -423,11 +424,12 @@ export class ThirdConfigComponent implements OnInit {
     
     if (this.originalTypeId) {
       const formValue = this.editTypeIdForm.value;
+      const code = formValue.code?.trim();
       const name = formValue.name?.trim();
       
-      // Verificar si ya existe otro tipo con el mismo nombre (excluyendo el actual)
+      // Verificar si ya existe otro tipo con el mismo código (excluyendo el actual)
       const existingTypeId = this.typesId.find((t, index) => 
-        t.typeIdname.toLowerCase() === name.toLowerCase() && 
+        t.typeId.toLowerCase() === code.toLowerCase() && 
         index !== this.editingTypeIdIndex
       );
       
@@ -435,7 +437,7 @@ export class ThirdConfigComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Ya existe otro tipo de identificación con ese nombre'
+          detail: 'Ya existe otro tipo de identificación con ese código'
         });
         return;
       }
@@ -443,8 +445,9 @@ export class ThirdConfigComponent implements OnInit {
       const classification = this.editTypeIdForm.get('classification')?.value;
       
       const updatedTypeId: TypeId = {
+        id: this.originalTypeId.id,
         entId: this.originalTypeId.entId,
-        typeId: this.originalTypeId.typeId, // El código no cambia
+        typeId: code,
         typeIdname: name,
         status: this.originalTypeId.status, // Mantener el estado actual
         classification: classification
@@ -490,9 +493,11 @@ export class ThirdConfigComponent implements OnInit {
    * Verifica si hay cambios en el formulario de edición de TypeId
    */
   hasTypeIdChanges(): boolean {
-    const currentName = this.editTypeIdForm.get('name')?.value;
+    const currentCode = this.editTypeIdForm.get('code')?.value?.trim();
+    const currentName = this.editTypeIdForm.get('name')?.value?.trim();
     const currentClassification = this.editTypeIdForm.get('classification')?.value;
-    return this.initialTypeIdValue.name !== currentName || 
+    return this.initialTypeIdValue.code !== currentCode ||
+           this.initialTypeIdValue.name !== currentName || 
            this.initialTypeIdValue.classification !== currentClassification;
   }
 
@@ -651,7 +656,7 @@ export class ThirdConfigComponent implements OnInit {
     
     // Guardar valor inicial para detectar cambios
     this.initialThirdTypeValue = {
-      name: thirdType.thirdTypeName
+      name: thirdType.thirdTypeName?.trim()
     };
     
     // Mostrar el formulario de edición
@@ -662,7 +667,7 @@ export class ThirdConfigComponent implements OnInit {
    * Verifica si hay cambios en el formulario de edición de ThirdType
    */
   hasThirdTypeChanges(): boolean {
-    const currentName = this.editThirdTypeForm.get('name')?.value;
+    const currentName = this.editThirdTypeForm.get('name')?.value?.trim();
     return this.initialThirdTypeValue.name !== currentName;
   }
 
