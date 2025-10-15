@@ -68,18 +68,20 @@
 
     <!-- Data Table -->
     <p-table #dt [value]="thirds" [loading]="loading" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
-      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      [rowsPerPageOptions]="[5, 10, 20, 50]" [first]="first"
       [globalFilterFields]="['names', 'lastNames', 'socialReason', 'idNumber', 'email', 'typeId.typeId']"
-      styleClass="p-datatable-gridlines" [responsiveLayout]="'scroll'">
+      styleClass="p-datatable-gridlines" [responsiveLayout]="'scroll'"
+      (onPage)="onPageChange($event)" (onSort)="onSort($event)"
+      [sortField]="sortField" [sortOrder]="sortOrder === 'asc' ? 1 : -1">
 
       <!-- Table Header -->
       <ng-template pTemplate="header">
         <tr>
           <th>Tipo Persona</th>
           <th>Tipo(s) Tercero</th>
-          <th>Nombre/Razón Social</th>
+          <th pSortableColumn="names">Nombre/Razón Social <p-sortIcon field="names"></p-sortIcon></th>
           <th>Tipo ID</th>
-          <th>Número de Identificación</th>
+          <th pSortableColumn="idNumber">Número de Identificación <p-sortIcon field="idNumber"></p-sortIcon></th>
           <th *ngIf="showDetailView">Dígito de Verificación</th>
           <th>Correo</th>
           <th *ngIf="showDetailView">País</th>
