@@ -52,7 +52,8 @@
                   <input
                     pInputText
                     type="text"
-                    (input)="typeIdTable.filterGlobal($any($event.target).value, 'contains')"
+                    [(ngModel)]="searchTermTypeIds"
+                    (input)="onSearchTypeIdsChange($any($event.target).value)"
                     placeholder="Buscar tipo de identificación..."
                     class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
                   />
@@ -210,9 +211,9 @@
           </div>
 
           <!-- Tabla de Tipos de Identificación -->
-          <p-table #typeIdTable [value]="typesId" [loading]="loadingTypeIds" [paginator]="true" [rows]="10" 
+          <p-table #typeIdTable [value]="typesId" [loading]="loadingTypeIds" [lazy]="true" (onLazyLoad)="loadTypeIdsLazy($event)"
+            [paginator]="true" [rows]="currentSizeTypeIds" [totalRecords]="totalRecordsTypeIds"
             [rowsPerPageOptions]="[5, 10, 20]"
-            [globalFilterFields]="['typeId', 'typeIdname', 'classification']" 
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
 

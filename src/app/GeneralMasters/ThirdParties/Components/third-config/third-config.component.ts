@@ -54,82 +54,72 @@ import { TypeId } from '../../models/TypeId';
   styleUrl: './third-config.component.css'
 })
 export class ThirdConfigComponent implements OnInit {
-  /** Control de visibilidad del modal */
   @Input() visible: boolean = false;
   
-  /** Datos recibidos como input al componente */
   @Input() inputData: any;
   
-  /** Evento para cerrar el modal */
   @Output() close = new EventEmitter<void>();
 
-  /** Datos de la empresa actual */
   entData: string = '';
 
-  /** Controla la visibilidad del input para nuevo tipo de tercero */
   showInputThirdType = false;
 
-  /** Controla la visibilidad del input para editar tipo de tercero */
   showEditThirdType = false;
 
-  /** Controla la visibilidad del input para nuevo tipo de identificación */
   showInputTypeId = false;
 
-  /** Controla la visibilidad del input para editar tipo de identificación */
   showEditTypeId = false;
-
-  /** Código para nueva identificación */
   newIdentificationCode = '';
 
-  /** Nombre para nueva identificación */
   newIdentificationName = '';
 
-  /** Formulario reactivo para tipos de identificación */
   typeIdForm: FormGroup;
   
-  /** Formulario reactivo para editar tipos de identificación */
   editTypeIdForm: FormGroup;
   
-  /** Formulario reactivo para tipos de terceros */
   thirdTypeForm: FormGroup;
-
-  /** Formulario reactivo para editar tipos de terceros */
   editThirdTypeForm: FormGroup;
 
-  /** Índice del tipo de tercero que se está editando */
   editingThirdTypeIndex: number = -1;
 
-  /** Tipo de tercero original antes de editar */
   originalThirdType: ThirdType | null = null;
 
-  /** Valor inicial del formulario de edición de ThirdType para detectar cambios */
   initialThirdTypeValue: any = {};
 
-  /** Índice del tipo de identificación que se está editando */
   editingTypeIdIndex: number = -1;
 
-  /** Tipo de identificación original antes de editar */
   originalTypeId: TypeId | null = null;
 
-  /** Valor inicial del formulario de edición para detectar cambios */
   initialTypeIdValue: any = {};
 
-  /** Nombre para nuevo tipo de tercero */
   newThirdTypeName = '';
 
-  /** Array de tipos de identificación */
   typesId: TypeId[] = [];
 
-  /** Array de tipos de terceros */
   thirdTypes: ThirdType[] = [];
 
-  /** Pestaña activa por defecto */
   activeTab: string = '0';
 
   /** Estados de carga */
   loading = false;
   loadingTypeIds = false;
   loadingThirdTypes = false;
+
+  /** Variables para paginación de tipos de ID */
+  totalRecordsTypeIds: number = 0;
+  currentPageTypeIds: number = 0;
+  currentSizeTypeIds: number = 10;
+  currentSortFieldTypeIds: string = 'tiName';
+  currentSortOrderTypeIds: string = 'asc';
+  searchTermTypeIds: string = '';
+
+  /** Variables para paginación de tipos de tercero */
+  totalRecordsThirdTypes: number = 0;
+  currentPageThirdTypes: number = 0;
+  currentSizeThirdTypes: number = 10;
+  currentSortFieldThirdTypes: string = 'ttName';
+  currentSortOrderThirdTypes: string = 'asc';
+  searchTermThirdTypes: string = '';
 
   /**
    * Constructor del componente
@@ -212,13 +202,21 @@ export class ThirdConfigComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de identificación
+   * Carga los tipos de identificación con paginación
    */
   private loadTypeIds(): void {
     this.loadingTypeIds = true;
-    this.thirdServiceConfiguration.getTypeIds(this.entData).subscribe({
-      next: (response: TypeId[]) => {
-        this.typesId = Array.isArray(response) ? response : [];
+    this.thirdServiceConfiguration.getTypeIds(
+      this.entData,
+      this.currentPageTypeIds,
+      this.currentSizeTypeIds,
+      this.currentSortFieldTypeIds,
+      this.currentSortOrderTypeIds,
+      this.searchTermTypeIds || undefined
+    ).subscribe({
+      next: (response: any) => {
+        this.typesId = Array.isArray(response.content) ? response.content : [];
+        this.totalRecordsTypeIds = response?.page?.totalElements || 0;
         this.loadingTypeIds = false;
       },
       error: (error: any) => {
@@ -231,6 +229,42 @@ export class ThirdConfigComponent implements OnInit {
         this.loadingTypeIds = false;
       }
     });
+  }
+
+  /**
+   * Carga los tipos de identificación con paginación lazy
+   */
+  loadTypeIdsLazy(event: any): void {
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) return;
+
+    // Calcular página y tamaño desde los controles de PrimeNG
+    this.currentPageTypeIds = Math.floor(event.first / event.rows);
+    this.currentSizeTypeIds = event.rows;
+    
+    // Manejar ordenamiento si está presente
+    if (event.sortField) {
+      this.currentSortFieldTypeIds = event.sortField;
+      this.currentSortOrderTypeIds = event.sortOrder === 1 ? 'asc' : 'desc';
+    }
+    
+    this.loadTypeIds();
+  }
+
+  /**
+   * Maneja el cambio en el término de búsqueda para tipos de ID
+   */
+  onSearchTypeIdsChange(searchTerm: string): void {
+    this.searchTermTypeIds = searchTerm;
+    this.currentPageTypeIds = 0; // Resetear a la primera página
+    this.loadTypeIds();
+  }
+
+  /**
+   * Recarga la página actual de tipos de ID
+   */
+  reloadCurrentPageTypeIds(): void {
+    this.loadTypeIds();
   }
 
 
@@ -253,7 +287,7 @@ export class ThirdConfigComponent implements OnInit {
     
     this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
       next: (response: TypeId) => {
-        this.typesId[index] = response;
+        this.reloadCurrentPageTypeIds();
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -337,12 +371,12 @@ export class ThirdConfigComponent implements OnInit {
 
       this.thirdServiceConfiguration.createTypeId(newTypeId).subscribe({
         next: (response: TypeId) => {
-          array.push(response);
           this.typeIdForm.reset();
           this.typeIdForm.patchValue({
             classification: 'NATURAL_PERSON'
           });
           this.showInputTypeId = false;
+          this.reloadCurrentPageTypeIds();
           this.messageService.add({
             severity: 'success',
             summary: 'Registro exitoso',
@@ -387,22 +421,18 @@ export class ThirdConfigComponent implements OnInit {
    * Inicia la edición de un tipo de identificación
    */
   editTypeId(typeId: TypeId, index: number): void {
-    // Cerrar otros formularios
     this.showInputTypeId = false;
     this.showInputThirdType = false;
     
-    // Guardar referencia del elemento original
     this.originalTypeId = { ...typeId };
     this.editingTypeIdIndex = index;
     
-    // Llenar el formulario con los datos actuales
     this.editTypeIdForm.patchValue({
       code: typeId.typeId,
       name: typeId.typeIdname,
       classification: typeId.classification
     });
     
-    // Guardar valor inicial para detectar cambios
     this.initialTypeIdValue = {
       code: typeId.typeId?.trim(),
       name: typeId.typeIdname?.trim(),
@@ -455,11 +485,8 @@ export class ThirdConfigComponent implements OnInit {
 
       this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
         next: (response: TypeId) => {
-          // Actualizar el elemento en el array
-          this.typesId[this.editingTypeIdIndex] = response;
-          
-          // Limpiar el formulario y ocultar
           this.cancelEditTypeId();
+          this.reloadCurrentPageTypeIds();
           
           this.messageService.add({
             severity: 'success',
@@ -545,7 +572,7 @@ export class ThirdConfigComponent implements OnInit {
     this.thirdServiceConfiguration.deleteTypeId(typeId.id, this.entData).subscribe({
       next: (response: boolean) => {
         if (response) {
-          this.typesId.splice(index, 1);
+          this.reloadCurrentPageTypeIds();
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
