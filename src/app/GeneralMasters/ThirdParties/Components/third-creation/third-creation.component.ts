@@ -562,8 +562,8 @@ export class ThirdCreationComponent implements OnInit {
   private getThirdTypes(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.thirdServiceConfigurationService.getThirdTypes(this.entData).subscribe({
-        next: (types: ThirdType[]) => {
-          this.thirdTypes = types;
+        next: (response: any) => {
+          this.thirdTypes = Array.isArray(response.content) ? response.content : [];
           resolve();
         },
         error: (error: any) => {
@@ -584,10 +584,10 @@ export class ThirdCreationComponent implements OnInit {
   private getTypesID(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.thirdServiceConfigurationService.getTypeIds(this.entData).subscribe({
-        next: (types: TypeId[]) => {
-          this.typeIds = types;
+        next: (response: any) => {
+          this.typeIds = Array.isArray(response.content) ? response.content : [];
           // Inicializar filteredTypeIds con persona natural por defecto
-          this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(types, 'NATURAL_PERSON');
+          this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds, 'NATURAL_PERSON');
           resolve();
         },
         error: (error: any) => {
