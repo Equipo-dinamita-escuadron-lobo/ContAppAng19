@@ -16,7 +16,7 @@
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
           <p-button label="Cancelar" (onClick)="onCancel()" styleClass="p-button-secondary"></p-button>
-          <p-button label="Actualizar" (onClick)="onSubmit()" [disabled]="!form.valid || isLoading"></p-button>              
+          <p-button label="Actualizar" (onClick)="onSubmit()" [disabled]="!form.valid || isLoading || !hasChanges()"></p-button>              
         </div>
       </div>
     </div>
