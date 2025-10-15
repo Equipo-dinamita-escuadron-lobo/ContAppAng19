@@ -35,6 +35,7 @@ export class HelpCenterEditComponent implements OnInit {
   form: FormGroup;
   helpCenterId: number = 0;
   isLoading: boolean = true;
+  initialFormValue: any = null;
 
   constructor(
     private fb: FormBuilder,
@@ -93,6 +94,7 @@ export class HelpCenterEditComponent implements OnInit {
           description: helpCenter.description,
           status: helpCenter.status
         });
+        this.initialFormValue = this.form.value;
         this.isLoading = false;
       },
       error: (error: any) => {
@@ -150,5 +152,10 @@ export class HelpCenterEditComponent implements OnInit {
 
   onCancel(): void {
     this.router.navigate(['/gen-masters/help-center/list']);
+  }
+
+  hasChanges(): boolean {
+    if (!this.initialFormValue) return false;
+    return JSON.stringify(this.form.value) !== JSON.stringify(this.initialFormValue);
   }
 }
