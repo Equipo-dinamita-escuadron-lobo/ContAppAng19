@@ -312,7 +312,8 @@
                   <input
                     pInputText
                     type="text"
-                    (input)="thirdTypeTable.filterGlobal($any($event.target).value, 'contains')"
+                    [(ngModel)]="searchTermThirdTypes"
+                    (input)="onSearchThirdTypesChange()"
                     placeholder="Buscar tipo de tercero..."
                     class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
                   />
@@ -407,9 +408,9 @@
           </div>
 
           <!-- Tabla de Tipos de Tercero -->
-          <p-table #thirdTypeTable [value]="thirdTypes" [loading]="loadingThirdTypes" [paginator]="true" [rows]="10" 
+          <p-table #thirdTypeTable [value]="thirdTypes" [loading]="loadingThirdTypes" [lazy]="true" (onLazyLoad)="loadThirdTypesLazy($event)"
+            [paginator]="true" [rows]="currentSizeThirdTypes" [totalRecords]="totalRecordsThirdTypes"
             [rowsPerPageOptions]="[5, 10, 20]"
-            [globalFilterFields]="['thirdTypeName']" 
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
 

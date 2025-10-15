@@ -117,7 +117,7 @@ export class ThirdConfigComponent implements OnInit {
   totalRecordsThirdTypes: number = 0;
   currentPageThirdTypes: number = 0;
   currentSizeThirdTypes: number = 10;
-  currentSortFieldThirdTypes: string = 'ttName';
+  currentSortFieldThirdTypes: string = 'thirdTypeName';
   currentSortOrderThirdTypes: string = 'asc';
   searchTermThirdTypes: string = '';
 
@@ -180,13 +180,21 @@ export class ThirdConfigComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de tercero
+   * Carga los tipos de tercero 
    */
   private loadThirdTypes(): void {
     this.loadingThirdTypes = true;
-    this.thirdServiceConfiguration.getThirdTypes(this.entData).subscribe({
-      next: (response: ThirdType[]) => {
-        this.thirdTypes = Array.isArray(response) ? response : [];
+    this.thirdServiceConfiguration.getThirdTypes(
+      this.entData,
+      this.currentPageThirdTypes,
+      this.currentSizeThirdTypes,
+      undefined, // No enviar sortField, el backend siempre ordena por ttName
+      this.currentSortOrderThirdTypes,
+      this.searchTermThirdTypes || undefined
+    ).subscribe({
+      next: (response: any) => {
+        this.thirdTypes = Array.isArray(response.content) ? response.content : [];
+        this.totalRecordsThirdTypes = response?.page?.totalElements || 0;
         this.loadingThirdTypes = false;
       },
       error: (error: any) => {
@@ -629,9 +637,9 @@ export class ThirdConfigComponent implements OnInit {
 
       this.thirdServiceConfiguration.createThirdType(newThirdType).subscribe({
         next: (response: ThirdType) => {
-          array.push(response);
           this.thirdTypeForm.reset();
           this.showInputThirdType = false;
+          this.reloadCurrentPageThirdTypes();
           this.messageService.add({
             severity: 'success',
             summary: 'Registro exitoso',
@@ -802,7 +810,7 @@ export class ThirdConfigComponent implements OnInit {
     this.thirdServiceConfiguration.deleteThirdType(thirdType.thirdTypeId, this.entData).subscribe({
       next: (response: boolean) => {
         if (response) {
-          this.thirdTypes.splice(index, 1);
+          this.reloadCurrentPageThirdTypes();
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -831,6 +839,32 @@ export class ThirdConfigComponent implements OnInit {
         });
       }
     });
+  }
+
+  /**
+   * Maneja el cambio en el término de búsqueda para tipos de tercero
+   */
+  onSearchThirdTypesChange(): void {
+    this.currentPageThirdTypes = 0;
+    this.loadThirdTypes();
+  }
+
+  /**
+   * Maneja la carga lazy de tipos de tercero
+   */
+  loadThirdTypesLazy(event: any): void {
+    this.currentPageThirdTypes = event.first / event.rows;
+    this.currentSizeThirdTypes = event.rows;
+    // Para tipos de tercero, el backend siempre ordena por nombre (ttName), no necesitamos sortField
+    this.currentSortOrderThirdTypes = event.sortOrder === 1 ? 'asc' : 'desc';
+    this.loadThirdTypes();
+  }
+
+  /**
+   * Recarga la página actual de tipos de tercero
+   */
+  reloadCurrentPageThirdTypes(): void {
+    this.loadThirdTypes();
   }
 
   /**

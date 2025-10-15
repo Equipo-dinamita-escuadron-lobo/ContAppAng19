@@ -66,16 +66,25 @@ export class ThirdServiceConfigurationService {
   constructor(private http: HttpClient) { }
 
   /**
-   * Obtiene los tipos de terceros para una empresa específica
+   * Obtiene los tipos de terceros para una empresa específica con paginación y búsqueda
    * @param entId ID de la empresa
-   * @returns Observable con el array de tipos de terceros
+   * @param page Número de página (opcional)
+   * @param size Tamaño de página (opcional)
+   * @param sortField Campo de ordenamiento (opcional)
+   * @param sortOrder Orden de clasificación (opcional)
+   * @param search Término de búsqueda (opcional)
+   * @returns Observable con la página de tipos de terceros
    */
-  getThirdTypes(entId: String): Observable<ThirdType[]> {
-    const params = new HttpParams().set('entId', entId.toString());
-    const possibleKeys = ['content', 'data', 'items', 'results', 'thirdTypes'];
+  getThirdTypes(entId: String, page?: number, size?: number, sortField?: string, sortOrder?: string, search?: string): Observable<any> {
+    let params = new HttpParams().set('entId', entId.toString());
+    
+    if (page !== undefined) params = params.set('numPage', page.toString());
+    if (size !== undefined) params = params.set('size', size.toString());
+    if (sortField) params = params.set('sortField', sortField);
+    if (sortOrder) params = params.set('sortOrder', sortOrder);
+    if (search) params = params.set('search', search);
 
-    return this.http.get<ThirdType[]>(this.thirdApiUrl + "thirdtype", {params}).pipe(
-      map(response => this.extractArrayFromResponse<ThirdType>(response, possibleKeys)),
+    return this.http.get<any>(this.thirdApiUrl + "thirdtype", {params}).pipe(
       catchError((error) => throwError(() => error))
     );
   }
