@@ -81,11 +81,23 @@ export class HelpCenterCreationComponent implements OnInit {
           this.router.navigate(['/gen-masters/help-center/list']);
         },
         error: (error: any) => {
-          console.error('Error al crear centro de ayuda:', error);
+          let errorMessage = 'No se pudo crear el centro de ayuda.';
+          let errorSummary = 'Error';
+          
+          if (error?.error) {
+            if (error.error.code === 'HELP_CENTER_ALREADY_EXISTS') {
+              errorSummary = 'Nombre duplicado';
+              errorMessage = error.error.message;
+            } else if (error.error.message) {
+              errorMessage = error.error.message;
+            }
+          }
+          
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo crear el centro de ayuda.'
+            summary: errorSummary,
+            detail: errorMessage,
+            life: 5000
           });
         }
       });
