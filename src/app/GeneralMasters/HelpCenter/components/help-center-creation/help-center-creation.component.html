@@ -34,6 +34,7 @@
             placeholder="Ingrese el nombre del centro de ayuda"
             class="w-full md:w-2/3"
           />
+          <small class="error-message" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">El nombre es requerido</small>
         </div>
 
         <!-- Módulo -->
@@ -50,13 +51,16 @@
             [showClear]="true"
             class="w-full md:w-2/3"
           ></p-select>
+          <small class="error-message" *ngIf="form.get('moduleId')?.touched && form.get('moduleId')?.invalid">Seleccione un módulo</small>
         </div>
       </div>
 
       <!-- Descripción -->
       <div class="flex flex-col gap-2 mt-40">
         <label for="description" class="font-semibold text-primary label-required mt-2">Descripción</label>
+        <small class="error-message" *ngIf="form.get('description')?.touched && form.get('description')?.invalid">La descripción es requerida</small>
         <p-editor
+          id="description"
           formControlName="description"
           [style]="{'height': '500px'}"
           placeholder="Ingrese la descripción del centro de ayuda"
@@ -84,6 +88,8 @@
             </span>
             <span class="ql-formats">
               <button type="button" class="ql-list" value="ordered" aria-label="Ordered List"></button>
+            </span>
+            <span class="ql-formats">
               <button type="button" class="ql-list" value="bullet" aria-label="Bullet List"></button>
             </span>
             <span class="ql-formats">

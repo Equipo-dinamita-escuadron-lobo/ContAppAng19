@@ -9,6 +9,7 @@ import { EditorModule } from 'primeng/editor';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { HelpCenterServiceService } from '../../services/help-center.service';
+import { HelpCenterValidators } from '../../services/help-center-validators.service';
 import katex from 'katex';
 
 (window as any).katex = katex;
@@ -42,7 +43,7 @@ export class HelpCenterCreationComponent implements OnInit {
     this.form = this.fb.group({
       moduleId: [null as number | null, Validators.required],
       name: ['', Validators.required],
-      description: ['', Validators.required],
+      description: ['', HelpCenterValidators.quillEditorRequired],
       status: [true]
     });
   }
