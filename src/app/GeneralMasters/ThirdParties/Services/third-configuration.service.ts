@@ -81,16 +81,25 @@ export class ThirdServiceConfigurationService {
   }
 
   /**
-   * Obtiene los tipos de identificación para una empresa específica
+   * Obtiene los tipos de identificación para una empresa específica con paginación y búsqueda
    * @param entId ID de la empresa
-   * @returns Observable con el array de tipos de identificación
+   * @param page Número de página (opcional)
+   * @param size Tamaño de página (opcional)
+   * @param sortField Campo de ordenamiento (opcional)
+   * @param sortOrder Orden de clasificación (opcional)
+   * @param search Término de búsqueda (opcional)
+   * @returns Observable con la página de tipos de identificación
    */
-  getTypeIds(entId: String): Observable<TypeId[]> {
-    const params = new HttpParams().set('entId', entId.toString());
-    const possibleKeys = ['content', 'data', 'items', 'results', 'typeIds'];
+  getTypeIds(entId: String, page?: number, size?: number, sortField?: string, sortOrder?: string, search?: string): Observable<any> {
+    let params = new HttpParams().set('entId', entId.toString());
+    
+    if (page !== undefined) params = params.set('numPage', page.toString());
+    if (size !== undefined) params = params.set('size', size.toString());
+    if (sortField) params = params.set('sortField', sortField);
+    if (sortOrder) params = params.set('sortOrder', sortOrder);
+    if (search) params = params.set('search', search);
 
-    return this.http.get<TypeId[]>(this.thirdApiUrl + "typeid", {params}).pipe(
-      map(response => this.extractArrayFromResponse<TypeId>(response, possibleKeys)),
+    return this.http.get<any>(this.thirdApiUrl + "typeid", {params}).pipe(
       catchError((error) => throwError(() => error))
     );
   }
