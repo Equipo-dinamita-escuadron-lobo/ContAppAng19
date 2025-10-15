@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,6 +9,9 @@ import { EditorModule } from 'primeng/editor';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { HelpCenterServiceService } from '../../services/help-center.service';
+import katex from 'katex';
+
+(window as any).katex = katex;
 
 @Component({
   selector: 'app-help-center-creation',
@@ -26,7 +29,7 @@ import { HelpCenterServiceService } from '../../services/help-center.service';
   templateUrl: './help-center-creation.component.html',
   styleUrl: './help-center-creation.component.css'
 })
-export class HelpCenterCreationComponent {
+export class HelpCenterCreationComponent implements OnInit {
   modules: any[] = [];
   form: FormGroup;
 
