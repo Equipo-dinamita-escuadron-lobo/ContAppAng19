@@ -35,17 +35,6 @@ export class ThirdServiceConfigurationService {
   }
 
   /**
-   * Método genérico para manejar errores en operaciones POST
-   * @param operation Nombre de la operación para el mensaje de error
-   * @returns Operador de manejo de errores
-   */
-  private handlePostError<T>(operation: string) {
-    return catchError<T, Observable<T>>((error: any) => 
-      throwError(() => new Error(`Ha ocurrido un error al ${operation}`))
-    );
-  }
-
-  /**
    * Método genérico para crear parámetros HTTP
    * @param params Objeto con los parámetros
    * @returns HttpParams configurado
@@ -119,7 +108,7 @@ export class ThirdServiceConfigurationService {
    */
   createTypeId(TypeId: TypeId): Observable<TypeId> {
     return this.http.post<TypeId>(this.thirdApiUrl + "typeid", TypeId).pipe(
-      this.handlePostError('agregar el tipo de identificación')
+      catchError((error) => throwError(() => error))
     );
   }
 
@@ -130,7 +119,7 @@ export class ThirdServiceConfigurationService {
    */
   createThirdType(ThirdType: ThirdType): Observable<ThirdType> {
     return this.http.post<ThirdType>(this.thirdApiUrl + "thirdtype", ThirdType).pipe(
-      this.handlePostError('agregar el tipo de tercero')
+      catchError((error) => throwError(() => error))
     );
   }
 
@@ -141,7 +130,7 @@ export class ThirdServiceConfigurationService {
    */
   updateThirdType(ThirdType: ThirdType): Observable<ThirdType> {
     return this.http.post<ThirdType>(this.thirdApiUrl + "thirdtype/update", ThirdType).pipe(
-      this.handlePostError('actualizar el tipo de tercero')
+      catchError((error) => throwError(() => error))
     );
   }
 
@@ -152,7 +141,7 @@ export class ThirdServiceConfigurationService {
    */
   updateTypeId(TypeId: TypeId): Observable<TypeId> {
     return this.http.post<TypeId>(this.thirdApiUrl + "typeid/update", TypeId).pipe(
-      this.handlePostError('actualizar el tipo de identificación')
+      catchError((error) => throwError(() => error))
     );
   }
 
