@@ -855,7 +855,6 @@ export class ThirdConfigComponent implements OnInit {
   loadThirdTypesLazy(event: any): void {
     this.currentPageThirdTypes = event.first / event.rows;
     this.currentSizeThirdTypes = event.rows;
-    // Para tipos de tercero, el backend siempre ordena por nombre (ttName), no necesitamos sortField
     this.currentSortOrderThirdTypes = event.sortOrder === 1 ? 'asc' : 'desc';
     this.loadThirdTypes();
   }
