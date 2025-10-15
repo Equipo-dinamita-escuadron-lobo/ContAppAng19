@@ -60,6 +60,10 @@
                 optionLabel="thirdTypeName"
                 [dataKey]="'thirdTypeId'"
                 placeholder="Seleccione tipos de tercero"
+                [filter]="true"
+                filterBy="thirdTypeName"
+                [loading]="loadingThirdTypes"
+                (onFilter)="onThirdTypeFilter($event)"
                 class="max-w-sm">
               </p-multiSelect>
               <app-form-field-error [form]="createdThirdForm" fieldName="thirdTypes" [submitted]="submitted">
