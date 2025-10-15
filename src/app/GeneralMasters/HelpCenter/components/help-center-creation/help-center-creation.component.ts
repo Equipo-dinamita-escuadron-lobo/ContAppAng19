@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { EditorModule } from 'primeng/editor';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -18,7 +18,7 @@ import { HelpCenterServiceService } from '../../services/help-center.service';
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
-    DropdownModule,
+    SelectModule,
     EditorModule,
     ToastModule
   ],
