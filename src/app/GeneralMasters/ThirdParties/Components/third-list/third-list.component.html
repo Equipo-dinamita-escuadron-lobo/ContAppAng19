@@ -68,11 +68,10 @@
 
     <!-- Data Table -->
     <p-table #dt [value]="thirds" [loading]="loading" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
-      [rowsPerPageOptions]="[5, 10, 20, 50]" [first]="first"
+      [rowsPerPageOptions]="[5, 10, 20]" [first]="first"
       [globalFilterFields]="['names', 'lastNames', 'socialReason', 'idNumber', 'email', 'typeId.typeId']"
       styleClass="p-datatable-gridlines" [responsiveLayout]="'scroll'"
-      (onPage)="onPageChange($event)" (onSort)="onSort($event)"
-      [sortField]="sortField" [sortOrder]="sortOrder === 'asc' ? 1 : -1">
+      (onPage)="onPageChange($event)" (onSort)="onSort($event)">
 
       <!-- Table Header -->
       <ng-template pTemplate="header">
