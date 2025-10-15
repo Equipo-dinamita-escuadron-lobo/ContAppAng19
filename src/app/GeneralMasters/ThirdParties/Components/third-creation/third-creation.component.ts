@@ -67,64 +67,46 @@ import { FormFieldErrorComponent } from '../shared/form-field-error.component';
 })
 export class ThirdCreationComponent implements OnInit {
 
-  /** Formulario principal para la creación de terceros */
   createdThirdForm!: FormGroup;
 
-  /** Contenido extraído del PDF RUT */
   contendPDFRUT: string | null = null;
 
-  /** Información del tercero extraída del RUT */
   infoThird: string[] | null = null;
-
-  /** Tipos de tercero seleccionados */
   selectedThirdTypes: ThirdType[] = [];
 
-  /** Indica si el formulario ha sido enviado */
   submitted = false;
 
-  /** Estado del botón de persona jurídica */
   button1Checked = false;
 
-  /** Estado del botón de persona natural */
   button2Checked = false;
 
-  /** Controla la visibilidad de div adicional */
   showAdditionalDiv = false;
 
-  /** Lista de países disponibles */
   countries: any[] = [];
 
-  /** Lista de estados/departamentos disponibles */
   states: any[] = [];
 
-  /** Lista de tipos de tercero disponibles */
   thirdTypes: ThirdType[] = [];
 
-  /** Lista de tipos de identificación disponibles */
+  thirdTypeSearchTerm: string = '';
+  loadingThirdTypes: boolean = false;
+
   typeIds: TypeId[] = [];
 
-  /** Lista de tipos de identificación filtrados según el tipo de persona */
   filteredTypeIds: TypeId[] = [];
 
-  /** Término de búsqueda actual para tipos de identificación */
   typeIdSearchTerm: string = '';
 
-  /** Indica si se está cargando los tipos de identificación */
   loadingTypeIds: boolean = false;
 
-  /** Lista de ciudades disponibles */
   cities: any[] = [];
 
-  /** Código del país seleccionado */
   selectedCountryCode: string = 'COL';
 
-  /** Código del estado/departamento seleccionado */
   selectedStateCode: string = '';
 
-  /** Fecha actual del sistema */
   currentDate = new Date();
 
-  /** ID de la empresa */
   entData: string = '';
 
   /** Datos del tercero por defecto */
@@ -377,7 +359,7 @@ export class ThirdCreationComponent implements OnInit {
   private async loadInitialData(): Promise<void> {
     try {
       await Promise.all([
-        this.getThirdTypes(),
+        this.loadInitialThirdTypes(),
         this.loadInitialTypeIds(),
         this.loadCountries(),
         this.loadStates()
@@ -407,6 +389,17 @@ export class ThirdCreationComponent implements OnInit {
   private loadInitialTypeIds(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.loadTypeIds();
+      // Pequeño delay para asegurar que se complete la carga
+      setTimeout(() => resolve(), 100);
+    });
+  }
+
+  /**
+   * Carga inicial de tipos de tercero
+   */
+  private loadInitialThirdTypes(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.loadThirdTypes();
       // Pequeño delay para asegurar que se complete la carga
       setTimeout(() => resolve(), 100);
     });
@@ -582,24 +575,24 @@ export class ThirdCreationComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de tercero
+   * Carga los tipos de tercero con soporte para búsqueda
+   * @param searchTerm Término de búsqueda opcional
    */
-  private getThirdTypes(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.thirdServiceConfigurationService.getThirdTypes(this.entData).subscribe({
-        next: (response: any) => {
-          this.thirdTypes = Array.isArray(response.content) ? response.content : [];
-          resolve();
-        },
-        error: (error: any) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al cargar tipos de tercero'
-          });
-          reject(error);
-        }
-      });
+  private loadThirdTypes(searchTerm?: string): void {
+    this.loadingThirdTypes = true;
+    this.thirdServiceConfigurationService.getActiveThirdTypes(this.entData, 0, 50, 'thirdTypename', 'asc', searchTerm).subscribe({
+      next: (response: any) => {
+        this.thirdTypes = Array.isArray(response.content) ? response.content : [];
+        this.loadingThirdTypes = false;
+      },
+      error: (error: any) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar tipos de tercero'
+        });
+        this.loadingThirdTypes = false;
+      }
     });
   }
 
@@ -652,6 +645,20 @@ export class ThirdCreationComponent implements OnInit {
     // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
     if (searchTerm.length >= 2 || searchTerm.length === 0) {
       this.loadTypeIds(searchTerm);
+    }
+  }
+
+  /**
+   * Maneja el evento de filtro del dropdown de tipos de tercero
+   * @param event Evento del filtro con el término de búsqueda
+   */
+  onThirdTypeFilter(event: any): void {
+    const searchTerm = event.filter || '';
+    this.thirdTypeSearchTerm = searchTerm;
+    
+    // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
+    if (searchTerm.length >= 2 || searchTerm.length === 0) {
+      this.loadThirdTypes(searchTerm);
     }
   }
 
@@ -728,8 +735,6 @@ export class ThirdCreationComponent implements OnInit {
       }
     });
   }
-
-  // Tooltips removidos
 
   /**
    * Maneja el cambio de departamento
