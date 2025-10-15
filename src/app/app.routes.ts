@@ -706,6 +706,14 @@ export const routes: Routes = [
                     './GeneralMasters/HelpCenter/components/help-center-creation/help-center-creation.component'
                   ).then((m) => m.HelpCenterCreationComponent),
               },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Centro de Ayuda' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-edit/help-center-edit.component'
+                  ).then((m) => m.HelpCenterEditComponent),
+              },
             ],
           },
           {
