@@ -1,14 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { EditorModule } from 'primeng/editor';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { HelpCenterServiceService } from '../../services/help-center.service';
+import { HelpCenterValidators } from '../../services/help-center-validators.service';
+import katex from 'katex';
+
+(window as any).katex = katex;
 
 @Component({
   selector: 'app-help-center-creation',
@@ -18,7 +22,7 @@ import { HelpCenterServiceService } from '../../services/help-center.service';
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
-    DropdownModule,
+    SelectModule,
     EditorModule,
     ToastModule
   ],
@@ -26,7 +30,7 @@ import { HelpCenterServiceService } from '../../services/help-center.service';
   templateUrl: './help-center-creation.component.html',
   styleUrl: './help-center-creation.component.css'
 })
-export class HelpCenterCreationComponent {
+export class HelpCenterCreationComponent implements OnInit {
   modules: any[] = [];
   form: FormGroup;
 
@@ -39,7 +43,7 @@ export class HelpCenterCreationComponent {
     this.form = this.fb.group({
       moduleId: [null as number | null, Validators.required],
       name: ['', Validators.required],
-      description: ['', Validators.required],
+      description: ['', HelpCenterValidators.quillEditorRequired],
       status: [true]
     });
   }
@@ -77,11 +81,23 @@ export class HelpCenterCreationComponent {
           this.router.navigate(['/gen-masters/help-center/list']);
         },
         error: (error: any) => {
-          console.error('Error al crear centro de ayuda:', error);
+          let errorMessage = 'No se pudo crear el centro de ayuda.';
+          let errorSummary = 'Error';
+          
+          if (error?.error) {
+            if (error.error.code === 'HELP_CENTER_ALREADY_EXISTS') {
+              errorSummary = 'Nombre duplicado';
+              errorMessage = error.error.message;
+            } else if (error.error.message) {
+              errorMessage = error.error.message;
+            }
+          }
+          
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo crear el centro de ayuda.'
+            summary: errorSummary,
+            detail: errorMessage,
+            life: 5000
           });
         }
       });

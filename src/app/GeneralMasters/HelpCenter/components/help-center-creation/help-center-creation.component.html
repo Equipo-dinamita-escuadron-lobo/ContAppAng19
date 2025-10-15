@@ -15,8 +15,8 @@
       <!-- Botones -->
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
-          <p-button label="Guardar" icon="pi pi-save" (onClick)="onSubmit()" [disabled]="!form.valid"></p-button>
-          <p-button icon="pi pi-arrow-left" (onClick)="onCancel()" styleClass="p-button-secondary"></p-button>    
+          <p-button label="Cancelar" (onClick)="onCancel()" styleClass="p-button-secondary"></p-button>
+          <p-button label="Guardar"  (onClick)="onSubmit()" [disabled]="!form.valid"></p-button>              
         </div>
       </div>
     </div>
@@ -34,32 +34,72 @@
             placeholder="Ingrese el nombre del centro de ayuda"
             class="w-full md:w-2/3"
           />
+          <small class="error-message" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">El nombre es requerido</small>
         </div>
 
         <!-- Módulo -->
         <div class="flex flex-col gap-2">
           <label for="moduleId" class="font-semibold text-primary label-required mt-2">Módulo</label>
-          <p-dropdown
+          <p-select
             id="moduleId"
             formControlName="moduleId"
             [options]="modules"
             optionLabel="name"
             optionValue="id"
             placeholder="Seleccione un módulo"
+            [filter]="true"
+            [showClear]="true"
             class="w-full md:w-2/3"
-            [style]="{'border-radius': '8px'}"
-          ></p-dropdown>
+          ></p-select>
+          <small class="error-message" *ngIf="form.get('moduleId')?.touched && form.get('moduleId')?.invalid">Seleccione un módulo</small>
         </div>
       </div>
 
       <!-- Descripción -->
       <div class="flex flex-col gap-2 mt-40">
         <label for="description" class="font-semibold text-primary label-required mt-2">Descripción</label>
+        <small class="error-message" *ngIf="form.get('description')?.touched && form.get('description')?.invalid">La descripción es requerida</small>
         <p-editor
+          id="description"
           formControlName="description"
-          [style]="{'height': '200px'}"
+          [style]="{'height': '500px'}"
           placeholder="Ingrese la descripción del centro de ayuda"
-        ></p-editor>
+        >
+          <ng-template #header>
+            <span class="ql-formats">
+              <select class="ql-size">
+                <option value="small"></option>
+                <option selected></option>
+                <option value="large"></option>
+                <option value="huge"></option>
+              </select>
+            </span>
+            <span class="ql-formats">
+              <button type="button" class="ql-bold" aria-label="Bold"></button>
+              <button type="button" class="ql-italic" aria-label="Italic"></button>
+              <button type="button" class="ql-underline" aria-label="Underline"></button>
+            </span>
+            <span class="ql-formats">
+              <select class="ql-color"></select>
+              <select class="ql-background"></select>
+            </span>
+            <span class="ql-formats">
+              <button type="button" class="ql-list" value="ordered" aria-label="Ordered List"></button>
+            </span>
+            <span class="ql-formats">
+              <button type="button" class="ql-list" value="bullet" aria-label="Bullet List"></button>
+            </span>
+            <span class="ql-formats">
+              <select class="ql-align"></select>
+            </span>
+            <span class="ql-formats">
+              <button type="button" class="ql-formula" aria-label="Formula"></button>
+            </span>
+            <span class="ql-formats">
+              <button type="button" class="ql-clean" aria-label="Clean"></button>
+            </span>
+          </ng-template>
+        </p-editor>
       </div>
     </form>
 
