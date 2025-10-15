@@ -487,9 +487,9 @@ export class ThirdConfigComponent implements OnInit {
             errorMessage = error.error.message;
             if (error.error.message.includes('Ya existe un tipo de identificación')) {
               if (error.error.message.includes('con el código')) {
-                errorSummary = 'Código de Tipo ID Duplicado';
+                errorSummary = 'Tipo ID Duplicado';
               } else if (error.error.message.includes('con el nombre')) {
-                errorSummary = 'Nombre de Tipo ID Duplicado';
+                errorSummary = 'Nombre Duplicado';
               } else {
                 errorSummary = 'Tipo ID Duplicado';
               }
@@ -634,7 +634,7 @@ export class ThirdConfigComponent implements OnInit {
             errorMessage = error.error.message;
             if (error.error.message.includes('Ya existe un tipo de tercero')) {
               if (error.error.message.includes('con el nombre')) {
-                errorSummary = 'Nombre de Tipo de Tercero Duplicado';
+                errorSummary = 'Nombre Duplicado';
               } else {
                 errorSummary = 'Tipo de Tercero Duplicado';
               }
@@ -739,7 +739,7 @@ export class ThirdConfigComponent implements OnInit {
             errorMessage = error.error.message;
             if (error.error.message.includes('Ya existe un tipo de tercero')) {
               if (error.error.message.includes('con el nombre')) {
-                errorSummary = 'Nombre de Tipo de Tercero Duplicado';
+                errorSummary = 'Nombre Duplicado';
               } else {
                 errorSummary = 'Tipo de Tercero Duplicado';
               }
