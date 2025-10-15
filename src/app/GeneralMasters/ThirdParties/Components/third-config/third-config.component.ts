@@ -21,7 +21,6 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { RadioButtonModule } from 'primeng/radiobutton';
 
 // Models and Services
-import { ThirdService } from '../../Services/third.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
@@ -283,7 +282,6 @@ export class ThirdConfigComponent implements OnInit {
     const newStatus = !typeId.status;
     const action = newStatus ? 'activar' : 'desactivar';
     
-    // Asegurarnos de incluir todos los campos, especialmente el id
     const updatedTypeId: TypeId = {
       id: typeId.id,
       entId: typeId.entId,
@@ -303,11 +301,16 @@ export class ThirdConfigComponent implements OnInit {
         });
       },
       error: (error: any) => {
-        console.error('Error updating type ID status:', error);
+        
+        let errorMessage = `Error al ${action} el tipo de identificación`;
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `Error al ${action} el tipo de identificación`
+          detail: errorMessage
         });
       }
     });
@@ -338,7 +341,6 @@ export class ThirdConfigComponent implements OnInit {
         });
       },
       error: (error: any) => {
-        console.error('Error updating third type status:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -355,18 +357,6 @@ export class ThirdConfigComponent implements OnInit {
     if (this.typeIdForm.valid) {
       const code = this.typeIdForm.get('code')?.value?.trim();
       const name = this.typeIdForm.get('name')?.value?.trim();
-      
-      // Verificar si ya existe el código
-      const existingTypeId = array.find(t => t.typeId.toLowerCase() === code.toLowerCase());
-      if (existingTypeId) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ya existe un tipo de identificación con ese código'
-        });
-        return;
-      }
-
       const classification = this.typeIdForm.get('classification')?.value;
       
       const newTypeId: TypeId = {
@@ -391,17 +381,30 @@ export class ThirdConfigComponent implements OnInit {
             detail: 'Tipo de identificación creado correctamente'
           });
         },
-        error: (error: any) => {
-          console.error('Error creating type ID:', error);
+        error: (error: any) => {          
+          let errorMessage = 'Error al crear el tipo de identificación';
+          let errorSummary = 'Error';
+          if (error.error?.message) {
+            errorMessage = error.error.message;
+            if (error.error.message.includes('Ya existe un tipo de identificación')) {
+              if (error.error.message.includes('con el código')) {
+                errorSummary = 'Tipo ID Duplicado';
+              } else if (error.error.message.includes('con el nombre')) {
+                errorSummary = 'Nombre Duplicado';
+              } else {
+                errorSummary = 'Tipo ID Duplicado';
+              }
+            }
+          }
+          
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al crear el tipo de identificación'
+            summary: errorSummary,
+            detail: errorMessage
           });
         }
       });
     } else {
-      // Marcar todos los campos como tocados para mostrar errores
       Object.keys(this.typeIdForm.controls).forEach(key => {
         this.typeIdForm.get(key)?.markAsTouched();
       });
@@ -414,9 +417,6 @@ export class ThirdConfigComponent implements OnInit {
     }
   }
 
-  /**
-   * Cancela la adición de un tipo de identificación
-   */
   cancelAddTypeId(): void {
     this.typeIdForm.reset();
     this.typeIdForm.patchValue({
@@ -425,9 +425,6 @@ export class ThirdConfigComponent implements OnInit {
     this.showInputTypeId = false;
   }
 
-  /**
-   * Inicia la edición de un tipo de identificación
-   */
   editTypeId(typeId: TypeId, index: number): void {
     this.showInputTypeId = false;
     this.showInputThirdType = false;
@@ -447,13 +444,9 @@ export class ThirdConfigComponent implements OnInit {
       classification: typeId.classification
     };
     
-    // Mostrar el formulario de edición
     this.showEditTypeId = true;
   }
 
-  /**
-   * Actualiza un tipo de identificación existente
-   */
   updateTypeId(): void {
     if (this.editTypeIdForm.invalid || !this.hasTypeIdChanges()) {
       this.editTypeIdForm.markAllAsTouched();
@@ -464,22 +457,6 @@ export class ThirdConfigComponent implements OnInit {
       const formValue = this.editTypeIdForm.value;
       const code = formValue.code?.trim();
       const name = formValue.name?.trim();
-      
-      // Verificar si ya existe otro tipo con el mismo código (excluyendo el actual)
-      const existingTypeId = this.typesId.find((t, index) => 
-        t.typeId.toLowerCase() === code.toLowerCase() && 
-        index !== this.editingTypeIdIndex
-      );
-      
-      if (existingTypeId) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ya existe otro tipo de identificación con ese código'
-        });
-        return;
-      }
-
       const classification = this.editTypeIdForm.get('classification')?.value;
       
       const updatedTypeId: TypeId = {
@@ -503,15 +480,30 @@ export class ThirdConfigComponent implements OnInit {
           });
         },
         error: (error: any) => {
+          
+          let errorMessage = 'Error al actualizar el tipo de identificación';
+          let errorSummary = 'Error';
+          if (error.error?.message) {
+            errorMessage = error.error.message;
+            if (error.error.message.includes('Ya existe un tipo de identificación')) {
+              if (error.error.message.includes('con el código')) {
+                errorSummary = 'Código de Tipo ID Duplicado';
+              } else if (error.error.message.includes('con el nombre')) {
+                errorSummary = 'Nombre de Tipo ID Duplicado';
+              } else {
+                errorSummary = 'Tipo ID Duplicado';
+              }
+            }
+          }
+          
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al actualizar el tipo de identificación'
+            summary: errorSummary,
+            detail: errorMessage
           });
         }
       });
     } else {
-      // Marcar todos los campos como tocados para mostrar errores
       Object.keys(this.editTypeIdForm.controls).forEach(key => {
         this.editTypeIdForm.get(key)?.markAsTouched();
       });
@@ -552,11 +544,12 @@ export class ThirdConfigComponent implements OnInit {
    */
   confirmDeleteTypeId(typeId: TypeId, index: number): void {
     this.confirmationService.confirm({
-      message: `¿Está seguro que desea eliminar el tipo de identificación "${typeId.typeIdname}"?`,
+      message: `¿Desea eliminar el tipo de identificación "${typeId.typeIdname}"?`,
       header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
+      rejectButtonProps: { severity: 'secondary' },
       accept: () => {
         this.deleteTypeId(typeId, index);
       }
@@ -594,9 +587,8 @@ export class ThirdConfigComponent implements OnInit {
           });
         }
       },
-      error: (error: any) => {
+      error: (error: any) => {        
         let errorMessage = 'Error al eliminar el tipo de identificación';
-        
         if (error.error?.message) {
           errorMessage = error.error.message;
         }
@@ -617,17 +609,6 @@ export class ThirdConfigComponent implements OnInit {
     if (this.thirdTypeForm.valid) {
       const name = this.thirdTypeForm.get('name')?.value?.trim();
       
-      // Verificar si ya existe el nombre
-      const existingThirdType = array.find(t => t.thirdTypeName.toLowerCase() === name.toLowerCase());
-      if (existingThirdType) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ya existe un tipo de tercero con ese nombre'
-        });
-        return;
-      }
-
       const newThirdType: ThirdType = {
         entId: this.entData,
         thirdTypeId: 0,
@@ -647,11 +628,22 @@ export class ThirdConfigComponent implements OnInit {
           });
         },
         error: (error: any) => {
-          console.error('Error creating third type:', error);
+          let errorMessage = 'Error al actualizar el tipo de tercero';
+          let errorSummary = 'Error';
+          if (error.error?.message) {
+            errorMessage = error.error.message;
+            if (error.error.message.includes('Ya existe un tipo de tercero')) {
+              if (error.error.message.includes('con el nombre')) {
+                errorSummary = 'Nombre de Tipo de Tercero Duplicado';
+              } else {
+                errorSummary = 'Tipo de Tercero Duplicado';
+              }
+            }
+          }
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al crear el tipo de tercero'
+            summary: errorSummary,
+            detail: errorMessage
           });
         }
       });
@@ -719,21 +711,6 @@ export class ThirdConfigComponent implements OnInit {
       const formValue = this.editThirdTypeForm.value;
       const name = formValue.name?.trim();
       
-      // Verificar si ya existe otro tipo con el mismo nombre (excluyendo el actual)
-      const existingThirdType = this.thirdTypes.find((t, index) => 
-        t.thirdTypeName.toLowerCase() === name.toLowerCase() && 
-        index !== this.editingThirdTypeIndex
-      );
-      
-      if (existingThirdType) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ya existe otro tipo de tercero con ese nombre'
-        });
-        return;
-      }
-
       const updatedThirdType: ThirdType = {
         entId: this.entData,
         thirdTypeId: this.originalThirdType.thirdTypeId,
@@ -756,10 +733,22 @@ export class ThirdConfigComponent implements OnInit {
           });
         },
         error: (error: any) => {
+          let errorMessage = 'Error al crear el tipo de tercero';
+          let errorSummary = 'Error';
+          if (error.error?.message) {
+            errorMessage = error.error.message;
+            if (error.error.message.includes('Ya existe un tipo de tercero')) {
+              if (error.error.message.includes('con el nombre')) {
+                errorSummary = 'Nombre de Tipo de Tercero Duplicado';
+              } else {
+                errorSummary = 'Tipo de Tercero Duplicado';
+              }
+            }
+          }
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al actualizar el tipo de tercero'
+            summary: errorSummary,
+            detail: errorMessage
           });
         }
       });
@@ -782,11 +771,12 @@ export class ThirdConfigComponent implements OnInit {
    */
   confirmDeleteThirdType(thirdType: ThirdType, index: number): void {
     this.confirmationService.confirm({
-      message: `¿Está seguro que desea eliminar el tipo de tercero "${thirdType.thirdTypeName}"?`,
+      message: `¿Desea eliminar el tipo de tercero "${thirdType.thirdTypeName}"?`,
       header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
+      rejectButtonProps: { severity: 'secondary' },
       accept: () => {
         this.deleteThirdType(thirdType, index);
       }
