@@ -15,8 +15,8 @@
       <!-- Botones -->
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
-          <p-button label="Guardar" icon="pi pi-save" (onClick)="onSubmit()" [disabled]="!form.valid"></p-button>
-          <p-button icon="pi pi-arrow-left" (onClick)="onCancel()" styleClass="p-button-secondary"></p-button>    
+          <p-button label="Cancelar" (onClick)="onCancel()" styleClass="p-button-secondary"></p-button>
+          <p-button label="Guardar"  (onClick)="onSubmit()" [disabled]="!form.valid"></p-button>              
         </div>
       </div>
     </div>
