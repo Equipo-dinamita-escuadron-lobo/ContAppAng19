@@ -17,7 +17,6 @@ import { TaxList } from '../../models/Tax';
 import { TaxService } from '../../services/tax.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
-import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-list-tax',
@@ -84,7 +83,6 @@ export class ListTaxComponent implements OnInit {
         this.loadTaxesLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
       },
       error: (error) => {
-        console.warn('No se pudieron cargar los nombres de las cuentas:', error);
         this.loadTaxesLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
       }
     });
@@ -141,7 +139,6 @@ export class ListTaxComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar los impuestos:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -173,7 +170,6 @@ export class ListTaxComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al recargar los impuestos:', error);
         this.loading = false;
       }
     });
@@ -241,7 +237,6 @@ export class ListTaxComponent implements OnInit {
             this.reloadCurrentPage(); // Recargar la página actual
           },
           error: (error) => {
-            console.error('Error al eliminar el impuesto:', error);
             const errorMessage = error?.error?.message || 'No se pudo eliminar el impuesto';
             this.messageService.add({
               severity: 'error',
@@ -269,11 +264,10 @@ export class ListTaxComponent implements OnInit {
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: `Impuesto "${tax.description}" cambiado correctamente`
+          detail: `Impuesto "${tax.code}" cambiado correctamente`
         });
       },
       error: (error) => {
-        console.error('Error al cambiar el estado del impuesto:', error);
         const errorMessage = error?.error?.message || 'No se pudo cambiar el estado del impuesto.';
         this.messageService.add({
           severity: 'error',
