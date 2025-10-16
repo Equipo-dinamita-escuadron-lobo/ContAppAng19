@@ -10,6 +10,8 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TagModule } from 'primeng/tag';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TaxList } from '../../models/Tax';
 import { TaxService } from '../../services/tax.service';
@@ -29,7 +31,9 @@ import { forkJoin } from 'rxjs';
     ConfirmDialogModule,
     TooltipModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    ToggleSwitchModule,
+    TagModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './list-tax.component.html',
@@ -43,7 +47,12 @@ export class ListTaxComponent implements OnInit {
   private readonly chartAccountService = inject(ChartAccountService);
 
   taxes: TaxList[] = [];
-  filteredTaxes: TaxList[] = [];
+  totalRecords: number = 0;
+  currentPage: number = 0;
+  currentSize: number = 10;
+  currentSortField: string = 'description';
+  currentSortOrder: string = 'asc';
+  searchTerm: string = '';
   loading: boolean = false;
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
@@ -51,58 +60,32 @@ export class ListTaxComponent implements OnInit {
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
-    this.loadTaxes();
+    this.loadAccountNames();
   }
 
   /**
-   * Carga la lista de impuestos desde el servicio
+   * Obtiene el ID de la empresa desde el localStorage
    */
-  loadTaxes(): void {
-    if (this.entData?.id) {
-      this.loading = true;
-
-      // Cargar impuestos primero
-      this.taxService.getTaxes(this.entData.id).subscribe({
-        next: (taxes) => {
-          // Mostrar impuestos inmediatamente con códigos de cuenta
-          this.taxes = taxes.map((tax: any) => ({
-            ...tax,
-            depositAccountName: tax.depositAccount || tax.depositAccountName || 'Cargando...',
-            refundAccountName: tax.refundAccount || tax.refundAccountName || 'Cargando...'
-          }));
-          this.filteredTaxes = [...this.taxes];
-          this.loading = false;
-
-          // Cargar nombres de cuentas en segundo plano
-          this.loadAccountNames();
-        },
-        error: (error) => {
-          console.error('Error al cargar los impuestos:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron cargar los impuestos'
-          });
-          this.loading = false;
-        }
-      });
-    }
+  private getEnterpriseId(): string {
+    const entData = this.localStorageMethods.loadEnterpriseData();
+    return entData?.id || '';
   }
 
   /**
-   * Carga los nombres de las cuentas en segundo plano
+   * Carga los nombres de las cuentas para mapear códigos a nombres
    */
   private loadAccountNames(): void {
-    this.chartAccountService.getListAccounts(this.entData.id).subscribe({
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
       next: (accounts) => {
         this.accounts = this.flattenAccounts(accounts);
-        // Actualizar nombres de cuentas sin mostrar loading
-        this.taxes = this.mapTaxesWithAccountNames(this.taxes);
-        this.filteredTaxes = [...this.taxes];
+        this.loadTaxesLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
       },
       error: (error) => {
         console.warn('No se pudieron cargar los nombres de las cuentas:', error);
-        // Mantener los códigos de cuenta si falla
+        this.loadTaxesLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
       }
     });
   }
@@ -127,19 +110,90 @@ export class ListTaxComponent implements OnInit {
   }
 
   /**
-   * Mapea los impuestos con los nombres de las cuentas
+   * Carga los impuestos con paginación lazy
    */
-  private mapTaxesWithAccountNames(taxes: any[]): TaxList[] {
-    return taxes.map(tax => {
-      const depositAccount = this.accounts.find(acc => acc.code === tax.depositAccount);
-      const refundAccount = this.accounts.find(acc => acc.code === tax.refundAccount);
+  loadTaxesLazy(event: any): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
 
-      return {
-        ...tax,
-        depositAccountName: depositAccount ? `${depositAccount.code} - ${depositAccount.description}` : tax.depositAccount || 'No especificada',
-        refundAccountName: refundAccount ? `${refundAccount.code} - ${refundAccount.description}` : tax.refundAccount || 'No especificada'
-      };
+    this.loading = true;
+
+    // Calcular página y tamaño desde los controles de PrimeNG
+    this.currentPage = Math.floor(event.first / event.rows);
+    this.currentSize = event.rows;
+
+    // Manejar ordenamiento si está presente
+    if (event.sortField) {
+      this.currentSortField = event.sortField;
+      this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
+    }
+
+    this.taxService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
+        const content: any[] = page.content || [];
+        this.taxes = content.map((tax: any) => ({
+          ...tax,
+          depositAccountName: this.getAccountName(tax.depositAccount),
+          refundAccountName: this.getAccountName(tax.refundAccount)
+        }));
+        this.totalRecords = page?.totalElements || 0;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar los impuestos:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los impuestos'
+        });
+        this.loading = false;
+      }
     });
+  }
+
+  /**
+   * Recarga la página actual
+   */
+  reloadCurrentPage(): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.loading = true;
+    this.taxService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
+        const content: any[] = page.content || [];
+        this.taxes = content.map((tax: any) => ({
+          ...tax,
+          depositAccountName: this.getAccountName(tax.depositAccount),
+          refundAccountName: this.getAccountName(tax.refundAccount)
+        }));
+        this.totalRecords = page?.totalElements || 0;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al recargar los impuestos:', error);
+        this.loading = false;
+      }
+    });
+  }
+
+  /**
+   * Maneja el cambio en el término de búsqueda
+   */
+  onSearchChange(): void {
+    // Resetear a la primera página cuando se busca
+    this.currentPage = 0;
+    // Recargar datos con el nuevo término de búsqueda
+    this.loadTaxesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
+  }
+
+  /**
+   * Obtiene el nombre de la cuenta por código
+   */
+  private getAccountName(code: string): string {
+    if (!code) return 'No especificada';
+    const account = this.accounts.find(acc => acc.code === code);
+    return account ? `${account.code} - ${account.description}` : code;
   }
 
 
@@ -172,6 +226,9 @@ export class ListTaxComponent implements OnInit {
       rejectLabel: 'Cancelar',
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
+        const enterpriseId = this.getEnterpriseId();
+        if (!enterpriseId) return;
+
         this.taxService.deleteTax(tax.id).subscribe({
           next: () => {
             this.messageService.add({
@@ -179,7 +236,7 @@ export class ListTaxComponent implements OnInit {
               summary: 'Éxito',
               detail: 'Impuesto eliminado exitosamente'
             });
-            this.loadTaxes(); // Recargar la lista
+            this.reloadCurrentPage(); // Recargar la página actual
           },
           error: (error) => {
             console.error('Error al eliminar el impuesto:', error);
@@ -195,11 +252,58 @@ export class ListTaxComponent implements OnInit {
   }
 
   /**
+   * Cambia el estado de un impuesto
+   */
+  changeTaxState(tax: TaxList): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!tax?.id || !enterpriseId) return;
+
+    const newStatus = !tax.status;
+
+    this.taxService.changeState(tax.id, enterpriseId, newStatus).subscribe({
+      next: () => {
+        tax.status = newStatus;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado del impuesto "${tax.description}" cambiado correctamente`
+        });
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado del impuesto.'
+        });
+      }
+    });
+  }
+
+  /**
    * Formatea el porcentaje para mostrar
    */
   formatPercentage(value: number): string {
     return `${value.toFixed(2)}%`;
   }
 
+  /**
+   * Obtiene la severidad del tag de estado
+   */
+  getStateSeverity(status: boolean): string {
+    return status ? 'success' : 'danger';
+  }
 
+  /**
+   * Formatea el estado para mostrar
+   */
+  formatState(status: boolean): string {
+    return status ? 'Activo' : 'Inactivo';
+  }
+
+  /**
+   * Verifica si el estado está activo
+   */
+  isActive(status: boolean): boolean {
+    return status === true;
+  }
 }

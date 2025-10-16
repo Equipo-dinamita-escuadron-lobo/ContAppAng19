@@ -4,6 +4,14 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Tax, TaxList, TaxCreateRequest, TaxUpdateRequest } from '../models/Tax';
 
+interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -22,6 +30,25 @@ export class TaxService {
   getTaxes(enterpriseId: string): Observable<TaxList[]> {
     const url = this.apiURL + 'taxes/' + enterpriseId;
     return this.http.get<TaxList[]>(url);
+  }
+
+  /**
+   * Obtiene la lista paginada de impuestos asociados a una empresa específica con opciones de búsqueda y ordenamiento.
+   *
+   * @param enterpriseId - El ID de la empresa para la que se desean obtener los impuestos.
+   * @param page - Número de página (por defecto 0).
+   * @param size - Tamaño de página (por defecto 10).
+   * @param sortField - Campo de ordenamiento (por defecto 'description').
+   * @param sortOrder - Orden de ordenamiento ('asc' o 'desc', por defecto 'asc').
+   * @param search - Término de búsqueda (opcional).
+   * @returns Un observable que emite una página de impuestos.
+   */
+  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'description', sortOrder = 'asc', search = ''): Observable<Page<Tax>> {
+    let url = `${this.apiURL}taxes/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
+    if (search && search.trim().length > 0) {
+      url += `&search=${encodeURIComponent(search.trim())}`;
+    }
+    return this.http.get<Page<Tax>>(url);
   }
 
   /**
@@ -77,6 +104,19 @@ export class TaxService {
   deleteTax(id: number): Observable<Tax> {
     const url = this.apiURL + id;
     return this.http.delete<Tax>(url);
+  }
+
+  /**
+   * Cambia el estado (activo/inactivo) de un impuesto.
+   *
+   * @param id - El ID del impuesto.
+   * @param enterpriseId - El ID de la empresa.
+   * @param status - El nuevo estado (true = activo, false = inactivo).
+   * @returns Un observable que emite el impuesto actualizado.
+   */
+  changeState(id: number, enterpriseId: string, status: boolean): Observable<Tax> {
+    const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
+    return this.http.patch<Tax>(url, {});
   }
 }
 
