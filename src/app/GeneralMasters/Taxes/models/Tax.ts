@@ -26,8 +26,8 @@ export interface TaxCreateRequest {
     code: string;
     description: string;
     interest: number;
-    refundAccount: string;
-    depositAccount: string;
+    refundAccountId: number;
+    depositAccountId: number;
     idEnterprise: string;
 }
 
@@ -36,7 +36,7 @@ export interface TaxUpdateRequest {
     code: string;
     description: string;
     interest: number;
-    refundAccount: string;
-    depositAccount: string;
+    refundAccountId: number;
+    depositAccountId: number;
     idEnterprise: string;
 } 

@@ -112,8 +112,8 @@ export class CreateTaxComponent implements OnInit {
         code: formValue.code,
         description: formValue.description,
         interest: formValue.interest,
-        depositAccount: formValue.depositAccount.code,
-        refundAccount: formValue.refundAccount.code,
+        depositAccountId: formValue.depositAccount.id,
+        refundAccountId: formValue.refundAccount.id,
         idEnterprise: this.entData?.id || ''
       };
 
