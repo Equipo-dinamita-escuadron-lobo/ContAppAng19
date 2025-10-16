@@ -15,7 +15,6 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
 import { cuentasDiferentesValidator, collectLeaves } from '../../CustomValidators/validateTaxInputs';
-import { map } from 'rxjs';
 
 @Component({
   selector: 'app-create-tax',
@@ -123,9 +122,8 @@ export class CreateTaxComponent implements OnInit {
             severity: 'success',
             summary: 'Éxito',
             detail: 'Impuesto creado exitosamente',
-            life: 3000 // Mantener notificación visible por 3 segundos
+            life: 3000
           });
-          // Navegación después de 1.5 segundos para permitir leer la notificación
           setTimeout(() => {
             this.goBack();
           }, 1500);
