@@ -828,6 +828,36 @@ export const routes: Routes = [
                   },
                 ],
               },
+              {
+                 path: 'financial-statements',
+                data: {
+                  breadcrumb: 'Estados Financieros',
+                },
+                children: [
+                  {
+                    path: 'list',
+                    pathMatch: 'full',
+                    data: {
+                      breadcrumb: null,
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statements-list/financial-statements-list.component'
+                      ).then((m) => m.FinancialStatementsListComponent),
+                  },
+                  {
+                    path: 'statement-financial-position',
+                    data: {
+                      breadcrumb: 'Estado de situacion Financiera',
+                    },
+                    /*loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statement-types/statement-financial-position/statement-financial-position.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),*/
+                  },
+                ],
+              },
+              
             ],
           },
           {
