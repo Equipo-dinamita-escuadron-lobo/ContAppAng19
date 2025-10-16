@@ -246,19 +246,63 @@ export class ListEnterpriseComponent implements OnInit {
 
   duplicateEnterprise(enterprise: EnterpriseList) {
     if (!enterprise.id) return;
-    this.enterpriseService
-      .duplicateEnterprise(String(enterprise.id))
-      .subscribe({
-        next: (res) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Duplicada',
-            detail: `${enterprise.name} fue duplicada exitosamente.`,
-          });
-          this.getEnterprises();
-        },
-        error: (err) => console.error('Error al duplicar empresa:', err),
-      });
+
+    // Obtener los datos de la empresa a duplicar
+    this.enterpriseService.getEnterpriseById(String(enterprise.id)).subscribe({
+      next: (data) => {
+        // Transformar los datos para cumplir con el formato esperado por el backend
+        const duplicatedEnterprise = {
+          name: `${data.name} (copia)`,
+          nit: data.nit,
+          dv: data.dv,
+          phone: data.phone,
+          branch: data.branch,
+          email: data.email,
+          logo: data.logo,
+          mainActivity: data.mainActivity,
+          secondaryActivity: data.secondaryActivity,
+          taxLiabilities: data.taxLiabilities.map((t: any) => t.id || t), // Extraer IDs
+          // state: data.state,
+          taxPayerType: data.taxPayerType.id || data.taxPayerType, // Extraer ID
+          enterpriseType: data.enterpriseType.id || data.enterpriseType, // Extraer ID
+          personType: {
+            type: data.personType.type,
+            name: data.personType.name,
+            surname: data.personType.surname,
+            bussinessName: data.personType.bussinessName,
+          },
+          location: {
+            address: data.location.address,
+            city: data.location.city.id || data.location.city, // Extraer ID
+            department: data.location.department.id || data.location.department, // Extraer ID
+            country: data.location.country.id || data.location.country, // Extraer ID
+          },
+        };
+
+        console.log('Datos enviados para duplicar:', duplicatedEnterprise);
+
+        // Enviar los datos duplicados para crear una nueva empresa
+        this.enterpriseService.createEnterprise(duplicatedEnterprise).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Duplicada',
+              detail: `${data.name} fue duplicada exitosamente.`,
+            });
+            this.getEnterprises(); // Actualizar la lista de empresas
+          },
+          error: (err) => {
+            console.error('Error al duplicar empresa:', err);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'No se pudo duplicar la empresa. Verifica los datos.',
+            });
+          },
+        });
+      },
+      error: (err) => console.error('Error al obtener datos de la empresa:', err),
+    });
   }
 
   backupEnterprise(enterprise: EnterpriseList) {
