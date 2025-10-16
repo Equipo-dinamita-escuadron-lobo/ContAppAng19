@@ -92,6 +92,9 @@ export class ThirdListComponent implements OnInit {
   totalRecords = 0;
   rows = 10;
   first = 0;
+  sortField = 'names';
+  sortOrder: 'asc' | 'desc' = 'asc';
+  searchValue = '';
   
   // Modal states
   showTemplateModal = false;
@@ -137,14 +140,23 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Carga la lista de terceros
+   * Carga la lista de terceros con paginación desde el backend
    */
   loadThirds(): void {
     this.loading = true;
-    this.thirdService.getThirdList(this.entData).subscribe({
-      next: (data: Third[]) => {
-        this.thirds = data || [];
-        this.totalRecords = this.thirds.length;
+    const pageNumber = Math.floor(this.first / this.rows);
+
+    this.thirdService.getThirdParties(
+      this.entData,
+      pageNumber,
+      this.rows,
+      this.sortField,
+      this.sortOrder,
+      this.searchValue || undefined
+    ).subscribe({
+      next: (response: any) => {
+        this.thirds = response.content || [];
+        this.totalRecords = response.totalElements || 0;
         this.loading = false;
       },
       error: (error: any) => {
@@ -207,8 +219,32 @@ export class ThirdListComponent implements OnInit {
    */
   applyGlobalFilter(event: Event): void {
     const target = event.target as HTMLInputElement;
-    this.globalFilterValue = target.value;
-    this.dt.filterGlobal(target.value, 'contains');
+    this.searchValue = target.value;
+    this.first = 0;
+    this.loadThirds();
+  }
+
+  /**
+   * Maneja el cambio de página
+   */
+  onPageChange(event: any): void {
+    this.first = event.first;
+    this.rows = event.rows;
+    this.loadThirds();
+  }
+
+  /**
+   * Maneja el cambio de ordenamiento
+   */
+  onSort(event: any): void {
+    // Evitar llamadas recursivas si el ordenamiento no cambió
+    if (this.sortField === event.field && this.sortOrder === (event.order === 1 ? 'asc' : 'desc')) {
+      return;
+    }
+
+    this.sortField = event.field;
+    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    this.loadThirds();
   }
 
 
@@ -280,6 +316,7 @@ export class ThirdListComponent implements OnInit {
         this.thirdService.deleteThird(third.thId, this.entData).subscribe({
           next: () => {
             this.thirds = this.thirds.filter(t => t.thId !== third.thId);
+            this.totalRecords--;
             this.messageService.add({
               severity: 'success',
               summary: 'Eliminado',
@@ -346,10 +383,6 @@ export class ThirdListComponent implements OnInit {
   private importThirdsFromExcel(file: File): void {
     this.loading = true;
     
-    console.log('Iniciando importación de terceros...');
-    console.log('Archivo:', file.name, 'Tamaño:', file.size, 'bytes');
-    console.log('ID Empresa:', this.entData);
-    
     this.thirdService.importFromExcel(this.entData, file).subscribe({
       next: (response) => {
         this.loading = false;
@@ -415,7 +448,6 @@ export class ThirdListComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error completo:', error);
         this.loading = false;
         
         // Extraer los errores del backend

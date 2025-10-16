@@ -54,7 +54,7 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" placeholder="Buscar terceros..."
+          <input pInputText type="text" placeholder="Buscar por nombre/razón social, identificación..."
             class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
             [(ngModel)]="globalFilterValue" (input)="applyGlobalFilter($event)">
         </p-iconfield>
@@ -68,18 +68,19 @@
 
     <!-- Data Table -->
     <p-table #dt [value]="thirds" [loading]="loading" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
-      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      [rowsPerPageOptions]="[5, 10, 20]" [first]="first"
       [globalFilterFields]="['names', 'lastNames', 'socialReason', 'idNumber', 'email', 'typeId.typeId']"
-      styleClass="p-datatable-gridlines" [responsiveLayout]="'scroll'">
+      styleClass="p-datatable-gridlines" [responsiveLayout]="'scroll'"
+      (onPage)="onPageChange($event)" (onSort)="onSort($event)">
 
       <!-- Table Header -->
       <ng-template pTemplate="header">
         <tr>
           <th>Tipo Persona</th>
           <th>Tipo(s) Tercero</th>
-          <th>Nombre/Razón Social</th>
+          <th pSortableColumn="names">Nombre/Razón Social <p-sortIcon field="names"></p-sortIcon></th>
           <th>Tipo ID</th>
-          <th>Número de Identificación</th>
+          <th pSortableColumn="idNumber">Número de Identificación <p-sortIcon field="idNumber"></p-sortIcon></th>
           <th *ngIf="showDetailView">Dígito de Verificación</th>
           <th>Correo</th>
           <th *ngIf="showDetailView">País</th>
@@ -102,14 +103,14 @@
 
           <!-- Tipos de Tercero -->
           <td>
-            <span class="text-sm">
+            <span>
               {{ showDetailView ? getThirdTypesText(third.thirdTypes) : (third.thirdTypes[0]?.thirdTypeName || 'N/A') }}
             </span>
           </td>
 
           <!-- Nombre/Razón Social -->
           <td>
-            <span class="font-semibold">{{ getDisplayName(third) }}</span>
+            <span>{{ getDisplayName(third) }}</span>
           </td>
 
           <!-- Tipo ID -->

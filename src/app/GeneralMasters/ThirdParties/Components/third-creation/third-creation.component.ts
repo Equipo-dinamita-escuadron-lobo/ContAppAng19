@@ -67,58 +67,46 @@ import { FormFieldErrorComponent } from '../shared/form-field-error.component';
 })
 export class ThirdCreationComponent implements OnInit {
 
-  /** Formulario principal para la creación de terceros */
   createdThirdForm!: FormGroup;
 
-  /** Contenido extraído del PDF RUT */
   contendPDFRUT: string | null = null;
 
-  /** Información del tercero extraída del RUT */
   infoThird: string[] | null = null;
-
-  /** Tipos de tercero seleccionados */
   selectedThirdTypes: ThirdType[] = [];
 
-  /** Indica si el formulario ha sido enviado */
   submitted = false;
 
-  /** Estado del botón de persona jurídica */
   button1Checked = false;
 
-  /** Estado del botón de persona natural */
   button2Checked = false;
 
-  /** Controla la visibilidad de div adicional */
   showAdditionalDiv = false;
 
-  /** Lista de países disponibles */
   countries: any[] = [];
 
-  /** Lista de estados/departamentos disponibles */
   states: any[] = [];
 
-  /** Lista de tipos de tercero disponibles */
   thirdTypes: ThirdType[] = [];
 
-  /** Lista de tipos de identificación disponibles */
+  thirdTypeSearchTerm: string = '';
+  loadingThirdTypes: boolean = false;
+
   typeIds: TypeId[] = [];
 
-  /** Lista de tipos de identificación filtrados según el tipo de persona */
   filteredTypeIds: TypeId[] = [];
 
-  /** Lista de ciudades disponibles */
+  typeIdSearchTerm: string = '';
+
+  loadingTypeIds: boolean = false;
+
   cities: any[] = [];
 
-  /** Código del país seleccionado */
   selectedCountryCode: string = 'COL';
 
-  /** Código del estado/departamento seleccionado */
   selectedStateCode: string = '';
 
-  /** Fecha actual del sistema */
   currentDate = new Date();
 
-  /** ID de la empresa */
   entData: string = '';
 
   /** Datos del tercero por defecto */
@@ -261,13 +249,8 @@ export class ThirdCreationComponent implements OnInit {
         // Limpiar DV para persona natural
         this.thirdFormService.clearVerificationDigit(this.createdThirdForm);
         
-        // Restaurar validaciones básicas del número de identificación
-        const idNumberControl = this.createdThirdForm.get('idNumber');
-        idNumberControl?.setValidators([Validators.required, Validators.min(1)]);
-        idNumberControl?.setAsyncValidators([
-          this.thirdValidationService.thirdExistsValidator(this.thirdService, this.entData)
-        ]);
-        idNumberControl?.updateValueAndValidity();
+        // Aplicar filtro de persona
+        this.onPersonTypeChange();
       } else if (value === ePersonType.juridica) {
         // Configurar validadores para persona jurídica
         socialReasonControl?.setValidators([Validators.required]);
@@ -306,6 +289,9 @@ export class ThirdCreationComponent implements OnInit {
           const dv = this.thirdFormService.calculateVerificationDigit(idNumber);
           this.thirdFormService.setVerificationDigit(this.createdThirdForm, dv);
         }
+
+        // Aplicar filtro de persona
+        this.onPersonTypeChange();
       }
 
       namesControl?.updateValueAndValidity();
@@ -373,8 +359,8 @@ export class ThirdCreationComponent implements OnInit {
   private async loadInitialData(): Promise<void> {
     try {
       await Promise.all([
-        this.getThirdTypes(),
-        this.getTypesID(),
+        this.loadInitialThirdTypes(),
+        this.loadInitialTypeIds(),
         this.loadCountries(),
         this.loadStates()
       ]);
@@ -385,6 +371,38 @@ export class ThirdCreationComponent implements OnInit {
         detail: 'Error al cargar los datos iniciales'
       });
     }
+  }
+
+  /**
+   * Carga inicial de tipos de identificación (sin búsqueda)
+   */
+  private getTypesID(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.loadTypeIds();
+      resolve();
+    });
+  }
+
+  /**
+   * Carga inicial de tipos de identificación
+   */
+  private loadInitialTypeIds(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.loadTypeIds();
+      // Pequeño delay para asegurar que se complete la carga
+      setTimeout(() => resolve(), 100);
+    });
+  }
+
+  /**
+   * Carga inicial de tipos de tercero
+   */
+  private loadInitialThirdTypes(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.loadThirdTypes();
+      // Pequeño delay para asegurar que se complete la carga
+      setTimeout(() => resolve(), 100);
+    });
   }
 
   /**
@@ -557,49 +575,99 @@ export class ThirdCreationComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de tercero
+   * Carga los tipos de tercero con soporte para búsqueda
+   * @param searchTerm Término de búsqueda opcional
    */
-  private getThirdTypes(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.thirdServiceConfigurationService.getThirdTypes(this.entData).subscribe({
-        next: (types: ThirdType[]) => {
-          this.thirdTypes = types;
-          resolve();
-        },
-        error: (error: any) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al cargar tipos de tercero'
-          });
-          reject(error);
-        }
-      });
+  private loadThirdTypes(searchTerm?: string): void {
+    this.loadingThirdTypes = true;
+    this.thirdServiceConfigurationService.getActiveThirdTypes(this.entData, 0, 50, 'thirdTypename', 'asc', searchTerm).subscribe({
+      next: (response: any) => {
+        this.thirdTypes = Array.isArray(response.content) ? response.content : [];
+        this.loadingThirdTypes = false;
+      },
+      error: (error: any) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar tipos de tercero'
+        });
+        this.loadingThirdTypes = false;
+      }
     });
   }
 
   /**
-   * Carga los tipos de identificación
+   * Carga los tipos de identificación con soporte para búsqueda
+   * @param searchTerm Término de búsqueda opcional
    */
-  private getTypesID(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.thirdServiceConfigurationService.getTypeIds(this.entData).subscribe({
-        next: (types: TypeId[]) => {
-          this.typeIds = types;
-          // Inicializar filteredTypeIds con persona natural por defecto
-          this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(types, 'NATURAL_PERSON');
-          resolve();
-        },
-        error: (error: any) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al cargar tipos de identificación'
-          });
-          reject(error);
-        }
-      });
+  private loadTypeIds(searchTerm?: string): void {
+    this.loadingTypeIds = true;
+    this.thirdServiceConfigurationService.getActiveTypeIds(this.entData, 0, 50, 'typeIdname', 'asc', searchTerm).subscribe({
+      next: (response: any) => {
+        this.typeIds = Array.isArray(response.content) ? response.content : [];
+        // Aplicar filtro por tipo de persona
+        this.applyPersonTypeFilter();
+        this.loadingTypeIds = false;
+      },
+      error: (error: any) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar tipos de identificación'
+        });
+        this.loadingTypeIds = false;
+      }
     });
+  }
+
+  /**
+   * Aplica el filtro de tipos de identificación según el tipo de persona seleccionado
+   */
+  private applyPersonTypeFilter(): void {
+    const personType = this.thirdFormService.getPersonType(this.createdThirdForm);
+    if (personType) {
+      this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds, 
+        personType === ePersonType.natural ? 'NATURAL_PERSON' : 'LEGAL_ENTITY');
+    } else {
+      // Por defecto mostrar tipos para persona natural
+      this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds, 'NATURAL_PERSON');
+    }
+  }
+
+  /**
+   * Maneja el evento de filtro del dropdown de tipos de identificación
+   * @param event Evento del filtro con el término de búsqueda
+   */
+  onTypeIdFilter(event: any): void {
+    const searchTerm = event.filter || '';
+    this.typeIdSearchTerm = searchTerm;
+    
+    // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
+    if (searchTerm.length >= 2 || searchTerm.length === 0) {
+      this.loadTypeIds(searchTerm);
+    }
+  }
+
+  /**
+   * Maneja el evento de filtro del dropdown de tipos de tercero
+   * @param event Evento del filtro con el término de búsqueda
+   */
+  onThirdTypeFilter(event: any): void {
+    const searchTerm = event.filter || '';
+    this.thirdTypeSearchTerm = searchTerm;
+    
+    // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
+    if (searchTerm.length >= 2 || searchTerm.length === 0) {
+      this.loadThirdTypes(searchTerm);
+    }
+  }
+
+  /**
+   * Maneja el cambio de tipo de persona para actualizar el filtro de tipos de identificación
+   */
+  onPersonTypeChange(): void {
+    // Reaplicar el filtro cuando cambia el tipo de persona
+    this.applyPersonTypeFilter();
   }
 
   /**
@@ -667,8 +735,6 @@ export class ThirdCreationComponent implements OnInit {
       }
     });
   }
-
-  // Tooltips removidos
 
   /**
    * Maneja el cambio de departamento
