@@ -116,10 +116,6 @@ export class TaxService {
    */
   changeState(id: number, enterpriseId: string, status: boolean): Observable<Tax> {
     const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
-    console.log('changeState - URL construida:', url);
-    console.log('changeState - id:', id, 'type:', typeof id);
-    console.log('changeState - enterpriseId:', enterpriseId, 'type:', typeof enterpriseId);
-    console.log('changeState - status:', status, 'type:', typeof status);
     return this.http.patch<Tax>(url, {});
   }
 }
