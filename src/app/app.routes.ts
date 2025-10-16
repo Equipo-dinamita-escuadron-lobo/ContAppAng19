@@ -5,6 +5,7 @@ import { ForgotPasswordComponent } from './Core/auth/forgot-password/forgot-pass
 import { RegisterComponent } from './Core/auth/register/register.component';
 import { ResetPasswordComponent } from './Core/auth/reset-password/reset-password.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
+import { ArchiveEnterpriseComponent } from './GeneralMasters/Enterprise/archive-enterprise/archive-enterprise.component';
 import { hasRoleChildGuard, hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
 import { ViewEnterpriseComponent } from './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component';
@@ -39,6 +40,14 @@ export const routes: Routes = [
       breadcrumb: 'enterprise-list',
     },
     component: ListEnterpriseComponent,
+  },
+  {
+    path: 'enterprise/archive',
+    canActivate: [isAuthenticatedGuard],
+    data: {
+      breadcrumb: 'enterprise-archive',
+    },
+    component: ArchiveEnterpriseComponent,
   },
   {
     path: 'enterprise/create',
@@ -916,7 +925,7 @@ export const routes: Routes = [
                   './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
                 ).then((m) => m.ReceiptAccountingEntriesComponent),
             },
-            
+
             ],
           },
           {

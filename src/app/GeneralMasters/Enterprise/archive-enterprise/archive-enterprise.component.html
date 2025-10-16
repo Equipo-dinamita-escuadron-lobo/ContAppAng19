@@ -1,0 +1,47 @@
+<!-- Ocupar todo el espacio-->
+<div class="w-full h-full flex flex-col">
+  <app-header></app-header>
+</div>
+
+<div class="m-120 max-w-7xl mx-auto">
+  <!-- Header con título y botón regresar -->
+  <div class="flex justify-between items-start mb-8">
+    <div>
+      <h1
+        class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+        Empresas Archivadas
+      </h1>
+      <p class="font-family-sans font-normal text-xs/21 text-neutral-50 mt-2">
+        Listado de empresas que han sido archivadas. Puedes desarchivar o ver detalles.
+      </p>
+    </div>
+    <p-button label="Regresar" icon="pi pi-arrow-left" (click)="goBack()" class="bg-primary text-white rounded-full">
+    </p-button>
+  </div>
+
+  <!-- Cards de empresas archivadas -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+    <div *ngFor="let enterprise of archivedEnterprises"
+      class="bg-white p-8 rounded-xl shadow text-center max-w-sm w-full relative">
+
+      <!-- Logo -->
+      <div class="w-64 h-64 mx-auto rounded-full bg-gray-200 mb-6 flex items-center justify-center overflow-hidden">
+        <img *ngIf="enterprise.logo" [src]="enterprise.logo" [alt]="enterprise.name"
+          class="w-full h-full rounded-full object-cover">
+        <i *ngIf="!enterprise.logo" class="pi pi-building text-6xl text-gray-400"></i>
+      </div>
+
+      <!-- Nombre y NIT -->
+      <h3 class="font-family-titillium font-semibold text-xl/22 mb-2">{{ enterprise.name }}</h3>
+      <p class="font-family-sans font-normal text-sm/21 text-neutral-50 mb-6">NIT: {{ enterprise.nit }}</p>
+
+      <!-- Botones de acción -->
+      <div class="flex justify-center gap-2">
+        <p-button label="Desarchivar" icon="pi pi-folder-open" class="bg-green-600 text-white w-full"
+          (click)="unarchiveEnterprise(enterprise)"></p-button>
+        <p-button label="Ver" icon="pi pi-eye" class="bg-blue-600 text-white w-full"
+          (click)="viewEnterprise(enterprise)"></p-button>
+      </div>
+    </div>
+  </div>
+</div>

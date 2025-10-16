@@ -90,7 +90,7 @@ export class EditEnterpriseComponent implements OnInit {
 
   loadEnterpriseData(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
-    
+
     if (this.entData?.id) {
       this.enterpriseId = this.entData.id;
       this.loading = true;
@@ -118,7 +118,7 @@ export class EditEnterpriseComponent implements OnInit {
       ownerName: [this.enterpriseData?.ownerName || '', [Validators.minLength(2)]],
       lastNames: [this.enterpriseData?.lastNames || '', [Validators.minLength(2)]],
       nit: [this.enterpriseData?.nit || '', [Validators.required, Validators.pattern(/^\d{9,10}$/)]],
-      dv: [this.enterpriseData?.dv || '', [Validators.required, Validators.pattern(/^\d{1}$/)]],
+      //dv: [this.enterpriseData?.dv || '', [Validators.required, Validators.pattern(/^\d{1}$/)]],
       taxPayerType: [this.enterpriseData?.taxPayerType || null, Validators.required],
       mainActivity: [this.enterpriseData?.mainActivity || '', [Validators.required, Validators.pattern(/^\d{4}$/)]],
       secondaryActivity: [this.enterpriseData?.secondaryActivity || '', [Validators.pattern(/^\d{4}$/)]],
@@ -152,7 +152,7 @@ export class EditEnterpriseComponent implements OnInit {
   onPersonTypeChange(type: 'juridica' | 'natural'): void {
     this.personType = type;
     this.updateFormValidations();
-    
+
     if (type === 'juridica') {
       this.enterpriseForm.get('ownerName')?.setValue('');
       this.enterpriseForm.get('lastNames')?.setValue('');
@@ -176,7 +176,7 @@ export class EditEnterpriseComponent implements OnInit {
     if (this.enterpriseForm.valid) {
       this.loading = true;
       const formData = this.enterpriseForm.value;
-      
+
       const enterpriseData: EnterpriseDetails = {
         id: this.enterpriseId,
         name: formData.name,
@@ -203,7 +203,7 @@ export class EditEnterpriseComponent implements OnInit {
       };
 
       console.log('Datos de empresa a actualizar:', enterpriseData);
-      
+
       this.enterpriseService.updateEnterprise(this.enterpriseId, enterpriseData).subscribe({
         next: (response) => {
           console.log('Empresa actualizada exitosamente:', response);
