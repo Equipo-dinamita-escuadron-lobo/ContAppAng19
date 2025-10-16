@@ -133,6 +133,7 @@ export class ListTaxComponent implements OnInit {
         const content: any[] = page.content || [];
         this.taxes = content.map((tax: any) => ({
           ...tax,
+          id: Number(tax.id),
           depositAccountName: this.getAccountName(tax.depositAccount),
           refundAccountName: this.getAccountName(tax.refundAccount)
         }));
@@ -164,6 +165,7 @@ export class ListTaxComponent implements OnInit {
         const content: any[] = page.content || [];
         this.taxes = content.map((tax: any) => ({
           ...tax,
+          id: Number(tax.id),
           depositAccountName: this.getAccountName(tax.depositAccount),
           refundAccountName: this.getAccountName(tax.refundAccount)
         }));
@@ -209,7 +211,7 @@ export class ListTaxComponent implements OnInit {
    * Navega al componente de edición de impuestos
    */
   editTax(tax: TaxList): void {
-    this.router.navigate(['/gen-masters/taxes/edit', tax.id], {
+    this.router.navigate(['/gen-masters/taxes/edit', Number(tax.id)], {
       state: { taxData: tax }
     });
   }
@@ -229,7 +231,7 @@ export class ListTaxComponent implements OnInit {
         const enterpriseId = this.getEnterpriseId();
         if (!enterpriseId) return;
 
-        this.taxService.deleteTax(tax.id).subscribe({
+        this.taxService.deleteTax(Number(tax.id)).subscribe({
           next: () => {
             this.messageService.add({
               severity: 'success',
@@ -254,22 +256,23 @@ export class ListTaxComponent implements OnInit {
   /**
    * Cambia el estado de un impuesto
    */
-  changeTaxState(tax: TaxList): void {
+  changeTaxState(taxId: number, tax: TaxList): void {
     const enterpriseId = this.getEnterpriseId();
-    if (!tax?.id || !enterpriseId) return;
+    if (!taxId || !enterpriseId) return;
 
     const newStatus = !tax.status;
 
-    this.taxService.changeState(tax.id, enterpriseId, newStatus).subscribe({
+    this.taxService.changeState(taxId, enterpriseId, newStatus).subscribe({
       next: () => {
         tax.status = newStatus;
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: `Estado del impuesto "${tax.description}" cambiado correctamente`
+          detail: `Impuesto "${tax.description}" cambiado correctamente`
         });
       },
-      error: () => {
+      error: (error) => {
+        console.error('Error al cambiar el estado del impuesto:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
