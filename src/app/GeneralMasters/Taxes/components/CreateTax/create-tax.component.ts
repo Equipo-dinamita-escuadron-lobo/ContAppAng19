@@ -77,10 +77,11 @@ export class CreateTaxComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al obtener las cuentas:', error);
+          const errorMessage = error?.error?.message || 'No se pudieron cargar las cuentas';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudieron cargar las cuentas'
+            detail: errorMessage
           });
         }
       });
@@ -130,10 +131,11 @@ export class CreateTaxComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al crear el impuesto:', error);
+          const errorMessage = error?.error?.message || 'No se pudo crear el impuesto';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo crear el impuesto'
+            detail: errorMessage
           });
         }
       });
