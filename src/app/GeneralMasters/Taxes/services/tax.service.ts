@@ -18,11 +18,10 @@ interface Page<T> {
 export class TaxService {
   private readonly http = inject(HttpClient);
   
-  // URL for the tax API
   private readonly apiURL = environment.API_URL + 'tax/';
 
   /**
-   * Obtiene la lista de impuestos asociados a una empresa específica a través de una solicitud HTTP GET.
+   * Obtiene la lista de impuestos asociados a una empresa
    *
    * @param enterpriseId - El ID de la empresa para la que se desean obtener los impuestos.
    * @returns Un observable que emite la lista de impuestos de tipo `TaxList[]`.
@@ -52,7 +51,7 @@ export class TaxService {
   }
 
   /**
-   * Crea un nuevo impuesto enviando los datos del impuesto a través de una solicitud HTTP POST.
+   * Crea un nuevo impuesto enviando los datos del impuesto
    *
    * @param tax - El objeto `TaxCreateRequest` que contiene la información del impuesto a crear.
    * @returns Un observable que emite el impuesto creado de tipo `Tax`.
@@ -62,7 +61,7 @@ export class TaxService {
   }
 
   /**
-   * Actualiza un impuesto existente enviando los datos modificados a través de una solicitud HTTP PUT.
+   * Actualiza un impuesto existente enviando los datos modificados
    *
    * @param tax - El objeto `TaxUpdateRequest` con los datos actualizados del impuesto.
    * @returns Un observable que emite el impuesto actualizado de tipo `Tax`.
@@ -73,7 +72,7 @@ export class TaxService {
   }
 
   /**
-   * Obtiene un impuesto específico utilizando su código y el ID de la empresa asociada mediante una solicitud HTTP GET.
+   * Obtiene un impuesto específico utilizando su código y el ID de la empresa asociada
    *
    * @param code - El código del impuesto que se desea obtener.
    * @param enterpriseId - El ID de la empresa a la que pertenece el impuesto.
@@ -95,15 +94,10 @@ export class TaxService {
     return this.http.get<Tax>(url);
   }
 
-  /**
-   * Elimina un impuesto existente a través de una solicitud HTTP DELETE utilizando el ID del impuesto.
-   *
-   * @param id - El ID del impuesto que se desea eliminar.
-   * @returns Un observable que emite el impuesto eliminado de tipo `Tax`.
-   */
-  deleteTax(id: number): Observable<Tax> {
-    const url = this.apiURL + id;
-    return this.http.delete<Tax>(url);
+  
+  deleteTax(id: number, enterpriseId: string): Observable<void> {
+    const url = `${this.apiURL}${id}/${enterpriseId}`;
+    return this.http.delete<void>(url);
   }
 
   /**

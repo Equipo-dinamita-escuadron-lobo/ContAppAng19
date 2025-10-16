@@ -227,7 +227,7 @@ export class ListTaxComponent implements OnInit {
         const enterpriseId = this.getEnterpriseId();
         if (!enterpriseId) return;
 
-        this.taxService.deleteTax(Number(tax.id)).subscribe({
+        this.taxService.deleteTax(Number(tax.id), enterpriseId).subscribe({
           next: () => {
             this.messageService.add({
               severity: 'success',
