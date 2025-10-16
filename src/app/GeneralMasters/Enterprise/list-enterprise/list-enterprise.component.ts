@@ -307,15 +307,63 @@ export class ListEnterpriseComponent implements OnInit {
 
   backupEnterprise(enterprise: EnterpriseList) {
     if (!enterprise.id) return;
-    this.enterpriseService.backupEnterprise(String(enterprise.id)).subscribe({
-      next: (res) => {
+
+    // Obtener los datos de la empresa
+    this.enterpriseService.getEnterpriseById(String(enterprise.id)).subscribe({
+      next: (data) => {
+        // Transformar los datos para cumplir con el formato esperado por el backend
+        const enterpriseData = {
+          name: data.name,
+          nit: data.nit,
+          dv: data.dv,
+          phone: data.phone,
+          branch: data.branch,
+          email: data.email,
+          logo: data.logo,
+          mainActivity: data.mainActivity,
+          secondaryActivity: data.secondaryActivity,
+          taxLiabilities: data.taxLiabilities.map((t: any) => t.id || t), // Extraer IDs
+          // state: data.state,
+          taxPayerType: data.taxPayerType.id || data.taxPayerType, // Extraer ID
+          enterpriseType: data.enterpriseType.id || data.enterpriseType, // Extraer ID
+          personType: {
+            type: data.personType.type,
+            name: data.personType.name,
+            surname: data.personType.surname,
+            bussinessName: data.personType.bussinessName,
+          },
+          location: {
+            address: data.location.address,
+            city: data.location.city.id || data.location.city, // Extraer ID
+            department: data.location.department.id || data.location.department, // Extraer ID
+            country: data.location.country.id || data.location.country, // Extraer ID
+          },
+        };
+
+        // Crear un archivo JSON y descargarlo
+        const jsonString = JSON.stringify(enterpriseData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${data.name}.json`; // Nombre del archivo
+        a.click();
+        window.URL.revokeObjectURL(url);
+
         this.messageService.add({
-          severity: 'info',
-          summary: 'Copia de seguridad creada',
-          detail: `${enterprise.name} fue respaldada correctamente.`,
+          severity: 'success',
+          summary: 'Copia de seguridad',
+          detail: `Se descargó la copia de seguridad de ${data.name}.`,
         });
       },
-      error: (err) => console.error('Error al hacer copia de seguridad:', err),
+      error: (err) => {
+        console.error('Error al obtener datos de la empresa:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo generar la copia de seguridad.',
+        });
+      },
     });
   }
 
@@ -357,5 +405,60 @@ export class ListEnterpriseComponent implements OnInit {
       enterprise.name,
       enterprise.logo
     );
+  }
+
+  onImportEnterprise(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+
+    input.addEventListener('change', (event: any) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            // Parsear el contenido del archivo JSON
+            const enterpriseData = JSON.parse(reader.result as string);
+
+            // Validar que el archivo tenga el formato esperado
+            if (!enterpriseData.name || !enterpriseData.nit || !enterpriseData.dv) {
+              throw new Error('El archivo JSON no tiene el formato esperado.');
+            }
+
+            // Enviar los datos al backend para crear la empresa
+            this.enterpriseService.createEnterprise(enterpriseData).subscribe({
+              next: () => {
+                this.messageService.add({
+                  severity: 'success',
+                  summary: 'Importación exitosa',
+                  detail: `La empresa ${enterpriseData.name} fue creada exitosamente.`,
+                });
+                this.getEnterprises(); // Actualizar la lista de empresas
+              },
+              error: (err) => {
+                console.error('Error al importar empresa:', err);
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error',
+                  detail: 'No se pudo importar la empresa. Verifica los datos.',
+                });
+              },
+            });
+          } catch (error) {
+            console.error('Error al leer el archivo JSON:', error);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'El archivo JSON no es válido.',
+            });
+          }
+        };
+
+        reader.readAsText(file);
+      }
+    });
+
+    input.click();
   }
 }
