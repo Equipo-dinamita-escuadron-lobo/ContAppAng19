@@ -118,6 +118,17 @@ export class TaxService {
     const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
     return this.http.patch<Tax>(url, {});
   }
+
+  /**
+   * Obtiene la lista de impuestos activos para una empresa específica.
+   *
+   * @param enterpriseId - El ID de la empresa para la que se desean obtener los impuestos activos.
+   * @returns Un observable que emite la lista de impuestos activos de tipo `TaxList[]`.
+   */
+  getActiveTaxes(enterpriseId: string): Observable<TaxList[]> {
+    const url = `${this.apiURL}active/${enterpriseId}`;
+    return this.http.get<TaxList[]>(url);
+  }
 }
 
 
