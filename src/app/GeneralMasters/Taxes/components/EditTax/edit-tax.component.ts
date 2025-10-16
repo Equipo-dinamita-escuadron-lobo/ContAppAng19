@@ -83,18 +83,17 @@ export class EditTaxComponent implements OnInit {
   }
 
   /**
-   * Obtiene las cuentas del catálogo de cuentas
+   * Obtiene las cuentas auxiliares del catálogo de cuentas
    */
   getCuentas(): void {
     if (this.entData?.id) {
-      this.chartAccountService.getListAccounts(this.entData.id).subscribe({
+      this.chartAccountService.getListAuxiliaryAccounts(this.entData.id).subscribe({
         next: (data: Account[]) => {
           this.accounts = data;
           this.processAccounts();
         },
         error: (error) => {
-          console.error('Error al obtener las cuentas:', error);
-          const errorMessage = error?.error?.message || 'No se pudieron cargar las cuentas';
+          const errorMessage = error?.error?.message || 'No se pudieron cargar las cuentas auxiliares';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
