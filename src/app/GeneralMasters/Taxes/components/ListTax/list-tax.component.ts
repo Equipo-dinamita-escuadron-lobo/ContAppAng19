@@ -242,10 +242,11 @@ export class ListTaxComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error al eliminar el impuesto:', error);
+            const errorMessage = error?.error?.message || 'No se pudo eliminar el impuesto';
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: 'No se pudo eliminar el impuesto'
+              detail: errorMessage
             });
           }
         });
@@ -273,10 +274,11 @@ export class ListTaxComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cambiar el estado del impuesto:', error);
+        const errorMessage = error?.error?.message || 'No se pudo cambiar el estado del impuesto.';
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo cambiar el estado del impuesto.'
+          detail: errorMessage
         });
       }
     });

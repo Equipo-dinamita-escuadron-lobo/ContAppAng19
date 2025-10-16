@@ -94,10 +94,11 @@ export class EditTaxComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al obtener las cuentas:', error);
+          const errorMessage = error?.error?.message || 'No se pudieron cargar las cuentas';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudieron cargar las cuentas'
+            detail: errorMessage
           });
         }
       });
@@ -138,10 +139,11 @@ export class EditTaxComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al cargar el impuesto desde API:', error);
+          const errorMessage = error?.error?.message || 'No se pudo cargar el impuesto. Por favor, regrese a la lista e intente nuevamente.';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo cargar el impuesto. Por favor, regrese a la lista e intente nuevamente.'
+            detail: errorMessage
           });
         }
       });
@@ -236,10 +238,11 @@ export class EditTaxComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al actualizar el impuesto:', error);
+          const errorMessage = error?.error?.message || 'No se pudo actualizar el impuesto';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo actualizar el impuesto'
+            detail: errorMessage
           });
         }
       });
