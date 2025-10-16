@@ -28,7 +28,7 @@ export class EnterpriseService {
 
   getEnterpriseById(id: string): Observable<EnterpriseDetails> {
     // Obtener empresa completa por ID
-    return this.http.get<EnterpriseDetails>(`${this.apiUrl}${id}`);
+    return this.http.get<EnterpriseDetails>(`${this.apiUrl}enterprise/${id}`);
   }
 
   getSelectedEnterprise() {

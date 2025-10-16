@@ -58,34 +58,39 @@ export class ViewEnterpriseComponent implements OnInit {
     this.router.navigate(['/enterprise/edit']);
   }
 
-  // Retornan directamente los nombres recibidos del backend
+  /** ==================== GETTERS DE DATOS ==================== */
+
+  // Tipo de empresa
   getEnterpriseTypeName(): string {
     if (!this.enterpriseData?.enterpriseType) return 'No disponible';
-    return (
-      (this.enterpriseData.enterpriseType as any).name ||
-      this.enterpriseData.enterpriseType ||
-      'No disponible'
-    );
+    const type = this.enterpriseData.enterpriseType;
+    return typeof type === 'object' ? type.name : type;
   }
 
+  // Tipo de persona
   getPersonTypeName(): string {
     if (!this.enterpriseData?.personType) return 'No disponible';
-    return (
-      (this.enterpriseData.personType as any).name ||
-      this.enterpriseData.personType ||
-      'No disponible'
-    );
+    const type = this.enterpriseData.personType;
+    return typeof type === 'object' ? type.type : type;
   }
 
+  // Razón social (business name)
+  getBusinessName(): string {
+    if (!this.enterpriseData?.personType) return 'No disponible';
+    const person = this.enterpriseData.personType;
+    return typeof person === 'object' && person.bussinessName
+      ? person.bussinessName
+      : 'No disponible';
+  }
+
+  // Tipo de contribuyente
   getTaxPayerTypeName(): string {
     if (!this.enterpriseData?.taxPayerType) return 'No disponible';
-    return (
-      (this.enterpriseData.taxPayerType as any).name ||
-      this.enterpriseData.taxPayerType ||
-      'No disponible'
-    );
+    const type = this.enterpriseData.taxPayerType;
+    return typeof type === 'object' ? type.name : type;
   }
 
+  // Responsabilidades tributarias
   getTaxLiabilitiesNames(): string {
     if (
       !this.enterpriseData?.taxLiabilities ||
@@ -93,22 +98,29 @@ export class ViewEnterpriseComponent implements OnInit {
     )
       return 'No disponible';
     return this.enterpriseData.taxLiabilities
-      .map((liability: any) => liability.name || liability)
+      .map((liability: any) =>
+        typeof liability === 'object' ? liability.name : liability
+      )
       .join(', ');
   }
 
+  // Localización
   getLocationData(field: string): string {
     if (!this.enterpriseData?.location) return 'No disponible';
     const location = this.enterpriseData.location;
     switch (field) {
       case 'country':
-        return location.country?.name || location.country || 'No disponible';
+        return typeof location.country === 'object'
+          ? location.country.name
+          : location.country;
       case 'department':
-        return (
-          location.department?.name || location.department || 'No disponible'
-        );
+        return typeof location.department === 'object'
+          ? location.department.name
+          : location.department;
       case 'city':
-        return location.city?.name || location.city || 'No disponible';
+        return typeof location.city === 'object'
+          ? location.city.name
+          : location.city;
       case 'address':
         return location.address || 'No disponible';
       default:

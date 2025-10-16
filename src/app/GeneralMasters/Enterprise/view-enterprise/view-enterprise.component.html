@@ -27,6 +27,8 @@
             <div class="flex flex-col">
               <label class="text-sm font-medium text-gray-600 mb-1">Nombre de la empresa:</label>
               <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.name || 'No disponible' }}</span>
+              <!-- <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.dv || 'No disponible' }}</span> -->
+
             </div>
 
             <div class="flex flex-col">
@@ -47,8 +49,10 @@
 
             <div class="flex flex-col">
               <label class="text-sm font-medium text-gray-600 mb-1">Razón social:</label>
-              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.legalName || 'No disponible'
-                }}</span>
+              <!-- <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.legalName || 'No disponible'
+                }}</span> -->
+                <span class="text-lg font-semibold text-gray-800">{{ getBusinessName() }}</span>
+
             </div>
           </div>
 
@@ -62,6 +66,7 @@
             <div class="flex flex-col">
               <label class="text-sm font-medium text-gray-600 mb-1">Dígito de verificación:</label>
               <!-- <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.dv || 'No disponible' }}</span> -->
+              <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.dv || 'No disponible' }}</span>
             </div>
 
             <div class="flex flex-col">
