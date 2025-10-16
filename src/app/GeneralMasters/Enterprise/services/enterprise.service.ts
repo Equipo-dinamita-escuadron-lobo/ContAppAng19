@@ -42,15 +42,12 @@ export class EnterpriseService {
     return this.http.post<EnterpriseDetails>(this.apiUrl, enterprise);
   }
 
-  updateEnterprise(
-    id: string,
-    enterprise: EnterpriseDetails
-  ): Observable<EnterpriseDetails> {
-    return this.http.put<EnterpriseDetails>(`${this.apiUrl}${id}`, enterprise);
+  updateEnterprise(id: string, enterprise: EnterpriseDetails): Observable<EnterpriseDetails> {
+    return this.http.put<EnterpriseDetails>(`${this.apiUrl}update/${id}`, enterprise);
   }
 
   deleteEnterprise(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}${id}`);
+    return this.http.delete<void>(`${this.apiUrl}enterprise/${id}`);
   }
 
   /** ==================== ARCHIVAR ==================== */

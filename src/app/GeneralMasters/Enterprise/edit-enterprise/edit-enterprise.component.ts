@@ -171,27 +171,40 @@ export class EditEnterpriseComponent implements OnInit {
       return;
     }
 
+    console.log(this.enterpriseForm.value); // Verifica el contenido del formulario
+
+    // Transformar los datos para que coincidan con el formato esperado por el backend
     const updatedData: any = {
-      ...this.enterpriseData,
-      ...this.enterpriseForm.value,
+      name: this.enterpriseForm.value.name,
+      nit: this.enterpriseForm.value.nit,
+      dv: this.enterpriseForm.value.dv,
+      phone: this.enterpriseForm.value.phone,
+      branch: this.enterpriseForm.value.mainActivity, // Cambia según el campo correcto
+      email: this.enterpriseForm.value.email,
+      logo: this.selectedFile
+        ? this.selectedFile.name
+        : this.enterpriseData?.logo,
+      mainActivity: this.enterpriseForm.value.mainActivity,
+      secondaryActivity: this.enterpriseForm.value.secondaryActivity,
+      taxLiabilities: this.enterpriseForm.value.taxLiabilities.map((liability: any) => liability.id), // Solo IDs
+      // state: this.enterpriseData?.state || 'ACTIVE', // Si el estado es requerido
+      taxPayerType: this.enterpriseForm.value.taxPayerType?.id, // Solo ID
+      enterpriseType: this.enterpriseForm.value.enterpriseType?.id, // Solo ID
       personType: {
-        ...this.enterpriseData?.personType,
         type: this.personType.toUpperCase(),
-        name: this.enterpriseForm.value.ownerName,
-        surname: this.enterpriseForm.value.lastNames,
+        name: this.enterpriseForm.value.ownerName || null,
+        surname: this.enterpriseForm.value.lastNames || null,
         bussinessName: this.enterpriseForm.value.legalName
       },
       location: {
-        ...this.enterpriseData?.location,
         address: this.enterpriseForm.value.address,
-        country: this.enterpriseForm.value.country,
-        department: this.enterpriseForm.value.department,
-        city: this.enterpriseForm.value.city
-      },
-      logo: this.selectedFile
-        ? this.selectedFile.name
-        : this.enterpriseData?.logo
+        city: this.enterpriseForm.value.city?.id, // Solo ID
+        department: this.enterpriseForm.value.department?.id, // Solo ID
+        country: this.enterpriseForm.value.country?.id // Solo ID
+      }
     };
+
+    console.log('Datos transformados:', updatedData); // Verifica el objeto transformado
 
     this.enterpriseService.updateEnterprise(this.enterpriseId, updatedData).subscribe({
       next: () => {
