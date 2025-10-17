@@ -53,6 +53,9 @@ export class ListEnterpriseComponent implements OnInit {
   showPdfModal: boolean = false;
   selectedPdfFile: File | null = null;
 
+  showInactivateModal: boolean = false;
+  enterpriseToInactivate: EnterpriseList | null = null;
+
   showDeleteModal: boolean = false;
   enterpriseToDelete: EnterpriseList | null = null;
 
@@ -136,15 +139,15 @@ export class ListEnterpriseComponent implements OnInit {
         command: () => this.backupEnterprise(this.selectedEnterpriseForMenu!),
       },
       {
-        label: 'Archivar',
+        label: 'inactivar',
         icon: 'pi pi-folder',
-        command: () => this.archiveEnterprise(this.selectedEnterpriseForMenu!),
+        command: () => this.InactiveEnterprise(this.selectedEnterpriseForMenu!),
       },
       {
         label: 'Eliminar',
         icon: 'pi pi-trash',
         command: () =>
-          this.confirmDeleteEnterprise(this.selectedEnterpriseForMenu!),
+          this.deleteEnterprise(this.selectedEnterpriseForMenu!),
       },
     ];
     menu.toggle(event);
@@ -217,29 +220,7 @@ export class ListEnterpriseComponent implements OnInit {
     this.router.navigate(['/enterprise/edit']);
   }
 
-  archiveEnterprise(enterprise: EnterpriseList) {
-    if (!enterprise.id) return;
-
-    // 1️⃣ Eliminar de la lista de activas
-    this.enterprises = this.enterprises.filter((e) => e.id !== enterprise.id);
-    this.filteredEnterprises = this.filteredEnterprises.filter(
-      (e) => e.id !== enterprise.id
-    );
-
-    // 2️⃣ Agregar a la lista de archivadas
-    this.archivedEnterprises.push(enterprise);
-
-    // 3️⃣ Mensaje de éxito
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Archivado',
-      detail: `${enterprise.name} fue archivada.`,
-    });
-
-    // ✅ El badge {{ archivedEnterprises.length }} se actualizará automáticamente
-  }
-
-  confirmDeleteEnterprise(enterprise: EnterpriseList) {
+  InactiveEnterprise(enterprise: EnterpriseList) {
     this.enterpriseToDelete = enterprise;
     this.showDeleteModal = true;
   }
@@ -379,7 +360,7 @@ export class ListEnterpriseComponent implements OnInit {
       .deleteEnterprise(String(this.enterpriseToDelete.id))
       .subscribe({
         next: () => {
-          console.log('Empresa eliminada:', this.enterpriseToDelete?.name);
+          console.log('Empresa inactiva:', this.enterpriseToDelete?.name);
           this.showDeleteModal = false;
           this.enterpriseToDelete = null;
           this.getEnterprises();
@@ -392,6 +373,34 @@ export class ListEnterpriseComponent implements OnInit {
   openArchivedEnterprise(enterprise: EnterpriseList) {
     this.saveSelectedEnterprise(enterprise);
     this.router.navigate(['/enterprise/archive']);
+  }
+
+  /* ==================== INACTIVAR/ACTIVAR ==================== */
+
+  /* ==================== ELIMINAR ==================== */
+  deleteEnterprise(enterprise: EnterpriseList): void {
+  if (!enterprise.id) return;
+
+  this.enterpriseService.deleteEnterpriseHard(String(enterprise.id)).subscribe({
+    next: () => {
+      this.enterprises = this.enterprises.filter((e) => e.id !== enterprise.id);
+      this.filteredEnterprises = this.filteredEnterprises.filter((e) => e.id !== enterprise.id);
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Eliminada',
+        detail: `La empresa ${enterprise.name} fue eliminada permanentemente.`,
+      });
+    },
+    error: (err) => {
+      console.error('Error al eliminar la empresa:', err);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo eliminar la empresa.',
+      });
+    },
+  });
   }
 
   /* ==================== LOGO ==================== */

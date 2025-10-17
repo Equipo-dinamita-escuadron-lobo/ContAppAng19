@@ -50,6 +50,10 @@ export class EnterpriseService {
     return this.http.delete<void>(`${this.apiUrl}enterprise/${id}`);
   }
 
+  deleteEnterpriseHard(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}enterprise/hard/${id}`);
+  }
+
   /** ==================== ARCHIVAR ==================== */
   archiveEnterprise(id: string): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}archive/${id}`, {});
