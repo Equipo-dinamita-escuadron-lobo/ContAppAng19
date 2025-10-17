@@ -1,6 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -12,7 +17,10 @@ import { MessageService } from 'primeng/api';
 import { HeaderComponent } from '../../../Core/Components/Header/header.component';
 import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
-import { LocalStorageMethods, EntData } from '../../../Shared/Methods/local-storage.method';
+import {
+  LocalStorageMethods,
+  EntData,
+} from '../../../Shared/Methods/local-storage.method';
 
 @Component({
   selector: 'app-edit-enterprise',
@@ -26,11 +34,11 @@ import { LocalStorageMethods, EntData } from '../../../Shared/Methods/local-stor
     MultiSelectModule,
     CheckboxModule,
     ToastModule,
-    HeaderComponent
+    HeaderComponent,
   ],
   providers: [MessageService],
   templateUrl: './edit-enterprise.component.html',
-  styleUrl: './edit-enterprise.component.css'
+  styleUrl: './edit-enterprise.component.css',
 })
 export class EditEnterpriseComponent implements OnInit {
   enterpriseForm!: FormGroup;
@@ -45,23 +53,39 @@ export class EditEnterpriseComponent implements OnInit {
   enterpriseTypes = [
     { id: 1, name: 'Privada' },
     { id: 2, name: 'Oficial' },
-    { id: 3, name: 'Mixta' }
+    { id: 3, name: 'Mixta' },
   ];
 
   taxLiabilities = [
     { id: 1, name: 'Información exógena' },
-    { id: 3, name: 'Informante de beneficiarios finales' }
+    { id: 3, name: 'Informante de beneficiarios finales' },
   ];
 
   taxPayerTypes = [
     { id: 1, name: 'Responsable de IVA' },
     { id: 2, name: 'No Responsable de IVA' },
-    { id: 3, name: 'Gran contribuyente' }
+    { id: 3, name: 'Gran contribuyente' },
   ];
 
-  countries = [{ id: 1, name: 'Colombia' }];
-  departments = [{ id: 11, name: 'Cesar' }];
-  cities = [{ id: 1, name: 'El Encanto' }];
+  countries = [
+    { id: 1, name: 'Colombia' },
+    { id: 2, name: 'Estados Unidos' },
+    { id: 3, name: 'España' },
+  ];
+
+  departments = [
+    { id: 1, name: 'Cauca' },
+    { id: 2, name: 'Valle del Cauca' },
+    { id: 3, name: 'Antioquia' },
+    { id: 4, name: 'Cundinamarca' },
+  ];
+
+  city = [
+    { id: 1, name: 'Popayán', departmentId: 1 },
+    { id: 2, name: 'Cali', departmentId: 2 },
+    { id: 3, name: 'Medellín', departmentId: 3 },
+    { id: 4, name: 'Bogotá', departmentId: 4 },
+  ];
 
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
 
@@ -95,7 +119,7 @@ export class EditEnterpriseComponent implements OnInit {
         error: (error) => {
           console.error('Error al cargar datos de la empresa:', error);
           this.loading = false;
-        }
+        },
       });
     }
   }
@@ -120,9 +144,9 @@ export class EditEnterpriseComponent implements OnInit {
       department: [this.enterpriseData?.location?.department || null],
       city: [this.enterpriseData?.location?.city || null],
       address: [this.enterpriseData?.location?.address || ''],
-      phone: [this.enterpriseData?.phone || ''],
+      phone: [this.enterpriseData?.phone?.replace(/^\+57 /, '') || ''],
       email: [this.enterpriseData?.email || ''],
-      hasBranches: [this.enterpriseData?.branch === 'Sí']
+      hasBranches: [this.enterpriseData?.branch === 'Sí'],
     });
 
     this.updateFormValidations();
@@ -130,13 +154,19 @@ export class EditEnterpriseComponent implements OnInit {
 
   updateFormValidations(): void {
     if (this.personType === 'juridica') {
-      this.enterpriseForm.get('legalName')?.setValidators([Validators.required]);
+      this.enterpriseForm
+        .get('legalName')
+        ?.setValidators([Validators.required]);
       this.enterpriseForm.get('ownerName')?.clearValidators();
       this.enterpriseForm.get('lastNames')?.clearValidators();
     } else {
       this.enterpriseForm.get('legalName')?.clearValidators();
-      this.enterpriseForm.get('ownerName')?.setValidators([Validators.required]);
-      this.enterpriseForm.get('lastNames')?.setValidators([Validators.required]);
+      this.enterpriseForm
+        .get('ownerName')
+        ?.setValidators([Validators.required]);
+      this.enterpriseForm
+        .get('lastNames')
+        ?.setValidators([Validators.required]);
     }
 
     this.enterpriseForm.get('legalName')?.updateValueAndValidity();
@@ -166,19 +196,23 @@ export class EditEnterpriseComponent implements OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Campos requeridos',
-        detail: 'Por favor complete los campos mínimos necesarios.'
+        detail: 'Por favor complete los campos mínimos necesarios.',
       });
       return;
     }
+    // Asegurar prefijo +57 en el número antes de enviar
+    const phoneValue = this.enterpriseForm.value.phone.startsWith('+57')
+      ? this.enterpriseForm.value.phone
+      : `+57 ${this.enterpriseForm.value.phone}`;
 
-    console.log(this.enterpriseForm.value); // Verifica el contenido del formulario
+    // console.log(this.enterpriseForm.value); // Verifica el contenido del formulario
 
     // Transformar los datos para que coincidan con el formato esperado por el backend
     const updatedData: any = {
       name: this.enterpriseForm.value.name,
       nit: this.enterpriseForm.value.nit,
       dv: this.enterpriseForm.value.dv,
-      phone: this.enterpriseForm.value.phone,
+      phone: phoneValue,
       branch: this.enterpriseForm.value.mainActivity, // Cambia según el campo correcto
       email: this.enterpriseForm.value.email,
       logo: this.selectedFile
@@ -186,7 +220,9 @@ export class EditEnterpriseComponent implements OnInit {
         : this.enterpriseData?.logo,
       mainActivity: this.enterpriseForm.value.mainActivity,
       secondaryActivity: this.enterpriseForm.value.secondaryActivity,
-      taxLiabilities: this.enterpriseForm.value.taxLiabilities.map((liability: any) => liability.id), // Solo IDs
+      taxLiabilities: this.enterpriseForm.value.taxLiabilities.map(
+        (liability: any) => liability.id
+      ), // Solo IDs
       // state: this.enterpriseData?.state || 'ACTIVE', // Si el estado es requerido
       taxPayerType: this.enterpriseForm.value.taxPayerType?.id, // Solo ID
       enterpriseType: this.enterpriseForm.value.enterpriseType?.id, // Solo ID
@@ -194,39 +230,53 @@ export class EditEnterpriseComponent implements OnInit {
         type: this.personType.toUpperCase(),
         name: this.enterpriseForm.value.ownerName || null,
         surname: this.enterpriseForm.value.lastNames || null,
-        bussinessName: this.enterpriseForm.value.legalName
+        bussinessName: this.enterpriseForm.value.legalName,
       },
       location: {
         address: this.enterpriseForm.value.address,
         city: this.enterpriseForm.value.city?.id, // Solo ID
         department: this.enterpriseForm.value.department?.id, // Solo ID
-        country: this.enterpriseForm.value.country?.id // Solo ID
-      }
+        country: this.enterpriseForm.value.country?.id, // Solo ID
+      },
     };
 
     console.log('Datos transformados:', updatedData); // Verifica el objeto transformado
 
-    this.enterpriseService.updateEnterprise(this.enterpriseId, updatedData).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Actualización exitosa',
-          detail: 'La empresa ha sido actualizada correctamente.'
-        });
-        this.router.navigate(['/enterprise/list']);
-      },
-      error: (error) => {
-        console.error('Error al actualizar:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo actualizar la empresa.'
-        });
-      }
-    });
+    this.enterpriseService
+      .updateEnterprise(this.enterpriseId, updatedData)
+      .subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Actualización exitosa',
+            detail: 'La empresa ha sido actualizada correctamente.',
+          });
+          this.router.navigate(['/enterprise/list']);
+        },
+        error: (error) => {
+          console.error('Error al actualizar:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo actualizar la empresa.',
+          });
+        },
+      });
   }
 
   goBack(): void {
     this.router.navigate(['/enterprise/list']);
+  }
+
+  validateNumberInput(event: KeyboardEvent, maxLength: number): void {
+    const input = event.target as HTMLInputElement;
+    const key = event.key;
+
+    // Solo permite números del 0 al 9
+    const isNumber = /^[0-9]$/.test(key);
+
+    if (!isNumber || input.value.length >= maxLength) {
+      event.preventDefault();
+    }
   }
 }

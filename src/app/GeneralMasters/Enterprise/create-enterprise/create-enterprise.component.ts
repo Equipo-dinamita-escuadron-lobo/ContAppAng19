@@ -210,7 +210,6 @@ export class CreateEnterpriseComponent implements OnInit {
       console.log(JSON.stringify(enterpriseDetailsApi, null, 2));
 
       this.enterpriseService.createEnterprise(enterpriseDetailsApi).subscribe({
-
         next: () => {
           this.loading = false;
           this.router.navigate(['/enterprise/list']);
@@ -231,5 +230,27 @@ export class CreateEnterpriseComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/enterprise/list']);
+  }
+
+  // validateNumberInput(event: KeyboardEvent): void {
+  //   const input = event.target as HTMLInputElement;
+  //   const key = event.key;
+
+  //   // Solo permite números y evita más de 10 dígitos
+  //   if (!/^[0-9]$/.test(key) || input.value.length >= 10) {
+  //     event.preventDefault();
+  //   }
+  // }
+
+  validateNumberInput(event: KeyboardEvent, maxLength: number): void {
+    const input = event.target as HTMLInputElement;
+    const key = event.key;
+
+    // Solo permite números del 0 al 9
+    const isNumber = /^[0-9]$/.test(key);
+
+    if (!isNumber || input.value.length >= maxLength) {
+      event.preventDefault();
+    }
   }
 }
