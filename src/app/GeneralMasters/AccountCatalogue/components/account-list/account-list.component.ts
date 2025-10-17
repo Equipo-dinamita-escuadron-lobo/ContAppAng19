@@ -2560,67 +2560,44 @@ export class AccountListComponent {
   }
 
   /**
-   * Cambia el estado de una cuenta y actualiza recursivamente el estado de sus hijos.
-   * @param account La cuenta cuyo estado se va a cambiar.
+   * Obtiene la lista de códigos de cuentas que están expandidas actualmente.
+   * @returns Array de códigos de cuentas expandidas.
    */
-  changeAccountState(account: Account) {
-    // Prevenir múltiples cambios de estado simultáneos
-    if (this.isChangingState) {
-      return;
-    }
-    this.isChangingState = true;
+  private getExpandedAccounts(): string[] {
+    const expandedCodes: string[] = [];
 
-    if (!account?.id || account.status == null) {
-      // Revertir el estado en la UI si la validación falla
-      if (account.status != null) {
-        account.status = !account.status;
-      }
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Faltan datos para cambiar el estado de la cuenta.'
-      });
-      this.isChangingState = false;
-      return;
-    }
-
-    const enterpriseId = this.getIdEnterprise();
-    const newStatus = account.status;
-
-    this._accountService.changeState(account.id, enterpriseId, newStatus).subscribe({
-      next: () => {
-        if (newStatus) {
-          // Si se está activando, activar toda la jerarquía de padres
-          this.activateParentHierarchy(account);
-        } else {
-          // Si se está inactivando, inactivar todos los hijos recursivamente
-          this.updateChildrenStatusRecursively(account, newStatus);
+    const collectExpanded = (accounts: Account[]) => {
+      for (const account of accounts) {
+        if (account.showSubAccounts) {
+          expandedCodes.push(account.code);
         }
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Estado de la cuenta "${account.description}" cambiado correctamente`
-        });
-        this.isChangingState = false;
-      },
-      error: () => {
-        // Revertir el estado en la UI del padre y todos los hijos si la llamada al servicio falla
-        account.status = !newStatus;
-        if (newStatus) {
-          // Si falló la activación, revertir la activación de padres
-          this.deactivateParentHierarchy(account);
-        } else {
-          // Si falló la inactivación, revertir la inactivación de hijos
-          this.updateChildrenStatusRecursively(account, !newStatus);
+        if (account.children && account.children.length > 0) {
+          collectExpanded(account.children);
         }
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cambiar el estado de la cuenta.'
-        });
-        this.isChangingState = false;
       }
-    });
+    };
+
+    collectExpanded(this.listAccounts);
+    return expandedCodes;
+  }
+
+  /**
+   * Restaura el estado de expansión de las cuentas basado en la lista de códigos proporcionada.
+   * @param expandedCodes Array de códigos de cuentas que deben estar expandidas.
+   */
+  private restoreExpandedAccounts(expandedCodes: string[]): void {
+    const expandAccounts = (accounts: Account[]) => {
+      for (const account of accounts) {
+        if (expandedCodes.includes(account.code)) {
+          account.showSubAccounts = true;
+        }
+        if (account.children && account.children.length > 0) {
+          expandAccounts(account.children);
+        }
+      }
+    };
+
+    expandAccounts(this.listAccounts);
   }
 
   /**
@@ -2671,22 +2648,6 @@ export class AccountListComponent {
   }
 
   /**
-   * Obtiene el código del padre para una cuenta dada.
-   * @param code El código de la cuenta.
-   * @returns El código del padre o null si no tiene padre.
-   */
-  private getParentCode(code: string): string | null {
-    switch (code.length) {
-      case 1: return null; // Clase, no tiene padre
-      case 2: return code.substring(0, 1); // Grupo -> Clase
-      case 4: return code.substring(0, 2); // Cuenta -> Grupo
-      case 6: return code.substring(0, 4); // Subcuenta -> Cuenta
-      case 8: return code.substring(0, 6); // Auxiliar -> Subcuenta
-      default: return null;
-    }
-  }
-
-  /**
    * Desactiva recursivamente la jerarquía de padres que fueron activados durante una operación fallida.
    * @param child La cuenta hija desde donde se inicia la desactivación ascendente.
    */
@@ -2722,6 +2683,22 @@ export class AccountListComponent {
   }
 
   /**
+   * Obtiene el código del padre para una cuenta dada.
+   * @param code El código de la cuenta.
+   * @returns El código del padre o null si no tiene padre.
+   */
+  private getParentCode(code: string): string | null {
+    switch (code.length) {
+      case 1: return null; // Clase, no tiene padre
+      case 2: return code.substring(0, 1); // Grupo -> Clase
+      case 4: return code.substring(0, 2); // Cuenta -> Grupo
+      case 6: return code.substring(0, 4); // Subcuenta -> Cuenta
+      case 8: return code.substring(0, 6); // Auxiliar -> Subcuenta
+      default: return null;
+    }
+  }
+
+  /**
    * Verifica si una cuenta tiene hijos activos.
    * @param account La cuenta a verificar.
    * @returns true si tiene al menos un hijo activo, false en caso contrario.
@@ -2737,5 +2714,61 @@ export class AccountListComponent {
     return false;
   }
 
+  /**
+   * Cambia el estado de una cuenta y actualiza recursivamente el estado de sus hijos.
+   * @param account La cuenta cuyo estado se va a cambiar.
+   */
+  changeAccountState(account: Account) {
+    if (this.isChangingState) {
+      return;
+    }
+    this.isChangingState = true;
+
+    if (!account?.id || account.status == null) {
+      if (account.status != null) {
+        account.status = !account.status;
+      }
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Faltan datos para cambiar el estado de la cuenta.'
+      });
+      this.isChangingState = false;
+      return;
+    }
+
+    const enterpriseId = this.getIdEnterprise();
+    const newStatus = account.status;
+
+    this._accountService.changeState(account.id, enterpriseId, newStatus).subscribe({
+      next: () => {
+        if (newStatus) {
+          this.activateParentHierarchy(account);
+        } else {
+          this.updateChildrenStatusRecursively(account, newStatus);
+        }
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado de la cuenta "${account.description}" cambiado correctamente`
+        });
+        this.isChangingState = false;
+      },
+      error: () => {
+        account.status = !newStatus;
+        if (newStatus) {
+          this.deactivateParentHierarchy(account);
+        } else {
+          this.updateChildrenStatusRecursively(account, !newStatus);
+        }
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado de la cuenta.'
+        });
+        this.isChangingState = false;
+      }
+    });
+  }
 
 }
