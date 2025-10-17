@@ -86,12 +86,20 @@
 
           <!-- Título del contenido -->
           <h2 class="font-family-titillium text-3xl font-bold mb-6 pb-4 border-b-4 leading-tight"
-              style="color: var(--color-primary); border-color: var(--color-secondary);">
+              style="color: var(--color-primary); border-color: var(--color-primary);">
             {{ selectedHelp.name }}
           </h2>
 
-          <!-- Descripción con contenido HTML enriquecido -->
-          <div class="help-content text-base leading-relaxed" style="color: var(--color-neutral-20);" [innerHTML]="selectedHelp.description"></div>
+          <!-- Descripción con contenido HTML enriquecido en modo solo lectura -->
+          <p-editor
+            [(ngModel)]="selectedHelp.description"
+            [readonly]="true"
+            [style]="{'height': '500px', 'border': 'none'}"
+          >
+            <ng-template #header>
+              <!-- Header vacío para ocultar la barra de herramientas -->
+            </ng-template>
+          </p-editor>
         </div>
       } @else {
         <div class="flex flex-col items-center justify-center min-h-[400px] text-center bg-white rounded-2xl p-12 border-2 border-dashed"
@@ -110,7 +118,7 @@
       <div class="bg-white rounded-2xl overflow-hidden shadow-xl border" style="border-color: var(--color-neutral-90);">
         <!-- Encabezado de la lista -->
         <div class="help-panel-header">
-          <i class="pi pi-list text-xl"></i>
+          <i class="pi pi-list text-xl" style="color: white;"></i>
           <h3 class="help-panel-title">Temas de Ayuda</h3>
           @if (filteredHelpList.length > 0) {
             <span class="help-panel-counter">{{ filteredHelpList.length }}</span>

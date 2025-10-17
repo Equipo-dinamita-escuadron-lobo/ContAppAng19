@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HelpCenterService } from './services/help-center.service';
 import { HelpCenterResponse } from './models/HelpCenterResponse';
 import { CardModule } from 'primeng/card';
@@ -12,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject } from 'rxjs';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { MenuItem } from 'primeng/api';
+import { EditorModule } from 'primeng/editor';
 
 interface Module {
   id: number;
@@ -29,14 +31,19 @@ interface Module {
     IconFieldModule,
     InputIconModule,
     FormsModule,
-    TabMenuModule
+    TabMenuModule,
+    EditorModule
   ],
   templateUrl: './help-center-view.component.html',
   styleUrl: './help-center-view.component.css'
 })
 export class HelpCenterViewComponent implements OnInit {
 
-  constructor(private helpCenterService: HelpCenterService) {}
+  constructor(
+    private helpCenterService: HelpCenterService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {}
 
   // Lista de ayudas
   helpList: HelpCenterResponse[] = [];
@@ -66,14 +73,47 @@ export class HelpCenterViewComponent implements OnInit {
   menuItems: MenuItem[] = [];
 
   ngOnInit() {
-    this.loadModules();
-
     // Configurar búsqueda con debounce
     this.searchSubject.pipe(
       debounceTime(300)
     ).subscribe(term => {
       this.performSearch();
     });
+
+    // Cargar módulos y luego verificar parámetro de ruta
+    this.loadModules();
+  }
+
+  /**
+   * Convierte un nombre de módulo a un slug para URL
+   */
+  private moduleNameToSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+      .replace(/[^\w\s-]/g, '') // Eliminar caracteres especiales
+      .replace(/\s+/g, '-') // Espacios a guiones
+      .replace(/-+/g, '-') // Múltiples guiones a uno solo
+      .trim();
+  }
+
+  /**
+   * Convierte un slug de URL a ID de módulo
+   */
+  private slugToModuleId(slug: string): number | null {
+    const module = this.modules.find(
+      m => this.moduleNameToSlug(m.name) === slug.toLowerCase()
+    );
+    return module ? module.id : null;
+  }
+
+  /**
+   * Obtiene el slug de un módulo por su ID
+   */
+  private getModuleSlug(moduleId: number): string | null {
+    const module = this.modules.find(m => m.id === moduleId);
+    return module ? this.moduleNameToSlug(module.name) : null;
   }
 
   /**
@@ -98,8 +138,26 @@ export class HelpCenterViewComponent implements OnInit {
           }))
         ];
 
-        // Cargar todas las ayudas inicialmente
-        this.loadAllHelps();
+        // Verificar si hay parámetro de módulo en la ruta
+        this.route.paramMap.subscribe(params => {
+          const moduleSlug = params.get('moduleId');
+
+          if (moduleSlug) {
+            // Convertir slug a ID
+            const moduleId = this.slugToModuleId(moduleSlug);
+
+            if (moduleId !== null) {
+              this.onModuleChange(moduleId);
+            } else {
+              // Slug no encontrado, cargar todas las ayudas
+              console.warn(`Módulo "${moduleSlug}" no encontrado`);
+              this.loadAllHelps();
+            }
+          } else {
+            // No hay parámetro, cargar todas las ayudas
+            this.loadAllHelps();
+          }
+        });
       },
       error: (error) => {
         console.error('Error al cargar los módulos:', error);
@@ -133,9 +191,16 @@ export class HelpCenterViewComponent implements OnInit {
     this.selectedModuleId = moduleId;
     this.searchTerm = ''; // Limpiar búsqueda al cambiar módulo
 
+    // Actualizar la URL sin recargar el componente
     if (moduleId === null) {
+      this.router.navigate(['/help-center-view'], { replaceUrl: true });
       this.loadAllHelps();
     } else {
+      // Convertir ID a slug para una URL más legible
+      const moduleSlug = this.getModuleSlug(moduleId);
+      if (moduleSlug) {
+        this.router.navigate(['/help-center-view', moduleSlug], { replaceUrl: true });
+      }
       this.loadHelpsByModule(moduleId);
     }
   }
