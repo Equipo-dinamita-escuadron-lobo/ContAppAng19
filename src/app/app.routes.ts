@@ -857,7 +857,7 @@ export const routes: Routes = [
                   },*/
                 ],
               },
-              
+
             ],
           },
           {
@@ -1118,6 +1118,14 @@ export const routes: Routes = [
   },
   {
     path: 'help-center-view',
+    data: {
+      breadcrumb: 'Centro de Ayuda',
+    },
+    loadComponent: () =>
+      import('./PublicSite/help-center/help-center-view.component').then((m) => m.HelpCenterViewComponent),
+  },
+  {
+    path: 'help-center-view/:moduleId',
     data: {
       breadcrumb: 'Centro de Ayuda',
     },

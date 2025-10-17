@@ -368,3 +368,100 @@ input[pInputText]::placeholder {
     font-size: 0.875rem;
   }
 }
+
+/* ================================
+   ESTILOS PARA P-EDITOR EN MODO SOLO LECTURA
+   ================================ */
+
+/* Ocultar la barra de herramientas cuando está vacía */
+::ng-deep p-editor .p-editor-toolbar {
+  display: none !important;
+}
+
+/* Eliminar el borde del editor */
+::ng-deep p-editor .p-editor-container {
+  border: none !important;
+}
+
+/* Ajustar el contenedor del contenido */
+::ng-deep p-editor .p-editor-content {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+/* Estilos para el área de contenido Quill */
+::ng-deep p-editor .ql-container {
+  border: none !important;
+  font-size: 1rem !important;
+  line-height: 1.75 !important;
+  color: var(--color-neutral-20) !important;
+}
+
+::ng-deep p-editor .ql-editor {
+  padding: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* Deshabilitar el cursor y selección en modo solo lectura */
+::ng-deep p-editor .ql-editor.ql-blank::before {
+  display: none !important;
+}
+
+::ng-deep p-editor.p-editor-readonly .ql-editor {
+  cursor: default !important;
+}
+
+/* Estilos mejorados para el contenido del editor */
+::ng-deep p-editor .ql-editor h1,
+::ng-deep p-editor .ql-editor h2,
+::ng-deep p-editor .ql-editor h3,
+::ng-deep p-editor .ql-editor h4 {
+  font-family: 'Titillium Web', sans-serif;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  color: var(--color-primary);
+}
+
+::ng-deep p-editor .ql-editor strong {
+  font-weight: 600;
+  color: var(--color-neutral-10);
+}
+
+::ng-deep p-editor .ql-editor ul,
+::ng-deep p-editor .ql-editor ol {
+  padding-left: 1.5em;
+}
+
+::ng-deep p-editor .ql-editor li {
+  margin-bottom: 0.5em;
+}
+
+::ng-deep p-editor .ql-editor a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+::ng-deep p-editor .ql-editor a:hover {
+  color: var(--color-primary-50);
+}
+
+/* Scrollbar personalizada para el editor */
+::ng-deep p-editor .ql-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+::ng-deep p-editor .ql-editor::-webkit-scrollbar-track {
+  background: var(--color-neutral-95);
+  border-radius: 4px;
+}
+
+::ng-deep p-editor .ql-editor::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+  opacity: 0.4;
+}
+
+::ng-deep p-editor .ql-editor::-webkit-scrollbar-thumb:hover {
+  opacity: 0.7;
+}
