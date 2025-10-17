@@ -15,8 +15,33 @@
     </h1>
   </div>
 
+  <!-- Menú de botones para módulos -->
+  @if (modules.length > 0) {
+    <div class="mb-8 mt-24 flex flex-wrap gap-2 justify-center">
+      <!-- Botón "Todos" -->
+      <p-button
+        label="Todos"
+        icon="pi pi-list"
+        (onClick)="onModuleChange(null)"
+        [styleClass]="selectedModuleId === null ? 'module-button-active' : 'module-button-inactive'"
+        size="small">
+      </p-button>
+
+      <!-- Botones de módulos -->
+      @for (module of modules; track module.id) {
+        <p-button
+          [label]="module.name"
+          [icon]="getModuleIcon(module.id)"
+          (onClick)="onModuleChange(module.id)"
+          [styleClass]="selectedModuleId === module.id ? 'module-button-active' : 'module-button-inactive'"
+          size="small">
+        </p-button>
+      }
+    </div>
+  }
+
   <!-- Buscador con PrimeNG IconField -->
-  <div class="flex justify-start mt-12 mb-12">
+  <div class="flex justify-start mb-12">
     <div class="w-full sm:w-[30rem]">
       <p-iconfield iconPosition="left">
         <p-inputicon>
@@ -54,21 +79,19 @@
                   style="background-color: var(--color-primary-95);
                          color: var(--color-primary);
                          border-color: var(--color-primary-80);">
-              <i class="pi pi-folder mr-2"></i>
+              <i [class]="getModuleIcon(selectedHelp.moduleId) + ' mr-2'"></i>
               {{ selectedHelp.moduleName }}
             </span>
           </div>
 
           <!-- Título del contenido -->
           <h2 class="font-family-titillium text-3xl font-bold mb-6 pb-4 border-b-4 leading-tight"
-              style="color: var(--color-primary);">
+              style="color: var(--color-primary); border-color: var(--color-secondary);">
             {{ selectedHelp.name }}
           </h2>
 
-          <!-- Descripción -->
-          <div class="text-base leading-relaxed whitespace-pre-wrap" style="color: var(--color-neutral-20);">
-            {{ selectedHelp.description }}
-          </div>
+          <!-- Descripción con contenido HTML enriquecido -->
+          <div class="help-content text-base leading-relaxed" style="color: var(--color-neutral-20);" [innerHTML]="selectedHelp.description"></div>
         </div>
       } @else {
         <div class="flex flex-col items-center justify-center min-h-[400px] text-center bg-white rounded-2xl p-12 border-2 border-dashed"
@@ -86,22 +109,17 @@
     <div class="sticky top-8">
       <div class="bg-white rounded-2xl overflow-hidden shadow-xl border" style="border-color: var(--color-neutral-90);">
         <!-- Encabezado de la lista -->
-        <div class="flex items-center gap-2 px-6 py-5 text-white font-family-titillium"
-             style="background-color: var(--color-primary);">
-          <i class="pi pi-list"></i>
-          <h3 class="font-bold text-lg flex-1">
-            Temas de Ayuda
-          </h3>
+        <div class="help-panel-header">
+          <i class="pi pi-list text-xl"></i>
+          <h3 class="help-panel-title">Temas de Ayuda</h3>
           @if (filteredHelpList.length > 0) {
-            <span class="px-3 py-1 rounded-full text-sm font-semibold" style="background-color: var(--color-light);">
-              {{ filteredHelpList.length }}
-            </span>
+            <span class="help-panel-counter">{{ filteredHelpList.length }}</span>
           }
         </div>
 
         <!-- Lista de ayudas -->
         <p-scrollPanel [style]="{ width: '100%', height: '600px' }" styleClass="custom-scrollpanel">
-          <div class="p-3">
+          <div class="p-4">
             @if (filteredHelpList.length === 0 && !loading) {
               <div class="p-12 text-center" style="color: var(--color-neutral-50);">
                 <i class="pi pi-search text-4xl mb-3 block"></i>
@@ -111,36 +129,21 @@
             } @else {
               @for (help of filteredHelpList; track help.id) {
                 <div
-                  class="p-5 mb-3 rounded-xl cursor-pointer transition-all duration-200 border-2"
-                  [class]="isSelected(help)
-                    ? 'transform translate-x-1 shadow-lg'
-                    : 'hover:transform hover:translate-x-1 hover:shadow-md'"
-                  [style.background-color]="isSelected(help)
-                    ? 'var(--color-primary)'
-                    : 'var(--color-neutral-98)'"
-                  [style.border-color]="isSelected(help) ? 'var(--color-primary)' : 'var(--color-neutral-90)'"
-                  [style.color]="isSelected(help) ? 'white' : 'inherit'"
+                  [class]="'help-item-card' + (isSelected(help) ? ' selected' : '')"
                   (click)="selectHelp(help)">
 
                   <!-- Nombre de la ayuda -->
-                  <h4 class="font-semibold text-base mb-2 font-family-titillium leading-snug"
-                      [style.color]="isSelected(help) ? 'white' : 'var(--color-primary)'">
+                  <h4 class="help-item-title">
                     {{ help.name }}
                   </h4>
 
-                  <!-- Vista previa de la descripción -->
-                  <p class="text-xs leading-relaxed mb-3 line-clamp-2"
-                     [style.color]="isSelected(help) ? 'rgba(255, 255, 255, 0.9)' : 'var(--color-neutral-40)'">
-                    {{ help.description }}
-                  </p>
-
-                  <!-- Módulo -->
-                  <span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-xl border"
-                        [style.color]="isSelected(help) ? 'var(--color-primary)' : 'var(--color-primary-50)'"
-                        [style.background]="isSelected(help) ? 'white' : 'var(--color-primary-95)'"
-                        [style.border-color]="isSelected(help) ? 'white' : 'var(--color-primary-80)'">
-                    {{ help.moduleName }}
-                  </span>
+                  <!-- Módulo con icono -->
+                  <div class="flex items-center justify-start">
+                    <span class="help-item-badge">
+                      <i [class]="getModuleIcon(help.moduleId)"></i>
+                      {{ help.moduleName }}
+                    </span>
+                  </div>
                 </div>
               }
             }
@@ -151,4 +154,3 @@
 
   </div>
 </div>
-

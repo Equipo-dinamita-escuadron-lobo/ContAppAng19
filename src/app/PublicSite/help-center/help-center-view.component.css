@@ -11,6 +11,55 @@
   overflow: hidden;
 }
 
+/* ================================
+   ESTILOS PARA BOTONES DE MÓDULOS
+   ================================ */
+
+/* Botón de módulo activo (seleccionado) - azul */
+::ng-deep .module-button-active.p-button {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+  border-radius: 25px !important;
+  padding: 11px 20px !important;
+}
+
+::ng-deep .module-button-active .p-button-label {
+  font-family: var(--font-family-sans) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+::ng-deep .module-button-active.p-button:hover {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  opacity: 0.9 !important;
+}
+
+/* Botón de módulo inactivo (no seleccionado) - azul claro */
+::ng-deep .module-button-inactive.p-button {
+  background-color: var(--color-primary-95) !important;
+  border-color: var(--color-primary-90) !important;
+  color: var(--color-primary) !important;
+  border-radius: 25px !important;
+  padding: 11px 20px !important;
+}
+
+::ng-deep .module-button-inactive .p-button-label {
+  font-family: var(--font-family-sans) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+::ng-deep .module-button-inactive.p-button:hover {
+  background-color: var(--color-primary-90) !important;
+  border-color: var(--color-primary-80) !important;
+}
+
+/* ================================
+   ESTILOS DEL INPUT DE BÚSQUEDA
+   ================================ */
+
 /* Estilos de focus para el input de búsqueda */
 input[pInputText]:focus {
   outline: none;
@@ -39,6 +88,267 @@ input[pInputText]::placeholder {
 }
 
 /* ================================
+   RICH TEXT CONTENT STYLES
+   ================================ */
+
+/* Contenedor principal del contenido HTML enriquecido */
+.help-content {
+  /* Reset de estilos para evitar conflictos */
+  line-height: 1.75;
+  color: var(--color-neutral-20);
+}
+
+/* Estilos para los elementos del editor Quill */
+.help-content h1,
+.help-content h2,
+.help-content h3,
+.help-content h4,
+.help-content h5,
+.help-content h6 {
+  font-family: 'Titillium Web', sans-serif;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  color: var(--color-primary);
+}
+
+.help-content h1 { font-size: 2em; }
+.help-content h2 { font-size: 1.75em; }
+.help-content h3 { font-size: 1.5em; }
+.help-content h4 { font-size: 1.25em; }
+
+.help-content p {
+  margin-bottom: 1em;
+  line-height: 1.75;
+}
+
+.help-content strong {
+  font-weight: 600;
+  color: var(--color-neutral-10);
+}
+
+.help-content em {
+  font-style: italic;
+}
+
+.help-content u {
+  text-decoration: underline;
+}
+
+/* Listas */
+.help-content ul,
+.help-content ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+  padding-left: 0.5em;
+}
+
+.help-content ul {
+  list-style-type: disc;
+}
+
+.help-content ol {
+  list-style-type: decimal;
+}
+
+.help-content li {
+  margin-bottom: 0.5em;
+  line-height: 1.75;
+}
+
+/* Enlaces */
+.help-content a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.help-content a:hover {
+  color: var(--color-primary-50);
+}
+
+/* Código */
+.help-content code {
+  background-color: var(--color-neutral-95);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.help-content pre {
+  background-color: var(--color-neutral-95);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.help-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+/* Citas */
+.help-content blockquote {
+  border-left: 4px solid var(--color-primary);
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-bottom: 1em;
+  font-style: italic;
+  color: var(--color-neutral-40);
+}
+
+/* Tamaños de texto del editor Quill */
+.help-content .ql-size-small {
+  font-size: 0.75em;
+}
+
+.help-content .ql-size-large {
+  font-size: 1.5em;
+}
+
+.help-content .ql-size-huge {
+  font-size: 2.5em;
+}
+
+/* Alineación de texto */
+.help-content .ql-align-center {
+  text-align: center;
+}
+
+.help-content .ql-align-right {
+  text-align: right;
+}
+
+.help-content .ql-align-justify {
+  text-align: justify;
+}
+
+/* Colores de fondo personalizados */
+.help-content [style*="background-color"] {
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+/* ================================
+   ESTILOS MEJORADOS PARA "TEMAS DE AYUDA"
+   ================================ */
+
+.help-item-card {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid var(--color-primary-90);
+  background-color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.help-item-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--color-primary);
+  transform: scaleY(0);
+  transition: transform 0.25s ease;
+}
+
+.help-item-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 102, 0.12);
+  border-color: var(--color-primary-70);
+}
+
+.help-item-card:hover::before {
+  transform: scaleY(1);
+}
+
+.help-item-card.selected {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: translateX(4px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 102, 0.25);
+}
+
+.help-item-card.selected::before {
+  transform: scaleY(1);
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.help-item-title {
+  font-family: 'Titillium Web', sans-serif;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+  color: var(--color-primary);
+  transition: color 0.25s ease;
+}
+
+.help-item-card.selected .help-item-title {
+  color: white;
+}
+
+.help-item-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-primary-80);
+  background-color: var(--color-primary-97);
+  color: var(--color-primary);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.help-item-card.selected .help-item-badge {
+  background-color: white;
+  border-color: white;
+  color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.help-panel-header {
+  background-color: var(--color-primary);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 102, 0.15);
+}
+
+.help-panel-title {
+  font-family: 'Titillium Web', sans-serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: white;
+  margin: 0;
+}
+
+.help-panel-counter {
+  background-color: rgba(255, 255, 255, 0.95);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 1.75rem;
+  text-align: center;
+}
+
+/* ================================
    RESPONSIVE
    ================================ */
 
@@ -46,5 +356,15 @@ input[pInputText]::placeholder {
   .sticky {
     position: relative !important;
     top: 0 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .help-item-card {
+    padding: 0.875rem;
+  }
+
+  .help-item-title {
+    font-size: 0.875rem;
   }
 }
