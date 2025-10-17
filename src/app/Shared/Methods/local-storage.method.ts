@@ -9,7 +9,7 @@ export interface EntData {
 
 
 @Injectable({
-  providedIn: 'root' 
+  providedIn: 'root'
 })
 export class LocalStorageMethods {
   public saveEnterpriseData(data: EntData): void {

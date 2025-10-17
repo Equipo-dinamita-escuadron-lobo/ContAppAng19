@@ -7,7 +7,6 @@ import { NatureType } from '../../models/NatureType';
 import { ClasificationType } from '../../models/ClasificationType';
 import { ChartAccountService } from '../../services/chart-account.service';
 import { forkJoin, map, Observable, of, switchMap, firstValueFrom, catchError } from 'rxjs';
-import Swal from 'sweetalert2';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import { AccountFormComponent } from '../account-form/account-form.component';
@@ -595,30 +594,27 @@ export class AccountListComponent {
           this.createAndDownloadExcel(accounts); // Llamamos a un nuevo método de ayuda
 
           // 4. Muestra la notificación de éxito
-          Swal.fire({
-            title: 'Éxito',
-            text: 'Se ha generado el archivo correctamente.',
-            confirmButtonColor: '#000066',
-            icon: 'success'
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Se ha generado el archivo correctamente.'
           });
         } else {
           // Si no hay cuentas, muestra la notificación de error
-          Swal.fire({
-            title: 'Error',
-            text: 'No se encontraron cuentas para exportar.',
-            confirmButtonColor: '#000066',
-            icon: 'error',
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se encontraron cuentas para exportar.'
           });
         }
       },
       error: (err) => {
         // Maneja el caso en que el servicio falle
         console.error('Error al obtener cuentas para exportar:', err);
-        Swal.fire({
-          title: 'Error de Conexión',
-          text: 'No se pudieron obtener las cuentas. Intente de nuevo más tarde.',
-          confirmButtonColor: '#000066',
-          icon: 'error',
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de Conexión',
+          detail: 'No se pudieron obtener las cuentas. Intente de nuevo más tarde.'
         });
       }
     });
@@ -1419,12 +1415,10 @@ export class AccountListComponent {
     const newAccountsOnly = this.listExcel.filter(account => !account.id);
     
     if (newAccountsOnly.length === 0) {
-      Swal.fire({
-        title: "Información",
-        text: "No hay cuentas nuevas para guardar.",
-        icon: "info",
-        showConfirmButton: false,
-        timer: 2000,
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Información',
+        detail: 'No hay cuentas nuevas para guardar.'
       });
       return;
     }
@@ -1434,12 +1428,10 @@ export class AccountListComponent {
     
     this.saveAccountsList(accountsToSave).subscribe((result) => {
       if (result) {
-        Swal.fire({
-          title: "¡Éxito!",
-          text: `Se guardaron ${newAccountsOnly.length} cuenta(s) correctamente.`,
-          icon: "success",
-          showConfirmButton: false,
-          timer: 2000,
+        this.messageService.add({
+          severity: 'success',
+          summary: '¡Éxito!',
+          detail: `Se guardaron ${newAccountsOnly.length} cuenta(s) correctamente.`
         });
         
         // Recargar las cuentas desde la base de datos para mostrar todas las cuentas actualizadas
@@ -1451,12 +1443,10 @@ export class AccountListComponent {
           console.error('Error al recargar las cuentas:', error);
         });
       } else {
-        Swal.fire({
-          title: "¡Error!",
-          text: "Ha ocurrido un error al guardar las cuentas.",
-          icon: "error",
-          showConfirmButton: false,
-          timer: 2000,
+        this.messageService.add({
+          severity: 'error',
+          summary: '¡Error!',
+          detail: 'Ha ocurrido un error al guardar las cuentas.'
         });
       }
     });
@@ -2147,11 +2137,10 @@ export class AccountListComponent {
     try {
       // Validación específica para subcuentas con límite de auxiliares
       if (this.name === 'subAccountName' && this.accountSelected && this.accountSelected.children && this.accountSelected.children.length >= 2) {
-        Swal.fire({
-          title: 'Error',
-          text: 'Solo se permiten dos cuentas auxiliares para esta subcuenta!',
-          confirmButtonColor: '#000066',
-          icon: 'error',
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Solo se permiten dos cuentas auxiliares para esta subcuenta!'
         });
         this.selectAccount(this.accountSelected);
         this.noShowFormAddNewClass();
@@ -2166,20 +2155,18 @@ export class AccountListComponent {
                 this.selectAccount(response);
                 this.noShowFormAddNewClass();
                 this.noAddNewChild();
-                Swal.fire({
-                  title: 'Creación exitosa',
-                  showConfirmButton: false,
-                  icon: 'success',
-                  timer: 1000
+                this.messageService.add({
+                  severity: 'success',
+                  summary: 'Registro exitoso',
+                  detail: 'La cuenta se ha creado correctamente'
                 });
               });
           },
           (error) => {
-            Swal.fire({
-              title: 'Error',
-              text: 'Ha ocurrido un error al crear la cuenta!.',
-              confirmButtonColor: '#000066',
-              icon: 'error',
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Ha ocurrido un error al crear la cuenta!.'
             });
           }
         );
@@ -2200,38 +2187,29 @@ export class AccountListComponent {
     if (this.accountSelected && this.accountSelected.id) {
       const isLinked = this.searchIfAccountIsLinked(this.accountSelected.code);
       if (isLinked) {
-        Swal.fire({
-          title: 'Error al eliminar',
-          text: 'No es posible eliminar porque está asociado a un impuesto.',
-          confirmButtonColor: '#000066',
-          //confirmButtonColor: buttonColors.confirmationColor,
-          icon: 'error',
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al eliminar',
+          detail: 'No es posible eliminar porque está asociado a un impuesto.'
         });
         return
       }
       try {
-        Swal.fire({
-          title: '¿Desea Eliminar?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#000066',
-          //confirmButtonColor: buttonColors.confirmationColor,
-          cancelButtonColor: '#9D0311',
-          //cancelButtonColor: buttonColors.cancelButtonColor,
-          confirmButtonText: 'Sí, Eliminar',
-          cancelButtonText: 'Cancelar'
-        }).then((result) => {
-          if (result.isConfirmed && this.accountSelected?.id) {
-            this._accountService.deleteAccount(this.accountSelected.id.toString(), this.getIdEnterprise()).subscribe(
-              () => {
-                Swal.fire({
-                  title: 'Eliminación exitosa',
-                  showConfirmButton: false,
-                  confirmButtonColor: '#000066',
-                  //confirmButtonColor: buttonColors.confirmationColor,
-                  icon: 'success',
-                  timer: 1000
-                });
+        this.confirmationService.confirm({
+          message: '¿Desea eliminar esta cuenta?',
+          header: 'Confirmar eliminación',
+          icon: 'pi pi-exclamation-triangle',
+          acceptLabel: 'Sí, Eliminar',
+          rejectLabel: 'Cancelar',
+          accept: () => {
+            if (this.accountSelected?.id) {
+              this._accountService.deleteAccount(this.accountSelected.id.toString(), this.getIdEnterprise()).subscribe(
+                () => {
+                  this.messageService.add({
+                    severity: 'success',
+                    summary: 'Eliminada',
+                    detail: 'La cuenta se ha eliminado correctamente'
+                  });
                 this.getAccounts()
                   .then(() => {
                     if (this.accountSelected && this.accountSelected.parent) {
@@ -2252,20 +2230,18 @@ export class AccountListComponent {
                       this.noShowPrincipalAndTransactionalForm();
                     }
                   });
-              },
-              (error) => {
-                Swal.fire({
-                  title: 'Error',
-                  text: 'Ha ocurrido un error al eliminar la cuenta!.',
-                  confirmButtonColor: '#000066',
-                  //confirmButtonColor: buttonColors.confirmationColor,
-                  icon: 'error',
-                });
-              }
-            );
+                },
+                (error) => {
+                  this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Ha ocurrido un error al eliminar la cuenta!.'
+                  });
+                }
+              );
+            }
           }
-
-        })
+        });
 
       } catch (error) {
         console.error('Error al eliminar el tipo de cuenta: ', error);
@@ -2295,11 +2271,10 @@ export class AccountListComponent {
     try {
       if (this.accountSelected) {
         if (this.accountSelected.children && this.accountSelected.children.length > 0 && this.accountSelected.code !== this.parentId + this.accountForm.get(this.code)?.value) {
-          Swal.fire({
-            title: 'Error',
-            text: 'No se puede cambiar el código de una cuenta que tiene subcuentas asociadas.',
-            confirmButtonColor: '#000066',
-            icon: 'error',
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se puede cambiar el código de una cuenta que tiene subcuentas asociadas.'
           });
           this.selectAccount(this.accountSelected);
           return; // Salir de la función
@@ -2359,11 +2334,10 @@ export class AccountListComponent {
           // Proceder con la actualización - el backend manejará duplicados si los hay
           this.update(this.accountSelected?.id, account);
         } else {
-          Swal.fire({
-            title: 'Error',
-            text: 'La cuenta tiene la misma información!',
-            confirmButtonColor: '#000066',
-            icon: 'error',
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'La cuenta tiene la misma información!'
           });
         }
       }
@@ -2392,23 +2366,18 @@ export class AccountListComponent {
             this.selectAccount(response);
             this.noShowFormAddNewClass();
             this.noAddNewChild();
-            Swal.fire({
-              title: 'Actualización exitosa',
-              showConfirmButton: false,
-              icon: 'success',
-              confirmButtonColor: '#000066',
-              //confirmButtonColor: buttonColors.confirmationColor,
-              timer: 1000
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Actualización exitosa',
+              detail: 'La cuenta se ha actualizado correctamente'
             });
           });
       },
       (error) => {
-        Swal.fire({
-          title: 'Error',
-          text: 'Ha ocurrido un error al actualizar la cuenta!.',
-          confirmButtonColor: '#000066',
-          //confirmButtonColor: buttonColors.confirmationColor,
-          icon: 'error',
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Ha ocurrido un error al actualizar la cuenta!.'
         });
         console.error('Error al actualizar la cuenta:', error);
       }
@@ -2620,8 +2589,13 @@ export class AccountListComponent {
 
     this._accountService.changeState(account.id, enterpriseId, newStatus).subscribe({
       next: () => {
-        // Actualizar recursivamente el estado de todos los hijos en la UI
-        this.updateChildrenStatusRecursively(account, newStatus);
+        if (newStatus) {
+          // Si se está activando, activar toda la jerarquía de padres
+          this.activateParentHierarchy(account);
+        } else {
+          // Si se está inactivando, inactivar todos los hijos recursivamente
+          this.updateChildrenStatusRecursively(account, newStatus);
+        }
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -2632,7 +2606,13 @@ export class AccountListComponent {
       error: () => {
         // Revertir el estado en la UI del padre y todos los hijos si la llamada al servicio falla
         account.status = !newStatus;
-        this.updateChildrenStatusRecursively(account, !newStatus);
+        if (newStatus) {
+          // Si falló la activación, revertir la activación de padres
+          this.deactivateParentHierarchy(account);
+        } else {
+          // Si falló la inactivación, revertir la inactivación de hijos
+          this.updateChildrenStatusRecursively(account, !newStatus);
+        }
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -2656,6 +2636,105 @@ export class AccountListComponent {
         this.updateChildrenStatusRecursively(child, status);
       }
     }
+  }
+
+  /**
+   * Activa recursivamente toda la jerarquía de padres de una cuenta en la UI.
+   * @param child La cuenta hija desde donde se inicia la activación ascendente.
+   */
+  private activateParentHierarchy(child: Account): void {
+    // Función auxiliar para encontrar el padre en la jerarquía
+    const findParentInHierarchy = (accounts: Account[], targetCode: string): Account | null => {
+      for (const account of accounts) {
+        if (account.code === targetCode) {
+          return account;
+        }
+        if (account.children && account.children.length > 0) {
+          const found = findParentInHierarchy(account.children, targetCode);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // Obtener el código del padre
+    const parentCode = this.getParentCode(child.code);
+    if (parentCode) {
+      const parent = findParentInHierarchy(this.listAccounts, parentCode);
+      if (parent && !parent.status) {
+        // Si el padre no está activo, activarlo
+        parent.status = true;
+        // Continuar activando recursivamente hacia arriba
+        this.activateParentHierarchy(parent);
+      }
+    }
+  }
+
+  /**
+   * Obtiene el código del padre para una cuenta dada.
+   * @param code El código de la cuenta.
+   * @returns El código del padre o null si no tiene padre.
+   */
+  private getParentCode(code: string): string | null {
+    switch (code.length) {
+      case 1: return null; // Clase, no tiene padre
+      case 2: return code.substring(0, 1); // Grupo -> Clase
+      case 4: return code.substring(0, 2); // Cuenta -> Grupo
+      case 6: return code.substring(0, 4); // Subcuenta -> Cuenta
+      case 8: return code.substring(0, 6); // Auxiliar -> Subcuenta
+      default: return null;
+    }
+  }
+
+  /**
+   * Desactiva recursivamente la jerarquía de padres que fueron activados durante una operación fallida.
+   * @param child La cuenta hija desde donde se inicia la desactivación ascendente.
+   */
+  private deactivateParentHierarchy(child: Account): void {
+    // Función auxiliar para encontrar el padre en la jerarquía
+    const findParentInHierarchy = (accounts: Account[], targetCode: string): Account | null => {
+      for (const account of accounts) {
+        if (account.code === targetCode) {
+          return account;
+        }
+        if (account.children && account.children.length > 0) {
+          const found = findParentInHierarchy(account.children, targetCode);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // Obtener el código del padre
+    const parentCode = this.getParentCode(child.code);
+    if (parentCode) {
+      const parent = findParentInHierarchy(this.listAccounts, parentCode);
+      if (parent && parent.status) {
+        // Si el padre está activo y no tiene otros hijos activos, desactivarlo
+        const hasActiveChildren = this.hasActiveChildren(parent);
+        if (!hasActiveChildren) {
+          parent.status = false;
+          // Continuar desactivando recursivamente hacia arriba
+          this.deactivateParentHierarchy(parent);
+        }
+      }
+    }
+  }
+
+  /**
+   * Verifica si una cuenta tiene hijos activos.
+   * @param account La cuenta a verificar.
+   * @returns true si tiene al menos un hijo activo, false en caso contrario.
+   */
+  private hasActiveChildren(account: Account): boolean {
+    if (account.children && account.children.length > 0) {
+      for (const child of account.children) {
+        if (child.status) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 

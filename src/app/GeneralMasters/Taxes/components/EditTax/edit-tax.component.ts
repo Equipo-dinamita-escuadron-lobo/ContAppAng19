@@ -76,7 +76,6 @@ export class EditTaxComponent implements OnInit {
     const taxData = navigation?.extras?.state?.['taxData'] || history.state?.taxData;
     
     if (taxData) {
-      console.log('Datos del impuesto recibidos del estado:', taxData);
       this.taxData = taxData;
     }
     
@@ -84,21 +83,21 @@ export class EditTaxComponent implements OnInit {
   }
 
   /**
-   * Obtiene las cuentas del catálogo de cuentas
+   * Obtiene las cuentas auxiliares del catálogo de cuentas
    */
   getCuentas(): void {
     if (this.entData?.id) {
-      this.chartAccountService.getListAccounts(this.entData.id).subscribe({
+      this.chartAccountService.getListAuxiliaryAccounts(this.entData.id).subscribe({
         next: (data: Account[]) => {
           this.accounts = data;
           this.processAccounts();
         },
         error: (error) => {
-          console.error('Error al obtener las cuentas:', error);
+          const errorMessage = error?.error?.message || 'No se pudieron cargar las cuentas auxiliares';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudieron cargar las cuentas'
+            detail: errorMessage
           });
         }
       });
@@ -127,25 +126,23 @@ export class EditTaxComponent implements OnInit {
   loadTax(): void {
     // Si tenemos los datos del estado de navegación, usarlos directamente
     if (this.taxData) {
-      console.log('Usando datos del estado de navegación:', this.taxData);
       this.setFormValues(this.taxData);
       return;
     }
 
     // Fallback: intentar cargar desde API (aunque puede no estar implementado)
     if (this.taxId) {
-      console.log('Intentando cargar desde API, ID:', this.taxId);
       this.taxService.getTaxByNumericId(this.taxId).subscribe({
         next: (tax) => {
-          console.log('Impuesto cargado desde API:', tax);
           this.setFormValues(tax);
         },
         error: (error) => {
           console.error('Error al cargar el impuesto desde API:', error);
+          const errorMessage = error?.error?.message || 'No se pudo cargar el impuesto. Por favor, regrese a la lista e intente nuevamente.';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo cargar el impuesto. Por favor, regrese a la lista e intente nuevamente.'
+            detail: errorMessage
           });
         }
       });
@@ -156,10 +153,6 @@ export class EditTaxComponent implements OnInit {
    * Establece los valores del formulario con los datos del impuesto
    */
   private setFormValues(tax: any): void {
-    console.log('Estableciendo valores del formulario:', tax);
-    console.log('Cuentas de depósito disponibles:', this.depositAccounts.length);
-    console.log('Cuentas de devolución disponibles:', this.refundAccounts.length);
-    
     // Obtener códigos de cuenta (puede venir de Tax o TaxList)
     const depositAccountCode = tax.depositAccount;
     const refundAccountCode = tax.refundAccount;
@@ -167,9 +160,6 @@ export class EditTaxComponent implements OnInit {
     // Buscar las cuentas correspondientes por código
     const depositAccount = this.depositAccounts.find(acc => acc.code === depositAccountCode);
     const refundAccount = this.refundAccounts.find(acc => acc.code === refundAccountCode);
-
-    console.log('Código cuenta depósito:', depositAccountCode, '-> Encontrada:', depositAccount);
-    console.log('Código cuenta devolución:', refundAccountCode, '-> Encontrada:', refundAccount);
 
     this.editForm.patchValue({
       code: tax.code,
@@ -190,9 +180,6 @@ export class EditTaxComponent implements OnInit {
 
     // Resetear estado de cambios
     this.hasChanges = false;
-
-    console.log('Valores del formulario después de patchValue:', this.editForm.value);
-    console.log('Valores iniciales guardados:', this.initialFormValues);
   }
 
   /**
@@ -230,8 +217,8 @@ export class EditTaxComponent implements OnInit {
         code: formValue.code,
         description: formValue.description,
         interest: formValue.interest,
-        depositAccount: formValue.depositAccount.code,
-        refundAccount: formValue.refundAccount.code,
+        depositAccountId: formValue.depositAccount.id,
+        refundAccountId: formValue.refundAccount.id,
         idEnterprise: this.entData?.id || ''
       };
 
@@ -250,10 +237,11 @@ export class EditTaxComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al actualizar el impuesto:', error);
+          const errorMessage = error?.error?.message || 'No se pudo actualizar el impuesto';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo actualizar el impuesto'
+            detail: errorMessage
           });
         }
       });

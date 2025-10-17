@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -15,8 +15,12 @@ export class CostCenterService {
   constructor(private http: HttpClient) {}
 
   // Listado paginado jerárquico - mantiene familias completas juntas
-  findAll(enterpriseId: string, page = 0, size = 30): Observable<Page<CostCenter>> {
-    return this.http.get<PageResponse<CostCenter>>(`${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`)
+  findAll(enterpriseId: string, page = 0, size = 30, search = ''): Observable<Page<CostCenter>> {
+    let url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
+    if (search && search.trim().length > 0) {
+      url += `&search=${encodeURIComponent(search.trim())}`;
+    }
+    return this.http.get<PageResponse<CostCenter>>(url)
       .pipe(
         map(pageResponse => {
           const simplePage = convertToSimplePage(pageResponse);
@@ -50,6 +54,39 @@ export class CostCenterService {
     const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
     return this.http.patch<any>(url, {});
   }
+
+  //Lista de centros de costo auxiliares activos   
+  findActiveAuxiliary(enterpriseId: string): Observable<CostCenter[]> {
+    return this.http.get<CostCenter[]>(`${this.apiURL}findAuxiliary/${enterpriseId}`);
+  }
+
+  /**
+   * Exporta centros de costo a Excel.
+   * 
+   * @param enterpriseId ID de la empresa
+   * @param companyName Nombre de la empresa (usado en el nombre del archivo)
+   * @param status Estado del filtro (true=activos, false=inactivos, undefined=todos)
+   * @returns Observable con la respuesta HTTP que contiene el blob del archivo Excel
+   */
+  exportToExcel(enterpriseId: string, companyName: string, status?: boolean): Observable<HttpResponse<Blob>> {
+    let url = `${this.apiURL}export/excel/${enterpriseId}`;
+    const params: string[] = [];
+    
+    // Agregar status si está definido (incluyendo false)
+    if (status !== undefined && status !== null) {
+      params.push(`status=${status}`);
+    }
+    
+    // Agregar companyName si existe y no está vacío
+    if (companyName && companyName.trim()) {
+      params.push(`companyName=${encodeURIComponent(companyName.trim())}`);
+    }
+    
+    // Construir URL final con parámetros
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+    
+    return this.http.get(url, { responseType: 'blob', observe: 'response' });
+  }
 }
-
-

@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ThirdImportComponent } from './third-import.component';
+import { WriteOffListComponent } from './write-off-list.component';
 
-describe('ThirdImportComponent', () => {
-  let component: ThirdImportComponent;
-  let fixture: ComponentFixture<ThirdImportComponent>;
+describe('WriteOffListComponent', () => {
+  let component: WriteOffListComponent;
+  let fixture: ComponentFixture<WriteOffListComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ThirdImportComponent]
+      imports: [WriteOffListComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ThirdImportComponent);
+    fixture = TestBed.createComponent(WriteOffListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

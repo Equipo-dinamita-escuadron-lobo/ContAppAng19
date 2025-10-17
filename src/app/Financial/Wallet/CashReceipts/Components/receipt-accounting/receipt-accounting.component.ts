@@ -17,7 +17,7 @@ import { AccountingEntryLine } from '../../Model';
     MessageModule,
     CurrencyPipe,
     DatePipe,
-    TableModule // Puedes añadirlo si decides usar p-table
+    TableModule
   ],
   templateUrl: './receipt-accounting.component.html',
   styleUrls: ['./receipt-accounting.component.css']
@@ -46,6 +46,10 @@ export class ReceiptAccountingComponent implements OnInit {
     }
   }
 
+  /**
+   * Metodo para cargar las entradas contables del recibo
+   * @param id id del recibo
+   */
   loadAccountingEntries(id: number): void {
     this.errorMessage = null;
     this.cashReceiptService.getReceiptById(id).subscribe({

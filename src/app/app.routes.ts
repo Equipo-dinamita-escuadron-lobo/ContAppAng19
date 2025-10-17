@@ -1,6 +1,9 @@
 import { Routes } from '@angular/router';
 import { StyleGuideComponent } from './Shared/Components/style-guide/style-guide.component';
 import { LoginComponent } from './Core/auth/login/login.component';
+import { ForgotPasswordComponent } from './Core/auth/forgot-password/forgot-password.component';
+import { RegisterComponent } from './Core/auth/register/register.component';
+import { ResetPasswordComponent } from './Core/auth/reset-password/reset-password.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
 import { hasRoleChildGuard, hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
@@ -16,6 +19,18 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
+  },
+  {
+    path: 'register',
+    component: RegisterComponent,
+  },
+  {
+    path: 'forgot-password',
+    component: ForgotPasswordComponent,
+  },
+  {
+    path: 'reset-password',
+    component: ResetPasswordComponent,
   },
   {
     path: 'enterprise/list',
@@ -674,6 +689,41 @@ export const routes: Routes = [
               ).then((m) => m.MenuComponent),
           },
           {
+            path: 'help-center',
+            data: { breadcrumb: 'Centro de Ayuda' },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list',
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-list/help-center-list.component'
+                  ).then((m) => m.HelpCenterListComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Centro de Ayuda' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-creation/help-center-creation.component'
+                  ).then((m) => m.HelpCenterCreationComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Centro de Ayuda' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-edit/help-center-edit.component'
+                  ).then((m) => m.HelpCenterEditComponent),
+              },
+            ],
+          },
+          {
             path: 'accounting-calendar',
             data: { breadcrumb: 'Calendario Contable' },
             loadComponent: () =>
@@ -785,6 +835,36 @@ export const routes: Routes = [
                   },
                 ],
               },
+              {
+                 path: 'financial-statements',
+                data: {
+                  breadcrumb: 'Estados Financieros',
+                },
+                children: [
+                  {
+                    path: 'list',
+                    pathMatch: 'full',
+                    data: {
+                      breadcrumb: null,
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statements-list/financial-statements-list.component'
+                      ).then((m) => m.FinancialStatementsListComponent),
+                  },
+                  {
+                    path: 'statement-financial-position',
+                    data: {
+                      breadcrumb: 'Estado de situacion Financiera',
+                    },
+                    /*loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statement-types/statement-financial-position/statement-financial-position.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),*/
+                  },
+                ],
+              },
+              
             ],
           },
           {
@@ -833,6 +913,47 @@ export const routes: Routes = [
                     './Financial/Wallet/CashReceipts/Components/receipt-accounting/receipt-accounting.component'
                   ).then((m) => m.ReceiptAccountingComponent),
               },
+              {
+                path: 'write-offs',
+                data: {
+                  breadcrumb: 'Castigos de cartera',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-list/write-off-list.component'
+                  ).then((m) => m.WriteOffListComponent),
+              },
+              {
+                path: 'write-offs/creation',
+                data: {
+                  breadcrumb: 'Creación de castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-creation/write-off-creation.component'
+                  ).then((m) => m.WriteOffCreationComponent),
+              },
+              {
+                path: 'write-offs/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-details/write-off-details.component'
+                  ).then((m) => m.WriteOffDetailsComponent),
+              },
+            {
+              path: 'accounting-entries',
+              data: {
+                breadcrumb: 'Asientos Contables',
+            },
+              loadComponent: () =>
+                import(
+                  './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
+                ).then((m) => m.ReceiptAccountingEntriesComponent),
+            },
+
             ],
           },
           {
@@ -1011,6 +1132,14 @@ export const routes: Routes = [
         ],
       },
     ],
+  },
+  {
+    path: 'help-center-view',
+    data: {
+      breadcrumb: 'Centro de Ayuda',
+    },
+    loadComponent: () =>
+      import('./PublicSite/help-center/help-center-view.component').then((m) => m.HelpCenterViewComponent),
   },
   {
     path: 'style-guide',

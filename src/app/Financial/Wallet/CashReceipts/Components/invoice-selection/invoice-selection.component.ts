@@ -33,24 +33,28 @@ export class InvoiceSelectionComponent {
   // Estado interno del componente
   selectedInvoicesInDialog: Invoice[] = [];
 
-  // ngOnChanges se dispara cada vez que un @Input cambia.
-  // Es perfecto para inicializar el estado del diálogo cuando se abre.
+  /**
+   * Metodo del ciclo de vida que se ejecuta cuando cambian las entradas.
+   * @param changes Objeto que contiene los cambios en las entradas.
+   */
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible'] && this.visible) {
-      // Cuando el diálogo se hace visible, inicializamos la selección interna
-      // con una copia de las facturas que ya estaban seleccionadas en el padre.
-      // Usamos el spread operator `[...]` para evitar mutar el array original del padre.
       this.selectedInvoicesInDialog = [...this.initiallySelectedInvoices];
     }
   }
 
+  /**
+   * Confirma la selección y emite el evento con las facturas seleccionadas.
+   * Este método se llama cuando el usuario confirma su selección en el diálogo.
+   */
   confirmSelection(): void {
-    // Emitimos la selección final al padre.
     this.selectionConfirmed.emit(this.selectedInvoicesInDialog);
   }
 
+  /**
+   * Cancela la selección y emite el evento de cancelación.
+   */
   cancelSelection(): void {
-    // Emitimos un evento para que el padre sepa que debe cerrar el diálogo.
     this.selectionCancelled.emit();
   }
 }

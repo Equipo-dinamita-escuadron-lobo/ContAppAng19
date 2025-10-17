@@ -1,209 +1,141 @@
 <p-dialog
-  [header]="inputData?.title || 'Detalles del Tercero'"
+  [header]="getModalTitle()"
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: '90vw', maxWidth: '800px' }"
+  [style]="{ width: '90vw', maxWidth: '1000px' }"
   [closable]="true"
   [draggable]="false"
   [resizable]="false"
   (onHide)="onHide()">
 
   <!-- Contenido del modal -->
-  <div class="p-fluid" *ngIf="!loading">
-    <!-- Sección superior con imagen e información básica -->
-    <div class="flex flex-column md:flex-row align-items-center gap-4 mb-4">
-      <!-- Imagen del tercero -->
-      <div class="flex-shrink-0">
-        <img 
-          src="../../../../../../assets/Iconos/third-parties/third-partie-icon-default.png" 
-          alt="Icono del Tercero" 
-          class="w-8rem h-8rem border-round shadow-2">
-      </div>
-      
-      <!-- Información básica -->
-      <div class="flex-1">
-        <div class="grid">
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="label-title">Tipo de ID:</label>
-              <p class="text-lg font-medium text-gray-800 mt-1">
-                {{ thirdData.typeId.typeId || 'NO APLICA' }}
-              </p>
+  <div *ngIf="!loading">
+    <div class="space-y-8 font-family-sans max-w-5xl mx-auto">
+
+      <!-- Panel: Información Básica -->
+      <app-form-panel title="Información Básica">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Tipo de ID"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getTypeId() }}</span>
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Tipo de Persona"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdData.personType }}</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Estado"></app-form-field-label>
+            <div>
+              <p-tag 
+                [value]="getStateText()" 
+                [severity]="getStateSeverity()">
+              </p-tag>
             </div>
           </div>
           
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="label-title">Tipo de Persona:</label>
-              <p class="text-lg font-medium text-gray-800 mt-1">
-                {{ thirdData.personType }}
-              </p>
-            </div>
-          </div>
-          
-          <div class="col-12">
-            <div class="field">
-              <label class="label-title">Tipos de Tercero:</label>
-              <p class="text-lg font-medium text-gray-800 mt-1">
-                {{ getThirdTypesNames() }}
-              </p>
-            </div>
+          <div class="flex flex-col gap-2 md:col-span-3">
+            <app-form-field-label label="Tipos de Tercero"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getThirdTypesNames() }}</span>
           </div>
         </div>
-      </div>
-    </div>
+      </app-form-panel>
 
-    <p-divider></p-divider>
+      <!-- Panel: Información de Identificación -->
+      <app-form-panel title="Información de Identificación">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Número de Identificación"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdData.idNumber }}</span>
+          </div>
 
-    <!-- Información detallada en grid -->
-    <div class="grid">
-      <!-- Información Personal/Empresa -->
-      <div class="col-12 md:col-6" *ngIf="isNaturalPerson()">
-        <div class="field">
-          <label class="label-title">Nombre Completo:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ getFullName() }}
-          </p>
+          <div class="flex flex-col gap-2" *ngIf="isJuridicPerson()">
+            <app-form-field-label label="Dígito de Verificación (DV)"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getVerificationNumber() }}</span>
+          </div>
         </div>
-      </div>
+      </app-form-panel>
 
-      <div class="col-12 md:col-6" *ngIf="isJuridicPerson()">
-        <div class="field">
-          <label class="label-title">Razón Social:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ getSocialReason() }}
-          </p>
-        </div>
-      </div>
+      <!-- Panel: Información Personal (Persona Natural) -->
+      <app-form-panel title="Información Personal" *ngIf="isNaturalPerson()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Nombre Completo"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getFullName() }}</span>
+          </div>
 
-      <div class="col-12 md:col-6" *ngIf="isNaturalPerson()">
-        <div class="field">
-          <label class="label-title">Género:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ getGender() }}
-          </p>
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Género"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getGender() }}</span>
+          </div>
         </div>
-      </div>
+      </app-form-panel>
 
-      <!-- Información de Identificación -->
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">Número de ID:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ thirdData.idNumber }}
-          </p>
+      <!-- Panel: Información de Empresa (Persona Jurídica) -->
+      <app-form-panel title="Información de Empresa" *ngIf="isJuridicPerson()">
+        <div class="grid grid-cols-1 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Razón Social"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getSocialReason() }}</span>
+          </div>
         </div>
-      </div>
+      </app-form-panel>
 
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">Dígito de Verificación:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ getVerificationNumber() }}
-          </p>
-        </div>
-      </div>
+      <!-- Panel: Información de Ubicación -->
+      <app-form-panel title="Información de Ubicación">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="País"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getCountry() }}</span>
+          </div>
 
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">Estado:</label>
-          <p-tag 
-            [value]="getStateText()" 
-            [severity]="getStateSeverity()"
-            class="mt-1">
-          </p-tag>
-        </div>
-      </div>
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Departamento"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getDepartment() }}</span>
+          </div>
 
-      <!-- Información de Ubicación -->
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">País:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ thirdData.country || 'NO APLICA' }}
-          </p>
-        </div>
-      </div>
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Ciudad"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getCity() }}</span>
+          </div>
 
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">Departamento:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ thirdData.province || 'NO APLICA' }}
-          </p>
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Dirección"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getAddress() }}</span>
+          </div>
         </div>
-      </div>
+      </app-form-panel>
 
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">Ciudad:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ thirdData.city || 'NO APLICA' }}
-          </p>
-        </div>
-      </div>
+      <!-- Panel: Información de Contacto -->
+      <app-form-panel title="Información de Contacto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Teléfono"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getPhoneNumber() }}</span>
+          </div>
 
-      <div class="col-12">
-        <div class="field">
-          <label class="label-title">Dirección:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ thirdData.address || 'NO APLICA' }}
-          </p>
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Correo Electrónico"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getEmail() }}</span>
+          </div>
         </div>
-      </div>
+      </app-form-panel>
 
-      <!-- Información de Contacto -->
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">Teléfono:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ thirdData.phoneNumber || 'NO APLICA' }}
-          </p>
-        </div>
-      </div>
-
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">Email:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ thirdData.email || 'NO APLICA' }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Fechas -->
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">Fecha de Creación:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ formatDate(thirdData.creationDate) }}
-          </p>
-        </div>
-      </div>
-
-      <div class="col-12 md:col-6">
-        <div class="field">
-          <label class="label-title">Fecha de Actualización:</label>
-          <p class="text-base font-medium text-gray-800 mt-1">
-            {{ formatDate(thirdData.updateDate) }}
-          </p>
-        </div>
-      </div>
     </div>
   </div>
 
   <!-- Estado de carga -->
   <div *ngIf="loading" class="flex justify-content-center align-items-center p-6">
-    <i class="pi pi-spinner pi-spin" style="font-size: 2rem"></i>
-    <span class="ml-3 text-lg">Cargando datos del tercero...</span>
+    <i class="pi pi-spinner pi-spin" style="font-size: 2rem; color: var(--color-primary);"></i>
+    <span class="ml-3" style="font-size: 1rem; color: var(--color-neutral-40); font-family: var(--font-family-sans);">Cargando datos del tercero...</span>
   </div>
 
   <!-- Footer con botón de cerrar -->
   <ng-template pTemplate="footer">
-    <div class="flex justify-content-end">
+    <div class="flex justify-content-end" style="padding-top: 0.5rem;">
       <p-button 
         label="Cerrar" 
-        icon="pi pi-times"
         severity="secondary"
         (onClick)="closePopUp()">
       </p-button>

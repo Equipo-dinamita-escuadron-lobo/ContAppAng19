@@ -55,7 +55,7 @@ export class ThirdService {
     return this.http.post<Third>(this.thirdApiUrl,Third).pipe(
       catchError((error) => {
         console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while adding a hero'));
+        return throwError(() => error);
       })
     );
   }
@@ -68,11 +68,11 @@ export class ThirdService {
   ExtractInfoPDFRUT(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file, file.name);
-    console.log('Request Body:', formData);
     return this.http.post<any>(this.thirdApiUrl+"content-PDF-RUT", formData).pipe(
       catchError((error) => {
         console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while uploading the file'));
+
+        return throwError(() => error);
       })
     );
   }
@@ -87,25 +87,37 @@ export class ThirdService {
     return this.http.post<Third>(this.thirdApiUrl+"update",Third).pipe(
       catchError((error) => {
         console.error('Error occurred: ', error);
-        return throwError(() => new Error('Error occurred while adding a hero'));
+        return throwError(() => error);
       })
     );
   }
 
   /**
-   * Obtiene la lista paginada de terceros
+   * Obtiene la lista paginada de terceros con búsqueda y ordenamiento
    * @param entId ID de la empresa
-   * @param numPage Número de página
-   * @returns Observable con la lista de terceros
+   * @param numPage Número de página (opcional, default: 0)
+   * @param size Tamaño de página (opcional, default: 10)
+   * @param sortField Campo de ordenamiento (opcional, default: "names")
+   * @param sortOrder Orden asc/desc (opcional, default: "asc")
+   * @param search Término de búsqueda (opcional)
+   * @returns Observable con la respuesta paginada del backend
    */
-  getThirdParties(entId: String, numPage: number): Observable<Third[]> {
+  getThirdParties(entId: String, numPage: number = 0, size?: number, sortField: string = "names", sortOrder: string = "asc", search?: string): Observable<any> {
     let params = new HttpParams()
-    .set('entId', entId.toString())
-    .set('numPage', numPage);
-    return this.http.get<any>(this.thirdApiUrl, {params})
-    .pipe(
-      map(response => response.content as Third[])
-    );
+      .set('entId', entId.toString())
+      .set('numPage', numPage.toString())
+      .set('sortField', sortField)
+      .set('sortOrder', sortOrder);
+
+    if (size !== undefined) {
+      params = params.set('size', size.toString());
+    }
+
+    if (search && search.trim()) {
+      params = params.set('search', search.trim());
+    }
+
+    return this.http.get<any>(this.thirdApiUrl, { params });
   }
 
   /**
@@ -113,19 +125,20 @@ export class ThirdService {
    * @param entId ID de la empresa
    * @returns Observable con la lista de terceros
    */
-  getThirdList(entId: String): Observable<Third[]> {
-    let params = new HttpParams()
-    .set('entId', entId.toString());
-    return this.http.get<any>(this.thirdApiUrl+"list", {params})
+  getThirdList(entId: String): Observable<Third[]> {  
+    return this.getThirdParties(entId, 0).pipe(
+      map(response => response.content as Third[])
+    );
   }
 
   /**
    * Obtiene un tercero específico por su ID
    * @param thId ID del tercero
+   * @param entId ID de la empresa
    * @returns Observable con los datos del tercero
    */
-  getThirdPartie(thId:number): Observable<Third>{
-    return this.http.get<any>(this.thirdApiUrl+`third?thId=${thId}`)
+  getThirdPartie(thId: number, entId: string): Observable<Third>{
+    return this.http.get<any>(this.thirdApiUrl+`third?thId=${thId}&entId=${entId}`)
   }
 
   /**
@@ -147,5 +160,108 @@ export class ThirdService {
     let params = new HttpParams()
     .set('thId', thId);
     return this.http.put<any>(this.thirdApiUrl,null,{params})
+  }
+
+  /**
+   * Elimina un tercero del sistema
+   * @param thId ID del tercero
+   * @param entId ID de la empresa
+   * @returns Observable con el resultado de la eliminación
+   */
+  deleteThird(thId: number, entId: string): Observable<boolean> {
+    let params = new HttpParams()
+      .set('thirdId', thId)
+      .set('entId', entId);
+    return this.http.delete<boolean>(this.thirdApiUrl + 'delete', { params }).pipe(
+      catchError((error) => {
+        console.error('Error al eliminar tercero:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Descarga la plantilla de importación de terceros con validaciones
+   * @param entId ID de la empresa
+   * @returns Observable con el Blob del archivo Excel
+   */
+  downloadThirdTemplate(entId: string): Observable<Blob> {
+    let params = new HttpParams().set('entId', entId);
+    return this.http.get(this.thirdApiUrl + 'template/excel', {
+      params,
+      responseType: 'blob'
+    }).pipe(
+      catchError((error) => {
+        console.error('Error al descargar la plantilla:', error);
+        return throwError(() => new Error('Error al descargar la plantilla de terceros'));
+      })
+    );
+  }
+
+  /**
+   * Exporta los terceros a un archivo Excel
+   * @param entId ID de la empresa
+   * @param companyName Nombre de la empresa
+   * @param status Estado de los terceros (true: activos, false: inactivos, null: todos)
+   * @param optionalFields Array con los campos opcionales a incluir
+   * @returns Observable con la respuesta HTTP que contiene el archivo Excel
+   */
+  exportToExcel(entId: string, companyName: string, status: boolean | null, optionalFields: string[]): Observable<any> {
+    let params = new HttpParams()
+      .set('entId', entId)
+      .set('companyName', companyName);
+
+    // Agregar el filtro de estado si está definido
+    if (status !== null) {
+      params = params.set('status', status.toString());
+    }
+
+    // Agregar los campos opcionales si existen
+    if (optionalFields && optionalFields.length > 0) {
+      optionalFields.forEach(field => {
+        params = params.append('optionalFields', field);
+      });
+    }
+
+    return this.http.get(this.thirdApiUrl + 'export/excel', {
+      params,
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error) => {
+        console.error('Error al exportar terceros:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Importa terceros masivamente desde un archivo Excel
+   * @param entId ID de la empresa
+   * @param file Archivo Excel con los terceros a importar
+   * @returns Observable con la respuesta de importación
+   */
+  importFromExcel(entId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+
+    let params = new HttpParams().set('entId', entId);
+
+    const url = this.thirdApiUrl + 'import/excel';
+    console.log('URL de importación:', url);
+    console.log('Parámetros:', { entId });
+    console.log('Archivo:', file.name);
+
+    return this.http.post(url, formData, {
+      params,
+      observe: 'response'
+    }).pipe(
+      catchError((error) => {
+        console.error('Error al importar terceros:', error);
+        console.error('Status:', error.status);
+        console.error('Error completo:', JSON.stringify(error, null, 2));
+        return throwError(() => error);
+      })
+    );
   }
 }

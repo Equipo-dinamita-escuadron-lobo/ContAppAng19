@@ -223,6 +223,16 @@ body {
   --spacing: 1px;
 }
 
+/* ================================
+   ESTILOS PARA LABELS REQUERIDOS
+   ================================ */
+
+/* Estilo para asteriscos requeridos en labels */
+.label-required::after {
+  content: ' *';
+  color: var(--color-error);
+}
+
 /* Botón principal */
 .p-button {
   background-color: var(--color-button-primary) !important;

@@ -6,6 +6,7 @@ export interface Tax {
     refundAccount: string; // Id cuenta devolución
     depositAccount: string; // Id cuenta depósito
     idEnterprise: string;
+    status: boolean;
 }
 
 export interface TaxList {
@@ -18,14 +19,15 @@ export interface TaxList {
     depositAccountName: string;
     refundAccountName: string;
     idEnterprise: string;
+    status: boolean;
 }
 
 export interface TaxCreateRequest {
     code: string;
     description: string;
     interest: number;
-    refundAccount: string;
-    depositAccount: string;
+    refundAccountId: number;
+    depositAccountId: number;
     idEnterprise: string;
 }
 
@@ -34,7 +36,7 @@ export interface TaxUpdateRequest {
     code: string;
     description: string;
     interest: number;
-    refundAccount: string;
-    depositAccount: string;
+    refundAccountId: number;
+    depositAccountId: number;
     idEnterprise: string;
 } 

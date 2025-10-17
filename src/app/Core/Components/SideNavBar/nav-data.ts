@@ -91,7 +91,7 @@ export const navbarData: INavbarData[] = [
         label:'Configuración metodo Valoración'
       },
       {
-        routeLink: '/gen-masters/help-panels',
+        routeLink: '/gen-masters/help-center/list',
         icon: 'help',
         label: 'Centro de Ayuda',
       },
@@ -130,7 +130,7 @@ export const navbarData: INavbarData[] = [
             label: 'Libros Auxiliares',
           },
           {
-            routeLink: 'TO DO',
+            routeLink: '/financial/reports/financial-statements/list',
             icon: 'article',
             label: 'Estados Financieros',
           },
@@ -169,10 +169,21 @@ export const navbarData: INavbarData[] = [
             label: 'Recibos de Caja',
           },
           {
+            routeLink: '/financial/wallet/accounting-entries',
+            icon: 'description',
+            label: 'Asientos Contables',
+          },
+          {
+            routeLink: '/financial/wallet/write-offs',
+            icon: 'gavel',
+            label: 'Castigos de cartera',
+          },
+          {
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',
           },
+          
         ],
       },
     ],

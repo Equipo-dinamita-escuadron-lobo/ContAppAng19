@@ -1,30 +1,22 @@
 import { CALENDAR_CONSTANTS, NAME_CONSTANTS } from '../constants/calendar.constants';
 
-// Enums para estados del calendario
-export enum CalendarStatus {
-  OPEN = 'open',
-  CLOSED = 'closed'
-}
-
+// Enum para estados del mes
 export enum MonthStatus {
   FULLY_OPEN = 'fully_open',
   FULLY_CLOSED = 'fully_closed'
 }
 
-// Interfaces principales del calendario contable
 export interface AccountingCalendar {
   id?: number;
   idEnterprise: string;
   tenantId?: string;
-  date: string;        
-  status: boolean;     // true: OPEN, false: CLOSED
+  date: string;
 }
 
 export interface AccountingCalendarCreateMonthReq {
   idEnterprise: string;
   year: number;
   month: number;
-  status: boolean;
 }
 
 export interface AccountingCalendarDeleteMonthReq {
@@ -36,7 +28,6 @@ export interface AccountingCalendarDeleteMonthReq {
 export interface AccountingCalendarCreateYearReq {
   idEnterprise: string;
   year: number;
-  status: boolean;
 }
 
 export interface AccountingCalendarDeleteYearReq {
@@ -44,15 +35,14 @@ export interface AccountingCalendarDeleteYearReq {
   year: number;
 }
 
-// Interfaces para la visualización del calendario
 export interface CalendarDay {
   date: Date;
   dayOfMonth: number;
   isCurrentMonth: boolean;
   isClosed: boolean;
   isToday: boolean;
-  isHoliday?: boolean; // Indica si es un día festivo
-  holidayName?: string; // Nombre del festivo si aplica
+  isHoliday?: boolean;
+  holidayName?: string;
 }
 
 export interface CalendarMonth {
@@ -63,5 +53,5 @@ export interface CalendarMonth {
   status: MonthStatus;
 }
 
-// Re-exportar constantes para mantener compatibilidad
+// Exportar constantes del calendario
 export { CALENDAR_CONSTANTS, NAME_CONSTANTS };
