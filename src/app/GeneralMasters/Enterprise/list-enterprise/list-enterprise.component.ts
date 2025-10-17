@@ -146,8 +146,7 @@ export class ListEnterpriseComponent implements OnInit {
       {
         label: 'Eliminar',
         icon: 'pi pi-trash',
-        command: () =>
-          this.deleteEnterprise(this.selectedEnterpriseForMenu!),
+        command: () => this.deleteEnterprise(this.selectedEnterpriseForMenu!),
       },
     ];
     menu.toggle(event);
@@ -220,11 +219,6 @@ export class ListEnterpriseComponent implements OnInit {
     this.router.navigate(['/enterprise/edit']);
   }
 
-  InactiveEnterprise(enterprise: EnterpriseList) {
-    this.enterpriseToDelete = enterprise;
-    this.showDeleteModal = true;
-  }
-
   duplicateEnterprise(enterprise: EnterpriseList) {
     if (!enterprise.id) return;
 
@@ -263,26 +257,29 @@ export class ListEnterpriseComponent implements OnInit {
         console.log('Datos enviados para duplicar:', duplicatedEnterprise);
 
         // Enviar los datos duplicados para crear una nueva empresa
-        this.enterpriseService.createEnterprise(duplicatedEnterprise).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Duplicada',
-              detail: `${data.name} fue duplicada exitosamente.`,
-            });
-            this.getEnterprises(); // Actualizar la lista de empresas
-          },
-          error: (err) => {
-            console.error('Error al duplicar empresa:', err);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'No se pudo duplicar la empresa. Verifica los datos.',
-            });
-          },
-        });
+        this.enterpriseService
+          .createEnterprise(duplicatedEnterprise)
+          .subscribe({
+            next: () => {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Duplicada',
+                detail: `${data.name} fue duplicada exitosamente.`,
+              });
+              this.getEnterprises(); // Actualizar la lista de empresas
+            },
+            error: (err) => {
+              console.error('Error al duplicar empresa:', err);
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'No se pudo duplicar la empresa. Verifica los datos.',
+              });
+            },
+          });
       },
-      error: (err) => console.error('Error al obtener datos de la empresa:', err),
+      error: (err) =>
+        console.error('Error al obtener datos de la empresa:', err),
     });
   }
 
@@ -348,6 +345,56 @@ export class ListEnterpriseComponent implements OnInit {
     });
   }
 
+  openArchivedEnterprise(enterprise: EnterpriseList) {
+    this.saveSelectedEnterprise(enterprise);
+    this.router.navigate(['/enterprise/archive']);
+  }
+
+  /* ==================== INACTIVAR ==================== */
+  InactiveEnterprise(enterprise: EnterpriseList) {
+    this.enterpriseToInactivate = enterprise;
+    this.showInactivateModal = true;
+  }
+
+  cancelInactivate() {
+    this.enterpriseToInactivate = null;
+    this.showInactivateModal = false;
+  }
+
+  confirmInactivate() {
+    if (!this.enterpriseToInactivate || !this.enterpriseToInactivate.id) return;
+
+    this.enterpriseService
+      .archiveEnterprise(String(this.enterpriseToInactivate.id))
+      .subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Inactivada',
+            detail: `La empresa ${this.enterpriseToInactivate?.name} fue inactivada exitosamente.`,
+          });
+          this.showInactivateModal = false;
+          this.enterpriseToInactivate = null;
+          this.getEnterprises();
+          this.getArchivedEnterprises();
+        },
+        error: (err) => {
+          console.error('Error al inactivar la empresa:', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo inactivar la empresa.',
+          });
+        },
+      });
+  }
+
+  /* ==================== ELIMINAR ==================== */
+  deleteEnterprise(enterprise: EnterpriseList) {
+    this.enterpriseToDelete = enterprise;
+    this.showDeleteModal = true;
+  }
+
   cancelDelete() {
     this.enterpriseToDelete = null;
     this.showDeleteModal = false;
@@ -357,51 +404,59 @@ export class ListEnterpriseComponent implements OnInit {
     if (!this.enterpriseToDelete || !this.enterpriseToDelete.id) return;
 
     this.enterpriseService
-      .deleteEnterprise(String(this.enterpriseToDelete.id))
+      .deleteEnterpriseHard(String(this.enterpriseToDelete.id))
       .subscribe({
         next: () => {
-          console.log('Empresa inactiva:', this.enterpriseToDelete?.name);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Deleted',
+            detail: `La empresa ${this.enterpriseToDelete?.name} fue Eliminada exitosamente.`,
+          });
           this.showDeleteModal = false;
           this.enterpriseToDelete = null;
           this.getEnterprises();
           this.getArchivedEnterprises();
         },
-        error: (err) => console.error('Error al eliminar empresa:', err),
+        error: (err) => {
+          console.error('Error al eliminar la empresa:', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo eliminar la empresa.',
+          });
+        },
       });
   }
+  // confirmDelete(){
+  //   if (!enterprise.id) return;
 
-  openArchivedEnterprise(enterprise: EnterpriseList) {
-    this.saveSelectedEnterprise(enterprise);
-    this.router.navigate(['/enterprise/archive']);
-  }
+  //   this.enterpriseService
+  //     .deleteEnterpriseHard(String(enterprise.id))
+  //     .subscribe({
+  //       next: () => {
+  //         this.enterprises = this.enterprises.filter(
+  //           (e) => e.id !== enterprise.id
+  //         );
+  //         this.filteredEnterprises = this.filteredEnterprises.filter(
+  //           (e) => e.id !== enterprise.id
+  //         );
 
-  /* ==================== INACTIVAR/ACTIVAR ==================== */
-
-  /* ==================== ELIMINAR ==================== */
-  deleteEnterprise(enterprise: EnterpriseList): void {
-  if (!enterprise.id) return;
-
-  this.enterpriseService.deleteEnterpriseHard(String(enterprise.id)).subscribe({
-    next: () => {
-      this.enterprises = this.enterprises.filter((e) => e.id !== enterprise.id);
-      this.filteredEnterprises = this.filteredEnterprises.filter((e) => e.id !== enterprise.id);
-
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Eliminada',
-        detail: `La empresa ${enterprise.name} fue eliminada permanentemente.`,
-      });
-    },
-    error: (err) => {
-      console.error('Error al eliminar la empresa:', err);
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo eliminar la empresa.',
-      });
-    },
-  });
-  }
+  //         this.messageService.add({
+  //           severity: 'success',
+  //           summary: 'Eliminada',
+  //           detail: `La empresa ${enterprise.name} fue eliminada permanentemente.`,
+  //         });
+  //       },
+  //       error: (err) => {
+  //         console.error('Error al eliminar la empresa:', err);
+  //         this.messageService.add({
+  //           severity: 'error',
+  //           summary: 'Error',
+  //           detail: 'No se pudo eliminar la empresa.',
+  //         });
+  //       },
+  //     });
+  // }
 
   /* ==================== LOGO ==================== */
   onImageError(event: any) {
@@ -431,7 +486,11 @@ export class ListEnterpriseComponent implements OnInit {
             const enterpriseData = JSON.parse(reader.result as string);
 
             // Validar que el archivo tenga el formato esperado
-            if (!enterpriseData.name || !enterpriseData.nit || !enterpriseData.dv) {
+            if (
+              !enterpriseData.name ||
+              !enterpriseData.nit ||
+              !enterpriseData.dv
+            ) {
               throw new Error('El archivo JSON no tiene el formato esperado.');
             }
 

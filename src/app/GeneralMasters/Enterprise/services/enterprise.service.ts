@@ -46,21 +46,16 @@ export class EnterpriseService {
     return this.http.put<EnterpriseDetails>(`${this.apiUrl}update/${id}`, enterprise);
   }
 
-  deleteEnterprise(id: string): Observable<void> {
+  archiveEnterprise(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}enterprise/${id}`);
+  }
+
+  unarchiveEnterprise(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}activate/${id}`);
   }
 
   deleteEnterpriseHard(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}enterprise/hard/${id}`);
-  }
-
-  /** ==================== ARCHIVAR ==================== */
-  archiveEnterprise(id: string): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}archive/${id}`, {});
-  }
-
-  unarchiveEnterprise(id: string): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}unarchive/${id}`, {});
   }
 
   /** ==================== UTILIDADES ==================== */
