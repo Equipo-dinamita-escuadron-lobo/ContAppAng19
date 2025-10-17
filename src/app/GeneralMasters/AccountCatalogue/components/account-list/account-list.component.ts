@@ -2589,8 +2589,13 @@ export class AccountListComponent {
 
     this._accountService.changeState(account.id, enterpriseId, newStatus).subscribe({
       next: () => {
-        // Actualizar recursivamente el estado de todos los hijos en la UI
-        this.updateChildrenStatusRecursively(account, newStatus);
+        if (newStatus) {
+          // Si se está activando, activar toda la jerarquía de padres
+          this.activateParentHierarchy(account);
+        } else {
+          // Si se está inactivando, inactivar todos los hijos recursivamente
+          this.updateChildrenStatusRecursively(account, newStatus);
+        }
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -2601,7 +2606,13 @@ export class AccountListComponent {
       error: () => {
         // Revertir el estado en la UI del padre y todos los hijos si la llamada al servicio falla
         account.status = !newStatus;
-        this.updateChildrenStatusRecursively(account, !newStatus);
+        if (newStatus) {
+          // Si falló la activación, revertir la activación de padres
+          this.deactivateParentHierarchy(account);
+        } else {
+          // Si falló la inactivación, revertir la inactivación de hijos
+          this.updateChildrenStatusRecursively(account, !newStatus);
+        }
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -2625,6 +2636,105 @@ export class AccountListComponent {
         this.updateChildrenStatusRecursively(child, status);
       }
     }
+  }
+
+  /**
+   * Activa recursivamente toda la jerarquía de padres de una cuenta en la UI.
+   * @param child La cuenta hija desde donde se inicia la activación ascendente.
+   */
+  private activateParentHierarchy(child: Account): void {
+    // Función auxiliar para encontrar el padre en la jerarquía
+    const findParentInHierarchy = (accounts: Account[], targetCode: string): Account | null => {
+      for (const account of accounts) {
+        if (account.code === targetCode) {
+          return account;
+        }
+        if (account.children && account.children.length > 0) {
+          const found = findParentInHierarchy(account.children, targetCode);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // Obtener el código del padre
+    const parentCode = this.getParentCode(child.code);
+    if (parentCode) {
+      const parent = findParentInHierarchy(this.listAccounts, parentCode);
+      if (parent && !parent.status) {
+        // Si el padre no está activo, activarlo
+        parent.status = true;
+        // Continuar activando recursivamente hacia arriba
+        this.activateParentHierarchy(parent);
+      }
+    }
+  }
+
+  /**
+   * Obtiene el código del padre para una cuenta dada.
+   * @param code El código de la cuenta.
+   * @returns El código del padre o null si no tiene padre.
+   */
+  private getParentCode(code: string): string | null {
+    switch (code.length) {
+      case 1: return null; // Clase, no tiene padre
+      case 2: return code.substring(0, 1); // Grupo -> Clase
+      case 4: return code.substring(0, 2); // Cuenta -> Grupo
+      case 6: return code.substring(0, 4); // Subcuenta -> Cuenta
+      case 8: return code.substring(0, 6); // Auxiliar -> Subcuenta
+      default: return null;
+    }
+  }
+
+  /**
+   * Desactiva recursivamente la jerarquía de padres que fueron activados durante una operación fallida.
+   * @param child La cuenta hija desde donde se inicia la desactivación ascendente.
+   */
+  private deactivateParentHierarchy(child: Account): void {
+    // Función auxiliar para encontrar el padre en la jerarquía
+    const findParentInHierarchy = (accounts: Account[], targetCode: string): Account | null => {
+      for (const account of accounts) {
+        if (account.code === targetCode) {
+          return account;
+        }
+        if (account.children && account.children.length > 0) {
+          const found = findParentInHierarchy(account.children, targetCode);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // Obtener el código del padre
+    const parentCode = this.getParentCode(child.code);
+    if (parentCode) {
+      const parent = findParentInHierarchy(this.listAccounts, parentCode);
+      if (parent && parent.status) {
+        // Si el padre está activo y no tiene otros hijos activos, desactivarlo
+        const hasActiveChildren = this.hasActiveChildren(parent);
+        if (!hasActiveChildren) {
+          parent.status = false;
+          // Continuar desactivando recursivamente hacia arriba
+          this.deactivateParentHierarchy(parent);
+        }
+      }
+    }
+  }
+
+  /**
+   * Verifica si una cuenta tiene hijos activos.
+   * @param account La cuenta a verificar.
+   * @returns true si tiene al menos un hijo activo, false en caso contrario.
+   */
+  private hasActiveChildren(account: Account): boolean {
+    if (account.children && account.children.length > 0) {
+      for (const child of account.children) {
+        if (child.status) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
 
