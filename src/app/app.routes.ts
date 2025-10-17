@@ -657,7 +657,14 @@ export const routes: Routes = [
                 './GeneralMasters/Components/MenuCards/menu.component'
               ).then((m) => m.MenuComponent),
           },
-
+          {
+            path:'configuration-valuation-models',
+            data:{Breadcrumb:'Configuracion metodos de Valoracion'},
+            loadComponent:()=>
+              import(
+                './GeneralMasters/ConfigurationValuationModels/components/configuration-valuation-models/configuration-valuation-models.component'
+              ).then((m) =>m.ValuationMethodConfigComponent),
+          },
           {
             path: 'help-panels',
             data: { breadcrumb: 'Centro de Ayuda' },
@@ -991,6 +998,16 @@ export const routes: Routes = [
                 './Commercial/InvoiceTemplate/components/create-return/create-return.component'
               ).then((m) => m.CreateReturnComponent),
           },
+          {
+            path:'non-commercial-template',
+            data:{
+              Breadcrumb:'Plantilla de Evento no Comercial'
+            },
+            loadComponent:()=>
+              import(
+                './Commercial/NonCommercialTemplate/components/create-non-commercial/create-non-commercial.component'
+              ).then((m) =>m.CreateNonCommercialComponent)
+          }
         ],
       },
     ],

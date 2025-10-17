@@ -1,5 +1,11 @@
 export interface Balance {
-  amount: number;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface SaleDetail {
+  quantityUsed: number;
   unitPrice: number;
   totalPrice: number;
 }
@@ -8,13 +14,9 @@ export interface KardexRecordsDTOResponse {
   idKardex: number | null;
   date: string;
   detail: string;
-  entryAmount: number | null;
+  entryQuantity: number | null;
   entryUnitPrice: number | null;
   entryTotalPrice: number | null;
-  outputAmount: number | null;
-  outputUnitPrice: number | null;
-  outputTotalPrice: number | null;
+  outputDetails: SaleDetail[] | null;
   balance: Balance[];
-  totalBalanceAmount: number;
-  totalBalanceValue: number;
 }

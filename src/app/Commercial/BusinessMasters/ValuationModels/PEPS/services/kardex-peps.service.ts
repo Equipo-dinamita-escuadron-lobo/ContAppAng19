@@ -36,5 +36,26 @@ export class KardexPepsService {
       return this.http.get<ResponseDto<any>>(`${this.apiUrl}kardexlist`, {params});
   }
 
+  /**
+   * Obtiene todos los registros del kardex para exportar (sin paginación)
+   */
+  getAllKardexForExport(productId: number, startDate: Date | null, endDate: Date | null): Observable<ResponseDto<any>> {
+    let params = new HttpParams()
+    .set('productId', productId)
+    .set('page', 0)
+    .set('size', 1000000);
+
+    if (startDate) {
+      const formattedStartDate = this.formatDate(startDate);
+      params = params.set('startDate', formattedStartDate);
+    }
+    if (endDate) {
+      const formattedEndDate = this.formatDate(endDate);
+      params = params.set('endDate', formattedEndDate);
+    }
+    return this.http.get<ResponseDto<any>>(`${this.apiUrl}kardex-by-product`,{params});
+    
+  }
+
 
 }

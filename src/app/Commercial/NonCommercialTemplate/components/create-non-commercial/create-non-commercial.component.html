@@ -1,61 +1,60 @@
 <div class="w-full px-4 sm:px-6 lg:px-8 pt-20">
     <p-toast></p-toast>
-    <h1
-     class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
-    >
-        Crear Factura
+    
+    <h1 class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4">
+        Crear Evento No Comercial
     </h1>
     <p class="mb-6 text-lg text-gray-700">
-        Complete la información necesaria para crear una nueva factura.
+        Complete la información necesaria para crear un evento No Comercial.
     </p>
 
     <div class="mt-6">
-        <form [formGroup]="invoiceForm" (ngSubmit)="onSubmit()" class="mt-4">
+        <form [formGroup]="nonCommercialForm" (ngSubmit)="onSubmit()" class="mt-4">
             <div class="w-full">
-                <!-- Tipo de factura -->
+                <!-- Tipo de Evento no Comercial -->
                 <div class="mb-6">
-                    <label for="invoiceType" class="block mb-2 font-semibold">
-                        Tipo de Factura <span class="text-red-500">*</span>
+                    <label for="eventType" class="block mb-2 font-semibold">
+                        Tipo de Evento no Comercial <span class="text-red-500">*</span>
                     </label>
                     <p-select
-                        id="invoiceType"
-                        formControlName="invoiceType"
-                        [options]="invoiceTypes"
+                        id="eventType"
+                        formControlName="eventType"
+                        [options]="eventTypes"
                         optionLabel="label"
                         optionValue="value"
-                        placeholder="Seleccione el tipo de factura"
+                        placeholder="Salida no Comercial"
                         class="w-full"
-                        (onChange)="onInvoiceTypeChange($event)">
+                        (onChange)="onEventTypeChange($event)">
                     </p-select>
 
-                    @if (invoiceForm.get('invoiceType')?.touched && invoiceForm.get('invoiceType')?.invalid) {
+                    @if (nonCommercialForm.get('eventType')?.touched && nonCommercialForm.get('eventType')?.invalid) {
                         <p-message
                             severity="error"
-                            text="El tipo de factura es requerido"
-                        ></p-message>
+                            text="El tipo de evento es requerido">
+                        </p-message>
                     }
                 </div>
 
-                <!-- Primera fila: Código y Tercero -->
+                <!-- Primera fila: Código No Comercial y ID Tercero -->
                 <div class="flex gap-4 mb-4">
                     <div class="w-1/2">
                         <label for="factCode" class="block mb-2 font-semibold">
-                            Código de Factura <span class="text-red-500">*</span>
+                            Código No Comercial <span class="text-red-500">*</span>
                         </label>
                         <p-inputNumber
                             id="factCode"
                             formControlName="factCode"
-                            placeholder="001"
+                            placeholder="5713"
                             class="w-full"
                             [useGrouping]="false"
                             [readonly]="true">
                         </p-inputNumber>
 
-                        @if (invoiceForm.get('factCode')?.touched && invoiceForm.get('factCode')?.invalid) {
+                        @if (nonCommercialForm.get('factCode')?.touched && nonCommercialForm.get('factCode')?.invalid) {
                             <p-message
                                 severity="error"
-                                text="El código de factura es requerido"
-                            ></p-message>
+                                text="El código no comercial es requerido">
+                            </p-message>
                         }
                     </div>
 
@@ -66,60 +65,43 @@
                         <p-inputNumber
                             id="thId"
                             formControlName="thId"
-                            placeholder="12345"
+                            placeholder="1"
                             class="w-full"
                             [useGrouping]="false">
                         </p-inputNumber>
 
-                        @if (invoiceForm.get('thId')?.touched && invoiceForm.get('thId')?.invalid) {
+                        @if (nonCommercialForm.get('thId')?.touched && nonCommercialForm.get('thId')?.invalid) {
                             <p-message
                                 severity="error"
-                                text="El ID del tercero es requerido"
-                            ></p-message>
+                                text="El ID del tercero es requerido">
+                            </p-message>
                         }
                     </div>
                 </div>
 
-                <!-- Segunda fila: Fecha de vencimiento -->
+                <!-- Segunda fila: Cuenta Contable -->
                 <div class="flex gap-4 mb-4">
                     <div class="w-1/2">
-                        <label for="expirationDate" class="block mb-2 font-semibold">
-                            Fecha de Vencimiento <span class="text-red-500">*</span>
-                        </label>
-                        <p-datepicker
-                            id="expirationDate"
-                            formControlName="expirationDate"
-                            placeholder="Seleccione la fecha"
-                            class="w-full"
-                            dateFormat="dd/mm/yy">
-                        </p-datepicker>
-
-                        @if (invoiceForm.get('expirationDate')?.touched && invoiceForm.get('expirationDate')?.invalid) {
-                            <p-message
-                                severity="error"
-                                text="La fecha de vencimiento es requerida"
-                            ></p-message>
-                        }
-                    </div>
-
-                    <div class="w-1/2">
                         <label for="accountingAccount" class="block mb-2 font-semibold">
-                            Cuenta Contable
+                            Cuenta Contable <span class="text-red-500">*</span>
                         </label>
-                        <input
-                            pInputText
-                            type="number"
+                        <p-inputNumber
                             id="accountingAccount"
                             formControlName="accountingAccount"
-                            placeholder="Ej: 110505"
+                            placeholder="5"
                             class="w-full"
-                        />
-                        @if (invoiceForm.get('accountingAccount')?.touched && invoiceForm.get('accountingAccount')?.invalid) {
+                            [useGrouping]="false">
+                        </p-inputNumber>
+
+                        @if (nonCommercialForm.get('accountingAccount')?.touched && nonCommercialForm.get('accountingAccount')?.invalid) {
                             <p-message
                                 severity="error"
-                                text="La cuenta contable es requerida"
-                            ></p-message>
+                                text="La cuenta contable es requerida">
+                            </p-message>
                         }
+                    </div>
+                    <div class="w-1/2">
+            
                     </div>
                 </div>
 
@@ -151,25 +133,25 @@
                                     }
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grnid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     <!-- ID Producto -->
                                     <div>
                                         <label class="block mb-2 font-semibold">
                                             ID Producto <span class="text-red-500">*</span>
                                         </label>
                                         <p-autocomplete
-                                          formControlName="productId"
-                                          [suggestions]="filteredProducts"
-                                          (completeMethod)="filterProducts($event)"
-                                          (onSelect)="onProductSelect($event.value)"
-                                          field="name"
-                                          [dropdown]="true"
-                                          [virtualScroll]="true"
-                                          [virtualScrollItemSize]="44"
-                                          placeholder="Escribe para buscar productos..."
-                                          styleClass="w-full"
-                                          inputId="product-ac"
-                                        />
+                                            formControlName="productId"
+                                            [suggestions]="filteredProducts"
+                                            (completeMethod)="filterProducts($event)"
+                                            (onSelect)="onProductSelect($event.value)"
+                                            field="name"
+                                            [dropdown]="true"
+                                            [virtualScroll]="true"
+                                            [virtualScrollItemSize]="44"
+                                            placeholder="Escribe para buscar productos..."
+                                            styleClass="w-full"
+                                            inputId="product-ac-{{$index}}">
+                                        </p-autocomplete>
                                     </div>
 
                                     <!-- Descripción -->
@@ -181,7 +163,8 @@
                                             pInputText
                                             formControlName="description"
                                             placeholder="Descripción del producto"
-                                            class="w-full">
+                                            class="w-full"
+                                            readonly>
                                     </div>
 
                                     <!-- Cantidad -->
@@ -191,9 +174,10 @@
                                         </label>
                                         <p-inputNumber
                                             formControlName="amount"
-                                            placeholder="1"
+                                            placeholder="5"
                                             class="w-full"
-                                            [min]="1">
+                                            [min]="1"
+                                            [useGrouping]="false">
                                         </p-inputNumber>
                                     </div>
 
@@ -204,7 +188,7 @@
                                         </label>
                                         <p-inputNumber
                                             formControlName="unitPrice"
-                                            placeholder="0.00"
+                                            placeholder="12.00"
                                             class="w-full"
                                             mode="currency"
                                             currency="COP"
@@ -212,20 +196,6 @@
                                         </p-inputNumber>
                                     </div>
 
-                                    <!-- Descuento -->
-                                    <div>
-                                        <label class="block mb-2 font-semibold">
-                                            Descuento (%)
-                                        </label>
-                                        <p-inputNumber
-                                            formControlName="descount"
-                                            placeholder="0"
-                                            class="w-full"
-                                            [min]="0"
-                                            [max]="100"
-                                            suffix="%">
-                                        </p-inputNumber>
-                                    </div>
 
                                     <!-- Subtotal -->
                                     <div>
@@ -234,7 +204,7 @@
                                         </label>
                                         <p-inputNumber
                                             formControlName="subtotal"
-                                            placeholder="0.00"
+                                            placeholder="57.00"
                                             class="w-full"
                                             mode="currency"
                                             currency="COP"
@@ -242,28 +212,6 @@
                                             [readonly]="true">
                                         </p-inputNumber>
                                     </div>
-                                </div>
-
-                                <!-- Porcentajes de impuestos -->
-                                <div class="mt-4">
-                                    <label class="block mb-2 font-semibold">
-                                        Porcentajes de Impuestos
-                                    </label>
-                                    <div class="flex gap-2">
-                                        <input
-                                            pInputText
-                                            formControlName="taxPercentageInput"
-                                            placeholder="Ej: 19,5,8"
-                                            class="flex-1"
-                                            (blur)="updateTaxPercentages($index)">
-                                        <p-button
-                                            type="button"
-                                            label="Actualizar"
-                                            size="small"
-                                            (onClick)="updateTaxPercentages($index)">
-                                        </p-button>
-                                    </div>
-                                    <small class="text-gray-600">Ingrese los porcentajes separados por comas</small>
                                 </div>
                             </div>
                         }
@@ -285,32 +233,11 @@
                                 [readonly]="true">
                             </p-inputNumber>
                         </div>
-                        <div>
-                            <label class="block mb-2 font-semibold">Total Pagado</label>
-                            <p-inputNumber
-                                formControlName="totalPay"
-                                mode="currency"
-                                currency="COP"
-                                locale="es-CO"
-                                class="w-full">
-                            </p-inputNumber>
-                        </div>
-                        <div>
-                            <label class="block mb-2 font-semibold">Valor Pendiente</label>
-                            <p-inputNumber
-                                formControlName="pendingValue"
-                                mode="currency"
-                                currency="COP"
-                                locale="es-CO"
-                                class="w-full"
-                                [readonly]="true">
-                            </p-inputNumber>
-                        </div>
                     </div>
                 </div>
 
-                 <!-- Botones de acción -->
-                 <div class="flex justify-center gap-4 mt-12">
+                <!-- Botones de acción -->
+                <div class="flex justify-center gap-4 mt-12">
                     <p-button
                         type="button"
                         label="Cancelar"
@@ -319,10 +246,10 @@
                     </p-button>
                     <p-button
                         type="submit"
-                        label="Crear Factura"
-                        [disabled]="invoiceForm.invalid">
+                        label="Crear"
+                        [disabled]="nonCommercialForm.invalid">
                     </p-button>
-                 </div>
+                </div>
             </div>
         </form>
     </div>

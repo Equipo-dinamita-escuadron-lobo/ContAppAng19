@@ -14,7 +14,10 @@ import { ProductResponse } from '../models/ProductResponse';
 import { KardexRecordsDTOResponse } from '../models/KardexResponse';
 import { ResponseDto } from '../../models/ResponseDto';
 import { CurrencyPipe } from '@angular/common';
-
+import { ExcelExportService } from '../services/excel-export.service';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 
 interface AutoCompleteCompleteEvent {
   originalEvent: Event;
@@ -31,16 +34,21 @@ interface AutoCompleteCompleteEvent {
     FormsModule,
     DatePickerModule,
     InputIconModule,
-     CurrencyPipe
+    CurrencyPipe,
+    ToastModule,
+    TooltipModule
   ],
   templateUrl: './list-kardex-peps.component.html',
   styleUrl: './list-kardex-peps.component.css'
 })
 export class ListKardexPepsComponent {
 
-  constructor(private kardexPepsService:KardexPepsService,
-              private productService:ProductService
-  ){}
+  constructor(
+    private kardexPepsService: KardexPepsService,
+    private productService: ProductService,
+    private excelExportService: ExcelExportService,
+    private messageService: MessageService,
+  ) {}
 
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
@@ -57,6 +65,13 @@ export class ListKardexPepsComponent {
   startDate: Date | null = null;
   endDate: Date | null = null;
 
+  // Variable para controlar el estado de carga de la exportación
+  exportLoading: boolean = false;
+
+
+  // Variables para el diálogo de ajuste de inventario
+  showInventoryAdjustment: boolean = false;
+
   onStartDateChange() {
     if (this.endDate && this.startDate && this.endDate < this.startDate) {
       this.endDate = null;
@@ -66,6 +81,7 @@ export class ListKardexPepsComponent {
       this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
     }
   }
+
   onEndDateChange() {
     if (this.startDate && this.endDate && this.endDate < this.startDate) {
       this.startDate = null;
@@ -89,7 +105,7 @@ export class ListKardexPepsComponent {
             product.reference.toLowerCase().includes(query);
     });
     
-    console.log('Productos filtrados:', this.filteredProducts); // Para debug
+    console.log('Productos filtrados:', this.filteredProducts);
   }
 
   ngOnInit() {
@@ -100,7 +116,7 @@ export class ListKardexPepsComponent {
       return;
     }
     
-    console.log('Enterprise ID:', this.entData.id); // Para debug
+    console.log('Enterprise ID:', this.entData.id);
     
     this.productService.getAllProducts().subscribe({
       next: (response: ResponseDto<ProductResponse[]>) => {
@@ -121,18 +137,15 @@ export class ListKardexPepsComponent {
     });
   }
 
-
-onProductSelect(event: any) {
-  // El valor seleccionado está en event.value
-  this.selectedProduct = event.value;
-  this.productId = event.value.id;
-  console.log('Producto seleccionado:', this.selectedProduct);
-  // Al seleccionar un producto se carga el kardex con la configuración actual de fechas
-  if (this.startDate && this.endDate) {
-    this.loadKardex({ first: 0, rows: 5 });
+  onProductSelect(event: any) {
+    this.selectedProduct = event.value;
+    this.productId = event.value.id;
+    console.log('Producto seleccionado:', this.selectedProduct);
+    
+    if (this.startDate && this.endDate) {
+      this.loadKardex({ first: 0, rows: 5 });
+    }
   }
-}
-
 
   trackByIndex(index: number, item: any): number {
     return index;
@@ -156,19 +169,24 @@ onProductSelect(event: any) {
     this.kardexPepsService.getKardexByProduc(this.productId, page, size, sort, this.startDate, this.endDate)
       .subscribe({
         next: (res) => {
-          // --- CORRECCIÓN AQUÍ ---
-          const pageData = res.data; // Objeto Page del backend
+          const pageData = res.data;
           
           if (pageData && pageData.content) {
-            // Mapea el contenido de la página
             this.kardexList = pageData.content.map((item: KardexRecordsDTOResponse) => {
               const formattedDate = new Date(item.date).toLocaleDateString('es-CO', {
                 day: '2-digit', month: 'long', year: 'numeric'
               }).replace(/ de /g, '-');
-              return { ...item, formattedDate } as KardexRow;
+              
+              return {
+                ...item,
+                formattedDate,
+                outputQuantity: this.calculateOutputQuantity(item.outputDetails),
+                outputTotalPrice: this.calculateOutputTotalPrice(item.outputDetails),
+                totalBalanceQuantity: this.calculateBalanceQuantity(item.balance),
+                totalBalanceValue: this.calculateBalanceValue(item.balance)
+              } as KardexRow;
             });
 
-            // Asigna el total de elementos para la paginación
             this.totalRecords = pageData.totalElements;
           } else {
             this.kardexList = [];
@@ -184,6 +202,125 @@ onProductSelect(event: any) {
           this.totalRecords = 0;
         }
       });
+  }
+
+
+  /**
+   * Calcula la cantidad total de salida desde outputDetails
+   */
+  private calculateOutputQuantity(outputDetails: any[] | null): number {
+    if (!outputDetails || outputDetails.length === 0) {
+      return 0;
+    }
+    return outputDetails.reduce((sum, detail) => sum + (detail.quantityUsed || 0), 0);
+  }
+
+  /**
+   * Calcula el precio total de salida desde outputDetails
+   */
+  private calculateOutputTotalPrice(outputDetails: any[] | null): number {
+    if (!outputDetails || outputDetails.length === 0) {
+      return 0;
+    }
+    return outputDetails.reduce((sum, detail) => sum + (detail.totalPrice || 0), 0);
+  }
+
+  /**
+   * Calcula la cantidad total del balance
+   */
+  private calculateBalanceQuantity(balance: any[] | null): number {
+    if (!balance || balance.length === 0) {
+      return 0;
+    }
+    return balance.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  }
+
+  /**
+   * Calcula el valor total del balance
+   */
+  private calculateBalanceValue(balance: any[] | null): number {
+    if (!balance || balance.length === 0) {
+      return 0;
+    }
+    return balance.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+  }
+
+
+  
+  /**
+   * Verifica si el botón de ajuste de inventario debe estar habilitado
+   */
+  isInventoryAdjustmentEnabled(): boolean {
+    return this.selectedProduct !== undefined && this.productId !== 0;
+  }
+
+  /**
+   * Abre el diálogo de ajuste de inventario
+   */
+  openInventoryAdjustment() {
+    if (this.isInventoryAdjustmentEnabled()) {
+      this.showInventoryAdjustment = true;
+    }
+  }
+
+
+  /**
+   * Exporta todos los registros del kardex a un archivo Excel
+   */
+  exportToExcel() {
+    if (!this.isInventoryAdjustmentEnabled()) {
+      return;
+    }
+
+    this.exportLoading = true;
+
+    // Solo enviar fechas si ambas están seleccionadas
+    const startDateToSend = (this.startDate && this.endDate) ? this.startDate : null;
+    const endDateToSend = (this.startDate && this.endDate) ? this.endDate : null;
+
+    this.kardexPepsService.getAllKardexForExport(this.productId, startDateToSend, endDateToSend).subscribe({
+      next: (res) => {
+        try {
+          const rawList = res.data.content;
+
+          // Procesar los datos usando el servicio
+          const processedData = this.excelExportService.processKardexData(rawList);
+
+          // Exportar usando el servicio
+          this.excelExportService.exportKardexToExcel(
+            processedData,
+            this.selectedProduct!,
+            startDateToSend,
+            endDateToSend
+          );
+
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Archivo Excel exportado correctamente'
+          });
+
+        } catch (error) {
+          console.error('Error al generar el archivo Excel:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al generar el archivo Excel'
+          });
+        } finally {
+          this.exportLoading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener los datos para exportar:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al obtener los datos para exportar'
+        });
+        this.exportLoading = false;
+      }
+    });
   }
 
 
