@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -36,17 +35,6 @@ export class ThirdServiceConfigurationService {
   }
 
   /**
-   * Método genérico para manejar errores en operaciones POST
-   * @param operation Nombre de la operación para el mensaje de error
-   * @returns Operador de manejo de errores
-   */
-  private handlePostError<T>(operation: string) {
-    return catchError<T, Observable<T>>((error: any) => 
-      throwError(() => new Error(`Ha ocurrido un error al ${operation}`))
-    );
-  }
-
-  /**
    * Método genérico para crear parámetros HTTP
    * @param params Objeto con los parámetros
    * @returns HttpParams configurado
@@ -66,31 +54,49 @@ export class ThirdServiceConfigurationService {
   constructor(private http: HttpClient) { }
 
   /**
-   * Obtiene los tipos de terceros para una empresa específica
+   * Obtiene los tipos de terceros para una empresa específica con paginación y búsqueda
    * @param entId ID de la empresa
-   * @returns Observable con el array de tipos de terceros
+   * @param page Número de página (opcional)
+   * @param size Tamaño de página (opcional)
+   * @param sortField Campo de ordenamiento (opcional)
+   * @param sortOrder Orden de clasificación (opcional)
+   * @param search Término de búsqueda (opcional)
+   * @returns Observable con la página de tipos de terceros
    */
-  getThirdTypes(entId: String): Observable<ThirdType[]> {
-    const params = new HttpParams().set('entId', entId.toString());
-    const possibleKeys = ['content', 'data', 'items', 'results', 'thirdTypes'];
+  getThirdTypes(entId: String, page?: number, size?: number, sortField?: string, sortOrder?: string, search?: string): Observable<any> {
+    let params = new HttpParams().set('entId', entId.toString());
+    
+    if (page !== undefined) params = params.set('numPage', page.toString());
+    if (size !== undefined) params = params.set('size', size.toString());
+    if (sortField) params = params.set('sortField', sortField);
+    if (sortOrder) params = params.set('sortOrder', sortOrder);
+    if (search) params = params.set('search', search);
 
-    return this.http.get<ThirdType[]>(this.thirdApiUrl + "thirdtype", {params}).pipe(
-      map(response => this.extractArrayFromResponse<ThirdType>(response, possibleKeys)),
+    return this.http.get<any>(this.thirdApiUrl + "thirdtype", {params}).pipe(
       catchError((error) => throwError(() => error))
     );
   }
 
   /**
-   * Obtiene los tipos de identificación para una empresa específica
+   * Obtiene los tipos de identificación para una empresa específica con paginación y búsqueda
    * @param entId ID de la empresa
-   * @returns Observable con el array de tipos de identificación
+   * @param page Número de página (opcional)
+   * @param size Tamaño de página (opcional)
+   * @param sortField Campo de ordenamiento (opcional)
+   * @param sortOrder Orden de clasificación (opcional)
+   * @param search Término de búsqueda (opcional)
+   * @returns Observable con la página de tipos de identificación
    */
-  getTypeIds(entId: String): Observable<TypeId[]> {
-    const params = new HttpParams().set('entId', entId.toString());
-    const possibleKeys = ['content', 'data', 'items', 'results', 'typeIds'];
+  getTypeIds(entId: String, page?: number, size?: number, sortField?: string, sortOrder?: string, search?: string): Observable<any> {
+    let params = new HttpParams().set('entId', entId.toString());
+    
+    if (page !== undefined) params = params.set('numPage', page.toString());
+    if (size !== undefined) params = params.set('size', size.toString());
+    if (sortField) params = params.set('sortField', sortField);
+    if (sortOrder) params = params.set('sortOrder', sortOrder);
+    if (search) params = params.set('search', search);
 
-    return this.http.get<TypeId[]>(this.thirdApiUrl + "typeid", {params}).pipe(
-      map(response => this.extractArrayFromResponse<TypeId>(response, possibleKeys)),
+    return this.http.get<any>(this.thirdApiUrl + "typeid", {params}).pipe(
       catchError((error) => throwError(() => error))
     );
   }
@@ -102,7 +108,7 @@ export class ThirdServiceConfigurationService {
    */
   createTypeId(TypeId: TypeId): Observable<TypeId> {
     return this.http.post<TypeId>(this.thirdApiUrl + "typeid", TypeId).pipe(
-      this.handlePostError('agregar el tipo de identificación')
+      catchError((error) => throwError(() => error))
     );
   }
 
@@ -113,7 +119,7 @@ export class ThirdServiceConfigurationService {
    */
   createThirdType(ThirdType: ThirdType): Observable<ThirdType> {
     return this.http.post<ThirdType>(this.thirdApiUrl + "thirdtype", ThirdType).pipe(
-      this.handlePostError('agregar el tipo de tercero')
+      catchError((error) => throwError(() => error))
     );
   }
 
@@ -124,7 +130,7 @@ export class ThirdServiceConfigurationService {
    */
   updateThirdType(ThirdType: ThirdType): Observable<ThirdType> {
     return this.http.post<ThirdType>(this.thirdApiUrl + "thirdtype/update", ThirdType).pipe(
-      this.handlePostError('actualizar el tipo de tercero')
+      catchError((error) => throwError(() => error))
     );
   }
 
@@ -135,7 +141,7 @@ export class ThirdServiceConfigurationService {
    */
   updateTypeId(TypeId: TypeId): Observable<TypeId> {
     return this.http.post<TypeId>(this.thirdApiUrl + "typeid/update", TypeId).pipe(
-      this.handlePostError('actualizar el tipo de identificación')
+      catchError((error) => throwError(() => error))
     );
   }
 
@@ -161,6 +167,54 @@ export class ThirdServiceConfigurationService {
   deleteThirdType(thirdTypeId: number, entId: string): Observable<boolean> {
     const params = this.buildHttpParams({ thirdTypeId, entId });
     return this.http.delete<boolean>(this.thirdApiUrl + "thirdtype/delete", { params }).pipe(
+      catchError((error) => throwError(() => error))
+    );
+  }
+
+  /**
+   * Obtiene los tipos de identificación activos para una empresa específica con paginación y búsqueda
+   * @param entId ID de la empresa
+   * @param page Número de página (opcional)
+   * @param size Tamaño de página (opcional)
+   * @param sortField Campo de ordenamiento (opcional)
+   * @param sortOrder Orden de clasificación (opcional)
+   * @param search Término de búsqueda (opcional)
+   * @returns Observable con la página de tipos de identificación activos
+   */
+  getActiveTypeIds(entId: String, page?: number, size?: number, sortField?: string, sortOrder?: string, search?: string): Observable<any> {
+    let params = new HttpParams().set('entId', entId.toString());
+    
+    if (page !== undefined) params = params.set('numPage', page.toString());
+    if (size !== undefined) params = params.set('size', size.toString());
+    if (sortField) params = params.set('sortField', sortField);
+    if (sortOrder) params = params.set('sortOrder', sortOrder);
+    if (search) params = params.set('search', search);
+
+    return this.http.get<any>(this.thirdApiUrl + "typeid-active", {params}).pipe(
+      catchError((error) => throwError(() => error))
+    );
+  }
+
+  /**
+   * Obtiene los tipos de terceros activos para una empresa específica con paginación y búsqueda
+   * @param entId ID de la empresa
+   * @param page Número de página (opcional)
+   * @param size Tamaño de página (opcional)
+   * @param sortField Campo de ordenamiento (opcional)
+   * @param sortOrder Orden de clasificación (opcional)
+   * @param search Término de búsqueda (opcional)
+   * @returns Observable con la página de tipos de terceros activos
+   */
+  getActiveThirdTypes(entId: String, page?: number, size?: number, sortField?: string, sortOrder?: string, search?: string): Observable<any> {
+    let params = new HttpParams().set('entId', entId.toString());
+    
+    if (page !== undefined) params = params.set('numPage', page.toString());
+    if (size !== undefined) params = params.set('size', size.toString());
+    if (sortField) params = params.set('sortField', sortField);
+    if (sortOrder) params = params.set('sortOrder', sortOrder);
+    if (search) params = params.set('search', search);
+
+    return this.http.get<any>(this.thirdApiUrl + "thirdtype-active", {params}).pipe(
       catchError((error) => throwError(() => error))
     );
   }

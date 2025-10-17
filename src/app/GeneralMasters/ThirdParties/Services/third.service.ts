@@ -93,19 +93,31 @@ export class ThirdService {
   }
 
   /**
-   * Obtiene la lista paginada de terceros
+   * Obtiene la lista paginada de terceros con búsqueda y ordenamiento
    * @param entId ID de la empresa
-   * @param numPage Número de página
-   * @returns Observable con la lista de terceros
+   * @param numPage Número de página (opcional, default: 0)
+   * @param size Tamaño de página (opcional, default: 10)
+   * @param sortField Campo de ordenamiento (opcional, default: "names")
+   * @param sortOrder Orden asc/desc (opcional, default: "asc")
+   * @param search Término de búsqueda (opcional)
+   * @returns Observable con la respuesta paginada del backend
    */
-  getThirdParties(entId: String, numPage: number): Observable<Third[]> {
+  getThirdParties(entId: String, numPage: number = 0, size?: number, sortField: string = "names", sortOrder: string = "asc", search?: string): Observable<any> {
     let params = new HttpParams()
-    .set('entId', entId.toString())
-    .set('numPage', numPage);
-    return this.http.get<any>(this.thirdApiUrl, {params})
-    .pipe(
-      map(response => response.content as Third[])
-    );
+      .set('entId', entId.toString())
+      .set('numPage', numPage.toString())
+      .set('sortField', sortField)
+      .set('sortOrder', sortOrder);
+
+    if (size !== undefined) {
+      params = params.set('size', size.toString());
+    }
+
+    if (search && search.trim()) {
+      params = params.set('search', search.trim());
+    }
+
+    return this.http.get<any>(this.thirdApiUrl, { params });
   }
 
   /**
@@ -113,10 +125,8 @@ export class ThirdService {
    * @param entId ID de la empresa
    * @returns Observable con la lista de terceros
    */
-  getThirdList(entId: String): Observable<Third[]> {
-    let params = new HttpParams()
-    .set('entId', entId.toString());
-    return this.http.get<any>(this.thirdApiUrl, {params}).pipe(
+  getThirdList(entId: String): Observable<Third[]> {  
+    return this.getThirdParties(entId, 0).pipe(
       map(response => response.content as Third[])
     );
   }

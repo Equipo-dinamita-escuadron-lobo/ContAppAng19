@@ -60,6 +60,10 @@
                 optionLabel="thirdTypeName"
                 [dataKey]="'thirdTypeId'"
                 placeholder="Seleccione tipos de tercero"
+                [filter]="true"
+                filterBy="thirdTypeName"
+                [loading]="loadingThirdTypes"
+                (onFilter)="onThirdTypeFilter($event)"
                 class="max-w-sm">
               </p-multiSelect>
               <app-form-field-error [form]="createdThirdForm" fieldName="thirdTypes" [submitted]="submitted">
@@ -83,7 +87,9 @@
                 [filter]="true"
                 filterBy="typeId"
                 [showClear]="true"
-                class="w-full">
+                [loading]="loadingTypeIds"
+                (onFilter)="onTypeIdFilter($event)"
+                class="max-w-xs">
                 <ng-template pTemplate="selectedItem" let-selectedOption>
                   <div *ngIf="selectedOption">
                     {{ selectedOption.typeId }}
@@ -104,7 +110,7 @@
                 formControlName="idNumber"
                 placeholder="Ingrese número de identificación"
                 [useGrouping]="false"
-                class="w-full">
+                class="max-w-xs">
               </p-inputNumber>
               <small class="error-message" *ngIf="(submitted || createdThirdForm.get('idNumber')?.touched) && createdThirdForm.get('idNumber')?.invalid">
                 <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['required']">
@@ -291,7 +297,7 @@
                 pInputText 
                 formControlName="phoneNumber"
                 placeholder="Ingrese número de teléfono"
-                class="max-w-sm">
+                class="max-w-xs">
               <app-form-field-error [form]="createdThirdForm" fieldName="phoneNumber" [submitted]="submitted">
                 El número de teléfono es requerido
               </app-form-field-error>

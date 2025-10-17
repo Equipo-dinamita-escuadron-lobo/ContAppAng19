@@ -682,6 +682,41 @@ export const routes: Routes = [
               ).then((m) => m.MenuComponent),
           },
           {
+            path: 'help-center',
+            data: { breadcrumb: 'Centro de Ayuda' },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list',
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-list/help-center-list.component'
+                  ).then((m) => m.HelpCenterListComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Centro de Ayuda' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-creation/help-center-creation.component'
+                  ).then((m) => m.HelpCenterCreationComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Centro de Ayuda' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-edit/help-center-edit.component'
+                  ).then((m) => m.HelpCenterEditComponent),
+              },
+            ],
+          },
+          {
             path: 'accounting-calendar',
             data: { breadcrumb: 'Calendario Contable' },
             loadComponent: () =>
@@ -793,6 +828,36 @@ export const routes: Routes = [
                   },
                 ],
               },
+              {
+                 path: 'financial-statements',
+                data: {
+                  breadcrumb: 'Estados Financieros',
+                },
+                children: [
+                  {
+                    path: 'list',
+                    pathMatch: 'full',
+                    data: {
+                      breadcrumb: null,
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statements-list/financial-statements-list.component'
+                      ).then((m) => m.FinancialStatementsListComponent),
+                  },
+                  {
+                    path: 'statement-financial-position',
+                    data: {
+                      breadcrumb: 'Estado de situacion Financiera',
+                    },
+                    /*loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statement-types/statement-financial-position/statement-financial-position.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),*/
+                  },
+                ],
+              },
+              
             ],
           },
           {
