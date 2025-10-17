@@ -852,16 +852,16 @@ export const routes: Routes = [
                         './Financial/Reports/financial-statements/Components/financial-statements-list/financial-statements-list.component'
                       ).then((m) => m.FinancialStatementsListComponent),
                   },
-                  {
+                 /* {
                     path: 'statement-financial-position',
                     data: {
                       breadcrumb: 'Estado de situacion Financiera',
                     },
-                    /*loadComponent: () =>
+                    loadComponent: () =>
                       import(
                         './Financial/Reports/financial-statements/Components/financial-statement-types/statement-financial-position/statement-financial-position.component'
-                      ).then((m) => m.InventoryAndBalancesComponent),*/
-                  },
+                      ).then((m) => m.InventoryAndBalancesComponent),
+                  },*/
                 ],
               },
               
