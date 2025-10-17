@@ -946,7 +946,7 @@ export const routes: Routes = [
                   './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
                 ).then((m) => m.ReceiptAccountingEntriesComponent),
             },
-            
+
             ],
           },
           {
@@ -1115,6 +1115,14 @@ export const routes: Routes = [
         ],
       },
     ],
+  },
+  {
+    path: 'help-center-view',
+    data: {
+      breadcrumb: 'Centro de Ayuda',
+    },
+    loadComponent: () =>
+      import('./PublicSite/help-center/help-center-view.component').then((m) => m.HelpCenterViewComponent),
   },
   {
     path: 'style-guide',
