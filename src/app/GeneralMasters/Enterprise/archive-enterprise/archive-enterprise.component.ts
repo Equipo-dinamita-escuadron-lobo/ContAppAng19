@@ -56,7 +56,7 @@ export class ArchiveEnterpriseComponent implements OnInit {
   unarchiveEnterprise(enterprise: EnterpriseList) {
     if (!enterprise.id) return;
 
-    this.enterpriseService.archiveEnterprise(String(enterprise.id)).subscribe({
+    this.enterpriseService.unarchiveEnterprise(String(enterprise.id)).subscribe({
       next: () => {
         console.log('Empresa desarchivada:', enterprise.name);
         this.loadArchivedEnterprises();
