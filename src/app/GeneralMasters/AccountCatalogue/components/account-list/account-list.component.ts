@@ -2128,49 +2128,33 @@ export class AccountListComponent {
 
   /**
    * Guarda una cuenta llamando al servicio.
-   * No valida duplicados porque es una cuenta nueva que se está creando.
-   * El backend se encargará de manejar cualquier error de duplicados.
-   * Si la cuenta es una subcuenta y la cuenta seleccionada tiene más de dos cuentas auxiliares, muestra un error.
    * @param account La cuenta que contiene la información a guardar.
    */
   async saveNewAccountType(account: Account) {
     try {
-      // Validación específica para subcuentas con límite de auxiliares
-      if (this.name === 'subAccountName' && this.accountSelected && this.accountSelected.children && this.accountSelected.children.length >= 2) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Solo se permiten dos cuentas auxiliares para esta subcuenta!'
-        });
-        this.selectAccount(this.accountSelected);
-        this.noShowFormAddNewClass();
-        this.noAddNewChild();
-      } else {
-        // Crear la cuenta directamente - el backend manejará duplicados si los hay
-        this._accountService.createAccount(account).subscribe(
-          (response) => {
-            this.getAccounts()
-              .then(() => {
-                this.expandAccounts(response);
-                this.selectAccount(response);
-                this.noShowFormAddNewClass();
-                this.noAddNewChild();
-                this.messageService.add({
-                  severity: 'success',
-                  summary: 'Registro exitoso',
-                  detail: 'La cuenta se ha creado correctamente'
-                });
+      this._accountService.createAccount(account).subscribe(
+        (response) => {
+          this.getAccounts()
+            .then(() => {
+              this.expandAccounts(response);
+              this.selectAccount(response);
+              this.noShowFormAddNewClass();
+              this.noAddNewChild();
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Registro exitoso',
+                detail: 'La cuenta se ha creado correctamente'
               });
-          },
-          (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Ha ocurrido un error al crear la cuenta!.'
             });
-          }
-        );
-      }
+        },
+        (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Ha ocurrido un error al crear la cuenta!.'
+          });
+        }
+      );
     } catch (error) {
       console.error('Error al guardar el tipo de cuenta:', error);
     }
