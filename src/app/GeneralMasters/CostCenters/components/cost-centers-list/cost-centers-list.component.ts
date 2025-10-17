@@ -382,9 +382,10 @@ export class CostCentersListComponent implements OnDestroy {
         // Si se está activando, activar también todos los padres
         if (newStatus) {
           this.updateParentStatusRecursively(costCenter, true);
+        } else {
+          // Si se está inactivando, inactivar todos los hijos recursivamente
+          this.updateChildrenStatusRecursively(costCenter, newStatus);
         }
-        // Actualizar recursivamente el estado de todos los hijos en la UI
-        this.updateChildrenStatusRecursively(costCenter, newStatus);
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -392,9 +393,10 @@ export class CostCentersListComponent implements OnDestroy {
         });
       },
       error: () => {
-        // Revertir el estado en la UI del padre y todos los hijos si la llamada al servicio falla
         costCenter.status = !newStatus;
-        this.updateChildrenStatusRecursively(costCenter, !newStatus);
+        if (!newStatus) {
+          this.updateChildrenStatusRecursively(costCenter, !newStatus);
+        }
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
