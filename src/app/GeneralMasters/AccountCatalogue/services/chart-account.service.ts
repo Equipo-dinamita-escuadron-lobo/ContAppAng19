@@ -17,12 +17,8 @@ let API_URL = environment.API_URL + 'accountCatalogue/';
 })
 export class ChartAccountService {
 
-  // URL para la API del catálogo de cuentas.
-  // Se utiliza la URL de producción si está habilitada, o la URL local si es necesario.
-  // Descomentar la línea correspondiente según el entorno de ejecución.
+ 
   private apiURL = API_URL
-  //Local
-  //private apiURL = myAppUrl + 'accountCatalogue'
 
   constructor(private http: HttpClient) { }
 
@@ -32,8 +28,8 @@ export class ChartAccountService {
      * @type {NatureType[]} - Un array de objetos que representa los tipos de naturaleza disponibles ('Débito' y 'Crédito'), cada uno con un identificador único.
      */
   listNature: NatureType[] = [
-    { id: 1, name: 'Débito' },
-    { id: 2, name: 'Crédito' }
+    { id: 1, name: 'Debito' },
+    { id: 2, name: 'Credito' }
   ];
 
   /**
