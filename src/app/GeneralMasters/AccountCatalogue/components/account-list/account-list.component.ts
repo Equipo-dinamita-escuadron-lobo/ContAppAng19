@@ -6,7 +6,7 @@ import { FinancialStateType } from '../../models/FinancialStateType';
 import { NatureType } from '../../models/NatureType';
 import { ClasificationType } from '../../models/ClasificationType';
 import { ChartAccountService } from '../../services/chart-account.service';
-import { forkJoin, map, Observable, of, switchMap, firstValueFrom, catchError } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { AccountFormComponent } from '../account-form/account-form.component';
 import { AccountTemplateComponent } from '../account-template/account-template.component';
 import { ButtonModule } from 'primeng/button';
@@ -267,22 +267,6 @@ export class AccountListComponent {
   }
 
   /**
-  * Abre un diálogo modal para mostrar los detalles de la importación.
-  */
-  openModalDetails(): void {
-    // this.OpenDetailsImport('Detalles de importación ', AccountImportComponent) //Descomentar linea cuando se tenga implementado esto
-  }
-
-
-
-  /**
-   * Abre el modal de plantilla de catálogo de cuentas.
-   */
-  downloadTemplate(): void {
-    this.showTemplateModal = true;
-  }
-
-  /**
    * Abre el modal de plantilla de catálogo de cuentas.
    */
   openTemplateModal(): void {
@@ -294,26 +278,8 @@ export class AccountListComponent {
    */
   closeTemplateModal(): void {
     this.showTemplateModal = false;
-  }
-
-  /**
-  * Abre un diálogo modal con un título y componente específicos.
-  * @param title El título del cuadro de diálogo modal.
-  * @param component El componente que se mostrará en el cuadro de diálogo modal.
-  */
-  /*OpenDetailsImport(title: any, component: any) {
-    var _popUp = this.dialog.open(component, {
-      width: '40%',
-      height: '100px',
-      enterAnimationDuration: '0ms',
-      exitAnimationDuration: '600ms',
-      data: {
-        title: title
-      }
-    });
-    _popUp.afterClosed().subscribe()
-  }*/ //Descomentar linea cuando se tenga implementado esto
-
+  } 
+  
   /**
    * Inicializa el componente obteniendo datos desde los servicios.
    */
