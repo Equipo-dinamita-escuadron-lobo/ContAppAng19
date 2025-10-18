@@ -6,11 +6,9 @@ import { FinancialStateType } from '../../models/FinancialStateType';
 import { NatureType } from '../../models/NatureType';
 import { ClasificationType } from '../../models/ClasificationType';
 import { ChartAccountService } from '../../services/chart-account.service';
-import { forkJoin, map, Observable, of, switchMap, firstValueFrom, catchError } from 'rxjs';
-import { saveAs } from 'file-saver';
-import * as XLSX from 'xlsx';
+import { firstValueFrom } from 'rxjs';
 import { AccountFormComponent } from '../account-form/account-form.component';
-import { FilterPipe } from '../../pipes/filter.pipe';
+import { AccountTemplateComponent } from '../account-template/account-template.component';
 import { ButtonModule } from 'primeng/button';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DropdownModule } from 'primeng/dropdown';
@@ -29,31 +27,15 @@ import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
-// Interfaces para manejo de errores de importación
-interface ImportError {
-  fila: number;
-  columna: string;
-  campo: string;
-  error: string;
-}
 
-interface ExcelRow {
-  [key: string]: any;
-  'Código': string;
-  'Nombre': string;
-  'Naturaleza': string;
-  'Estado Financiero': string;
-  'Clasificación': string;
-  'Cruce': string;
-  'Centro de Costo': string;
-}
 
 @Component({
   selector: 'app-account-list',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule,
-    AccountFormComponent, FilterPipe,
+    AccountFormComponent,
+    AccountTemplateComponent,
     ButtonModule, FileUploadModule, DropdownModule, DialogModule,
     IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
     ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule,
@@ -74,24 +56,6 @@ export class AccountListComponent {
   * estado financiero y clasificación.
   */
   formTransactional: FormGroup;
-
-  /**
-  * Variables para la importación de archivos planos (flat file).
-  * Estas variables gestionan los datos importados, filtros y estados de importación.
-  */
-  filterAccount: string = '';
-  listExcel: Account[] = [];
-  listAccountsToShow: Account[] = [];
-  importedAccounts: boolean = false;
-  importedFailed: boolean = false;
-
-  //Variable para controlar la visibilidad
-  showImportModal = false;
-  
-  // Variables para manejar errores de importación
-  showErrorModal = false;
-  importErrors: ImportError[] = [];
-  totalErrors = 0;
 
   /**
    * Cuenta seleccionada y estado de conmutación para la interfaz de usuario.
@@ -127,12 +91,15 @@ export class AccountListComponent {
   showButtonDelete: boolean = false;
 
   /**
-  * Variables para controlar la visibilidad de los checkboxes en la edición
-  */
-  showCrossingCheckboxEdit: boolean = false;
-  showCostCenterCheckboxEdit: boolean = false;
+   * Controla la visibilidad del modal de plantilla
+   */
+  showTemplateModal: boolean = false;
 
-    /**
+  /**
+   * Variables para controlar la visibilidad de los checkboxes en la edición
+   */
+  showCrossingCheckboxEdit: boolean = false;
+  showCostCenterCheckboxEdit: boolean = false;    /**
    * Variables determinadas según el nivel de la cuenta.
    * Estas variables gestionan el tipo de cuenta y si se deben agregar subcuentas o hijos.
    */
@@ -300,72 +267,19 @@ export class AccountListComponent {
   }
 
   /**
-  * Abre un diálogo modal para mostrar los detalles de la importación.
-  */
-  openModalDetails(): void {
-    // this.OpenDetailsImport('Detalles de importación ', AccountImportComponent) //Descomentar linea cuando se tenga implementado esto
-  }
-
-  // Nuevo método para abrir el modal (reemplaza a openModalDetails)
-  openTemplateModal(): void {
-    this.showImportModal = true;
-  }
-
-  // Nuevo método para cerrar el modal
-  closeTemplateModal(): void {
-    this.showImportModal = false;
-  }
-
-  /**
-   * Descarga la plantilla de catálogo de cuentas desde el backend.
+   * Abre el modal de plantilla de catálogo de cuentas.
    */
-  downloadTemplate(): void {
-    this._accountService.downloadTemplate().subscribe({
-      next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'plantillaCatalogoCuentas.xlsx';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Descarga exitosa',
-          detail: 'La plantilla se ha descargado correctamente'
-        });
-      },
-      error: (error) => {
-        console.error('Error al descargar la plantilla:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo descargar la plantilla. Intente nuevamente.'
-        });
-      }
-    });
+  openTemplateModal(): void {
+    this.showTemplateModal = true;
   }
 
   /**
-  * Abre un diálogo modal con un título y componente específicos.
-  * @param title El título del cuadro de diálogo modal.
-  * @param component El componente que se mostrará en el cuadro de diálogo modal.
-  */
-  /*OpenDetailsImport(title: any, component: any) {
-    var _popUp = this.dialog.open(component, {
-      width: '40%',
-      height: '100px',
-      enterAnimationDuration: '0ms',
-      exitAnimationDuration: '600ms',
-      data: {
-        title: title
-      }
-    });
-    _popUp.afterClosed().subscribe()
-  }*/ //Descomentar linea cuando se tenga implementado esto
-
+   * Cierra el modal de plantilla de catálogo de cuentas.
+   */
+  closeTemplateModal(): void {
+    this.showTemplateModal = false;
+  } 
+  
   /**
    * Inicializa el componente obteniendo datos desde los servicios.
    */
@@ -385,37 +299,7 @@ export class AccountListComponent {
     });
   }
 
-  onFileSelect(event: any) {
-    // Validar tipo de archivo antes de procesar
-    if (event.files && event.files.length > 0) {
-      const file = event.files[0];
-      if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Solo se permiten archivos .xlsx'
-        });
-        // Limpiar el selector de archivos
-        if (event.originalEvent && event.originalEvent.target) {
-          event.originalEvent.target.value = '';
-        }
-        return;
-      }
-    }
-    
-    // El evento de PrimeNG es un poco diferente. El archivo está en event.files[0]
-    // Creamos un objeto de evento simulado para que tu método ReadExcel funcione sin cambios.
-    const simulatedEvent = {
-      target: {
-        files: event.files
-      }
-    };
-    this.ReadExcel(simulatedEvent);
-    // Limpia el selector de archivos para poder seleccionar el mismo archivo de nuevo
-    if (event.originalEvent && event.originalEvent.target) {
-    event.originalEvent.target.value = '';
-    }
-  }
+
 
   /**
   * Alterna la visibilidad de las subcuentas de una cuenta específica.
@@ -584,87 +468,6 @@ export class AccountListComponent {
   /**
    * Exporta cuentas a un archivo Excel.
    */
-  exportAccountsToExcel(): void {
-    // 1. Llama a tu servicio para obtener las cuentas actualizadas
-    this._accountService.getListAccounts(this.getIdEnterprise()).subscribe({
-      next: (accounts) => {
-        // 2. Verifica si se obtuvieron cuentas
-        if (accounts && accounts.length > 0) {
-          // 3. Si hay cuentas, procede a crear y descargar el Excel
-          this.createAndDownloadExcel(accounts); // Llamamos a un nuevo método de ayuda
-
-          // 4. Muestra la notificación de éxito
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Se ha generado el archivo correctamente.'
-          });
-        } else {
-          // Si no hay cuentas, muestra la notificación de error
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se encontraron cuentas para exportar.'
-          });
-        }
-      },
-      error: (err) => {
-        // Maneja el caso en que el servicio falle
-        console.error('Error al obtener cuentas para exportar:', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error de Conexión',
-          detail: 'No se pudieron obtener las cuentas. Intente de nuevo más tarde.'
-        });
-      }
-    });
-  }
-
-  private createAndDownloadExcel(accounts: Account[]): void {
-    // Define la cabecera del Excel
-    const data: any[] = [['Código', 'Nombre', 'Naturaleza', 'Estado Financiero', 'Clasificación']];
-
-    // Función auxiliar recursiva para aplanar la jerarquía
-    const addAccountRows = (accountList: Account[]) => {
-      for (const account of accountList) {
-        data.push([
-          account.code,
-          account.description,
-          account.nature,
-          account.financialStatus,
-          account.classification
-        ]);
-        if (account.children && account.children.length > 0) {
-          addAccountRows(account.children);
-        }
-      }
-    };
-
-    // Llama a la función auxiliar para poblar los datos
-    addAccountRows(accounts);
-
-    // Crea la hoja de cálculo (worksheet)
-    const worksheet: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(data);
-
-    // Opcional: ajusta el ancho de las columnas
-    worksheet['!cols'] = [{ wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 30 }, { wch: 25 }];
-
-    // Crea el libro de trabajo (workbook)
-    const workbook: XLSX.WorkBook = {
-      Sheets: { 'CatalogoCuentas': worksheet },
-      SheetNames: ['CatalogoCuentas']
-    };
-
-    // Genera el buffer del archivo Excel
-    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-
-    // Crea un Blob (Binary Large Object) para la descarga
-    const blobData: Blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8' });
-
-    // Usa file-saver para iniciar la descarga
-    saveAs(blobData, 'CatalogoCuentas.xlsx');
-  }
-
   /**
   * Ordena las cuentas recursivamente por código.
   */
@@ -758,1024 +561,6 @@ export class AccountListComponent {
       const codeLength = codeStr.length; // Obtener la longitud del código
       return (codeLength === 1 || codeLength === 2 || codeLength === 4 || codeLength === 6 || codeLength === 8);
     });
-  }
-
-  /**
-   * Valida formato, campos obligatorios, duplicados, jerarquía y otros criterios.
-   *
-   * @param event - El evento de entrada de archivo que contiene el archivo Excel.
-   */
-  ReadExcel(event: any) {
-    let file = event.target.files[0];
-
-    if (!file) {
-      return;
-    }
-
-    let fileReader = new FileReader();
-    fileReader.readAsBinaryString(file);
-
-    fileReader.onload = (e) => {
-      try {
-        const workBook = XLSX.read(fileReader.result, { type: 'binary', cellText: true });
-        const sheetNames = workBook.SheetNames;
-        
-        // Convertir la hoja a JSON
-        let jsonData: any[][] = XLSX.utils.sheet_to_json(workBook.Sheets[sheetNames[0]], { 
-          raw: false, 
-          header: 1,
-          defval: '' // Valor por defecto para celdas vacías
-        });
-
-        // Validaciones y procesamiento
-        this.validateExcelDataAsync(jsonData).then((validationResult) => {
-          if (validationResult.errors.length > 0) {
-            this.showImportErrors(validationResult.errors);
-            return;
-          }
-
-          // Si no hay errores, procesar las cuentas válidas
-          this.processValidAccounts(validationResult.validAccounts);
-        }).catch(error => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error durante la validación del archivo'
-          });
-        });
-        
-      } catch (error) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Error al procesar el archivo Excel'
-        });
-      }
-
-      // Reset file input value
-      event.target.value = null;
-    };
-  }
-
-  /**
-   * Valida todos los datos del Excel según los requerimientos de forma asíncrona.
-   */
-  private async validateExcelDataAsync(jsonData: any[][]): Promise<{ errors: ImportError[], validAccounts: ExcelRow[] }> {
-    const errors: ImportError[] = [];
-    const validAccounts: ExcelRow[] = [];
-    
-    if (jsonData.length === 0) {
-      errors.push({
-        fila: 1,
-        columna: 'General',
-        campo: 'Archivo',
-        error: 'El archivo está vacío'
-      });
-      return { errors, validAccounts };
-    }
-
-    // Verificar columnas requeridas
-    const headers = jsonData[0] as string[];
-    const requiredColumns = ['Código', 'Nombre', 'Naturaleza', 'Estado Financiero', 'Clasificación', 'Cruce', 'Centro de Costo'];
-    const missingColumns = requiredColumns.filter(col => !headers.includes(col));
-    
-    if (missingColumns.length > 0) {
-      missingColumns.forEach(col => {
-        errors.push({
-          fila: 1,
-          columna: 'Encabezados',
-          campo: col,
-          error: `La columna ${col} es obligatoria`
-        });
-      });
-      return { errors, validAccounts };
-    }
-
-    // Crear mapeo de índices de columnas
-    const columnIndexes: { [key: string]: number } = {};
-    requiredColumns.forEach(col => {
-      columnIndexes[col] = headers.indexOf(col);
-    });
-
-    // PRIMERA PASADA: Recopilar todas las cuentas del archivo para validación de jerarquía
-    const dataRows = jsonData.slice(1);
-    const allAccountsInFile: ExcelRow[] = [];
-    
-    for (let i = 0; i < dataRows.length; i++) {
-      const rowIndex = i + 2;
-      const row = dataRows[i];
-      
-      if (this.isEmptyRow(row)) continue;
-
-      const rowData: ExcelRow = {
-        'Código': this.getCellValue(row, columnIndexes['Código']),
-        'Nombre': this.getCellValue(row, columnIndexes['Nombre']),
-        'Naturaleza': this.getCellValue(row, columnIndexes['Naturaleza']),
-        'Estado Financiero': this.getCellValue(row, columnIndexes['Estado Financiero']),
-        'Clasificación': this.getCellValue(row, columnIndexes['Clasificación']),
-        'Cruce': this.getCellValue(row, columnIndexes['Cruce']),
-        'Centro de Costo': this.getCellValue(row, columnIndexes['Centro de Costo']),
-        '_rowIndex': rowIndex
-      };
-
-      if (rowData['Código']) {
-        allAccountsInFile.push(rowData);
-      }
-    }
-
-    // SEGUNDA PASADA: Validaciones completas con todas las cuentas disponibles
-    const codesInFile = new Set<string>();
-    const namesInFile = new Set<string>();
-    const accountsInFile: ExcelRow[] = [];
-
-    for (const rowData of allAccountsInFile) {
-      const rowIndex = rowData['_rowIndex'];
-      
-      // Campos vacíos
-      const emptyFields = this.validateRequiredFields(rowData, rowIndex, errors);
-      if (emptyFields) continue;
-
-      // Código debe ser solo números
-      if (!this.validateCodeFormat(rowData['Código'], rowIndex, errors)) continue;
-
-      // Nombre no puede contener números y mínimo 2 caracteres
-      if (!this.validateNameFormat(rowData['Nombre'], rowIndex, errors)) continue;
-
-      // Duplicados en el mismo archivo
-      if (!this.validateDuplicatesInFile(rowData, rowIndex, codesInFile, namesInFile, errors)) continue;
-
-      // Validar jerarquía de padres (ahora con todas las cuentas disponibles)
-      if (!(await this.validateParentHierarchy(rowData['Código'], allAccountsInFile, rowIndex, errors))) continue;
-
-      // procesar campos Cruce y Centro de Costo
-      this.processBooleanFields(rowData);
-
-      // Remover el índice auxiliar
-      delete rowData['_rowIndex'];
-      
-      accountsInFile.push(rowData);
-      codesInFile.add(rowData['Código']);
-      namesInFile.add(rowData['Nombre'].toLowerCase());
-    }
-
-    // Si hay errores, no procesar más validaciones
-    if (errors.length > 0) {
-      return { errors, validAccounts };
-    }
-
-    await this.validateAgainstDatabase(accountsInFile, errors);
-
-    if (errors.length === 0) {
-      validAccounts.push(...accountsInFile);
-      
-      // Verificar si después de todas las validaciones hay cuentas para importar
-      if (validAccounts.length === 0) {
-        // Todas las cuentas ya existen, mostrar mensaje informativo
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Información',
-          detail: 'Todas las cuentas del archivo ya existen en el sistema. No hay cuentas nuevas para importar.'
-        });
-      }
-    }
-
-    return { errors, validAccounts };
-  }
-
-  private getCellValue(row: any[], index: number): string {
-    return row[index] ? String(row[index]).trim() : '';
-  }
-
-  private isEmptyRow(row: any[]): boolean {
-    return !row || row.every(cell => !cell || String(cell).trim() === '');
-  }
-
-  private validateRequiredFields(rowData: ExcelRow, rowIndex: number, errors: ImportError[]): boolean {
-      const requiredFields = ['Código', 'Nombre', 'Naturaleza', 'Estado Financiero', 'Clasificación'];
-    let hasErrors = false;
-
-    requiredFields.forEach(field => {
-      if (!rowData[field] || rowData[field].trim() === '') {
-        errors.push({
-          fila: rowIndex,
-          columna: this.getColumnLetter(field),
-          campo: field,
-          error: `El campo ${field} es obligatorio`
-        });
-        hasErrors = true;
-      }
-    });
-
-    return hasErrors;
-  }
-
-  private validateCodeFormat(code: string, rowIndex: number, errors: ImportError[]): boolean {
-    if (!/^\d+$/.test(code)) {
-      errors.push({
-        fila: rowIndex,
-        columna: 'A',
-        campo: 'Código',
-        error: 'El código debe contener solo números positivos y sin espacios entre si'
-      });
-      return false;
-    }
-    
-    // Validar longitud máxima de 8 dígitos
-    if (code.length > 8) {
-      errors.push({
-        fila: rowIndex,
-        columna: 'A',
-        campo: 'Código',
-        error: 'El código no puede tener más de 8 dígitos'
-      });
-      return false;
-    }
-    
-    // Validar longitudes permitidas (1, 2, 4, 6, 8)
-    const validLengths = [1, 2, 4, 6, 8];
-    if (!validLengths.includes(code.length)) {
-      errors.push({
-        fila: rowIndex,
-        columna: 'A',
-        campo: 'Código',
-        error: 'El código debe tener exactamente 1, 2, 4, 6 u 8 dígitos'
-      });
-      return false;
-    }
-    
-    return true;
-  }
-
-  private validateNameFormat(name: string, rowIndex: number, errors: ImportError[]): boolean {
-    // Validar que tenga al menos 2 caracteres
-    if (name.trim().length < 2) {
-      errors.push({
-        fila: rowIndex,
-        columna: 'B',
-        campo: 'Nombre',
-        error: 'El nombre debe tener al menos 2 caracteres'
-      });
-      return false;
-    }
-
-    // Validar que no contenga números
-    if (/\d/.test(name)) {
-      errors.push({
-        fila: rowIndex,
-        columna: 'B',
-        campo: 'Nombre',
-        error: 'El nombre no puede contener números'
-      });
-      return false;
-    }
-    
-    return true;
-  }
-
-  private validateDuplicatesInFile(rowData: ExcelRow, rowIndex: number, codesInFile: Set<string>, namesInFile: Set<string>, errors: ImportError[]): boolean {
-    const code = rowData['Código'];
-    const name = rowData['Nombre'].toLowerCase();
-    
-    if (codesInFile.has(code)) {
-      errors.push({
-        fila: rowIndex,
-        columna: 'A',
-        campo: 'Código',
-        error: 'Código duplicado en el archivo'
-      });
-      return false;
-    }
-    
-    if (namesInFile.has(name)) {
-      errors.push({
-        fila: rowIndex,
-        columna: 'B',
-        campo: 'Nombre',
-        error: 'Nombre duplicado en el archivo'
-      });
-      return false;
-    }
-    
-    return true;
-  }
-
-  private async validateParentHierarchy(code: string, accountsInFile: ExcelRow[], rowIndex: number, errors: ImportError[]): Promise<boolean> {
-    if (code.length <= 1) return true; // Cuentas de nivel 1 no necesitan padre
-
-    let parentCode: string;
-    
-    // Determinar código del padre según la longitud
-    switch (code.length) {
-      case 2: // Nivel 2: padre tiene 1 dígito
-        parentCode = code.substring(0, 1);
-        break;
-      case 4: // Nivel 3: padre tiene 2 dígitos
-        parentCode = code.substring(0, 2);
-        break;
-      case 6: // Nivel 4: padre tiene 4 dígitos
-        parentCode = code.substring(0, 4);
-        break;
-      case 8: // Nivel 5: padre tiene 6 dígitos
-        parentCode = code.substring(0, 6);
-        break;
-      default:
-        errors.push({
-          fila: rowIndex,
-          columna: 'A',
-          campo: 'Código',
-          error: 'El código debe tener 1, 2, 4, 6 u 8 dígitos'
-        });
-        return false;
-    }
-    
-    // PRIMERO: Verificar si el padre existe en la base de datos
-    // Buscar en la lista cargada (más eficiente)
-    const parentInCurrentList = this.listAccountsAux.find(account => account.code === parentCode && account.status === true);
-    
-    if (parentInCurrentList) {
-      return true; // Padre encontrado en la lista actual y está activo
-    }
-    
-    // Si no está en la lista actual, hacer búsqueda en BD
-    try {
-      const idEnterprise = this.getIdEnterprise();
-      const existingParent = await firstValueFrom(
-        this._accountService.getAccountByCode(parentCode, idEnterprise)
-      );
-      
-      if (existingParent && existingParent.status === true) {
-        return true; // Padre encontrado en BD y está activo
-      }
-    } catch (error) {
-      // Padre no existe en BD, continuar con verificación en archivo
-    }
-    
-    // SEGUNDO: Si no existe en BD, verificar si está en el archivo Excel para crearlo
-    const parentExistsInFile = accountsInFile.some(account => account['Código'] === parentCode);
-    
-    if (parentExistsInFile) {
-      return true; // Padre será creado desde el archivo
-    }
-    
-    // Si no existe ni en BD ni en el archivo, es un error
-    errors.push({
-      fila: rowIndex,
-      columna: 'A',
-      campo: 'Código',
-      error: `La cuenta padre (${parentCode}) no existe en la base de datos ni en el archivo`
-    });
-    return false;
-  }
-
-  private processBooleanFields(rowData: ExcelRow): void {
-    // Procesar campo Cruce
-    const cruce = rowData['Cruce'].toUpperCase();
-    if (cruce === 'SI') {
-      rowData['Cruce'] = 'true';
-    } else if (cruce === 'NO') {
-      rowData['Cruce'] = 'false';
-        } else {
-      rowData['Cruce'] = 'null';
-    }
-
-    // Procesar campo Centro de Costo
-    const centroCosto = rowData['Centro de Costo'].toUpperCase();
-    if (centroCosto === 'SI') {
-      rowData['Centro de Costo'] = 'true';
-    } else if (centroCosto === 'NO') {
-      rowData['Centro de Costo'] = 'false';
-    } else {
-      rowData['Centro de Costo'] = 'null';
-    }
-  }
-
-  private async validateAgainstDatabase(accountsInFile: ExcelRow[], errors: ImportError[]): Promise<void> {
-    const idEnterprise = this.getIdEnterprise();
-    const accountsToRemove: number[] = [];
-    
-    for (let i = 0; i < accountsInFile.length; i++) {
-      const account = accountsInFile[i];
-      const rowIndex = account['_rowIndex'] || (i + 2);
-      
-      try {
-        // Verificar si ya existe una cuenta con el mismo código
-        const existingAccountByCode = await firstValueFrom(
-          this._accountService.getAccountByCode(account['Código'], idEnterprise)
-        );
-        
-        if (existingAccountByCode) {
-          if (existingAccountByCode.status === true) {
-            // Cuenta activa existente
-            if (existingAccountByCode.description.trim().toLowerCase() === account['Nombre'].trim().toLowerCase()) {
-              // Si es exactamente igual, omitir (no importar duplicados)
-              accountsToRemove.push(i);
-              continue;
-            } else {
-              // Código existe con diferente nombre - ERROR
-              errors.push({
-                fila: rowIndex,
-                columna: 'A',
-                campo: 'Código',
-                error: `El código ${account['Código']} ya existe con un nombre diferente: "${existingAccountByCode.description}"`
-              });
-              continue;
-            }
-          } else {
-            // Cuenta inactiva - se puede reactivar importando
-            // No hacer nada, permitir la importación
-          }
-        }
-
-        // Verificar si ya existe una cuenta con la misma descripción pero diferente código
-        try {
-          // Buscar por descripción (simulamos la búsqueda)
-          const allAccounts = await firstValueFrom(this._accountService.getListAccounts(idEnterprise));
-          const existingAccountByDescription = allAccounts.find(acc => 
-            acc.description.trim().toLowerCase() === account['Nombre'].trim().toLowerCase() && 
-            acc.status === true &&
-            acc.code !== account['Código']
-          );
-
-          if (existingAccountByDescription) {
-            errors.push({
-              fila: rowIndex,
-              columna: 'B',
-              campo: 'Nombre',
-              error: `El nombre "${account['Nombre']}" ya existe con un código diferente: ${existingAccountByDescription.code}`
-            });
-            continue;
-          }
-        } catch (descriptionError) {
-          // Error al buscar por descripción, continuar
-        }
-
-        // Validar naturaleza (debe ser "Débito" o "Crédito" con tilde)
-        const validNatures = ['Débito', 'Crédito'];
-        if (!validNatures.includes(account['Naturaleza'])) {
-          // Intentar corregir automáticamente
-          const correctedNature = this.correctNatureValue(account['Naturaleza']);
-          if (correctedNature) {
-            account['Naturaleza'] = correctedNature;
-        } else {
-            errors.push({
-              fila: rowIndex,
-              columna: 'C',
-              campo: 'Naturaleza',
-              error: `La naturaleza debe ser "Débito" o "Crédito". Valor actual: "${account['Naturaleza']}"`
-            });
-            continue;
-          }
-        }
-
-      } catch (error) {
-        // Si hay error 404, la cuenta no existe - está bien para importar
-        if (error && (error as any).status === 404) {
-          // Cuenta no existe, se puede importar
-          continue;
-        }
-        
-        // Para otros errores, reportar
-        console.error('Error validando cuenta:', error);
-        errors.push({
-          fila: rowIndex,
-          columna: 'A',
-          campo: 'Código',
-          error: 'Error al validar la cuenta en el sistema'
-        });
-      }
-    }
-
-    // Remover cuentas duplicadas (en orden inverso para no afectar índices)
-    for (let i = accountsToRemove.length - 1; i >= 0; i--) {
-      accountsInFile.splice(accountsToRemove[i], 1);
-    }
-  }
-
-  /**
-   * Corrige valores de naturaleza sin tildes
-   */
-  private correctNatureValue(nature: string): string | null {
-    const normalized = nature.toLowerCase().trim();
-    switch (normalized) {
-      case 'debito':
-        return 'Débito';
-      case 'credito':
-        return 'Crédito';
-      default:
-        return null;
-    }
-  }
-
-  /**
-   * Crea una jerarquía simple para importación sin crear padres vacíos
-   */
-  private createSimpleHierarchyForImport(accounts: Account[]): Account[] {
-    // Ordenar cuentas por código para procesar padres antes que hijos
-    const sortedAccounts = [...accounts].sort((a, b) => a.code.localeCompare(b.code));
-    
-    // Crear mapa de cuentas por código
-    const accountMap = new Map<string, Account>();
-    const rootAccounts: Account[] = [];
-    
-    for (const account of sortedAccounts) {
-      const accountWithHierarchy: Account = {
-        ...account,
-        children: [],
-        parent: null,
-        showSubAccounts: false
-      };
-      
-      accountMap.set(account.code, accountWithHierarchy);
-      
-      // Determinar código del padre
-      const parentCode = this.getParentCodeForImport(account.code);
-      
-      if (parentCode && accountMap.has(parentCode)) {
-        // Padre existe en las cuentas a importar
-        const parent = accountMap.get(parentCode)!;
-        parent.children = parent.children || [];
-        parent.children.push(accountWithHierarchy);
-        accountWithHierarchy.parent = parentCode;
-      } else {
-        // No hay padre en las cuentas a importar, es cuenta raíz
-        rootAccounts.push(accountWithHierarchy);
-      }
-    }
-    
-    return rootAccounts;
-  }
-
-  /**
-   * Obtiene el código del padre para importación
-   */
-  private getParentCodeForImport(code: string): string | null {
-    switch (code.length) {
-      case 1: return null; // Clase, no tiene padre
-      case 2: return code.substring(0, 1); // Grupo -> Clase
-      case 4: return code.substring(0, 2); // Cuenta -> Grupo
-      case 6: return code.substring(0, 4); // Subcuenta -> Cuenta
-      case 8: return code.substring(0, 6); // Auxiliar -> Subcuenta
-      default: return null;
-    }
-  }
-
-  private getColumnLetter(fieldName: string): string {
-    const columnMap: { [key: string]: string } = {
-      'Código': 'A',
-      'Nombre': 'B',
-      'Naturaleza': 'C',
-      'Estado Financiero': 'D',
-      'Clasificación': 'E',
-      'Cruce': 'F',
-      'Centro de Costo': 'G'
-    };
-    return columnMap[fieldName] || '';
-  }
-
-  private showImportErrors(errors: ImportError[]): void {
-    this.importErrors = errors;
-    this.totalErrors = errors.length;
-    this.showErrorModal = true;
-  }
-
-    private processValidAccounts(validAccounts: ExcelRow[]): void {
-    if (validAccounts.length === 0) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Información',
-        detail: 'No hay cuentas nuevas para importar'
-      });
-        return;
-      }
-
-      const idEnterprise = this.getIdEnterprise();
-
-    // Convertir a formato Account con estado activo
-    this.listExcel = validAccounts.map((item: ExcelRow) => ({
-        idEnterprise: idEnterprise,
-      code: item['Código'],
-        description: item['Nombre'],
-        nature: item['Naturaleza'],
-        financialStatus: item['Estado Financiero'],
-      classification: item['Clasificación'],
-      crossing: item['Cruce'] === 'true' ? true : item['Cruce'] === 'false' ? false : null,
-      costCenter: item['Centro de Costo'] === 'true' ? true : item['Centro de Costo'] === 'false' ? false : null,
-      status: true //Estado activo por defecto
-      }));
-
-    if (this.listExcel.length > 0) {
-        this.importedAccounts = true;
-      this.listAccountsAux = [...this.listAccounts]; // Hacer copia para restaurar después
-
-      // Mostrar solo las cuentas a importar sin crear padres vacíos
-      this.listAccounts = this.createSimpleHierarchyForImport(this.listExcel);
-      this.listAccounts = this.sortAccountsRecursively(this.listAccounts);
-
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Éxito',
-        detail: `Se prepararon ${this.listExcel.length} cuenta(s) para importar`
-      });
-    }
-  }
-
-
-
-  closeErrorModal(): void {
-    this.showErrorModal = false;
-    this.importErrors = [];
-    this.totalErrors = 0;
-  }
-
-  exportErrors(): void {
-    // Crear datos para exportar errores
-    const errorData = this.importErrors.map(error => ({
-      'Fila': error.fila,
-      'Columna': error.columna,
-      'Campo': error.campo,
-      'Error': error.error
-    }));
-
-    // Crear hoja de trabajo
-    const ws = XLSX.utils.json_to_sheet(errorData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Errores');
-
-    // Descargar archivo
-    XLSX.writeFile(wb, 'errores_importacion.xlsx');
-  }
-
-  /**
-   * Guarda las cuentas importadas en la base de datos
-   */
-  saveImportAccounts() {
-    this.importedAccounts = false;
-    
-    // Filtrar solo las cuentas realmente nuevas (sin ID) para evitar conflictos
-    const newAccountsOnly = this.listExcel.filter(account => !account.id);
-    
-    if (newAccountsOnly.length === 0) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Información',
-        detail: 'No hay cuentas nuevas para guardar.'
-      });
-      return;
-    }
-    
-    // Crear jerarquía simple solo con cuentas nuevas para guardar
-    const accountsToSave = this.createSimpleListForSave(newAccountsOnly);
-    
-    this.saveAccountsList(accountsToSave).subscribe((result) => {
-      if (result) {
-        this.messageService.add({
-          severity: 'success',
-          summary: '¡Éxito!',
-          detail: `Se guardaron ${newAccountsOnly.length} cuenta(s) correctamente.`
-        });
-        
-        // Recargar las cuentas desde la base de datos para mostrar todas las cuentas actualizadas
-        this.getAccounts().then(() => {
-          // Limpiar variables de importación
-          this.listExcel = [];
-          this.importedAccounts = false;
-        }).catch(error => {
-          console.error('Error al recargar las cuentas:', error);
-        });
-      } else {
-        this.messageService.add({
-          severity: 'error',
-          summary: '¡Error!',
-          detail: 'Ha ocurrido un error al guardar las cuentas.'
-        });
-      }
-    });
-  }
-
-  /**
-   * Crea una lista simple de cuentas para guardar sin jerarquía compleja
-   */
-  private createSimpleListForSave(accounts: Account[]): Account[] {
-    return accounts.map(account => ({
-      ...account,
-      children: [], // Sin hijos para evitar guardado recursivo
-      parent: null  // Se asignará automáticamente en saveAccountRecursively
-    }));
-  }
-
-  /**
-   * Guarda una lista de cuentas de forma secuencial, creando padres automáticamente
-   */
-  saveAccountsList(accounts: Account[]): Observable<boolean> {
-    return new Observable(observer => {
-      const processAllAccounts = async () => {
-        try {
-          // Crear un mapa para rastrear cuentas guardadas y sus IDs
-          const savedAccountsMap = new Map<string, number>();
-          
-          // Cargar todas las cuentas existentes en el sistema para tener referencia
-          await this.loadExistingAccountsToMap(savedAccountsMap);
-          
-          // Ordenar cuentas por longitud de código (padres primero)
-          const sortedAccounts = [...accounts].sort((a, b) => a.code.length - b.code.length);
-          
-          // Procesar cada cuenta secuencialmente
-          for (const account of sortedAccounts) {
-            await this.saveAccountWithHierarchy(account, savedAccountsMap);
-          }
-          
-          observer.next(true);
-          observer.complete();
-        } catch (error) {
-          console.error('Error al guardar cuentas:', error);
-          observer.error(false);
-        }
-      };
-
-      processAllAccounts();
-    });
-  }
-
-  /**
-   * Carga las cuentas existentes en el mapa para referencia
-   */
-  private async loadExistingAccountsToMap(savedAccountsMap: Map<string, number>): Promise<void> {
-    try {
-      // Cargar todas las cuentas existentes activas
-      const existingAccounts = await firstValueFrom(this._accountService.getListAccounts(this.getIdEnterprise()));
-      existingAccounts.forEach(account => {
-        if (account.status && account.id) {
-          savedAccountsMap.set(account.code, account.id);
-        }
-      });
-      console.log(`Cargadas ${savedAccountsMap.size} cuentas existentes para referencia`);
-    } catch (error) {
-      console.warn('Error cargando cuentas existentes:', error);
-    }
-  }
-
-  /**
-   * Guarda una cuenta asegurando que su jerarquía de padres exista
-   */
-  private async saveAccountWithHierarchy(account: Account, savedAccountsMap: Map<string, number>): Promise<Account> {
-    try {
-      let parentId: number | null = null;
-      
-      // Si la cuenta tiene más de 1 dígito, necesita un padre
-      if (account.code.length > 1) {
-        const parentCode = this.getParentCodeForImport(account.code);
-        if (parentCode) {
-          // Verificar si el padre ya existe
-          if (savedAccountsMap.has(parentCode)) {
-            parentId = savedAccountsMap.get(parentCode)!;
-            console.log(`Padre ${parentCode} encontrado con ID: ${parentId}`);
-          } else {
-            // El padre no existe, necesitamos crearlo automáticamente
-            console.log(`Creando padre automático: ${parentCode}`);
-            const parentAccount = await this.createAutomaticParent(parentCode, savedAccountsMap);
-            parentId = parentAccount.id!;
-          }
-        }
-      }
-
-      // Asignar el parent ID y guardar la cuenta
-      account.parent = parentId;
-      console.log(`Guardando cuenta ${account.code} con parent_id: ${parentId}`);
-      
-      const savedAccount = await firstValueFrom(this._accountService.createAccount(account));
-      
-      // Registrar la cuenta guardada
-      if (savedAccount.id) {
-        savedAccountsMap.set(account.code, savedAccount.id);
-        console.log(`Cuenta ${account.code} guardada con ID: ${savedAccount.id}`);
-      }
-
-      return savedAccount;
-    } catch (error) {
-      console.error(`Error guardando cuenta ${account.code}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Crea un padre automático para mantener la jerarquía
-   */
-  private async createAutomaticParent(parentCode: string, savedAccountsMap: Map<string, number>): Promise<Account> {
-    try {
-      // Crear cuenta padre automática con valores por defecto
-      const parentAccount: Account = {
-        code: parentCode,
-        description: `Cuenta ${parentCode} (Creada automáticamente)`,
-        nature: 'Débito', // Valor por defecto
-        financialStatus: 'Balance General', // Valor por defecto
-        classification: 'Activo', // Valor por defecto
-        crossing: null,
-        costCenter: null,
-        status: true,
-        parent: null, // Se asignará recursivamente si es necesario
-        children: []
-      };
-
-      // Si el padre también necesita un padre, crearlo recursivamente
-      if (parentCode.length > 1) {
-        const grandParentCode = this.getParentCodeForImport(parentCode);
-        if (grandParentCode && !savedAccountsMap.has(grandParentCode)) {
-          const grandParent = await this.createAutomaticParent(grandParentCode, savedAccountsMap);
-          parentAccount.parent = grandParent.id!;
-        } else if (grandParentCode && savedAccountsMap.has(grandParentCode)) {
-          parentAccount.parent = savedAccountsMap.get(grandParentCode)!;
-        }
-      }
-
-      console.log(`Creando cuenta padre automática: ${parentCode} con parent_id: ${parentAccount.parent}`);
-      const savedParent = await firstValueFrom(this._accountService.createAccount(parentAccount));
-      
-      // Registrar el padre creado
-      if (savedParent.id) {
-        savedAccountsMap.set(parentCode, savedParent.id);
-        console.log(`Padre automático ${parentCode} creado con ID: ${savedParent.id}`);
-      }
-
-      return savedParent;
-    } catch (error) {
-      console.error(`Error creando padre automático ${parentCode}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Cancela la importación y restaura la lista original
-   */
-  cancelImportAccounts() {
-    this.importedAccounts = false;
-    this.listAccounts = [...this.listAccountsAux]; // Restaurar lista original
-    this.listExcel = [];
-    this.listAccounts = this.sortAccountsRecursively(this.listAccounts);
-  }
-
-  /**
-  * Guarda la jerarquía de cuentas de forma recursiva.
-  * Para cada cuenta, llama a la función de guardado de forma recursiva y espera a que todas las operaciones
-  * de guardado se completen. Al finalizar, devuelve un observable que emite `true`.
-  *
-  * @param accounts - Lista de cuentas que se guardarán recursivamente.
-  * @returns Un observable que emite `true` cuando todas las cuentas hayan sido guardadas correctamente.
-  */
-  saveAccountHierarchy(accounts: Account[]): Observable<boolean> {
-    const saveObservables = accounts.map(account => this.saveAccountRecursively(account));
-
-    // Retornar el observable de forkJoin
-    return forkJoin(saveObservables).pipe(
-      // Aquí, cuando todas las operaciones terminen, devolvemos `true`
-      map(() => true)
-    );
-  }
-
-  /**
-  * Guarda una cuenta de forma recursiva, asignando un ID de padre y luego guardando la cuenta.
-  * Si la cuenta tiene hijos, se guarda cada uno de ellos recursivamente, esperando a que todos los hijos
-  * se guarden antes de devolver la cuenta guardada.
-  *
-  * @param account - La cuenta que se va a guardar.
-  * @param parentId - El ID del padre de la cuenta (por defecto es 0 para la raíz).
-  * @returns Un observable que emite la cuenta guardada.
-  */
-  saveAccountRecursively(account: Account, parentId: number | null = null): Observable<Account> {
-    return new Observable(observer => {
-      // Función async dentro del Observable
-      const processAccount = async () => {
-        try {
-          // Buscar el ID del padre si no se ha proporcionado y la cuenta tiene un código con más de 1 dígito
-          if (!parentId && account.code.length > 1) {
-            const parentCode = this.getParentCodeForImport(account.code);
-            if (parentCode) {
-              // Buscar el padre en la lista actual primero (más eficiente)
-              const parentInCurrentList = this.listAccountsAux.find(acc => 
-                acc.code === parentCode && acc.status === true
-              );
-              
-              if (parentInCurrentList && parentInCurrentList.id) {
-                parentId = parentInCurrentList.id;
-              } else {
-                // Si no está en la lista actual, buscar en BD
-                try {
-                  const parentAccount = await firstValueFrom(
-                    this._accountService.getAccountByCode(parentCode, this.getIdEnterprise())
-                  );
-                  if (parentAccount && parentAccount.id && parentAccount.status === true) {
-                    parentId = parentAccount.id;
-                  }
-                } catch (error) {
-                  console.warn(`Padre ${parentCode} no encontrado para cuenta ${account.code}:`, error);
-                  parentId = null;
-                }
-              }
-            }
-          }
-
-          // Asignar el parent ID
-          account.parent = parentId;
-
-          console.log(`Guardando cuenta ${account.code} con parent_id: ${parentId}`);
-
-          // Crear la cuenta
-          const savedAccount = await firstValueFrom(this._accountService.createAccount(account));
-          const accountId = savedAccount.id;
-
-          // Procesar hijos si existen
-          if (account.children && account.children.length > 0) {
-            const childPromises = account.children.map(child =>
-              firstValueFrom(this.saveAccountRecursively(child, accountId))
-            );
-            await Promise.all(childPromises);
-          }
-
-          observer.next(savedAccount);
-          observer.complete();
-        } catch (error) {
-          console.error(`Error guardando cuenta ${account.code}:`, error);
-          observer.error(error);
-        }
-      };
-
-      processAccount();
-    });
-  }
-
-  /**
-   * Crea una jerarquía de cuentas con relaciones padre-hijo a partir de un arreglo de cuentas.
-   * Asigna a cada cuenta su código de padre correspondiente dependiendo del nivel de la cuenta.
-   * La función también organiza las cuentas de nivel superior (Clase) y sus hijos en la jerarquía.
-   *
-   * @param accounts - El arreglo de cuentas que se utilizará para crear la jerarquía.
-   * @returns Un arreglo de cuentas de nivel superior (Clase) con sus respectivas relaciones padre-hijo.
-   */
-  createHierarchyWithParent(accounts: Account[]): Account[] {
-    const hierarchy: Record<string, Account> = {};
-
-    // Función para obtener el código del padre dependiendo del nivel
-    const getParentCode = (code: string): string => {
-      if (code.length > 6) return code.slice(0, 6);  // Subcuenta -> Cuenta
-      if (code.length > 4) return code.slice(0, 4);  // Cuenta -> Grupo
-      if (code.length > 2) return code.slice(0, 2);  // Grupo -> Clase
-      if (code.length > 1) return code.slice(0, 1);  // Clase no tiene más padres
-      return "";  // No hay padre para la Clase
-    };
-
-    // Agrupar cuentas por código
-    for (const account of accounts) {
-      const code = account.code;
-
-      if (!hierarchy[code]) {
-        hierarchy[code] = {
-          ...account,
-          children: [],
-          idEnterprise: this.getIdEnterprise(),  // Asignar idEnterprise a la cuenta actual
-          parent: null  // Inicialmente, el parent es null
-        };
-      } else {
-        hierarchy[code].description = account.description;
-      }
-
-      // Crear la jerarquía de padres hasta el nivel Clase
-      let currentCode = code;
-      let parentCode = getParentCode(currentCode);
-
-      while (parentCode) {
-        if (!hierarchy[parentCode]) {
-          hierarchy[parentCode] = {
-            code: parentCode,
-            description: '',
-            nature: '',
-            financialStatus: '',
-            classification: '',
-            children: [],
-            idEnterprise: this.getIdEnterprise(),  // Asignar idEnterprise al padre
-            parent: getParentCode(parentCode) || null  // Obtener el padre del padre o null si no hay
-          };
-        }
-        if (!hierarchy[currentCode].parent) {
-          hierarchy[currentCode].parent = parentCode;  // Asignar parent_id a la cuenta actual si aún no se ha asignado
-        }
-        if (!hierarchy[parentCode].children?.includes(hierarchy[currentCode])) {
-          hierarchy[parentCode].children?.push(hierarchy[currentCode]);  // Agregar solo si no está ya en la lista
-        }
-
-        // Pasar al siguiente nivel (más arriba en la jerarquía)
-        currentCode = parentCode;
-        parentCode = getParentCode(currentCode);
-      }
-    }
-
-    // Obtener cuentas de nivel superior (clases)
-    const topLevelAccounts: Account[] = [];
-    for (const account of Object.values(hierarchy)) {
-      if (account.code.length === 1) {  // Las cuentas de nivel más alto tienen un solo dígito (Clase)
-        topLevelAccounts.push(account);
-      }
-    }
-
-    return topLevelAccounts;
   }
 
   /**
@@ -2128,49 +913,33 @@ export class AccountListComponent {
 
   /**
    * Guarda una cuenta llamando al servicio.
-   * No valida duplicados porque es una cuenta nueva que se está creando.
-   * El backend se encargará de manejar cualquier error de duplicados.
-   * Si la cuenta es una subcuenta y la cuenta seleccionada tiene más de dos cuentas auxiliares, muestra un error.
    * @param account La cuenta que contiene la información a guardar.
    */
   async saveNewAccountType(account: Account) {
     try {
-      // Validación específica para subcuentas con límite de auxiliares
-      if (this.name === 'subAccountName' && this.accountSelected && this.accountSelected.children && this.accountSelected.children.length >= 2) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Solo se permiten dos cuentas auxiliares para esta subcuenta!'
-        });
-        this.selectAccount(this.accountSelected);
-        this.noShowFormAddNewClass();
-        this.noAddNewChild();
-      } else {
-        // Crear la cuenta directamente - el backend manejará duplicados si los hay
-        this._accountService.createAccount(account).subscribe(
-          (response) => {
-            this.getAccounts()
-              .then(() => {
-                this.expandAccounts(response);
-                this.selectAccount(response);
-                this.noShowFormAddNewClass();
-                this.noAddNewChild();
-                this.messageService.add({
-                  severity: 'success',
-                  summary: 'Registro exitoso',
-                  detail: 'La cuenta se ha creado correctamente'
-                });
+      this._accountService.createAccount(account).subscribe(
+        (response) => {
+          this.getAccounts()
+            .then(() => {
+              this.expandAccounts(response);
+              this.selectAccount(response);
+              this.noShowFormAddNewClass();
+              this.noAddNewChild();
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Registro exitoso',
+                detail: 'La cuenta se ha creado correctamente'
               });
-          },
-          (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Ha ocurrido un error al crear la cuenta!.'
             });
-          }
-        );
-      }
+        },
+        (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Ha ocurrido un error al crear la cuenta!.'
+          });
+        }
+      );
     } catch (error) {
       console.error('Error al guardar el tipo de cuenta:', error);
     }
@@ -2560,67 +1329,44 @@ export class AccountListComponent {
   }
 
   /**
-   * Cambia el estado de una cuenta y actualiza recursivamente el estado de sus hijos.
-   * @param account La cuenta cuyo estado se va a cambiar.
+   * Obtiene la lista de códigos de cuentas que están expandidas actualmente.
+   * @returns Array de códigos de cuentas expandidas.
    */
-  changeAccountState(account: Account) {
-    // Prevenir múltiples cambios de estado simultáneos
-    if (this.isChangingState) {
-      return;
-    }
-    this.isChangingState = true;
+  private getExpandedAccounts(): string[] {
+    const expandedCodes: string[] = [];
 
-    if (!account?.id || account.status == null) {
-      // Revertir el estado en la UI si la validación falla
-      if (account.status != null) {
-        account.status = !account.status;
-      }
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'Faltan datos para cambiar el estado de la cuenta.'
-      });
-      this.isChangingState = false;
-      return;
-    }
-
-    const enterpriseId = this.getIdEnterprise();
-    const newStatus = account.status;
-
-    this._accountService.changeState(account.id, enterpriseId, newStatus).subscribe({
-      next: () => {
-        if (newStatus) {
-          // Si se está activando, activar toda la jerarquía de padres
-          this.activateParentHierarchy(account);
-        } else {
-          // Si se está inactivando, inactivar todos los hijos recursivamente
-          this.updateChildrenStatusRecursively(account, newStatus);
+    const collectExpanded = (accounts: Account[]) => {
+      for (const account of accounts) {
+        if (account.showSubAccounts) {
+          expandedCodes.push(account.code);
         }
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Estado de la cuenta "${account.description}" cambiado correctamente`
-        });
-        this.isChangingState = false;
-      },
-      error: () => {
-        // Revertir el estado en la UI del padre y todos los hijos si la llamada al servicio falla
-        account.status = !newStatus;
-        if (newStatus) {
-          // Si falló la activación, revertir la activación de padres
-          this.deactivateParentHierarchy(account);
-        } else {
-          // Si falló la inactivación, revertir la inactivación de hijos
-          this.updateChildrenStatusRecursively(account, !newStatus);
+        if (account.children && account.children.length > 0) {
+          collectExpanded(account.children);
         }
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cambiar el estado de la cuenta.'
-        });
-        this.isChangingState = false;
       }
-    });
+    };
+
+    collectExpanded(this.listAccounts);
+    return expandedCodes;
+  }
+
+  /**
+   * Restaura el estado de expansión de las cuentas basado en la lista de códigos proporcionada.
+   * @param expandedCodes Array de códigos de cuentas que deben estar expandidas.
+   */
+  private restoreExpandedAccounts(expandedCodes: string[]): void {
+    const expandAccounts = (accounts: Account[]) => {
+      for (const account of accounts) {
+        if (expandedCodes.includes(account.code)) {
+          account.showSubAccounts = true;
+        }
+        if (account.children && account.children.length > 0) {
+          expandAccounts(account.children);
+        }
+      }
+    };
+
+    expandAccounts(this.listAccounts);
   }
 
   /**
@@ -2671,22 +1417,6 @@ export class AccountListComponent {
   }
 
   /**
-   * Obtiene el código del padre para una cuenta dada.
-   * @param code El código de la cuenta.
-   * @returns El código del padre o null si no tiene padre.
-   */
-  private getParentCode(code: string): string | null {
-    switch (code.length) {
-      case 1: return null; // Clase, no tiene padre
-      case 2: return code.substring(0, 1); // Grupo -> Clase
-      case 4: return code.substring(0, 2); // Cuenta -> Grupo
-      case 6: return code.substring(0, 4); // Subcuenta -> Cuenta
-      case 8: return code.substring(0, 6); // Auxiliar -> Subcuenta
-      default: return null;
-    }
-  }
-
-  /**
    * Desactiva recursivamente la jerarquía de padres que fueron activados durante una operación fallida.
    * @param child La cuenta hija desde donde se inicia la desactivación ascendente.
    */
@@ -2722,6 +1452,22 @@ export class AccountListComponent {
   }
 
   /**
+   * Obtiene el código del padre para una cuenta dada.
+   * @param code El código de la cuenta.
+   * @returns El código del padre o null si no tiene padre.
+   */
+  private getParentCode(code: string): string | null {
+    switch (code.length) {
+      case 1: return null; // Clase, no tiene padre
+      case 2: return code.substring(0, 1); // Grupo -> Clase
+      case 4: return code.substring(0, 2); // Cuenta -> Grupo
+      case 6: return code.substring(0, 4); // Subcuenta -> Cuenta
+      case 8: return code.substring(0, 6); // Auxiliar -> Subcuenta
+      default: return null;
+    }
+  }
+
+  /**
    * Verifica si una cuenta tiene hijos activos.
    * @param account La cuenta a verificar.
    * @returns true si tiene al menos un hijo activo, false en caso contrario.
@@ -2737,5 +1483,78 @@ export class AccountListComponent {
     return false;
   }
 
+  /**
+   * Cambia el estado de una cuenta y actualiza recursivamente el estado de sus hijos.
+   * @param account La cuenta cuyo estado se va a cambiar.
+   */
+  changeAccountState(account: Account) {
+    if (this.isChangingState) {
+      return;
+    }
+    this.isChangingState = true;
+
+    if (!account?.id || account.status == null) {
+      if (account.status != null) {
+        account.status = !account.status;
+      }
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Faltan datos para cambiar el estado de la cuenta.'
+      });
+      this.isChangingState = false;
+      return;
+    }
+
+    const enterpriseId = this.getIdEnterprise();
+    const newStatus = account.status;
+
+    this._accountService.changeState(account.id, enterpriseId, newStatus).subscribe({
+      next: () => {
+        if (newStatus) {
+          this.activateParentHierarchy(account);
+        } else {
+          this.updateChildrenStatusRecursively(account, newStatus);
+        }
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado de la cuenta "${account.description}" cambiado correctamente`
+        });
+        this.isChangingState = false;
+      },
+      error: () => {
+        account.status = !newStatus;
+        if (newStatus) {
+          this.deactivateParentHierarchy(account);
+        } else {
+          this.updateChildrenStatusRecursively(account, !newStatus);
+        }
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cambiar el estado de la cuenta.'
+        });
+        this.isChangingState = false;
+      }
+    });
+  }
+
+  /**
+   * Método preparado para futuras conexiones con el backend para exportar cuentas.
+   */
+  exportAccounts(): void {
+    // TODO: Implementar lógica de exportación cuando se conecte con el backend
+    console.log('Método exportAccounts preparado para futuras conexiones');
+  }
+
+  /**
+   * Método preparado para futuras conexiones con el backend para importar cuentas desde archivo.
+   * @param event Evento del selector de archivos.
+   */
+  onFileSelect(event: any): void {
+    // TODO: Implementar lógica de importación cuando se conecte con el backend
+    console.log('Método onFileSelect preparado para futuras conexiones', event);
+  }
 
 }
