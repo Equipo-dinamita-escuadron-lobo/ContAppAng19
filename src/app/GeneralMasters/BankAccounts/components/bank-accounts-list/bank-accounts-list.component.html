@@ -23,123 +23,9 @@
                         severity="primary"
                         (click)="navigateToBanks()">
                     </p-button>
-                    <p-button label="Crear" icon="pi pi-plus" (click)="showCreateForm()"></p-button>
+                    <p-button label="Crear" icon="pi pi-plus" (click)="navigateToCreate()"></p-button>
                 </div>
             </div>
-        </div>
-
-        <!-- Create/Edit Form Section -->
-        <div *ngIf="showForm" class="account-section mb-16">
-            <div class="floating-label">
-                <span class="section-title">{{ isEditing ? 'Editar Cuenta Bancaria' : 'Crear Nueva Cuenta Bancaria' }}</span>
-            </div>
-
-            <form [formGroup]="bankAccountForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <!-- Número de Cuenta -->
-                <div class="field-wrapper">
-                    <label class="label-title">Número de Cuenta *</label>
-                    <input 
-                        type="number" 
-                        formControlName="accountNumber"
-                        [readonly]="isEditing"
-                        class="input-base"
-                        placeholder="Ej: 1234567890"
-                        maxlength="20">
-                    <div *ngIf="bankAccountForm.get('accountNumber')?.invalid && bankAccountForm.get('accountNumber')?.touched" class="error-message">
-                        <span *ngIf="bankAccountForm.get('accountNumber')?.errors?.['required']">El número de cuenta es requerido</span>
-                        <span *ngIf="bankAccountForm.get('accountNumber')?.errors?.['pattern']">Solo se permiten números</span>
-                        <span *ngIf="bankAccountForm.get('accountNumber')?.errors?.['duplicateAccount']">Este número de cuenta ya existe</span>
-                    </div>
-                </div>
-
-                <!-- Banco -->
-                <div class="field-wrapper">
-                    <label class="label-title">Banco *</label>
-                    <p-dropdown 
-                        formControlName="bankId"
-                        [options]="banks"
-                        optionLabel="nombre"
-                        optionValue="id"
-                        placeholder="Seleccionar banco"
-                        [filter]="true"
-                        filterBy="nombre,codigo"
-                        class="dropdown-custom w-full">
-                        <ng-template pTemplate="selectedItem" let-selectedBank>
-                            <div *ngIf="selectedBank" class="flex items-center gap-2">
-                                <span class="font-medium">{{ selectedBank.codigo }}</span>
-                                <span>-</span>
-                                <span>{{ selectedBank.nombre }}</span>
-                            </div>
-                        </ng-template>
-                        <ng-template pTemplate="item" let-bank>
-                            <div class="flex items-center gap-2">
-                                <span class="font-medium">{{ bank.codigo }}</span>
-                                <span>-</span>
-                                <span>{{ bank.nombre }}</span>
-                            </div>
-                        </ng-template>
-                    </p-dropdown>
-                    <div *ngIf="bankAccountForm.get('bankId')?.invalid && bankAccountForm.get('bankId')?.touched" class="error-message">
-                        <span *ngIf="bankAccountForm.get('bankId')?.errors?.['required']">El banco es requerido</span>
-                    </div>
-                </div>
-
-                <!-- Tipo de Cuenta -->
-                <div class="field-wrapper">
-                    <label class="label-title">Tipo de Cuenta *</label>
-                    <p-dropdown 
-                        formControlName="accountType"
-                        [options]="accountTypes"
-                        optionLabel="description"
-                        optionValue="code"
-                        placeholder="Seleccionar tipo"
-                        class="dropdown-custom w-full">
-                    </p-dropdown>
-                    <div *ngIf="bankAccountForm.get('accountType')?.invalid && bankAccountForm.get('accountType')?.touched" class="error-message">
-                        <span *ngIf="bankAccountForm.get('accountType')?.errors?.['required']">El tipo de cuenta es requerido</span>
-                    </div>
-                </div>
-
-                <!-- Cuenta Contable -->
-                <div class="field-wrapper">
-                    <label class="label-title">Cuenta Contable *</label>
-                    <input 
-                        type="text" 
-                        formControlName="cuentaContable"
-                        class="input-base"
-                        placeholder="Ej: 1110050001"
-                        maxlength="50">
-                    <div *ngIf="bankAccountForm.get('cuentaContable')?.invalid && bankAccountForm.get('cuentaContable')?.touched" class="error-message">
-                        <span *ngIf="bankAccountForm.get('cuentaContable')?.errors?.['required']">La cuenta contable es requerida</span>
-                        <span *ngIf="bankAccountForm.get('cuentaContable')?.errors?.['pattern']">Solo se permiten números y letras</span>
-                    </div>
-                </div>
-
-                <!-- Status (solo para edición) -->
-                <div *ngIf="isEditing" class="field-wrapper">
-                    <label class="label-title">Estado</label>
-                    <div class="flex items-center gap-3 mt-2">
-                        <p-toggleSwitch formControlName="status"></p-toggleSwitch>
-                        <span class="text-sm text-gray-600">
-                            {{ bankAccountForm.get('status')?.value ? 'Activo' : 'Inactivo' }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="col-span-1 sm:col-span-3 flex justify-end gap-3 mt-6">
-                    <p-button 
-                        label="Cancelar" 
-                        severity="secondary" 
-                        (click)="cancelForm()">
-                    </p-button>
-                    <p-button 
-                        label="{{ isEditing ? 'Actualizar' : 'Guardar' }}" 
-                        type="submit"
-                        [disabled]="bankAccountForm.invalid || isSubmitting">
-                    </p-button>
-                </div>
-            </form>
         </div>
 
         <!-- Search Field -->
@@ -216,13 +102,6 @@
                     </td>
                     <td class="py-3 text-center">
                         <div class="flex justify-center gap-2 items-center">
-                            <p-button 
-                                icon="pi pi-pencil" 
-                                pTooltip="Editar" 
-                                tooltipPosition="top"
-                                (click)="editBankAccount(account)" 
-                                styleClass="p-button-rounded p-button-text text-complementary-green">
-                            </p-button>
                             <p-button 
                                 icon="pi pi-trash" 
                                 pTooltip="Eliminar" 

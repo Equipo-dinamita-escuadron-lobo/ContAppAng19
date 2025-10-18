@@ -655,6 +655,14 @@ export const routes: Routes = [
                   ).then((m) => m.BankAccountsListComponent),
               },
               {
+                path: 'create',
+                data: { breadcrumb: 'Crear Cuenta Bancaria' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-accounts-creation/bank-accounts-creation.component'
+                  ).then((m) => m.BankAccountsCreationComponent),
+              },
+              {
                 path: 'banks',
                 data: { breadcrumb: 'Gestión de Bancos' },
                 loadComponent: () =>
