@@ -43,6 +43,7 @@ export class ReportPreviewComponent {
   @Input() styles: ReportStyles | null = null;
   @Input() format: 'pdf' | 'excel' = 'pdf';
 
+<<<<<<< HEAD
   get flatColumns(): ColumnDefinition[] {
     const flat: ColumnDefinition[] = [];
     if (this.headerConfig && this.headerConfig.length > 0) {
@@ -58,6 +59,28 @@ export class ReportPreviewComponent {
       for (let node of this.headerConfig[0]) {
         getLeafNodes(node);
       }
+=======
+  // --- LÓGICA INTERNA ---
+
+  // Devuelve las columnas finales (las que no tienen hijos) para renderizar las celdas de datos
+  get flatColumns(): ColumnDefinition[] {
+    const flat: ColumnDefinition[] = [];
+    // ✅ CORREGIDO: Procesamos solo la primera fila para obtener la jerarquía completa
+    // a través de la propiedad 'children' y evitar duplicados.
+    if (this.headerConfig && this.headerConfig.length > 0) {
+      const getLeafNodes = (node: ColumnDefinition) => {
+        if (node.children && node.children.length > 0) {
+          node.children.forEach(getLeafNodes);
+        } else {
+          // Solo añadimos columnas que tienen un 'field' para evitar añadir
+          // cabeceras de agrupación que no tienen datos asociados.
+          if (node.field) {
+            flat.push(node);
+          }
+        }
+      };
+      this.headerConfig[0].forEach(getLeafNodes);
+>>>>>>> dd826c7 (Feat: Export view ready)
     }
     return flat;
   }
@@ -128,6 +151,7 @@ export class ReportPreviewComponent {
   }
 
   getHeaderTextColor(hexColor: string): string {
+<<<<<<< HEAD
     if (hexColor.length === 0) return '#000000';
     else {
       const hex = hexColor.replace('#', '');
@@ -137,5 +161,14 @@ export class ReportPreviewComponent {
       const luminosity = (r * 299 + g * 587 + b * 114) / 1000;
       return luminosity < 128 ? '#FFFFFF' : '#000000';
     }
+=======
+    if (!hexColor) return '#000000';
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const luminosity = (r * 299 + g * 587 + b * 114) / 1000;
+    return luminosity < 128 ? '#FFFFFF' : '#000000';
+>>>>>>> dd826c7 (Feat: Export view ready)
   }
 }
