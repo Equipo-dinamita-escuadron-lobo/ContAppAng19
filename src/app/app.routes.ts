@@ -670,6 +670,14 @@ export const routes: Routes = [
                     './GeneralMasters/BankAccounts/components/bank-list/bank-list.component'
                   ).then((m) => m.BankListComponent),
               },
+              {
+                path: 'banks/create',
+                data: { breadcrumb: 'Crear Banco' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-creation/bank-creation.component'
+                  ).then((m) => m.BankCreationComponent),
+              },
             ],
           },
           {

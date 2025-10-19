@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { environment } from '../../../../../environments/environment';
 
@@ -80,6 +81,7 @@ export class BankListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private localStorageMethod = inject(LocalStorageMethods);
+  private router = inject(Router);
 
   private readonly API_BASE = environment.API_URL + 'accountCatalogue/banks';
   private enterpriseId: string = '';
@@ -216,6 +218,10 @@ export class BankListComponent implements OnInit {
           });
         }
       });
+  }
+
+  navigateToCreate(): void {
+    this.router.navigate(['/gen-masters/bank-accounts/banks/create']);
   }
 
   getCurrencyDisplay(currencyCode: string): string {

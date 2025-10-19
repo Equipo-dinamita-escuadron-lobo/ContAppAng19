@@ -77,7 +77,6 @@ export class BankAccountsListComponent implements OnInit {
   private localStorageMethod = inject(LocalStorageMethods);
 
   private readonly BANK_ACCOUNT_API = environment.API_URL + 'accountCatalogue/bank-accounts';
-  private readonly BANK_API = environment.API_URL + 'accountCatalogue/banks';
   
   private enterpriseId: string = '';
 
