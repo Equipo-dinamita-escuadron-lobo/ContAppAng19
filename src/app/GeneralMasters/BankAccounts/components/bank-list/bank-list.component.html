@@ -93,7 +93,7 @@
                             <p-toggleSwitch
                                 [ngModel]="bank.status"
                                 (onChange)="toggleBankStatus(bank, $event.checked)"
-                                pTooltip="Cambiar Estado"
+                                [pTooltip]="bank.status ? 'Activo' : 'Inactivo'"
                                 tooltipPosition="top"
                                 styleClass="p-toggleSwitch-sm"
                                 [style]="{'transform': 'scale(0.8)'}">

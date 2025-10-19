@@ -170,9 +170,9 @@ export class BankAccountsListComponent implements OnInit {
         next: (response) => {
           account.status = newStatus;
           this.messageService.add({
-            severity: 'info',
-            summary: 'Estado actualizado',
-            detail: `Cuenta bancaria ${newStatus ? 'activada' : 'desactivada'} correctamente`
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Estado de la cuenta '${account.accountNumber}' cambiado correctamente`
           });
         },
         error: (error: HttpErrorResponse) => {
@@ -191,7 +191,7 @@ export class BankAccountsListComponent implements OnInit {
   // Delete Confirmation
   confirmDelete(account: BankAccount): void {
     this.confirmationService.confirm({
-      message: `¿Está seguro de que desea eliminar la cuenta bancaria "${account.accountNumber}"?`,
+      message: `¿Desea eliminar la cuenta bancaria "${account.accountNumber}"?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',

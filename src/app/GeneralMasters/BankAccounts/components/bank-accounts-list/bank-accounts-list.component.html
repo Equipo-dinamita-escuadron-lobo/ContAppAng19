@@ -17,13 +17,13 @@
             <!-- Action Buttons -->
             <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
                 <div class="flex flex-wrap gap-3">
+                    <p-button label="Crear" icon="pi pi-plus" (click)="navigateToCreate()"></p-button>
                     <p-button 
                         label="Bancos" 
                         icon="pi pi-list"
                         severity="primary"
                         (click)="navigateToBanks()">
-                    </p-button>
-                    <p-button label="Crear" icon="pi pi-plus" (click)="navigateToCreate()"></p-button>
+                    </p-button>                    
                 </div>
             </div>
         </div>
@@ -110,7 +110,7 @@
                             <p-toggleSwitch
                                 [ngModel]="account.status"
                                 (onChange)="toggleAccountStatus(account, $event.checked)"
-                                pTooltip="Cambiar Estado"
+                                [pTooltip]="account.status ? 'Activo' : 'Inactivo'"
                                 tooltipPosition="top"
                                 styleClass="p-toggleSwitch-sm"
                                 [style]="{'transform': 'scale(0.8)'}">

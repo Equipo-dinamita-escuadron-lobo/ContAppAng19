@@ -163,9 +163,9 @@ export class BankListComponent implements OnInit {
         next: (response) => {
           bank.status = newStatus;
           this.messageService.add({
-            severity: 'info',
-            summary: 'Estado actualizado',
-            detail: `Banco ${newStatus ? 'activado' : 'desactivado'} correctamente`
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Estado del banco '${bank.nombre}' cambiado correctamente`
           });
         },
         error: (error: HttpErrorResponse) => {
@@ -183,7 +183,7 @@ export class BankListComponent implements OnInit {
 
   confirmDelete(bank: Bank): void {
     this.confirmationService.confirm({
-      message: `¿Está seguro de que desea eliminar el banco "${bank.nombre}"?`,
+      message: `¿Desea eliminar el banco "${bank.nombre}"?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',
