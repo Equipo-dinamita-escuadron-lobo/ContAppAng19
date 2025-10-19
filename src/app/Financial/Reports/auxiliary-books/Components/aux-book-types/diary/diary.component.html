@@ -27,6 +27,8 @@
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
       />
     </div>
   </div>

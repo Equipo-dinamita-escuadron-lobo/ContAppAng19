@@ -10,6 +10,8 @@ import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCat
 import { MessageService } from 'primeng/api';
 import { Select } from 'primeng/select';
 import { auxBookResponse } from '../../../Models/Responses/BookResponse';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { ExportAuxiliaryBookComponent } from '../../export-auxiliary-book/export-auxiliary-book.component';
 
 @Directive()
 export abstract class BaseAuxiliaryBookComponent implements OnInit {
@@ -63,15 +65,19 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   dataTable: any;
 
-  totalDebit: number = 0;
-  totalCredit: number = 0;
+  // ✅ CORREGIDO: Se inicializan en null para diferenciar entre "no calculado" y un total de "0".
+  totalDebit: number | null = null;
+  totalCredit: number | null = null;
+
+  refDialog: DynamicDialogRef | undefined;
 
   constructor(
     protected auxiliaryBookService: AuxiliaryBooksServiceService,
     protected enterpriseService: EnterpriseService,
     protected thirdService: ThirdService,
     protected accountService: ChartAccountService,
-    protected messageService: MessageService
+    protected messageService: MessageService,
+    protected dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -398,5 +404,71 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   private isDatePeriodValid(): boolean {
     return !(this.datePeriod[0].getTime() > this.datePeriod[1].getTime());
+  }
+
+  showExportDialog() {
+    // ✅ CORREGIDO: Se añaden los totales al objeto de datos del diálogo.
+    let data = {
+      reportTitle: this.auxiliaryBookInfo.name,
+      auxBookType: this.auxiliaryBookInfo.type,
+      criteria: this.criteria,
+      dataTable: this.dataTable,
+      headerConfig: (this as any).headerConfig || [], // Se usa 'as any' para acceder a la propiedad del hijo
+      // Pasamos un objeto con los totales calculados.
+      totals: {
+        totalDebit: this.totalDebit,
+        totalCredit: this.totalCredit,
+        // Aquí se podrían añadir otros totales si fueran necesarios en el futuro.
+      },
+    };
+
+    this.refDialog = this.dialogService.open(ExportAuxiliaryBookComponent, {
+      data: data,
+    });
+  }
+
+  formatMoneyAligned(value: number | null | undefined): string {
+    if (value == null || Number.isNaN(value)) {
+      return '';
+    }
+
+    const locale = 'es-CO';
+    const currency = 'COP';
+
+    const parts = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).formatToParts(Math.abs(value));
+
+    const integer = parts
+      .filter((p) => p.type === 'integer' || p.type === 'group')
+      .map((p) => p.value)
+      .join('');
+
+    const decimal = parts.find((p) => p.type === 'decimal')?.value ?? ',';
+    const fraction = parts.find((p) => p.type === 'fraction')?.value ?? '00';
+    const symbol =
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+        .formatToParts(Math.abs(value))
+        .find((p) => p.type === 'currency')?.value ?? '$';
+
+    const isNegative = value < 0;
+    const sign = isNegative ? '-' : '';
+
+    // Clase condicional si el valor es negativo
+    const colorClass = isNegative ? 'negative' : '';
+
+    return `
+    <span class="money font-mono ${colorClass}">
+      <span class="symbol">${symbol}</span>
+      <span class="integer">${sign}${integer}</span>
+      <span class="decimal">${decimal}${fraction}</span>
+    </span>
+  `;
   }
 }
