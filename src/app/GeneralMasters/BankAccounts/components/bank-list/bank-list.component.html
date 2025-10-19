@@ -15,8 +15,9 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+            <div class="flex justify-start sm:justify-end mt-4 sm:mt-0 gap-3">
                 <p-button label="Crear" icon="pi pi-plus" (click)="navigateToCreate()"></p-button>
+                <p-button icon="pi pi-arrow-left" severity="secondary" (click)="goBack()"></p-button>
             </div>
         </div>
 
@@ -83,6 +84,13 @@
                     </td>
                     <td class="py-3 text-center">
                         <div class="flex justify-center gap-2 items-center">
+                            <p-button 
+                                icon="pi pi-pencil" 
+                                pTooltip="Editar" 
+                                tooltipPosition="top"
+                                (click)="navigateToEdit(bank)" 
+                                styleClass="p-button-rounded p-button-text text-primary">
+                            </p-button>
                             <p-button 
                                 icon="pi pi-trash" 
                                 pTooltip="Eliminar" 

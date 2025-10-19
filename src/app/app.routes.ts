@@ -678,6 +678,14 @@ export const routes: Routes = [
                     './GeneralMasters/BankAccounts/components/bank-creation/bank-creation.component'
                   ).then((m) => m.BankCreationComponent),
               },
+              {
+                path: 'banks/edit/:id',
+                data: { breadcrumb: 'Editar Banco' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-edit/bank-edit.component'
+                  ).then((m) => m.BankEditComponent),
+              },
             ],
           },
           {
