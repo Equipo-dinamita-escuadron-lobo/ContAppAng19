@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { BankAccountsService, BankAccount } from '../../services/bank-accounts.service';
+import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -49,6 +50,7 @@ export class BankAccountsListComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private router = inject(Router);
   private localStorageMethod = inject(LocalStorageMethods);
+  private chartAccountService = inject(ChartAccountService);
   
   private enterpriseId: string = '';
 
@@ -56,6 +58,7 @@ export class BankAccountsListComponent implements OnInit {
 
   bankAccounts: BankAccount[] = [];
   filteredBankAccounts: BankAccount[] = [];
+  accountingAccountsMap: Map<string, string> = new Map();
 
   pageSize = 10;
   totalRecords = 0;
@@ -66,6 +69,7 @@ export class BankAccountsListComponent implements OnInit {
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
     if (this.enterpriseId) {
+      this.loadAccountingAccounts();
       this.loadBankAccounts();
     } else {
       this.messageService.add({
@@ -74,6 +78,19 @@ export class BankAccountsListComponent implements OnInit {
         detail: 'No se pudo obtener el ID de la empresa'
       });
     }
+  }
+
+  private loadAccountingAccounts(): void {
+    this.chartAccountService.getListAuxiliaryAccounts(this.enterpriseId).subscribe({
+      next: (accounts) => {
+        accounts.forEach(account => {
+          this.accountingAccountsMap.set(account.code, `${account.code} - ${account.description}`);
+        });
+      },
+      error: () => {
+        // Silenciar error, no es crítico
+      }
+    });
   }
 
   private loadBankAccounts(): void {
@@ -125,6 +142,10 @@ export class BankAccountsListComponent implements OnInit {
 
   navigateToCreate(): void {
     this.router.navigate(['/gen-masters/bank-accounts/create']);
+  }
+
+  navigateToEdit(account: BankAccount): void {
+    this.router.navigate(['/gen-masters/bank-accounts/edit', account.id]);
   }
 
   toggleAccountStatus(account: BankAccount, newStatus: boolean): void {
@@ -192,5 +213,9 @@ export class BankAccountsListComponent implements OnInit {
 
   getAccountTypeDisplay(accountType: string): string {
     return this.bankAccountsService.getAccountTypeDisplay(accountType);
+  }
+
+  getAccountingAccountDisplay(accountCode: string): string {
+    return this.accountingAccountsMap.get(accountCode) || accountCode;
   }
 }

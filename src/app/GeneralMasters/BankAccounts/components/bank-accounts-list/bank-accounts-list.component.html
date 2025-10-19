@@ -56,7 +56,7 @@
             [loading]="loading"
             [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
-            [globalFilterFields]="['accountNumber', 'bank.nombre', 'bank.codigo', 'accountType', 'cuentaContable']"
+            [globalFilterFields]="['accountNumber', 'bank.nombre', 'bank.codigo', 'accountType', 'accountingAccount']"
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}">
             
@@ -86,12 +86,11 @@
                     <td class="py-3">{{ account.accountNumber }}</td>
                     <td class="py-3">
                         <div class="flex flex-col">
-                            <span class="font-medium">{{ account.bank?.nombre }}</span>
-                            <span class="text-sm text-gray-500">{{ account.bank?.codigo }}</span>
+                            <span class="font-medium">{{ account.bank?.codigo }} - {{ account.bank?.nombre }}</span>
                         </div>
                     </td>
                     <td class="py-3">{{ getAccountTypeDisplay(account.accountType) }}</td>
-                    <td class="py-3">{{ account.cuentaContable }}</td>
+                    <td class="py-3">{{ getAccountingAccountDisplay(account.cuentaContable) }}</td>
                     <td class="py-3 text-center">
                         <p-tag 
                             [value]="account.status ? 'Activo' : 'Inactivo'" 
@@ -100,6 +99,13 @@
                     </td>
                     <td class="py-3 text-center">
                         <div class="flex justify-center gap-2 items-center">
+                            <p-button 
+                                icon="pi pi-pencil" 
+                                pTooltip="Editar" 
+                                tooltipPosition="top"
+                                (click)="navigateToEdit(account)" 
+                                styleClass="p-button-rounded p-button-text text-primary">
+                            </p-button>
                             <p-button 
                                 icon="pi pi-trash" 
                                 pTooltip="Eliminar" 

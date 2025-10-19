@@ -142,7 +142,7 @@ export class BankEditComponent implements OnInit {
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: 'Éxito',
+          summary: 'Actualización exitosa',
           detail: 'Banco actualizado correctamente.'
         });
         setTimeout(() => {
