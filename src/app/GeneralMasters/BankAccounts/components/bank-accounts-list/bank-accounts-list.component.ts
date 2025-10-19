@@ -76,29 +76,22 @@ export class BankAccountsListComponent implements OnInit {
   private router = inject(Router);
   private localStorageMethod = inject(LocalStorageMethods);
 
-  // API Base URLs
   private readonly BANK_ACCOUNT_API = environment.API_URL + 'accountCatalogue/bank-accounts';
   private readonly BANK_API = environment.API_URL + 'accountCatalogue/banks';
   
-  // Enterprise ID
   private enterpriseId: string = '';
 
-  // UI State
   loading = false;
 
-  // Data
   bankAccounts: BankAccount[] = [];
   filteredBankAccounts: BankAccount[] = [];
 
-  // Pagination
   pageSize = 10;
   totalRecords = 0;
   currentPage = 0;
 
-  // Search
   searchTerm = '';
 
-  // Account Types
   accountTypes: AccountType[] = [
     { code: 'AHORROS', description: 'Cuenta de Ahorros' },
     { code: 'CORRIENTE', description: 'Cuenta Corriente' }

@@ -1,8 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { environment } from '../../../../../environments/environment';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -15,6 +16,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
 
 // PrimeNG Services
 import { MessageService } from 'primeng/api';
@@ -57,56 +59,41 @@ interface BankUpdateRequest {
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
     FormsModule,
     ButtonModule,
     TableModule,
     InputTextModule,
-    DropdownModule,
     ToggleSwitchModule,
     ToastModule,
     ConfirmDialogModule,
     IconFieldModule,
     InputIconModule,
-    TooltipModule
+    TooltipModule,
+    TagModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './bank-list.component.html',
   styleUrl: './bank-list.component.css'
 })
 export class BankListComponent implements OnInit {
-  private fb = inject(FormBuilder);
   private http = inject(HttpClient);
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
+  private localStorageMethod = inject(LocalStorageMethods);
 
-  // API Base URL
-  private readonly API_BASE = '/api/accountCatalogue/banks';
-  
-  // Enterprise ID - En un caso real vendría del servicio de autenticación
-  private readonly enterpriseId = 'EMP001';
+  private readonly API_BASE = environment.API_URL + 'accountCatalogue/banks';
+  private enterpriseId: string = '';
 
-  // Form and UI State
-  bankForm!: FormGroup;
-  showForm = false;
-  isEditing = false;
-  isSubmitting = false;
   loading = false;
-
-  // Data
   banks: Bank[] = [];
   filteredBanks: Bank[] = [];
-  editingBank: Bank | null = null;
 
-  // Pagination
   pageSize = 10;
   totalRecords = 0;
   currentPage = 0;
 
-  // Search
   searchTerm = '';
 
-  // Currency Options
   currencies: Currency[] = [
     { code: 'COP', description: 'COP - Peso Colombiano' },
     { code: 'USD', description: 'USD - Dólar Estadounidense' },
@@ -117,61 +104,17 @@ export class BankListComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.initializeForm();
-    this.loadBanks();
-  }
-
-  private initializeForm(): void {
-    this.bankForm = this.fb.group({
-      codigo: ['', [
-        Validators.required,
-        Validators.pattern(/^[a-zA-Z0-9]+$/),
-        Validators.maxLength(10)
-      ], [this.duplicateCodeValidator.bind(this)]],
-      nombre: ['', [
-        Validators.required,
-        Validators.pattern(/^[a-zA-Z0-9\s]+$/),
-        Validators.maxLength(100)
-      ], [this.duplicateNameValidator.bind(this)]],
-      moneda: ['', Validators.required],
-      status: [true]
-    });
-  }
-
-  // Custom Validators
-  private duplicateCodeValidator(control: AbstractControl): Promise<ValidationErrors | null> {
-    if (!control.value || (this.isEditing && this.editingBank?.codigo === control.value)) {
-      return Promise.resolve(null);
+    this.enterpriseId = this.localStorageMethod.getIdEnterprise();
+    if (this.enterpriseId) {
+      this.loadBanks();
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo obtener el ID de la empresa'
+      });
     }
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const exists = this.banks.some(bank => 
-          bank.codigo.toLowerCase() === control.value.toLowerCase() && 
-          (!this.isEditing || bank.id !== this.editingBank?.id)
-        );
-        resolve(exists ? { duplicateCode: true } : null);
-      }, 300);
-    });
   }
-
-  private duplicateNameValidator(control: AbstractControl): Promise<ValidationErrors | null> {
-    if (!control.value || (this.isEditing && this.editingBank?.nombre === control.value)) {
-      return Promise.resolve(null);
-    }
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const exists = this.banks.some(bank => 
-          bank.nombre.toLowerCase() === control.value.toLowerCase() && 
-          (!this.isEditing || bank.id !== this.editingBank?.id)
-        );
-        resolve(exists ? { duplicateName: true } : null);
-      }, 300);
-    });
-  }
-
-  // Data Loading
   private loadBanks(): void {
     this.loading = true;
     this.http.get<any>(`${this.API_BASE}/findAll/${this.enterpriseId}?page=${this.currentPage}&size=${this.pageSize}`)
@@ -194,7 +137,6 @@ export class BankListComponent implements OnInit {
       });
   }
 
-  // Search Functionality
   onSearch(): void {
     this.applySearch();
   }
@@ -211,117 +153,6 @@ export class BankListComponent implements OnInit {
     }
   }
 
-  // Form Operations
-  showCreateForm(): void {
-    this.isEditing = false;
-    this.editingBank = null;
-    this.showForm = true;
-    this.bankForm.reset();
-    this.bankForm.patchValue({ status: true });
-  }
-
-  editBank(bank: Bank): void {
-    this.isEditing = true;
-    this.editingBank = { ...bank };
-    this.showForm = true;
-    this.bankForm.patchValue({
-      codigo: bank.codigo,
-      nombre: bank.nombre,
-      moneda: bank.moneda,
-      status: bank.status
-    });
-  }
-
-  cancelForm(): void {
-    this.showForm = false;
-    this.isEditing = false;
-    this.editingBank = null;
-    this.bankForm.reset();
-  }
-
-  onSubmit(): void {
-    if (this.bankForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
-      
-      if (this.isEditing) {
-        this.updateBank();
-      } else {
-        this.createBank();
-      }
-    }
-  }
-
-  private createBank(): void {
-    const formValue = this.bankForm.value;
-    const createRequest: BankCreateRequest = {
-      codigo: formValue.codigo,
-      nombre: formValue.nombre,
-      moneda: formValue.moneda,
-      idEnterprise: this.enterpriseId
-    };
-
-    this.http.post<Bank>(`${this.API_BASE}/create`, createRequest)
-      .subscribe({
-        next: (response) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Banco creado correctamente'
-          });
-          this.loadBanks();
-          this.cancelForm();
-          this.isSubmitting = false;
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error creating bank:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error.error?.message || 'Error al crear el banco'
-          });
-          this.isSubmitting = false;
-        }
-      });
-  }
-
-  private updateBank(): void {
-    if (!this.editingBank?.id) return;
-
-    const formValue = this.bankForm.value;
-    const updateRequest: BankUpdateRequest = {
-      id: this.editingBank.id,
-      codigo: formValue.codigo,
-      nombre: formValue.nombre,
-      moneda: formValue.moneda,
-      status: formValue.status,
-      idEnterprise: this.enterpriseId
-    };
-
-    this.http.put<Bank>(`${this.API_BASE}/update`, updateRequest)
-      .subscribe({
-        next: (response) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Banco actualizado correctamente'
-          });
-          this.loadBanks();
-          this.cancelForm();
-          this.isSubmitting = false;
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error updating bank:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error.error?.message || 'Error al actualizar el banco'
-          });
-          this.isSubmitting = false;
-        }
-      });
-  }
-
-  // Status Toggle
   toggleBankStatus(bank: Bank, newStatus: boolean): void {
     if (!bank.id) return;
 
@@ -348,7 +179,6 @@ export class BankListComponent implements OnInit {
       });
   }
 
-  // Delete Confirmation
   confirmDelete(bank: Bank): void {
     this.confirmationService.confirm({
       message: `¿Está seguro de que desea eliminar el banco "${bank.nombre}"?`,
@@ -388,16 +218,6 @@ export class BankListComponent implements OnInit {
       });
   }
 
-  // Export Functionality
-  exportBanks(): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Exportación',
-      detail: 'Funcionalidad de exportación en desarrollo'
-    });
-  }
-
-  // Utility Methods
   getCurrencyDisplay(currencyCode: string): string {
     const currency = this.currencies.find(c => c.code === currencyCode);
     return currency ? currency.description : currencyCode;

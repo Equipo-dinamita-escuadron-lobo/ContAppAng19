@@ -664,7 +664,7 @@ export const routes: Routes = [
               },
               {
                 path: 'banks',
-                data: { breadcrumb: 'Gestión de Bancos' },
+                data: { breadcrumb: 'Bancos' },
                 loadComponent: () =>
                   import(
                     './GeneralMasters/BankAccounts/components/bank-list/bank-list.component'
