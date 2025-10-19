@@ -89,7 +89,7 @@ export class BankAccountsListComponent implements OnInit {
         error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: error.title || 'Error',
             detail: error.message
           });
           this.loading = false;
@@ -143,7 +143,7 @@ export class BankAccountsListComponent implements OnInit {
         error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: error.title || 'Error',
             detail: error.message
           });
           account.status = !newStatus;
@@ -182,7 +182,7 @@ export class BankAccountsListComponent implements OnInit {
         error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: error.title || 'Error',
             detail: error.message
           });
         }

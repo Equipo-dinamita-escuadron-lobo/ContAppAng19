@@ -87,7 +87,7 @@ export class BankListComponent implements OnInit {
         error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: error.title || 'Error',
             detail: error.message
           });
           this.loading = false;
@@ -127,7 +127,7 @@ export class BankListComponent implements OnInit {
         error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: error.title || 'Error',
             detail: error.message
           });
           bank.status = !newStatus;
@@ -166,7 +166,7 @@ export class BankListComponent implements OnInit {
         error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: error.title || 'Error',
             detail: error.message
           });
         }

@@ -23,6 +23,7 @@ export class BankEditComponent implements OnInit {
   currenciesOptions: { label: string; value: string }[] = [];
   bankId: number | null = null;
   loading = false;
+  originalFormValue: any = null;
 
   constructor(
     private fb: FormBuilder,
@@ -71,17 +72,19 @@ export class BankEditComponent implements OnInit {
     this.loading = true;
     this.bankService.findById(this.bankId, enterpriseId).subscribe({
       next: (bank) => {
-        this.form.patchValue({
+        const formData = {
           codigo: bank.codigo,
           nombre: bank.nombre,
           moneda: bank.moneda
-        });
+        };
+        this.form.patchValue(formData);
+        this.originalFormValue = { ...formData };
         this.loading = false;
       },
       error: (error) => {
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
+          summary: error.title || 'Error',
           detail: error.message
         });
         this.loading = false;
@@ -92,6 +95,12 @@ export class BankEditComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/gen-masters/bank-accounts/banks']);
+  }
+
+  hasChanges(): boolean {
+    if (!this.originalFormValue) return false;
+    const currentValue = this.form.value;
+    return JSON.stringify(currentValue) !== JSON.stringify(this.originalFormValue);
   }
 
   onSubmit(): void {
@@ -143,7 +152,7 @@ export class BankEditComponent implements OnInit {
       error: (err) => {
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
+          summary: err.title || 'Error',
           detail: err.message
         });
       }

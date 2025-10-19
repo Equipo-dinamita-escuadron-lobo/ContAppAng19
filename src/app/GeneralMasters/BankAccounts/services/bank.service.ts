@@ -164,21 +164,32 @@ export class BankService {
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ha ocurrido un error inesperado';
+    let errorTitle = 'Error';
 
     if (error.error instanceof ErrorEvent) {
-      // Error del lado del cliente
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Error del lado del servidor
-      if (error.status === 409) {
-        errorMessage = 'El código del banco ya existe';
-      } else if (error.status === 404) {
-        errorMessage = 'Banco no encontrado';
+      // Capturar mensaje del backend
+      if (typeof error.error === 'string' && error.error.trim()) {
+        errorMessage = error.error;
       } else if (error.error?.message) {
         errorMessage = error.error.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      // Definir título según código de estado
+      if (error.status === 409) {
+        errorTitle = 'Registro Duplicado';
+      } else if (error.status === 404) {
+        errorTitle = 'No Encontrado';
+      } else if (error.status === 400) {
+        errorTitle = 'Datos Inválidos';
+      } else if (error.status === 500) {
+        errorTitle = 'Error del Servidor';
       }
     }
 
-    return throwError(() => ({ status: error.status, message: errorMessage }));
+    return throwError(() => ({ status: error.status, title: errorTitle, message: errorMessage }));
   }
 }

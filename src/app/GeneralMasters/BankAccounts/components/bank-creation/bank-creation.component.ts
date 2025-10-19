@@ -85,7 +85,7 @@ export class BankCreationComponent implements OnInit {
       error: (err) => {
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
+          summary: err.title || 'Error',
           detail: err.message
         });
       }

@@ -72,7 +72,7 @@ export class BankAccountsCreationComponent implements OnInit {
         error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: error.title || 'Error',
             detail: error.message
           });
         }
@@ -140,7 +140,7 @@ export class BankAccountsCreationComponent implements OnInit {
       error: (error) => {
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
+          summary: error.title || 'Error',
           detail: error.message
         });
       }
