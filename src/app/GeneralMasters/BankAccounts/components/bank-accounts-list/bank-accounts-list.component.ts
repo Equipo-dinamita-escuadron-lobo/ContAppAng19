@@ -1,10 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
-import { environment } from '../../../../../environments/environment';
+import { BankAccountsService, BankAccount } from '../../services/bank-accounts.service';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -21,31 +20,6 @@ import { TagModule } from 'primeng/tag';
 // PrimeNG Services
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
-
-// Interfaces
-interface Bank {
-  id: number;
-  codigo: string;
-  nombre: string;
-  moneda: string;
-  status: boolean;
-}
-
-interface BankAccount {
-  id?: number;
-  accountNumber: number;
-  bank: Bank;
-  accountType: string;
-  cuentaContable: string;
-  status: boolean;
-  isDeleted?: boolean;
-  idEnterprise?: string;
-}
-
-interface AccountType {
-  code: string;
-  description: string;
-}
 
 
 @Component({
@@ -70,13 +44,11 @@ interface AccountType {
   styleUrl: './bank-accounts-list.component.css'
 })
 export class BankAccountsListComponent implements OnInit {
-  private http = inject(HttpClient);
+  private bankAccountsService = inject(BankAccountsService);
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private router = inject(Router);
   private localStorageMethod = inject(LocalStorageMethods);
-
-  private readonly BANK_ACCOUNT_API = environment.API_URL + 'accountCatalogue/bank-accounts';
   
   private enterpriseId: string = '';
 
@@ -90,11 +62,6 @@ export class BankAccountsListComponent implements OnInit {
   currentPage = 0;
 
   searchTerm = '';
-
-  accountTypes: AccountType[] = [
-    { code: 'AHORROS', description: 'Cuenta de Ahorros' },
-    { code: 'CORRIENTE', description: 'Cuenta Corriente' }
-  ];
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
@@ -111,20 +78,19 @@ export class BankAccountsListComponent implements OnInit {
 
   private loadBankAccounts(): void {
     this.loading = true;
-    this.http.get<any>(`${this.BANK_ACCOUNT_API}/findAll/${this.enterpriseId}?page=${this.currentPage}&size=${this.pageSize}`)
+    this.bankAccountsService.findAll(this.enterpriseId, this.currentPage, this.pageSize)
       .subscribe({
         next: (response) => {
-          this.bankAccounts = response.content || [];
-          this.totalRecords = response.totalElements || 0;
+          this.bankAccounts = response.content;
+          this.totalRecords = response.totalElements;
           this.applySearch();
           this.loading = false;
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error loading bank accounts:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Error al cargar la lista de cuentas bancarias'
+            detail: error.message
           });
           this.loading = false;
         }
@@ -161,13 +127,12 @@ export class BankAccountsListComponent implements OnInit {
     this.router.navigate(['/gen-masters/bank-accounts/create']);
   }
 
-  // Status Toggle
   toggleAccountStatus(account: BankAccount, newStatus: boolean): void {
     if (!account.id) return;
 
-    this.http.patch<BankAccount>(`${this.BANK_ACCOUNT_API}/changeState/${account.id}/${this.enterpriseId}?state=${newStatus}`, {})
+    this.bankAccountsService.changeState(account.id, this.enterpriseId, newStatus)
       .subscribe({
-        next: (response) => {
+        next: () => {
           account.status = newStatus;
           this.messageService.add({
             severity: 'success',
@@ -175,20 +140,17 @@ export class BankAccountsListComponent implements OnInit {
             detail: `Estado de la cuenta '${account.accountNumber}' cambiado correctamente`
           });
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error toggling account status:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Error al cambiar el estado de la cuenta bancaria'
+            detail: error.message
           });
-          // Revert the toggle
           account.status = !newStatus;
         }
       });
   }
 
-  // Delete Confirmation
   confirmDelete(account: BankAccount): void {
     this.confirmationService.confirm({
       message: `¿Desea eliminar la cuenta bancaria "${account.accountNumber}"?`,
@@ -207,9 +169,9 @@ export class BankAccountsListComponent implements OnInit {
   private deleteBankAccount(account: BankAccount): void {
     if (!account.id) return;
 
-    this.http.delete<BankAccount>(`${this.BANK_ACCOUNT_API}/delete/${account.id}/${this.enterpriseId}`)
+    this.bankAccountsService.delete(account.id, this.enterpriseId)
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -217,21 +179,18 @@ export class BankAccountsListComponent implements OnInit {
           });
           this.loadBankAccounts();
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error deleting bank account:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: error.error?.message || 'Error al eliminar la cuenta bancaria'
+            detail: error.message
           });
         }
       });
   }
 
 
-  // Utility Methods
   getAccountTypeDisplay(accountType: string): string {
-    const type = this.accountTypes.find(t => t.code === accountType);
-    return type ? type.description : accountType;
+    return this.bankAccountsService.getAccountTypeDisplay(accountType);
   }
 }

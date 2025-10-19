@@ -8,32 +8,10 @@ import { ButtonModule } from 'primeng/button';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
-import { HttpClient } from '@angular/common/http';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
-import { environment } from '../../../../../environments/environment';
-
-interface Bank {
-  id: number;
-  codigo: string;
-  nombre: string;
-  moneda: string;
-  status: boolean;
-}
-
-interface AccountType {
-  code: string;
-  description: string;
-}
-
-interface BankAccountCreateRequest {
-  idEnterprise: string;
-  accountNumber: number;
-  bankId: number;
-  accountType: string;
-  cuentaContable: string;
-  status?: boolean;
-}
+import { BankService } from '../../services/bank.service';
+import { BankAccountsService } from '../../services/bank-accounts.service';
 
 @Component({
   selector: 'app-bank-accounts-creation',
@@ -49,14 +27,12 @@ export class BankAccountsCreationComponent implements OnInit {
   accountTypesOptions: { label: string; value: string }[] = [];
   auxiliaryAccountsOptions: { label: string; value: string }[] = [];
 
-  private readonly BANK_API = environment.API_URL + 'accountCatalogue/banks';
-  private readonly BANK_ACCOUNT_API = environment.API_URL + 'accountCatalogue/bank-accounts';
-
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private messageService: MessageService,
-    private http: HttpClient,
+    private bankService: BankService,
+    private bankAccountsService: BankAccountsService,
     private chartAccountService: ChartAccountService,
     private localStorageMethod: LocalStorageMethods
   ) {
@@ -71,13 +47,13 @@ export class BankAccountsCreationComponent implements OnInit {
   ngOnInit(): void {
     const enterpriseId = this.localStorageMethod.getIdEnterprise();
 
-    // Cargar tipos de cuenta
-    this.accountTypesOptions = [
-      { label: 'Cuenta de Ahorros', value: 'AHORROS' },
-      { label: 'Cuenta Corriente', value: 'CORRIENTE' }
-    ];
+    // Cargar tipos de cuenta desde el servicio
+    this.accountTypesOptions = this.bankAccountsService.getAccountTypes().map(type => ({
+      label: type.description,
+      value: type.code
+    }));
 
-    // Cargar bancos
+    // Cargar bancos y cuentas contables
     if (enterpriseId) {
       this.loadBanks(enterpriseId);
       this.loadAuxiliaryAccounts(enterpriseId);
@@ -85,20 +61,19 @@ export class BankAccountsCreationComponent implements OnInit {
   }
 
   private loadBanks(enterpriseId: string): void {
-    this.http.get<any>(`${this.BANK_API}/findAllByStatus/${enterpriseId}?status=true&page=0&size=100`)
+    this.bankService.findAllActive(enterpriseId)
       .subscribe({
         next: (response) => {
-          const banks = response.content || [];
-          this.banksOptions = banks.map((bank: Bank) => ({
+          this.banksOptions = response.content.map(bank => ({
             label: `${bank.codigo} - ${bank.nombre}`,
-            value: bank.id
+            value: bank.id!
           }));
         },
-        error: (err) => {
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudieron cargar los bancos disponibles'
+            detail: error.message
           });
         }
       });
@@ -143,16 +118,15 @@ export class BankAccountsCreationComponent implements OnInit {
       return;
     }
 
-    const payload: BankAccountCreateRequest = {
+    const payload = {
       idEnterprise: enterpriseId,
-      accountNumber: Number(this.form.value.accountNumber),
+      accountNumber: this.form.value.accountNumber,
       bankId: this.form.value.bankId,
       accountType: this.form.value.accountType,
-      cuentaContable: this.form.value.cuentaContable,
-      status: true
+      cuentaContable: this.form.value.cuentaContable
     };
 
-    this.http.post<any>(`${this.BANK_ACCOUNT_API}/create`, payload).subscribe({
+    this.bankAccountsService.create(payload).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
@@ -163,19 +137,11 @@ export class BankAccountsCreationComponent implements OnInit {
           this.goBack();
         }, 1000);
       },
-      error: (err) => {
-        if (err?.status === 409) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Duplicado',
-            detail: 'Ya existe una cuenta bancaria con este número.'
-          });
-          return;
-        }
+      error: (error) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: err?.error?.message || 'No se pudo crear la cuenta bancaria'
+          detail: error.message
         });
       }
     });
