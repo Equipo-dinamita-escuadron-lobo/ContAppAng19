@@ -1,10 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
-import { environment } from '../../../../../environments/environment';
+import { BankService, Bank } from '../../services/bank.service';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -22,38 +21,6 @@ import { TagModule } from 'primeng/tag';
 // PrimeNG Services
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
-
-// Interfaces
-interface Bank {
-  id?: number;
-  codigo: string;
-  nombre: string;
-  moneda: string;
-  status: boolean;
-  isDeleted?: boolean;
-  idEnterprise?: string;
-}
-
-interface Currency {
-  code: string;
-  description: string;
-}
-
-interface BankCreateRequest {
-  codigo: string;
-  nombre: string;
-  moneda: string;
-  idEnterprise: string;
-}
-
-interface BankUpdateRequest {
-  id: number;
-  codigo: string;
-  nombre: string;
-  moneda: string;
-  status: boolean;
-  idEnterprise: string;
-}
 
 @Component({
   selector: 'app-bank-list',
@@ -77,13 +44,12 @@ interface BankUpdateRequest {
   styleUrl: './bank-list.component.css'
 })
 export class BankListComponent implements OnInit {
-  private http = inject(HttpClient);
+  private bankService = inject(BankService);
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private localStorageMethod = inject(LocalStorageMethods);
   private router = inject(Router);
 
-  private readonly API_BASE = environment.API_URL + 'accountCatalogue/banks';
   private enterpriseId: string = '';
 
   loading = false;
@@ -95,15 +61,6 @@ export class BankListComponent implements OnInit {
   currentPage = 0;
 
   searchTerm = '';
-
-  currencies: Currency[] = [
-    { code: 'COP', description: 'COP - Peso Colombiano' },
-    { code: 'USD', description: 'USD - Dólar Estadounidense' },
-    { code: 'EUR', description: 'EUR - Euro' },
-    { code: 'GBP', description: 'GBP - Libra Esterlina' },
-    { code: 'CHF', description: 'CHF - Franco Suizo' },
-    { code: 'JPY', description: 'JPY - Yen Japonés' }
-  ];
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
@@ -119,20 +76,19 @@ export class BankListComponent implements OnInit {
   }
   private loadBanks(): void {
     this.loading = true;
-    this.http.get<any>(`${this.API_BASE}/findAll/${this.enterpriseId}?page=${this.currentPage}&size=${this.pageSize}`)
+    this.bankService.findAll(this.enterpriseId, this.currentPage, this.pageSize)
       .subscribe({
         next: (response) => {
-          this.banks = response.content || [];
-          this.totalRecords = response.totalElements || 0;
+          this.banks = response.content;
+          this.totalRecords = response.totalElements;
           this.applySearch();
           this.loading = false;
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error loading banks:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Error al cargar la lista de bancos'
+            detail: error.message
           });
           this.loading = false;
         }
@@ -158,9 +114,9 @@ export class BankListComponent implements OnInit {
   toggleBankStatus(bank: Bank, newStatus: boolean): void {
     if (!bank.id) return;
 
-    this.http.patch<Bank>(`${this.API_BASE}/changeState/${bank.id}/${this.enterpriseId}?state=${newStatus}`, {})
+    this.bankService.changeState(bank.id, this.enterpriseId, newStatus)
       .subscribe({
-        next: (response) => {
+        next: () => {
           bank.status = newStatus;
           this.messageService.add({
             severity: 'success',
@@ -168,14 +124,12 @@ export class BankListComponent implements OnInit {
             detail: `Estado del banco '${bank.nombre}' cambiado correctamente`
           });
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error toggling bank status:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Error al cambiar el estado del banco'
+            detail: error.message
           });
-          // Revert the toggle
           bank.status = !newStatus;
         }
       });
@@ -199,9 +153,9 @@ export class BankListComponent implements OnInit {
   private deleteBank(bank: Bank): void {
     if (!bank.id) return;
 
-    this.http.delete<Bank>(`${this.API_BASE}/delete/${bank.id}/${this.enterpriseId}`)
+    this.bankService.delete(bank.id, this.enterpriseId)
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -209,12 +163,11 @@ export class BankListComponent implements OnInit {
           });
           this.loadBanks();
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error deleting bank:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: error.error?.message || 'Error al eliminar el banco'
+            detail: error.message
           });
         }
       });
@@ -225,7 +178,6 @@ export class BankListComponent implements OnInit {
   }
 
   getCurrencyDisplay(currencyCode: string): string {
-    const currency = this.currencies.find(c => c.code === currencyCode);
-    return currency ? currency.description : currencyCode;
+    return this.bankService.getCurrencyDisplay(currencyCode);
   }
 }
