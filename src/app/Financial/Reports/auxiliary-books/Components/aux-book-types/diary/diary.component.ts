@@ -13,13 +13,15 @@ import { TableModule } from 'primeng/table';
 
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
-import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
+import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
 import { DiaryResponse } from '../../../Models/Responses/DiaryBookResponse';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
+import { DialogService } from 'primeng/dynamicdialog';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 
 @Component({
   selector: 'app-diary',
@@ -34,7 +36,7 @@ import { MessageService } from 'primeng/api';
     DatePickerModule,
     TableModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService],
   templateUrl: './diary.component.html',
   styleUrl: './diary.component.css',
 })
@@ -48,12 +50,42 @@ export class DiaryComponent extends BaseAuxiliaryBookComponent {
 
   override dataTable: DiaryResponse[] = [];
 
+  /**
+   * ✅ NUEVO: Define la configuración de las cabeceras para la previsualización.
+   * Esta estructura debe coincidir con la tabla que se muestra en el HTML.
+   */
+  headerConfig: ColumnDefinition[][] = [
+    // Fila 1 de la cabecera
+    [
+      { header: 'Fecha', field: 'date', rowspan: 2 },
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        children: [
+          { header: 'Código', field: 'accountCode' },
+          { header: 'Descripción', field: 'accountDescription' },
+        ],
+      },
+      { header: 'Débito', field: 'debit', type: 'number', rowspan: 2 },
+      { header: 'Crédito', field: 'credit', type: 'number', rowspan: 2 },
+    ],
+    // Fila 2 de la cabecera (columnas anidadas)
+    [
+      // Estas columnas se renderizarán debajo de 'Cuenta'
+      { header: 'Código', field: 'accountCode' },
+      { header: 'Descripción', field: 'accountDescription' },
+      // Nota: He omitido 'Comprobante' ya que no está en los datos de la respuesta (DiaryResponse)
+      // Si se añade en el futuro, se puede agregar aquí de forma similar a 'Cuenta'.
+    ],
+  ];
+
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
     enterpriseService: EnterpriseService,
     thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    dialogService: DialogService,
     private datePipe: DatePipe
   ) {
     super(
@@ -61,7 +93,8 @@ export class DiaryComponent extends BaseAuxiliaryBookComponent {
       enterpriseService,
       thirdService,
       accountService,
-      messageService
+      messageService,
+      dialogService
     );
   }
 
