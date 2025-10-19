@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { environment } from '../../../../../environments/environment';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -76,8 +77,8 @@ export class BankAccountsListComponent implements OnInit {
   private localStorageMethod = inject(LocalStorageMethods);
 
   // API Base URLs
-  private readonly BANK_ACCOUNT_API = '/api/accountCatalogue/bank-accounts';
-  private readonly BANK_API = '/api/accountCatalogue/banks';
+  private readonly BANK_ACCOUNT_API = environment.API_URL + 'accountCatalogue/bank-accounts';
+  private readonly BANK_API = environment.API_URL + 'accountCatalogue/banks';
   
   // Enterprise ID
   private enterpriseId: string = '';

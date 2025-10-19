@@ -11,6 +11,7 @@ import { SelectModule } from 'primeng/select';
 import { HttpClient } from '@angular/common/http';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { environment } from '../../../../../environments/environment';
 
 interface Bank {
   id: number;
@@ -48,8 +49,8 @@ export class BankAccountsCreationComponent implements OnInit {
   accountTypesOptions: { label: string; value: string }[] = [];
   auxiliaryAccountsOptions: { label: string; value: string }[] = [];
 
-  private readonly BANK_API = '/api/accountCatalogue/banks';
-  private readonly BANK_ACCOUNT_API = '/api/accountCatalogue/bank-accounts';
+  private readonly BANK_API = environment.API_URL + 'accountCatalogue/banks';
+  private readonly BANK_ACCOUNT_API = environment.API_URL + 'accountCatalogue/bank-accounts';
 
   constructor(
     private fb: FormBuilder,
