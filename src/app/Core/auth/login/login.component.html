@@ -1,113 +1,60 @@
-<!DOCTYPE html>
-<html lang="es">
+<app-auth-layaout>
+  <div class="login-form">
+    <h2 class="login-title">Inicio de sesión</h2>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ContaApp - Inicio de Sesión</title>
-</head>
-
-<body class="login-page">
-
-  <!-- Encabezado: Logo y título -->
-  <div class="login-header">
-    <img src="logo_unicauca.png" alt="Logo Unicauca" class="logo" />
-    <div class="header-divider"></div>
-    <span class="app-title">ContaApp</span>
-  </div>
-
-  <!-- Contenido principal -->
-  <div class="main-content">
-    <!-- Formulario: ocupa la mitad izquierda -->
-    <div class="login-form-container">
-      <div class="login-form">
-        <h2 class="login-title">Inicio de sesión</h2>
-        <form [formGroup]="loginForm" (submit)="onSubmit()" class="form">
-          <!-- Correo institucional -->
-          <div class="form-group">
-            <label for="username" class="loginfields">
-              Correo institucional <span class="required">*</span>
-            </label>
-            <div class="input-container">
-              <input type="text" id="username" placeholder="usuario@unicauca.edu.co" required
-                formControlName="username" />
-              <span class="input-icon pi pi-envelope"></span>
-            </div>
-          </div>
-          <!-- Contraseña -->
-          <div class="form-group">
-            <label for="password" class="loginfields">
-              Contraseña <span class="required">*</span>
-            </label>
-            <div class="input-container">
-              <input type="password" id="password" placeholder="**********" required formControlName="password" />
-              <span class="input-icon pi pi-eye"></span>
-            </div>
-          </div>
-          <!-- Botón ingresar -->
-          <div class="form-submit">
-            <button type="submit" [disabled]="loginForm.invalid">
-              Iniciar sesión
-            </button>
-          </div>
-          <div class="forgot-password-text">
-            <a routerLink="/forgot-password" class="forgot-password-link">
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
-          <div class="new-user-text">
-            ¿Eres un usuario nuevo?
-            <a routerLink="/register" class="register-link">
-              <span>Click aqui para registrarte</span>
-            </a>
-          </div>
-        </form>
-      </div>
-    </div>
-    <!-- Imagen derecha: ocupa la mitad derecha -->
-    <div class="login-image">
-      <img src="unicauca-economia.jpg" alt="Edificio Unicauca" />
-    </div>
-  </div>
-
-  <!-- Línea de colores -->
-  <div class="color-strip">
-    <div class="color-red"></div>
-    <div class="color-orange"></div>
-    <div class="color-yellow"></div>
-    <div class="color-blue"></div>
-    <div class="color-purple"></div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div>
-      <div class="footer-grid">
-        <div class="footer-section">
-          <strong>Universidad del Cauca</strong><br />
-          NIT. 891500319-2
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form">
+      <div class="form-group">
+        <label for="username" class="loginfields">
+          Correo institucional <span class="required">*</span>
+        </label>
+        <div class="input-container">
+          <input type="text" id="username" formControlName="username" placeholder="usuario@unicauca.edu.co" />
+          <span class="input-icon pi pi-envelope"></span> 
         </div>
-        <div class="footer-section-data">
-          <div class="footer-section">
-            <strong>Software contable ContaApp</strong><br />
-            Facultad de Ciencias Contables<br />
-            <a href="mailto:contapp&#64;unicauca.edu.co" class="footer-link">contapp&#64;unicauca.edu.co</a>
-          </div>
-          <div class="footer-divider"></div>
-          <div class="footer-section-TIC">
-            <strong>División de Tecnologia de la Información y comunicacion - TIC</strong><br />
-            Versión 1.0.0<br />
-            2025
-          </div>
+        <div *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched" class="error-message">
+          <p-message
+            severity="error"
+            *ngIf="loginForm.get('username')?.hasError('required')"
+            text="El correo es requerido"
+          ></p-message>
+          <p-message
+            severity="error"
+            *ngIf="loginForm.get('username')?.hasError('email')"
+            text="El correo electrónico no es válido."
+          ></p-message>
         </div>
       </div>
-      <p class="footer-text">
-        Institución con Acreditación de Alta Calidad por 8 años - Resolución MEN 6218 de 2019 - Vigilada
-        MinEducación<br />
-        Política de Protección de Datos | Seguridad de la Información | Soporte Técnico
-      </p>
-    </div>
-  </footer>
-</body>
 
-</html>
+      <div class="form-group">
+        <label for="password" class="loginfields">
+          Contraseña <span class="required">*</span>
+        </label>
+        <div class="input-container">
+          <input type="password" id="password" formControlName="password" placeholder="**********" />
+           <span class="input-icon pi pi-lock"></span>
+        </div>
+         <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-message">
+          <p-message
+            severity="error"
+            *ngIf="loginForm.get('password')?.hasError('required')"
+            text="La contraseña es requerida"
+          ></p-message>
+        </div>
+      </div>
+
+      <div class="form-submit">
+        <button type="submit" [disabled]="loginForm.invalid">
+          Iniciar sesión
+        </button>
+      </div>
+    </form>
+
+    <div class="new-user-text">
+      ¿Eres un usuario nuevo? 
+      <a routerLink="/register" class="register-link">clic aquí para registrarse !</a>
+    </div>
+    <div class="forgot-password-text">
+      <a routerLink="/forgot-password" class="forgot-password-link">¿olvidaste tu contraseña?</a>
+    </div>
+  </div>
+</app-auth-layaout>

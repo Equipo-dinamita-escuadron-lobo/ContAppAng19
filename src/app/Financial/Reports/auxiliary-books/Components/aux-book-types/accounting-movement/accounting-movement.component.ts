@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
-import { RadioButton } from 'primeng/radiobutton';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -30,7 +29,6 @@ import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliar
     FormsModule,
     ButtonModule,
     SplitButtonModule,
-    RadioButton,
     CheckboxModule,
     SelectModule,
     DatePickerModule,

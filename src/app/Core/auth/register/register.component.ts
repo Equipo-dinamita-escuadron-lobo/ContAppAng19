@@ -1,45 +1,86 @@
-import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from '../services/auth.service';
-import { RouterModule } from '@angular/router';
-import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import {
+  AbstractControl,
+  FormGroup,
+  FormBuilder,
+  Validators,
+  ReactiveFormsModule,
+  ValidationErrors,
+} from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { AuthService } from '../services/auth.service';
 import { RegisterUser } from '../models/register-user';
+import { AuthLayaoutComponent } from '../../../auth-layaout/auth-layaout.component';
+
+// Custom Validator for Passwords
+export function passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
+  const password = control.get('password')?.value;
+  const confirmPassword = control.get('confirmPassword')?.value;
+  return password === confirmPassword ? null : { passwordsNotMatching: true };
+}
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, CommonModule, RouterModule, ButtonModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    ButtonModule,
+    InputTextModule,
+    MessageModule,
+    ToastModule,
+    AuthLayaoutComponent,
+  ],
+  providers: [MessageService],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css'
+  styleUrl: './register.component.css',
 })
 export class RegisterComponent {
-  registerFail: boolean = false;
-  invalidForm: boolean = false;
+  readonly router = inject(Router);
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly messageService = inject(MessageService);
 
-  authService: AuthService = inject(AuthService);
+  registerForm: FormGroup;
 
-  constructor(public router: Router) {}
+  private static readonly ONLY_LETTERS_REGEX = /^[a-zA-ZÀ-ÿ\u00f1\u00d1 ]+$/;
 
-  registerForm = new FormGroup({
-    username: new FormControl('', [Validators.required]),
-    email: new FormControl('', [Validators.required, Validators.email]),
-    firstName: new FormControl('', [Validators.required]),
-    lastName: new FormControl('', [Validators.required]),
-    password: new FormControl('', [Validators.required, Validators.minLength(8)]),
-  });
+  constructor() {
+    this.registerForm = this.formBuilder.group({
+      firstName: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(RegisterComponent.ONLY_LETTERS_REGEX),
+        ],
+      ],
+      lastName: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(RegisterComponent.ONLY_LETTERS_REGEX),
+        ],
+      ],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      confirmPassword: ['', [Validators.required]],
+    }, { validators: passwordsMatchValidator });
+  }
 
   onSubmit() {
-    if (!this.registerForm.valid) {
-      this.invalidForm = true;
+    if (this.registerForm.invalid) {
+      this.markFormGroupTouched();
       return;
     }
 
-    this.invalidForm = false;
-    this.registerFail = false;
-
     const user: RegisterUser = {
-      username: this.registerForm.value.username || '',
+      username: this.registerForm.value.email || '',
       email: this.registerForm.value.email || '',
       firstName: this.registerForm.value.firstName || '',
       lastName: this.registerForm.value.lastName || '',
@@ -48,13 +89,34 @@ export class RegisterComponent {
 
     this.authService.register(user).subscribe({
       next: () => {
-        // Registro exitoso, redirigir al login
-        this.router.navigate(['/login']);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: '¡Registro exitoso! Serás redirigido al login.',
+          life: 3000,
+        });
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 3000);
       },
-      error: (error) => {
-        console.error('Register error:', error);
-        this.registerFail = true;
-      }
+      error: (err) => {
+        const detail = err.error?.message || 'No se pudo completar el registro.';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: detail,
+        });
+      },
     });
+  }
+
+  private markFormGroupTouched(): void {
+    Object.values(this.registerForm.controls).forEach((control) => {
+      control.markAsTouched();
+    });
+  }
+
+  goToLogin(): void {
+    this.router.navigate(['/login']);
   }
 }
