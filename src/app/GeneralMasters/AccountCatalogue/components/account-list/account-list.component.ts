@@ -96,6 +96,14 @@ export class AccountListComponent {
   showTemplateModal: boolean = false;
 
   /**
+   * Variables para la funcionalidad de búsqueda
+   */
+  searchTerm: string = '';
+  searchResults: Account[] = [];
+  isLoading: boolean = false;
+  hasActiveSearch: boolean = false;
+
+  /**
    * Variables para controlar la visibilidad de los checkboxes en la edición
    */
   showCrossingCheckboxEdit: boolean = false;
@@ -860,6 +868,67 @@ export class AccountListComponent {
     });
   }
 
+  /**
+   * Realiza la búsqueda de cuentas por código o descripción.
+   */
+  searchAccounts(): void {
+    // Evitar múltiples llamadas simultáneas
+    if (this.isLoading) {
+      return;
+    }
+
+    this.isLoading = true;
+
+    // Realizar búsqueda general por código o descripción
+    this.performGeneralSearch(this.searchTerm.trim());
+  }
+
+
+  /**
+   * Realiza búsqueda general por código o descripción.
+   */
+  private performGeneralSearch(searchValue: string): void {
+    this._accountService.searchAccounts(
+      this.getIdEnterprise(),
+      searchValue
+    ).subscribe({
+      next: (results: Account[]) => {
+        this.searchResults = results;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error en búsqueda general:', error);
+        this.searchResults = [];
+        this.isLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Maneja el cambio en el campo de búsqueda.
+   * Realiza búsqueda automática cuando cambia el valor.
+   */
+  onSearchChange(): void {
+    // Si el campo está vacío, resetear búsqueda y mostrar todas las cuentas
+    if (!this.searchTerm.trim()) {
+      this.hasActiveSearch = false;
+      this.searchResults = [];
+      this.isLoading = false;
+      return;
+    }
+
+    // Marcar que hay una búsqueda activa
+    this.hasActiveSearch = true;
+
+    // Realizar búsqueda si hay al menos 1 carácter
+    if (this.searchTerm.trim().length >= 1) {
+      this.searchAccounts();
+    } else {
+      // Si no hay texto, limpiar resultados
+      this.searchResults = [];
+      this.isLoading = false;
+    }
+  }
 
   /**
    * Verifica si una cuenta existe usando el cache local de cuentas cargadas.

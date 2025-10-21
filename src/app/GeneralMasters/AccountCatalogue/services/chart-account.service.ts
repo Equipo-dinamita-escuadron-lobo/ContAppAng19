@@ -248,6 +248,36 @@ export class ChartAccountService {
     );
   }
 
+
+  /**
+   * Busca cuentas por código o descripción de forma eficiente.
+   * Retorna todas las cuentas que coincidan, ordenadas por código ascendente.
+   *
+   * @param entId - El ID de la entidad.
+   * @param search - El término de búsqueda (código o descripción). Si no se proporciona, retorna todas las cuentas.
+   * @returns Un observable con la lista de cuentas que coinciden.
+   */
+  searchAccounts(entId: string, search?: string): Observable<Account[]> {
+    let params = new HttpParams();
+
+    if (search && search.trim()) {
+      params = params.set('search', search.trim());
+    }
+
+    return this.http.get<ItemAccountCatalogueSearchRes[]>(this.apiURL + 'search/' + entId, { params }).pipe(
+      map((response: ItemAccountCatalogueSearchRes[]) => {
+        // Mapear cada item de la respuesta a Account
+        return response.map((item: ItemAccountCatalogueSearchRes) =>
+          this.mapItemAccountToAccount(item, entId)
+        );
+      }),
+      catchError(error => {
+        console.error('Error en búsqueda de cuentas:', error);
+        throw error;
+      })
+    );
+  }
+
   /**
    * Verifica si una cuenta existe sin cargar datos completos ni mostrar errores.
    * Usa método HEAD para verificar existencia sin transferir contenido.
@@ -288,7 +318,10 @@ export class ChartAccountService {
       classification: item.classification,
       parent: item.parent,
       children: [],
-      showSubAccounts: false
+      showSubAccounts: false,
+      crossing: item.crossing,
+      costCenter: item.costCenter,
+      status: item.status
     };
   }
 
