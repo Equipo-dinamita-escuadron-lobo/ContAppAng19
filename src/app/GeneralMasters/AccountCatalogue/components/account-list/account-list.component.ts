@@ -1610,20 +1610,120 @@ export class AccountListComponent {
   }
 
   /**
-   * Método preparado para futuras conexiones con el backend para exportar cuentas.
+   * Exporta el catálogo de cuentas a formato Excel.
    */
-  exportAccounts(): void {
-    // TODO: Implementar lógica de exportación cuando se conecte con el backend
-    console.log('Método exportAccounts preparado para futuras conexiones');
+  async exportAccounts(): Promise<void> {
+    try {
+      const entId = this.getIdEnterprise();
+      const response = await firstValueFrom(this._accountService.exportAccounts(entId));
+
+      if (response.body) {
+        // Crear blob y descargar
+        const blob = new Blob([response.body], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+
+        // Obtener nombre del archivo desde headers
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = 'catalogo_cuentas.xlsx';
+        if (contentDisposition) {
+          const matches = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (matches && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '');
+          }
+        }
+
+        // Crear enlace de descarga
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error: any) {
+      // Mostrar mensaje de error del backend
+      let errorMessage = 'Error desconocido al exportar cuentas';
+
+      try {
+        // Si error.error es un Blob (por responseType: 'blob'), convertirlo a texto
+        if (error.error instanceof Blob) {
+          const text = await error.error.text();
+          const parsedError = JSON.parse(text);
+          errorMessage = parsedError.message || errorMessage;
+        } else if (typeof error.error === 'string') {
+          // Si error.error es un string (JSON), intentar parsearlo
+          const parsedError = JSON.parse(error.error);
+          errorMessage = parsedError.message || errorMessage;
+        } else if (error.error?.message) {
+          // Si error.error ya es un objeto con message
+          errorMessage = error.error.message;
+        } else {
+          // Fallback al mensaje del error HTTP
+          errorMessage = error.message || errorMessage;
+        }
+      } catch (parseError) {
+        // Si falla el parseo, usar el mensaje por defecto
+        errorMessage = error.message || errorMessage;
+      }
+
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Información',
+        detail: errorMessage
+      });
+    }
   }
 
   /**
-   * Método preparado para futuras conexiones con el backend para importar cuentas desde archivo.
+   * Maneja la selección de archivo para importar cuentas.
    * @param event Evento del selector de archivos.
    */
-  onFileSelect(event: any): void {
-    // TODO: Implementar lógica de importación cuando se conecte con el backend
-    console.log('Método onFileSelect preparado para futuras conexiones', event);
+  async onFileSelect(event: any): Promise<void> {
+    const file = event.files?.[0];
+    if (!file) return;
+
+    try {
+      const entId = this.getIdEnterprise();
+      const response = await firstValueFrom(this._accountService.importAccounts(entId, file));
+
+      // Mostrar mensaje de éxito
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Importación completada',
+        detail: response.message || 'Las cuentas han sido importadas exitosamente'
+      });
+
+      // Recargar la lista de cuentas
+      this.getAccounts();
+
+    } catch (error: any) {
+      // Mostrar mensaje de error del backend (incluyendo límite de tamaño)
+      let errorMessage = 'Error desconocido al importar cuentas';
+
+      try {
+        // Si error.error es un string (JSON), intentar parsearlo
+        if (typeof error.error === 'string') {
+          const parsedError = JSON.parse(error.error);
+          errorMessage = parsedError.message || errorMessage;
+        } else if (error.error?.message) {
+          // Si error.error ya es un objeto con message
+          errorMessage = error.error.message;
+        } else if (error.message) {
+          // Fallback al mensaje del error HTTP
+          errorMessage = error.message;
+        }
+      } catch (parseError) {
+        // Si falla el parseo, usar el mensaje por defecto
+        errorMessage = error.message || errorMessage;
+      }
+
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de importación',
+        detail: errorMessage
+      });
+    }
   }
 
 }

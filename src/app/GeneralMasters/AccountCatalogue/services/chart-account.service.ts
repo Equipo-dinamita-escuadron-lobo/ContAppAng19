@@ -371,4 +371,49 @@ export class ChartAccountService {
       })
     );
   }
+
+  /**
+   * Exporta el catálogo de cuentas a formato Excel.
+   *
+   * @param entId - El ID de la entidad.
+   * @param companyName - Nombre opcional de la empresa para el archivo.
+   * @returns Un observable con la respuesta HTTP que contiene el blob del archivo.
+   */
+  exportAccounts(entId: string, companyName?: string): Observable<HttpResponse<Blob>> {
+    let params = new HttpParams().set('entId', entId);
+    if (companyName) {
+      params = params.set('companyName', companyName);
+    }
+
+    return this.http.get(`${this.apiURL}export/excel`, {
+      params,
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // Re-lanzar el error para que el componente lo maneje
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Importa cuentas desde un archivo Excel.
+   *
+   * @param entId - El ID de la entidad.
+   * @param file - El archivo Excel a importar.
+   * @returns Un observable con la respuesta de la importación.
+   */
+  importAccounts(entId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('entId', entId);
+    formData.append('file', file);
+
+    return this.http.post(`${this.apiURL}import/excel`, formData).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // Re-lanzar el error para que el componente lo maneje
+        return throwError(() => error);
+      })
+    );
+  }
 }
