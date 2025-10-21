@@ -1,5 +1,5 @@
 <div class="flex w-full h-full font-titillium">
-    <div class="m-10 w-full h-full font-medium  bg-white rounded-3xl p-10">
+    <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
         <p-toast></p-toast>
         <p-confirmDialog></p-confirmDialog>
 
@@ -82,7 +82,8 @@
                                         <svg class="h-16 w-16 mt-1 transform"
                                             [ngClass]="{'text-transparent': !class.children, 'rotate-90': class.showSubAccounts}"
                                             width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
-                                            stroke="currentColor" fill="none" stroke-linejoin="round">
+                                            stroke="currentColor" fill="none" stroke-linejoin="round"
+                                            aria-hidden="true">
                                             <path stroke="none" d="M0 0h24v24H0z" />
                                             <polyline points="9 6 15 12 9 18" />
                                         </svg>
@@ -103,7 +104,8 @@
                                         (click)="$event.stopPropagation()"
                                         [style]="{ transform: 'scale(0.8)' }"
                                         pTooltip="Cambiar Estado"
-                                        tooltipPosition="top">
+                                        tooltipPosition="top"
+                                        aria-label="Cambiar estado de la clase">
                                     </p-toggleswitch>
                                 </div>
                             </div>
@@ -119,7 +121,8 @@
                                                 <svg class="h-16 w-16 mt-1 transform"
                                                     [ngClass]="{'text-white': !group.children || group.children.length === 0, 'rotate-90': group.showSubAccounts}"
                                                     width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
-                                                    stroke="currentColor" fill="none" stroke-linejoin="round">
+                                                    stroke="currentColor" fill="none" stroke-linejoin="round"
+                                                    aria-hidden="true">
                                                     <path stroke="none" d="M0 0h24v24H0z" />
                                                     <polyline points="9 6 15 12 9 18" />
                                                 </svg>
@@ -140,7 +143,8 @@
                                                 (click)="$event.stopPropagation()"
                                                 [style]="{ transform: 'scale(0.8)' }"
                                                 pTooltip="Cambiar Estado"
-                                                tooltipPosition="top">
+                                                tooltipPosition="top"
+                                                aria-label="Cambiar estado del grupo">
                                             </p-toggleswitch>
                                         </div>
                                     </div>
@@ -155,7 +159,8 @@
                                                         <svg class="h-16 w-16 mt-1 transform"
                                                             [ngClass]="{'text-white': !account.children || account.children.length === 0, 'rotate-90': account.showSubAccounts}"
                                                             width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
-                                                            stroke="currentColor" fill="none" stroke-linejoin="round">
+                                                            stroke="currentColor" fill="none" stroke-linejoin="round"
+                                                            aria-hidden="true">
                                                             <path stroke="none" d="M0 0h24v24H0z" />
                                                             <polyline points="9 6 15 12 9 18" />
                                                         </svg>
@@ -176,7 +181,8 @@
                                                         (click)="$event.stopPropagation()"
                                                         [style]="{ transform: 'scale(0.8)' }"
                                                         pTooltip="Cambiar Estado"
-                                                        tooltipPosition="top">
+                                                        tooltipPosition="top"
+                                                        aria-label="Cambiar estado de la cuenta">
                                                     </p-toggleswitch>
                                                 </div>
                                             </div>
@@ -193,7 +199,8 @@
                                                                     [ngClass]="{'text-white': !subAccount.children || subAccount.children.length === 0, 'rotate-90': subAccount.showSubAccounts}"
                                                                     width="24" height="24" viewBox="0 0 24 24"
                                                                     stroke-width="1" stroke="currentColor" fill="none"
-                                                                    stroke-linejoin="round">
+                                                                    stroke-linejoin="round"
+                                                                    aria-hidden="true">
                                                                     <path stroke="none" d="M0 0h24v24H0z" />
                                                                     <polyline points="9 6 15 12 9 18" />
                                                                 </svg>
@@ -214,7 +221,8 @@
                                                                 (click)="$event.stopPropagation()"
                                                                 [style]="{ transform: 'scale(0.8)' }"
                                                                 pTooltip="Cambiar Estado"
-                                                                tooltipPosition="top">
+                                                                tooltipPosition="top"
+                                                                aria-label="Cambiar estado de la subcuenta">
                                                             </p-toggleswitch>
                                                         </div>
                                                     </div>
@@ -244,7 +252,8 @@
                                                                         (click)="$event.stopPropagation()"
                                                                         [style]="{ transform: 'scale(0.8)' }"
                                                                         pTooltip="Cambiar Estado"
-                                                                        tooltipPosition="top">
+                                                                        tooltipPosition="top"
+                                                                        aria-label="Cambiar estado del auxiliar 1">
                                                                     </p-toggleswitch>
                                                                 </div>
                                                             </div>
@@ -274,7 +283,8 @@
                                                                                 (click)="$event.stopPropagation()"
                                                                                 [style]="{ transform: 'scale(0.8)' }"
                                                                                 pTooltip="Cambiar Estado"
-                                                                                tooltipPosition="top">
+                                                                                tooltipPosition="top"
+                                                                                aria-label="Cambiar estado del auxiliar 2">
                                                                             </p-toggleswitch>
                                                                         </div>
                                                                     </div>
@@ -329,9 +339,9 @@
                                 </div>
                                 <div *ngIf="!inputAccess.class && showButtonDelete"
                                     style="position: absolute; right: -0.5rem; top: -0.5rem;">
-                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar clase">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar clase" aria-label="Eliminar clase">
                                         <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
+                                            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -378,9 +388,9 @@
                                 </div>
                                 <div *ngIf="!inputAccess.group && showButtonDelete"
                                     style="position: absolute; right: -0.5rem; top: -0.5rem;">
-                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar grupo">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar grupo" aria-label="Eliminar grupo">
                                         <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
+                                            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -432,9 +442,9 @@
                                 </div>
                                 <div *ngIf="!inputAccess.account && showButtonDelete"
                                     style="position: absolute; right: -0.5rem; top: -0.5rem;">
-                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar cuenta">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar cuenta" aria-label="Eliminar cuenta">
                                         <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
+                                            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -481,9 +491,9 @@
                                 </div>
                                 <div *ngIf="!inputAccess.subAccount && showButtonDelete"
                                     style="position: absolute; right: -0.5rem; top: -0.5rem;">
-                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar subcuenta">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar subcuenta" aria-label="Eliminar subcuenta">
                                         <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
+                                            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -533,9 +543,9 @@
                                     <div *ngIf="!inputAccess.auxiliary && showButtonDelete"
                                         style="position: absolute; right: -0.5rem; top: -0.5rem;">
                                         <button class="delete-button" (click)="deleteAccount()"
-                                            title="Eliminar auxiliar">
+                                            title="Eliminar auxiliar" aria-label="Eliminar auxiliar">
                                             <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg">
+                                                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M6 18L18 6M6 6l12 12">
                                                 </path>
