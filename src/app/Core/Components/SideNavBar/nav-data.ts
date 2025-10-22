@@ -178,7 +178,7 @@ export const navbarData: INavbarData[] = [
             icon: 'analytics',
             label: 'Reportes',
           },
-          
+
         ],
       },
     ],
@@ -241,28 +241,6 @@ export const navbarData: INavbarData[] = [
          routeLink: 'TO DO',
          icon: 'analytics',
          label: 'Reportes',
-       },
-       {
-         routeLink: 'TO DO',
-         icon: 'shelves',
-         label: 'Ajustes de Inventario',
-         items: [
-           {
-             routeLink: 'TO DO',
-             icon: 'arrows_input',
-             label: 'Entradas',
-           },
-           {
-             routeLink: 'TO DO',
-             icon: 'arrows_output',
-             label: 'Salidas',
-           },
-           {
-             routeLink: 'TO DO',
-             icon: 'difference',
-             label: 'Recalculos',
-           },
-         ],
        },
      ],
    },
