@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule, FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
 import { Account } from '../../models/ChartAccount';
 import { FinancialStateType } from '../../models/FinancialStateType';
@@ -20,9 +20,8 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
@@ -45,7 +44,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
   styleUrl: './account-list.component.css',
   providers: [MessageService, ConfirmationService]
 })
-export class AccountListComponent {
+export class AccountListComponent implements OnInit {
   /**
   * Formulario reactivo que contiene los campos de entrada para la gestión de cuentas contables.
   */
@@ -94,6 +93,14 @@ export class AccountListComponent {
    * Controla la visibilidad del modal de plantilla
    */
   showTemplateModal: boolean = false;
+
+  /**
+   * Variables para la funcionalidad de búsqueda
+   */
+  searchTerm: string = '';
+  searchResults: Account[] = [];
+  isLoading: boolean = false;
+  hasActiveSearch: boolean = false;
 
   /**
    * Variables para controlar la visibilidad de los checkboxes en la edición
@@ -159,9 +166,8 @@ export class AccountListComponent {
   placeNatureType: string = '';
   placeFinancialStateType: string = '';
   placeClasificationType: string = '';
-  localStorageMethods: LocalStorageMethods = new LocalStorageMethods(); //Descomentar linea cuando se tenga implementado esto
-  entData: any | null = null;
-  //taxes: Tax[] = []; //Descomentar linea cuando se tenga implementado esto
+  localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
+  entData: unknown | null = null;
 
   /**
   * Constructor del componente.
@@ -176,12 +182,11 @@ export class AccountListComponent {
   * @param taxService Servicio para gestionar los impuestos.
   */
   constructor(
-    private fb: FormBuilder,
-    private _accountService: ChartAccountService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    //private dialog: MatDialog,  //Descomentar linea cuando se tenga implementado esto
-    //private taxService: TaxService  //Descomentar linea cuando se tenga implementado esto
+    private readonly fb: FormBuilder,
+    private readonly _accountService: ChartAccountService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+ 
   ) {
 
     this.accountForm = this.fb.group({})
@@ -228,7 +233,7 @@ export class AccountListComponent {
     this.showFormTransactional = false;
     this.showUpdateButton = false;
     if (this.accountSelected) {
-      this.updateInputAccess(parseInt(this.accountSelected.code));
+      this.updateInputAccess(Number.parseInt(this.accountSelected.code));
     }
   }
 
@@ -287,9 +292,7 @@ export class AccountListComponent {
     this.getAccounts();
 
 
-    //DESCOMENTAR CUANDO SE IMPLEMENTE
     this.entData = this.localStorageMethods.loadEnterpriseData();
-    this.getTaxesByCodes();
     this.getNatureType();
     this.getFinancialStateType();
     this.getClasificationType();
@@ -420,7 +423,7 @@ export class AccountListComponent {
     for (const key in formValues) {
       if (formValues.hasOwnProperty(key)) {
         const control = form.get(key);
-        if (control && control.dirty) {
+        if (control?.dirty) {
           return true;
         }
       }
@@ -473,15 +476,15 @@ export class AccountListComponent {
   */
   sortAccountsRecursively(accounts: Account[]): Account[] {
     // Ordenamos la lista actual numéricamente
-    accounts.sort((a, b) => parseInt(a.code) - parseInt(b.code));
+    accounts.sort((a, b) => Number.parseInt(a.code) - Number.parseInt(b.code));
 
     // Iteramos sobre cada cuenta para ordenar sus hijos recursivamente
-    accounts.forEach(account => {
+    for (const account of accounts) {
       if (account.children && account.children.length > 0) {
         // Si la cuenta tiene hijos, aplicamos la función recursiva
         account.children = this.sortAccountsRecursively(account.children);
       }
-    });
+    }
 
     return accounts;
   }
@@ -496,10 +499,10 @@ export class AccountListComponent {
    * @returns Un arreglo de cuentas con los tipos de estados financieros actualizados.
    */
   changeFinancialStateType(accounts: Account[]): Account[] {
-    accounts.forEach(account => {
+    for (const account of accounts) {
       // Solo asignar valor por defecto si no tiene un estado financiero definido
       if (!account.financialStatus || account.financialStatus.trim() === '') {
-        var code = account.code[0];
+        const code = account.code[0];
         if (code === "1" || code === "2" || code === "3") {
           account.financialStatus = "Estado de situacion financiero";
         }
@@ -510,7 +513,7 @@ export class AccountListComponent {
       if (account.children) { // Verificamos que children no sea undefined
         account.children = this.changeFinancialStateType(account.children);
       }
-    });
+    }
     return accounts;
   }
 
@@ -525,11 +528,11 @@ export class AccountListComponent {
    * @returns Un arreglo de cuentas con el tipo de naturaleza actualizado.
    */
   changeNatureType(accounts: Account[]): Account[] {
-    accounts.forEach(account => {
+    for (const account of accounts) {
       // Solo asignar valor por defecto si no tiene una naturaleza definida
       if (!account.nature || account.nature.trim() === '') {
-        var code = account.code[0];
-        var codeAccount = account.code.slice(0, 4);
+        const code = account.code[0];
+        const codeAccount = account.code.slice(0, 4);
         if (code === "1" || code === "5" || code === "6") {
           account.nature = "Debito";
         }
@@ -543,7 +546,7 @@ export class AccountListComponent {
       if (account.children) { // Verificamos que children no sea undefined
         account.children = this.changeNatureType(account.children);
       }
-    });
+    }
     return accounts;
   }
 
@@ -601,11 +604,11 @@ export class AccountListComponent {
       auxiliary: true
     };
     this.inputAccess = {
-      class: !(code == 1),
-      group: !(code == 2),
-      account: !(code == 4),
-      subAccount: !(code == 6),
-      auxiliary: !(code == 8)
+      class: code != 1,
+      group: code != 2,
+      account: code != 4,
+      subAccount: code != 6,
+      auxiliary: code != 8
     };
   }
 
@@ -753,8 +756,8 @@ export class AccountListComponent {
     );
 
     // 2. Resetea el formulario a un estado "limpio" con los objetos encontrados.
-    const crossingValue = selectedAccount.crossing === true ? true : false;
-    const costCenterValue = selectedAccount.costCenter === true ? true : false;
+    const crossingValue = selectedAccount.crossing === true;
+    const costCenterValue = selectedAccount.costCenter === true;
     
     this.formTransactional.reset({
       selectedNatureType: natureObject || null,
@@ -782,7 +785,7 @@ export class AccountListComponent {
     return str
       .toLowerCase() // 1. Convertir a minúsculas
       .normalize("NFD") // 2. Descomponer caracteres (ej. 'é' se convierte en 'e' + '´')
-      .replace(/[\u0300-\u036f]/g, ""); // 3. Eliminar los diacríticos (acentos)
+      .replaceAll(/[\u0300-\u036f]/g, ""); // 3. Eliminar los diacríticos (acentos)
   }
 
 
@@ -838,7 +841,6 @@ export class AccountListComponent {
     return '';
   }
 
-  //CRUD Metodos
   /**
    * Obtiene todas las cuentas.
    * @returns Una promesa que se resuelve cuando las cuentas son obtenidas correctamente, o se rechaza con un error en caso de fallo.
@@ -860,6 +862,67 @@ export class AccountListComponent {
     });
   }
 
+  /**
+   * Realiza la búsqueda de cuentas por código o descripción.
+   */
+  searchAccounts(): void {
+    // Evitar múltiples llamadas simultáneas
+    if (this.isLoading) {
+      return;
+    }
+
+    this.isLoading = true;
+
+    // Realizar búsqueda general por código o descripción
+    this.performGeneralSearch(this.searchTerm.trim());
+  }
+
+
+  /**
+   * Realiza búsqueda general por código o descripción.
+   */
+  private performGeneralSearch(searchValue: string): void {
+    this._accountService.searchAccounts(
+      this.getIdEnterprise(),
+      searchValue
+    ).subscribe({
+      next: (results: Account[]) => {
+        this.searchResults = results;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error en búsqueda general:', error);
+        this.searchResults = [];
+        this.isLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Maneja el cambio en el campo de búsqueda.
+   * Realiza búsqueda automática cuando cambia el valor.
+   */
+  onSearchChange(): void {
+    // Si el campo está vacío, resetear búsqueda y mostrar todas las cuentas
+    if (!this.searchTerm.trim()) {
+      this.hasActiveSearch = false;
+      this.searchResults = [];
+      this.isLoading = false;
+      return;
+    }
+
+    // Marcar que hay una búsqueda activa
+    this.hasActiveSearch = true;
+
+    // Realizar búsqueda si hay al menos 1 carácter
+    if (this.searchTerm.trim().length >= 1) {
+      this.searchAccounts();
+    } else {
+      // Si no hay texto, limpiar resultados
+      this.searchResults = [];
+      this.isLoading = false;
+    }
+  }
 
   /**
    * Verifica si una cuenta existe usando el cache local de cuentas cargadas.
@@ -953,7 +1016,7 @@ export class AccountListComponent {
    */
   deleteAccount() {
     // Validate if the account is linked to any tax
-    if (this.accountSelected && this.accountSelected.id) {
+    if (this.accountSelected?.id) {
       const isLinked = this.searchIfAccountIsLinked(this.accountSelected.code);
       if (isLinked) {
         this.messageService.add({
@@ -981,7 +1044,7 @@ export class AccountListComponent {
                   });
                 this.getAccounts()
                   .then(() => {
-                    if (this.accountSelected && this.accountSelected.parent) {
+                    if (this.accountSelected?.parent) {
                       this._accountService.getAccountByCode(this.accountSelected?.parent, this.getIdEnterprise()).subscribe({
                         next: (account) => {
                           if (account) {
@@ -1198,31 +1261,6 @@ export class AccountListComponent {
     });
   }
 
-  /**
- * Obtiene los impuestos a través del servicio `taxService` y procesa los resultados.
- * Mapea las cuentas de depósito y de reembolso de cada impuesto, y luego asigna estas cuentas a las propiedades `listDepositAccount` y `listRefundAccount`.
- * Si ocurre un error al obtener los impuestos, se muestra un mensaje de error en la consola.
- */
-  getTaxesByCodes(): void {
-    //Descomentar cuando este implementado
-    /*this.taxService.getTaxes(this.entData).pipe(
-      map((taxes: Tax[]) => {
-        const depositAccounts = taxes.map(tax => tax.depositAccount);
-        const refundAccounts = taxes.map(tax => tax.refundAccount);
-        return { depositAccounts, refundAccounts };
-      })
-    ).subscribe(
-      (data) => {
-
-        const { depositAccounts, refundAccounts } = data;
-        this.listDepositAccount = depositAccounts;
-        this.listRefundAccount = refundAccounts;
-      },
-      (error) => {
-        console.error('Error al obtener los impuestos:', error);
-      }
-    );*/
-  }
 
   /**
  * Verifica si una cuenta está asociada a algún impuesto, buscando si su código se encuentra en las listas de cuentas de reembolso o de depósito.
@@ -1230,7 +1268,7 @@ export class AccountListComponent {
  * @returns `true` si el código de la cuenta está presente en alguna de las listas, `false` en caso contrario.
  */
   searchIfAccountIsLinked(accountCode: string) {
-    return this.listRefundAccount.some(account => account === accountCode) || this.listDepositAccount.some(account => account === accountCode)
+    return this.listRefundAccount.includes(accountCode) || this.listDepositAccount.includes(accountCode)
   }
 
   /**
@@ -1246,18 +1284,18 @@ export class AccountListComponent {
     }
 
     // Permitir teclas de navegación
-    const allowedKeys = [
+    const allowedKeys = new Set([
       'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
       'Home', 'End'
-    ];
+    ]);
     
-    if (allowedKeys.includes(event.key)) {
+    if (allowedKeys.has(event.key)) {
       return;
     }
 
     // Solo permitir números
-    if (!/^[0-9]$/.test(event.key)) {
+    if (!/^\d$/.test(event.key)) {
       event.preventDefault();
       return;
     }
@@ -1267,7 +1305,7 @@ export class AccountListComponent {
     const currentValue = target.value;
     
     // Limitar longitud según el nivel
-    if (currentValue.length >= maxLength && !allowedKeys.includes(event.key)) {
+    if (currentValue.length >= maxLength && !allowedKeys.has(event.key)) {
       event.preventDefault();
     }
   }
@@ -1282,7 +1320,7 @@ export class AccountListComponent {
     let value = target.value;
     
     // Remover caracteres que no sean números
-    value = value.replace(/[^0-9]/g, '');
+    value = value.replaceAll(/\D/g, '');
     
     // Limitar longitud según el nivel
     if (value.length > maxLength) {
@@ -1311,18 +1349,18 @@ export class AccountListComponent {
     }
 
     // Permitir teclas de navegación
-    const allowedKeys = [
+    const allowedKeys = new Set([
       'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
       'Home', 'End', ' '
-    ];
+    ]);
 
-    if (allowedKeys.includes(event.key)) {
+    if (allowedKeys.has(event.key)) {
       return;
     }
 
     // Solo permitir letras, espacios y caracteres especiales permitidos
-    const allowedPattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d1,.()\/\-+&%]$/;
+    const allowedPattern = /^[a-zA-ZÀ-ÿ,.()/\-+&%]$/;
     if (!allowedPattern.test(event.key)) {
       event.preventDefault();
     }
@@ -1439,7 +1477,7 @@ export class AccountListComponent {
     const parentCode = this.getParentCode(child.code);
     if (parentCode) {
       const parent = findParentInHierarchy(this.listAccounts, parentCode);
-      if (parent && parent.status) {
+      if (parent?.status) {
         // Si el padre está activo y no tiene otros hijos activos, desactivarlo
         const hasActiveChildren = this.hasActiveChildren(parent);
         if (!hasActiveChildren) {
@@ -1541,20 +1579,121 @@ export class AccountListComponent {
   }
 
   /**
-   * Método preparado para futuras conexiones con el backend para exportar cuentas.
+   * Exporta el catálogo de cuentas a formato Excel.
    */
-  exportAccounts(): void {
-    // TODO: Implementar lógica de exportación cuando se conecte con el backend
-    console.log('Método exportAccounts preparado para futuras conexiones');
+  async exportAccounts(): Promise<void> {
+    try {
+      const entId = this.getIdEnterprise();
+      const response = await firstValueFrom(this._accountService.exportAccounts(entId));
+
+      if (response.body) {
+        // Crear blob y descargar
+        const blob = new Blob([response.body], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+
+        // Obtener nombre del archivo desde headers
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = 'catalogo_cuentas.xlsx';
+        if (contentDisposition) {
+          const regex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+          const matches = regex.exec(contentDisposition);
+          if (matches?.[1]) {
+            filename = matches[1].replaceAll(/['"]/g, '');
+          }
+        }
+
+        // Crear enlace de descarga
+        const url = globalThis.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        globalThis.URL.revokeObjectURL(url);
+      }
+    } catch (error: any) {
+      // Mostrar mensaje de error del backend
+      let errorMessage = 'Error desconocido al exportar cuentas';
+
+      try {
+        // Si error.error es un Blob (por responseType: 'blob'), convertirlo a texto
+        if (error.error instanceof Blob) {
+          const text = await error.error.text();
+          const parsedError = JSON.parse(text);
+          errorMessage = parsedError.message || errorMessage;
+        } else if (typeof error.error === 'string') {
+          // Si error.error es un string (JSON), intentar parsearlo
+          const parsedError = JSON.parse(error.error);
+          errorMessage = parsedError.message || errorMessage;
+        } else if (error.error?.message) {
+          // Si error.error ya es un objeto con message
+          errorMessage = error.error.message;
+        } else {
+          // Fallback al mensaje del error HTTP
+          errorMessage = error.message || errorMessage;
+        }
+      } catch (parseError) {
+        // Si falla el parseo, usar el mensaje por defecto
+        errorMessage = error.message || errorMessage;
+      }
+
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Información',
+        detail: errorMessage
+      });
+    }
   }
 
   /**
-   * Método preparado para futuras conexiones con el backend para importar cuentas desde archivo.
+   * Maneja la selección de archivo para importar cuentas.
    * @param event Evento del selector de archivos.
    */
-  onFileSelect(event: any): void {
-    // TODO: Implementar lógica de importación cuando se conecte con el backend
-    console.log('Método onFileSelect preparado para futuras conexiones', event);
+  async onFileSelect(event: any): Promise<void> {
+    const file = event.files?.[0];
+    if (!file) return;
+
+    try {
+      const entId = this.getIdEnterprise();
+      const response = await firstValueFrom(this._accountService.importAccounts(entId, file));
+
+      // Mostrar mensaje de éxito
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Importación completada',
+        detail: response.message || 'Las cuentas han sido importadas exitosamente'
+      });
+
+      // Recargar la lista de cuentas
+      this.getAccounts();
+
+    } catch (error: any) {
+      // Mostrar mensaje de error del backend (incluyendo límite de tamaño)
+      let errorMessage = 'Error desconocido al importar cuentas';
+
+      try {
+        // Si error.error es un string (JSON), intentar parsearlo
+        if (typeof error.error === 'string') {
+          const parsedError = JSON.parse(error.error);
+          errorMessage = parsedError.message || errorMessage;
+        } else if (error.error?.message) {
+          // Si error.error ya es un objeto con message
+          errorMessage = error.error.message;
+        } else if (error.message) {
+          // Fallback al mensaje del error HTTP
+          errorMessage = error.message;
+        }
+      } catch (parseError) {
+        // Si falla el parseo, usar el mensaje por defecto
+        errorMessage = error.message || errorMessage;
+      }
+
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de importación',
+        detail: errorMessage
+      });
+    }
   }
 
 }

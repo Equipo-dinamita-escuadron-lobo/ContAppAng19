@@ -248,6 +248,36 @@ export class ChartAccountService {
     );
   }
 
+
+  /**
+   * Busca cuentas por código o descripción de forma eficiente.
+   * Retorna todas las cuentas que coincidan, ordenadas por código ascendente.
+   *
+   * @param entId - El ID de la entidad.
+   * @param search - El término de búsqueda (código o descripción). Si no se proporciona, retorna todas las cuentas.
+   * @returns Un observable con la lista de cuentas que coinciden.
+   */
+  searchAccounts(entId: string, search?: string): Observable<Account[]> {
+    let params = new HttpParams();
+
+    if (search && search.trim()) {
+      params = params.set('search', search.trim());
+    }
+
+    return this.http.get<ItemAccountCatalogueSearchRes[]>(this.apiURL + 'search/' + entId, { params }).pipe(
+      map((response: ItemAccountCatalogueSearchRes[]) => {
+        // Mapear cada item de la respuesta a Account
+        return response.map((item: ItemAccountCatalogueSearchRes) =>
+          this.mapItemAccountToAccount(item, entId)
+        );
+      }),
+      catchError(error => {
+        console.error('Error en búsqueda de cuentas:', error);
+        throw error;
+      })
+    );
+  }
+
   /**
    * Verifica si una cuenta existe sin cargar datos completos ni mostrar errores.
    * Usa método HEAD para verificar existencia sin transferir contenido.
@@ -288,7 +318,10 @@ export class ChartAccountService {
       classification: item.classification,
       parent: item.parent,
       children: [],
-      showSubAccounts: false
+      showSubAccounts: false,
+      crossing: item.crossing,
+      costCenter: item.costCenter,
+      status: item.status
     };
   }
 
@@ -335,6 +368,51 @@ export class ChartAccountService {
       catchError((error) => {
         console.error('Error al descargar la plantilla:', error);
         return throwError(() => new Error('Error al descargar la plantilla de catálogo de cuentas'));
+      })
+    );
+  }
+
+  /**
+   * Exporta el catálogo de cuentas a formato Excel.
+   *
+   * @param entId - El ID de la entidad.
+   * @param companyName - Nombre opcional de la empresa para el archivo.
+   * @returns Un observable con la respuesta HTTP que contiene el blob del archivo.
+   */
+  exportAccounts(entId: string, companyName?: string): Observable<HttpResponse<Blob>> {
+    let params = new HttpParams().set('entId', entId);
+    if (companyName) {
+      params = params.set('companyName', companyName);
+    }
+
+    return this.http.get(`${this.apiURL}export/excel`, {
+      params,
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // Re-lanzar el error para que el componente lo maneje
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Importa cuentas desde un archivo Excel.
+   *
+   * @param entId - El ID de la entidad.
+   * @param file - El archivo Excel a importar.
+   * @returns Un observable con la respuesta de la importación.
+   */
+  importAccounts(entId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('entId', entId);
+    formData.append('file', file);
+
+    return this.http.post(`${this.apiURL}import/excel`, formData).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // Re-lanzar el error para que el componente lo maneje
+        return throwError(() => error);
       })
     );
   }
