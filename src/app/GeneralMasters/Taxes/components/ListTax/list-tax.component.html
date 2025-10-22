@@ -65,7 +65,7 @@
               <p-toggleSwitch
                 [ngModel]="isActive(tax.status)"
                 (onChange)="changeTaxState(tax.id, tax)"
-                pTooltip="Cambiar Estado"
+                [pTooltip]="isActive(tax.status) ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"
