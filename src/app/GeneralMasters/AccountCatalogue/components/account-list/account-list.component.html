@@ -736,16 +736,22 @@
         </ng-template>
       </p-table>
 
-      <ng-template pTemplate="footer">
-        <div class="flex justify-center gap-3">
-          <p-button
-            label="Cerrar"
-            icon="pi pi-times"
-            styleClass="p-button-secondary"
-            (click)="closeErrorModal()">
-          </p-button>
-        </div>
-      </ng-template>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-center gap-3">
+      <p-button
+        label="Exportar Errores"
+        icon="pi pi-download"
+        styleClass="p-button-success"
+        (click)="exportImportErrors()">
+      </p-button>
+      <p-button
+        label="Cerrar"
+        icon="pi pi-times"
+        styleClass="p-button-secondary"
+        (click)="closeErrorModal()">
+      </p-button>
+    </div>
+  </ng-template>
     </p-dialog>
 
 </div>
