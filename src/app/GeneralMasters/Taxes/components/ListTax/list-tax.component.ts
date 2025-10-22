@@ -189,7 +189,7 @@ export class ListTaxComponent implements OnInit {
    * Obtiene el nombre de la cuenta por código
    */
   private getAccountName(code: string): string {
-    if (!code) return 'No especificada';
+    if (!code) return 'N/A';
     const account = this.accounts.find(acc => acc.code === code);
     return account ? `${account.code} - ${account.description}` : code;
   }
