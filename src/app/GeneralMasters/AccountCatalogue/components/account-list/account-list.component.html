@@ -7,9 +7,9 @@
         <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
             <div class="items-center mb-6">
                 <h1
-                    class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-                    Catálogo de cuentas</h1>
-                <p class="font-family-sans font-normal text-sm mt-2">Guía detallada del manejo financiero y
+                    class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+                    <span class="border-b-4 border-secondary-light inline-block pb-1">Catálogo</span> de cuentas</h1>
+                <p class="font-family-sans font-normal text-sm mt-12">Guía detallada del manejo financiero y
                     transacciones
                     económicas.</p>
             </div>
@@ -19,11 +19,10 @@
             <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
                 <div class="flex flex-wrap gap-3">
                     <p-button label="Crear" icon="pi pi-plus" type="submit" (click)="showFormAddNewClass()"></p-button>
-                    <p-button label="Exportar" icon="pi pi-download" type="submit" (click)="exportAccounts()"></p-button>
-
                     <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" chooseIcon="pi pi-upload" accept=".xlsx" [auto]="true"
                         (onSelect)="onFileSelect($event)" class="p-button-primeng">
                     </p-fileUpload>
+                    <p-button label="Exportar" icon="pi pi-download" type="submit" (click)="exportAccounts()"></p-button>
                     <p-button label="Plantilla" icon="pi pi-download" (click)="openTemplateModal()"></p-button>
                 </div>
             </div>
