@@ -41,8 +41,8 @@ export class EditTaxComponent implements OnInit {
   private readonly messageService = inject(MessageService);
 
   editForm: FormGroup;
-  depositAccounts: Account[] = [];
-  refundAccounts: Account[] = [];
+  salesTaxes: Account[] = [];
+  purchaseTaxes: Account[] = [];
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
   accounts: Account[] = [];
@@ -57,8 +57,8 @@ export class EditTaxComponent implements OnInit {
       code: ['', Validators.required],
       description: ['', Validators.required],
       interest: [null, [Validators.required, Validators.min(0)]],
-      depositAccount: [null, Validators.required],
-      refundAccount: [null, Validators.required]
+      salesTax: [null], // Opcional
+      purchaseTax: [null] // Opcional
     }, { validators: cuentasDiferentesValidator });
 
     // Suscribirse a cambios del formulario para detectar modificaciones
@@ -113,8 +113,8 @@ export class EditTaxComponent implements OnInit {
       collectLeaves(account, leaves);
     });
     
-    this.depositAccounts = [...leaves];
-    this.refundAccounts = [...leaves];
+    this.salesTaxes = [...leaves];
+    this.purchaseTaxes = [...leaves];
     
     // Cargar los datos del impuesto después de que las cuentas estén disponibles
     this.loadTax();
@@ -154,19 +154,19 @@ export class EditTaxComponent implements OnInit {
    */
   private setFormValues(tax: any): void {
     // Obtener códigos de cuenta (puede venir de Tax o TaxList)
-    const depositAccountCode = tax.depositAccount;
-    const refundAccountCode = tax.refundAccount;
-    
+    const salesTaxCode = tax.salesTax;
+    const purchaseTaxCode = tax.purchaseTax;
+
     // Buscar las cuentas correspondientes por código
-    const depositAccount = this.depositAccounts.find(acc => acc.code === depositAccountCode);
-    const refundAccount = this.refundAccounts.find(acc => acc.code === refundAccountCode);
+    const salesTax = this.salesTaxes.find(acc => acc.code === salesTaxCode);
+    const purchaseTax = this.purchaseTaxes.find(acc => acc.code === purchaseTaxCode);
 
     this.editForm.patchValue({
       code: tax.code,
       description: tax.description,
       interest: tax.interest,
-      depositAccount: depositAccount,
-      refundAccount: refundAccount
+      salesTax: salesTax,
+      purchaseTax: purchaseTax
     });
 
     // Guardar valores iniciales para comparar cambios
@@ -174,8 +174,8 @@ export class EditTaxComponent implements OnInit {
       code: tax.code,
       description: tax.description,
       interest: tax.interest,
-      depositAccount: depositAccount,
-      refundAccount: refundAccount
+      salesTax: salesTax,
+      purchaseTax: purchaseTax
     };
 
     // Resetear estado de cambios
@@ -197,11 +197,11 @@ export class EditTaxComponent implements OnInit {
     const codeChanged = currentValues.code !== this.initialFormValues.code;
     const descriptionChanged = currentValues.description !== this.initialFormValues.description;
     const interestChanged = currentValues.interest !== this.initialFormValues.interest;
-    const depositAccountChanged = currentValues.depositAccount?.code !== this.initialFormValues.depositAccount?.code;
-    const refundAccountChanged = currentValues.refundAccount?.code !== this.initialFormValues.refundAccount?.code;
+    const salesTaxChanged = currentValues.salesTax?.code !== this.initialFormValues.salesTax?.code;
+    const purchaseTaxChanged = currentValues.purchaseTax?.code !== this.initialFormValues.purchaseTax?.code;
 
-    this.hasChanges = codeChanged || descriptionChanged || interestChanged || 
-                     depositAccountChanged || refundAccountChanged;
+    this.hasChanges = codeChanged || descriptionChanged || interestChanged ||
+                     salesTaxChanged || purchaseTaxChanged;
 
   }
 
@@ -217,8 +217,8 @@ export class EditTaxComponent implements OnInit {
         code: formValue.code,
         description: formValue.description,
         interest: formValue.interest,
-        depositAccountId: formValue.depositAccount.id,
-        refundAccountId: formValue.refundAccount.id,
+        salesTaxId: formValue.salesTax?.id || undefined,
+        purchaseTaxId: formValue.purchaseTax?.id || undefined,
         idEnterprise: this.entData?.id || ''
       };
 
@@ -288,7 +288,7 @@ export class EditTaxComponent implements OnInit {
    */
   getCustomError(): string {
     if (this.editForm.errors?.['cuentasIguales'] && this.editForm.touched) {
-      return 'Las cuentas de depósito y devolución no pueden ser iguales';
+      return 'Las cuentas de impuesto de venta e impuesto de compra no pueden ser iguales';
     }
     return '';
   }

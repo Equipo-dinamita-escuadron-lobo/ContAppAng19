@@ -5,11 +5,11 @@ import { Account } from '../../../GeneralMasters/AccountCatalogue/models/ChartAc
 export const cuentasDiferentesValidator: ValidatorFn = (
   control: AbstractControl
 ): ValidationErrors | null => {
-  const depositAccount = control.get('depositAccount')?.value;
-  const refundAccount = control.get('refundAccount')?.value;
+  const salesTax = control.get('salesTax')?.value;
+  const purchaseTax = control.get('purchaseTax')?.value;
   // Solo ejecutar la validación si ambos campos tienen valor
-  if (depositAccount && refundAccount) {
-    return depositAccount === refundAccount ? { cuentasIguales: true } : null;
+  if (salesTax && purchaseTax) {
+    return salesTax === purchaseTax ? { cuentasIguales: true } : null;
   }
 
   return null; // No hay error si cualquiera de los campos es null o está vacío
