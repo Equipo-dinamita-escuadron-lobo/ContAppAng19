@@ -41,8 +41,8 @@
           <th pSortableColumn="code" class="font-semibold text-primary border-b-2 border-primary">Código <p-sortIcon field="code"></p-sortIcon></th>
           <th pSortableColumn="description" class="font-semibold text-primary border-b-2 border-primary">Descripción <p-sortIcon field="description"></p-sortIcon></th>
           <th pSortableColumn="interest" class="font-semibold text-primary border-b-2 border-primary text-right">Tarifa <p-sortIcon field="interest"></p-sortIcon></th>
-          <th class="font-semibold text-primary border-b-2 border-primary">Cuenta Impuesto en Venta</th>
           <th class="font-semibold text-primary border-b-2 border-primary">Cuenta Impuesto en Compra</th>
+          <th class="font-semibold text-primary border-b-2 border-primary">Cuenta Impuesto en Venta</th>        
           <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
           <th class="font-semibold text-primary border-b-2 border-primary text-center">Acciones</th>
         </tr>
@@ -53,8 +53,8 @@
           <td class="py-3">{{ tax.code }}</td>
           <td class="py-3">{{ tax.description }}</td>
           <td class="py-3 text-right">{{ formatPercentage(tax.interest) }}</td>
-          <td class="py-3">{{ tax.salesTaxName }}</td>
           <td class="py-3">{{ tax.purchaseTaxName }}</td>
+          <td class="py-3">{{ tax.salesTaxName }}</td>
           <td class="py-3 text-center">
             <p-tag [value]="formatState(tax.status)" [severity]="getStateSeverity(tax.status)"></p-tag>
           </td>
