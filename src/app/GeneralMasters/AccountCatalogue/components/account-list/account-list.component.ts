@@ -1140,6 +1140,7 @@ export class AccountListComponent implements OnInit {
         }
 
         const account: Account = {
+          idEnterprise: this.getIdEnterprise(),
           code: newCode,
           description: this.accountForm.get(this.name)?.value,
 
@@ -1163,8 +1164,18 @@ export class AccountListComponent implements OnInit {
         );
         
         if (hasChanges) {
+          // Verificar que tenemos un ID válido
+          if (!this.accountSelected?.id) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'No se pudo identificar la cuenta a actualizar. Por favor, recargue la página.'
+            });
+            return;
+          }
+
           // Proceder con la actualización - el backend manejará duplicados si los hay
-          this.update(this.accountSelected?.id, account);
+          this.update(this.accountSelected.id, account);
         } else {
           this.messageService.add({
             severity: 'error',
