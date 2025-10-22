@@ -7,10 +7,10 @@
     <div class="flex justify-between items-start mb-12">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
-        <h1 class="font-bold text-3xl/41 inline-block pb-1" style="font-family: var(--font-family-titillium); color: var(--color-primary); border-bottom: 4px solid var(--color-secondary);">
-          Editar Tipo de Producto
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Editar</span> Tipo de Producto
         </h1>
-        <p class="font-normal text-sm mt-2" style="font-family: var(--font-family-sans);">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Modifique la información del tipo de producto.
         </p>
       </div>
@@ -60,7 +60,7 @@
         </p-button>
         <p-button 
           type="submit"
-          label="Guardar Cambios"
+          label="Actualizar"
           [disabled]="productTypeForm.invalid || !hasChanges()">
         </p-button>
       </div>

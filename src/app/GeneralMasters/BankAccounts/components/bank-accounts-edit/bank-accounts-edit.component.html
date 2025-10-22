@@ -5,10 +5,10 @@
     <!-- Cabecera -->
     <div class="flex justify-between items-start mb-12">
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Editar Cuenta Bancaria
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Editar</span> Cuenta Bancaria
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Modifique la información de la cuenta bancaria.
         </p>
       </div>
@@ -58,7 +58,7 @@
       <!-- Botones de acción -->
       <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button type="button" label="Cancelar" severity="secondary" (onClick)="goBack()"></p-button>
-        <p-button type="submit" label="Guardar Cambios" [disabled]="form.invalid || loading || !hasChanges()"></p-button>
+        <p-button type="submit" label="Actualizar" [disabled]="form.invalid || loading || !hasChanges()"></p-button>
       </div>
     </form>
   </div>

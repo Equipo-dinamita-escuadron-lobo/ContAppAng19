@@ -6,10 +6,10 @@
     <!-- Cabecera -->
     <div class="flex justify-between items-start mb-12">
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Crear Tercero
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Crear</span> Tercero
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Ingrese la información requerida para registrar un nuevo tercero.
         </p>
       </div>
@@ -330,7 +330,7 @@
       <!-- Botones de acción -->
       <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button type="button" label="Cancelar" severity="secondary" (onClick)="onCancel()"></p-button>
-        <p-button type="submit" label="Crear Tercero" [disabled]="createdThirdForm.invalid"></p-button>
+        <p-button type="submit" label="Guardar" [disabled]="createdThirdForm.invalid"></p-button>
       </div>
     </form>
   </div>
