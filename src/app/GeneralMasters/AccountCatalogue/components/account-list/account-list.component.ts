@@ -175,6 +175,7 @@ export class AccountListComponent implements OnInit {
    * Propiedades para el modal de exportación
    */
   exportStatusFilter: boolean | undefined = undefined;
+  selectedExportStatus: boolean | undefined = undefined; // Variable para el modal
   exportDialogMessage = '¿Qué tipo de cuentas desea exportar?';
   exportStatusOptions = [
     { label: 'Todos', value: undefined },
@@ -1670,7 +1671,7 @@ export class AccountListComponent implements OnInit {
    * Muestra el modal de confirmación para exportar cuentas
    */
   showExportConfirmDialog() {
-    this.exportStatusFilter = undefined; // "Todos" por defecto
+    this.selectedExportStatus = undefined; // "Todos" por defecto
 
     this.confirmationService.confirm({
       key: 'exportDialog',
@@ -1680,7 +1681,7 @@ export class AccountListComponent implements OnInit {
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
-        this.exportAccounts(this.exportStatusFilter);
+        this.exportAccounts(this.selectedExportStatus);
       }
     });
   }
@@ -1688,68 +1689,92 @@ export class AccountListComponent implements OnInit {
   /**
    * Exporta el catálogo de cuentas a formato Excel.
    */
-  async exportAccounts(status: boolean | undefined): Promise<void> {
-    try {
-      const entId = this.getIdEnterprise();
-      const response = await firstValueFrom(this._accountService.exportAccounts(entId, undefined, status));
+  exportAccounts(status: boolean | undefined): void {
+    const entData = this.localStorageMethods.loadEnterpriseData();
+    const entId = entData?.id || this.getIdEnterprise();
+    const companyName = entData?.name || '';
 
-      if (response.body) {
-        // Crear blob y descargar
-        const blob = new Blob([response.body], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    this._accountService.exportAccounts(entId, companyName, status).subscribe({
+      next: (response) => {
+        if (!response.body) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Exportación',
+            detail: 'No se recibió el archivo del servidor'
+          });
+          return;
+        }
+
+        this.downloadFile(response);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Exportación Exitosa',
+          detail: `Se ha exportado el catálogo de cuentas correctamente`
         });
-
-        // Obtener nombre del archivo desde headers
-        const contentDisposition = response.headers.get('content-disposition');
-        let filename = 'catalogo_cuentas.xlsx';
-        if (contentDisposition) {
-          const regex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-          const matches = regex.exec(contentDisposition);
-          if (matches?.[1]) {
-            filename = matches[1].replaceAll(/['"]/g, '');
-          }
-        }
-
-        // Crear enlace de descarga
-        const url = globalThis.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        link.click();
-        globalThis.URL.revokeObjectURL(url);
-      }
-    } catch (error: any) {
-      // Mostrar mensaje de error del backend
-      let errorMessage = 'Error desconocido al exportar cuentas';
-
-      try {
-        // Si error.error es un Blob (por responseType: 'blob'), convertirlo a texto
+      },
+      error: (error) => {
         if (error.error instanceof Blob) {
-          const text = await error.error.text();
-          const parsedError = JSON.parse(text);
-          errorMessage = parsedError.message || errorMessage;
-        } else if (typeof error.error === 'string') {
-          // Si error.error es un string (JSON), intentar parsearlo
-          const parsedError = JSON.parse(error.error);
-          errorMessage = parsedError.message || errorMessage;
-        } else if (error.error?.message) {
-          // Si error.error ya es un objeto con message
-          errorMessage = error.error.message;
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const errorData = JSON.parse(reader.result as string);
+              const errorMessage = errorData.message || 'No se pudo exportar las cuentas.';
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error de Exportación',
+                detail: errorMessage
+              });
+            } catch (e) {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error de Exportación',
+                detail: 'Ocurrió un error inesperado.'
+              });
+            }
+          };
+          reader.onerror = () => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: 'No se pudo leer el mensaje de error.'
+            });
+          };
+          reader.readAsText(error.error);
         } else {
-          // Fallback al mensaje del error HTTP
-          errorMessage = error.message || errorMessage;
+          const errorMessage = error.error?.message || error.message || 'Error desconocido al exportar cuentas';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Exportación',
+            detail: errorMessage
+          });
         }
-      } catch (parseError) {
-        // Si falla el parseo, usar el mensaje por defecto
-        errorMessage = error.message || errorMessage;
       }
+    });
+  }
 
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Información',
-        detail: errorMessage
-      });
+  /**
+   * Procesa la respuesta HTTP para descargar el archivo.
+   */
+  private downloadFile(response: any): void {
+    const blob = response.body;
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'catalogo_cuentas.xlsx';
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
     }
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   }
 
   /**
