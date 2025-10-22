@@ -1262,6 +1262,36 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
+   * Determina el título del error de importación basado en el código de error
+   * @param errorCode Código de error del backend
+   * @returns Título apropiado para el error de importación
+   */
+  private getImportErrorTitle(errorCode?: string): string {
+    switch (errorCode) {
+      case 'FILE_SIZE_EXCEEDED':
+        return 'Archivo muy grande';
+
+      case 'EXCEL_VALIDATION_ERROR':
+      case 'EXCEL_CODE_VALIDATION_ERROR':
+      case 'EXCEL_DROPDOWN_VALIDATION_ERROR':
+      case 'EXCEL_CONDITIONAL_VALIDATION_ERROR':
+        return 'Error en el archivo';
+
+      case 'ACCOUNT_IMPORT_ERROR':
+        return 'Error de importación';
+
+      case 'ACCOUNT_IMPORT_NO_DATA':
+        return 'Archivo vacío';
+
+      case 'ACCOUNT_HIERARCHY_ERROR':
+        return 'Error de jerarquía';
+
+      default:
+        return 'Error de importación';
+    }
+  }
+
+  /**
    * Expands the parent accounts of the selected account
    * @param account Account to expand
    * @returns A Promise that resolves to void
@@ -1713,29 +1743,37 @@ export class AccountListComponent implements OnInit {
       this.getAccounts();
 
     } catch (error: any) {
-      // Mostrar mensaje de error del backend (incluyendo límite de tamaño)
-      let errorMessage = 'Error desconocido al importar cuentas';
+      // Mostrar mensaje de error del backend (sin información sensible)
+      let errorMessage = 'Error al procesar el archivo. Verifique el formato y contenido del archivo.';
+      let errorTitle = 'Error de importación';
 
       try {
         // Si error.error es un string (JSON), intentar parsearlo
         if (typeof error.error === 'string') {
           const parsedError = JSON.parse(error.error);
-          errorMessage = parsedError.message || errorMessage;
+          if (parsedError.message) {
+            errorMessage = parsedError.message;
+            // Determinar título basado en el código de error si existe
+            if (parsedError.code) {
+              errorTitle = this.getImportErrorTitle(parsedError.code);
+            }
+          }
         } else if (error.error?.message) {
           // Si error.error ya es un objeto con message
           errorMessage = error.error.message;
-        } else if (error.message) {
-          // Fallback al mensaje del error HTTP
-          errorMessage = error.message;
+          if (error.error?.code) {
+            errorTitle = this.getImportErrorTitle(error.error.code);
+          }
         }
+        // No usar error.message directamente ya que contiene información técnica sensible
       } catch (parseError) {
-        // Si falla el parseo, usar el mensaje por defecto
-        errorMessage = error.message || errorMessage;
+        // Si falla el parseo, mantener el mensaje genérico
+        console.error('Error al parsear respuesta del backend:', parseError);
       }
 
       this.messageService.add({
         severity: 'error',
-        summary: 'Error de importación',
+        summary: errorTitle,
         detail: errorMessage
       });
     }
