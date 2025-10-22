@@ -1217,12 +1217,12 @@ export class AccountListComponent implements OnInit {
           });
       },
       (error) => {
+        const errorMessage = error?.error?.message || 'Ha ocurrido un error al actualizar la cuenta!.';
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: 'Ha ocurrido un error al actualizar la cuenta!.'
+          summary: 'Registro Duplicado',
+          detail: errorMessage
         });
-        console.error('Error al actualizar la cuenta:', error);
       }
     );
   }
