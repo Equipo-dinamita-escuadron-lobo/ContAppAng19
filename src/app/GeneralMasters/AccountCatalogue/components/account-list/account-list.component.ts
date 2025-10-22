@@ -27,7 +27,16 @@ import { PaginatorModule } from 'primeng/paginator';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { RadioButtonModule } from 'primeng/radiobutton';
 
-
+// Interfaces para manejo de errores de importación
+interface ImportError {
+  rowNumber: number;
+  columnNumber: number;
+  columnName: string;
+  fieldValue: any;
+  errorCode: string;
+  errorMessage: string;
+  errorType: string;
+}
 
 @Component({
   selector: 'app-account-list',
@@ -170,6 +179,15 @@ export class AccountListComponent implements OnInit {
   placeClasificationType: string = '';
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: unknown | null = null;
+
+  // Propiedades para el modal de errores de importación
+  importErrors: ImportError[] = [];
+  totalErrors = 0;
+  totalRecordsImported = 0;
+  failedImportsCount = 0;
+  successfulImports = 0;
+  duplicatesSkipped = 0;
+  showErrorModal = false;
 
   /**
    * Propiedades para el modal de exportación
@@ -1778,62 +1796,183 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
+   * Muestra el modal con los detalles de errores de importación.
+   */
+  private showImportErrorsModal(errors: ImportError[], fileName: string, totalRecords?: number, failedImports?: number, successfulImports?: number, duplicatesSkipped?: number): void {
+    this.importErrors = errors;
+    this.totalErrors = errors.length;
+    this.totalRecordsImported = totalRecords || 0;
+    this.failedImportsCount = failedImports || errors.length;
+    this.successfulImports = successfulImports || 0;
+    this.duplicatesSkipped = duplicatesSkipped || 0;
+    this.showErrorModal = true;
+  }
+
+  /**
+   * Cierra el modal de errores de importación.
+   */
+  closeErrorModal(): void {
+    this.showErrorModal = false;
+    this.importErrors = [];
+    this.totalErrors = 0;
+    this.totalRecordsImported = 0;
+    this.failedImportsCount = 0;
+    this.successfulImports = 0;
+    this.duplicatesSkipped = 0;
+  }
+
+  /**
+   * Convierte un número de columna a letra de Excel (1=A, 2=B, 27=AA, etc.)
+   */
+  getExcelColumnLetter(columnNumber: number): string {
+    let columnLetter = '';
+    let temp = columnNumber;
+
+    while (temp > 0) {
+      const remainder = (temp - 1) % 26;
+      columnLetter = String.fromCharCode(65 + remainder) + columnLetter;
+      temp = Math.floor((temp - 1) / 26);
+    }
+
+    return columnLetter;
+  }
+
+  /**
    * Maneja la selección de archivo para importar cuentas.
    * @param event Evento del selector de archivos.
    */
-  async onFileSelect(event: any): Promise<void> {
+  onFileSelect(event: any): void {
     const file = event.files?.[0];
     if (!file) return;
 
-    try {
-      const entId = this.getIdEnterprise();
-      const response = await firstValueFrom(this._accountService.importAccounts(entId, file));
+    const entId = this.getIdEnterprise();
 
-      // Mostrar mensaje de éxito
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Importación completada',
-        detail: response.message || 'Las cuentas han sido importadas exitosamente'
-      });
+    this._accountService.importAccounts(entId, file).subscribe({
+      next: (response) => {
+        const importResult = response.body;
 
-      // Recargar la lista de cuentas
-      this.getAccounts();
+        if (importResult) {
+          const { status, totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = importResult;
 
-    } catch (error: any) {
-      // Mostrar mensaje de error del backend (sin información sensible)
-      let errorMessage = 'Error al procesar el archivo. Verifique el formato y contenido del archivo.';
-      let errorTitle = 'Error de importación';
-
-      try {
-        // Si error.error es un string (JSON), intentar parsearlo
-        if (typeof error.error === 'string') {
-          const parsedError = JSON.parse(error.error);
-          if (parsedError.message) {
-            errorMessage = parsedError.message;
-            // Determinar título basado en el código de error si existe
-            if (parsedError.code) {
-              errorTitle = this.getImportErrorTitle(parsedError.code);
+          // Si hay errores, mostrar modal de errores Y notificación de resumen
+          if (errors && errors.length > 0) {
+            let detail = `Total procesados: ${totalRecords || 0}\n`;
+            detail += `Exitosos: ${successfulImports || 0}\n`;
+            detail += `Fallidos: ${failedImports}\n`;
+            if (duplicatesSkipped > 0) {
+              detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
             }
+
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Importación Completada con Errores',
+              detail,
+              life: 8000
+            });
+
+            // Mostrar modal con detalles de errores
+            this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
+
+            // Recargar lista si hubo importaciones exitosas
+            if (successfulImports > 0) {
+              this.getAccounts();
+            }
+            return;
           }
-        } else if (error.error?.message) {
-          // Si error.error ya es un objeto con message
-          errorMessage = error.error.message;
-          if (error.error?.code) {
-            errorTitle = this.getImportErrorTitle(error.error.code);
+
+          // Si no hay errores, mostrar resumen de importación exitosa
+          let severity: 'success' | 'info' | 'warn' | 'error' = 'success';
+          let summary = 'Importación Exitosa';
+
+          if (status === 'FAILED') {
+            severity = 'error';
+            summary = 'Error en Importación';
+          }
+
+          // Construir mensaje detallado
+          let detail = `Total procesados: ${totalRecords || 0}\n`;
+          detail += `Exitosos: ${successfulImports || 0}\n`;
+          if (duplicatesSkipped > 0) {
+            detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
+          }
+
+          this.messageService.add({
+            severity,
+            summary,
+            detail,
+            life: 8000
+          });
+
+          // Recargar lista si hubo importaciones exitosas
+          if (successfulImports > 0) {
+            this.getAccounts();
           }
         }
-        // No usar error.message directamente ya que contiene información técnica sensible
-      } catch (parseError) {
-        // Si falla el parseo, mantener el mensaje genérico
-        console.error('Error al parsear respuesta del backend:', parseError);
-      }
+      },
+      error: (error) => {
+        // Extraer los errores del backend
+        if (error.error && typeof error.error === 'object') {
+          const errorResponse = error.error;
+          const errors = errorResponse.errors || [];
 
-      this.messageService.add({
-        severity: 'error',
-        summary: errorTitle,
-        detail: errorMessage
-      });
-    }
+          if (errors && errors.length > 0) {
+            // Mostrar modal de errores
+            this.showImportErrorsModal(
+              errors,
+              errorResponse.fileName || file.name,
+              errorResponse.totalRecords,
+              errorResponse.failedImports,
+              errorResponse.successfulImports,
+              errorResponse.duplicatesSkipped
+            );
+          } else {
+            // Error general sin detalles específicos
+            const errorMessage = errorResponse.message || 'Error desconocido durante la importación';
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Importación',
+              detail: errorMessage
+            });
+          }
+        } else if (error.error instanceof Blob) {
+          // Manejar errores que vienen como Blob
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const errorData = JSON.parse(reader.result as string);
+              const errorMessage = errorData.message || 'No se pudo importar las cuentas.';
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error de Importación',
+                detail: errorMessage
+              });
+            } catch (e) {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error de Importación',
+                detail: 'Ocurrió un error inesperado.'
+              });
+            }
+          };
+          reader.onerror = () => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Importación',
+              detail: 'No se pudo leer el mensaje de error.'
+            });
+          };
+          reader.readAsText(error.error);
+        } else {
+          // Error que no es Blob
+          const errorMessage = error.error?.message || error.message || 'Error desconocido al importar cuentas';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Importación',
+            detail: errorMessage
+          });
+        }
+      }
+    });
   }
 
 }
