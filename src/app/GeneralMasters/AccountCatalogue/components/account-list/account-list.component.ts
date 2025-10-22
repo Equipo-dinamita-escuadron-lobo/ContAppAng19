@@ -996,10 +996,14 @@ export class AccountListComponent implements OnInit {
             });
         },
         (error) => {
+          const errorMessage = error?.error?.message || 'Ha ocurrido un error al crear la cuenta!.';
+          const errorCode = error?.error?.code;
+          const errorTitle = this.getErrorTitle(errorCode);
+
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Ha ocurrido un error al crear la cuenta!.'
+            summary: errorTitle,
+            detail: errorMessage
           });
         }
       );
@@ -1218,13 +1222,43 @@ export class AccountListComponent implements OnInit {
       },
       (error) => {
         const errorMessage = error?.error?.message || 'Ha ocurrido un error al actualizar la cuenta!.';
+        const errorCode = error?.error?.code;
+        const errorTitle = this.getErrorTitle(errorCode);
+
         this.messageService.add({
           severity: 'error',
-          summary: 'Registro Duplicado',
+          summary: errorTitle,
           detail: errorMessage
         });
       }
     );
+  }
+
+  /**
+   * Determina el título del error basado en el código de error
+   * @param errorCode Código de error del backend
+   * @returns Título apropiado para el error
+   */
+  private getErrorTitle(errorCode?: string): string {
+    switch (errorCode) {
+      case 'ACCOUNT_DESCRIPTION_ALREADY_EXISTS':
+      case 'ACCOUNT_ALREADY_EXISTS':
+        return 'Registro Duplicado';
+
+      case 'INVALID_ACCOUNT_CODE':
+      case 'INVALID_ACCOUNT_CODE_LENGTH':
+      case 'INVALID_ACCOUNT_CODE_FORMAT':
+        return 'Error de Validación';
+
+      case 'ACCOUNT_NOT_FOUND':
+        return 'Cuenta No Encontrada';
+
+      case 'ACCOUNT_HAS_CHILDREN':
+        return 'Operación No Permitida';
+
+      default:
+        return 'Error';
+    }
   }
 
   /**
