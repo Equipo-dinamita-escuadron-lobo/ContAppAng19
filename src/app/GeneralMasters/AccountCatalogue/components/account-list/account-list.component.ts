@@ -25,6 +25,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 
 
@@ -37,6 +38,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
     AccountTemplateComponent,
     ButtonModule, FileUploadModule, DropdownModule, DialogModule,
     IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
+    RadioButtonModule,
     ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule,
     TableModule, PaginatorModule
   ],
@@ -168,6 +170,17 @@ export class AccountListComponent implements OnInit {
   placeClasificationType: string = '';
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: unknown | null = null;
+
+  /**
+   * Propiedades para el modal de exportación
+   */
+  exportStatusFilter: boolean | undefined = undefined;
+  exportDialogMessage = '¿Qué tipo de cuentas desea exportar?';
+  exportStatusOptions = [
+    { label: 'Todos', value: undefined },
+    { label: 'Activos', value: true },
+    { label: 'Inactivos', value: false }
+  ];
 
   /**
   * Constructor del componente.
@@ -1654,12 +1667,31 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
+   * Muestra el modal de confirmación para exportar cuentas
+   */
+  showExportConfirmDialog() {
+    this.exportStatusFilter = undefined; // "Todos" por defecto
+
+    this.confirmationService.confirm({
+      key: 'exportDialog',
+      header: 'Exportar',
+      acceptLabel: 'Aceptar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-success',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        this.exportAccounts(this.exportStatusFilter);
+      }
+    });
+  }
+
+  /**
    * Exporta el catálogo de cuentas a formato Excel.
    */
-  async exportAccounts(): Promise<void> {
+  async exportAccounts(status: boolean | undefined): Promise<void> {
     try {
       const entId = this.getIdEnterprise();
-      const response = await firstValueFrom(this._accountService.exportAccounts(entId));
+      const response = await firstValueFrom(this._accountService.exportAccounts(entId, undefined, status));
 
       if (response.body) {
         // Crear blob y descargar

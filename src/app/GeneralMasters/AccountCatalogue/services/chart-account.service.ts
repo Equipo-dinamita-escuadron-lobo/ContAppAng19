@@ -377,16 +377,29 @@ export class ChartAccountService {
    *
    * @param entId - El ID de la entidad.
    * @param companyName - Nombre opcional de la empresa para el archivo.
+   * @param status - Estado del filtro (true=activos, false=inactivos, undefined=todos).
    * @returns Un observable con la respuesta HTTP que contiene el blob del archivo.
    */
-  exportAccounts(entId: string, companyName?: string): Observable<HttpResponse<Blob>> {
-    let params = new HttpParams().set('entId', entId);
-    if (companyName) {
-      params = params.set('companyName', companyName);
+  exportAccounts(entId: string, companyName?: string, status?: boolean): Observable<HttpResponse<Blob>> {
+    let url = `${this.apiURL}export/excel/${entId}`;
+    const params: string[] = [];
+
+    // Agregar status si está definido (incluyendo false)
+    if (status !== undefined && status !== null) {
+      params.push(`status=${status}`);
     }
 
-    return this.http.get(`${this.apiURL}export/excel`, {
-      params,
+    // Agregar companyName si existe y no está vacío
+    if (companyName && companyName.trim()) {
+      params.push(`companyName=${encodeURIComponent(companyName.trim())}`);
+    }
+
+    // Construir URL final con parámetros
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+
+    return this.http.get(url, {
       responseType: 'blob',
       observe: 'response'
     }).pipe(
