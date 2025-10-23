@@ -88,7 +88,18 @@
           <th *ngIf="showDetailView">Ciudad</th>
           <th *ngIf="showDetailView">Dirección</th>
           <th *ngIf="showDetailView">Teléfono</th>
-          <th>Estado</th>
+          <th>
+            <div class="flex items-center gap-2">
+              <span>Estado</span>
+              <p-toggleswitch
+                [(ngModel)]="bulkStateToggle"
+                (onChange)="changeBulkState()"
+                pTooltip="Cambiar estado de todos los terceros"
+                tooltipPosition="top"
+                [style]="{'transform': 'scale(0.8)'}">
+              </p-toggleswitch>
+            </div>
+          </th>
           <th>Acciones</th>
         </tr>
       </ng-template>

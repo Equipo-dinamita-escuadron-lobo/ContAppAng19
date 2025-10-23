@@ -256,4 +256,23 @@ export class ThirdService {
       })
     );
   }
+
+  /**
+   * Cambia el estado de todos los terceros de una empresa de forma masiva
+   * @param entId ID de la empresa
+   * @param newState Nuevo estado para todos los terceros
+   * @returns Observable con la respuesta del cambio masivo
+   */
+  changeAllThirdsState(entId: string, newState: boolean): Observable<any> {
+    let params = new HttpParams()
+      .set('entId', entId)
+      .set('newState', newState.toString());
+
+    return this.http.patch<any>(`${this.thirdApiUrl}allState`, null, { params }).pipe(
+      catchError((error) => {
+        console.error('Error al cambiar estado masivo de terceros:', error);
+        return throwError(() => error);
+      })
+    );
+  }
 }

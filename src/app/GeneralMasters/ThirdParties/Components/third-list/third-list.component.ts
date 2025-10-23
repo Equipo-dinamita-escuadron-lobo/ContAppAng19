@@ -87,6 +87,8 @@ export class ThirdListComponent implements OnInit {
   loadingPdfRut = false;
   showDetailView = false;
   globalFilterValue = '';
+
+  bulkStateToggle = true; // Default to active
   
   // Pagination
   totalRecords = 0;
@@ -336,6 +338,52 @@ export class ThirdListComponent implements OnInit {
             });
           },
         });
+      }
+    });
+  }
+
+  /**
+   * Cambia el estado de todos los terceros de forma masiva
+   */
+  changeBulkState(): void {
+    const actionLower = this.bulkStateToggle ? 'activar' : 'inactivar';
+
+    this.confirmationService.confirm({
+      message: `¿Desea ${actionLower} todos los terceros? Esta acción no se puede deshacer.`,
+      header: 'Confirmar Cambio de Estado Masivo',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: `Sí, ${actionLower}`,
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: this.bulkStateToggle ? 'p-button-success' : 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
+      accept: () => {
+        this.loading = true;
+        this.thirdService.changeAllThirdsState(this.entData, this.bulkStateToggle).subscribe({
+          next: (response: any) => {
+            this.loadThirds();
+
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Cambio Masivo Exitoso',
+              detail: `${response.message}`
+            });
+          },
+          error: (error) => {
+            console.error('Error changing bulk state:', error);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Error al cambiar el estado masivo de los terceros'
+            });
+          }
+        }).add(() => {
+          this.loading = false;
+        });
+      },
+      reject: () => {
+        this.bulkStateToggle = !this.bulkStateToggle;
       }
     });
   }
