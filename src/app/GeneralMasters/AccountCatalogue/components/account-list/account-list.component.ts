@@ -1185,11 +1185,12 @@ export class AccountListComponent implements OnInit {
       }
       try {
         this.confirmationService.confirm({
-          message: '¿Desea eliminar esta cuenta?',
+          message: '¿Desea eliminar esta cuenta? Esta acción no se puede deshacer.',
           header: 'Confirmar eliminación',
           icon: 'pi pi-exclamation-triangle',
           acceptLabel: 'Sí, Eliminar',
           rejectLabel: 'Cancelar',
+          rejectButtonStyleClass: 'p-button-secondary',
           accept: () => {
             if (this.accountSelected?.id) {
               this._accountService.deleteAccount(this.accountSelected.id.toString(), this.getIdEnterprise()).subscribe(
