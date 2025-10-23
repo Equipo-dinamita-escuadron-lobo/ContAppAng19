@@ -496,8 +496,8 @@ export class ThirdCreationComponent implements OnInit {
       .toLowerCase()
       .trim()
       .normalize('NFD') // Descompone caracteres con acentos
-      .replace(/[\u0300-\u036f]/g, '') // Remueve los acentos
-      .replace(/[^a-z0-9\s]/g, ''); // Remueve caracteres especiales excepto espacios
+      .replaceAll(/[\u0300-\u036f]/g, '') // Remueve los acentos
+      .replaceAll(/[^a-z0-9\s]/g, ''); // Remueve caracteres especiales excepto espacios
   }
 
   /**
