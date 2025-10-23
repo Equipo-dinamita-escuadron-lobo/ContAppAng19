@@ -258,6 +258,21 @@ export class ThirdService {
   }
 
   /**
+   * Obtiene una lista de terceros activos
+   * @param entId ID de la empresa
+   * @returns Observable con la lista de terceros activos
+   */
+  getActiveThirds(entId: string): Observable<any> {
+    const params = new HttpParams().set('entId', entId);
+
+    return this.http.get<any>(`${this.thirdApiUrl}findAllActive`, { params }).pipe(
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Cambia el estado de todos los terceros de una empresa de forma masiva
    * @param entId ID de la empresa
    * @param newState Nuevo estado para todos los terceros
