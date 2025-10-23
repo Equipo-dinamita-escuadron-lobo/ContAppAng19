@@ -12,7 +12,7 @@ export class ThirdService {
   private infoThirdRUT: string |null=null;
 
   /** URL base para las operaciones con terceros */
-  private thirdApiUrl = environment.API_URL + 'thirds/'
+  private readonly thirdApiUrl = environment.API_URL + 'thirds/'
   //Cambiar para desarrollo local
   //private thirdApiUrl = 'http://localhost:8081/api/thirds/'
 
@@ -20,7 +20,7 @@ export class ThirdService {
    * Constructor del servicio
    * @param http Cliente HTTP para realizar peticiones
    */
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   /**
    * Establece la información del RUT

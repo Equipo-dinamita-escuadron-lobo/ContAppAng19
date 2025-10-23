@@ -152,16 +152,16 @@ export class ThirdCreationComponent implements OnInit {
   ];
 
   constructor(
-    private fb: FormBuilder,
-    private thirdService: ThirdService,
-    private thirdServiceConfigurationService: ThirdServiceConfigurationService,
-    private router: Router,
-    private datePipe: DatePipe,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods,
-    private thirdFormService: ThirdFormService,
-    private thirdValidationService: ThirdValidationService,
-    private geographyHelper: GeographyHelperService
+    private readonly fb: FormBuilder,
+    private readonly thirdService: ThirdService,
+    private readonly thirdServiceConfigurationService: ThirdServiceConfigurationService,
+    private readonly router: Router,
+    private readonly datePipe: DatePipe,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods,
+    private readonly thirdFormService: ThirdFormService,
+    private readonly thirdValidationService: ThirdValidationService,
+    private readonly geographyHelper: GeographyHelperService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();

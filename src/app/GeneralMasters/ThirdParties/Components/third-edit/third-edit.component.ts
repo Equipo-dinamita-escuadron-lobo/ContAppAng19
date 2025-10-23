@@ -207,18 +207,18 @@ export class ThirdEditComponent implements OnInit {
   entData: string = '';
 
   constructor(
-    private fb: FormBuilder,
-    private thirdService: ThirdService,
-    private thirdConfigurationService: ThirdServiceConfigurationService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private datePipe: DatePipe,
-    private http: HttpClient,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods,
-    private thirdFormService: ThirdFormService,
-    private thirdValidationService: ThirdValidationService,
-    private geographyHelperService: GeographyHelperService
+    private readonly fb: FormBuilder,
+    private readonly thirdService: ThirdService,
+    private readonly thirdConfigurationService: ThirdServiceConfigurationService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly datePipe: DatePipe,
+    private readonly http: HttpClient,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods,
+    private readonly thirdFormService: ThirdFormService,
+    private readonly thirdValidationService: ThirdValidationService,
+    private readonly geographyHelperService: GeographyHelperService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
