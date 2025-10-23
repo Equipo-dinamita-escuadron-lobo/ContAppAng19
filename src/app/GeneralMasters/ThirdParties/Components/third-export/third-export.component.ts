@@ -186,8 +186,8 @@ export class ThirdExportComponent implements OnInit {
         
         this.messageService.add({
           severity: 'success',
-          summary: 'Estamos generando tu archivo',
-          detail: `El archivo se descargará automáticamente en unos segundos.`
+          summary: 'Exportación exitosa',
+          detail: `El archivo se ha exportado correctamente.`
         });
 
         this.loading = false;

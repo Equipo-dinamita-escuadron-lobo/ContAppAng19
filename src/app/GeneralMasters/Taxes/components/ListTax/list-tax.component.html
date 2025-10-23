@@ -29,7 +29,7 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Buscar impuesto (descripción)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
+          <input pInputText type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Buscar impuesto (código/descripción)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
         </p-iconfield>
       </div>
     </div>
@@ -41,8 +41,8 @@
           <th pSortableColumn="code" class="font-semibold text-primary border-b-2 border-primary">Código <p-sortIcon field="code"></p-sortIcon></th>
           <th pSortableColumn="description" class="font-semibold text-primary border-b-2 border-primary">Descripción <p-sortIcon field="description"></p-sortIcon></th>
           <th pSortableColumn="interest" class="font-semibold text-primary border-b-2 border-primary text-right">Tarifa <p-sortIcon field="interest"></p-sortIcon></th>
-          <th class="font-semibold text-primary border-b-2 border-primary">Cuenta</th>
-          <th class="font-semibold text-primary border-b-2 border-primary">Cuenta Devolución</th>
+          <th class="font-semibold text-primary border-b-2 border-primary">Cuenta Impuesto en Compra</th>
+          <th class="font-semibold text-primary border-b-2 border-primary">Cuenta Impuesto en Venta</th>        
           <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
           <th class="font-semibold text-primary border-b-2 border-primary text-center">Acciones</th>
         </tr>
@@ -53,8 +53,8 @@
           <td class="py-3">{{ tax.code }}</td>
           <td class="py-3">{{ tax.description }}</td>
           <td class="py-3 text-right">{{ formatPercentage(tax.interest) }}</td>
-          <td class="py-3">{{ tax.depositAccountName }}</td>
-          <td class="py-3">{{ tax.refundAccountName }}</td>
+          <td class="py-3">{{ tax.purchaseTaxName }}</td>
+          <td class="py-3">{{ tax.salesTaxName }}</td>
           <td class="py-3 text-center">
             <p-tag [value]="formatState(tax.status)" [severity]="getStateSeverity(tax.status)"></p-tag>
           </td>
@@ -65,7 +65,7 @@
               <p-toggleSwitch
                 [ngModel]="isActive(tax.status)"
                 (onChange)="changeTaxState(tax.id, tax)"
-                pTooltip="Cambiar Estado"
+                [pTooltip]="isActive(tax.status) ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"

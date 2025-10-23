@@ -347,7 +347,7 @@ export class AccountFormComponent implements OnInit {
 
   /**
    * Maneja la entrada de teclado en el campo nombre.
-   * Bloquea caracteres que no sean letras, espacios y caracteres especiales permitidos.
+   * Bloquea caracteres que no sean letras, números, espacios y caracteres especiales permitidos.
    * @param event Evento de teclado.
    */
   onNameKeyDown(event: KeyboardEvent) {
@@ -362,13 +362,13 @@ export class AccountFormComponent implements OnInit {
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
       'Home', 'End', ' '
     ];
-    
+
     if (allowedKeys.includes(event.key)) {
       return;
     }
 
-    // Solo permitir letras, espacios y caracteres especiales permitidos
-    const allowedPattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d1,.()\/\-+&%]$/;
+    // Solo permitir letras, números, espacios y caracteres especiales permitidos
+    const allowedPattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\d,.()\/\-+&%]$/;
     if (!allowedPattern.test(event.key)) {
       event.preventDefault();
     }

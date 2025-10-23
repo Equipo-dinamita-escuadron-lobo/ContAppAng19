@@ -132,8 +132,8 @@ export class ListTaxComponent implements OnInit {
         this.taxes = content.map((tax: any) => ({
           ...tax,
           id: Number(tax.id),
-          depositAccountName: this.getAccountName(tax.depositAccount),
-          refundAccountName: this.getAccountName(tax.refundAccount)
+          salesTaxName: this.getAccountName(tax.salesTax),
+          purchaseTaxName: this.getAccountName(tax.purchaseTax)
         }));
         this.totalRecords = page?.totalElements || 0;
         this.loading = false;
@@ -163,8 +163,8 @@ export class ListTaxComponent implements OnInit {
         this.taxes = content.map((tax: any) => ({
           ...tax,
           id: Number(tax.id),
-          depositAccountName: this.getAccountName(tax.depositAccount),
-          refundAccountName: this.getAccountName(tax.refundAccount)
+          salesTaxName: this.getAccountName(tax.salesTax),
+          purchaseTaxName: this.getAccountName(tax.purchaseTax)
         }));
         this.totalRecords = page?.totalElements || 0;
         this.loading = false;
@@ -189,7 +189,7 @@ export class ListTaxComponent implements OnInit {
    * Obtiene el nombre de la cuenta por código
    */
   private getAccountName(code: string): string {
-    if (!code) return 'No especificada';
+    if (!code) return 'N/A';
     const account = this.accounts.find(acc => acc.code === code);
     return account ? `${account.code} - ${account.description}` : code;
   }

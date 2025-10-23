@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule, FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import { Account } from '../../models/ChartAccount';
 import { FinancialStateType } from '../../models/FinancialStateType';
 import { NatureType } from '../../models/NatureType';
@@ -25,8 +27,18 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
-
+// Interfaces para manejo de errores de importación
+interface ImportError {
+  rowNumber: number;
+  columnNumber: number;
+  columnName: string;
+  fieldValue: any;
+  errorCode: string;
+  errorMessage: string;
+  errorType: string;
+}
 
 @Component({
   selector: 'app-account-list',
@@ -37,6 +49,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
     AccountTemplateComponent,
     ButtonModule, FileUploadModule, DropdownModule, DialogModule,
     IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
+    RadioButtonModule,
     ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule,
     TableModule, PaginatorModule
   ],
@@ -77,9 +90,14 @@ export class AccountListComponent implements OnInit {
   showFormTransactional: boolean = false;
 
   /**
-  * Variable que indica si una cuenta ha sido seleccionada.
-  */
+   * Variable que indica si una cuenta ha sido seleccionada.
+   */
   selectedAccount: boolean = false;
+
+  /**
+   * Valores originales de la cuenta seleccionada para comparar cambios reales.
+   */
+  private originalAccountValues: any = null;
 
   /**
   * Variables para controlar la visibilidad de los botones en la interfaz de usuario.
@@ -106,7 +124,12 @@ export class AccountListComponent implements OnInit {
    * Variables para controlar la visibilidad de los checkboxes en la edición
    */
   showCrossingCheckboxEdit: boolean = false;
-  showCostCenterCheckboxEdit: boolean = false;    /**
+  showCostCenterCheckboxEdit: boolean = false;
+
+  /**
+   * Controla si los inputs deben estar bloqueados cuando no hay cambios reales
+   */
+  inputsLocked: boolean = false;    /**
    * Variables determinadas según el nivel de la cuenta.
    * Estas variables gestionan el tipo de cuenta y si se deben agregar subcuentas o hijos.
    */
@@ -168,6 +191,27 @@ export class AccountListComponent implements OnInit {
   placeClasificationType: string = '';
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: unknown | null = null;
+
+  // Propiedades para el modal de errores de importación
+  importErrors: ImportError[] = [];
+  totalErrors = 0;
+  totalRecordsImported = 0;
+  failedImportsCount = 0;
+  successfulImports = 0;
+  duplicatesSkipped = 0;
+  showErrorModal = false;
+
+  /**
+   * Propiedades para el modal de exportación
+   */
+  exportStatusFilter: boolean | undefined = undefined;
+  selectedExportStatus: boolean | undefined = undefined; // Variable para el modal
+  exportDialogMessage = '¿Qué tipo de cuentas desea exportar?';
+  exportStatusOptions = [
+    { label: 'Todos', value: undefined },
+    { label: 'Activos', value: true },
+    { label: 'Inactivos', value: false }
+  ];
 
   /**
   * Constructor del componente.
@@ -322,16 +366,63 @@ export class AccountListComponent implements OnInit {
     this.accountHasInformation(account);
     this.createForm(account.code, account.description);
     this.selectedAccount = true;
-    this.showUpdateButton = false;
     this.accountSelected = account;
+
+    // Almacenar los valores originales para comparar cambios reales
+    this.storeOriginalValues(account);
+
+    this.showUpdateButton = false;
     this.updateCheckboxVisibilityEdit();
   }
 
   /**
-  * Crea el formulario de cuenta basado en el código y la descripción de la cuenta seleccionada.
-  * @param code El código de la cuenta seleccionada.
-  * @param description La descripción de la cuenta seleccionada.
-  */
+   * Almacena los valores originales de la cuenta para comparar cambios reales.
+   * @param account La cuenta seleccionada.
+   */
+  private storeOriginalValues(account: Account) {
+    // Extraer el código y descripción según el nivel de la cuenta
+    let originalCode = '';
+    let originalDescription = '';
+
+    switch (account.code.length) {
+      case 1:
+        originalCode = account.code.slice(0, 1);
+        originalDescription = account.description;
+        break;
+      case 2:
+        originalCode = account.code.slice(1, 2);
+        originalDescription = account.description;
+        break;
+      case 4:
+        originalCode = account.code.slice(2, 4);
+        originalDescription = account.description;
+        break;
+      case 6:
+        originalCode = account.code.slice(4, 6);
+        originalDescription = account.description;
+        break;
+      case 8:
+        originalCode = account.code.slice(6, 8);
+        originalDescription = account.description;
+        break;
+    }
+
+    this.originalAccountValues = {
+      code: originalCode,
+      description: originalDescription,
+      nature: account.nature,
+      financialStatus: account.financialStatus,
+      classification: account.classification,
+      crossing: account.crossing,
+      costCenter: account.costCenter
+    };
+  }
+
+  /**
+   * Crea el formulario de cuenta basado en el código y la descripción de la cuenta seleccionada.
+   * @param code El código de la cuenta seleccionada.
+   * @param description La descripción de la cuenta seleccionada.
+   */
   createForm(code: string, description: string) {
     this.accountForm = this.fb.group({});
     this.showPrincipalAndTransactionalForm();
@@ -404,31 +495,93 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-  * Determina si se debe mostrar el botón de "Actualizar" basado en los cambios en los formularios.
+  * Determina si se debe mostrar el botón de "Actualizar" basado en los cambios reales en los formularios
+  * comparados con los valores originales. También controla si los inputs deben estar bloqueados.
   * @returns Si el botón de "Actualizar" debe mostrarse.
   */
   shouldShowUpdateButton(): boolean {
-    const accountFormHasChanges = this.hasFormValueChanged(this.accountForm);
-    const transactionalFormHasChanges = this.hasFormValueChanged(this.formTransactional);
-    return accountFormHasChanges || transactionalFormHasChanges;
+    if (!this.originalAccountValues || !this.accountSelected) {
+      this.inputsLocked = true;
+      return false;
+    }
+
+    // Comparar valores actuales con valores originales
+    const hasChanges = this.hasRealChanges();
+    this.inputsLocked = !hasChanges; // Bloquear inputs cuando no hay cambios
+
+    return hasChanges;
   }
 
   /**
-  * Verifica si algún control en el formulario proporcionado ha sido modificado.
-  * @param form El grupo de formularios a verificar.
-  * @returns Si algún control en el formulario ha sido modificado.
+  * Verifica si hay cambios reales comparando los valores actuales con los valores originales.
+  * @returns Si hay cambios reales en los formularios.
   */
-  hasFormValueChanged(form: FormGroup): boolean {
-    const formValues = form.value;
-    for (const key in formValues) {
-      if (formValues.hasOwnProperty(key)) {
-        const control = form.get(key);
-        if (control?.dirty) {
-          return true;
-        }
-      }
+  private hasRealChanges(): boolean {
+    if (!this.originalAccountValues) {
+      return false;
     }
-    return false;
+
+    const currentAccountValues = this.getCurrentAccountValues();
+    const currentTransactionalValues = this.formTransactional.value;
+
+    // Comparar código y descripción
+    if (currentAccountValues.code !== this.originalAccountValues.code ||
+        currentAccountValues.description !== this.originalAccountValues.description) {
+      return true;
+    }
+
+    // Comparar valores transaccionales
+    const natureChanged = this.compareNatureValues(currentTransactionalValues.selectedNatureType);
+    const financialStatusChanged = this.compareFinancialStatusValues(currentTransactionalValues.selectedFinancialStateType);
+    const classificationChanged = this.compareClassificationValues(currentTransactionalValues.selectedClasificationType);
+    const crossingChanged = currentTransactionalValues.crossing !== this.originalAccountValues.crossing;
+    const costCenterChanged = currentTransactionalValues.costCenter !== this.originalAccountValues.costCenter;
+
+    return natureChanged || financialStatusChanged || classificationChanged || crossingChanged || costCenterChanged;
+  }
+
+  /**
+  * Obtiene los valores actuales del formulario de cuenta.
+  * @returns Los valores actuales del código y descripción.
+  */
+  private getCurrentAccountValues(): { code: string, description: string } {
+    const codeValue = this.accountForm.get(this.code)?.value || '';
+    const descriptionValue = this.accountForm.get(this.name)?.value || '';
+
+    return {
+      code: codeValue,
+      description: descriptionValue
+    };
+  }
+
+  /**
+  * Compara el valor de naturaleza actual con el original.
+  * @param currentValue Valor actual del selector de naturaleza.
+  * @returns Si el valor cambió.
+  */
+  private compareNatureValues(currentValue: any): boolean {
+    const currentName = currentValue?.name || null;
+    return currentName !== this.originalAccountValues.nature;
+  }
+
+  /**
+  * Compara el valor de estado financiero actual con el original.
+  * @param currentValue Valor actual del selector de estado financiero.
+  * @returns Si el valor cambió.
+  */
+  private compareFinancialStatusValues(currentValue: any): boolean {
+    const currentName = currentValue?.name || null;
+    return currentName !== this.originalAccountValues.financialStatus;
+  }
+
+  /**
+  * Compara el valor de clasificación actual con el original.
+  * @param currentValue Valor actual del selector de clasificación.
+  * @returns Si el valor cambió.
+  */
+  private compareClassificationValues(currentValue: any): boolean {
+    const currentName = currentValue?.name || null;
+    return currentName !== this.originalAccountValues.classification;
   }
 
   /**
@@ -996,10 +1149,14 @@ export class AccountListComponent implements OnInit {
             });
         },
         (error) => {
+          const errorMessage = error?.error?.message || 'Ha ocurrido un error al crear la cuenta!.';
+          const errorCode = error?.error?.code;
+          const errorTitle = this.getErrorTitle(errorCode);
+
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Ha ocurrido un error al crear la cuenta!.'
+            summary: errorTitle,
+            detail: errorMessage
           });
         }
       );
@@ -1089,9 +1246,8 @@ export class AccountListComponent implements OnInit {
 
   /**
    * Actualiza la información de una cuenta seleccionada.
-   * Valida que el código de la cuenta no esté asociado a subcuentas antes de proceder con la actualización.
-   * Si la cuenta ya existe o si los datos no han cambiado, muestra un mensaje de error.
-   * Si la cuenta no existe y los datos han cambiado, actualiza la cuenta llamando al servicio correspondiente.
+   * Si los datos han cambiado, actualiza la cuenta llamando al servicio correspondiente.
+   * Si no hay cambios, el botón permanece inactivo y no se realiza ninguna acción.
    */
   async updateAccount() {
     // Prevenir múltiples actualizaciones simultáneas
@@ -1102,16 +1258,6 @@ export class AccountListComponent implements OnInit {
 
     try {
       if (this.accountSelected) {
-        if (this.accountSelected.children && this.accountSelected.children.length > 0 && this.accountSelected.code !== this.parentId + this.accountForm.get(this.code)?.value) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se puede cambiar el código de una cuenta que tiene subcuentas asociadas.'
-          });
-          this.selectAccount(this.accountSelected);
-          return; // Salir de la función
-        }
-
         const transactionalValues = this.formTransactional.value;
 
         // Construir el código correctamente según el nivel de cuenta
@@ -1120,19 +1266,14 @@ export class AccountListComponent implements OnInit {
         
         // Asegurar que el código mantenga la longitud correcta según el nivel
         if (this.num === 1) {
-          // Clase: 1 dígito
           newCode = codeValue.padStart(1, '0');
         } else if (this.num === 2) {
-          // Grupo: 2 dígitos  
           newCode = this.parentId + codeValue.padStart(1, '0');
         } else if (this.num === 4) {
-          // Cuenta: 4 dígitos
           newCode = this.parentId + codeValue.padStart(2, '0');
         } else if (this.num === 6) {
-          // Subcuenta: 6 dígitos
           newCode = this.parentId + codeValue.padStart(2, '0');
         } else if (this.num === 8) {
-          // Auxiliar: 8 dígitos
           newCode = this.parentId + codeValue.padStart(2, '0');
         } else {
           // Fallback: usar la construcción original
@@ -1140,10 +1281,10 @@ export class AccountListComponent implements OnInit {
         }
 
         const account: Account = {
+          idEnterprise: this.getIdEnterprise(),
           code: newCode,
           description: this.accountForm.get(this.name)?.value,
 
-          // Extraemos el .name del objeto, o enviamos null si no hay nada seleccionado
           nature: transactionalValues.selectedNatureType ? transactionalValues.selectedNatureType.name : null,
           financialStatus: transactionalValues.selectedFinancialStateType ? transactionalValues.selectedFinancialStateType.name : null,
           classification: transactionalValues.selectedClasificationType ? transactionalValues.selectedClasificationType.name : null,
@@ -1163,14 +1304,17 @@ export class AccountListComponent implements OnInit {
         );
         
         if (hasChanges) {
-          // Proceder con la actualización - el backend manejará duplicados si los hay
-          this.update(this.accountSelected?.id, account);
-        } else {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'La cuenta tiene la misma información!'
-          });
+          // Verificar que tenemos un ID válido
+          if (!this.accountSelected?.id) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'No se pudo identificar la cuenta a actualizar. Por favor, recargue la página.'
+            });
+            return;
+          }
+
+          this.update(this.accountSelected.id, account);
         }
       }
     } catch (error) {
@@ -1206,14 +1350,74 @@ export class AccountListComponent implements OnInit {
           });
       },
       (error) => {
+        const errorMessage = error?.error?.message || 'Ha ocurrido un error al actualizar la cuenta!.';
+        const errorCode = error?.error?.code;
+        const errorTitle = this.getErrorTitle(errorCode);
+
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: 'Ha ocurrido un error al actualizar la cuenta!.'
+          summary: errorTitle,
+          detail: errorMessage
         });
-        console.error('Error al actualizar la cuenta:', error);
       }
     );
+  }
+
+  /**
+   * Determina el título del error basado en el código de error
+   * @param errorCode Código de error del backend
+   * @returns Título apropiado para el error
+   */
+  private getErrorTitle(errorCode?: string): string {
+    switch (errorCode) {
+      case 'ACCOUNT_DESCRIPTION_ALREADY_EXISTS':
+      case 'ACCOUNT_ALREADY_EXISTS':
+        return 'Registro Duplicado';
+
+      case 'INVALID_ACCOUNT_CODE':
+      case 'INVALID_ACCOUNT_CODE_LENGTH':
+      case 'INVALID_ACCOUNT_CODE_FORMAT':
+        return 'Error de Validación';
+
+      case 'ACCOUNT_NOT_FOUND':
+        return 'Cuenta No Encontrada';
+
+      case 'ACCOUNT_HAS_CHILDREN':
+        return 'Operación No Permitida';
+
+      default:
+        return 'Error';
+    }
+  }
+
+  /**
+   * Determina el título del error de importación basado en el código de error
+   * @param errorCode Código de error del backend
+   * @returns Título apropiado para el error de importación
+   */
+  private getImportErrorTitle(errorCode?: string): string {
+    switch (errorCode) {
+      case 'FILE_SIZE_EXCEEDED':
+        return 'Archivo muy grande';
+
+      case 'EXCEL_VALIDATION_ERROR':
+      case 'EXCEL_CODE_VALIDATION_ERROR':
+      case 'EXCEL_DROPDOWN_VALIDATION_ERROR':
+      case 'EXCEL_CONDITIONAL_VALIDATION_ERROR':
+        return 'Error en el archivo';
+
+      case 'ACCOUNT_IMPORT_ERROR':
+        return 'Error de importación';
+
+      case 'ACCOUNT_IMPORT_NO_DATA':
+        return 'Archivo vacío';
+
+      case 'ACCOUNT_HIERARCHY_ERROR':
+        return 'Error de jerarquía';
+
+      default:
+        return 'Error de importación';
+    }
   }
 
   /**
@@ -1339,7 +1543,7 @@ export class AccountListComponent implements OnInit {
 
   /**
    * Maneja la entrada de teclado en los campos de nombre.
-   * Bloquea caracteres que no sean letras, espacios y caracteres especiales permitidos.
+   * Bloquea caracteres que no sean letras, números, espacios y caracteres especiales permitidos.
    * @param event Evento de teclado.
    */
   onNameKeyDown(event: KeyboardEvent) {
@@ -1359,8 +1563,8 @@ export class AccountListComponent implements OnInit {
       return;
     }
 
-    // Solo permitir letras, espacios y caracteres especiales permitidos
-    const allowedPattern = /^[a-zA-ZÀ-ÿ,.()/\-+&%]$/;
+    // Solo permitir letras, números, espacios y caracteres especiales permitidos
+    const allowedPattern = /^[a-zA-ZÀ-ÿ\d,.()/\-+&%]$/;
     if (!allowedPattern.test(event.key)) {
       event.preventDefault();
     }
@@ -1579,121 +1783,408 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
+   * Muestra el modal de confirmación para exportar cuentas
+   */
+  showExportConfirmDialog() {
+    this.selectedExportStatus = undefined; // "Todos" por defecto
+
+    this.confirmationService.confirm({
+      key: 'exportDialog',
+      header: 'Exportar',
+      acceptLabel: 'Aceptar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-success',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        this.exportAccounts(this.selectedExportStatus);
+      }
+    });
+  }
+
+  /**
    * Exporta el catálogo de cuentas a formato Excel.
    */
-  async exportAccounts(): Promise<void> {
-    try {
-      const entId = this.getIdEnterprise();
-      const response = await firstValueFrom(this._accountService.exportAccounts(entId));
+  exportAccounts(status: boolean | undefined): void {
+    const entData = this.localStorageMethods.loadEnterpriseData();
+    const entId = entData?.id || this.getIdEnterprise();
+    const companyName = entData?.name || '';
 
-      if (response.body) {
-        // Crear blob y descargar
-        const blob = new Blob([response.body], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    this._accountService.exportAccounts(entId, companyName, status).subscribe({
+      next: (response) => {
+        if (!response.body) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Exportación',
+            detail: 'No se recibió el archivo del servidor'
+          });
+          return;
+        }
+
+        this.downloadFile(response);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Exportación Exitosa',
+          detail: `Se ha exportado el catálogo de cuentas correctamente`
         });
-
-        // Obtener nombre del archivo desde headers
-        const contentDisposition = response.headers.get('content-disposition');
-        let filename = 'catalogo_cuentas.xlsx';
-        if (contentDisposition) {
-          const regex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-          const matches = regex.exec(contentDisposition);
-          if (matches?.[1]) {
-            filename = matches[1].replaceAll(/['"]/g, '');
-          }
-        }
-
-        // Crear enlace de descarga
-        const url = globalThis.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        link.click();
-        globalThis.URL.revokeObjectURL(url);
-      }
-    } catch (error: any) {
-      // Mostrar mensaje de error del backend
-      let errorMessage = 'Error desconocido al exportar cuentas';
-
-      try {
-        // Si error.error es un Blob (por responseType: 'blob'), convertirlo a texto
+      },
+      error: (error) => {
         if (error.error instanceof Blob) {
-          const text = await error.error.text();
-          const parsedError = JSON.parse(text);
-          errorMessage = parsedError.message || errorMessage;
-        } else if (typeof error.error === 'string') {
-          // Si error.error es un string (JSON), intentar parsearlo
-          const parsedError = JSON.parse(error.error);
-          errorMessage = parsedError.message || errorMessage;
-        } else if (error.error?.message) {
-          // Si error.error ya es un objeto con message
-          errorMessage = error.error.message;
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const errorData = JSON.parse(reader.result as string);
+              const errorMessage = errorData.message || 'No se pudo exportar las cuentas.';
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error de Exportación',
+                detail: errorMessage
+              });
+            } catch (e) {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error de Exportación',
+                detail: 'Ocurrió un error inesperado.'
+              });
+            }
+          };
+          reader.onerror = () => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: 'No se pudo leer el mensaje de error.'
+            });
+          };
+          reader.readAsText(error.error);
         } else {
-          // Fallback al mensaje del error HTTP
-          errorMessage = error.message || errorMessage;
+          const errorMessage = error.error?.message || error.message || 'Error desconocido al exportar cuentas';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Exportación',
+            detail: errorMessage
+          });
         }
-      } catch (parseError) {
-        // Si falla el parseo, usar el mensaje por defecto
-        errorMessage = error.message || errorMessage;
+      }
+    });
+  }
+
+  /**
+   * Procesa la respuesta HTTP para descargar el archivo.
+   */
+  private downloadFile(response: any): void {
+    const blob = response.body;
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'catalogo_cuentas.xlsx';
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Muestra el modal con los detalles de errores de importación.
+   */
+  private showImportErrorsModal(errors: ImportError[], fileName: string, totalRecords?: number, failedImports?: number, successfulImports?: number, duplicatesSkipped?: number): void {
+    this.importErrors = errors;
+    this.totalErrors = errors.length;
+    this.totalRecordsImported = totalRecords || 0;
+    this.failedImportsCount = failedImports || errors.length;
+    this.successfulImports = successfulImports || 0;
+    this.duplicatesSkipped = duplicatesSkipped || 0;
+    this.showErrorModal = true;
+  }
+
+  /**
+   * Cierra el modal de errores de importación.
+   */
+  closeErrorModal(): void {
+    this.showErrorModal = false;
+    this.importErrors = [];
+    this.totalErrors = 0;
+    this.totalRecordsImported = 0;
+    this.failedImportsCount = 0;
+    this.successfulImports = 0;
+    this.duplicatesSkipped = 0;
+  }
+
+  /**
+   * Exporta los errores de importación a un archivo Excel
+   */
+  exportImportErrors(): void {
+    try {
+      // Validar que existan errores para exportar
+      if (!this.importErrors || this.importErrors.length === 0) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Sin Errores',
+          detail: 'No hay errores para exportar'
+        });
+        return;
       }
 
+      // Crear el workbook y worksheet
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      const ws: XLSX.WorkSheet = {};
+
+      // Información del encabezado
+      const headerInfo = [
+        ['ERRORES DE IMPORTACIÓN DE CATÁLOGO DE CUENTAS'],
+        [''],
+        ['Fecha de exportación:', new Date().toLocaleDateString('es-CO', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        })],
+        ['Hora:', new Date().toLocaleTimeString('es-CO')],
+        [''],
+        ['RESUMEN DE IMPORTACIÓN'],
+        ['Total procesados:', this.totalRecordsImported],
+        ['Exitosos:', this.successfulImports],
+        ['Fallidos:', this.failedImportsCount],
+        ['Duplicados omitidos:', this.duplicatesSkipped],
+        [''],
+        ['DETALLE DE ERRORES']
+      ];
+
+      // Agregar la información del encabezado
+      XLSX.utils.sheet_add_aoa(ws, headerInfo, { origin: 'A1' });
+
+      // Encabezados de la tabla
+      const tableHeaders = [
+        ['Fila', 'Columna', 'Campo', 'Valor', 'Error']
+      ];
+
+      // Agregar encabezados de la tabla
+      XLSX.utils.sheet_add_aoa(ws, tableHeaders, { origin: 'A14' });
+
+      // Preparar los datos de la tabla
+      const tableData = this.importErrors.map(error => [
+        error.rowNumber,
+        this.getExcelColumnLetter(error.columnNumber),
+        error.columnName,
+        error.fieldValue || '(vacío)',
+        error.errorMessage
+      ]);
+
+      // Agregar los datos de la tabla
+      XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A15' });
+
+      // Establecer el rango de la hoja
+      const totalRows = headerInfo.length + 2 + tableData.length;
+      ws['!ref'] = `A1:E${totalRows}`;
+
+      // Configurar anchos de columnas
+      ws['!cols'] = [
+        { wch: 8 },  // A - Fila
+        { wch: 10 }, // B - Columna
+        { wch: 25 }, // C - Campo
+        { wch: 25 }, // D - Valor
+        { wch: 60 }  // E - Error
+      ];
+
+      // Combinar celdas para el título
+      if (!ws['!merges']) ws['!merges'] = [];
+      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }); // A1:E1 (Título)
+
+      // Agregar el worksheet al workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Errores Importación');
+
+      // Generar el nombre del archivo con fecha local
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const timestamp = `${year}-${month}-${day}`;
+      const fileName = `Errores_Importacion_Catalogo_Cuentas_${timestamp}.xlsx`;
+
+      // Generar el archivo y descargarlo
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      saveAs(blob, fileName);
+
+      // Cerrar el modal
+      this.closeErrorModal();
+
+      // Mostrar notificación de éxito
       this.messageService.add({
-        severity: 'info',
-        summary: 'Información',
-        detail: errorMessage
+        severity: 'success',
+        summary: 'Exportación exitosa',
+        detail: 'El archivo se ha exportado correctamente.'
+      });
+
+    } catch (error) {
+      console.error('Error al exportar errores:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error en Exportación',
+        detail: 'Ocurrió un error al exportar los errores.'
       });
     }
+  }
+
+  /**
+   * Convierte un número de columna a letra de Excel (1=A, 2=B, 27=AA, etc.)
+   */
+  getExcelColumnLetter(columnNumber: number): string {
+    let columnLetter = '';
+    let temp = columnNumber;
+
+    while (temp > 0) {
+      const remainder = (temp - 1) % 26;
+      columnLetter = String.fromCharCode(65 + remainder) + columnLetter;
+      temp = Math.floor((temp - 1) / 26);
+    }
+
+    return columnLetter;
   }
 
   /**
    * Maneja la selección de archivo para importar cuentas.
    * @param event Evento del selector de archivos.
    */
-  async onFileSelect(event: any): Promise<void> {
+  onFileSelect(event: any): void {
     const file = event.files?.[0];
     if (!file) return;
 
-    try {
-      const entId = this.getIdEnterprise();
-      const response = await firstValueFrom(this._accountService.importAccounts(entId, file));
+    const entId = this.getIdEnterprise();
 
-      // Mostrar mensaje de éxito
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Importación completada',
-        detail: response.message || 'Las cuentas han sido importadas exitosamente'
-      });
+    this._accountService.importAccounts(entId, file).subscribe({
+      next: (response) => {
+        const importResult = response.body;
 
-      // Recargar la lista de cuentas
-      this.getAccounts();
+        if (importResult) {
+          const { status, totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = importResult;
 
-    } catch (error: any) {
-      // Mostrar mensaje de error del backend (incluyendo límite de tamaño)
-      let errorMessage = 'Error desconocido al importar cuentas';
+          // Si hay errores, mostrar modal de errores Y notificación de resumen
+          if (errors && errors.length > 0) {
+            let detail = `Total procesados: ${totalRecords || 0}\n`;
+            detail += `Exitosos: ${successfulImports || 0}\n`;
+            detail += `Fallidos: ${failedImports}\n`;
+            if (duplicatesSkipped > 0) {
+              detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
+            }
 
-      try {
-        // Si error.error es un string (JSON), intentar parsearlo
-        if (typeof error.error === 'string') {
-          const parsedError = JSON.parse(error.error);
-          errorMessage = parsedError.message || errorMessage;
-        } else if (error.error?.message) {
-          // Si error.error ya es un objeto con message
-          errorMessage = error.error.message;
-        } else if (error.message) {
-          // Fallback al mensaje del error HTTP
-          errorMessage = error.message;
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Importación Completada con Errores',
+              detail,
+              life: 8000
+            });
+
+            // Mostrar modal con detalles de errores
+            this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
+
+            // Recargar lista si hubo importaciones exitosas
+            if (successfulImports > 0) {
+              this.getAccounts();
+            }
+            return;
+          }
+
+          // Si no hay errores, mostrar resumen de importación exitosa
+          let severity: 'success' | 'info' | 'warn' | 'error' = 'success';
+          let summary = 'Importación Exitosa';
+
+          if (status === 'FAILED') {
+            severity = 'error';
+            summary = 'Error en Importación';
+          }
+
+          // Construir mensaje detallado
+          let detail = `Total procesados: ${totalRecords || 0}\n`;
+          detail += `Exitosos: ${successfulImports || 0}\n`;
+          if (duplicatesSkipped > 0) {
+            detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
+          }
+
+          this.messageService.add({
+            severity,
+            summary,
+            detail,
+            life: 8000
+          });
+
+          // Recargar lista si hubo importaciones exitosas
+          if (successfulImports > 0) {
+            this.getAccounts();
+          }
         }
-      } catch (parseError) {
-        // Si falla el parseo, usar el mensaje por defecto
-        errorMessage = error.message || errorMessage;
-      }
+      },
+      error: (error) => {
+        // Extraer los errores del backend
+        if (error.error && typeof error.error === 'object') {
+          const errorResponse = error.error;
+          const errors = errorResponse.errors || [];
 
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error de importación',
-        detail: errorMessage
-      });
-    }
+          if (errors && errors.length > 0) {
+            // Mostrar modal de errores
+            this.showImportErrorsModal(
+              errors,
+              errorResponse.fileName || file.name,
+              errorResponse.totalRecords,
+              errorResponse.failedImports,
+              errorResponse.successfulImports,
+              errorResponse.duplicatesSkipped
+            );
+          } else {
+            // Error general sin detalles específicos
+            const errorMessage = errorResponse.message || 'Error desconocido durante la importación';
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Importación',
+              detail: errorMessage
+            });
+          }
+        } else if (error.error instanceof Blob) {
+          // Manejar errores que vienen como Blob
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const errorData = JSON.parse(reader.result as string);
+              const errorMessage = errorData.message || 'No se pudo importar las cuentas.';
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error de Importación',
+                detail: errorMessage
+              });
+            } catch (e) {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error de Importación',
+                detail: 'Ocurrió un error inesperado.'
+              });
+            }
+          };
+          reader.onerror = () => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Importación',
+              detail: 'No se pudo leer el mensaje de error.'
+            });
+          };
+          reader.readAsText(error.error);
+        } else {
+          // Error que no es Blob
+          const errorMessage = error.error?.message || error.message || 'Error desconocido al importar cuentas';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Importación',
+            detail: errorMessage
+          });
+        }
+      }
+    });
   }
 
 }

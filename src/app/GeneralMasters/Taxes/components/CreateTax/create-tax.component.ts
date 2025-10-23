@@ -40,8 +40,8 @@ export class CreateTaxComponent implements OnInit {
   private readonly messageService = inject(MessageService);
 
   addForm: FormGroup;
-  depositAccounts: Account[] = [];
-  refundAccounts: Account[] = [];
+  salesTaxes: Account[] = [];
+  purchaseTaxes: Account[] = [];
   selectedAccount: any;
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
@@ -55,8 +55,8 @@ export class CreateTaxComponent implements OnInit {
       code: ['', Validators.required],
       description: ['', Validators.required],
       interest: [null, [Validators.required, Validators.min(0)]],
-      depositAccount: [null, Validators.required],
-      refundAccount: [null, Validators.required]
+      salesTax: [null], // Opcional
+      purchaseTax: [null] // Opcional
     }, { validators: cuentasDiferentesValidator });
   }
 
@@ -95,9 +95,9 @@ export class CreateTaxComponent implements OnInit {
     this.accounts.forEach(account => {
       collectLeaves(account, leaves);
     });
-    
-    this.depositAccounts = [...leaves];
-    this.refundAccounts = [...leaves];
+
+    this.salesTaxes = [...leaves];
+    this.purchaseTaxes = [...leaves];
   }
 
   /**
@@ -106,13 +106,13 @@ export class CreateTaxComponent implements OnInit {
   onSubmit(): void {
     if (this.addForm.valid) {
       const formValue = this.addForm.value;
-      
+
       const taxData: TaxCreateRequest = {
         code: formValue.code,
         description: formValue.description,
         interest: formValue.interest,
-        depositAccountId: formValue.depositAccount.id,
-        refundAccountId: formValue.refundAccount.id,
+        salesTaxId: formValue.salesTax?.id || undefined,
+        purchaseTaxId: formValue.purchaseTax?.id || undefined,
         idEnterprise: this.entData?.id || ''
       };
 
@@ -181,7 +181,7 @@ export class CreateTaxComponent implements OnInit {
    */
   getCustomError(): string {
     if (this.addForm.errors?.['cuentasIguales'] && this.addForm.touched) {
-      return 'Las cuentas de depósito y devolución no pueden ser iguales';
+      return 'Las cuentas de impuesto de venta e impuesto de compra no pueden ser iguales';
     }
     return '';
   }
