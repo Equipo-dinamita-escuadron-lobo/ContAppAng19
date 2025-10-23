@@ -27,6 +27,8 @@
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
       />
     </div>
   </div>
@@ -60,16 +62,21 @@
           Periodo <span class="text-[var(--color-secondary)]"> *</span>
         </h4>
         <p-datepicker
-          [(ngModel)]="criteria.endDate"
+          [(ngModel)]="datePeriod"
+          selectionMode="multiple"
+          maxDateCount="2"
           dateFormat="dd/mm/yy"
           placeholder="DD/MM/YYYY - DD/MM/YYYY"
           [showIcon]="true"
-          styleClass="w-full text-sm"
+          showClear="true"
+          styleClass="w-full text-xs"
+          multipleSeparator="-"
+          [style]="{ width: '100%', minWidth: '310px' }"
         ></p-datepicker>
       </div>
 
       <!-- 3. Botón -->
-      <div class="flex justify-center md:justify-end items-center md:pl-4">
+      <div class="flex justify-center items-center md:pl-4 h-full">
         <button
           pButton
           type="button"
