@@ -274,15 +274,27 @@ export class ThirdListComponent implements OnInit {
    */
   changeThirdState(third: Third): void {
     const previousState = third.state;
-    const action = previousState ? 'desactivado' : 'activado';
-    
+
     this.thirdService.changeThirdPartieState(third.thId, this.entData).subscribe({
-      next: () => {
-        third.state = !previousState;
+      next: (response: any) => {
+        if (response && typeof response === 'object' && 'state' in response) {
+          third.state = response.state;
+        } else {
+          // El backend no devuelve el tercero, obtener el estado actualizado
+          this.thirdService.getThirdPartie(third.thId, this.entData).subscribe({
+            next: (fetchedThird: any) => {
+              third.state = fetchedThird.state;
+            },
+            error: (fetchError) => {
+              third.state = !previousState;
+            }
+          });
+        }
+
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: `Tercero ${action} correctamente`
+          detail: `Estado del Tercero cambiado correctamente`
         });
       },
       error: (error) => {
