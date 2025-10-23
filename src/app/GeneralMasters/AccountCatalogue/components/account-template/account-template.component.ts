@@ -127,6 +127,7 @@ export class AccountTemplateComponent implements OnInit {
           summary: 'Descarga exitosa',
           detail: 'La plantilla se ha descargado correctamente'
         });
+        this.closePopUp();
       },
       error: (error) => {
         console.error('Error al descargar la plantilla:', error);
