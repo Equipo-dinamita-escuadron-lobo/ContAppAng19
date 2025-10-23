@@ -144,11 +144,13 @@ export class ThirdService {
   /**
    * Cambia el estado de un tercero
    * @param thId ID del tercero
+   * @param entId ID de la empresa
    * @returns Observable con el resultado del cambio de estado
    */
-  changeThirdPartieState(thId:number): Observable<Boolean>{
+  changeThirdPartieState(thId:number, entId: string): Observable<Boolean>{
     let params = new HttpParams()
-    .set('thId', thId);
+    .set('thId', thId)
+    .set('entId', entId);
     return this.http.put<any>(this.thirdApiUrl,null,{params})
   }
 

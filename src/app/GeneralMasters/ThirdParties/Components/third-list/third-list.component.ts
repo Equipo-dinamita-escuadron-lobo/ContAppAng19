@@ -276,7 +276,7 @@ export class ThirdListComponent implements OnInit {
     const previousState = third.state;
     const action = previousState ? 'desactivado' : 'activado';
     
-    this.thirdService.changeThirdPartieState(third.thId).subscribe({
+    this.thirdService.changeThirdPartieState(third.thId, this.entData).subscribe({
       next: () => {
         third.state = !previousState;
         this.messageService.add({
