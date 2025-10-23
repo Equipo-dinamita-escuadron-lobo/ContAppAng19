@@ -406,6 +406,13 @@ export class ThirdCreationComponent implements OnInit {
     if (this.contendPDFRUT) {
       this.infoThird = this.contendPDFRUT.split(';');
       this.prefillFormWithRUTData();
+
+      // Mostrar notificación de éxito del procesamiento del PDF
+      this.messageService.add({
+        severity: 'success',
+        summary: 'PDF procesado correctamente',
+        detail: 'Los datos del RUT se han cargado en el formulario.'
+      });
     }
   }
 
