@@ -103,7 +103,7 @@
                 </button>
                 <div *ngIf="c1.showChildren" class="flex items-center gap-2 pr-4">
                   <p-toggleswitch [(ngModel)]="c1.status" (ngModelChange)="changeCostCenterState(c1)"
-                    (click)="$event.stopPropagation()" [style]="{ transform: 'scale(0.8)' }" pTooltip="Cambiar Estado"
+                    (click)="$event.stopPropagation()" [style]="{ transform: 'scale(0.8)' }" [pTooltip]="c1.status ? 'Activo' : 'Inactivo'"
                     tooltipPosition="top">
                   </p-toggleswitch>
                 </div>
@@ -135,7 +135,7 @@
                     <div *ngIf="c1.showChildren" class="flex items-center gap-2 pr-4">
                       <p-toggleswitch [(ngModel)]="c2.status" (ngModelChange)="changeCostCenterState(c2)"
                         (click)="$event.stopPropagation()" [style]="{ transform: 'scale(0.8)' }"
-                        pTooltip="Cambiar Estado" tooltipPosition="top">
+                        [pTooltip]="c2.status ? 'Activo' : 'Inactivo'" tooltipPosition="top">
                       </p-toggleswitch>
                     </div>
                   </div>
@@ -157,7 +157,7 @@
                         <div *ngIf="c2.showChildren" class="flex items-center gap-2 pr-4">
                           <p-toggleswitch [(ngModel)]="c3.status" (ngModelChange)="changeCostCenterState(c3)"
                             (click)="$event.stopPropagation()" [style]="{ transform: 'scale(0.8)' }"
-                            pTooltip="Cambiar Estado" tooltipPosition="top">
+                            [pTooltip]="c3.status ? 'Activo' : 'Inactivo'" tooltipPosition="top">
                           </p-toggleswitch>
                         </div>
                       </div>
