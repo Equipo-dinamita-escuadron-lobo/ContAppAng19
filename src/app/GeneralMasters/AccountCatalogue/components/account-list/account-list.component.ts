@@ -1221,10 +1221,21 @@ export class AccountListComponent implements OnInit {
                   });
                 },
                 (error) => {
+                  // Extraer el mensaje específico del backend
+                  let errorMessage = 'Ha ocurrido un error al eliminar la cuenta!.';
+
+                  if (error.error) {
+                    if (typeof error.error === 'string') {
+                      errorMessage = error.error;
+                    } else if (error.error.message) {
+                      errorMessage = error.error.message;
+                    }
+                  }
+
                   this.messageService.add({
                     severity: 'error',
-                    summary: 'Error',
-                    detail: 'Ha ocurrido un error al eliminar la cuenta!.'
+                    summary: 'Error al eliminar',
+                    detail: errorMessage
                   });
                 }
               );
