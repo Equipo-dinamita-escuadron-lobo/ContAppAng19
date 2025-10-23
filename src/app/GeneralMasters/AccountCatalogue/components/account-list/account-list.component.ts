@@ -90,9 +90,14 @@ export class AccountListComponent implements OnInit {
   showFormTransactional: boolean = false;
 
   /**
-  * Variable que indica si una cuenta ha sido seleccionada.
-  */
+   * Variable que indica si una cuenta ha sido seleccionada.
+   */
   selectedAccount: boolean = false;
+
+  /**
+   * Valores originales de la cuenta seleccionada para comparar cambios reales.
+   */
+  private originalAccountValues: any = null;
 
   /**
   * Variables para controlar la visibilidad de los botones en la interfaz de usuario.
@@ -119,7 +124,12 @@ export class AccountListComponent implements OnInit {
    * Variables para controlar la visibilidad de los checkboxes en la edición
    */
   showCrossingCheckboxEdit: boolean = false;
-  showCostCenterCheckboxEdit: boolean = false;    /**
+  showCostCenterCheckboxEdit: boolean = false;
+
+  /**
+   * Controla si los inputs deben estar bloqueados cuando no hay cambios reales
+   */
+  inputsLocked: boolean = false;    /**
    * Variables determinadas según el nivel de la cuenta.
    * Estas variables gestionan el tipo de cuenta y si se deben agregar subcuentas o hijos.
    */
@@ -356,16 +366,63 @@ export class AccountListComponent implements OnInit {
     this.accountHasInformation(account);
     this.createForm(account.code, account.description);
     this.selectedAccount = true;
-    this.showUpdateButton = false;
     this.accountSelected = account;
+
+    // Almacenar los valores originales para comparar cambios reales
+    this.storeOriginalValues(account);
+
+    this.showUpdateButton = false;
     this.updateCheckboxVisibilityEdit();
   }
 
   /**
-  * Crea el formulario de cuenta basado en el código y la descripción de la cuenta seleccionada.
-  * @param code El código de la cuenta seleccionada.
-  * @param description La descripción de la cuenta seleccionada.
-  */
+   * Almacena los valores originales de la cuenta para comparar cambios reales.
+   * @param account La cuenta seleccionada.
+   */
+  private storeOriginalValues(account: Account) {
+    // Extraer el código y descripción según el nivel de la cuenta
+    let originalCode = '';
+    let originalDescription = '';
+
+    switch (account.code.length) {
+      case 1:
+        originalCode = account.code.slice(0, 1);
+        originalDescription = account.description;
+        break;
+      case 2:
+        originalCode = account.code.slice(1, 2);
+        originalDescription = account.description;
+        break;
+      case 4:
+        originalCode = account.code.slice(2, 4);
+        originalDescription = account.description;
+        break;
+      case 6:
+        originalCode = account.code.slice(4, 6);
+        originalDescription = account.description;
+        break;
+      case 8:
+        originalCode = account.code.slice(6, 8);
+        originalDescription = account.description;
+        break;
+    }
+
+    this.originalAccountValues = {
+      code: originalCode,
+      description: originalDescription,
+      nature: account.nature,
+      financialStatus: account.financialStatus,
+      classification: account.classification,
+      crossing: account.crossing,
+      costCenter: account.costCenter
+    };
+  }
+
+  /**
+   * Crea el formulario de cuenta basado en el código y la descripción de la cuenta seleccionada.
+   * @param code El código de la cuenta seleccionada.
+   * @param description La descripción de la cuenta seleccionada.
+   */
   createForm(code: string, description: string) {
     this.accountForm = this.fb.group({});
     this.showPrincipalAndTransactionalForm();
@@ -438,31 +495,93 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-  * Determina si se debe mostrar el botón de "Actualizar" basado en los cambios en los formularios.
+  * Determina si se debe mostrar el botón de "Actualizar" basado en los cambios reales en los formularios
+  * comparados con los valores originales. También controla si los inputs deben estar bloqueados.
   * @returns Si el botón de "Actualizar" debe mostrarse.
   */
   shouldShowUpdateButton(): boolean {
-    const accountFormHasChanges = this.hasFormValueChanged(this.accountForm);
-    const transactionalFormHasChanges = this.hasFormValueChanged(this.formTransactional);
-    return accountFormHasChanges || transactionalFormHasChanges;
+    if (!this.originalAccountValues || !this.accountSelected) {
+      this.inputsLocked = true;
+      return false;
+    }
+
+    // Comparar valores actuales con valores originales
+    const hasChanges = this.hasRealChanges();
+    this.inputsLocked = !hasChanges; // Bloquear inputs cuando no hay cambios
+
+    return hasChanges;
   }
 
   /**
-  * Verifica si algún control en el formulario proporcionado ha sido modificado.
-  * @param form El grupo de formularios a verificar.
-  * @returns Si algún control en el formulario ha sido modificado.
+  * Verifica si hay cambios reales comparando los valores actuales con los valores originales.
+  * @returns Si hay cambios reales en los formularios.
   */
-  hasFormValueChanged(form: FormGroup): boolean {
-    const formValues = form.value;
-    for (const key in formValues) {
-      if (formValues.hasOwnProperty(key)) {
-        const control = form.get(key);
-        if (control?.dirty) {
-          return true;
-        }
-      }
+  private hasRealChanges(): boolean {
+    if (!this.originalAccountValues) {
+      return false;
     }
-    return false;
+
+    const currentAccountValues = this.getCurrentAccountValues();
+    const currentTransactionalValues = this.formTransactional.value;
+
+    // Comparar código y descripción
+    if (currentAccountValues.code !== this.originalAccountValues.code ||
+        currentAccountValues.description !== this.originalAccountValues.description) {
+      return true;
+    }
+
+    // Comparar valores transaccionales
+    const natureChanged = this.compareNatureValues(currentTransactionalValues.selectedNatureType);
+    const financialStatusChanged = this.compareFinancialStatusValues(currentTransactionalValues.selectedFinancialStateType);
+    const classificationChanged = this.compareClassificationValues(currentTransactionalValues.selectedClasificationType);
+    const crossingChanged = currentTransactionalValues.crossing !== this.originalAccountValues.crossing;
+    const costCenterChanged = currentTransactionalValues.costCenter !== this.originalAccountValues.costCenter;
+
+    return natureChanged || financialStatusChanged || classificationChanged || crossingChanged || costCenterChanged;
+  }
+
+  /**
+  * Obtiene los valores actuales del formulario de cuenta.
+  * @returns Los valores actuales del código y descripción.
+  */
+  private getCurrentAccountValues(): { code: string, description: string } {
+    const codeValue = this.accountForm.get(this.code)?.value || '';
+    const descriptionValue = this.accountForm.get(this.name)?.value || '';
+
+    return {
+      code: codeValue,
+      description: descriptionValue
+    };
+  }
+
+  /**
+  * Compara el valor de naturaleza actual con el original.
+  * @param currentValue Valor actual del selector de naturaleza.
+  * @returns Si el valor cambió.
+  */
+  private compareNatureValues(currentValue: any): boolean {
+    const currentName = currentValue?.name || null;
+    return currentName !== this.originalAccountValues.nature;
+  }
+
+  /**
+  * Compara el valor de estado financiero actual con el original.
+  * @param currentValue Valor actual del selector de estado financiero.
+  * @returns Si el valor cambió.
+  */
+  private compareFinancialStatusValues(currentValue: any): boolean {
+    const currentName = currentValue?.name || null;
+    return currentName !== this.originalAccountValues.financialStatus;
+  }
+
+  /**
+  * Compara el valor de clasificación actual con el original.
+  * @param currentValue Valor actual del selector de clasificación.
+  * @returns Si el valor cambió.
+  */
+  private compareClassificationValues(currentValue: any): boolean {
+    const currentName = currentValue?.name || null;
+    return currentName !== this.originalAccountValues.classification;
   }
 
   /**
@@ -1127,9 +1246,8 @@ export class AccountListComponent implements OnInit {
 
   /**
    * Actualiza la información de una cuenta seleccionada.
-   * Valida que el código de la cuenta no esté asociado a subcuentas antes de proceder con la actualización.
-   * Si la cuenta ya existe o si los datos no han cambiado, muestra un mensaje de error.
-   * Si la cuenta no existe y los datos han cambiado, actualiza la cuenta llamando al servicio correspondiente.
+   * Si los datos han cambiado, actualiza la cuenta llamando al servicio correspondiente.
+   * Si no hay cambios, el botón permanece inactivo y no se realiza ninguna acción.
    */
   async updateAccount() {
     // Prevenir múltiples actualizaciones simultáneas
@@ -1140,16 +1258,6 @@ export class AccountListComponent implements OnInit {
 
     try {
       if (this.accountSelected) {
-        if (this.accountSelected.children && this.accountSelected.children.length > 0 && this.accountSelected.code !== this.parentId + this.accountForm.get(this.code)?.value) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se puede cambiar el código de una cuenta que tiene subcuentas asociadas.'
-          });
-          this.selectAccount(this.accountSelected);
-          return; // Salir de la función
-        }
-
         const transactionalValues = this.formTransactional.value;
 
         // Construir el código correctamente según el nivel de cuenta
@@ -1158,19 +1266,14 @@ export class AccountListComponent implements OnInit {
         
         // Asegurar que el código mantenga la longitud correcta según el nivel
         if (this.num === 1) {
-          // Clase: 1 dígito
           newCode = codeValue.padStart(1, '0');
         } else if (this.num === 2) {
-          // Grupo: 2 dígitos  
           newCode = this.parentId + codeValue.padStart(1, '0');
         } else if (this.num === 4) {
-          // Cuenta: 4 dígitos
           newCode = this.parentId + codeValue.padStart(2, '0');
         } else if (this.num === 6) {
-          // Subcuenta: 6 dígitos
           newCode = this.parentId + codeValue.padStart(2, '0');
         } else if (this.num === 8) {
-          // Auxiliar: 8 dígitos
           newCode = this.parentId + codeValue.padStart(2, '0');
         } else {
           // Fallback: usar la construcción original
@@ -1182,7 +1285,6 @@ export class AccountListComponent implements OnInit {
           code: newCode,
           description: this.accountForm.get(this.name)?.value,
 
-          // Extraemos el .name del objeto, o enviamos null si no hay nada seleccionado
           nature: transactionalValues.selectedNatureType ? transactionalValues.selectedNatureType.name : null,
           financialStatus: transactionalValues.selectedFinancialStateType ? transactionalValues.selectedFinancialStateType.name : null,
           classification: transactionalValues.selectedClasificationType ? transactionalValues.selectedClasificationType.name : null,
@@ -1212,14 +1314,7 @@ export class AccountListComponent implements OnInit {
             return;
           }
 
-          // Proceder con la actualización - el backend manejará duplicados si los hay
           this.update(this.accountSelected.id, account);
-        } else {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'La cuenta tiene la misma información!'
-          });
         }
       }
     } catch (error) {
