@@ -422,7 +422,9 @@ export class ChartAccountService {
     formData.append('entId', entId);
     formData.append('file', file);
 
-    return this.http.post(`${this.apiURL}import/excel`, formData).pipe(
+    return this.http.post(`${this.apiURL}import/excel`, formData, {
+      observe: 'response'
+    }).pipe(
       catchError((error: HttpErrorResponse) => {
         // Re-lanzar el error para que el componente lo maneje
         return throwError(() => error);
