@@ -60,25 +60,8 @@
         </p-iconfield>
       </div>
     </div>
-    
-    <!-- Paginador -->
-    <div class="flex items-center justify-start mt-20 mb-6">
-      <div class="flex justify-center items-center gap-12">
-        <span class="font-semibold text-sm text-primary p-10">Elementos por página:</span>
-        <p-slider [(ngModel)]="rows" (ngModelChange)="onSliderChange()" [style]="{ width: '10rem' }" [min]="10"
-          [max]="50" [step]="10" [disabled]="isLoading" />
-        <span class="text-sm text-gray-600">{{rows}}</span>
-        <div *ngIf="!isInitialLoad && isLoading" class="ml-4">
-          <div class="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
-        </div>
-      </div>
-      <p-paginator (onPageChange)="onPageChange($event)" [first]="first" [rows]="rows" [totalRecords]="totalRecords"
-        [showFirstLastIcon]="false" [showCurrentPageReport]="true"
-        currentPageReportTemplate="Página {currentPage} de {totalPages}" class="ml-6">
-      </p-paginator>
-    </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 font-family-sans text-sm mt-20">
+    <div class="grid grid-cols-1 sm:grid-cols-2 font-family-sans text-sm">
       <!-- Lista (árbol) -->
       <div class="list-account overscroll-auto border-r-4 sm:border-primary sm:mr-20 sm:p-3"
         [class.opacity-50]="isInitialLoad && isLoading">
@@ -187,6 +170,8 @@
         </div>
       </div>
 
+      
+
       <!-- Panel de creación -->
       <div class="create-account font-normal">
         <div class="mb-4">
@@ -263,6 +248,23 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Paginador -->
+    <div class="flex items-center justify-start mt-70 mb-6">
+      <div class="flex justify-center items-center gap-12">
+        <span class="font-semibold text-sm text-primary p-10">Elementos por página:</span>
+        <p-slider [(ngModel)]="rows" (ngModelChange)="onSliderChange()" [style]="{ width: '10rem' }" [min]="10"
+          [max]="50" [step]="10" [disabled]="isLoading" />
+        <span class="text-sm text-gray-600">{{rows}}</span>
+        <div *ngIf="!isInitialLoad && isLoading" class="ml-4">
+          <div class="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
+        </div>
+      </div>
+      <p-paginator (onPageChange)="onPageChange($event)" [first]="first" [rows]="rows" [totalRecords]="totalRecords"
+        [showFirstLastIcon]="false" [showCurrentPageReport]="true"
+        currentPageReportTemplate="Página {currentPage} de {totalPages}" class="ml-6">
+      </p-paginator>
     </div>
   </div>
 
