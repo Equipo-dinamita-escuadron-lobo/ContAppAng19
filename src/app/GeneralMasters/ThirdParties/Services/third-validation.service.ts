@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AbstractControl, AsyncValidatorFn, FormGroup, ValidationErrors, Validators } from '@angular/forms';
-import { Observable, of, catchError, map } from 'rxjs';
-import { ThirdService } from './third.service';
+import { AbstractControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { TypeId } from '../models/TypeId';
 import { ePersonType } from '../models/ePersonType';
 
@@ -43,47 +41,17 @@ export class ThirdValidationService {
     };
   }
 
-  /**
-   * Validador asíncrono que verifica si un tercero ya existe
-   * @param thirdService Servicio de terceros
-   * @param entId ID de la empresa
-   * @returns Función validadora asíncrona
-   */
-  thirdExistsValidator(thirdService: ThirdService, entId: string): AsyncValidatorFn {
-    return (control: AbstractControl): Observable<ValidationErrors | null> => {
-      if (!control.value) {
-        return of(null);
-      }
-
-      const idNumber = control.value;
-      
-      return thirdService.existThird(idNumber, entId).pipe(
-        map((exists: boolean) => {
-          // Si existe el tercero, devolver error de validación
-          return exists ? { thirdExists: { value: control.value } } : null;
-        }),
-        catchError((error: any) => {
-          // Para errores, considerar como válido para no bloquear el formulario
-          return of(null);
-        })
-      );
-    };
-  }
 
   /**
    * Actualiza las validaciones del número de identificación según el tipo seleccionado
    * @param form Formulario reactivo
    * @param typeId Tipo de identificación
    * @param personType Tipo de persona
-   * @param entId ID de la empresa (opcional, solo para creación con validación async)
-   * @param thirdService Servicio de terceros (opcional, solo para creación)
    */
   updateIdNumberValidations(
     form: FormGroup,
     typeId: TypeId | null,
-    personType: ePersonType | null,
-    entId?: string,
-    thirdService?: ThirdService
+    personType: ePersonType | null
   ): void {
     const idNumberControl = form.get('idNumber');
     
@@ -103,14 +71,8 @@ export class ThirdValidationService {
     // Aplicar validaciones síncronas
     idNumberControl.setValidators(validators);
 
-    // Aplicar validación asíncrona solo si se proporciona el servicio (modo creación)
-    if (thirdService && entId) {
-      idNumberControl.setAsyncValidators([
-        this.thirdExistsValidator(thirdService, entId)
-      ]);
-    } else {
-      idNumberControl.clearAsyncValidators();
-    }
+    // Limpiar validaciones asíncronas
+    idNumberControl.clearAsyncValidators();
 
     idNumberControl.updateValueAndValidity();
   }

@@ -142,16 +142,6 @@ export class ThirdService {
   }
 
   /**
-   * Verifica si existe un tercero con el ID y empresa especificados
-   * @param thId ID del tercero
-   * @param entId ID de la empresa
-   * @returns Observable con el resultado de la verificación
-   */
-  existThird(thId:number, entId:String): Observable<boolean>{
-    return this.http.get<boolean>(`${this.thirdApiUrl}existBy?idNumber=${thId}&entId=${entId}`);
-  }
-
-  /**
    * Cambia el estado de un tercero
    * @param thId ID del tercero
    * @returns Observable con el resultado del cambio de estado
