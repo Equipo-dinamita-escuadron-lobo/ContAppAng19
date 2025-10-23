@@ -22,8 +22,10 @@
     </div>
 
     <!-- Derecha: Botón Exportar -->
-    <div *ngIf="isReportGenerated" class="flex items-start">
+    <div class="flex items-start" *ngIf="isReportGenerated">
       <p-button
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
@@ -159,6 +161,7 @@
           pButton
           type="button"
           label="Generar Reporte"
+          (keydown.enter)="generateReport()"
           (click)="generateReport()"
         ></button>
       </div>
@@ -184,7 +187,9 @@
             Cuenta
           </th>
           <th class="text-center" pResizableColumn rowspan="2">Descripción</th>
-          <th class="text-center" pResizableColumn rowspan="2">Valor</th>
+          <th scope="row" class="text-right pr-4" pResizableColumn rowspan="2">
+            Valor
+          </th>
         </tr>
         <tr>
           <th class="text-center">Código</th>
@@ -198,8 +203,12 @@
           <td>{{ accountInfo.accountCode }}</td>
           <td>{{ accountInfo.accountDescription }}</td>
           <td>{{ accountInfo.description }}</td>
-          <td [ngClass]="{ 'text-red-500': accountInfo.value < 0 }">
-            {{ accountInfo.value | currency : "COP $" : "symbol" : "1.0-0" }}
+          <!-- ✅ CORREGIDO: Añadida la clase tabular-nums -->
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="formatMoneyAligned(accountInfo.value)"
+            ></div>
           </td>
         </tr>
       </ng-template>

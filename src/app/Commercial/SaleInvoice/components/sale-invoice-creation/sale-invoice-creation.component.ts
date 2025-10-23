@@ -17,7 +17,6 @@ import { EnterpriseService } from '../../../../GeneralMasters/Enterprise/service
 import { EnterpriseDetails } from '../../../../GeneralMasters/Enterprise/models/EnterpriseDetails';
 import { UnitOfMeasureService } from '../../services/unit-of-measure.service';
 import { FactureV } from '../../models/SaleInvoice';
-import Swal from 'sweetalert2';
 import { ProductS } from '../../models/ProductSelect';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { DropdownModule } from 'primeng/dropdown';
@@ -25,6 +24,9 @@ import { SaleInvoiceSelectedProductsComponent } from '../sale-invoice-selected-p
 import { DatePickerModule } from 'primeng/datepicker';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 
 @Component({
@@ -44,10 +46,14 @@ import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/t
     TooltipModule,
     AutoCompleteModule,
     DropdownModule,
-    DatePickerModule
+    DatePickerModule,
+    ToastModule,
+    ConfirmDialogModule
   ],
   providers: [
-    DialogService 
+    DialogService,
+    MessageService,
+    ConfirmationService
   ],
   templateUrl: './sale-invoice-creation.component.html',
   styleUrl: './sale-invoice-creation.component.css'
@@ -59,28 +65,28 @@ export class SaleInvoiceCreationComponent {
 
   /**
    * Detalles de la empresa seleccionada (opcional).
-   * 
+   *
    * @type {EnterpriseDetails} - Objeto que contiene los detalles de la empresa seleccionada.
    */
   enterpriseSelected?: EnterpriseDetails;
 
   /**
    * Estado de carga para la vista previa del PDF.
-   * 
+   *
    * @type {boolean} - Indica si se está cargando la vista previa del PDF.
    */
   isLoadingPdfPreview: boolean = false;
 
   /**
    * Estado de guardado para el PDF.
-   * 
+   *
    * @type {boolean} - Indica si se está guardando el PDF.
    */
   isSavingPdf: boolean = false;
 
   /**
    * Variables relacionadas con terceros.
-   * 
+   *
    * @type {boolean} showSectionThrid - Indica si se debe mostrar la sección de terceros.
    * @type {boolean} SectionNotas - Controla la visibilidad de la sección de notas.
    * @type {boolean} showInfoThird - Indica si se debe mostrar la información del tercero seleccionado.
@@ -159,20 +165,23 @@ export class SaleInvoiceCreationComponent {
    */
   onClientSelect(selectedClient: Third) {
     if (this.lstProducts.length > 0) {
-      Swal.fire({
-        title: "Cambio de cliente",
-        text: "Has cambiado de cliente. Esto limpiará la lista de productos actual. ¿Deseas continuar?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: '#000066',
-        cancelButtonColor: '#d33',
-        confirmButtonText: "Sí, continuar",
-        cancelButtonText: "Cancelar"
-      }).then((result) => {
-        if (result.isConfirmed) {
+      this.confirmationService.confirm({
+        header: 'Cambio de cliente',
+        message: 'Has cambiado de cliente. Esto limpiará la lista de productos actual. ¿Deseas continuar?',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, continuar',
+        rejectLabel: 'Cancelar',
+        rejectButtonStyleClass: 'p-button-secondary',
+        defaultFocus: 'reject',
+        closeOnEscape: true,
+        accept: () => {
           this.lstProducts = []; // Limpiar productos
           this.calculateInvoiceTotals(); // Recalcular totales
-        } else {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Cliente cambiado',
+            detail: 'Se ha limpiado la lista de productos.'
+          });
         }
       });
     }
@@ -181,7 +190,7 @@ export class SaleInvoiceCreationComponent {
 
   /**
    * Variables relacionadas con productos.
-   * 
+   *
    * @type {boolean} showSectionProducts - Indica si se debe mostrar la sección de productos.
    * @type {boolean} showInfoProducts - Controla la visibilidad de la información de los productos.
    * @type {ProductToSale[]} lstProducts - Lista de productos disponibles.
@@ -194,7 +203,7 @@ export class SaleInvoiceCreationComponent {
 
   /**
    * Variables relacionadas con la factura de compra.
-   * 
+   *
    * @type {number} subTotal - El subtotal de la factura antes de impuestos y descuentos.
    * @type {number} taxTotal - El total de impuestos aplicados en la factura.
    * @type {number} uvt - El valor de la unidad de valor tributario (UVT).
@@ -219,7 +228,7 @@ export class SaleInvoiceCreationComponent {
 
   /**
    * Variables relacionadas con la factura de compra y el pago.
-   * 
+   *
    * @type {Date} currentDate - La fecha actual al momento de la creación de la factura.
    * @type {string} dueDate - La fecha de vencimiento de la factura (opcional).
    * @type {string} paymentMethod - El método de pago seleccionado (por defecto 'debito').
@@ -234,7 +243,7 @@ export class SaleInvoiceCreationComponent {
 
   /**
    * Columnas de la tabla de productos.
-   * 
+   *
    * @type {any[]} columnsProducts - Un array de objetos que define las columnas de la tabla de productos, incluyendo los títulos y los datos asociados.
    * Cada objeto puede tener un título para la columna y un campo de datos asociado.
    */
@@ -255,10 +264,12 @@ export class SaleInvoiceCreationComponent {
     private enterpriseService: EnterpriseService, //Descomentar cuando este implementado
     private UnitMeasureService: UnitOfMeasureService,  //Descomentar cuando este implementado
     private dialogService: DialogService,
-    private thirdService: ThirdService, 
+    private thirdService: ThirdService,
     private saleService: SaleInvoiceService,
     private router: Router,
-    private localStorageMethods: LocalStorageMethods) { }
+    private localStorageMethods: LocalStorageMethods,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService) { }
 
   ngOnInit() {
     this.getEnterpriseSelectedInfo();
@@ -267,9 +278,9 @@ export class SaleInvoiceCreationComponent {
 
   /**
    * Obtiene la información de la empresa seleccionada.
-   * 
+   *
    * @returns {EnterpriseDetails | undefined} - Devuelve los detalles de la empresa seleccionada, o undefined si no se ha seleccionado ninguna empresa.
-   * 
+   *
    * Si no hay una empresa seleccionada, se maneja el caso y no se realiza ninguna acción.
    * Si se ha seleccionado una empresa, se realiza una llamada a la API para obtener los detalles de la empresa por su ID.
    */
@@ -459,7 +470,7 @@ export class SaleInvoiceCreationComponent {
       : 0;
 
     // 4. Calcular Retención
-    this.calculateRetention(); 
+    this.calculateRetention();
 
     // 5. Calcular Total Final
     this.total = this.subTotal + this.taxTotal - this.retention;
@@ -616,7 +627,7 @@ export class SaleInvoiceCreationComponent {
   }
 
   /**
-   * Guarda la factura, generando un archivo PDF y descargándolo en el navegador. 
+   * Guarda la factura, generando un archivo PDF y descargándolo en el navegador.
    * Luego de guardar, limpia los datos de la factura y muestra un mensaje de éxito o error.
    * @param facture - Los datos de la factura a guardar, incluidos los productos, descuentos, impuestos, etc.
    */
@@ -653,20 +664,21 @@ export class SaleInvoiceCreationComponent {
         link.click();
         link.parentNode?.removeChild(link);
         this.isSavingPdf = false;
-        Swal.fire({
-          title: 'Creación exitosa',
-          text: 'Se ha creado la factura con éxito!',
-          confirmButtonColor: '#000066',
-          icon: 'success',
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Creación exitosa',
+          detail: 'Se ha creado la factura con éxito!',
+          life: 5000
         });
       },
       (error) => {
         this.isSavingPdf = false;
-        Swal.fire({
-          title: 'Error',
-          text: 'Ha ocurrido un error al crear la factura.',
-          confirmButtonColor: '#000066',
-          icon: 'error',
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Ha ocurrido un error al crear la factura.',
+          life: 5000
         });
       }
     );
@@ -739,11 +751,11 @@ export class SaleInvoiceCreationComponent {
 
 
     if (!previewFacture) {
-      Swal.fire({
-        title: 'Error',
-        text: 'No hay factura disponible para mostrar.',
-        icon: 'error',
-        confirmButtonColor: '#000066',
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No hay factura disponible para mostrar.',
+        life: 5000
       });
       return;
     }
@@ -753,20 +765,20 @@ export class SaleInvoiceCreationComponent {
         const url = window.URL.createObjectURL(blob);
         window.open(url);
         this.isLoadingPdfPreview = false;
-        Swal.fire({
-          title: 'Visualización exitosa',
-          text: 'Se ha generado la vista previa de la factura.',
-          confirmButtonColor: '#000066',
-          icon: 'success',
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Visualización exitosa',
+          detail: 'Se ha generado la vista previa de la factura.',
+          life: 5000
         });
       },
       (error) => {
         this.isLoadingPdfPreview = false;
-        Swal.fire({
-          title: 'Error',
-          text: 'Ha ocurrido un error al generar la vista previa de la factura.',
-          confirmButtonColor: '#000066',
-          icon: 'error',
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Ha ocurrido un error al generar la vista previa de la factura.',
+          life: 5000
         });
       }
     );

@@ -7,10 +7,10 @@
     <div class="flex justify-between items-start mb-12">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Unidades de Medida
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Unidades</span> de Medida
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Gestione las unidades de medida utilizadas en el sistema.
         </p>
       </div>
@@ -18,7 +18,7 @@
       <!-- Botones de acción -->
       <div class="flex gap-3">
         <p-button
-          label="Crear Unidad"
+          label="Crear"
           icon="pi pi-plus"
           (click)="redirectToCreate()"
           styleClass="p-button-primary"

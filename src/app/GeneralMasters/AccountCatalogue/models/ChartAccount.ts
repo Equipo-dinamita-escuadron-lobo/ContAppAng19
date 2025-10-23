@@ -45,6 +45,9 @@ export interface ItemAccountCatalogueSearchRes {
     financialStatus: string;
     classification: string;
     parent: string;
+    crossing?: boolean | null;
+    costCenter?: boolean | null;
+    status?: boolean;
 }
 
 // Interface para crear cuenta

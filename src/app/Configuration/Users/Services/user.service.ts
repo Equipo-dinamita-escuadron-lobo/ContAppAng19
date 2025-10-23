@@ -3,7 +3,7 @@ import { environment } from '../../../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { User } from '../Models/User';
 import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -98,6 +98,43 @@ export class UserService {
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('token'); // Suponiendo que el token está en localStorage
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+  }
+
+  // Buscar usuario por email
+  findByEmail(email: string): Observable<User[]> {
+    const url = `${this.apiUrl}users?email=${email}`;
+    const headers = this.getAuthHeaders();
+    return this.http.get<User[]>(url, { headers }).pipe(
+      catchError((error) => {
+        console.error('Error al buscar usuario por email:', error);
+        return of([]);
+      })
+    );
+  }
+
+  // Eliminar un usuario
+  deleteUser(id: string): Observable<void> {
+    const url = `${this.apiUrl}delete/${id}`;
+    const headers = this.getAuthHeaders();
+    return this.http.delete<void>(url, { headers }).pipe(
+      catchError((error) => {
+        console.error('Error al eliminar usuario:', error);
+        throw error;
+      })
+    );
+  }
+
+  // Obtener lista de roles disponibles (solo roles personalizados)
+  getRoles(): Observable<string[]> {
+    const url = `${this.apiUrl}roles`;
+    const headers = this.getAuthHeaders();
+    return this.http.get<string[]>(url, { headers }).pipe(
+      map(roles => roles.filter(role => ['administrador', 'estudiante', 'profesor'].includes(role))),
+      catchError((error) => {
+        console.error('Error al obtener roles:', error);
+        return of(['administrador', 'estudiante', 'profesor']); // Valores por defecto
+      })
+    );
   }
 
   // Validación básica del modelo de usuario

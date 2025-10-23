@@ -17,12 +17,12 @@ export class HelpCenterService {
   /**
    * Obtiene todos los registros de ayuda filtrados por módulo
    */
-  findAllByModule(enterpriseId: string, moduleId: number): Observable<HelpCenterResponse[]> {
+  findAllByModule(moduleId: number): Observable<HelpCenterResponse[]> {
     let params = new HttpParams()
       .set('moduleId', moduleId.toString());
 
     return this.http.get<HelpCenterResponse[]>(
-      `${this.apiUrl}findAllByModule/${enterpriseId}`,
+      `${this.apiUrl}findAllByModule`,
       { params }
     );
   }
@@ -31,15 +31,15 @@ export class HelpCenterService {
    * Busca registros de ayuda por término de búsqueda
    * Utiliza el endpoint findAll con paginación flexible y parámetro search
    */
-  searchHelps(enterpriseId: string, searchTerm: string): Observable<any> {
+  searchHelps(searchTerm: string): Observable<any> {
     let params = new HttpParams();
-    
+
     if (searchTerm && searchTerm.trim()) {
       params = params.set('search', searchTerm.trim());
     }
 
     return this.http.get<any>(
-      `${this.apiUrl}findAll/${enterpriseId}`,
+      `${this.apiUrl}findAll`,
       { params }
     );
   }
@@ -47,9 +47,16 @@ export class HelpCenterService {
   /**
    * Obtiene un registro de ayuda por ID
    */
-  findById(id: number, enterpriseId: string): Observable<HelpCenterResponse> {
+  findById(id: number): Observable<HelpCenterResponse> {
     return this.http.get<HelpCenterResponse>(
-      `${this.apiUrl}findById/${id}/${enterpriseId}`
+      `${this.apiUrl}findById/${id}`
     );
+  }
+
+  /**
+   * Obtiene la lista de módulos disponibles
+   */
+  getModules(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}modules`);
   }
 }

@@ -791,8 +791,8 @@ export class ThirdListComponent implements OnInit {
       // Mostrar notificación de éxito
       this.messageService.add({
         severity: 'success',
-        summary: 'Estamos generando tu archivo',
-        detail: `El archivo se descargará automáticamente en unos segundos.`
+        summary: 'Exportación exitosa',
+        detail: `El archivo se ha exportado correctamente.`
       });
 
     } catch (error) {
