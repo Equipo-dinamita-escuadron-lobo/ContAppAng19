@@ -295,12 +295,12 @@ export class ThirdEditComponent implements OnInit {
       const genderControl = this.createdThirdForm.get('gender');
 
       if (value === ePersonType.natural) {
-        // Persona natural: nombres y apellidos requeridos
+        // Persona natural: nombres y apellidos requeridos, género opcional
         namesControl?.setValidators([Validators.required]);
         lastNamesControl?.setValidators([Validators.required]);
         socialReasonControl?.clearValidators();
-        genderControl?.setValidators([Validators.required]);
-        
+        genderControl?.clearValidators(); // Género ahora opcional
+
         this.button2Checked = true;
         this.button1Checked = false;
         this.PersonaCargadaNatural = true;
@@ -311,7 +311,7 @@ export class ThirdEditComponent implements OnInit {
 
         // Limpiar DV para persona natural
         this.createdThirdForm.get('verificationNumber')?.setValue(null);
-        
+
         // Restaurar validaciones básicas del número de identificación
         const idNumberControl = this.createdThirdForm.get('idNumber');
         idNumberControl?.setValidators([Validators.required, Validators.min(1)]);
