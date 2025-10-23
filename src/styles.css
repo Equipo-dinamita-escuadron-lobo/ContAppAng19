@@ -295,6 +295,16 @@ body {
   border-color: var(--color-primary);
 }
 
+
+.input-base::placeholder {
+  color: var(--color-neutral-40);
+}
+
+.input-base[readonly]::placeholder,
+.input-base:disabled::placeholder {
+  color: var(--color-neutral-40);
+}
+
 .error-message {
   color: var(--color-error);
   @apply text-xs mt-1 ml-3;
