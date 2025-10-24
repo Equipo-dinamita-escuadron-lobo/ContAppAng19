@@ -76,6 +76,8 @@ export class ExportAuxiliaryBookComponent implements OnInit {
     { name: 'Arial', value: 'Arial' },
     { name: 'Calibri', value: 'Calibri' },
     { name: 'Roboto', value: 'Roboto' },
+    { name: 'Sans Serif', value: 'SansSerif' },
+    { name: 'Times New Roman', value: 'TimesNewRoman' },
   ];
 
   fontSizes = [
