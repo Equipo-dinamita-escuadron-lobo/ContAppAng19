@@ -57,13 +57,13 @@ export class BankService {
   findAll(enterpriseId: string, page: number = 0, size: number = 10, sortField?: string, sortOrder?: string, search?: string): Observable<PageResponse<Bank>> {
     let url = `${this.API_BASE}/findAll/${enterpriseId}?page=${page}&size=${size}`;
 
-    if (sortField && sortField.trim()) {
+    if (sortField?.trim()) {
       url += `&sortField=${sortField}`;
     }
-    if (sortOrder && sortOrder.trim()) {
+    if (sortOrder?.trim()) {
       url += `&sortOrder=${sortOrder}`;
     }
-    if (search && search.trim()) {
+    if (search?.trim()) {
       url += `&search=${encodeURIComponent(search)}`;
     }
 
