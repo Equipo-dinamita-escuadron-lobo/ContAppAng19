@@ -81,7 +81,7 @@ export class BankService {
    * Obtiene la lista de bancos activos
    */
   findAllActive(enterpriseId: string, page: number = 0, size: number = 100): Observable<PageResponse<Bank>> {
-    return this.http.get<PageResponse<Bank>>(`${this.API_BASE}/findAllByStatus/${enterpriseId}?status=true&page=${page}&size=${size}`)
+    return this.http.get<PageResponse<Bank>>(`${this.API_BASE}/findAllActive/${enterpriseId}?page=${page}&size=${size}`)
       .pipe(catchError(this.handleError));
   }
 

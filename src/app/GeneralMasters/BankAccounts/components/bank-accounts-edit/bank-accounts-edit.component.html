@@ -49,8 +49,8 @@
 
         <div class="flex flex-col gap-2">
           <label class="font-semibold text-primary label-required">Cuenta Contable</label>
-          <p-select [options]="auxiliaryAccountsOptions" formControlName="cuentaContable" placeholder="Seleccione cuenta contable" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
-          <small style="color: var(--color-error);" *ngIf="form.get('cuentaContable')?.touched && form.get('cuentaContable')?.invalid">Seleccione una cuenta contable</small>
+          <p-select [options]="auxiliaryAccountsOptions" formControlName="accountingAccountId" placeholder="Seleccione cuenta contable" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
+          <small class="error-message" *ngIf="form.get('accountingAccountId')?.touched && form.get('accountingAccountId')?.invalid">Seleccione una cuenta contable</small>
         </div>
 
       </div>

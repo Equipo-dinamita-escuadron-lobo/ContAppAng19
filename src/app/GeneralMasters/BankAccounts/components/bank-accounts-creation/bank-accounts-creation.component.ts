@@ -40,7 +40,7 @@ export class BankAccountsCreationComponent implements OnInit {
       accountNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.maxLength(20)]],
       bankId: [null, [Validators.required]],
       accountType: ['', [Validators.required]],
-      cuentaContable: ['', [Validators.required]]
+      accountingAccountId: ['', [Validators.required]]
     });
   }
 
@@ -123,7 +123,7 @@ export class BankAccountsCreationComponent implements OnInit {
       accountNumber: this.form.value.accountNumber,
       bankId: this.form.value.bankId,
       accountType: this.form.value.accountType,
-      cuentaContable: this.form.value.cuentaContable
+      accountingAccountId: this.form.value.accountingAccountId
     };
 
     this.bankAccountsService.create(payload).subscribe({

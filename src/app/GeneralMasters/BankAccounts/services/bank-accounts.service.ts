@@ -10,7 +10,7 @@ export interface BankAccount {
   accountNumber: string;
   bank: Bank;
   accountType: string;
-  cuentaContable: string;
+  accountingAccountId: string;
   status: boolean;
   idEnterprise?: string;
 }
@@ -20,7 +20,7 @@ export interface BankAccountCreateRequest {
   accountNumber: string;
   bankId: number;
   accountType: string;
-  cuentaContable: string;
+  accountingAccountId: string;
 }
 
 export interface BankAccountUpdateRequest {
@@ -28,7 +28,7 @@ export interface BankAccountUpdateRequest {
   accountNumber: string;
   bankId: number;
   accountType: string;
-  cuentaContable: string;
+  accountingAccountId: string;
   status: boolean;
   idEnterprise: string;
 }
@@ -71,7 +71,7 @@ export class BankAccountsService {
    * Obtiene la lista de cuentas bancarias activas
    */
   findAllActive(enterpriseId: string, page: number = 0, size: number = 100): Observable<PageResponse<BankAccount>> {
-    return this.http.get<PageResponse<BankAccount>>(`${this.API_BASE}/findAllByStatus/${enterpriseId}?status=true&page=${page}&size=${size}`)
+    return this.http.get<PageResponse<BankAccount>>(`${this.API_BASE}/findAllActive/${enterpriseId}?page=${page}&size=${size}`)
       .pipe(catchError(this.handleError));
   }
 

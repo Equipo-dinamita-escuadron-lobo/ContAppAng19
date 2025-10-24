@@ -44,7 +44,7 @@ export class BankAccountsEditComponent implements OnInit {
       accountNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.maxLength(20)]],
       bankId: [null, [Validators.required]],
       accountType: ['', [Validators.required]],
-      cuentaContable: ['', [Validators.required]]
+      accountingAccountId: ['', [Validators.required]]
     });
   }
 
@@ -125,7 +125,7 @@ export class BankAccountsEditComponent implements OnInit {
           accountNumber: account.accountNumber.toString(),
           bankId: account.bank.id,
           accountType: account.accountType,
-          cuentaContable: account.cuentaContable
+          accountingAccountId: account.accountingAccountId
         };
         this.form.patchValue(formData);
         this.originalFormValue = { ...formData };
@@ -185,7 +185,7 @@ export class BankAccountsEditComponent implements OnInit {
       accountNumber: this.form.value.accountNumber,
       bankId: this.form.value.bankId,
       accountType: this.form.value.accountType,
-      cuentaContable: this.form.value.cuentaContable,
+      accountingAccountId: this.form.value.accountingAccountId,
       status: true
     };
 

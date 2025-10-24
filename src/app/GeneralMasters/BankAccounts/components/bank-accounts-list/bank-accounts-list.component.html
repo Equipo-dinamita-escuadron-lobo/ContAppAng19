@@ -90,7 +90,7 @@
                         </div>
                     </td>
                     <td class="py-3">{{ getAccountTypeDisplay(account.accountType) }}</td>
-                    <td class="py-3">{{ getAccountingAccountDisplay(account.cuentaContable) }}</td>
+                    <td class="py-3">{{ getAccountingAccountDisplay(account.accountingAccountId) }}</td>
                     <td class="py-3 text-center">
                         <p-tag 
                             [value]="account.status ? 'Activo' : 'Inactivo'" 

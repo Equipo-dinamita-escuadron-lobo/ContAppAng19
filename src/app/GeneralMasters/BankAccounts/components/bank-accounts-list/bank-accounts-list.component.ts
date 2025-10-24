@@ -129,7 +129,7 @@ export class BankAccountsListComponent implements OnInit {
         account.accountNumber.toString().includes(term) ||
         account.bank?.name?.toLowerCase().includes(term) ||
         account.bank?.code?.toLowerCase().includes(term) ||
-        account.cuentaContable.toLowerCase().includes(term)
+        account.accountingAccountId.toLowerCase().includes(term)
       );
     }
   }
