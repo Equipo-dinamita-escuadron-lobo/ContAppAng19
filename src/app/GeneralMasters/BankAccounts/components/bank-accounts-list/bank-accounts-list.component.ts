@@ -83,7 +83,9 @@ export class BankAccountsListComponent implements OnInit {
     this.chartAccountService.getListAuxiliaryAccounts(this.enterpriseId).subscribe({
       next: (accounts) => {
         accounts.forEach(account => {
-          this.accountingAccountsMap.set(account.code, `${account.code} - ${account.description}`);
+          if (account.id != null) {
+            this.accountingAccountsMap.set(account.id.toString(), `${account.code} - ${account.description}`);
+          }
         });
       },
       error: () => {
@@ -214,7 +216,7 @@ export class BankAccountsListComponent implements OnInit {
     return this.bankAccountsService.getAccountTypeDisplay(accountType);
   }
 
-  getAccountingAccountDisplay(accountCode: string): string {
-    return this.accountingAccountsMap.get(accountCode) || accountCode;
+  getAccountingAccountDisplay(accountingAccountId: string): string {
+    return this.accountingAccountsMap.get(accountingAccountId.toString()) || accountingAccountId;
   }
 }

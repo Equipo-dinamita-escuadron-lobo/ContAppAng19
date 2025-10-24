@@ -25,7 +25,7 @@ export class BankAccountsCreationComponent implements OnInit {
   form: FormGroup;
   banksOptions: { label: string; value: number }[] = [];
   accountTypesOptions: { label: string; value: string }[] = [];
-  auxiliaryAccountsOptions: { label: string; value: string }[] = [];
+  auxiliaryAccountsOptions: { label: string; value: number }[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -82,10 +82,12 @@ export class BankAccountsCreationComponent implements OnInit {
   private loadAuxiliaryAccounts(enterpriseId: string): void {
     this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (accounts) => {
-        this.auxiliaryAccountsOptions = accounts.map(account => ({
-          label: `${account.code} - ${account.description}`,
-          value: account.code
-        }));
+        this.auxiliaryAccountsOptions = accounts
+          .filter(account => account.id != null)
+          .map(account => ({
+            label: `${account.code} - ${account.description}`,
+            value: account.id!
+          }));
       },
       error: (err) => {
         this.messageService.add({
