@@ -149,7 +149,7 @@ export class BankListComponent implements OnInit {
 
   confirmDelete(bank: Bank): void {
     this.confirmationService.confirm({
-      message: `¿Desea eliminar el banco "${bank.name}"?`,
+      message: `¿Desea eliminar "${bank.name}"?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',

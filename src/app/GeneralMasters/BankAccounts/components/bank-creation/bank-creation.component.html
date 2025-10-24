@@ -24,22 +24,22 @@
         <div class="flex flex-col gap-2">
           <label class="font-semibold text-primary label-required">Código</label>
           <input pInputText formControlName="code" placeholder="Ej: 01" maxlength="2" class="w-full md:w-1/3" />
-          <small style="color: var(--color-error);" *ngIf="form.get('code')?.touched && form.get('code')?.invalid">
+          <small class="error-message" *ngIf="form.get('code')?.touched && form.get('code')?.invalid">
             <span *ngIf="form.get('code')?.errors?.['required']">Código requerido</span>
-            <span *ngIf="form.get('code')?.errors?.['maxDigits']">Solo se permiten máximo 2 dígitos</span>
+            <span *ngIf="form.get('code')?.errors?.['maxDigits']">Debe ingresar 2 dígitos</span>
           </small>
         </div>
 
         <div class="flex flex-col gap-2">
           <label class="font-semibold text-primary label-required">Nombre</label>
           <input pInputText formControlName="name" placeholder="Ej: Banco de Bogotá" maxlength="100" class="w-full md:w-2/3" />
-          <small style="color: var(--color-error);" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido</small>
+          <small class="error-message" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido</small>
         </div>
 
         <div class="flex flex-col gap-2">
           <label class="font-semibold text-primary label-required">Monedas</label>
           <p-multiSelect [options]="currenciesOptions" formControlName="currencies" placeholder="Seleccione monedas" [filter]="true" [showClear]="true" class="w-full md:w-2/3" display="chip"></p-multiSelect>
-          <small style="color: var(--color-error);" *ngIf="form.get('currencies')?.touched && form.get('currencies')?.invalid">Seleccione al menos una moneda</small>
+          <small class="error-message" *ngIf="form.get('currencies')?.touched && form.get('currencies')?.invalid">Seleccione al menos una moneda</small>
         </div>
 
       </div>
