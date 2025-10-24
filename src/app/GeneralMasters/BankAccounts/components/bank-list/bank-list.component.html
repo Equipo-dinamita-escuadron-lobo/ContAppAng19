@@ -76,7 +76,7 @@
                 <tr class="text-neutral-20">
                     <td class="py-3">{{ bank.code }}</td>
                     <td class="py-3">{{ bank.name }}</td>
-                    <td class="py-3">{{ getCurrencyDisplay(bank.currency) }}</td>
+                    <td class="py-3">{{ getCurrenciesDisplay(bank.currencies) }}</td>
                     <td class="py-3 text-center">
                         <p-tag 
                             [value]="bank.status ? 'Activo' : 'Inactivo'" 

@@ -6,14 +6,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { BankService } from '../../services/bank.service';
 
 @Component({
   selector: 'app-bank-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, MultiSelectModule],
   templateUrl: './bank-edit.component.html',
   styleUrl: './bank-edit.component.css',
   providers: [MessageService]
@@ -36,7 +36,7 @@ export class BankEditComponent implements OnInit {
     this.form = this.fb.group({
       code: ['', [Validators.required, BankService.validateBankCode]],
       name: ['', [Validators.required, Validators.maxLength(100)]],
-      currency: ['', [Validators.required]]
+      currencies: [[], [Validators.required, Validators.minLength(1)]]
     });
   }
 
@@ -75,7 +75,7 @@ export class BankEditComponent implements OnInit {
         const formData = {
           code: bank.code,
           name: bank.name,
-          currency: bank.currency
+          currencies: bank.currencies
         };
         this.form.patchValue(formData);
         this.originalFormValue = { ...formData };
@@ -134,7 +134,7 @@ export class BankEditComponent implements OnInit {
       idEnterprise: enterpriseId,
       code: this.form.value.code,
       name: this.form.value.name,
-      currency: this.form.value.currency,
+      currencies: this.form.value.currencies,
       status: true
     };
 

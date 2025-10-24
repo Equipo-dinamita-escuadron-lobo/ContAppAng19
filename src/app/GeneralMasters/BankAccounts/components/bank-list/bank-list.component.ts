@@ -197,7 +197,7 @@ export class BankListComponent implements OnInit {
     this.router.navigate(['/gen-masters/bank-accounts']);
   }
 
-  getCurrencyDisplay(currencyCode: string): string {
-    return this.bankService.getCurrencyDisplay(currencyCode);
+  getCurrenciesDisplay(currencyCodes: string[]): string {
+    return this.bankService.getCurrenciesDisplay(currencyCodes);
   }
 }

@@ -9,7 +9,7 @@ export interface Bank {
   id?: number;
   code: string;
   name: string;
-  currency: string;
+  currencies: string[];
   status: boolean;
   isDeleted?: boolean;
   idEnterprise?: string;
@@ -19,14 +19,14 @@ export interface BankCreateRequest {
   idEnterprise: string;
   code: string;
   name: string;
-  currency: string;
+  currencies: string[];
 }
 
 export interface BankUpdateRequest {
   id: number;
   code: string;
   name: string;
-  currency: string;
+  currencies: string[];
   status: boolean;
   idEnterprise: string;
 }
@@ -139,6 +139,18 @@ export class BankService {
   getCurrencyDisplay(currencyCode: string): string {
     const currency = this.getCurrencies().find(c => c.code === currencyCode);
     return currency ? currency.description : currencyCode;
+  }
+
+  /**
+   * Obtiene las descripciones de múltiples monedas
+   */
+  getCurrenciesDisplay(currencyCodes: string[]): string {
+    if (!currencyCodes || currencyCodes.length === 0) {
+      return '';
+    }
+
+    const descriptions = currencyCodes.map(code => this.getCurrencyDisplay(code));
+    return descriptions.join(', ');
   }
 
   /**
