@@ -23,11 +23,11 @@ export class BankCreationComponent implements OnInit {
   currenciesOptions: { label: string; value: string }[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private messageService: MessageService,
-    private bankService: BankService,
-    private localStorageMethod: LocalStorageMethods
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly bankService: BankService,
+    private readonly localStorageMethod: LocalStorageMethods
   ) {
     this.form = this.fb.group({
       code: ['', [Validators.required, BankService.validateBankCode]],

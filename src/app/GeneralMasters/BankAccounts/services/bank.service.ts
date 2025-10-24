@@ -175,9 +175,9 @@ export class BankService {
       return { notPositive: true };
     }
 
-    // Validar que tenga máximo 2 dígitos
-    if (value.length > 2) {
-      return { maxDigits: true };
+    // Validar que tenga exactamente 2 dígitos
+    if (value.length !== 2) {
+      return { invalidLength: true };
     }
 
     return null;

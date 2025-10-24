@@ -31,7 +31,7 @@
           <input pInputText formControlName="code" placeholder="Ej: 01" maxlength="2" class="w-full md:w-1/3" />
           <small class="error-message" *ngIf="form.get('code')?.touched && form.get('code')?.invalid">
             <span *ngIf="form.get('code')?.errors?.['required']">Código requerido</span>
-            <span *ngIf="form.get('code')?.errors?.['maxDigits']">Debe ingresar 2 dígitos</span>
+            <span *ngIf="form.get('code')?.errors?.['invalidLength']">Debe ingresar 2 dígitos</span>
           </small>
         </div>
 
