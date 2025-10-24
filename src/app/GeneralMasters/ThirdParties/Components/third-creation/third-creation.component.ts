@@ -1,8 +1,7 @@
-import { Component, OnInit, ViewChildren, QueryList, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
 
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -153,16 +152,16 @@ export class ThirdCreationComponent implements OnInit {
   ];
 
   constructor(
-    private fb: FormBuilder,
-    private thirdService: ThirdService,
-    private thirdServiceConfigurationService: ThirdServiceConfigurationService,
-    private router: Router,
-    private datePipe: DatePipe,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods,
-    private thirdFormService: ThirdFormService,
-    private thirdValidationService: ThirdValidationService,
-    private geographyHelper: GeographyHelperService
+    private readonly fb: FormBuilder,
+    private readonly thirdService: ThirdService,
+    private readonly thirdServiceConfigurationService: ThirdServiceConfigurationService,
+    private readonly router: Router,
+    private readonly datePipe: DatePipe,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods,
+    private readonly thirdFormService: ThirdFormService,
+    private readonly thirdValidationService: ThirdValidationService,
+    private readonly geographyHelper: GeographyHelperService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
@@ -184,7 +183,7 @@ export class ThirdCreationComponent implements OnInit {
       state: [true, Validators.required],
       thirdTypes: [[], Validators.required],
       typeId: [null, Validators.required],
-      idNumber: [null, [Validators.required, Validators.min(1)], [this.thirdValidationService.thirdExistsValidator(this.thirdService, this.entData)]],
+      idNumber: [null, [Validators.required, Validators.min(1)]],
       verificationNumber: [null],
       names: [null],
       lastNames: [null],
@@ -276,11 +275,9 @@ export class ThirdCreationComponent implements OnInit {
         const typeId = this.thirdFormService.getTypeId(this.createdThirdForm);
         const personType = this.thirdFormService.getPersonType(this.createdThirdForm);
         this.thirdValidationService.updateIdNumberValidations(
-          this.createdThirdForm, 
-          typeId, 
-          personType,
-          this.entData,
-          this.thirdService
+          this.createdThirdForm,
+          typeId,
+          personType
         );
 
         // Calcular DV si ya hay número de identificación y el tipo es NIT
@@ -324,9 +321,7 @@ export class ThirdCreationComponent implements OnInit {
       this.thirdValidationService.updateIdNumberValidations(
         this.createdThirdForm,
         typeId,
-        personType,
-        this.entData,
-        this.thirdService
+        personType
       );
       
       const idNumber = this.createdThirdForm.get('idNumber')?.value;
@@ -347,9 +342,7 @@ export class ThirdCreationComponent implements OnInit {
     this.thirdValidationService.updateIdNumberValidations(
       this.createdThirdForm,
       this.thirdFormService.getTypeId(this.createdThirdForm),
-      this.thirdFormService.getPersonType(this.createdThirdForm),
-      this.entData,
-      this.thirdService
+      this.thirdFormService.getPersonType(this.createdThirdForm)
     );
   }
 
@@ -413,6 +406,13 @@ export class ThirdCreationComponent implements OnInit {
     if (this.contendPDFRUT) {
       this.infoThird = this.contendPDFRUT.split(';');
       this.prefillFormWithRUTData();
+
+      // Mostrar notificación de éxito del procesamiento del PDF
+      this.messageService.add({
+        severity: 'success',
+        summary: 'PDF procesado correctamente',
+        detail: 'Los datos del RUT se han cargado en el formulario.'
+      });
     }
   }
 
@@ -503,8 +503,8 @@ export class ThirdCreationComponent implements OnInit {
       .toLowerCase()
       .trim()
       .normalize('NFD') // Descompone caracteres con acentos
-      .replace(/[\u0300-\u036f]/g, '') // Remueve los acentos
-      .replace(/[^a-z0-9\s]/g, ''); // Remueve caracteres especiales excepto espacios
+      .replaceAll(/[\u0300-\u036f]/g, '') // Remueve los acentos
+      .replaceAll(/[^a-z0-9\s]/g, ''); // Remueve caracteres especiales excepto espacios
   }
 
   /**

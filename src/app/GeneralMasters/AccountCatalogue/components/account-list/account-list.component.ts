@@ -1185,11 +1185,12 @@ export class AccountListComponent implements OnInit {
       }
       try {
         this.confirmationService.confirm({
-          message: '¿Desea eliminar esta cuenta?',
+          message: '¿Desea eliminar esta cuenta? Esta acción no se puede deshacer.',
           header: 'Confirmar eliminación',
           icon: 'pi pi-exclamation-triangle',
           acceptLabel: 'Sí, Eliminar',
           rejectLabel: 'Cancelar',
+          rejectButtonStyleClass: 'p-button-secondary',
           accept: () => {
             if (this.accountSelected?.id) {
               this._accountService.deleteAccount(this.accountSelected.id.toString(), this.getIdEnterprise()).subscribe(
@@ -1221,10 +1222,21 @@ export class AccountListComponent implements OnInit {
                   });
                 },
                 (error) => {
+                  // Extraer el mensaje específico del backend
+                  let errorMessage = 'Ha ocurrido un error al eliminar la cuenta!.';
+
+                  if (error.error) {
+                    if (typeof error.error === 'string') {
+                      errorMessage = error.error;
+                    } else if (error.error.message) {
+                      errorMessage = error.error.message;
+                    }
+                  }
+
                   this.messageService.add({
                     severity: 'error',
-                    summary: 'Error',
-                    detail: 'Ha ocurrido un error al eliminar la cuenta!.'
+                    summary: 'Error al eliminar',
+                    detail: errorMessage
                   });
                 }
               );
@@ -1791,7 +1803,8 @@ export class AccountListComponent implements OnInit {
     this.confirmationService.confirm({
       key: 'exportDialog',
       header: 'Exportar',
-      acceptLabel: 'Aceptar',
+      acceptLabel: 'Exportar',
+      acceptIcon: 'pi pi-download',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary',
@@ -1834,11 +1847,25 @@ export class AccountListComponent implements OnInit {
             try {
               const errorData = JSON.parse(reader.result as string);
               const errorMessage = errorData.message || 'No se pudo exportar las cuentas.';
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error de Exportación',
-                detail: errorMessage
-              });
+
+              // Verificar si es un mensaje informativo sobre cuentas no disponibles
+              const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
+
+              if (isNoAccountsMessage) {
+                // Mostrar como información en lugar de error
+                this.messageService.add({
+                  severity: 'info',
+                  summary: 'Información',
+                  detail: this.getNoAccountsMessage(status)
+                });
+              } else {
+                // Mostrar como error para otros casos
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error de Exportación',
+                  detail: errorMessage
+                });
+              }
             } catch (e) {
               this.messageService.add({
                 severity: 'error',
@@ -1857,14 +1884,61 @@ export class AccountListComponent implements OnInit {
           reader.readAsText(error.error);
         } else {
           const errorMessage = error.error?.message || error.message || 'Error desconocido al exportar cuentas';
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error de Exportación',
-            detail: errorMessage
-          });
+
+          // Verificar si es un mensaje informativo sobre cuentas no disponibles
+          const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
+
+          if (isNoAccountsMessage) {
+            // Mostrar como información en lugar de error
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: this.getNoAccountsMessage(status)
+            });
+          } else {
+            // Mostrar como error para otros casos
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: errorMessage
+            });
+          }
         }
       }
     });
+  }
+
+  /**
+   * Verifica si el mensaje de error indica que no hay cuentas disponibles para exportar.
+   */
+  private isNoAccountsAvailableMessage(message: string): boolean {
+    const noAccountsPatterns = [
+      'no hay cuentas',
+      'no existen cuentas',
+      'no se encontraron cuentas',
+      'no hay registros',
+      'empty',
+      'sin cuentas'
+    ];
+
+    return noAccountsPatterns.some(pattern =>
+      message.toLowerCase().includes(pattern.toLowerCase())
+    );
+  }
+
+  /**
+   * Retorna el mensaje informativo apropiado según el filtro de estado aplicado.
+   */
+  private getNoAccountsMessage(status: boolean | undefined): string {
+    switch (status) {
+      case true:
+        return 'No hay cuentas activas para exportar';
+      case false:
+        return 'No hay cuentas inactivas para exportar';
+      case undefined:
+      default:
+        return 'No hay cuentas para exportar';
+    }
   }
 
   /**

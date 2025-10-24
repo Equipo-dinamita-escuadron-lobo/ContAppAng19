@@ -12,7 +12,7 @@ export class ThirdService {
   private infoThirdRUT: string |null=null;
 
   /** URL base para las operaciones con terceros */
-  private thirdApiUrl = environment.API_URL + 'thirds/'
+  private readonly thirdApiUrl = environment.API_URL + 'thirds/'
   //Cambiar para desarrollo local
   //private thirdApiUrl = 'http://localhost:8081/api/thirds/'
 
@@ -20,7 +20,7 @@ export class ThirdService {
    * Constructor del servicio
    * @param http Cliente HTTP para realizar peticiones
    */
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   /**
    * Establece la información del RUT
@@ -142,24 +142,16 @@ export class ThirdService {
   }
 
   /**
-   * Verifica si existe un tercero con el ID y empresa especificados
-   * @param thId ID del tercero
-   * @param entId ID de la empresa
-   * @returns Observable con el resultado de la verificación
-   */
-  existThird(thId:number, entId:String): Observable<boolean>{
-    return this.http.get<boolean>(`${this.thirdApiUrl}existBy?idNumber=${thId}&entId=${entId}`);
-  }
-
-  /**
    * Cambia el estado de un tercero
    * @param thId ID del tercero
+   * @param entId ID de la empresa
    * @returns Observable con el resultado del cambio de estado
    */
-  changeThirdPartieState(thId:number): Observable<Boolean>{
+  changeThirdPartieState(thId:number, entId: string): Observable<Third>{
     let params = new HttpParams()
-    .set('thId', thId);
-    return this.http.put<any>(this.thirdApiUrl,null,{params})
+    .set('thId', thId)
+    .set('entId', entId);
+    return this.http.put<Third>(this.thirdApiUrl,null,{params})
   }
 
   /**
@@ -260,6 +252,40 @@ export class ThirdService {
         console.error('Error al importar terceros:', error);
         console.error('Status:', error.status);
         console.error('Error completo:', JSON.stringify(error, null, 2));
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene una lista de terceros activos
+   * @param entId ID de la empresa
+   * @returns Observable con la lista de terceros activos
+   */
+  getActiveThirds(entId: string): Observable<any> {
+    const params = new HttpParams().set('entId', entId);
+
+    return this.http.get<any>(`${this.thirdApiUrl}findAllActive`, { params }).pipe(
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Cambia el estado de todos los terceros de una empresa de forma masiva
+   * @param entId ID de la empresa
+   * @param newState Nuevo estado para todos los terceros
+   * @returns Observable con la respuesta del cambio masivo
+   */
+  changeAllThirdsState(entId: string, newState: boolean): Observable<any> {
+    let params = new HttpParams()
+      .set('entId', entId)
+      .set('newState', newState.toString());
+
+    return this.http.patch<any>(`${this.thirdApiUrl}allState`, null, { params }).pipe(
+      catchError((error) => {
+        console.error('Error al cambiar estado masivo de terceros:', error);
         return throwError(() => error);
       })
     );

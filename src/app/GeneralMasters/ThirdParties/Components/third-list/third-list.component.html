@@ -88,7 +88,18 @@
           <th *ngIf="showDetailView">Ciudad</th>
           <th *ngIf="showDetailView">Dirección</th>
           <th *ngIf="showDetailView">Teléfono</th>
-          <th>Estado</th>
+          <th>
+            <div class="flex justify-center gap-4">
+              <span>Estado</span>
+              <p-toggleswitch
+                [(ngModel)]="bulkStateToggle"
+                (onChange)="changeBulkState()"
+                [pTooltip]="bulkStateToggle ? 'Activos' : 'Inactivos'"
+                tooltipPosition="top"
+                [style]="{'transform': 'scale(0.8)'}">
+              </p-toggleswitch>
+            </div>
+          </th>
           <th>Acciones</th>
         </tr>
       </ng-template>
@@ -146,7 +157,7 @@
           <td>
             <div class="flex justify-center gap-2 items-center">
               <!-- Botón Ver (solo vista resumida) -->
-              <p-button *ngIf="!showDetailView" icon="pi pi-eye" pTooltip="Ver detalles" tooltipPosition="top" 
+              <p-button *ngIf="!showDetailView" icon="pi pi-eye" pTooltip="Detalles" tooltipPosition="top" 
                 (click)="openDetailsModal(third)" styleClass="p-button-rounded p-button-text text-primary">
               </p-button>
 
