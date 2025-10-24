@@ -36,7 +36,7 @@
     Criterios para la Generación:
   </h3>
   <div class="p-4 bg-white rounded-lg shadow-sm">
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
       <!-- 2. Rango -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
@@ -75,7 +75,7 @@
         </div>
       </div>
 
-      <!-- 3. Tercero -->
+      <!-- 3. Tipo de documento -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
           <p-checkbox
@@ -100,19 +100,24 @@
       <!-- 4. Fecha de Corte (sin línea a la derecha) -->
       <div class="col-span-1">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Fecha de Corte <span class="text-[var(--color-secondary)]"> *</span>
+          Periodo <span class="text-[var(--color-secondary)]"> *</span>
         </h4>
         <p-datepicker
-          [(ngModel)]="criteria.endDate"
+          [(ngModel)]="datePeriod"
+          selectionMode="multiple"
+          maxDateCount="2"
           dateFormat="dd/mm/yy"
-          placeholder="DD-MM-YYYY"
+          placeholder="DD/MM/YYYY - DD/MM/YYYY"
           [showIcon]="true"
+          showClear="true"
           styleClass="w-full text-xs"
+          multipleSeparator="-"
+          [style]="{ width: '100%', minWidth: '310px' }"
         ></p-datepicker>
       </div>
 
-      <!-- 5. Botón -->
-      <div class="col-span-1 flex justify-center items-center">
+      <!-- 4. Botón -->
+      <div class="col-span-1 flex justify-center items-center h-full">
         <button
           pButton
           type="button"
@@ -138,15 +143,32 @@
       <!-- Header -->
       <ng-template pTemplate="header">
         <tr>
+          <th class="text-center" pResizableColumn rowspan="2">
+            Tipo Documento
+          </th>
+          <th class="text-center" pResizableColumn rowspan="2">Fecha</th>
+          <th class="text-center" pResizableColumn rowspan="2">Estado</th>
+          <th class="text-center" pResizableColumn rowspan="1" colspan="2">
+            Tercero
+          </th>
           <th class="text-center" pResizableColumn rowspan="1" colspan="2">
             Cuenta
           </th>
-          <th class="text-center" pResizableColumn rowspan="2">Descripción</th>
-          <th class="text-center" pResizableColumn rowspan="2">Valor</th>
+          <th class="text-center" pResizableColumn rowspan="1" colspan="3">
+            Movimiento
+          </th>
+          <th class="text-center" pResizableColumn rowspan="2">
+            Movimiento Neto
+          </th>
         </tr>
         <tr>
+          <th class="text-center">Identificacion</th>
+          <th class="text-center">Nombre</th>
           <th class="text-center">Código</th>
           <th class="text-center">Descripción</th>
+          <th class="text-center">Saldo Inicial</th>
+          <th class="text-center">Débito</th>
+          <th class="text-center">Crédito</th>
         </tr>
       </ng-template>
 
@@ -165,7 +187,7 @@
       <ng-template pTemplate="emptymessage">
         <tr style="height: 200px">
           <!-- aumenta aquí la altura -->
-          <td colspan="4">
+          <td colspan="11">
             <div class="flex flex-col items-center justify-center h-full">
               <p class="text-sm text-gray-600 max-w-md text-center">
                 NO HAY INFORMACION PARA MOSTRAR

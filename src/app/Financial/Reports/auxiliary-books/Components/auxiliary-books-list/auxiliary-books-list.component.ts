@@ -29,7 +29,7 @@ export class AuxiliaryBooksListComponent implements OnInit {
       icon: 'wb_sunny',
     },
     {
-      name: 'Libro Mayor y Balances',
+      name: 'Libro Mayor',
       route: '/financial/reports/auxiliary-books/major-and-balances',
       description: 'Resume saldos y movimientos por cuenta',
       longDescription:
@@ -37,7 +37,7 @@ export class AuxiliaryBooksListComponent implements OnInit {
       icon: 'book_5',
     },
     {
-      name: 'Libro por Cuenta',
+      name: 'Libro Auxiliar por Cuenta',
       route: '/financial/reports/auxiliary-books/account-book',
       description: 'Detalla movimientos dentro de cada cuenta',
       longDescription:
@@ -45,7 +45,7 @@ export class AuxiliaryBooksListComponent implements OnInit {
       icon: 'account_balance',
     },
     {
-      name: 'Libro por Tercero',
+      name: 'Libro Auxiliar por Tercero',
       route: '/financial/reports/auxiliary-books/third-party-book',
       description: 'Muestra movimientos contables de un tercero específico',
       longDescription:
