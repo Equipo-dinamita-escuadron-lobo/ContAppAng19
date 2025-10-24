@@ -19,8 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 
 // PrimeNG Services
-import { MessageService } from 'primeng/api';
-import { ConfirmationService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 
 @Component({
@@ -45,12 +44,12 @@ import { ConfirmationService } from 'primeng/api';
   styleUrl: './bank-accounts-list.component.css'
 })
 export class BankAccountsListComponent implements OnInit {
-  private bankAccountsService = inject(BankAccountsService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
-  private router = inject(Router);
-  private localStorageMethod = inject(LocalStorageMethods);
-  private chartAccountService = inject(ChartAccountService);
+  private readonly bankAccountsService = inject(BankAccountsService);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly router = inject(Router);
+  private readonly localStorageMethod = inject(LocalStorageMethods);
+  private readonly chartAccountService = inject(ChartAccountService);
   
   private enterpriseId: string = '';
 
@@ -99,7 +98,7 @@ export class BankAccountsListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.bankAccounts = response.content;
-          this.totalRecords = response.totalElements;
+          this.totalRecords = response.page?.totalElements || response.totalElements || 0;
           this.applySearch();
           this.loading = false;
         },

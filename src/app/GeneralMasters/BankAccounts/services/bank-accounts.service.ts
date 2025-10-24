@@ -40,10 +40,16 @@ export interface AccountType {
 
 export interface PageResponse<T> {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  page?: {
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  };
 }
 
 @Injectable({

@@ -47,6 +47,7 @@
             [rows]="pageSize"
             [totalRecords]="totalRecords"
             [loading]="loading"
+            [lazy]="true"
             [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
             (onSort)="onSort($event)"

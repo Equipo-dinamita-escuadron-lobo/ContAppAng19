@@ -79,7 +79,7 @@ export class BankListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.banks = response.content;
-          this.totalRecords = response.totalElements;
+          this.totalRecords = response.page?.totalElements || response.totalElements || 0;
           this.loading = false;
         },
         error: (error) => {
@@ -112,10 +112,9 @@ export class BankListComponent implements OnInit {
   }
 
   onPage(event: any): void {
-    const newPage = event.page;
+    const newPage = Math.floor(event.first / event.rows);
     const newRows = event.rows;
 
-    // Only reload if page parameters actually changed
     if (this.currentPage !== newPage || this.pageSize !== newRows) {
       this.currentPage = newPage;
       this.pageSize = newRows;

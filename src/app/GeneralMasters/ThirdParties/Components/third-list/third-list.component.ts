@@ -158,7 +158,7 @@ export class ThirdListComponent implements OnInit {
     ).subscribe({
       next: (response: any) => {
         this.thirds = response.content || [];
-        this.totalRecords = response.totalElements || 0;
+        this.totalRecords = response.page?.totalElements || response.totalElements || 0;
         this.loading = false;
       },
       error: (error: any) => {
