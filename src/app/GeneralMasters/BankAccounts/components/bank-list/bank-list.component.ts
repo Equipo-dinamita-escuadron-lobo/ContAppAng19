@@ -58,8 +58,8 @@ export class BankListComponent implements OnInit {
   currentPage = 0;
 
   searchTerm = '';
-  sortField: string = '';
-  sortOrder: string = '';
+  sortField: string | undefined;
+  sortOrder: string | undefined;
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
@@ -99,16 +99,28 @@ export class BankListComponent implements OnInit {
   }
 
   onSort(event: any): void {
-    this.sortField = event.field;
-    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
-    this.currentPage = 0; // Reset to first page when sorting
-    this.loadBanks();
+    const newSortField = event.field;
+    const newSortOrder = event.order === 1 ? 'asc' : 'desc';
+
+    // Only reload if sort parameters actually changed
+    if (this.sortField !== newSortField || this.sortOrder !== newSortOrder) {
+      this.sortField = newSortField || undefined;
+      this.sortOrder = newSortOrder || undefined;
+      this.currentPage = 0; // Reset to first page when sorting
+      this.loadBanks();
+    }
   }
 
   onPage(event: any): void {
-    this.currentPage = event.page;
-    this.pageSize = event.rows;
-    this.loadBanks();
+    const newPage = event.page;
+    const newRows = event.rows;
+
+    // Only reload if page parameters actually changed
+    if (this.currentPage !== newPage || this.pageSize !== newRows) {
+      this.currentPage = newPage;
+      this.pageSize = newRows;
+      this.loadBanks();
+    }
   }
 
   toggleBankStatus(bank: Bank, newStatus: boolean): void {
