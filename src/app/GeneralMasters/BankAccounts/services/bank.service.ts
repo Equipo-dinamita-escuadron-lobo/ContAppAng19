@@ -49,7 +49,7 @@ export interface PageResponse<T> {
 })
 export class BankService {
   private readonly http = inject(HttpClient);
-  private readonly API_BASE = environment.API_URL + 'accountCatalogue/bank-accounts';
+  private readonly API_BASE = environment.API_URL + 'accountCatalogue/banks';
 
   /**
    * Obtiene la lista de bancos paginada
