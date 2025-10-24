@@ -26,7 +26,6 @@ import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 import { CostCenterService } from '../../../../../../GeneralMasters/CostCenters/services/cost-center.service';
 import { CostCenter } from '../../../../../../GeneralMasters/CostCenters/models/cost-center.model';
-import { AccountingCalendarService } from '../../../../../../GeneralMasters/AccountingCalendar/services/accounting-calendar.service';
 
 // Interface para respuestas paginadas
 interface Page<T> {

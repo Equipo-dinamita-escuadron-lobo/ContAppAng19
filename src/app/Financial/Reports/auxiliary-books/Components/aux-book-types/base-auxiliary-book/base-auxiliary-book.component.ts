@@ -179,20 +179,6 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     }
   }
 
-  private resetForm(): void {
-    this.resetCriteria();
-    this.resetRangeDropDowns();
-    this.resetThirdPartySelect();
-
-    // ✅ Reset de checkboxes
-    this.isRangeOptionSelected = false;
-    this.isThirdPartyOptionSelected = false;
-
-    // ✅ Esto también borra la info del tercero en pantalla
-    this.thirdPartySelected = null;
-    this.thirdPartyInfo = null;
-  }
-
   private resetRangeDropDowns(): void {
     if (this.fromSelect) {
       this.fromSelect.clear();
