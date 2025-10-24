@@ -9,7 +9,6 @@ import { BankService, Bank } from '../../services/bank.service';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -19,8 +18,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 
 // PrimeNG Services
-import { MessageService } from 'primeng/api';
-import { ConfirmationService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-bank-list',
@@ -44,23 +42,24 @@ import { ConfirmationService } from 'primeng/api';
   styleUrl: './bank-list.component.css'
 })
 export class BankListComponent implements OnInit {
-  private bankService = inject(BankService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
-  private localStorageMethod = inject(LocalStorageMethods);
-  private router = inject(Router);
+  private readonly bankService = inject(BankService);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly localStorageMethod = inject(LocalStorageMethods);
+  private readonly router = inject(Router);
 
   private enterpriseId: string = '';
 
   loading = false;
   banks: Bank[] = [];
-  filteredBanks: Bank[] = [];
 
   pageSize = 10;
   totalRecords = 0;
   currentPage = 0;
 
   searchTerm = '';
+  sortField: string = '';
+  sortOrder: string = '';
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
@@ -70,18 +69,17 @@ export class BankListComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo obtener el ID de la empresa'
+        detail: 'No se pudo obtener el identificador de la empresa'
       });
     }
   }
   private loadBanks(): void {
     this.loading = true;
-    this.bankService.findAll(this.enterpriseId, this.currentPage, this.pageSize)
+    this.bankService.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
       .subscribe({
         next: (response) => {
           this.banks = response.content;
           this.totalRecords = response.totalElements;
-          this.applySearch();
           this.loading = false;
         },
         error: (error) => {
@@ -96,19 +94,21 @@ export class BankListComponent implements OnInit {
   }
 
   onSearch(): void {
-    this.applySearch();
+    this.currentPage = 0; // Reset to first page when searching
+    this.loadBanks();
   }
 
-  private applySearch(): void {
-    if (!this.searchTerm.trim()) {
-      this.filteredBanks = [...this.banks];
-    } else {
-      const term = this.searchTerm.toLowerCase();
-      this.filteredBanks = this.banks.filter(bank =>
-        bank.codigo.toLowerCase().includes(term) ||
-        bank.nombre.toLowerCase().includes(term)
-      );
-    }
+  onSort(event: any): void {
+    this.sortField = event.field;
+    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    this.currentPage = 0; // Reset to first page when sorting
+    this.loadBanks();
+  }
+
+  onPage(event: any): void {
+    this.currentPage = event.page;
+    this.pageSize = event.rows;
+    this.loadBanks();
   }
 
   toggleBankStatus(bank: Bank, newStatus: boolean): void {
@@ -121,7 +121,7 @@ export class BankListComponent implements OnInit {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
-            detail: `Estado del banco '${bank.nombre}' cambiado correctamente`
+            detail: `Estado del banco '${bank.name}' cambiado correctamente`
           });
         },
         error: (error) => {
@@ -137,7 +137,7 @@ export class BankListComponent implements OnInit {
 
   confirmDelete(bank: Bank): void {
     this.confirmationService.confirm({
-      message: `¿Desea eliminar el banco "${bank.nombre}"?`,
+      message: `¿Desea eliminar el banco "${bank.name}"?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',

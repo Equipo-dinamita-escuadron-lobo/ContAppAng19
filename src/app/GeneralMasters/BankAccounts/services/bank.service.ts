@@ -1,15 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 
 export interface Bank {
   id?: number;
-  codigo: string;
-  nombre: string;
-  moneda: string;
+  code: string;
+  name: string;
+  currency: string;
   status: boolean;
   isDeleted?: boolean;
   idEnterprise?: string;
@@ -17,16 +17,16 @@ export interface Bank {
 
 export interface BankCreateRequest {
   idEnterprise: string;
-  codigo: string;
-  nombre: string;
-  moneda: string;
+  code: string;
+  name: string;
+  currency: string;
 }
 
 export interface BankUpdateRequest {
   id: number;
-  codigo: string;
-  nombre: string;
-  moneda: string;
+  code: string;
+  name: string;
+  currency: string;
   status: boolean;
   idEnterprise: string;
 }
@@ -49,13 +49,25 @@ export interface PageResponse<T> {
 })
 export class BankService {
   private readonly http = inject(HttpClient);
-  private readonly API_BASE = environment.API_URL + 'accountCatalogue/banks';
+  private readonly API_BASE = environment.API_URL + 'accountCatalogue/bank-accounts';
 
   /**
    * Obtiene la lista de bancos paginada
    */
-  findAll(enterpriseId: string, page: number = 0, size: number = 10): Observable<PageResponse<Bank>> {
-    return this.http.get<PageResponse<Bank>>(`${this.API_BASE}/findAll/${enterpriseId}?page=${page}&size=${size}`)
+  findAll(enterpriseId: string, page: number = 0, size: number = 10, sortField?: string, sortOrder?: string, search?: string): Observable<PageResponse<Bank>> {
+    let url = `${this.API_BASE}/findAll/${enterpriseId}?page=${page}&size=${size}`;
+
+    if (sortField) {
+      url += `&sortField=${sortField}`;
+    }
+    if (sortOrder) {
+      url += `&sortOrder=${sortOrder}`;
+    }
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+
+    return this.http.get<PageResponse<Bank>>(url)
       .pipe(catchError(this.handleError));
   }
 
@@ -146,7 +158,7 @@ export class BankService {
     }
 
     // Validar que sea un número positivo
-    const numValue = parseInt(value, 10);
+    const numValue = Number.parseInt(value, 10);
     if (numValue <= 0) {
       return { notPositive: true };
     }

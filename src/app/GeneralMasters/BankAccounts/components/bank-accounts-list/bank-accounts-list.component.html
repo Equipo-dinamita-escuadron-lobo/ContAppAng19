@@ -56,7 +56,7 @@
             [loading]="loading"
             [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
-            [globalFilterFields]="['accountNumber', 'bank.nombre', 'bank.codigo', 'accountType', 'accountingAccount']"
+            [globalFilterFields]="['accountNumber', 'bank.name', 'bank.code', 'accountType', 'accountingAccount']"
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}">
             
@@ -66,9 +66,9 @@
                         Número de Cuenta
                         <p-sortIcon field="accountNumber"></p-sortIcon>
                     </th>
-                    <th pSortableColumn="bank.nombre" class="font-semibold text-primary border-b-2 border-primary">
+                    <th pSortableColumn="bank.name" class="font-semibold text-primary border-b-2 border-primary">
                         Banco
-                        <p-sortIcon field="bank.nombre"></p-sortIcon>
+                        <p-sortIcon field="bank.name"></p-sortIcon>
                     </th>
                     <th class="font-semibold text-primary border-b-2 border-primary">
                         Tipo de Cuenta
@@ -86,7 +86,7 @@
                     <td class="py-3">{{ account.accountNumber }}</td>
                     <td class="py-3">
                         <div class="flex flex-col">
-                            <span class="font-medium">{{ account.bank?.codigo }} - {{ account.bank?.nombre }}</span>
+                            <span class="font-medium">{{ account.bank?.code }} - {{ account.bank?.name }}</span>
                         </div>
                     </td>
                     <td class="py-3">{{ getAccountTypeDisplay(account.accountType) }}</td>

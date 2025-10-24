@@ -30,9 +30,9 @@ export class BankCreationComponent implements OnInit {
     private localStorageMethod: LocalStorageMethods
   ) {
     this.form = this.fb.group({
-      codigo: ['', [Validators.required, BankService.validateBankCode]],
-      nombre: ['', [Validators.required, Validators.maxLength(100)]],
-      moneda: ['', [Validators.required]]
+      code: ['', [Validators.required, BankService.validateBankCode]],
+      name: ['', [Validators.required, Validators.maxLength(100)]],
+      currency: ['', [Validators.required]]
     });
   }
 
@@ -66,9 +66,9 @@ export class BankCreationComponent implements OnInit {
 
     const payload = {
       idEnterprise: enterpriseId,
-      codigo: this.form.value.codigo,
-      nombre: this.form.value.nombre,
-      moneda: this.form.value.moneda
+      code: this.form.value.code,
+      name: this.form.value.name,
+      currency: this.form.value.currency
     };
 
     this.bankService.create(payload).subscribe({

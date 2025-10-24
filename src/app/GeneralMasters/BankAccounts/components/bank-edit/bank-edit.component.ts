@@ -26,17 +26,17 @@ export class BankEditComponent implements OnInit {
   originalFormValue: any = null;
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private messageService: MessageService,
-    private bankService: BankService,
-    private localStorageMethod: LocalStorageMethods
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly messageService: MessageService,
+    private readonly bankService: BankService,
+    private readonly localStorageMethod: LocalStorageMethods
   ) {
     this.form = this.fb.group({
-      codigo: ['', [Validators.required, BankService.validateBankCode]],
-      nombre: ['', [Validators.required, Validators.maxLength(100)]],
-      moneda: ['', [Validators.required]]
+      code: ['', [Validators.required, BankService.validateBankCode]],
+      name: ['', [Validators.required, Validators.maxLength(100)]],
+      currency: ['', [Validators.required]]
     });
   }
 
@@ -73,9 +73,9 @@ export class BankEditComponent implements OnInit {
     this.bankService.findById(this.bankId, enterpriseId).subscribe({
       next: (bank) => {
         const formData = {
-          codigo: bank.codigo,
-          nombre: bank.nombre,
-          moneda: bank.moneda
+          code: bank.code,
+          name: bank.name,
+          currency: bank.currency
         };
         this.form.patchValue(formData);
         this.originalFormValue = { ...formData };
@@ -132,9 +132,9 @@ export class BankEditComponent implements OnInit {
     const payload = {
       id: this.bankId,
       idEnterprise: enterpriseId,
-      codigo: this.form.value.codigo,
-      nombre: this.form.value.nombre,
-      moneda: this.form.value.moneda,
+      code: this.form.value.code,
+      name: this.form.value.name,
+      currency: this.form.value.currency,
       status: true
     };
 

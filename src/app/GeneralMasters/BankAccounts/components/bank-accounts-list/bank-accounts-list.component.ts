@@ -128,8 +128,8 @@ export class BankAccountsListComponent implements OnInit {
       const term = this.searchTerm.toLowerCase();
       this.filteredBankAccounts = this.bankAccounts.filter(account =>
         account.accountNumber.toString().includes(term) ||
-        account.bank?.nombre?.toLowerCase().includes(term) ||
-        account.bank?.codigo?.toLowerCase().includes(term) ||
+        account.bank?.name?.toLowerCase().includes(term) ||
+        account.bank?.code?.toLowerCase().includes(term) ||
         account.cuentaContable.toLowerCase().includes(term)
       );
     }

@@ -73,7 +73,7 @@ export class BankAccountsEditComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.banksOptions = response.content.map(bank => ({
-            label: `${bank.codigo} - ${bank.nombre}`,
+            label: `${bank.code} - ${bank.name}`,
             value: bank.id!
           }));
         },
