@@ -65,7 +65,6 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   dataTable: any;
 
-  // ✅ CORREGIDO: Se inicializan en null para diferenciar entre "no calculado" y un total de "0".
   totalDebit: number | null = null;
   totalCredit: number | null = null;
 
@@ -101,7 +100,6 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   private getEnterpriseInfo(): void {
     this.enterpriseData = this.enterpriseService.getSelectedEnterprise();
-    console.log(this.enterpriseData);
   }
 
   onLevelChange() {
@@ -177,6 +175,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     if (this.isRangeOptionSelected && this.levelRange.to !== null) {
       this.criteria.criteriaRange!.to = this.levelRange.to;
     }
+    ``;
   }
 
   private resetRangeDropDowns(): void {
@@ -299,12 +298,6 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
     this.organizeRequest();
 
-    console.log('Generando reporte con la petición:', this.request);
-    console.log(
-      'Id del Tercero asociado a los criterios:',
-      this.request.criteria.thirdPartyId
-    );
-
     this.auxiliaryBookService.registerAuxiliaryBook(this.request).subscribe({
       next: (response: auxBookResponse) => {
         this.dataTable = response.data;
@@ -329,12 +322,10 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
         });
       },
     });
-
-    //this.resetForm();
   }
 
   private validateCriteria(): boolean {
-    this.errors = []; // reiniciamos errores
+    this.errors = [];
 
     if (!this.isLevelValid()) {
       this.errors.push('No ha seleccionado un nivel.');
@@ -368,7 +359,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       );
     }
 
-    return this.errors.length === 0; // ✅ retorna true solo si no hay errores
+    return this.errors.length === 0;
   }
 
   private isLevelValid(): boolean {
@@ -399,12 +390,11 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       auxBookType: this.auxiliaryBookInfo.type,
       criteria: this.criteria,
       dataTable: this.dataTable,
-      headerConfig: (this as any).headerConfig || [], // Se usa 'as any' para acceder a la propiedad del hijo
-      // Pasamos un objeto con los totales calculados.
+      headerConfig: (this as any).headerConfig || [],
+      enterpriseData: this.enterpriseData,
       totals: {
         totalDebit: this.totalDebit,
         totalCredit: this.totalCredit,
-        // Aquí se podrían añadir otros totales si fueran necesarios en el futuro.
       },
     };
 
