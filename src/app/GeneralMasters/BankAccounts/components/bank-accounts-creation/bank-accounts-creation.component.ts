@@ -37,7 +37,7 @@ export class BankAccountsCreationComponent implements OnInit {
     private localStorageMethod: LocalStorageMethods
   ) {
     this.form = this.fb.group({
-      accountNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.maxLength(20)]],
+      accountNumber: ['', [Validators.required, Validators.pattern('^[0-9]{8,16}$')]],
       bankId: [null, [Validators.required]],
       accountType: ['', [Validators.required]],
       accountingAccountId: ['', [Validators.required]]
