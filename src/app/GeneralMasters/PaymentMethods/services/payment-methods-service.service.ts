@@ -4,12 +4,18 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { PaymentMethod } from '../models/PaymentMethods';
 
-interface Page<T> {
+export interface PageResponse<T> {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  page?: {
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  };
 }
 
 @Injectable({
@@ -19,14 +25,25 @@ export class PaymentMethodsServiceService {
   private readonly http = inject(HttpClient);
   private readonly apiURL = environment.API_URL + 'accountCatalogue/payment-methods/';
 
-  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'name', sortOrder = 'asc'): Observable<Page<PaymentMethod>> {
-    const url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
-    return this.http.get<Page<PaymentMethod>>(url);
+  findAll(enterpriseId: string, page: number = 0, size: number = 10, sortField?: string, sortOrder?: string, search?: string): Observable<PageResponse<PaymentMethod>> {
+    let url = `${this.apiURL}findAll/${enterpriseId}?page=${page}&size=${size}`;
+
+    if (sortField?.trim()) {
+      url += `&sortField=${sortField}`;
+    }
+    if (sortOrder?.trim()) {
+      url += `&sortOrder=${sortOrder}`;
+    }
+    if (search?.trim()) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+
+    return this.http.get<PageResponse<PaymentMethod>>(url);
   }
 
-  findAllActive(enterpriseId: string): Observable<Page<PaymentMethod>> {
-    const url = `${this.apiURL}findAllActive/${enterpriseId}`;
-    return this.http.get<Page<PaymentMethod>>(url);
+  findAllActive(enterpriseId: string, page = 0, size = 10): Observable<PageResponse<PaymentMethod>> {
+    const url = `${this.apiURL}findAllActive/${enterpriseId}?page=${page}&size=${size}`;
+    return this.http.get<PageResponse<PaymentMethod>>(url);
   }
 
   findById(id: number, enterpriseId: string): Observable<PaymentMethod> {
