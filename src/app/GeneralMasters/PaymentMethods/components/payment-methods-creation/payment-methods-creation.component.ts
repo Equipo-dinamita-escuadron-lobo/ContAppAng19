@@ -132,14 +132,14 @@ export class PaymentMethodsCreationComponent {
             const n = (nameMatch[1] || nameMatch[0])?.toString().replace(/^[^']*'|'/g,'');
             this.messageService.add({
               severity: 'error',
-              summary: 'Nombre duplicado',
+              summary: 'Registro duplicado',
               detail: `El método de pago "${n}" ya existe.`
             });
             return;
           }
           this.messageService.add({
             severity: 'error',
-            summary: 'Duplicado',
+            summary: 'Registro duplicado',
             detail: 'Ya existe un método de pago con el mismo nombre.'
           });
           return;
