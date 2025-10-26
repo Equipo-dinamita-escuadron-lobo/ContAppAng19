@@ -238,9 +238,11 @@ export class EditTaxComponent implements OnInit {
         error: (error) => {
           console.error('Error al actualizar el impuesto:', error);
           const errorMessage = error?.error?.message || 'No se pudo actualizar el impuesto';
+          const isDuplicateError = errorMessage.toLowerCase().includes('ya existe') ||
+                                   errorMessage.toLowerCase().includes('duplicado');
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: isDuplicateError ? 'Registro Duplicado' : 'Error',
             detail: errorMessage
           });
         }
