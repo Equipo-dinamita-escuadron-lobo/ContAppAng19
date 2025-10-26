@@ -78,7 +78,7 @@
               <p-toggleSwitch
                 [ngModel]="row.status"
                 (onChange)="togglePaymentMethodStatus(row, $event.checked)"
-                pTooltip="Cambiar Estado"
+                [pTooltip]="row.status ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"
