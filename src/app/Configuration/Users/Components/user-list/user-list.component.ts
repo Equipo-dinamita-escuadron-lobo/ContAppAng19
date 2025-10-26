@@ -90,57 +90,31 @@ export class UserListComponent implements OnInit {
   }
 
   redirectToDelete(userId: string): void {
-    // Verificar si el usuario está asignado a algún perfil
-    this.profileService.getAllProfiles().subscribe({
-      next: (profiles) => {
-        const assignedProfiles = profiles.filter(profile =>
-          profile.name && this.users.find(u => u.id === userId)?.roles?.some(role => role === profile.name)
-        );
-
-        if (assignedProfiles.length > 0) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: `No se puede eliminar el usuario porque está asignado a uno o varios perfiles.`,
-          });
-          return;
-        }
-
-        // Confirmación y eliminación normal
-        this.confirmationService.confirm({
-          message: `¿Está seguro que desea eliminar este usuario?`,
-          header: 'Confirmar eliminación',
-          icon: 'pi pi-exclamation-triangle',
-          acceptLabel: 'Si, eliminar',
-          rejectLabel: 'Cancelar',
-          rejectButtonStyleClass: 'p-button-secondary',
-          accept: () => {
-            this.userService.deleteUser(userId).subscribe({
-              next: () => {
-                this.messageService.add({
-                  severity: 'success',
-                  summary: 'Éxito',
-                  detail: 'Usuario eliminado exitosamente.',
-                });
-                this.getUsers();
-              },
-              error: () => {
-                this.messageService.add({
-                  severity: 'error',
-                  summary: 'Error',
-                  detail: 'No se pudo eliminar el usuario.',
-                });
-              },
+    this.confirmationService.confirm({
+      message: `¿Está seguro que desea eliminar este usuario?`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Si, eliminar',
+      rejectLabel: 'Cancelar',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        this.userService.deleteUser(userId).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: 'Usuario eliminado exitosamente.',
+            });
+            this.getUsers(); // Refresh the list after deletion
+          },
+          error: (err) => {
+            console.error("Error al eliminar usuario:", err);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: err.error?.message || 'No se pudo eliminar el usuario.',
             });
           },
-        });
-      },
-      error: (error) => {
-        console.error('Error al verificar perfiles:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo verificar los perfiles asignados.',
         });
       },
     });

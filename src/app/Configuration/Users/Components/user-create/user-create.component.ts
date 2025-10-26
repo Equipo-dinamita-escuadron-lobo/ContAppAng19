@@ -94,51 +94,34 @@ export class UserCreateComponent implements OnInit {
     if (this.userForm.valid) {
       const formValue = this.userForm.value;
 
-      // Validar si ya existe el email antes de crear
-      this.userService.findByEmail(formValue.email).subscribe({
-        next: (existingUsers) => {
-          if (existingUsers && existingUsers.length > 0) {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Ya existe un usuario con este correo electrónico.',
-            });
-          } else {
-            // Si no existe, lo creamos
-            const userData = {
-              ...formValue,
-              roles: formValue.roles, // Ya es array
-            };
+      const userData = {
+        ...formValue,
+        username: formValue.email, // Usar email como username
+        roles: formValue.roles, // Ya es array
+      };
 
-            this.userService.createUser(userData).subscribe({
-              next: () => {
-                this.messageService.add({
-                  severity: 'success',
-                  summary: 'Éxito',
-                  detail: 'Usuario creado exitosamente!',
-                  life: 3000,
-                });
-                setTimeout(() => {
-                  this.goBack();
-                }, 3000);
-              },
-              error: (error) => {
-                console.error('Error al crear el usuario:', error);
-                this.messageService.add({
-                  severity: 'error',
-                  summary: 'Error',
-                  detail: 'No se pudo crear el usuario.',
-                });
-              },
-            });
-          }
+      this.userService.createUser(userData).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Usuario creado exitosamente!',
+            life: 3000,
+          });
+          setTimeout(() => {
+            this.goBack();
+          }, 3000);
         },
         error: (error) => {
-          console.error('Error verificando email de usuario:', error);
+          console.error('Error al crear el usuario:', error);
+          let errorMessage = 'No se pudo crear el usuario.';
+          if (error.status === 409) {
+            errorMessage = 'Ya existe un usuario con este correo electrónico.';
+          }
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo verificar el correo electrónico del usuario.',
+            detail: errorMessage,
           });
         },
       });
