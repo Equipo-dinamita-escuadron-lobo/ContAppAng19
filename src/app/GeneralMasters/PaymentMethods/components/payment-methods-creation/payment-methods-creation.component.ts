@@ -27,11 +27,11 @@ export class PaymentMethodsCreationComponent {
   accountingAccountsOptions: AccountingAccountOption[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private messageService: MessageService,
-    private service: PaymentMethodsServiceService,
-    private chartAccountService: ChartAccountService
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: PaymentMethodsServiceService,
+    private readonly chartAccountService: ChartAccountService
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],

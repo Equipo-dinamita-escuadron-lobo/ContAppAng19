@@ -31,12 +31,12 @@ export class PaymentMethodsEditComponent implements OnInit {
   accountingAccountLocked: boolean = true; // La cuenta contable siempre está bloqueada en edición
 
   constructor(
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private messageService: MessageService,
-    private service: PaymentMethodsServiceService,
-    private chartAccountService: ChartAccountService
+    private readonly fb: FormBuilder,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: PaymentMethodsServiceService,
+    private readonly chartAccountService: ChartAccountService
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
