@@ -40,7 +40,7 @@
                         type="text"
                         [(ngModel)]="searchTerm"
                         (input)="onSearch()"
-                        placeholder="Buscar cuenta (número, banco)..."
+                        placeholder="Buscar número de cuenta..."
                         class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
                     />
                 </p-iconfield>
@@ -48,15 +48,17 @@
         </div>
 
         <!-- Bank Accounts Table -->
-        <p-table 
-            [value]="filteredBankAccounts" 
-            [paginator]="true" 
+        <p-table
+            [value]="bankAccounts"
+            [paginator]="true"
             [rows]="pageSize"
             [totalRecords]="totalRecords"
             [loading]="loading"
+            [lazy]="true"
             [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
-            [globalFilterFields]="['accountNumber', 'bank.name', 'bank.code', 'accountType', 'accountingAccount']"
+            (onSort)="onSort($event)"
+            (onPage)="onPage($event)"
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}">
             

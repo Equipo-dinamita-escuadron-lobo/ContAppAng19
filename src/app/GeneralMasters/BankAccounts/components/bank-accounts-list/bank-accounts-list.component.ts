@@ -56,7 +56,6 @@ export class BankAccountsListComponent implements OnInit {
   loading = false;
 
   bankAccounts: BankAccount[] = [];
-  filteredBankAccounts: BankAccount[] = [];
   accountingAccountsMap: Map<string, string> = new Map();
 
   pageSize = 10;
@@ -64,6 +63,8 @@ export class BankAccountsListComponent implements OnInit {
   currentPage = 0;
 
   searchTerm = '';
+  sortField: string | undefined;
+  sortOrder: string | undefined;
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
@@ -96,12 +97,11 @@ export class BankAccountsListComponent implements OnInit {
 
   private loadBankAccounts(): void {
     this.loading = true;
-    this.bankAccountsService.findAll(this.enterpriseId, this.currentPage, this.pageSize)
+    this.bankAccountsService.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
       .subscribe({
         next: (response) => {
           this.bankAccounts = response.content;
           this.totalRecords = response.page?.totalElements || response.totalElements || 0;
-          this.applySearch();
           this.loading = false;
         },
         error: (error) => {
@@ -118,21 +118,31 @@ export class BankAccountsListComponent implements OnInit {
 
   // Search Functionality
   onSearch(): void {
-    this.applySearch();
+    this.currentPage = 0; // Reset to first page when searching
+    this.loadBankAccounts();
   }
 
+  onSort(event: any): void {
+    const newSortField = event.field;
+    const newSortOrder = event.order === 1 ? 'asc' : 'desc';
 
-  private applySearch(): void {
-    if (!this.searchTerm.trim()) {
-      this.filteredBankAccounts = [...this.bankAccounts];
-    } else {
-      const term = this.searchTerm.toLowerCase();
-      this.filteredBankAccounts = this.bankAccounts.filter(account =>
-        account.accountNumber.toString().includes(term) ||
-        account.bank?.name?.toLowerCase().includes(term) ||
-        account.bank?.code?.toLowerCase().includes(term) ||
-        account.accountingAccountId.toLowerCase().includes(term)
-      );
+    // Only reload if sort parameters actually changed
+    if (this.sortField !== newSortField || this.sortOrder !== newSortOrder) {
+      this.sortField = newSortField || undefined;
+      this.sortOrder = newSortOrder || undefined;
+      this.currentPage = 0; // Reset to first page when sorting
+      this.loadBankAccounts();
+    }
+  }
+
+  onPage(event: any): void {
+    const newPage = Math.floor(event.first / event.rows);
+    const newRows = event.rows;
+
+    if (this.currentPage !== newPage || this.pageSize !== newRows) {
+      this.currentPage = newPage;
+      this.pageSize = newRows;
+      this.loadBankAccounts();
     }
   }
 
