@@ -245,9 +245,12 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   }
 
   private getThirdPartyOptions(): void {
-    this.thirdService.getThirdParties(this.enterpriseData.id, 1).subscribe({
+    this.thirdService.getThirdList(this.enterpriseData.id).subscribe({
       next: (response: Third[]) => {
-        this.thirdPartyOptions = response;
+        this.thirdPartyOptions = response.map((third) => ({
+          ...third,
+          fullName: `${third.names} ${third.lastNames}`,
+        }));
       },
       error: (err: any) => {
         console.error('Error fetching third parties:', err);
@@ -272,6 +275,8 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
           name: `${seleccionado.names} ${seleccionado.lastNames}`,
           types: this.concatenateThirdTypeInfo(seleccionado.thirdTypes),
         };
+
+        this.criteria.thirdPartyId = seleccionado.thId;
       }, 300);
     } else {
       this.thirdPartyInfo = null;
@@ -302,9 +307,17 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       next: (response: auxBookResponse) => {
         this.dataTable = response.data;
         this.calculateTotals();
-        console.log(this.dataTable);
-
         this.isReportGenerated = true;
+
+        if (this.dataTable.length === 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Advertencia',
+            detail:
+              'La consulta no arrojó resultados con los criterios seleccionados.',
+          });
+          return;
+        }
 
         this.messageService.add({
           severity: 'success',
