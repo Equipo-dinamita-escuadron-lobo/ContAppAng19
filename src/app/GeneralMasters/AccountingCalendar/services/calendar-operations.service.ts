@@ -61,7 +61,7 @@ export class CalendarOperationsService {
         : this.createByDateKey(enterpriseId, dateKey);
 
       return action$.pipe(
-        switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, selectedYear))
+        switchMap(() => this.calendarService.findAllByYear(enterpriseId, selectedYear))
       );
     } catch (error) {
       return throwError(() => new Error(`Error interno en toggleDate: ${error}`));
@@ -115,12 +115,11 @@ export class CalendarOperationsService {
     const request: AccountingCalendarCreateMonthReq = {
       idEnterprise: enterpriseId,
       year: month.year,
-      month: month.month + 1, // usa 1-12, no 0-11
-      status: true
+      month: month.month + 1 // usa 1-12
     };
     
     return this.calendarService.openMonth(request).pipe(
-      switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, month.year))
+      switchMap(() => this.calendarService.findAllByYear(enterpriseId, month.year))
     );
   }
 
@@ -135,7 +134,7 @@ export class CalendarOperationsService {
     };
     
     return this.calendarService.deleteByMonth(request).pipe(
-      switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, month.year))
+      switchMap(() => this.calendarService.findAllByYear(enterpriseId, month.year))
     );
   }
 
@@ -145,12 +144,11 @@ export class CalendarOperationsService {
   private openYear(enterpriseId: string, year: number): Observable<any> {
     const request: AccountingCalendarCreateYearReq = {
       idEnterprise: enterpriseId,
-      year: year,
-      status: true
+      year: year
     };
     
     return this.calendarService.openYear(request).pipe(
-      switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, year))
+      switchMap(() => this.calendarService.findAllByYear(enterpriseId, year))
     );
   }
 
@@ -164,7 +162,7 @@ export class CalendarOperationsService {
     };
     
     return this.calendarService.deleteByYear(request).pipe(
-      switchMap(() => this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, year))
+      switchMap(() => this.calendarService.findAllByYear(enterpriseId, year))
     );
   }
 
@@ -172,7 +170,7 @@ export class CalendarOperationsService {
    * Crea una entrada por fecha
    */
   private createByDateKey(enterpriseId: string, dateKey: string): Observable<any> {
-    const payload = { idEnterprise: enterpriseId, date: dateKey, status: true };
+    const payload = { idEnterprise: enterpriseId, date: dateKey };
     return this.calendarService.create(payload);
   }
 
@@ -190,11 +188,10 @@ export class CalendarOperationsService {
       return this.calendarService.delete(entry.id, enterpriseId);
     }
     
-    // Fallback: si por alguna razón no está en el mapa, recuperar activos y buscar ID
     return this.calendarService
-      .findActiveByEnterpriseAndYear(enterpriseId, selectedYear)
+      .findAllByYear(enterpriseId, selectedYear)
       .pipe(
-        map(res => (res?.content || []).find((e: AccountingCalendar) => toDateKey(e.date) === dateKey)),
+        map(dates => dates.find((e: AccountingCalendar) => toDateKey(e.date) === dateKey)),
         switchMap((found?: AccountingCalendar) => {
           if (found?.id) {
             return this.calendarService.delete(found.id, enterpriseId);

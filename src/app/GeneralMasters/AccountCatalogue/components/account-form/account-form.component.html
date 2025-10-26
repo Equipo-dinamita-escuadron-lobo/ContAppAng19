@@ -94,12 +94,12 @@
     <div class="flex flex-wrap justify-center items-center mt-30 gap-3">
 
         <!-- Botón Cancelar -->
-        <p-button label="Cancelar" (click)="cancel()" styleClass="p-button-danger p-button-raised">
+        <p-button label="Cancelar" (click)="cancel()" severity="secondary">
         </p-button>
 
         <!-- Botón Guardar (Aparece cuando el formulario es válido) -->
         <div *ngIf="formNewAccount.valid">
-            <p-button [label]="'Guardar ' + currentLevelAccount"  (click)="sendAccount()" styleClass="p-button-raised">
+            <p-button [label]="'Guardar ' + currentLevelAccount"  (click)="sendAccount()">
             </p-button>
         </div>
 

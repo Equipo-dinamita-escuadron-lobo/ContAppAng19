@@ -1,294 +1,114 @@
-/* Estilos generales */
-body.register-page {
-    font-family: 'Open Sans', Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: white;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-/* Encabezado */
-.register-header {
-    position: absolute;
-    top: 30px;
-    left: 30px;
-    display: flex;
-    gap: 14px;
-    align-items: center;
-    z-index: 10;
-}
-
-.logo {
-    height: 60px;
-}
-
-.header-divider {
-    width: 1px;
-    height: 60px;
-    background-color: #003DA5;
-}
-
-.app-title {
-    font-family: 'Titillium Web', sans-serif;
-    font-weight: bold;
-    font-size: 14px;
-    color: #143296;
-}
-
-/* Contenido principal */
-.main-content {
-    display: flex;
-    flex: 1;
-    min-height: 0;
-}
-
-.register-form-container {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-@media (min-width: 768px) {
-    .register-form-container {
-        width: 50%;
-    }
-}
+/* Estilos específicos para el formulario de Registro.
+  Todo el layout (header, footer, imagen) se ha movido a app-auth-layaout.component.css
+*/
 
 .register-form {
-    width: 100%;
-    max-width: 448px;
-    padding: 32px;
+  width: 100%;
+  max-width: 448px;
+  padding: 32px;
 }
 
 .register-title {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 32px;
-    color: #000066;
-    font-family: 'Open Sans', sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 32px;
+  color: #000066;
+  font-family: 'Open Sans', sans-serif;
 }
 
 /* Formulario */
 .form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .form-group {
-    margin-bottom: 16px;
+  margin-bottom: 16px;
 }
 
 .form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #003DA5;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #003DA5;
 }
 
 .input-container {
-    position: relative;
+  position: relative;
 }
 
 .form-group input {
-    width: 100%;
-    border: 1px solid #000066;
-    border-radius: 12px;
-    padding: 12px 16px;
-    font-size: 16px;
+  width: 100%;
+  border: 1px solid #000066;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 16px;
 }
 
 .form-group input:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px #003DA5;
+  outline: none;
+  box-shadow: 0 0 0 2px #003DA5;
 }
 
 .input-icon {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #003DA5;
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #003DA5;
 }
 
 .registerfields {
-    color: #000066 !important;
-    font-weight: bold !important;
+  color: #000066 !important;
+  font-weight: bold !important;
 }
 
 .existing-user-text {
-    font-weight: bold;
-    color: #000066;
-    margin-top: 16px;
-    text-align: center;
+  font-weight: bold;
+  color: #000066;
+  margin-top: 16px;
+  text-align: center;
 }
 
 .login-link {
-    color: #DB141C;
-    font-weight: bold;
-    text-decoration: none;
+  color: #DB141C;
+  font-weight: bold;
+  text-decoration: none;
 }
 
 .required {
-    color: #EF4444;
+  color: #EF4444;
 }
 
 .form-submit {
-    margin-top: 24px;
+  margin-top: 24px;
 }
 
 .form-submit button {
-    background-color: #000066;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 12px;
-    width: 100%;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
+  background-color: #000066;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 .form-submit button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
-/* Imagen derecha */
-.register-image {
-    display: none;
-    width: 50%;
-    align-items: center;
-    justify-content: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
-}
-
-@media (min-width: 1024px) {
-    .register-image {
-        display: flex;
-    }
-}
-
-.register-image img {
-    object-fit: cover;
-    width: 100%;
-    height: 100%;
-}
-
-/* Línea de colores */
-.color-strip {
-    width: 100%;
-    display: flex;
-    height: 8px;
-}
-
-.color-strip>div {
-    flex: 1;
-}
-
-.color-red {
-    background-color: red;
-}
-
-.color-orange {
-    background-color: orange;
-}
-
-.color-yellow {
-    background-color: yellow;
-}
-
-.color-blue {
-    background-color: blue;
-}
-
-.color-purple {
-    background-color: purple;
-}
-
-/* Footer */
-.footer {
-    width: 100%;
-    background-color: #F4F4F4;
-    font-size: 14px;
-    color: #777680;
-    padding: 24px;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.footer-grid {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-  padding: 0 0 0 40px;
-}
-
-@media (min-width: 768px) {
-    .footer-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-.footer-section {
-  min-width: 200px;
-}
-
-.footer-section-TIC {
-  min-width: 200px;
-}
-
-.footer-link {
-    color: #2563EB;
-    text-decoration: none;
-}
-
-.footer-text {
-    text-align: center;
-    margin-top: 30px;
-    font-size: 12px;
-    color: #6B7280;
-}
-
-.footer-section-data {
-  display: flex;
-  gap: 20px;
-}
-
-.footer-divider {
-  width: 2px;
-  background: #ccc;
-  margin: 0 20px;
-}
-
-/* Mensajes */
-.success-message {
-    background-color: #d4edda;
-    color: #155724;
-    padding: 1rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-    border: 1px solid #c3e6cb;
-}
-
+/* Mensajes de error */
 .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 1rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-    border: 1px solid #f5c6cb;
+  margin-top: 8px;
 }
 
 .error-text {
-    color: #EF4444;
-    font-size: 0.85rem;
-    margin-top: 0.5rem;
+  color: #EF4444;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
 }

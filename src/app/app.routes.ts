@@ -655,12 +655,44 @@ export const routes: Routes = [
                   ).then((m) => m.BankAccountsListComponent),
               },
               {
+                path: 'create',
+                data: { breadcrumb: 'Crear Cuenta Bancaria' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-accounts-creation/bank-accounts-creation.component'
+                  ).then((m) => m.BankAccountsCreationComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Cuenta Bancaria' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-accounts-edit/bank-accounts-edit.component'
+                  ).then((m) => m.BankAccountsEditComponent),
+              },
+              {
                 path: 'banks',
-                data: { breadcrumb: 'Gestión de Bancos' },
+                data: { breadcrumb: 'Bancos' },
                 loadComponent: () =>
                   import(
                     './GeneralMasters/BankAccounts/components/bank-list/bank-list.component'
                   ).then((m) => m.BankListComponent),
+              },
+              {
+                path: 'banks/create',
+                data: { breadcrumb: 'Crear Banco' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-creation/bank-creation.component'
+                  ).then((m) => m.BankCreationComponent),
+              },
+              {
+                path: 'banks/edit/:id',
+                data: { breadcrumb: 'Editar Banco' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-edit/bank-edit.component'
+                  ).then((m) => m.BankEditComponent),
               },
             ],
           },
@@ -680,6 +712,41 @@ export const routes: Routes = [
               import(
                 './GeneralMasters/Components/MenuCards/menu.component'
               ).then((m) => m.MenuComponent),
+          },
+          {
+            path: 'help-center',
+            data: { breadcrumb: 'Centro de Ayuda' },
+            children: [
+              {
+                path: '',
+                pathMatch: 'full',
+                redirectTo: 'list',
+              },
+              {
+                path: 'list',
+                data: { breadcrumb: null },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-list/help-center-list.component'
+                  ).then((m) => m.HelpCenterListComponent),
+              },
+              {
+                path: 'create',
+                data: { breadcrumb: 'Crear Centro de Ayuda' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-creation/help-center-creation.component'
+                  ).then((m) => m.HelpCenterCreationComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Centro de Ayuda' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/HelpCenter/components/help-center-edit/help-center-edit.component'
+                  ).then((m) => m.HelpCenterEditComponent),
+              },
+            ],
           },
           {
             path: 'accounting-calendar',
@@ -793,6 +860,36 @@ export const routes: Routes = [
                   },
                 ],
               },
+              {
+                 path: 'financial-statements',
+                data: {
+                  breadcrumb: 'Estados Financieros',
+                },
+                children: [
+                  {
+                    path: 'list',
+                    pathMatch: 'full',
+                    data: {
+                      breadcrumb: null,
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statements-list/financial-statements-list.component'
+                      ).then((m) => m.FinancialStatementsListComponent),
+                  },
+                 /* {
+                    path: 'statement-financial-position',
+                    data: {
+                      breadcrumb: 'Estado de situacion Financiera',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statement-types/statement-financial-position/statement-financial-position.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),
+                  },*/
+                ],
+              },
+
             ],
           },
           {
@@ -842,15 +939,46 @@ export const routes: Routes = [
                   ).then((m) => m.ReceiptAccountingComponent),
               },
               {
-                path: 'accounting-entries',
+                path: 'write-offs',
                 data: {
-                  breadcrumb: 'Asientos Contables',
-              },
+                  breadcrumb: 'Castigos de cartera',
+                },
                 loadComponent: () =>
                   import(
-                    './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
-                  ).then((m) => m.ReceiptAccountingEntriesComponent),
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-list/write-off-list.component'
+                  ).then((m) => m.WriteOffListComponent),
               },
+              {
+                path: 'write-offs/creation',
+                data: {
+                  breadcrumb: 'Creación de castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-creation/write-off-creation.component'
+                  ).then((m) => m.WriteOffCreationComponent),
+              },
+              {
+                path: 'write-offs/details/:id',
+                data: {
+                  breadcrumb: 'Detalles del castigo',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioWriteOffs/Components/write-off-details/write-off-details.component'
+                  ).then((m) => m.WriteOffDetailsComponent),
+              },
+            {
+              path: 'accounting-entries',
+              data: {
+                breadcrumb: 'Asientos Contables',
+            },
+              loadComponent: () =>
+                import(
+                  './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
+                ).then((m) => m.ReceiptAccountingEntriesComponent),
+            },
+
             ],
           },
           {
@@ -1019,6 +1147,22 @@ export const routes: Routes = [
         ],
       },
     ],
+  },
+  {
+    path: 'help-center-view',
+    data: {
+      breadcrumb: 'Centro de Ayuda',
+    },
+    loadComponent: () =>
+      import('./PublicSite/help-center/help-center-view.component').then((m) => m.HelpCenterViewComponent),
+  },
+  {
+    path: 'help-center-view/:moduleId',
+    data: {
+      breadcrumb: 'Centro de Ayuda',
+    },
+    loadComponent: () =>
+      import('./PublicSite/help-center/help-center-view.component').then((m) => m.HelpCenterViewComponent),
   },
   {
     path: 'style-guide',

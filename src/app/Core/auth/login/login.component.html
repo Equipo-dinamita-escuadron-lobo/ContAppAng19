@@ -1,60 +1,89 @@
-<app-auth-layaout>
-  <div class="login-form">
-    <h2 class="login-title">Inicio de sesión</h2>
+<app-auth-layout>
+  <div class="w-full max-w-md mx-auto p-4 md:p-8">
+    <p-toast></p-toast>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form">
-      <div class="form-group">
-        <label for="username" class="loginfields">
-          Correo institucional <span class="required">*</span>
+    <h2
+      class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-8 text-center"
+    >
+      Inicio de sesión
+    </h2>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="mt-4">
+      
+      <div class="mb-4">
+        <label for="username" class="block mb-2 font-semibold">
+          Correo institucional <span class="text-red-500">*</span>
         </label>
-        <div class="input-container">
-          <input type="text" id="username" formControlName="username" placeholder="usuario@unicauca.edu.co" />
-          <span class="input-icon pi pi-envelope"></span> 
-        </div>
-        <div *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched" class="error-message">
-          <p-message
-            severity="error"
-            *ngIf="loginForm.get('username')?.hasError('required')"
-            text="El correo es requerido"
-          ></p-message>
-          <p-message
-            severity="error"
-            *ngIf="loginForm.get('username')?.hasError('email')"
-            text="El correo electrónico no es válido."
-          ></p-message>
-        </div>
+        <input
+          pInputText
+          id="username"
+          formControlName="username"
+          placeholder="usuario@unicauca.edu.co"
+          class="w-full"
+        />
+        <p-message
+          severity="error"
+          *ngIf="
+            loginForm.get('username')?.touched &&
+            loginForm.get('username')?.hasError('required')
+          "
+          text="El correo es requerido"
+        ></p-message>
+        <p-message
+          severity="error"
+          *ngIf="
+            loginForm.get('username')?.touched &&
+            loginForm.get('username')?.hasError('email')
+          "
+          text="El correo electrónico no es válido."
+        ></p-message>
       </div>
 
-      <div class="form-group">
-        <label for="password" class="loginfields">
-          Contraseña <span class="required">*</span>
+      <div class="mb-4">
+        <label for="password" class="block mb-2 font-semibold">
+          Contraseña <span class="text-red-500">*</span>
         </label>
-        <div class="input-container">
-          <input type="password" id="password" formControlName="password" placeholder="**********" />
-           <span class="input-icon pi pi-lock"></span>
-        </div>
-         <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-message">
-          <p-message
-            severity="error"
-            *ngIf="loginForm.get('password')?.hasError('required')"
-            text="La contraseña es requerida"
-          ></p-message>
-        </div>
+        <input
+          pInputText
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="**********"
+          class="w-full"
+        />
+        <p-message
+          severity="error"
+          *ngIf="
+            loginForm.get('password')?.touched &&
+            loginForm.get('password')?.hasError('required')
+          "
+          text="La contraseña es requerida"
+        ></p-message>
       </div>
-
-      <div class="form-submit">
-        <button type="submit" [disabled]="loginForm.invalid">
-          Iniciar sesión
-        </button>
+      <div class="flex flex-col items-center gap-4 mt-12">
+        <p-button
+          type="submit"
+          label="Iniciar sesión"
+          [disabled]="loginForm.invalid"
+        >
+        </p-button>
       </div>
     </form>
 
-    <div class="new-user-text">
-      ¿Eres un usuario nuevo? 
-      <a routerLink="/register" class="register-link">clic aquí para registrarse !</a>
-    </div>
-    <div class="forgot-password-text">
-      <a routerLink="/forgot-password" class="forgot-password-link">¿olvidaste tu contraseña?</a>
+    <div class="text-center mt-10">
+      <p class="mb-2">
+        ¿Eres un usuario nuevo?
+        <a
+          routerLink="/register"
+          class="font-semibold text-[var(--color-secondary)] hover:underline"
+          >clic aquí para registrarse !</a
+        >
+      </p>
+      <a
+        routerLink="/forgot-password"
+        class="text-sm text-gray-600 hover:underline"
+        >¿olvidaste tu contraseña?</a
+      >
     </div>
   </div>
-</app-auth-layaout>
+</app-auth-layout>

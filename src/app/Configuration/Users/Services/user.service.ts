@@ -28,7 +28,7 @@ export class UserService {
 
   // Crear un usuario
   createUser(user: User): Observable<User> {
-    if (!this.validateUser(user)) {
+    if (!this.validateUser(user) || !user.password) {
       throw new Error('Datos de usuario no válidos');
     }
     const headers = this.getAuthHeaders();
@@ -102,7 +102,7 @@ export class UserService {
 
   // Buscar usuario por email
   findByEmail(email: string): Observable<User[]> {
-    const url = `${this.apiUrl}users?email=${email}`;
+    const url = `${this.apiUrl}users/${email}`;
     const headers = this.getAuthHeaders();
     return this.http.get<User[]>(url, { headers }).pipe(
       catchError((error) => {
@@ -129,10 +129,10 @@ export class UserService {
     const url = `${this.apiUrl}roles`;
     const headers = this.getAuthHeaders();
     return this.http.get<string[]>(url, { headers }).pipe(
-      map(roles => roles.filter(role => ['administrador', 'estudiante', 'profesor'].includes(role))),
+      map(roles => roles.filter(role => ['Administrador', 'Estudiante', 'Profesor'].includes(role))),
       catchError((error) => {
         console.error('Error al obtener roles:', error);
-        return of(['administrador', 'estudiante', 'profesor']); // Valores por defecto
+        return of(['Administrador', 'Estudiante', 'Profesor']);
       })
     );
   }
@@ -143,7 +143,6 @@ export class UserService {
       user.firstName &&
         user.lastName &&
         user.email &&
-        user.password &&
         user.roles
     );
   }

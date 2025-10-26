@@ -16,7 +16,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '../services/auth.service';
 import { RegisterUser } from '../models/register-user';
-import { AuthLayaoutComponent } from '../../../auth-layaout/auth-layaout.component';
+import { AuthLayoutComponent } from '../../../auth-layout/auth-layout.component';
 
 // Custom Validator for Passwords
 export function passwordsMatchValidator(control: AbstractControl): ValidationErrors | null {
@@ -35,7 +35,7 @@ export function passwordsMatchValidator(control: AbstractControl): ValidationErr
     InputTextModule,
     MessageModule,
     ToastModule,
-    AuthLayaoutComponent,
+    AuthLayoutComponent,
   ],
   providers: [MessageService],
   templateUrl: './register.component.html',

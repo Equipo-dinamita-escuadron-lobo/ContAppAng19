@@ -14,7 +14,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { AuthService } from '../services/auth.service';
 import { Login } from '../models/login';
-import { AuthLayaoutComponent } from '../../../auth-layaout/auth-layaout.component';
+import { AuthLayoutComponent } from '../../../auth-layout/auth-layout.component';
 
 @Component({
   selector: 'app-login',
@@ -27,8 +27,8 @@ import { AuthLayaoutComponent } from '../../../auth-layaout/auth-layaout.compone
     InputTextModule,
     MessageModule,
     ToastModule,
-    AuthLayaoutComponent,
-  ],
+    AuthLayoutComponent,
+],
   providers: [MessageService],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',

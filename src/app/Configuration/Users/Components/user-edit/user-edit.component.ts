@@ -102,7 +102,7 @@ export class UserEditComponent implements OnInit {
         this.originalEmail = user.email;
         // Filtrar solo roles personalizados
         const customRoles = (user.roles || []).filter(role =>
-          ['administrador', 'estudiante', 'profesor'].includes(role)
+          ['Administrador', 'Estudiante', 'Profesor'].includes(role)
         );
         this.userForm.patchValue({
           firstName: user.firstName,
@@ -164,6 +164,10 @@ export class UserEditComponent implements OnInit {
     const updateData = { ...formValue };
     if (!updateData.password) {
       delete updateData.password;
+    }
+    // Agregar username si no está presente (usar email como username por defecto)
+    if (!updateData.username) {
+      updateData.username = this.originalEmail.split('@')[0];
     }
 
     this.userService.updateUser(this.userId, updateData).subscribe({

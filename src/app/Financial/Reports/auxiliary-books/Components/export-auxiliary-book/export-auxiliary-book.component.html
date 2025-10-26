@@ -1,0 +1,194 @@
+<div class="p-fluid p-4 md:p-6">
+  <!-- Encabezado -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Exportar Reporte Auxiliar</h2>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-times"
+      (click)="closeModal()"
+      class="p-button-text p-button-secondary p-button-rounded"
+      aria-label="Cerrar modal"
+    ></button>
+  </div>
+
+  <!-- Contenido Principal (Layout 60/40) -->
+  <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+    <!-- ✅ CONTENEDOR DE VISTA PREVIA MÁS GRANDE (3 de 5 columnas) -->
+    <div
+      class="lg:col-span-3 w-full h-full rounded-lg border border-gray-200 overflow-auto"
+    >
+      <app-report-preview
+        [reportTitle]="reportTitle"
+        [companyName]="companyName"
+        [generationDate]="generationDate"
+        [criteria]="criteriaForPreview"
+        [headerConfig]="headerConfig"
+        [previewData]="previewData"
+        [totals]="totals"
+        [styles]="styles"
+        [format]="formatSelected"
+      >
+      </app-report-preview>
+    </div>
+
+    <!-- ✅ Panel de Opciones (2 de 5 columnas) -->
+    <div
+      class="lg:col-span-2 flex flex-col space-y-6 overflow-y-auto max-h-[70vh] pr-2"
+    >
+      <!-- Plantilla -->
+      <div>
+        <label for="template-select" class="text-lg font-medium mb-2 block"
+          >Plantilla</label
+        >
+        <p-select
+          inputId="template-select"
+          [options]="templates"
+          [(ngModel)]="selectedTemplate"
+          optionLabel="name"
+          [filter]="true"
+          filterBy="name"
+          [showClear]="true"
+          placeholder="Selecciona una plantilla"
+          styleClass="w-full"
+          [appendTo]="'body'"
+        >
+          <ng-template pTemplate="selectedItem" let-selectedOption>
+            <div *ngIf="selectedOption" class="flex items-center gap-2">
+              <span>{{ selectedOption.name }}</span>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="item" let-option>
+            <div class="flex items-center gap-2">
+              <span>{{ option.name }}</span>
+            </div>
+          </ng-template>
+        </p-select>
+        <small class="text-gray-500 mt-2 block">
+          Si modificas una opción, la plantilla se marcará como
+          <b>Personalizada</b>.
+        </small>
+      </div>
+
+      <!-- Formato -->
+      <p-fieldset legend="Formato">
+        <p-selectButton
+          [options]="formatOptions"
+          [(ngModel)]="formatSelected"
+          optionValue="value"
+          [allowEmpty]="false"
+        >
+          <ng-template let-item pTemplate="item">
+            <div class="flex items-center justify-center gap-2 px-2">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-selectButton>
+      </p-fieldset>
+
+      <!-- Estilos del Encabezado -->
+      <p-fieldset legend="Estilos del Encabezado">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- ✅ CORREGIDO: Label asociado con for/id -->
+          <div>
+            <label for="align-select" class="font-medium mb-2 block"
+              >Alineación</label
+            >
+            <p-selectButton
+              id="align-select"
+              [options]="alignOptions"
+              [ngModel]="styles.align"
+              (ngModelChange)="updateStyles({ align: $event })"
+              optionValue="value"
+            >
+              <ng-template let-item pTemplate="item">
+                <i
+                  [class]="item.icon"
+                  [pTooltip]="item.tooltip"
+                  tooltipPosition="top"
+                ></i>
+              </ng-template>
+            </p-selectButton>
+          </div>
+          <!-- ✅ CORREGIDO: Label asociado con for/id -->
+          <div>
+            <label for="header-color-picker" class="font-medium mb-2 block"
+              >Color de Cabecera
+              <p-colorPicker
+                [ngModel]="styles.color"
+                (ngModelChange)="updateStyles({ color: $event })"
+              ></p-colorPicker>
+            </label>
+          </div>
+        </div>
+      </p-fieldset>
+
+      <!-- Estilos del Contenido -->
+      <p-fieldset legend="Estilos del Contenido">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <!-- ✅ CORREGIDO: Label asociado y appendTo para el dropdown -->
+            <label for="font-select" class="font-medium mb-2 block"
+              >Fuente
+              <p-select
+                inputId="font-select"
+                [options]="fonts"
+                [ngModel]="styles.font"
+                (ngModelChange)="updateStyles({ font: $event })"
+                optionLabel="name"
+                optionValue="value"
+                placeholder="Selecciona una fuente"
+                styleClass="w-full"
+                [appendTo]="'body'"
+              >
+                <ng-template let-font pTemplate="item">
+                  <div [style.font-family]="font.value">{{ font.name }}</div>
+                </ng-template>
+                <ng-template let-font pTemplate="selectedItem">
+                  <div *ngIf="font" [style.font-family]="font.value">
+                    {{ font.name }}
+                  </div>
+                </ng-template>
+              </p-select>
+            </label>
+          </div>
+          <div>
+            <!-- ✅ CORREGIDO: Label asociado y appendTo para el dropdown -->
+            <label for="fontsize-select" class="font-medium mb-2 block"
+              >Tamaño
+              <p-select
+                inputId="fontsize-select"
+                [options]="fontSizes"
+                [ngModel]="styles.fontSize"
+                (ngModelChange)="updateStyles({ fontSize: $event })"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Ej: 12px"
+                styleClass="w-full"
+                [appendTo]="'body'"
+              />
+            </label>
+          </div>
+        </div>
+      </p-fieldset>
+    </div>
+  </div>
+
+  <!-- Footer con Botones de Acción -->
+  <div class="flex justify-end gap-3 mt-8 border-t border-gray-200 pt-4">
+    <p-button
+      label="Cancelar"
+      styleClass="p-button-outlined p-button-secondary"
+      (keydown.enter)="closeModal()"
+      (click)="closeModal()"
+    />
+    <p-button
+      label="Exportar"
+      icon="pi pi-download"
+      (click)="exportReport()"
+      (keydown.enter)="exportReport()"
+      type="button"
+    />
+  </div>
+</div>

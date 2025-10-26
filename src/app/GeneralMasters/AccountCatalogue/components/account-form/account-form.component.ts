@@ -167,9 +167,8 @@ export class AccountFormComponent implements OnInit {
    */
   sendAccount() {
     
-    const account: Account = {
-      //idEnterprise: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
-      idEnterprise: this.getIdEnterprise(), //Descomentar esta línea si tienes un método para obtener el ID de la empresa
+    const account: Account = {    
+      idEnterprise: this.getIdEnterprise(),
       code: this.formNewAccount.value.code,
       description: this.formNewAccount.value.name,
       nature: this.formNewAccount.value.selectedNatureType,

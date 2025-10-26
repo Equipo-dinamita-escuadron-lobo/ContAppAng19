@@ -24,8 +24,8 @@ export class CalendarDataService {
     const updatedMonths = [...calendarMonths];
     
     if (!calendarData || calendarData.length === 0) {
-      // Si no hay datos, el calendario se mantiene rojo (cerrado)
-      this.clearActiveEntriesMap();
+      // Si no hay datos, el calendario se mantiene cerrado
+      this.clearCache();
       return updatedMonths;
     }
     
@@ -64,39 +64,15 @@ export class CalendarDataService {
   }
 
   /**
-   * Determina si una fecha está seleccionada
+   * Determina si una fecha está abierta (existe en BD)
    * @param date Fecha a verificar
-   * @param calendarData Datos del calendario
-   * @returns true si la fecha está seleccionada
+   * @param calendarData Datos del calendario (no usado, mantenido por compatibilidad)
+   * @returns true si la fecha existe (abierta/verde), false si no existe (cerrada/rojo)
    */
   private isDateSelected(date: Date, calendarData: AccountingCalendar[]): boolean {
-    // Si no hay datos, por defecto no está seleccionada (rojo)
-    if (!calendarData || calendarData.length === 0) {
-      return false;
-    }
-
-    // Buscar una fecha que coincida exactamente
-    const matchingDate = calendarData.find(period => {
-      try {
-        const periodDate = parseDateFromBackend(period.date);
-        const isMatch = periodDate.getDate() === date.getDate() &&
-                       periodDate.getMonth() === date.getMonth() &&
-                       periodDate.getFullYear() === date.getFullYear();
-        
-        return isMatch;
-      } catch (e) {
-        return false;
-      }
-    });
-
-    // Si no hay una fecha coincidente, no está seleccionada
-    if (!matchingDate) {
-      return false;
-    }
-
-    // Retornar el estado (true = seleccionada, false = no seleccionada)
-    const result = matchingDate.status;
-    return result;
+    // Usar el Map de cache para búsqueda
+    const dateKey = toDateKey(date);
+    return this.activeEntriesByDate.has(dateKey);
   }
 
   /**
@@ -111,12 +87,12 @@ export class CalendarDataService {
       return;
     }
     
-    const selectedDays = currentMonthDays.filter(d => !d.isClosed); // !isClosed = seleccionada
+    const selectedDays = currentMonthDays.filter(d => !d.isClosed);
     
     if (selectedDays.length === currentMonthDays.length) {
-      month.status = MonthStatus.FULLY_OPEN; // Todo abierto
+      month.status = MonthStatus.FULLY_OPEN;
     } else {
-      month.status = MonthStatus.FULLY_CLOSED; // Todo cerrado
+      month.status = MonthStatus.FULLY_CLOSED; 
     }
   }
 
@@ -166,25 +142,9 @@ export class CalendarDataService {
 
 
   /**
-   * Limpia el cache completo
+   * Limpia el cache completo (mapa de entradas activas)
    */
   clearCache(): void {
     this.activeEntriesByDate.clear();
   }
-
-  /**
-   * Limpia solo el mapa de entradas activas
-   */
-  clearActiveEntries(): void {
-    this.activeEntriesByDate.clear();
-  }
-
-  /**
-   * Limpia solo el mapa de entradas activas
-   */
-  private clearActiveEntriesMap(): void {
-    this.activeEntriesByDate.clear();
-  }
-
-
 }

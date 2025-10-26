@@ -1,0 +1,164 @@
+<!-- Header con Logo -->
+<div class="w-full border-b" style="background-color: white; border-color: var(--color-neutral-90);">
+  <div class="max-w-[1400px] mx-auto px-8 py-4">
+    <a href="/#/" class="inline-block cursor-pointer hover:opacity-80 transition-opacity">
+      <img src="logo_unicauca_horizontal.png" alt="Logo Unicauca" class="max-h-72 w-auto">
+    </a>
+  </div>
+</div>
+
+<div class="max-w-[1400px] mx-auto px-8 py-8">
+  <!-- Título -->
+  <div class="mt-12 mb-6">
+    <h1 class="font-family-titillium font-bold text-3xl text-primary">
+      <span class="border-b-4 border-secondary pb-1">Centro de</span> Ayuda
+    </h1>
+  </div>
+
+  <!-- Menú de botones para módulos -->
+  @if (modules.length > 0) {
+    <div class="mb-8 mt-24 flex flex-wrap gap-2 justify-center">
+      <!-- Botón "Todos" -->
+      <p-button
+        label="Todos"
+        icon="pi pi-list"
+        (onClick)="onModuleChange(null)"
+        [styleClass]="selectedModuleId === null ? 'module-button-active' : 'module-button-inactive'"
+        size="small">
+      </p-button>
+
+      <!-- Botones de módulos -->
+      @for (module of modules; track module.id) {
+        <p-button
+          [label]="module.name"
+          [icon]="getModuleIcon(module.id)"
+          (onClick)="onModuleChange(module.id)"
+          [styleClass]="selectedModuleId === module.id ? 'module-button-active' : 'module-button-inactive'"
+          size="small">
+        </p-button>
+      }
+    </div>
+  }
+
+  <!-- Buscador con PrimeNG IconField -->
+  <div class="flex justify-start mb-12">
+    <div class="w-full sm:w-[30rem]">
+      <p-iconfield iconPosition="left">
+        <p-inputicon>
+          <i class="pi pi-search" style="color: var(--color-primary);"></i>
+        </p-inputicon>
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+          placeholder="Buscar por título, descripción o módulo..."
+          class="w-full py-2 px-3 pl-10 text-sm rounded-xl border-2 transition-all duration-200"
+          style="border-color: var(--color-neutral-80); background-color: var(--color-neutral-98);"
+          [style.border-color]="searchTerm ? 'var(--color-primary)' : 'var(--color-neutral-80)'"
+        />
+      </p-iconfield>
+    </div>
+  </div>
+
+  <!-- Contenedor principal con dos columnas -->
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_450px] gap-8 items-start">
+
+    <!-- Columna izquierda: Contenido seleccionado -->
+    <div class="min-h-[500px]">
+      @if (loading) {
+        <div class="flex flex-col items-center justify-center min-h-[400px]" style="color: var(--color-primary);">
+          <i class="pi pi-spin pi-spinner text-5xl"></i>
+          <p class="mt-4">Cargando contenido...</p>
+        </div>
+      } @else if (selectedHelp) {
+        <div class="bg-white rounded-2xl p-10 shadow-lg border" style="border-color: var(--color-neutral-90);">
+          <!-- Encabezado con módulo -->
+          <div class="mb-6">
+            <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border"
+                  style="background-color: var(--color-primary-95);
+                         color: var(--color-primary);
+                         border-color: var(--color-primary-80);">
+              <i [class]="getModuleIcon(selectedHelp.moduleId) + ' mr-2'"></i>
+              {{ selectedHelp.moduleName }}
+            </span>
+          </div>
+
+          <!-- Título del contenido -->
+          <h2 class="font-family-titillium text-3xl font-bold mb-6 pb-4 border-b-4 leading-tight"
+              style="color: var(--color-primary); border-color: var(--color-primary);">
+            {{ selectedHelp.name }}
+          </h2>
+
+          <!-- Descripción con contenido HTML enriquecido en modo solo lectura -->
+          <p-editor
+            [(ngModel)]="selectedHelp.description"
+            [readonly]="true"
+            [style]="{'height': '500px', 'border': 'none'}"
+          >
+            <ng-template #header>
+              <!-- Header vacío para ocultar la barra de herramientas -->
+            </ng-template>
+          </p-editor>
+        </div>
+      } @else {
+        <div class="flex flex-col items-center justify-center min-h-[400px] text-center bg-white rounded-2xl p-12 border-2 border-dashed"
+             style="border-color: var(--color-neutral-80); color: var(--color-neutral-50);">
+          <i class="pi pi-inbox text-7xl mb-4" style="color: var(--color-neutral-70);"></i>
+          <h3 class="text-xl font-semibold mb-2" style="color: var(--color-neutral-30);">No hay contenido disponible</h3>
+          <p>
+            {{ searchTerm ? 'No se encontraron resultados para tu búsqueda.' : 'No hay ayudas disponibles en este momento.' }}
+          </p>
+        </div>
+      }
+    </div>
+
+    <!-- Columna derecha: Lista de ayudas -->
+    <div class="sticky top-8">
+      <div class="bg-white rounded-2xl overflow-hidden shadow-xl border" style="border-color: var(--color-neutral-90);">
+        <!-- Encabezado de la lista -->
+        <div class="help-panel-header">
+          <i class="pi pi-list text-xl" style="color: white;"></i>
+          <h3 class="help-panel-title">Temas de Ayuda</h3>
+          @if (filteredHelpList.length > 0) {
+            <span class="help-panel-counter">{{ filteredHelpList.length }}</span>
+          }
+        </div>
+
+        <!-- Lista de ayudas -->
+        <p-scrollPanel [style]="{ width: '100%', height: '600px' }" styleClass="custom-scrollpanel">
+          <div class="p-4">
+            @if (filteredHelpList.length === 0 && !loading) {
+              <div class="p-12 text-center" style="color: var(--color-neutral-50);">
+                <i class="pi pi-search text-4xl mb-3 block"></i>
+                <p class="font-semibold mb-1">Sin resultados</p>
+                <p class="text-sm">Intenta con otros términos de búsqueda</p>
+              </div>
+            } @else {
+              @for (help of filteredHelpList; track help.id) {
+                <div
+                  [class]="'help-item-card' + (isSelected(help) ? ' selected' : '')"
+                  (click)="selectHelp(help)">
+
+                  <!-- Nombre de la ayuda -->
+                  <h4 class="help-item-title">
+                    {{ help.name }}
+                  </h4>
+
+                  <!-- Módulo con icono -->
+                  <div class="flex items-center justify-start">
+                    <span class="help-item-badge">
+                      <i [class]="getModuleIcon(help.moduleId)"></i>
+                      {{ help.moduleName }}
+                    </span>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </p-scrollPanel>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -4,19 +4,19 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators, AbstractContro
 import { AuthService } from '../services/auth.service';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { AuthLayaoutComponent } from '../../../auth-layaout/auth-layaout.component';
+import { AuthLayoutComponent } from '../../../auth-layout/auth-layout.component';
 import { MessageModule } from 'primeng/message';
 
 @Component({
   selector: 'app-reset-password',
-  standalone: true, // <-- AÑADIR STANDALONE
+  standalone: true, 
   imports: [
     ReactiveFormsModule, 
     CommonModule, 
     RouterModule, 
     ButtonModule,
-    AuthLayaoutComponent, // <-- AÑADIR LAYOUT A IMPORTS
-    MessageModule         // <-- AÑADIR MESSAGE MODULE
+    AuthLayoutComponent, 
+    MessageModule 
   ],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.css'

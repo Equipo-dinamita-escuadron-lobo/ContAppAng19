@@ -1,0 +1,11 @@
+/* Estilos para el componente de previsualización */
+.report-container {
+  background-color: #ffffff;
+  font-size: 11px; /* Un tamaño base más pequeño para reportes */
+  transition: all 0.3s ease-in-out;
+}
+
+/* Simula una vista más ancha para Excel */
+.report-container.excel-preview {
+  width: 140%;
+}

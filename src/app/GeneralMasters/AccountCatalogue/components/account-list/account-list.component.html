@@ -18,68 +18,20 @@
             <!-- Contenedor de botones con alineación -->
             <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
                 <div class="flex flex-wrap gap-3">
-                    <p-button label="Crear" type="submit" (click)="showFormAddNewClass()"></p-button>
-                    <p-button label="Exportar" type="submit" (click)="exportAccountsToExcel()"></p-button>
+                    <p-button label="Crear" icon="pi pi-plus" type="submit" (click)="showFormAddNewClass()"></p-button>
+                    <p-button label="Exportar" icon="pi pi-download" type="submit" (click)="exportAccounts()"></p-button>
 
-                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" accept=".xlsx" [auto]="true"
+                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" chooseIcon="pi pi-upload" accept=".xlsx" [auto]="true"
                         (onSelect)="onFileSelect($event)" class="p-button-primeng">
                     </p-fileUpload>
-                    <p-button label="Plantilla" (click)="openTemplateModal()"></p-button>
+                    <p-button label="Plantilla" icon="pi pi-download" (click)="openTemplateModal()"></p-button>
                 </div>
             </div>
 
         </div>
 
 
-        <div *ngIf="importedAccounts"
-            class="my-10 p-6 sm:p-8 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.06)] bg-white border border-gray-300 font-family-sans text-sm">
 
-            <div class="grid gap-6 sm:grid-cols-[1fr_auto] sm:gap-12 items-center">
-                <!-- Info -->
-                <div class="flex gap-5 text-[var(--color-primary)]">
-                    <div class="shrink-0">
-                        <svg class="h-20 w-20 mt-1" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path
-                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                            <line x1="12" y1="9" x2="12" y2="13" />
-                            <line x1="12" y1="17" x2="12.01" y2="17" />
-                        </svg>
-                    </div>
-                    <div class="space-y-3">
-                        <p class="font-semibold">
-                            Se ha cargado un listado de cuentas desde su ordenador.
-                        </p>
-                        <p>
-                            Presione <strong>Guardar cambios</strong> para conservar la información o
-                            <strong>Restablecer</strong> para descartarla.
-                        </p>
-
-                        <!-- Advertencia -->
-                        <div
-                            class="flex gap-3 items-start text-[var(--color-error-60)] border-l-4 border-[var(--color-error-60)] pl-4">
-                            <p class="leading-snug">
-                                <strong>Advertencia:</strong> asegúrese de que cada cuenta tenga toda su información
-                                completa.
-                                Si falta algún dato, no se guardará.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botones -->
-                <div class="flex flex-wrap gap-3 justify-center sm:justify-end">
-                    <button (click)="cancelImportAccounts()"
-                        class="text-sm py-2.5 px-5 border-2 border-[var(--color-primary)] text-[var(--color-primary)] rounded-full transition duration-200 hover:bg-[var(--color-primary)] hover:text-white">
-                        Restablecer
-                    </button>
-                    <button (click)="saveImportAccounts()"
-                        class="text-sm py-2.5 px-5 border-2 border-[var(--color-primary)] text-[var(--color-primary)] rounded-full transition duration-200 hover:bg-[var(--color-primary)] hover:text-white">
-                        Guardar cambios
-                    </button>
-                </div>
-            </div>
-        </div>
 
 
         <!-- Search Field -->
@@ -92,7 +44,6 @@
                     <input
                         pInputText
                         type="text"
-                        [(ngModel)]="filterAccount"
                         placeholder="Buscar cuenta (código/nombre)..."
                         class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
                     />
@@ -112,7 +63,7 @@
                 <div class="w-full flex ">
                     <!--list of class type accounts C:-->
                     <ul class="w-full mt-3">
-                        <li class="list_class mb-2" *ngFor="let class of listAccounts | filterAccounts: filterAccount">
+                        <li class="list_class mb-2" *ngFor="let class of listAccounts">
                             <div class="w-full flex items-center transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
                                 <button
                                     class="w-full text-start flex items-center"
@@ -332,7 +283,7 @@
                 </div>
             </div>
 
-            <div *ngIf="!importedAccounts" class="create-account font-normal">
+            <div class="create-account font-normal">
                 <form [formGroup]="accountForm">
                     <div class="mb-4">
                         <div style="position: relative;">
@@ -681,97 +632,10 @@
         </div>
     </div>
 
-    <p-dialog header="Información de la Plantilla de Importación" [modal]="true" [(visible)]="showImportModal"
-        [style]="{ width: '50rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [maximizable]="true"
-        (onHide)="closeTemplateModal()">
-
-
-        <div class="font-family-sans text-sm space-y-4">
-            <p>
-                Para importar el catálogo de cuentas, por favor, utilice un archivo de Excel (.xlsx) con el siguiente
-                formato y consideraciones.
-            </p>
-
-            <h4 class="font-bold text-base text-primary">Columnas Requeridas</h4>
-            <p>El archivo debe contener las siguientes columnas en la primera fila:</p>
-            <ul class="list-disc list-inside  p-4 rounded-md">
-                <li><strong>Código</strong></li>
-                <li><strong>Nombre</strong></li>
-                <li><strong>Naturaleza</strong> (Débito o Crédito)</li>
-                <li><strong>Estado Financiero</strong> (Estado de situacion financiero o Estado de resultados)</li>
-                <li><strong>Clasificación</strong></li>
-                <li><strong>Cruce</strong></li>
-                <li><strong>Centro de Costo</strong></li>
-            </ul>
-
-            <h4 class="font-bold text-base text-primary">Consideraciones Importantes</h4>
-            <ul class="list-disc list-inside  p-4 rounded-md space-y-2">
-                <li>Asegúrese de que no haya filas completamente vacías entre los registros.</li>
-                <li>Todos los campos son obligatorios. Las filas con alguna celda vacía no serán importadas.</li>
-                <li>La jerarquía de las cuentas se creará automáticamente a partir de los códigos.</li>
-            </ul>
-        </div>
-
-
-        <ng-template pTemplate="footer">
-            <div class="flex justify-center">
-                <p-button label="Descargar Plantilla" icon="pi pi-download" 
-                    styleClass="p-button-success" (click)="downloadTemplate()">
-                </p-button>
-            </div>
-        </ng-template>
-    </p-dialog>
-
-    <!-- Modal de Errores de Importación -->
-    <p-dialog header="Importación Fallida" [modal]="true" [(visible)]="showErrorModal"
-        [style]="{ width: '80rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"
-        (onHide)="closeErrorModal()">
-
-        <div class="bg-orange-100 border-l-4 border-orange-500 text-orange-700 px-15 py-15 mb-15">
-            <p class="font-bold">Se encontraron algunos errores!</p>
-            <p>No se puede importar el archivo debido a los siguientes errores:</p>
-        </div>
-
-        <div class="bg-blue-50 border border-blue-200 rounded-lg px-15 py-15 mb-15">
-            <h4 class="font-bold text-base text-primary mb-2">Instrucciones:</h4>
-            <ul class="list-disc list-inside text-sm space-y-1">
-                <li>El archivo Excel debe contener las columnas: Código (A), Nombre (B), Naturaleza (C), Estado Financiero (D), Clasificación (E), Cruce (F), Centro de Costo (G).</li>
-                <li>Todos los campos son obligatorios y no pueden estar vacíos a excepción de los campos de cruce y centro de costo.</li>
-                <li>La primera fila debe contener los encabezados.</li>
-                <li>Se mostrarán errores específicos indicando fila y columna.</li>
-            </ul>
-        </div>
-
-        <p-table [value]="importErrors" [paginator]="true" [rows]="10" [totalRecords]="totalErrors"
-            [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} errores"
-            styleClass="p-datatable-sm" [tableStyle]="{'min-width': '50rem'}">
-            
-            <ng-template pTemplate="header">
-                <tr>
-                    <th>Fila</th>
-                    <th>Columna</th>
-                    <th>Campo</th>
-                    <th>Error</th>
-                </tr>
-            </ng-template>
-            
-            <ng-template pTemplate="body" let-error>
-                <tr>
-                    <td>{{ error.fila }}</td>
-                    <td>{{ error.columna }}</td>
-                    <td>{{ error.campo }}</td>
-                    <td class="text-red-600">{{ error.error }}</td>
-                </tr>
-            </ng-template>
-        </p-table>
-
-        <ng-template pTemplate="footer">
-            <div class="flex justify-center gap-3">
-                <p-button label="Aceptar" styleClass="p-button-secondary" (click)="closeErrorModal()"></p-button>
-                <p-button label="Exportar Errores" icon="pi pi-download" 
-                    styleClass="p-button-success" (click)="exportErrors()"></p-button>
-            </div>
-        </ng-template>
-    </p-dialog>
+    <!-- Modal de Plantilla de Catálogo de Cuentas -->
+    <app-account-template 
+        [visible]="showTemplateModal" 
+        (close)="closeTemplateModal()">
+    </app-account-template>
 
 </div>

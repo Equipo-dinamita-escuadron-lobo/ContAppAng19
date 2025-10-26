@@ -10,6 +10,10 @@ import { ColombianHolidaysService } from './colombian-holidays.service';
   providedIn: 'root'
 })
 export class CalendarGeneratorService {
+  // Cache de calendarios generados por año
+  // Limita a 3 años para evitar consumo excesivo de memoria
+  private calendarCache = new Map<number, CalendarMonth[]>();
+  private readonly MAX_CACHE_SIZE = 3;
 
   constructor(private holidaysService: ColombianHolidaysService) {}
 
@@ -19,12 +23,24 @@ export class CalendarGeneratorService {
    * @returns Array de meses del calendario
    */
   generateYearCalendar(year: number): CalendarMonth[] {
+    // Verificar si el calendario ya está en cache
+    if (this.calendarCache.has(year)) {
+      return this.deepCopyCalendar(this.calendarCache.get(year)!);
+    }
+    
+    // Generar nuevo calendario
     const calendarMonths: CalendarMonth[] = [];
     
     for (let month = 0; month < 12; month++) {
       const monthData = this.createMonthCalendar(month, year);
       calendarMonths.push(monthData);
     }
+    
+    // Guardar en cache
+    this.calendarCache.set(year, this.deepCopyCalendar(calendarMonths));
+    
+    // Limpiar cache si excede el tamaño máximo
+    this.cleanupCache();
     
     return calendarMonths;
   }
@@ -81,7 +97,7 @@ export class CalendarGeneratorService {
           date: new Date(prevYear, prevMonth, day),
           dayOfMonth: day,
           isCurrentMonth: false,
-          isClosed: true, // Días de otros meses siempre cerrados
+          isClosed: true,
           isToday: false,
           isHoliday: false
         });
@@ -136,7 +152,7 @@ export class CalendarGeneratorService {
           date: new Date(nextYear, nextMonth, day),
           dayOfMonth: day,
           isCurrentMonth: false,
-          isClosed: true, // Días de otros meses siempre cerrados
+          isClosed: true,
           isToday: false,
           isHoliday: false
         });
@@ -165,5 +181,38 @@ export class CalendarGeneratorService {
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
     return monthNames[month];
+  }
+
+  /**
+   * Crea una copia profunda del calendario para evitar mutaciones del cache
+   * @param calendar Calendario a copiar
+   * @returns Copia profunda del calendario
+   */
+  private deepCopyCalendar(calendar: CalendarMonth[]): CalendarMonth[] {
+    return calendar.map(month => ({
+      ...month,
+      days: month.days.map(day => ({
+        ...day,
+        date: new Date(day.date)
+      }))
+    }));
+  }
+
+  /**
+   * Limpia el cache manteniendo solo los últimos N años
+   */
+  private cleanupCache(): void {
+    if (this.calendarCache.size > this.MAX_CACHE_SIZE) {
+      // Obtener el año más antiguo y eliminarlo
+      const oldestYear = Math.min(...Array.from(this.calendarCache.keys()));
+      this.calendarCache.delete(oldestYear);
+    }
+  }
+
+  /**
+   * Limpia completamente el cache
+   */
+  clearCache(): void {
+    this.calendarCache.clear();
   }
 }

@@ -1,4 +1,5 @@
 export interface TypeId {
+  id?: number;
   entId: String;
   typeId: string;
   typeIdname: string;

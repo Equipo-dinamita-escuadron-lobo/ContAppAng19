@@ -13,5 +13,6 @@ export interface ReceiptCreateRequest {
     enterpriseId: string,
     totalAmount: number,
     details: ReceiptDetail[],
-    ledgerAccountId: number
+    ledgerAccountId: number,
+    centerCostId?: number
 }

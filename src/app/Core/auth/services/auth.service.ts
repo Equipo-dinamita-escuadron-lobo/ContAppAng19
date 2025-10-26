@@ -1,15 +1,16 @@
 import { environment } from '../../../../environments/environment';
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient , HttpContext} from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, catchError, map, switchMap, delay } from 'rxjs/operators';
-import { jwtDecode } from 'jwt-decode'; // Importar la librería
+import { jwtDecode } from 'jwt-decode';
 import { Login } from '../models/login';
 import { UserProfile } from '../models/user-profile';
 import { DecodedToken } from '../models/decoded-token';
 import { Permission } from '../models/permission';
 import { RegisterUser } from '../models/register-user';
+import { BYPASS_AUTH } from '../../Interceptors/http-context';
 
 const keycloakUrl = environment.keycloak_url;
 const keycloakUrlToken = environment.keycloak_url_token;
@@ -26,6 +27,8 @@ export interface PayloadToken {
 export class AuthService {
   router = inject(Router);
   http = inject(HttpClient);
+
+  private bypassAuthContext = new HttpContext().set(BYPASS_AUTH, true);
 
   // Mantén el estado del token
   private _currentUser = new BehaviorSubject<UserProfile | null>(null);
@@ -84,25 +87,28 @@ export class AuthService {
 
   public login(auth: Login) {
     return this.http
-      .post<{ access_token: string }>(`${keycloakUrlToken}`, auth)
+      .post<{ access_token: string }>(`${keycloakUrlToken}`, auth, { 
+        context: this.bypassAuthContext // <-- 3. AÑADIR CONTEXTO
+      })
       .pipe(
-        tap((res) => this.saveToken(res.access_token)), // Guarda el token primero
-        switchMap(() => this.fetchAndSetUser()), // Luego obtiene y guarda el usuario en memoria
-        tap(() => this.isAuthenticated.set(true)), // Actualiza la señal
+        tap((res) => this.saveToken(res.access_token)),
+        switchMap(() => this.fetchAndSetUser()),
+        tap(() => this.isAuthenticated.set(true)),
         tap(() => {
           this.router.navigate(['/enterprise/list']);
         }),
         catchError((error) => {
           console.error('Login failed:', error);
           this.isAuthenticated.set(false);
-          // Devuelve un observable que emite null o propaga el error como prefieras
           return of(null);
         })
       );
   }
 
   public register(user: RegisterUser): Observable<any> {
-    return this.http.post<any>(`${keycloakUrl}register`, user).pipe(
+    return this.http.post<any>(`${keycloakUrl}register`, user, { 
+      context: this.bypassAuthContext // <-- 3. AÑADIR CONTEXTO
+    }).pipe(
       tap((createdUser) => console.log('Usuario registrado exitosamente:', createdUser)),
       catchError((error) => {
         console.error('Error en registro:', error);
@@ -112,7 +118,9 @@ export class AuthService {
   }
 
   public forgotPassword(email: string): Observable<void> {
-    return this.http.post<void>(`${keycloakUrl}forgot-password`, { email }).pipe(
+    return this.http.post<void>(`${keycloakUrl}forgot-password`, { email }, { 
+      context: this.bypassAuthContext // <-- 3. AÑADIR CONTEXTO
+    }).pipe(
       tap(() => console.log('Email de recuperación enviado')),
       catchError((error) => {
         console.error('Error enviando email de recuperación:', error);
@@ -122,7 +130,9 @@ export class AuthService {
   }
 
   public resetPassword(token: string, newPassword: string): Observable<void> {
-    return this.http.post<void>(`${keycloakUrl}reset-password`, { token, newPassword }).pipe(
+    return this.http.post<void>(`${keycloakUrl}reset-password`, { token, newPassword }, { 
+      context: this.bypassAuthContext // <-- 3. AÑADIR CONTEXTO
+    }).pipe(
       tap(() => console.log('Contraseña reseteada exitosamente')),
       catchError((error) => {
         console.error('Error reseteando contraseña:', error);

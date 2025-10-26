@@ -104,11 +104,7 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         }
         
-        // Verificar años con periodos abiertos después de la carga inicial
-        this.checkYearsWithOpenPeriods();
-        
-        // Cargar el estado de todos los años
-        this.loadAllYearsStateFromBackend();
+        this.loadAllYearsState();
         
       });
   }
@@ -124,42 +120,9 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
       return true;
     }
     
-    // Cambios en los meses del calendario son significativos
+    // Cambios en longitud de meses
     if (this.calendarMonths.length !== newState.calendarMonths.length) {
       return true;
-    }
-    
-    // Verificar si hay cambios en el estado de los meses
-    for (let i = 0; i < this.calendarMonths.length; i++) {
-      const oldMonth = this.calendarMonths[i];
-      const newMonth = newState.calendarMonths[i];
-      
-      if (!oldMonth || !newMonth) {
-        return true;
-      }
-      
-      if (oldMonth.status !== newMonth.status) {
-        return true;
-      }
-      
-      // Verificar cambios en días individuales
-      if (oldMonth.days.length !== newMonth.days.length) {
-        return true;
-      }
-      
-      for (let j = 0; j < oldMonth.days.length; j++) {
-        const oldDay = oldMonth.days[j];
-        const newDay = newMonth.days[j];
-        
-        if (!oldDay || !newDay) {
-          return true;
-        }
-        
-        if (oldDay.isClosed !== newDay.isClosed || 
-            oldDay.isToday !== newDay.isToday) {
-          return true;
-        }
-      }
     }
     
     // Cambios en errores son significativos
@@ -167,7 +130,25 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
       return true;
     }
     
-    return false;
+    // Usar hash simple para comparación rápida de estados
+    // Hash basado en: mes-status-díasAbiertos
+    const oldHash = this.calculateStateHash(this.calendarMonths);
+    const newHash = this.calculateStateHash(newState.calendarMonths);
+    
+    return oldHash !== newHash;
+  }
+
+  /**
+   * Calcula un hash simple del estado del calendario
+   * @param months Meses del calendario
+   * @returns Hash string representando el estado
+   */
+  private calculateStateHash(months: CalendarMonth[]): string {
+    return months.map(m => {
+      // Contar días abiertos del mes actual
+      const openDays = m.days.filter(d => d.isCurrentMonth && !d.isClosed).length;
+      return `${m.month}-${m.status}-${openDays}`;
+    }).join('|');
   }
 
   /**
@@ -184,9 +165,8 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
    */
   onYearChange(): void {
     this.stateService.changeYear(this.selectedYear);
-    // Verificar años con periodos abiertos después de cambiar de año
-    setTimeout(() => this.checkYearsWithOpenPeriods(), 100);
-
+    // Recargar años con periodos abiertos desde el backend
+    setTimeout(() => this.loadAllYearsState(), 100);
   }
   
   /**
@@ -307,59 +287,34 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
     return this.stateService.areAllMonthsClosed();
   }
   
-  /**
-   * Verifica qué años tienen periodos abiertos
-   * Se ejecuta cuando se cambia de año para mantener un registro
-   */
-  checkYearsWithOpenPeriods(): void {
-    if (!this.availableYears.length) return;    
-    
-    // Agregar el año actual si tiene periodos abiertos
-    if (!this.areAllMonthsClosed()) {
-      this.yearsWithOpenPeriods.add(this.selectedYear);
-    } else {
-      // Si el año actual está completamente cerrado, removerlo del registro
-      this.yearsWithOpenPeriods.delete(this.selectedYear);
-    }
-    
-    // Marcar para detección de cambios
-    this.cdr.markForCheck();
-  }
   
   /**
-   * Carga el estado de todos los años
-   * Se ejecuta al inicializar el componente para obtener información persistente
+   * Carga los años con periodos abiertos 
    */
-  loadAllYearsStateFromBackend(): void {
-    if (!this.availableYears.length) return;
-    
+  loadAllYearsState(): void {
     const enterpriseId = this.localStorageMethods.loadEnterpriseData()?.id;
     if (!enterpriseId) return;
     
-    // Obtener todos los años disponibles
-    const allYears = this.availableYears.map(y => y.value);
-    
-    // Llamar al servicio para verificar qué años tienen periodos abiertos
-    this.calendarService.getYearsWithOpenPeriods(enterpriseId, allYears).subscribe({
-      next: (yearsWithOpenPeriods) => {
-        // Limpiar el registro anterior y cargar desde el backend
-        this.yearsWithOpenPeriods.clear();
-        yearsWithOpenPeriods.forEach(year => this.yearsWithOpenPeriods.add(year));
-        
-        // Marcar para detección de cambios
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        // En caso de error, mantener el comportamiento anterior
-        this.checkYearsWithOpenPeriods();
-      }
-    });
+    this.calendarService.getYearsWithOpenPeriods(enterpriseId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (yearsWithOpenPeriods) => {
+          this.yearsWithOpenPeriods.clear();
+          yearsWithOpenPeriods.forEach(year => this.yearsWithOpenPeriods.add(year));
+          
+          // Marcar para detección de cambios
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error('Error al cargar años con periodos abiertos:', error);
+          // En caso de error, mantener el Set vacío
+          this.yearsWithOpenPeriods.clear();
+          this.cdr.markForCheck();
+        }
+      });
   }
   
-
-  
   /**
-   * Obtiene el indicador visual para un año
    */
   getYearIndicator(year: number): { hasOpenPeriods: boolean; tooltip: string } {
     const hasOpenPeriods = this.yearsWithOpenPeriods.has(year);
@@ -400,18 +355,18 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Navega al año especificado
+   * Navega al año especificado desde los tags
    * @param year Año al que navegar
    */
   navigateToYear(year: number): void {
     // Solo navegar si es un año diferente al actual
     if (year !== this.selectedYear) {
-      // Usar la misma lógica que el selector de años
+      // Actualizar el año seleccionado (esto actualizará el dropdown automáticamente)
       this.selectedYear = year;
       this.stateService.changeYear(year);
       
-      // Verificar años con periodos abiertos después del cambio
-      setTimeout(() => this.checkYearsWithOpenPeriods(), 100);
+      // Marcar para detección de cambios para actualizar el dropdown
+      this.cdr.markForCheck();
     }
   }
   

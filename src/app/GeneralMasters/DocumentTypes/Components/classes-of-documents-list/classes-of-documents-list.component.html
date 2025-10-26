@@ -29,13 +29,13 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" (input)="filterGlobal($event, classesTable)" placeholder="Buscar clase (nombre)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
+          <input pInputText type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Buscar clase (nombre)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
         </p-iconfield>
       </div>
     </div>
 
     <!-- Tabla -->
-    <p-table #classesTable [value]="list" [lazy]="true" (onLazyLoad)="loadClassesLazy($event)" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [globalFilterFields]="['name']" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '40rem'}" responsiveLayout="scroll">
+    <p-table #classesTable [value]="list" [lazy]="true" (onLazyLoad)="loadClassesLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '40rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">Nombre <p-sortIcon field="name"></p-sortIcon></th>

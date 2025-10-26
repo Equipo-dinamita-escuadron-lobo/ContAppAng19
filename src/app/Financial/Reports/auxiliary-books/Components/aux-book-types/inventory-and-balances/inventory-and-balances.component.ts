@@ -12,9 +12,10 @@ import { SplitButtonModule } from 'primeng/splitbutton';
 import { TableModule } from 'primeng/table';
 
 // Models
-import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
+import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 
 // Services
 import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
@@ -23,6 +24,7 @@ import { MessageService } from 'primeng/api';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
+import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-inventory-and-balances',
@@ -37,7 +39,7 @@ import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliar
     DatePickerModule,
     TableModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService],
   templateUrl: './inventory-and-balances.component.html',
   styleUrl: './inventory-and-balances.component.css',
 })
@@ -51,12 +53,39 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
 
   override dataTable: InventoryAndBalancesResponse[] = [];
 
+  /**
+   * ✅ NUEVO: Define la configuración de las cabeceras para la previsualización.
+   * Esta estructura debe coincidir con la tabla mostrada en el HTML.
+   */
+  headerConfig: ColumnDefinition[][] = [
+    // Fila 1 de la cabecera
+    [
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        // Los 'children' se usan para calcular las columnas de datos (flatColumns)
+        children: [
+          { header: 'Código', field: 'accountCode' },
+          { header: 'Descripción', field: 'accountDescription' },
+        ],
+      },
+      { header: 'Descripción', field: 'description', rowspan: 2 },
+      { header: 'Valor', field: 'value', type: 'number', rowspan: 2 },
+    ],
+    // ✅ CORREGIDO: Fila 2 de la cabecera, contiene los hijos de 'Cuenta'
+    [
+      // Estas columnas se renderizarán debajo de 'Cuenta'
+      { header: 'Código', field: 'accountCode' },
+      { header: 'Descripción', field: 'accountDescription' },
+    ],
+  ];
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
     enterpriseService: EnterpriseService,
     thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    dialogService: DialogService,
     private datePipe: DatePipe
   ) {
     super(
@@ -64,13 +93,15 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
       enterpriseService,
       thirdService,
       accountService,
-      messageService
+      messageService,
+      dialogService
     );
   }
 
   protected loadConfig(): void {
     this.auxiliaryBookInfo = {
       name: 'Libro de Inventarios y Balances',
+      type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
       description:
         'Presenta los activos, pasivos y patrimonio de la empresa en un momento determinado.',
       icon: 'inventory_2',
