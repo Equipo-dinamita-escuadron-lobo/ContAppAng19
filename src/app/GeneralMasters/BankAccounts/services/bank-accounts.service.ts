@@ -143,11 +143,18 @@ export class BankAccountsService {
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Capturar mensaje del backend
       if (typeof error.error === 'string' && error.error.trim()) {
         errorMessage = error.error;
       } else if (error.error?.message) {
         errorMessage = error.error.message;
+      } else if (error.error?.fieldErrors && typeof error.error.fieldErrors === 'object') {
+        const fieldErrorMessages = Object.values(error.error.fieldErrors);
+        errorMessage = fieldErrorMessages.join('. ');
+      } else if (error.error?.errors && Array.isArray(error.error.errors)) {
+        const validationErrors = error.error.errors.map((err: any) => err.defaultMessage || err.message);
+        errorMessage = validationErrors.join('. ');
+      } else if (error.error?.field && error.error?.defaultMessage) {
+        errorMessage = error.error.defaultMessage;
       } else if (error.message) {
         errorMessage = error.message;
       }
