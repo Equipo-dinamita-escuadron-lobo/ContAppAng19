@@ -24,6 +24,11 @@ export class PaymentMethodsServiceService {
     return this.http.get<Page<PaymentMethod>>(url);
   }
 
+  findAllActive(enterpriseId: string): Observable<Page<PaymentMethod>> {
+    const url = `${this.apiURL}findAllActive/${enterpriseId}`;
+    return this.http.get<Page<PaymentMethod>>(url);
+  }
+
   findById(id: number, enterpriseId: string): Observable<PaymentMethod> {
     const url = `${this.apiURL}findById/${id}/${enterpriseId}`;
     return this.http.get<PaymentMethod>(url);
