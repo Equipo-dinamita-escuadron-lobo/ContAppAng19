@@ -100,9 +100,9 @@ export class PaymentMethodsEditComponent implements OnInit {
       next: (accounts: Account[]) => {
         // Obtener solo las cuentas auxiliares (8 dígitos) que son las que se usan para registrar movimientos
         const auxiliaryAccounts: Account[] = [];
-        accounts.forEach(account => {
+        for (const account of accounts) {
           PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
-        });
+        }
 
         // Filtrar cuentas válidas
         const validAuxiliaryAccounts = PaymentMethodsUtils.filterValidAuxiliaryAccounts(auxiliaryAccounts);

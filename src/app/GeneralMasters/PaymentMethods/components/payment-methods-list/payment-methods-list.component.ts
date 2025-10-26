@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { PaymentMethodsServiceService, PageResponse } from '../../services/payment-methods-service.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
-import { PaymentMethod, AccountingAccountOption } from '../../models/PaymentMethods';
+import { PaymentMethod } from '../../models/PaymentMethods';
 import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
@@ -86,14 +86,14 @@ export class PaymentMethodsListComponent implements OnInit {
       next: (accounts: Account[]) => {
         // Obtener todas las cuentas auxiliares para crear el mapa
         const auxiliaryAccounts: Account[] = [];
-        accounts.forEach(account => {
+        for (const account of accounts) {
           PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
-        });
+        }
 
         // Crear mapa de código -> descripción
-        auxiliaryAccounts.forEach(account => {
+        for (const account of auxiliaryAccounts) {
           this.accountingAccountsMap.set(account.code, account.description);
-        });
+        }
 
         // Una vez que tenemos el mapa, cargar los métodos de pago
         this.loadPaymentMethods();
