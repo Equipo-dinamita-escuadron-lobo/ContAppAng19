@@ -28,13 +28,13 @@ export class BankAccountsCreationComponent implements OnInit {
   auxiliaryAccountsOptions: { label: string; value: number }[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private messageService: MessageService,
-    private bankService: BankService,
-    private bankAccountsService: BankAccountsService,
-    private chartAccountService: ChartAccountService,
-    private localStorageMethod: LocalStorageMethods
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly bankService: BankService,
+    private readonly bankAccountsService: BankAccountsService,
+    private readonly chartAccountService: ChartAccountService,
+    private readonly localStorageMethod: LocalStorageMethods
   ) {
     this.form = this.fb.group({
       accountNumber: ['', [Validators.required, Validators.pattern('^[0-9]{8,16}$')]],

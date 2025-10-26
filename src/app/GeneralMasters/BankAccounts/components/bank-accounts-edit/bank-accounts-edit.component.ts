@@ -31,14 +31,14 @@ export class BankAccountsEditComponent implements OnInit {
   originalFormValue: any = null;
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private messageService: MessageService,
-    private bankService: BankService,
-    private bankAccountsService: BankAccountsService,
-    private chartAccountService: ChartAccountService,
-    private localStorageMethod: LocalStorageMethods
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly messageService: MessageService,
+    private readonly bankService: BankService,
+    private readonly bankAccountsService: BankAccountsService,
+    private readonly chartAccountService: ChartAccountService,
+    private readonly localStorageMethod: LocalStorageMethods
   ) {
     this.form = this.fb.group({
       accountNumber: ['', [Validators.required, Validators.pattern('^[0-9]{8,16}$')]],
