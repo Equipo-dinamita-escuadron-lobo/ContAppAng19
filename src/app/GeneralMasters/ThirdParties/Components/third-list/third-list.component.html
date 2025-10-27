@@ -54,9 +54,9 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" placeholder="Buscar por nombre/razón social, identificación..."
+          <input pInputText type="text" placeholder="Buscar tercero (Nombre/Razón Social, Identificación)..."
             class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
-            [(ngModel)]="globalFilterValue" (input)="applyGlobalFilter($event)">
+            [(ngModel)]="searchValue" (input)="onSearch()">
         </p-iconfield>
       </div>
 
@@ -68,10 +68,9 @@
 
     <!-- Data Table -->
     <p-table #dt [value]="thirds" [loading]="loading" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
-      [rowsPerPageOptions]="[5, 10, 20]" [first]="first"
-      [globalFilterFields]="['names', 'lastNames', 'socialReason', 'idNumber', 'email', 'typeId.typeId']"
+      [rowsPerPageOptions]="[5, 10, 20]" [first]="first" [lazy]="true"
       styleClass="p-datatable-gridlines" [responsiveLayout]="'scroll'"
-      (onPage)="onPageChange($event)" (onSort)="onSort($event)">
+      (onLazyLoad)="onPageChange($event)" (onPage)="onPageChange($event)" (onSort)="onSort($event)">
 
       <!-- Table Header -->
       <ng-template pTemplate="header">

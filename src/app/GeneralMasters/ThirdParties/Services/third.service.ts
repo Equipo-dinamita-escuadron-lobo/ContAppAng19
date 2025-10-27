@@ -4,6 +4,20 @@ import { Observable, catchError, map, throwError } from 'rxjs';
 import { Third } from '../models/Third';
 import { environment } from '../../../../environments/environment';
 
+export interface PageResponse<T> {
+  content: T[];
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  page?: {
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -102,7 +116,7 @@ export class ThirdService {
    * @param search Término de búsqueda (opcional)
    * @returns Observable con la respuesta paginada del backend
    */
-  getThirdParties(entId: String, numPage: number = 0, size?: number, sortField: string = "names", sortOrder: string = "asc", search?: string): Observable<any> {
+  getThirdParties(entId: String, numPage: number = 0, size?: number, sortField: string = "names", sortOrder: string = "asc", search?: string): Observable<PageResponse<Third>> {
     let params = new HttpParams()
       .set('entId', entId.toString())
       .set('numPage', numPage.toString())
@@ -117,7 +131,7 @@ export class ThirdService {
       params = params.set('search', search.trim());
     }
 
-    return this.http.get<any>(this.thirdApiUrl, { params });
+    return this.http.get<PageResponse<Third>>(this.thirdApiUrl, { params });
   }
 
   /**
@@ -125,8 +139,8 @@ export class ThirdService {
    * @param entId ID de la empresa
    * @returns Observable con la lista de terceros
    */
-  getThirdList(entId: String): Observable<Third[]> {  
-    return this.getThirdParties(entId, 0).pipe(
+  getThirdList(entId: String): Observable<Third[]> {
+    return this.getThirdParties(entId).pipe(
       map(response => response.content as Third[])
     );
   }
