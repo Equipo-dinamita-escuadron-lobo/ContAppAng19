@@ -161,7 +161,6 @@ export class ThirdListComponent implements OnInit {
         this.loading = false;
       },
       error: (error: any) => {
-        console.error('Error loading thirds:', error);
         this.thirds = [];
         this.totalRecords = 0;
         this.loading = false;
@@ -186,7 +185,6 @@ export class ThirdListComponent implements OnInit {
         this.thirdTypes = response;
       },
       error: (error: any) => {
-        console.error('Error loading third types:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -205,7 +203,6 @@ export class ThirdListComponent implements OnInit {
         this.typeIds = response;
       },
       error: (error: any) => {
-        console.error('Error loading ID types:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -297,7 +294,6 @@ export class ThirdListComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error changing third state:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -368,7 +364,6 @@ export class ThirdListComponent implements OnInit {
             });
           },
           error: (error) => {
-            console.error('Error changing bulk state:', error);
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
@@ -853,7 +848,6 @@ export class ThirdListComponent implements OnInit {
       });
 
     } catch (error) {
-      console.error('Error al exportar errores:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error de Exportación',
