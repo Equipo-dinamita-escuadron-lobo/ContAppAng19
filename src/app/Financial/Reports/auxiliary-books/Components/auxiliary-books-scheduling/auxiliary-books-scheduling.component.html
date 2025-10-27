@@ -1,0 +1,78 @@
+<p-toast></p-toast>
+<div class="card">
+  <form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()">
+    <div class="p-fluid grid formgrid">
+      <!-- Nombre del Libro -->
+      <div class="field col-12">
+        <label for="bookName">Reporte a Programar</label>
+        <input
+          pInputText
+          id="bookName"
+          type="text"
+          [value]="historyItem?.bookName"
+          disabled
+        />
+      </div>
+
+      <!-- Fecha y Hora de Programación -->
+      <div class="field col-12">
+        <label for="scheduleDate">Fecha y Hora de Envío</label>
+        <p-calendar
+          formControlName="scheduleDate"
+          [showTime]="true"
+          [showSeconds]="false"
+          hourFormat="12"
+          [minDate]="minDate"
+          dateFormat="dd/mm/yy"
+          inputId="scheduleDate"
+          styleClass="w-full"
+        ></p-calendar>
+      </div>
+
+      <!-- Tipo de Envío -->
+      <div class="field col-12">
+        <label for="sendType">Tipo de Envío</label>
+        <p-selectButton
+          [options]="sendOptions"
+          formControlName="sendType"
+          optionLabel="label"
+          optionValue="value"
+        ></p-selectButton>
+      </div>
+
+      <!-- Campo de Correo (condicional) -->
+      <div
+        *ngIf="scheduleForm.get('sendType')?.value === 'email'"
+        class="field col-12"
+      >
+        <label for="email">Correo Electrónico</label>
+        <input
+          pInputText
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="ejemplo@correo.com"
+        />
+      </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="flex justify-end gap-2 mt-5">
+      <button
+        pButton
+        pRipple
+        type="button"
+        label="Cancelar"
+        class="p-button-text"
+        (click)="closeModal.emit()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        type="submit"
+        label="Programar"
+        [disabled]="scheduleForm.invalid"
+      ></button>
+    </div>
+  </form>
+</div>
