@@ -121,8 +121,13 @@ export class ProductTypeListComponent implements OnInit {
     this.loadProductTypesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
   }
 
-  redirectTo(route: string): void {
-    this.router.navigate([route]);
+ 
+  goBack(): void {
+    this.router.navigate(['/gen-masters/inventory']);
+  }
+
+  redirectToCreate(): void {
+    this.router.navigate(['/gen-masters/inventory/product-types/create']);
   }
 
   redirectToEdit(id: number): void {
