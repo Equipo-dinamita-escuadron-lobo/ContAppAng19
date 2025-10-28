@@ -158,9 +158,9 @@ export class ProductTypeListComponent implements OnInit {
           error: (error: any) => {
             console.error('Error al eliminar el tipo de producto:', error);
             this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'No se pudo eliminar el tipo de producto'
+              severity: 'info',
+              summary: 'Información',
+              detail: `No se puede eliminar el tipo "${productType.name}" porque está siendo utilizado por uno o más productos.`
             });
           }
         });

@@ -152,7 +152,7 @@ export class UnitOfMeasureListComponent implements OnInit {
       rejectButtonStyleClass: 'p-button-secondary',
       defaultFocus: 'reject',
       closeOnEscape: true,
-      accept: () => this.confirmDeleteUnit(unitId, enterpriseId)
+      accept: () => this.confirmDeleteUnit(this.unitOfMeasures.find(u => u.id === unitId)!, enterpriseId)
     });
   }
 
@@ -184,8 +184,8 @@ export class UnitOfMeasureListComponent implements OnInit {
     });
   }
 
-  private confirmDeleteUnit(unitId: number, enterpriseId: string): void {
-    this.unitOfMeasureService.deleteUnitOfMeasureId(unitId.toString(), enterpriseId).subscribe({
+  private confirmDeleteUnit(unit: UnitOfMeasure, enterpriseId: string): void {
+    this.unitOfMeasureService.deleteUnitOfMeasureId(unit.id.toString(), enterpriseId).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
@@ -196,9 +196,9 @@ export class UnitOfMeasureListComponent implements OnInit {
       },
       error: (err) => {
         this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo eliminar la unidad de medida.'
+          severity: 'info',
+          summary: 'Información',
+          detail: `No se puede eliminar la unidad "${unit.name}" porque está siendo utilizada por uno o más productos.`
         });
       }
     });

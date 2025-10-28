@@ -230,9 +230,9 @@ export class CategoryListComponent implements OnInit {
           error: (error: any) => {
             console.error('Error al eliminar la categoría:', error);
             this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'No se pudo eliminar la categoría'
+              severity: 'info',
+              summary: 'Información',
+              detail: `No se puede eliminar la categoria "${category.name}" porque está siendo utilizada por uno o más productos.`
             });
           }
         });
