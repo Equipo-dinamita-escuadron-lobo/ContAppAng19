@@ -1,17 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-
-// --- AHORA: Importaciones Standalone y de PrimeNG ---
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
-// --- Servicios y Modelos ---
 import { UnitOfMeasure } from '../../Models/UnitOfMeasure';
 import { UnitOfMeasureService } from '../../Services/unit-of-measure.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
@@ -44,11 +39,11 @@ export class UnitOfMeasureEditComponent implements OnInit {
   entData: any | null = null;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private unitOfMeasureService: UnitOfMeasureService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private messageService: MessageService
+    private readonly formBuilder: FormBuilder,
+    private readonly unitOfMeasureService: UnitOfMeasureService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly messageService: MessageService
   ) {
     this.unitOfMeasureForm = this.formBuilder.group({
       name: ['', Validators.required],

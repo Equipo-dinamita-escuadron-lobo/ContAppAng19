@@ -1,11 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { Router } from '@angular/router';
-
-// --- AHORA: Importaciones Standalone y de PrimeNG ---
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -14,17 +10,14 @@ import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
-import { ReactiveFormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-// --- Servicios y Modelos ---
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { UnitOfMeasure } from '../../Models/UnitOfMeasure';
 import { UnitOfMeasureService } from '../../Services/unit-of-measure.service';
-import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-unit-of-measure-list',
@@ -63,10 +56,10 @@ export class UnitOfMeasureListComponent implements OnInit {
   searchTerm: string = '';
 
   constructor(
-    private unitOfMeasureService: UnitOfMeasureService,
-    private router: Router,
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private readonly unitOfMeasureService: UnitOfMeasureService,
+    private readonly router: Router,
+    private readonly confirmationService: ConfirmationService,
+    private readonly messageService: MessageService
   ) {}
 
   ngOnInit(): void {
