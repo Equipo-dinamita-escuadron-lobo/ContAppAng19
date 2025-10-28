@@ -41,7 +41,7 @@
           <label for="description" class="font-semibold" style="color: var(--color-primary);">Descripción</label>
           <textarea id="description" formControlName="description"
             placeholder="Añade aquí una descripción detallada del tipo de producto, sus características y propósito..."
-            rows="3" pInputTextarea
+            rows="3" pTextarea
             class="p-inputtext w-full md:w-2/3"></textarea>
           @if (productTypeForm.get('description')?.invalid && productTypeForm.get('description')?.touched) {
           <small style="color: var(--color-error-35);">La descripción es requerida.</small>

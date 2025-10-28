@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { TextareaModule } from 'primeng/textarea';
 
 import { ProductType } from '../../Models/ProductType';
 import { ProductTypeService } from '../../Services/product-type.service';
@@ -19,6 +20,7 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     CommonModule,
     CardModule,
     InputTextModule,
+    TextareaModule,
     ButtonModule,
     ReactiveFormsModule,
     ToastModule
@@ -112,12 +114,16 @@ export class ProductTypeEditComponent implements OnInit {
             this.router.navigate(['/gen-masters/inventory/product-types/list']);
           }, 2000);
         },
-        error: (error: any) => {
-          console.error('Error al actualizar el tipo de producto:', error);
+        error: (error) => {
+          const message = error.error?.message || 'Ha ocurrido un error al actualizar el tipo de producto. Por favor, inténtelo de nuevo.';
+          let summary = 'Error';
+          if (message.includes('Ya existe')) {
+            summary = 'Registro Duplicado';
+          }
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo actualizar el tipo de producto'
+            summary: summary,
+            detail: message
           });
         }
       });
