@@ -130,6 +130,9 @@ export class ProductTypeListComponent implements OnInit {
   }
 
   deleteProductType(id: number): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
     this.confirmationService.confirm({
       message: '¿Estás seguro de que deseas eliminar este tipo de producto?',
       header: 'Confirmar Eliminación',
@@ -137,7 +140,7 @@ export class ProductTypeListComponent implements OnInit {
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
       accept: () => {
-        this.productTypeService.deleteProductType(id.toString()).subscribe({
+        this.productTypeService.deleteProductType(id.toString(), enterpriseId).subscribe({
           next: () => {
             this.messageService.add({
               severity: 'success',

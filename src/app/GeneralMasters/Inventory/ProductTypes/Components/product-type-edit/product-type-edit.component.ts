@@ -30,7 +30,7 @@ export class ProductTypeEditComponent implements OnInit {
   productTypeForm!: FormGroup;
   productTypeId: string | null = null;
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string | null = null;
   loading = false;
   currentProductType: ProductType | null = null;
   private originalProductTypeData!: ProductType;
@@ -58,9 +58,9 @@ export class ProductTypeEditComponent implements OnInit {
   }
 
   loadProductType(): void {
-    if (this.productTypeId) {
+    if (this.productTypeId && this.entData) {
       this.loading = true;
-      this.productTypeService.getProductTypeById(this.productTypeId).subscribe({
+      this.productTypeService.getProductTypeById(this.productTypeId, this.entData).subscribe({
         next: (productType) => {
           this.currentProductType = productType;
           this.originalProductTypeData = { ...productType };

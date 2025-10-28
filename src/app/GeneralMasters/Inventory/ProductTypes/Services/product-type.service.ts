@@ -42,8 +42,8 @@ export class ProductTypeService {
   }
 
   // Método para obtener un tipo de producto por su ID
-  getProductTypeById(id: string): Observable<ProductType> {
-    const url = `${environment.API_URL}product-types/${id}`;
+  getProductTypeById(id: string, enterpriseId: string): Observable<ProductType> {
+    const url = `${environment.API_URL}product-types/${id}?enterpriseId=${enterpriseId}`;
     return this.http.get<ProductType>(url);
   }
 
@@ -60,8 +60,8 @@ export class ProductTypeService {
   }
 
   // Método para eliminar un tipo de producto
-  deleteProductType(id: string): Observable<any> {
-    const url = `${environment.API_URL}product-types/${id}`;
+  deleteProductType(id: string, enterpriseId: string): Observable<any> {
+    const url = `${environment.API_URL}product-types/${id}?enterpriseId=${enterpriseId}`;
     return this.http.delete(url);
   }
 

@@ -91,7 +91,7 @@ export class ProductService {
 
             if (productsNeedingIndividualQueries.length > 0) {
               const individualQueries = productsNeedingIndividualQueries.map(product => 
-                this.productTypeService.getProductTypeById((product as any).productTypeId.toString()).pipe(
+                this.productTypeService.getProductTypeById((product as any).productTypeId.toString(), enterpriseId).pipe(
                   map(productType => ({ productId: product.id, productType }))
                 )
               );
