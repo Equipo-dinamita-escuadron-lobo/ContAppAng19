@@ -145,7 +145,7 @@ export class UnitOfMeasureListComponent implements OnInit {
 
     this.confirmationService.confirm({
       header: 'Confirmar Eliminación',
-      message: `¿Desea eliminar "${this.unitOfMeasures.find(u => u.id === unitId)?.name || 'seleccionada'}"? Esta acción no se puede deshacer.`,
+      message: `¿Desea eliminar la unidad de medida "${this.unitOfMeasures.find(u => u.id === unitId)?.name || 'seleccionada'}"?`,
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',

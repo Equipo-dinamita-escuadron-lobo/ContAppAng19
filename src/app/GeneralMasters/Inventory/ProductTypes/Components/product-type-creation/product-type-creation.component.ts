@@ -84,8 +84,6 @@ export class ProductTypeCreationComponent implements OnInit {
     const formData = { ...this.productTypeForm.value };
     formData.enterpriseId = this.entData;
 
-    console.log('Datos del formulario:', formData);
-
     this.productTypeService.createProductType(formData).subscribe({
       next: () => {
         this.messageService.add({

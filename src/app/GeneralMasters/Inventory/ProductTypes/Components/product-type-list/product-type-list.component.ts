@@ -134,18 +134,19 @@ export class ProductTypeListComponent implements OnInit {
     this.router.navigate([`/gen-masters/inventory/product-types/edit/${id}`]);
   }
 
-  deleteProductType(id: number): void {
+  deleteProductType(productType: ProductType): void {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
     this.confirmationService.confirm({
-      message: '¿Estás seguro de que deseas eliminar este tipo de producto?',
+      message: `¿Desea eliminar el tipo de producto "${productType.name}"?`,
       header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
-        this.productTypeService.deleteProductType(id.toString(), enterpriseId).subscribe({
+        this.productTypeService.deleteProductType(productType.id.toString(), enterpriseId).subscribe({
           next: () => {
             this.messageService.add({
               severity: 'success',
@@ -197,10 +198,18 @@ export class ProductTypeListComponent implements OnInit {
 
   // Métodos para manejar el estado
   getStateSeverity(state: boolean): 'success' | 'danger' {
-    return state ? 'success' : 'danger';
+    if (state) {
+      return 'success';
+    } else {
+      return 'danger';
+    }
   }
 
   formatState(state: boolean): string {
-    return state ? 'Activo' : 'Inactivo';
+    if (state) {
+      return 'Activo';
+    } else {
+      return 'Inactivo';
+    }
   }
 }
