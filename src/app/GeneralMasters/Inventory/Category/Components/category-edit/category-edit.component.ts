@@ -88,14 +88,9 @@ export class CategoryEditComponent implements OnInit {
   }
 
   getCategoryDetails(): void {
-    console.log('Iniciando getCategoryDetails()...');
-    console.log('Formulario sin editar:', this.editForm.value);
-    console.log('Cuentas disponibles:', this.accounts);
-
     const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
     this.categoryService.getCategoryById(this.categoryId, enterpriseId).subscribe({
       next: (category: Category) => {
-        console.log('Categoría obtenida:', category);
 
         this.category = category;
         // Guardar los datos originales para comparación
@@ -107,12 +102,6 @@ export class CategoryEditComponent implements OnInit {
         const saleAccount = this.accounts.find(acc => acc.id === category.saleId || acc.id === Number(category.saleId));
         const returnAccount = this.accounts.find(acc => acc.id === category.returnId || acc.id === Number(category.returnId));
 
-        console.log('Buscando cuenta de inventario con ID:', category.inventoryId, 'tipo:', typeof category.inventoryId);
-        console.log('Buscando cuenta de costo con ID:', category.costId, 'tipo:', typeof category.costId);
-        console.log('Buscando cuenta de venta con ID:', category.saleId, 'tipo:', typeof category.saleId);
-        console.log('Buscando cuenta de devolución con ID:', category.returnId, 'tipo:', typeof category.returnId);
-        console.log('Tipos de IDs de cuentas disponibles:', this.accounts.slice(0, 3).map(acc => ({ id: acc.id, tipo: typeof acc.id })));
-
         this.editForm.patchValue({
           name: category.name,
           description: category.description,
@@ -121,12 +110,6 @@ export class CategoryEditComponent implements OnInit {
           sale: saleAccount || null,
           return: returnAccount || null
         });
-
-        console.log('Formulario editado:', this.editForm.value);
-        console.log('Cuenta de inventario encontrada:', inventoryAccount);
-        console.log('Cuenta de costo encontrada:', costAccount);
-        console.log('Cuenta de venta encontrada:', saleAccount);
-        console.log('Cuenta de devolución encontrada:', returnAccount);
       },
       error: (error: any) => {
         console.error('Error obteniendo detalles de la categoría: ', error);
@@ -137,19 +120,14 @@ export class CategoryEditComponent implements OnInit {
     //cuentas
    // Cuentas
   getCuentas(): void {
-    console.log('Cargando cuentas auxiliares en edición con entData:', this.entData);
     const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
-    console.log('Enterprise ID para cuentas auxiliares en edición:', enterpriseId);
     this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (data: any[]) => {
-        console.log('Cuentas auxiliares recibidas en edición:', data);
         this.accounts = this.mapAccountToList(data);
         this.cost = this.accounts;
         this.inventory = this.accounts;
         this.sale = this.accounts;
         this.return = this.accounts;
-        console.log('Cuentas auxiliares mapeadas en edición:', this.accounts);
-        console.log('Primeras 5 cuentas auxiliares como ejemplo:', this.accounts.slice(0, 5));
         
         // Ahora que las cuentas están cargadas, obtener los detalles de la categoría
         this.getCategoryDetails();
@@ -238,8 +216,6 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
       enterpriseId: this.entData?.id || this.localStorageMethods.getIdEnterprise(),
       state: this.category.state
     };
-
-    console.log('Datos de categoría a actualizar:', categoryData);
 
     const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
     this.categoryService.updateCategory(categoryData, enterpriseId).subscribe({

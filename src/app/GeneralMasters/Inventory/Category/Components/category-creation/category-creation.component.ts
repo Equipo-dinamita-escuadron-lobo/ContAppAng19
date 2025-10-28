@@ -100,8 +100,6 @@ export class CategoryCreationComponent implements OnInit {
       state: true 
     };
 
-    console.log('Datos de categoría a enviar:', categoryData);
-
     this.categoryService.createCategory(categoryData).subscribe({
       next: () => {
         Swal.fire({
@@ -130,18 +128,14 @@ export class CategoryCreationComponent implements OnInit {
 
   // Cuentas
   getCuentas(): void {
-    console.log('Cargando cuentas auxiliares con entData:', this.entData);
     const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
-    console.log('Enterprise ID para cuentas auxiliares:', enterpriseId);
     this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (data: any[]) => {
-        console.log('Cuentas auxiliares recibidas:', data);
         this.accounts = this.mapAccountToList(data);
         this.cost = this.accounts;
         this.inventory = this.accounts;
         this.sale = this.accounts;
         this.return = this.accounts;
-        console.log('Cuentas auxiliares mapeadas:', this.accounts);
       },
       error: (error: any) => {
         console.error('Error al obtener las cuentas auxiliares:', error);
@@ -159,11 +153,15 @@ export class CategoryCreationComponent implements OnInit {
 
         // Llamamos recursivamente para cada hijo
         if (children && children.length > 0) {
-            children.forEach((child: Account) => traverse(child));
+            for (const child of children) {
+              traverse(child);
+            }
         }
     }
 
-    data.forEach(account => traverse(account));
+    for (const account of data) {
+      traverse(account);
+    }
     return result;
 }
 get filteredAccounts() {
