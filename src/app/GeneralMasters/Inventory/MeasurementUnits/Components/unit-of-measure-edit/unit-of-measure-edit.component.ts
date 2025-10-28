@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import Swal from 'sweetalert2';
 
 // --- AHORA: Importaciones Standalone y de PrimeNG ---
 import { CommonModule } from '@angular/common';
@@ -9,6 +8,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 // --- Servicios y Modelos ---
 import { UnitOfMeasure } from '../../Models/UnitOfMeasure';
@@ -23,8 +24,10 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     ReactiveFormsModule,
     RouterModule,
     InputTextModule,
-    ButtonModule
+    ButtonModule,
+    ToastModule
   ],
+  providers: [MessageService],
   templateUrl: './unit-of-measure-edit.component.html',
   styleUrls: ['./unit-of-measure-edit.component.css']
 })
@@ -44,7 +47,8 @@ export class UnitOfMeasureEditComponent implements OnInit {
     private formBuilder: FormBuilder,
     private unitOfMeasureService: UnitOfMeasureService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private messageService: MessageService
   ) {
     this.unitOfMeasureForm = this.formBuilder.group({
       name: ['', Validators.required],
@@ -74,14 +78,12 @@ export class UnitOfMeasureEditComponent implements OnInit {
       },
       error => {
         this.isLoading = false;
-        Swal.fire({
-          title: 'Error',
-          text: 'No se pudo cargar la información de la unidad de medida.',
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
-        }).then(() => {
-          this.goBack();
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cargar la información de la unidad de medida.'
         });
+        this.goBack();
       }
     );
   }
@@ -95,11 +97,10 @@ export class UnitOfMeasureEditComponent implements OnInit {
       const hasChanges = this.hasFormChanges(formData);
 
       if (!hasChanges) {
-        Swal.fire({
-          title: 'Sin cambios',
-          text: 'No se han detectado cambios en la unidad de medida.',
-          icon: 'info',
-          confirmButtonText: 'Aceptar'
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Sin cambios',
+          detail: 'No se han detectado cambios en la unidad de medida.'
         });
         return;
       }
@@ -113,30 +114,29 @@ export class UnitOfMeasureEditComponent implements OnInit {
 
       this.unitOfMeasureService.updateUnitOfMeasureId(this.currentUnitId, updatedUnitData, this.entData).subscribe(
         () => {
-          Swal.fire({
-            title: '¡Éxito!',
-            text: 'La unidad de medida ha sido actualizada exitosamente.',
-            icon: 'success',
-            confirmButtonText: 'Aceptar'
-          }).then(() => {
-            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'La unidad de medida ha sido actualizada exitosamente.',
+            life: 3000
           });
+          setTimeout(() => {
+            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+          }, 1500);
         },
         error => {
-          Swal.fire({
-            title: 'Error',
-            text: 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.',
-            icon: 'error',
-            confirmButtonText: 'Aceptar'
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.'
           });
         }
       );
     } else {
-      Swal.fire({
-        title: 'Formulario incompleto',
-        text: 'Por favor, complete todos los campos requeridos.',
-        icon: 'warning',
-        confirmButtonText: 'Aceptar'
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Por favor, complete todos los campos requeridos.'
       });
     }
   }

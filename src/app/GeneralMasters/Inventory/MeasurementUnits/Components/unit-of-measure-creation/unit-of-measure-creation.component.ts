@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import Swal from 'sweetalert2';
 
 // --- AHORA: Importaciones Standalone y de PrimeNG ---
 import { CommonModule } from '@angular/common';
@@ -9,6 +8,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 // --- Servicios y Modelos ---
 import { UnitOfMeasureService } from '../../Services/unit-of-measure.service';
@@ -22,8 +23,10 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     ReactiveFormsModule,
     RouterModule,
     InputTextModule,
-    ButtonModule
+    ButtonModule,
+    ToastModule
   ],
+  providers: [MessageService],
   templateUrl: './unit-of-measure-creation.component.html',
   styleUrls: ['./unit-of-measure-creation.component.css']
 })
@@ -36,7 +39,8 @@ export class UnitOfMeasureCreationComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private unitOfMeasureService: UnitOfMeasureService,
-    private router: Router
+    private router: Router,
+    private messageService: MessageService
   ) {
     // Inicializa el formulario en el constructor
     this.unitOfMeasureForm = this.formBuilder.group({
@@ -62,30 +66,29 @@ export class UnitOfMeasureCreationComponent implements OnInit {
 
       this.unitOfMeasureService.createUnitOfMeasure(unitOfMeasureData).subscribe(
         () => {
-          Swal.fire({
-            title: '¡Éxito!',
-            text: 'La unidad de medida ha sido creada exitosamente.',
-            icon: 'success',
-            confirmButtonText: 'Aceptar'
-          }).then(() => {
-            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'La unidad de medida ha sido creada exitosamente.',
+            life: 3000
           });
+          setTimeout(() => {
+            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+          }, 1500);
         },
         error => {
-          Swal.fire({
-            title: 'Error',
-            text: 'Ha ocurrido un error al crear la unidad de medida. Por favor, inténtelo de nuevo.',
-            icon: 'error',
-            confirmButtonText: 'Aceptar'
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Ha ocurrido un error al crear la unidad de medida. Por favor, inténtelo de nuevo.'
           });
         }
       );
     } else {
-      Swal.fire({
-        title: 'Formulario incompleto',
-        text: 'Por favor, complete todos los campos requeridos.',
-        icon: 'warning',
-        confirmButtonText: 'Aceptar'
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Por favor, complete todos los campos requeridos.'
       });
     }
   }
