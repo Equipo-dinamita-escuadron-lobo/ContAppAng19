@@ -38,7 +38,7 @@
           type="text"
           [(ngModel)]="searchTerm"
           (input)="onSearchChange()"
-          placeholder="Buscar por nombre, abreviatura, descripción..."
+          placeholder="Buscar unidad (nombre/abreviatura)..."
           class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
         />
       </p-iconfield>
@@ -61,12 +61,6 @@
       <ng-template pTemplate="header">
         <tr>
           <!-- Cabeceras de tabla con el estilo de la guía -->
-          <th
-            pSortableColumn="id"
-            class="font-semibold text-primary border-b-2 border-primary"
-          >
-            ID <p-sortIcon field="id"></p-sortIcon>
-          </th>
           <th
             pSortableColumn="name"
             class="font-semibold text-primary border-b-2 border-primary"
@@ -100,7 +94,6 @@
 
       <ng-template pTemplate="body" let-unit>
         <tr>
-          <td class="py-3">{{ unit.id }}</td>
           <td class="py-3">{{ unit.name }}</td>
           <td class="py-3">{{ unit.abbreviation }}</td>
           <td class="py-3">{{ unit.description }}</td>
@@ -141,7 +134,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td
-            colspan="6"
+            colspan="5"
             class="text-center py-6 font-family-sans text-neutral-50"
           >
             No se encontraron unidades de medida.
@@ -152,7 +145,7 @@
       <ng-template pTemplate="loadingbody">
         <tr>
           <td
-            colspan="6"
+            colspan="5"
             class="text-center py-6 font-family-sans text-neutral-50"
           >
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
