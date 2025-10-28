@@ -57,7 +57,7 @@ export class UnitOfMeasureCreationComponent implements OnInit {
       const unitOfMeasureData = {
         ...this.unitOfMeasureForm.value,
         enterpriseId: this.entData,
-        state: 'ACTIVE'
+        state: true
       };
 
       this.unitOfMeasureService.createUnitOfMeasure(unitOfMeasureData).subscribe(

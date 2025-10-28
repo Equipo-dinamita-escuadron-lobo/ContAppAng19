@@ -13,6 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { ProductType } from '../../../ProductTypes/Models/ProductType';
+import { UnitOfMeasure } from '../../../MeasurementUnits/Models/UnitOfMeasure';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ProductService } from '../../Services/product.service';
 import { UnitOfMeasureService } from '../../../MeasurementUnits/Services/unit-of-measure.service';
@@ -112,9 +113,13 @@ export class ProductCreationComponent implements OnInit {
   }
 
   getUnitOfMeasures(): void {
-    this.unitOfMeasureService.getUnitOfMeasures(this.entData).subscribe({
-      next: (data) => this.unitOfMeasures = data,
-      error: (err) => console.error('Error al obtener las unidades de medida:', err)
+    this.unitOfMeasureService.findActivate(this.entData).subscribe({
+      next: (data: UnitOfMeasure[]) => {
+        this.unitOfMeasures = data;
+      },
+      error: (err: any) => {
+        console.error('Error al obtener las unidades de medida:', err);
+      }
     });
   }
 

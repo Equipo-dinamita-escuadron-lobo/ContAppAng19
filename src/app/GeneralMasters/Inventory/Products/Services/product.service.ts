@@ -29,7 +29,7 @@ export class ProductService {
     return this.http.get<Product[]>(`${API_URL}products/findAll/${enterpriseId}`).pipe(
       switchMap((products: Product[]) => {
         // Obtener datos relacionados
-        const unitOfMeasures$ = this.unitOfMeasureService.getUnitOfMeasures(enterpriseId);
+        const unitOfMeasures$ = this.unitOfMeasureService.findActivate(enterpriseId);
         const categories$ = this.categoryService.getCategories(enterpriseId);
         const productTypes$ = this.productTypeService.getProductTypes(enterpriseId);
         const taxes$ = this.taxService.getTaxes(enterpriseId).pipe(

@@ -12,6 +12,7 @@ import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ProductType } from '../../../ProductTypes/Models/ProductType';
+import { UnitOfMeasure } from '../../../MeasurementUnits/Models/UnitOfMeasure';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ProductService } from '../../Services/product.service';
 import { UnitOfMeasureService } from '../../../MeasurementUnits/Services/unit-of-measure.service';
@@ -105,7 +106,7 @@ export class ProductEditComponent implements OnInit {
 
   loadDropdownData(): void {
     if (!this.entData) return;
-    this.unitOfMeasureService.getUnitOfMeasures(this.entData).subscribe(data => this.unitOfMeasures = data);
+    this.unitOfMeasureService.findActivate(this.entData).subscribe(data => this.unitOfMeasures = data);
     this.categoryService.getCategories(this.entData).subscribe(data => this.categories = data);
     this.productTypeService.getProductTypes(this.entData).subscribe((data: any) => this.productTypes = data);
     this.taxService.getTaxes(this.entData).subscribe({

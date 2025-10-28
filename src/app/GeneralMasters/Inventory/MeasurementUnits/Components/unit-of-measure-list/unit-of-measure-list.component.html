@@ -36,8 +36,8 @@
         <input
           pInputText
           type="text"
-          #filterInput
-          (input)="unitsTable.filterGlobal(filterInput.value, 'contains')"
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
           placeholder="Buscar por nombre, abreviatura, descripción..."
           class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
         />
@@ -48,10 +48,12 @@
     <p-table
       #unitsTable
       [value]="unitOfMeasures"
+      [lazy]="true"
+      (onLazyLoad)="loadUnitsLazy($event)"
       [paginator]="true"
-      [rows]="10"
+      [rows]="currentSize"
       [rowsPerPageOptions]="[5, 10, 20]"
-      [globalFilterFields]="['name', 'abbreviation', 'description']"
+      [totalRecords]="totalRecords"
       styleClass="p-datatable-striped font-family-sans"
       [tableStyle]="{ 'min-width': '50rem' }"
       responsiveLayout="scroll"

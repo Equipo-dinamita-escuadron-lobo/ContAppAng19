@@ -62,7 +62,7 @@ export class UnitOfMeasureEditComponent implements OnInit {
 
   loadUnitData(): void {
     this.isLoading = true;
-    this.unitOfMeasureService.getUnitOfMeasuresId(this.currentUnitId).subscribe(
+    this.unitOfMeasureService.getUnitOfMeasuresId(this.currentUnitId, this.entData).subscribe(
       (unitOfMeasure: UnitOfMeasure) => {
         this.originalUnitData = unitOfMeasure;
         this.unitOfMeasureForm.patchValue({
@@ -112,7 +112,7 @@ export class UnitOfMeasureEditComponent implements OnInit {
         state: this.originalUnitData.state
       };
 
-      this.unitOfMeasureService.updateUnitOfMeasureId(this.currentUnitId, updatedUnitData).subscribe(
+      this.unitOfMeasureService.updateUnitOfMeasureId(this.currentUnitId, updatedUnitData, this.entData).subscribe(
         () => {
           Swal.fire({
             title: '¡Éxito!',
