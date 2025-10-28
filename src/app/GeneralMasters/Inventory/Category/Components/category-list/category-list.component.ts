@@ -19,6 +19,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { Category } from '../../Models/Category';
 import { CategoryService } from '../../Services/category.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
+import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
+import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
 
 @Component({
   selector: 'app-category-list',
@@ -61,7 +63,8 @@ export class CategoryListComponent implements OnInit {
     private readonly categoryService: CategoryService,
     private readonly router: Router,
     private readonly confirmationService: ConfirmationService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly chartAccountService: ChartAccountService
   ) { }
 
   ngOnInit(): void {
@@ -126,16 +129,38 @@ export class CategoryListComponent implements OnInit {
 
   //cuentas
   getCuentas(): void {
-    // TODO: Implementar servicio de cuentas cuando esté disponible
-    // Por ahora usamos datos mock del servicio
-    this.categoryService.getCuentas().subscribe({
+    const enterpriseId = this.getEnterpriseId();
+    this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (data: any[]) => {
-        this.accounts = data;
+        this.accounts = this.mapAccountToList(data);
       },
       error: (error: any) => {
+        console.error('Error al obtener las cuentas auxiliares:', error);
         this.accounts = [];
       }
     });
+  }
+
+  mapAccountToList(data: Account[]): Account[] {
+    let result: Account[] = [];
+
+    function traverse(account: Account) {
+        // Clonamos el objeto cuenta sin los hijos
+        let { children, ...accountWithoutChildren } = account;
+        result.push(accountWithoutChildren as Account);
+
+        // Llamamos recursivamente para cada hijo
+        if (children && children.length > 0) {
+            for (const child of children) {
+              traverse(child);
+            }
+        }
+    }
+
+    for (const account of data) {
+      traverse(account);
+    }
+    return result;
   }
 
   getCategoryName(id: number | string | null | undefined): string {
@@ -167,7 +192,7 @@ export class CategoryListComponent implements OnInit {
     });
     
     if (!account) {
-      return `No encontrado (ID: ${numericId})`;
+      return `N/A`;
     }
     
     // Retornar código y descripción de la cuenta
@@ -258,10 +283,18 @@ export class CategoryListComponent implements OnInit {
 
   // Métodos para manejar el estado
   getStateSeverity(state: boolean): 'success' | 'danger' {
-    return state ? 'success' : 'danger';
+    if (state) {
+      return 'success';
+    } else {
+      return 'danger';
+    }
   }
 
   formatState(state: boolean): string {
-    return state ? 'Activo' : 'Inactivo';
+    if (state) {
+      return 'Activo';
+    } else {
+      return 'Inactivo';
+    }
   }
 }
