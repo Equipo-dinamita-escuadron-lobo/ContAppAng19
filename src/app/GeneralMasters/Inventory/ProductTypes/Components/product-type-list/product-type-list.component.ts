@@ -44,9 +44,16 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
 })
 export class ProductTypeListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string | null = null;
   productTypes: ProductType[] = [];
   loading: boolean = false;
+
+  totalRecords: number = 0;
+  currentPage: number = 0;
+  currentSize: number = 10;
+  currentSortField: string = 'name';
+  currentSortOrder: string = 'asc';
+  searchTerm: string = '';
 
   constructor(
     private readonly productTypeService: ProductTypeService,
@@ -57,31 +64,61 @@ export class ProductTypeListComponent implements OnInit {
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.getIdEnterprise();
-    this.loadProductTypes();
+    if (this.entData) {
+      this.loadProductTypesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
+    }
   }
 
-  loadProductTypes(): void {
-    this.loading = true;
+  private getEnterpriseId(): string {
+    return this.entData || '';
+  }
+
+  loadProductTypesLazy(event: any): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    // Calcular página y tamaño desde los controles de PrimeNG
+    this.currentPage = Math.floor(event.first / event.rows);
+    this.currentSize = event.rows;
     
-    this.productTypeService.getProductTypes(this.entData).subscribe({
-      next: (data: ProductType[]) => {
-        // Asegurar que todos los tipos de producto tengan un estado definido
-        this.productTypes = data.map(productType => ({
-          ...productType,
-          state: productType.state ?? true // Usar nullish coalescing para mayor claridad
-        }));
-        this.loading = false;
+    // Manejar ordenamiento si está presente
+    if (event.sortField) {
+      this.currentSortField = event.sortField;
+      this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
+    }
+    
+    this.productTypeService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
+        this.productTypes = page.content || [];
+        this.totalRecords = page?.totalElements || 0;
       },
       error: (error: any) => {
-        console.error('Error al cargar los tipos de producto:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
           detail: 'No se pudieron cargar los tipos de producto.'
         });
-        this.loading = false;
       }
     });
+  }
+
+  reloadCurrentPage(): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.productTypeService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
+        this.productTypes = page.content || [];
+        this.totalRecords = page?.totalElements || 0;
+      }
+    });
+  }
+
+  onSearchChange(): void {
+    // Resetear a la primera página cuando se busca
+    this.currentPage = 0;
+    // Recargar datos con el nuevo término de búsqueda
+    this.loadProductTypesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
   }
 
   redirectTo(route: string): void {
@@ -107,7 +144,7 @@ export class ProductTypeListComponent implements OnInit {
               summary: 'Éxito',
               detail: 'Tipo de producto eliminado correctamente'
             });
-            this.loadProductTypes();
+            this.reloadCurrentPage();
           },
           error: (error: any) => {
             console.error('Error al eliminar el tipo de producto:', error);
@@ -124,11 +161,13 @@ export class ProductTypeListComponent implements OnInit {
 
   // Método para cambiar el estado del tipo de producto
   changeProductTypeState(productType: ProductType): void {
-    // Guardar el estado actual
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
     const newState = productType.state;
-    const previousState = !newState; // El estado anterior es el opuesto al actual
+    const previousState = !newState;
     
-    this.productTypeService.changeProductTypeState(productType.id).subscribe({
+    this.productTypeService.changeProductTypeState(productType.id, enterpriseId).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
@@ -139,7 +178,6 @@ export class ProductTypeListComponent implements OnInit {
       error: (error: any) => {
         // Revertir el cambio si hay error
         productType.state = previousState;
-        console.error('Error al cambiar el estado del tipo de producto:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
