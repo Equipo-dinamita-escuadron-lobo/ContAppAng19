@@ -230,7 +230,7 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: 'Actualización exitosa',
+          summary: 'Actualización Exitosa',
           detail: 'Se ha actualizado la categoría con éxito.'
         });
         this.router.navigate(['/gen-masters/inventory/categories/list']); // Redirigir a la lista

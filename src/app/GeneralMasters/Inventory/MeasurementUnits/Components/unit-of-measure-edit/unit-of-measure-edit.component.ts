@@ -112,7 +112,7 @@ export class UnitOfMeasureEditComponent implements OnInit {
         next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización Exitosa',
             detail: 'La unidad de medida ha sido actualizada exitosamente.',
             life: 3000
           });
