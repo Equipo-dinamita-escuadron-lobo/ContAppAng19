@@ -63,13 +63,6 @@
       <ng-template pTemplate="header">
         <tr>
           <th
-            pSortableColumn="id"
-            scope="col"
-            class="font-semibold text-primary border-b-2 border-primary"
-          >
-            ID <p-sortIcon field="id"></p-sortIcon>
-          </th>
-          <th
             pSortableColumn="name"
             scope="col"
             class="font-semibold text-primary border-b-2 border-primary"
@@ -77,11 +70,10 @@
             Nombre <p-sortIcon field="name"></p-sortIcon>
           </th>
           <th
-            pSortableColumn="description"
             scope="col"
             class="font-semibold text-primary border-b-2 border-primary"
           >
-            Descripción <p-sortIcon field="description"></p-sortIcon>
+            Descripción
           </th>
           <th
             scope="col"
@@ -100,7 +92,6 @@
 
       <ng-template pTemplate="body" let-productType>
         <tr class="text-neutral-20">
-          <td class="py-3">{{ productType.id }}</td>
           <td class="py-3">{{ productType.name }}</td>
           <td class="py-3">{{ productType.description }}</td>
           <td class="py-3 text-center">
@@ -139,7 +130,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="5" class="text-center py-6 font-family-sans text-neutral-50">
+          <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron tipos de productos.
           </td>
         </tr>
@@ -147,7 +138,7 @@
 
       <ng-template pTemplate="loadingbody">
         <tr>
-          <td colspan="5" class="text-center py-6 font-family-sans text-neutral-50">
+          <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             <p class="mt-2 text-primary">Cargando tipos de producto...</p>
           </td>
