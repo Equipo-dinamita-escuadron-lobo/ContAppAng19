@@ -129,7 +129,7 @@
               <p-toggleSwitch
                 [(ngModel)]="unit.state"
                 (onChange)="changeUnitState(unit)"
-                [pTooltip]="unit.state ? 'Activo' : 'Inactivo'"
+                [pTooltip]="formatState(unit.state)"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"

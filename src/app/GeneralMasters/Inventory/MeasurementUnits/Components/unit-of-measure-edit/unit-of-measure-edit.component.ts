@@ -176,4 +176,9 @@ export class UnitOfMeasureEditComponent implements OnInit {
     }
     return '';
   }
+
+  // Getter para mantener dumb templates
+  get isSubmitDisabled(): boolean {
+    return this.unitOfMeasureForm.invalid || !this.hasChanges();
+  }
 }

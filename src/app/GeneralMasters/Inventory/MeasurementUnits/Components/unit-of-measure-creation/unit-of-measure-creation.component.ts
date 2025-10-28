@@ -111,4 +111,9 @@ export class UnitOfMeasureCreationComponent implements OnInit {
     }
     return '';
   }
+
+
+  get isSubmitDisabled(): boolean {
+    return this.unitOfMeasureForm.invalid;
+  }
 }
