@@ -36,11 +36,11 @@ export class ProductTypeEditComponent implements OnInit {
   private originalProductTypeData!: ProductType;
 
   constructor(
-    private route: ActivatedRoute,
-    private formBuilder: FormBuilder,
-    private productTypeService: ProductTypeService,
-    private router: Router,
-    private messageService: MessageService
+    private readonly route: ActivatedRoute,
+    private readonly formBuilder: FormBuilder,
+    private readonly productTypeService: ProductTypeService,
+    private readonly router: Router,
+    private readonly messageService: MessageService
   ) {}
 
   ngOnInit(): void {

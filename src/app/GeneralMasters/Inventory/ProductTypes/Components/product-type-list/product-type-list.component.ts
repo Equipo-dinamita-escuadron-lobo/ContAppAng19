@@ -19,7 +19,6 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ProductType } from '../../Models/ProductType';
 import { ProductTypeService } from '../../Services/product-type.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
-import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-product-type-list',
@@ -50,10 +49,10 @@ export class ProductTypeListComponent implements OnInit {
   loading: boolean = false;
 
   constructor(
-    private productTypeService: ProductTypeService,
-    private router: Router,
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private readonly productTypeService: ProductTypeService,
+    private readonly router: Router,
+    private readonly confirmationService: ConfirmationService,
+    private readonly messageService: MessageService
   ) { }
 
   ngOnInit(): void {

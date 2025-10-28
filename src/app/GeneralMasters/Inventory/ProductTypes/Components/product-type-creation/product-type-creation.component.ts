@@ -4,7 +4,6 @@ import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
 
-// --- Importaciones Standalone y de PrimeNG ---
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
@@ -12,7 +11,6 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { InputTextarea } from 'primeng/inputtextarea';
 
-import { ProductType } from '../../Models/ProductType';
 import { ProductTypeService } from '../../Services/product-type.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 
@@ -39,12 +37,11 @@ export class ProductTypeCreationComponent implements OnInit {
   formSubmitAttempt = false;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private productTypeService: ProductTypeService,
-    private router: Router,
-    private messageService: MessageService
+    private readonly formBuilder: FormBuilder,
+    private readonly productTypeService: ProductTypeService,
+    private readonly router: Router,
+    private readonly messageService: MessageService
   ) {
-    // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     this.productTypeForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
       description: ['', [Validators.required, Validators.maxLength(500)]]
