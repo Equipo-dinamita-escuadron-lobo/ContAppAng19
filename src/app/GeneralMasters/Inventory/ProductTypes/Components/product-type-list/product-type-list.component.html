@@ -124,7 +124,7 @@
               <p-toggleSwitch
                 [(ngModel)]="productType.state"
                 (onChange)="changeProductTypeState(productType)"
-                [pTooltip]="productType.state ? 'Activo' : 'Inactivo'"
+                [pTooltip]="formatState(productType.state)"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"

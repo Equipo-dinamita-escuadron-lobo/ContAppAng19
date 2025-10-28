@@ -112,7 +112,7 @@ export class ProductTypeEditComponent implements OnInit {
           
           setTimeout(() => {
             this.router.navigate(['/gen-masters/inventory/product-types/list']);
-          }, 2000);
+          }, 1500);
         },
         error: (error) => {
           const message = error.error?.message || 'Ha ocurrido un error al actualizar el tipo de producto. Por favor, inténtelo de nuevo.';
@@ -178,5 +178,18 @@ export class ProductTypeEditComponent implements OnInit {
   hasChanges(): boolean {
     if (!this.originalProductTypeData) return false;
     return this.hasFormChanges();
+  }
+
+  // Getters para mantener dumb templates
+  get isNameInvalid(): boolean {
+    return this.isFieldInvalid('name');
+  }
+
+  get isDescriptionInvalid(): boolean {
+    return this.isFieldInvalid('description');
+  }
+
+  get isSubmitDisabled(): boolean {
+    return this.productTypeForm.invalid || !this.hasChanges();
   }
 }
