@@ -9,7 +9,6 @@ import { BankService, Bank } from '../../services/bank.service';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -19,8 +18,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 
 // PrimeNG Services
-import { MessageService } from 'primeng/api';
-import { ConfirmationService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-bank-list',
@@ -44,23 +42,24 @@ import { ConfirmationService } from 'primeng/api';
   styleUrl: './bank-list.component.css'
 })
 export class BankListComponent implements OnInit {
-  private bankService = inject(BankService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
-  private localStorageMethod = inject(LocalStorageMethods);
-  private router = inject(Router);
+  private readonly bankService = inject(BankService);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly localStorageMethod = inject(LocalStorageMethods);
+  private readonly router = inject(Router);
 
   private enterpriseId: string = '';
 
   loading = false;
   banks: Bank[] = [];
-  filteredBanks: Bank[] = [];
 
   pageSize = 10;
   totalRecords = 0;
   currentPage = 0;
 
   searchTerm = '';
+  sortField: string | undefined;
+  sortOrder: string | undefined;
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
@@ -70,18 +69,17 @@ export class BankListComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo obtener el ID de la empresa'
+        detail: 'No se pudo obtener el identificador de la empresa'
       });
     }
   }
   private loadBanks(): void {
     this.loading = true;
-    this.bankService.findAll(this.enterpriseId, this.currentPage, this.pageSize)
+    this.bankService.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
       .subscribe({
         next: (response) => {
           this.banks = response.content;
-          this.totalRecords = response.totalElements;
-          this.applySearch();
+          this.totalRecords = response.page?.totalElements || response.totalElements || 0;
           this.loading = false;
         },
         error: (error) => {
@@ -96,18 +94,31 @@ export class BankListComponent implements OnInit {
   }
 
   onSearch(): void {
-    this.applySearch();
+    this.currentPage = 0; // Reset to first page when searching
+    this.loadBanks();
   }
 
-  private applySearch(): void {
-    if (!this.searchTerm.trim()) {
-      this.filteredBanks = [...this.banks];
-    } else {
-      const term = this.searchTerm.toLowerCase();
-      this.filteredBanks = this.banks.filter(bank =>
-        bank.codigo.toLowerCase().includes(term) ||
-        bank.nombre.toLowerCase().includes(term)
-      );
+  onSort(event: any): void {
+    const newSortField = event.field;
+    const newSortOrder = event.order === 1 ? 'asc' : 'desc';
+
+    // Only reload if sort parameters actually changed
+    if (this.sortField !== newSortField || this.sortOrder !== newSortOrder) {
+      this.sortField = newSortField || undefined;
+      this.sortOrder = newSortOrder || undefined;
+      this.currentPage = 0; // Reset to first page when sorting
+      this.loadBanks();
+    }
+  }
+
+  onPage(event: any): void {
+    const newPage = Math.floor(event.first / event.rows);
+    const newRows = event.rows;
+
+    if (this.currentPage !== newPage || this.pageSize !== newRows) {
+      this.currentPage = newPage;
+      this.pageSize = newRows;
+      this.loadBanks();
     }
   }
 
@@ -121,7 +132,7 @@ export class BankListComponent implements OnInit {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
-            detail: `Estado del banco '${bank.nombre}' cambiado correctamente`
+            detail: `Estado del banco '${bank.name}' cambiado correctamente`
           });
         },
         error: (error) => {
@@ -137,7 +148,7 @@ export class BankListComponent implements OnInit {
 
   confirmDelete(bank: Bank): void {
     this.confirmationService.confirm({
-      message: `¿Desea eliminar el banco "${bank.nombre}"?`,
+      message: `¿Desea eliminar "${bank.name}"?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',
@@ -185,7 +196,7 @@ export class BankListComponent implements OnInit {
     this.router.navigate(['/gen-masters/bank-accounts']);
   }
 
-  getCurrencyDisplay(currencyCode: string): string {
-    return this.bankService.getCurrencyDisplay(currencyCode);
+  getCurrenciesDisplay(currencyCodes: string[]): string {
+    return this.bankService.getCurrenciesDisplay(currencyCodes);
   }
 }

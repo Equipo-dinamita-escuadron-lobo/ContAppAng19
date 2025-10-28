@@ -10,7 +10,7 @@ export interface BankAccount {
   accountNumber: string;
   bank: Bank;
   accountType: string;
-  cuentaContable: string;
+  accountingAccountId: string;
   status: boolean;
   idEnterprise?: string;
 }
@@ -20,7 +20,7 @@ export interface BankAccountCreateRequest {
   accountNumber: string;
   bankId: number;
   accountType: string;
-  cuentaContable: string;
+  accountingAccountId: string;
 }
 
 export interface BankAccountUpdateRequest {
@@ -28,7 +28,7 @@ export interface BankAccountUpdateRequest {
   accountNumber: string;
   bankId: number;
   accountType: string;
-  cuentaContable: string;
+  accountingAccountId: string;
   status: boolean;
   idEnterprise: string;
 }
@@ -40,10 +40,16 @@ export interface AccountType {
 
 export interface PageResponse<T> {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  page?: {
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  };
 }
 
 @Injectable({
@@ -54,10 +60,22 @@ export class BankAccountsService {
   private readonly API_BASE = environment.API_URL + 'accountCatalogue/bank-accounts';
 
   /**
-   * Obtiene la lista de cuentas bancarias paginada
+   * Obtiene la lista de cuentas bancarias paginada con filtros de búsqueda y ordenamiento
    */
-  findAll(enterpriseId: string, page: number = 0, size: number = 10): Observable<PageResponse<BankAccount>> {
-    return this.http.get<PageResponse<BankAccount>>(`${this.API_BASE}/findAll/${enterpriseId}?page=${page}&size=${size}`)
+  findAll(enterpriseId: string, page: number = 0, size: number = 10, sortField?: string, sortOrder?: string, search?: string): Observable<PageResponse<BankAccount>> {
+    let url = `${this.API_BASE}/findAll/${enterpriseId}?page=${page}&size=${size}`;
+
+    if (sortField?.trim()) {
+      url += `&sortField=${sortField}`;
+    }
+    if (sortOrder?.trim()) {
+      url += `&sortOrder=${sortOrder}`;
+    }
+    if (search?.trim()) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+
+    return this.http.get<PageResponse<BankAccount>>(url)
       .pipe(catchError(this.handleError));
   }
 
@@ -65,7 +83,7 @@ export class BankAccountsService {
    * Obtiene la lista de cuentas bancarias activas
    */
   findAllActive(enterpriseId: string, page: number = 0, size: number = 100): Observable<PageResponse<BankAccount>> {
-    return this.http.get<PageResponse<BankAccount>>(`${this.API_BASE}/findAllByStatus/${enterpriseId}?status=true&page=${page}&size=${size}`)
+    return this.http.get<PageResponse<BankAccount>>(`${this.API_BASE}/findAllActive/${enterpriseId}?page=${page}&size=${size}`)
       .pipe(catchError(this.handleError));
   }
 
@@ -137,11 +155,18 @@ export class BankAccountsService {
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Capturar mensaje del backend
       if (typeof error.error === 'string' && error.error.trim()) {
         errorMessage = error.error;
       } else if (error.error?.message) {
         errorMessage = error.error.message;
+      } else if (error.error?.fieldErrors && typeof error.error.fieldErrors === 'object') {
+        const fieldErrorMessages = Object.values(error.error.fieldErrors);
+        errorMessage = fieldErrorMessages.join('. ');
+      } else if (error.error?.errors && Array.isArray(error.error.errors)) {
+        const validationErrors = error.error.errors.map((err: any) => err.defaultMessage || err.message);
+        errorMessage = validationErrors.join('. ');
+      } else if (error.error?.field && error.error?.defaultMessage) {
+        errorMessage = error.error.defaultMessage;
       } else if (error.message) {
         errorMessage = error.message;
       }

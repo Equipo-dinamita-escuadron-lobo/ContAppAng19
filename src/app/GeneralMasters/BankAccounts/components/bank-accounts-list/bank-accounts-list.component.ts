@@ -19,8 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 
 // PrimeNG Services
-import { MessageService } from 'primeng/api';
-import { ConfirmationService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 
 @Component({
@@ -45,19 +44,18 @@ import { ConfirmationService } from 'primeng/api';
   styleUrl: './bank-accounts-list.component.css'
 })
 export class BankAccountsListComponent implements OnInit {
-  private bankAccountsService = inject(BankAccountsService);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
-  private router = inject(Router);
-  private localStorageMethod = inject(LocalStorageMethods);
-  private chartAccountService = inject(ChartAccountService);
+  private readonly bankAccountsService = inject(BankAccountsService);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly router = inject(Router);
+  private readonly localStorageMethod = inject(LocalStorageMethods);
+  private readonly chartAccountService = inject(ChartAccountService);
   
   private enterpriseId: string = '';
 
   loading = false;
 
   bankAccounts: BankAccount[] = [];
-  filteredBankAccounts: BankAccount[] = [];
   accountingAccountsMap: Map<string, string> = new Map();
 
   pageSize = 10;
@@ -65,6 +63,8 @@ export class BankAccountsListComponent implements OnInit {
   currentPage = 0;
 
   searchTerm = '';
+  sortField: string | undefined;
+  sortOrder: string | undefined;
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
@@ -84,7 +84,9 @@ export class BankAccountsListComponent implements OnInit {
     this.chartAccountService.getListAuxiliaryAccounts(this.enterpriseId).subscribe({
       next: (accounts) => {
         accounts.forEach(account => {
-          this.accountingAccountsMap.set(account.code, `${account.code} - ${account.description}`);
+          if (account.id != null) {
+            this.accountingAccountsMap.set(account.id.toString(), `${account.code} - ${account.description}`);
+          }
         });
       },
       error: () => {
@@ -95,12 +97,11 @@ export class BankAccountsListComponent implements OnInit {
 
   private loadBankAccounts(): void {
     this.loading = true;
-    this.bankAccountsService.findAll(this.enterpriseId, this.currentPage, this.pageSize)
+    this.bankAccountsService.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
       .subscribe({
         next: (response) => {
           this.bankAccounts = response.content;
-          this.totalRecords = response.totalElements;
-          this.applySearch();
+          this.totalRecords = response.page?.totalElements || response.totalElements || 0;
           this.loading = false;
         },
         error: (error) => {
@@ -117,21 +118,31 @@ export class BankAccountsListComponent implements OnInit {
 
   // Search Functionality
   onSearch(): void {
-    this.applySearch();
+    this.currentPage = 0; // Reset to first page when searching
+    this.loadBankAccounts();
   }
 
+  onSort(event: any): void {
+    const newSortField = event.field;
+    const newSortOrder = event.order === 1 ? 'asc' : 'desc';
 
-  private applySearch(): void {
-    if (!this.searchTerm.trim()) {
-      this.filteredBankAccounts = [...this.bankAccounts];
-    } else {
-      const term = this.searchTerm.toLowerCase();
-      this.filteredBankAccounts = this.bankAccounts.filter(account =>
-        account.accountNumber.toString().includes(term) ||
-        account.bank?.nombre?.toLowerCase().includes(term) ||
-        account.bank?.codigo?.toLowerCase().includes(term) ||
-        account.cuentaContable.toLowerCase().includes(term)
-      );
+    // Only reload if sort parameters actually changed
+    if (this.sortField !== newSortField || this.sortOrder !== newSortOrder) {
+      this.sortField = newSortField || undefined;
+      this.sortOrder = newSortOrder || undefined;
+      this.currentPage = 0; // Reset to first page when sorting
+      this.loadBankAccounts();
+    }
+  }
+
+  onPage(event: any): void {
+    const newPage = Math.floor(event.first / event.rows);
+    const newRows = event.rows;
+
+    if (this.currentPage !== newPage || this.pageSize !== newRows) {
+      this.currentPage = newPage;
+      this.pageSize = newRows;
+      this.loadBankAccounts();
     }
   }
 
@@ -215,7 +226,7 @@ export class BankAccountsListComponent implements OnInit {
     return this.bankAccountsService.getAccountTypeDisplay(accountType);
   }
 
-  getAccountingAccountDisplay(accountCode: string): string {
-    return this.accountingAccountsMap.get(accountCode) || accountCode;
+  getAccountingAccountDisplay(accountingAccountId: string): string {
+    return this.accountingAccountsMap.get(accountingAccountId.toString()) || accountingAccountId;
   }
 }

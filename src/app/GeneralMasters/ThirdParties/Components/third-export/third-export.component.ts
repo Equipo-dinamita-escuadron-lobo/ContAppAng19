@@ -198,7 +198,6 @@ export class ThirdExportComponent implements OnInit {
         }, 2000);
       },
       error: (err) => {
-        console.error('Error al exportar terceros:', err);
 
         // Intentar leer el mensaje de error si es un blob
         if (err.error instanceof Blob) {
