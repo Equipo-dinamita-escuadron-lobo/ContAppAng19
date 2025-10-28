@@ -107,7 +107,7 @@ export class ProductEditComponent implements OnInit {
   loadDropdownData(): void {
     if (!this.entData) return;
     this.unitOfMeasureService.findActivate(this.entData).subscribe(data => this.unitOfMeasures = data);
-    this.categoryService.getCategories(this.entData).subscribe(data => this.categories = data);
+    this.categoryService.findActivate(this.entData).subscribe(data => this.categories = data);
     this.productTypeService.getProductTypes(this.entData).subscribe((data: any) => this.productTypes = data);
     this.taxService.getTaxes(this.entData).subscribe({
       next: (data) => {
@@ -123,7 +123,8 @@ export class ProductEditComponent implements OnInit {
 
   // --- CAMBIO 2: Modifica este método para guardar el producto original ---
   loadProductData(id: number): void {
-    this.productService.getProductById(id).subscribe({
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    this.productService.getProductById(id, enterpriseId).subscribe({
       next: (product: Product) => {
         // Convertir valores numéricos explícitamente
         this.originalProductData = {
@@ -203,7 +204,8 @@ export class ProductEditComponent implements OnInit {
     };
 
     // Llama al servicio con los dos argumentos correctos: (ID, DATOS)
-    this.productService.updateProduct(this.currentProductId, payload as any).subscribe({
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    this.productService.updateProduct(this.currentProductId, payload as any, enterpriseId).subscribe({
       next: () => {
         Swal.fire({
           title: '¡Actualizado!',

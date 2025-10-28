@@ -106,7 +106,7 @@ export class ProductCreationComponent implements OnInit {
   }
 
   getCategories(): void {
-    this.categoryService.getCategories(this.entData).subscribe({
+    this.categoryService.findActivate(this.entData).subscribe({
       next: (data) => this.categories = data,
       error: (err) => console.error('Error al obtener las categorías:', err)
     });

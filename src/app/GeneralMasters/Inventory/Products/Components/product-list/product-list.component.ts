@@ -104,7 +104,8 @@ export class ProductListComponent implements OnInit {
 
   // --- MÉTODO PARA ELIMINAR UN PRODUCTO ---
   deleteProduct(productId: number): void {
-    this.productService.deleteProduct(productId).subscribe({
+    const enterpriseId = this.localstorageMethods.getIdEnterprise();
+    this.productService.deleteProduct(productId, enterpriseId).subscribe({
       next: (data: Product) => {
         this.getProducts();
         this.messageService.add({
@@ -156,7 +157,8 @@ export class ProductListComponent implements OnInit {
     const newState = product.state;
     const previousState = !newState; // El estado anterior es el opuesto al actual
     
-    this.productService.changeProductState(product.id).subscribe({
+    const enterpriseId = this.localstorageMethods.getIdEnterprise();
+    this.productService.changeProductState(product.id, enterpriseId).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',

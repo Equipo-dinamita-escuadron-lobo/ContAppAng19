@@ -77,20 +77,12 @@ export class CategoryService {
   }
 
   // Método para obtener categorías activas con paginación
-  findActivate(enterpriseId: string, page: number, size: number): Observable<any> {
+  findActivate(enterpriseId: string): Observable<any> {
     const params = new HttpParams()
-      .set('enterpriseId', enterpriseId)
-      .set('numPage', page.toString())
-      .set('size', size.toString());
+      .set('enterpriseId', enterpriseId);
 
     const url = `${environment.API_URL}categories/findActivate`;
     return this.http.get(url, { params });
-  }
-
-  // Método para obtener todas las categorías (sin paginación)
-  getCategories(enterpriseId: string): Observable<Category[]> {
-    const url = `${environment.API_URL}categories/findAll/${enterpriseId}`;
-    return this.http.get<Category[]>(url);
   }
 
   // Método para obtener una categoría por su ID

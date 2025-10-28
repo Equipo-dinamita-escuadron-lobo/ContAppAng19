@@ -30,7 +30,7 @@ export class ProductService {
       switchMap((products: Product[]) => {
         // Obtener datos relacionados
         const unitOfMeasures$ = this.unitOfMeasureService.findActivate(enterpriseId);
-        const categories$ = this.categoryService.getCategories(enterpriseId);
+        const categories$ = this.categoryService.findActivate(enterpriseId);
         const productTypes$ = this.productTypeService.getProductTypes(enterpriseId);
         const taxes$ = this.taxService.getTaxes(enterpriseId).pipe(
           map(taxes => taxes),
@@ -44,13 +44,13 @@ export class ProductService {
         return combineLatest([unitOfMeasures$, categories$, productTypes$, taxes$]).pipe(
           switchMap(([unitOfMeasures, categories, productTypes, taxes]) => {
             // Crear mapas para búsqueda rápida
-            const unitOfMeasureMap = new Map(unitOfMeasures.map(um => [um.id, um]));
-            const categoryMap = new Map(categories.map(cat => [cat.id, cat]));
-            const productTypeMap = new Map(productTypes.map(pt => [pt.id, pt]));
-            const taxMap = new Map(taxes.map(tax => [tax.interest, tax]));
+            const unitOfMeasureMap = new Map<number, any>(unitOfMeasures.map((um: any) => [um.id, um]));
+            const categoryMap = new Map<number, any>(categories.map((cat: any) => [cat.id, cat]));
+            const productTypeMap = new Map<number, any>(productTypes.map((pt: any) => [pt.id, pt]));
+            const taxMap = new Map<number, any>(taxes.map((tax: any) => [tax.interest, tax]));
             
-            // Transformar productos a ProductList con nombres
-            const transformedProducts = products.map(product => {
+                          // Transformar productos a ProductList con nombres
+            const transformedProducts = products.map((product: any) => {
               let productType: ProductType | null = null;
               
               // Verificar si el producto ya tiene el objeto productType completo
@@ -67,16 +67,20 @@ export class ProductService {
               
               // Si no se encuentra exactamente, buscar por aproximación
               if (!taxInfo && taxes.length > 0) {
-                taxInfo = taxes.find(tax => Math.abs(tax.interest - product.taxPercentage) < 0.01);
+                taxInfo = taxes.find((tax: any) => Math.abs(tax.interest - product.taxPercentage) < 0.01);
               }
               
               const taxDisplayText = taxInfo ? `${taxInfo.code} (${taxInfo.interest}%)` : `${product.taxPercentage}%`;
               
+              // Obtener nombres de manera segura
+              const unitOfMeasure = unitOfMeasureMap.get(product.unitOfMeasureId);
+              const category = categoryMap.get(product.categoryId);
+              
               return {
                 ...product,
                 name: product.name,
-                unitOfMeasureName: unitOfMeasureMap.get(product.unitOfMeasureId)?.name || 'N/A',
-                categoryName: categoryMap.get(product.categoryId)?.name || 'N/A',
+                unitOfMeasureName: unitOfMeasure ? unitOfMeasure.name : 'N/A',
+                categoryName: category ? category.name : 'N/A',
                 productType: productType,
                 productTypeName: productType?.name || 'N/A',
                 taxDisplayText: taxDisplayText,
@@ -85,23 +89,23 @@ export class ProductService {
             });
 
             // Si no hay tipos de productos en el mapa, hacer consultas individuales
-            const productsNeedingIndividualQueries = transformedProducts.filter(product => 
-              (product as any).productTypeId && !product.productType
+            const productsNeedingIndividualQueries = transformedProducts.filter((product: any) =>
+              product.productTypeId && !product.productType
             );
 
             if (productsNeedingIndividualQueries.length > 0) {
-              const individualQueries = productsNeedingIndividualQueries.map(product => 
-                this.productTypeService.getProductTypeById((product as any).productTypeId.toString(), enterpriseId).pipe(
-                  map(productType => ({ productId: product.id, productType }))
+              const individualQueries = productsNeedingIndividualQueries.map((product: any) =>
+                this.productTypeService.getProductTypeById(product.productTypeId.toString(), enterpriseId).pipe(
+                  map((productType: ProductType) => ({ productId: product.id, productType }))
                 )
               );
 
               return forkJoin(individualQueries).pipe(
-                map(results => {
-                  const individualProductTypeMap = new Map(results.map(r => [r.productId, r.productType]));
-                  
-                  return transformedProducts.map(product => {
-                    if ((product as any).productTypeId && !product.productType) {
+                map((results: any[]) => {
+                  const individualProductTypeMap = new Map(results.map((r: any) => [r.productId, r.productType]));
+
+                  return transformedProducts.map((product: any) => {
+                    if (product.productTypeId && !product.productType) {
                       const individualProductType = individualProductTypeMap.get(product.id);
                       if (individualProductType) {
                         product.productType = individualProductType;
@@ -112,9 +116,7 @@ export class ProductService {
                   });
                 })
               );
-            }
-
-            return of(transformedProducts);
+            }            return of(transformedProducts);
           })
         );
       })
@@ -132,24 +134,24 @@ export class ProductService {
   }
 
   // Ahora acepta el ID y los datos como parámetros separados.
-  updateProduct(id: number, productData: Product): Observable<Product> {
-    const url = `${API_URL}products/update/${id}`; // La URL se construye con el ID recibido.
+  updateProduct(id: number, productData: Product, enterpriseId: string): Observable<Product> {
+    const url = `${API_URL}products/update/${enterpriseId}/${id}`; // La URL se construye con el ID recibido.
     // El cuerpo de la petición son los datos del producto.
     return this.http.put<Product>(url, productData);
   }
   
-  getProductById(id: number): Observable<Product> {
-    const url = `${environment.API_URL}products/findById/${id}`;
+  getProductById(id: number, enterpriseId: string): Observable<Product> {
+    const url = `${environment.API_URL}products/findById/${enterpriseId}/${id}`;
     return this.http.get<Product>(url);
   }
 
-  deleteProduct(id: number): Observable<Product> {
-    const url = `${API_URL}products/delete/${id}`;
+  deleteProduct(id: number, enterpriseId: string): Observable<Product> {
+    const url = `${API_URL}products/delete/${enterpriseId}/${id}`;
     return this.http.delete<Product>(url);
   }
 
-  changeProductState(id: number): Observable<void> {
-    const url = `${API_URL}products/changeState/${id}`;
+  changeProductState(id: number, enterpriseId: string): Observable<void> {
+    const url = `${API_URL}products/changeState/${enterpriseId}/${id}`;
     return this.http.put<void>(url, {});
   }
 }
