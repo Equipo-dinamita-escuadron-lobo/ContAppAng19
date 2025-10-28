@@ -1,14 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import Swal from 'sweetalert2';
-import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
-import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
-import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
-import { Category } from '../../Models/Category';
-import { CategoryService } from '../../Services/category.service';
-
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -23,8 +16,9 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-// Componente de detalles (si existe)
-// import { CategoryDetailsComponent } from '../category-details/category-details.component';
+import { Category } from '../../Models/Category';
+import { CategoryService } from '../../Services/category.service';
+import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 
 @Component({
   selector: 'app-category-list',
@@ -42,7 +36,6 @@ import { ConfirmationService, MessageService } from 'primeng/api';
     TooltipModule,
     InputIcon,
     IconField,
-    ReactiveFormsModule,
     ToggleSwitchModule,
     TagModule
   ],
@@ -52,89 +45,97 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 })
 export class CategoryListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string | null = null;
   categories: Category[] = [];
   accounts: any[] = [];
+  loading: boolean = false;
 
-  // Variables para el formulario reactivo
-  form: FormGroup;
-
-  // Variables eliminadas para doble clic - ya no se necesitan
-
-  // Variables para modales
-  dialog: any;
-  displayDetailsModal = false;
-  selectedCategory: Category | null = null;
+  totalRecords: number = 0;
+  currentPage: number = 0;
+  currentSize: number = 10;
+  currentSortField: string = 'name';
+  currentSortOrder: string = 'asc';
+  searchTerm: string = '';
 
   constructor(
     private readonly categoryService: CategoryService,
     private readonly router: Router,
-    private readonly chartAccountService: ChartAccountService,
-    private readonly fb: FormBuilder,
     private readonly confirmationService: ConfirmationService,
     private readonly messageService: MessageService
-  ) {
-    this.form = this.fb.group(this.validationsAll());
-  }
-
-  validationsAll() {
-    return {
-      stringSearchCategory: [''],
-    };
-  }
+  ) { }
 
   ngOnInit(): void {
-    this.entData = this.localStorageMethods.loadEnterpriseData();
-    // Cargar primero las cuentas, luego las categorías
-    this.getCuentas();
+    this.entData = this.localStorageMethods.getIdEnterprise();
+    if (this.entData) {
+      this.loadCategoriesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
+      this.getCuentas();
+    }
   }
 
-  // Método para filtrar las categorías
-  applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value;
-    // El filtrado se maneja automáticamente por PrimeNG Table
+  private getEnterpriseId(): string {
+    return this.entData || '';
   }
 
-  //cuentas
-  getCuentas(): void {
-    const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
+  loadCategoriesLazy(event: any): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    // Calcular página y tamaño desde los controles de PrimeNG
+    this.currentPage = Math.floor(event.first / event.rows);
+    this.currentSize = event.rows;
     
-    if (!enterpriseId) {
-      this.accounts = [];
-      return;
+    // Manejar ordenamiento si está presente
+    if (event.sortField) {
+      this.currentSortField = event.sortField;
+      this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
     }
     
-    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
-      next: (data: any[]) => {
-        this.accounts = this.mapAccountToList(data);
-        // Una vez que las cuentas están cargadas, cargar las categorías
-        this.getCategories();
+    this.categoryService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
+        this.categories = page.content || [];
+        this.totalRecords = page?.totalElements || 0;
       },
       error: (error: any) => {
-        this.accounts = [];
-        // Aún así intentar cargar las categorías
-        this.getCategories();
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las categorías.'
+        });
       }
     });
   }
 
-  mapAccountToList(data: Account[]): Account[] {
-    let result: Account[] = [];
+  reloadCurrentPage(): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
 
-    function traverse(account: Account) {
-        // Clonamos el objeto cuenta sin los hijos
-        let { children, ...accountWithoutChildren } = account;
-        result.push(accountWithoutChildren as Account);
+    this.categoryService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
+        this.categories = page.content || [];
+        this.totalRecords = page?.totalElements || 0;
+      }
+    });
+  }
 
-        // Llamamos recursivamente para cada hijo
-        if (children && children.length > 0) {
-            children.forEach((child: Account) => traverse(child));
-        }
-    }
+  onSearchChange(): void {
+    // Resetear a la primera página cuando se busca
+    this.currentPage = 0;
+    // Recargar datos con el nuevo término de búsqueda
+    this.loadCategoriesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
+  }
 
-    data.forEach(account => traverse(account));
-    
-    return result;
+  //cuentas
+  getCuentas(): void {
+    // TODO: Implementar servicio de cuentas cuando esté disponible
+    // Por ahora usamos datos mock del servicio
+    this.categoryService.getCuentas().subscribe({
+      next: (data: any[]) => {
+        this.accounts = data;
+      },
+      error: (error: any) => {
+        this.accounts = [];
+      }
+    });
   }
 
   getCategoryName(id: number | string | null | undefined): string {
@@ -151,8 +152,8 @@ export class CategoryListComponent implements OnInit {
     // Convertir a número si es string, manejando posibles errores
     let numericId: number;
     if (typeof id === 'string') {
-      numericId = parseInt(id, 10);
-      if (isNaN(numericId)) {
+      numericId = Number.parseInt(id, 10);
+      if (Number.isNaN(numericId)) {
         return 'ID inválido';
       }
     } else {
@@ -176,27 +177,9 @@ export class CategoryListComponent implements OnInit {
     return code ? `${code} - ${description}` : description;
   }
 
-  getCategories(): void {
-    const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
-    
-    if (!enterpriseId) {
-      this.categories = [];
-      return;
-    }
-    
-    this.categoryService.getCategories(enterpriseId).subscribe({
-      next: (data: Category[]) => {
-        this.categories = data;
-      },
-      error: (error) => {
-        this.categories = [];
-      }
-    });
-  }
-
   // Método para redirigir a una ruta específica
-  redirectTo(route: string): void {
-    this.router.navigateByUrl(route);
+  redirectToCreate(): void {
+    this.router.navigate(['/gen-masters/inventory/categories/create']);
   }
 
   // Método para redirigir a la página de edición con un solo clic
@@ -208,48 +191,35 @@ export class CategoryListComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory']);
   }
 
-  // Método para recargar las cuentas si es necesario
-  reloadAccounts(): void {
-    this.getCuentas();
-  }
-
   deleteCategory(categoryId: string): void {
-    // Utilizando SweetAlert para mostrar un cuadro de diálogo de confirmación
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: '¿Estás seguro de que deseas eliminar esta categoría?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-      cancelButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-secondary').trim(),
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      // Si el usuario confirma la eliminación
-      if (result.isConfirmed) {
-        this.categoryService.deleteCategory(categoryId).subscribe(
-          (data: Category) => {
-            this.getCategories();
-            // Mostrar cuadro de diálogo de éxito
-            Swal.fire({
-              title: 'Eliminada con éxito',
-              text: 'La categoría se ha eliminado correctamente.',
-              icon: 'success',
-              confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-              confirmButtonText: 'Aceptar'
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.confirmationService.confirm({
+      message: '¿Estás seguro de que deseas eliminar esta categoría?',
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      accept: () => {
+        this.categoryService.deleteCategory(categoryId, enterpriseId).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: 'Categoría eliminada correctamente'
             });
+            this.reloadCurrentPage();
           },
-          (error: any) => {
-            // Mostrar cuadro de diálogo de error
-            Swal.fire({
-              title: 'Error al eliminar',
-              text: 'Ha ocurrido un error al intentar eliminar la categoría.',
-              icon: 'error',
-              confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-              confirmButtonText: 'Aceptar'
+          error: (error: any) => {
+            console.error('Error al eliminar la categoría:', error);
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'No se pudo eliminar la categoría'
             });
           }
-        );
+        });
       }
     });
   }
@@ -259,11 +229,15 @@ export class CategoryListComponent implements OnInit {
     if (!category.id) {
       return;
     }
+
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    const newState = category.state;
+    const previousState = !newState;
     
-    this.categoryService.changeCategoryState(category.id).subscribe({
+    this.categoryService.changeCategoryState(category.id, enterpriseId).subscribe({
       next: () => {
-        // Cambiar el estado localmente
-        category.state = !category.state;
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -271,7 +245,8 @@ export class CategoryListComponent implements OnInit {
         });
       },
       error: (error: any) => {
-        console.error('Error al cambiar el estado de la categoría:', error);
+        // Revertir el cambio si hay error
+        category.state = previousState;
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -286,11 +261,7 @@ export class CategoryListComponent implements OnInit {
     return state ? 'success' : 'danger';
   }
 
-  getStateLabel(state: boolean): string {
+  formatState(state: boolean): string {
     return state ? 'Activo' : 'Inactivo';
-  }
-
-  isActive(state: boolean): boolean {
-    return state;
   }
 }

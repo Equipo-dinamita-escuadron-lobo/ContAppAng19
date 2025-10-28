@@ -38,7 +38,7 @@ export class CategoryEditComponent implements OnInit {
   category: Category = {} as Category;
   editForm: FormGroup;
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: any = null;
   formSubmitAttempt = false;
   loading = false;
   
@@ -71,7 +71,7 @@ export class CategoryEditComponent implements OnInit {
   }
   ngOnInit(): void {
     this.entData = this.localStorageMethods.getIdEnterprise();
-    if (!this.entData) {
+    if (this.entData === null) {
       console.error("No se encontró el ID de la empresa. No se pueden cargar los datos del formulario.");
       Swal.fire('Error', 'No se pudo identificar la empresa. Vuelva a iniciar sesión.', 'error');
     } else {
@@ -92,8 +92,9 @@ export class CategoryEditComponent implements OnInit {
     console.log('Formulario sin editar:', this.editForm.value);
     console.log('Cuentas disponibles:', this.accounts);
 
-    this.categoryService.getCategoryById(this.categoryId).subscribe(
-      (category: Category) => {
+    const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
+    this.categoryService.getCategoryById(this.categoryId, enterpriseId).subscribe({
+      next: (category: Category) => {
         console.log('Categoría obtenida:', category);
 
         this.category = category;
@@ -127,10 +128,10 @@ export class CategoryEditComponent implements OnInit {
         console.log('Cuenta de venta encontrada:', saleAccount);
         console.log('Cuenta de devolución encontrada:', returnAccount);
       },
-      (error: any) => {
+      error: (error: any) => {
         console.error('Error obteniendo detalles de la categoría: ', error);
       }
-    );
+    });
   }
 
     //cuentas
@@ -169,11 +170,15 @@ mapAccountToList(data: Account[]): Account[] {
 
       // Llamamos recursivamente para cada hijo
       if (children && children.length > 0) {
-          children.forEach((child: Account) => traverse(child));
+          for (const child of children) {
+            traverse(child);
+          }
       }
   }
 
-  data.forEach(account => traverse(account));
+  for (const account of data) {
+    traverse(account);
+  }
   return result;
 }
 get filteredAccounts() {
@@ -236,7 +241,8 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
 
     console.log('Datos de categoría a actualizar:', categoryData);
 
-    this.categoryService.updateCategory(categoryData).subscribe({
+    const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
+    this.categoryService.updateCategory(categoryData, enterpriseId).subscribe({
       next: () => {
         Swal.fire({
           title: 'Actualización exitosa',
