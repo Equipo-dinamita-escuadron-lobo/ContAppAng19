@@ -137,25 +137,25 @@ export class CategoryEditComponent implements OnInit {
     //cuentas
    // Cuentas
   getCuentas(): void {
-    console.log('Cargando cuentas en edición con entData:', this.entData);
+    console.log('Cargando cuentas auxiliares en edición con entData:', this.entData);
     const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
-    console.log('Enterprise ID para cuentas en edición:', enterpriseId);
-    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
+    console.log('Enterprise ID para cuentas auxiliares en edición:', enterpriseId);
+    this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (data: any[]) => {
-        console.log('Cuentas recibidas en edición:', data);
+        console.log('Cuentas auxiliares recibidas en edición:', data);
         this.accounts = this.mapAccountToList(data);
         this.cost = this.accounts;
         this.inventory = this.accounts;
         this.sale = this.accounts;
         this.return = this.accounts;
-        console.log('Cuentas mapeadas en edición:', this.accounts);
-        console.log('Primeras 5 cuentas como ejemplo:', this.accounts.slice(0, 5));
+        console.log('Cuentas auxiliares mapeadas en edición:', this.accounts);
+        console.log('Primeras 5 cuentas auxiliares como ejemplo:', this.accounts.slice(0, 5));
         
         // Ahora que las cuentas están cargadas, obtener los detalles de la categoría
         this.getCategoryDetails();
       },
       error: (error: any) => {
-        console.error('Error al obtener las cuentas en edición:', error);
+        console.error('Error al obtener las cuentas auxiliares en edición:', error);
       }
     });
   }

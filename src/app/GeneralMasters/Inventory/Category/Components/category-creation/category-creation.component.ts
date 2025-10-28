@@ -130,21 +130,21 @@ export class CategoryCreationComponent implements OnInit {
 
   // Cuentas
   getCuentas(): void {
-    console.log('Cargando cuentas con entData:', this.entData);
+    console.log('Cargando cuentas auxiliares con entData:', this.entData);
     const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
-    console.log('Enterprise ID para cuentas:', enterpriseId);
-    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
+    console.log('Enterprise ID para cuentas auxiliares:', enterpriseId);
+    this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (data: any[]) => {
-        console.log('Cuentas recibidas:', data);
+        console.log('Cuentas auxiliares recibidas:', data);
         this.accounts = this.mapAccountToList(data);
         this.cost = this.accounts;
         this.inventory = this.accounts;
         this.sale = this.accounts;
         this.return = this.accounts;
-        console.log('Cuentas mapeadas:', this.accounts);
+        console.log('Cuentas auxiliares mapeadas:', this.accounts);
       },
       error: (error: any) => {
-        console.error('Error al obtener las cuentas:', error);
+        console.error('Error al obtener las cuentas auxiliares:', error);
       }
     });
   }
