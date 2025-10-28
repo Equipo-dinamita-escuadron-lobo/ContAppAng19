@@ -83,11 +83,9 @@ export class CategoryListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
-    // Calcular página y tamaño desde los controles de PrimeNG
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
     
-    // Manejar ordenamiento si está presente
     if (event.sortField) {
       this.currentSortField = event.sortField;
       this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
@@ -121,21 +119,18 @@ export class CategoryListComponent implements OnInit {
   }
 
   onSearchChange(): void {
-    // Resetear a la primera página cuando se busca
     this.currentPage = 0;
-    // Recargar datos con el nuevo término de búsqueda
     this.loadCategoriesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
   }
 
-  //cuentas
   getCuentas(): void {
     const enterpriseId = this.getEnterpriseId();
-    this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
+    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
       next: (data: any[]) => {
         this.accounts = this.mapAccountToList(data);
       },
       error: (error: any) => {
-        console.error('Error al obtener las cuentas auxiliares:', error);
+        console.error('Error al obtener las cuentas:', error);
         this.accounts = [];
       }
     });
@@ -145,7 +140,6 @@ export class CategoryListComponent implements OnInit {
     let result: Account[] = [];
 
     function traverse(account: Account) {
-        // Clonamos el objeto cuenta sin los hijos
         let { children, ...accountWithoutChildren } = account;
         result.push(accountWithoutChildren as Account);
 
