@@ -4,7 +4,7 @@
   <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
 
     <!-- 1. CABECERA: Título y Botón de Crear -->
-    <div class="flex justify-between items-start mb-12">
+    <div class="flex justify-between items-start mb-40">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
         <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
@@ -28,20 +28,22 @@
     </div>
 
     <!-- 2. BARRA DE BÚSQUEDA: Con el estilo minimalista -->
-    <div class="mb-16 w-1/2 sm:w-1/3">
-      <p-iconfield iconPosition="left">
-        <p-inputicon>
-          <i class="pi pi-search text-gray-500"></i>
-        </p-inputicon>
-        <input
-          pInputText
-          type="text"
-          [(ngModel)]="searchTerm"
-          (input)="onSearchChange()"
-          placeholder="Buscar unidad (nombre/abreviatura)..."
-          class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
-        />
-      </p-iconfield>
+    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+      <div class="w-full sm:w-[30rem]">
+        <p-iconfield iconPosition="left">
+          <p-inputicon>
+            <i class="pi pi-search text-gray-500"></i>
+          </p-inputicon>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Buscar unidad (nombre/abreviatura)..."
+            class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
+          />
+        </p-iconfield>
+      </div>
     </div>
 
     <!-- 3. TABLA DE UNIDADES DE MEDIDA: Estilizada para ser coherente con el diseño -->
