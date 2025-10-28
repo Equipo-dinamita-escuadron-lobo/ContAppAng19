@@ -31,7 +31,6 @@ export class ProductTypeEditComponent implements OnInit {
   productTypeId: string | null = null;
   localStorageMethods = new LocalStorageMethods();
   entData: string | null = null;
-  loading = false;
   currentProductType: ProductType | null = null;
   private originalProductTypeData!: ProductType;
 
@@ -59,7 +58,6 @@ export class ProductTypeEditComponent implements OnInit {
 
   loadProductType(): void {
     if (this.productTypeId && this.entData) {
-      this.loading = true;
       this.productTypeService.getProductTypeById(this.productTypeId, this.entData).subscribe({
         next: (productType) => {
           this.currentProductType = productType;
@@ -68,7 +66,6 @@ export class ProductTypeEditComponent implements OnInit {
             name: productType.name,
             description: productType.description
           });
-          this.loading = false;
         },
         error: (error: any) => {
           console.error('Error al cargar el tipo de producto:', error);
@@ -77,7 +74,6 @@ export class ProductTypeEditComponent implements OnInit {
             summary: 'Error',
             detail: 'No se pudo cargar el tipo de producto'
           });
-          this.loading = false;
         }
       });
     }
@@ -97,8 +93,6 @@ export class ProductTypeEditComponent implements OnInit {
         return;
       }
 
-      this.loading = true;
-      
       const updatedProductType: ProductType = {
         ...this.currentProductType,
         name: this.productTypeForm.value.name,
@@ -125,7 +119,6 @@ export class ProductTypeEditComponent implements OnInit {
             summary: 'Error',
             detail: 'No se pudo actualizar el tipo de producto'
           });
-          this.loading = false;
         }
       });
     } else {

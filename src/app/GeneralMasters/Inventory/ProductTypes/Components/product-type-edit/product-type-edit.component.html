@@ -23,7 +23,7 @@
     </div>
 
     <!-- 2. FORMULARIO DE EDICIÓN DE TIPO DE PRODUCTO -->
-    <form [formGroup]="productTypeForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+    <form [formGroup]="productTypeForm" (ngSubmit)="onSubmit()">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 mt-24" style="font-family: var(--font-family-sans);">
 
         <!-- Nombre del Tipo de Producto -->
@@ -65,11 +65,6 @@
         </p-button>
       </div>
     </form>
-
-    <!-- Loading state -->
-    <div *ngIf="loading" class="flex justify-center items-center h-64">
-      <i class="pi pi-spin pi-spinner text-4xl text-primary"></i>
-    </div>
 
   </div>
 </div>
