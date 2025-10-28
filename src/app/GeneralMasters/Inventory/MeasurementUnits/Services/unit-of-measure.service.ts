@@ -21,7 +21,7 @@ export class UnitOfMeasureService {
 
   constructor(private http: HttpClient) { }
 
-  // GET
+ 
   // Método para obtener todas las unidades de medida con paginación
   findAll(enterpriseId: string, page = 0, size = 10, sortField = 'name', sortOrder = 'asc', search = ''): Observable<Page<UnitOfMeasure>> {
     let url = `${API_URL}unit-measures/findAll?enterpriseId=${enterpriseId}&numPage=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
@@ -45,7 +45,7 @@ export class UnitOfMeasureService {
     return this.http.get<UnitOfMeasure>(url);
   }
 
-  // PUT  
+
   // Método para actualizar una Unidad de medida existente por ID
   updateUnitOfMeasureId(id: string, unitOfMeasure: UnitOfMeasure, enterpriseId: string): Observable<UnitOfMeasure> {    
     const url = `${API_URL}unit-measures/update/${id}`;
@@ -58,15 +58,13 @@ export class UnitOfMeasureService {
     return this.http.put<UnitOfMeasure>(url, {});
   }
 
-  // POST
+
   // Método para crear una nueva unidad de medida
   createUnitOfMeasure(unitOfMeasure: UnitOfMeasure): Observable<UnitOfMeasure> {
     const url = `${API_URL}unit-measures/create`;
-    console.log('unitOfMeasure', unitOfMeasure);
     return this.http.post<UnitOfMeasure>(url, unitOfMeasure);
   }
 
-  // DELETE
   // Método para Eliminar una Unidad de medida existente por ID
   deleteUnitOfMeasureId(id: string, enterpriseId: string): Observable<UnitOfMeasure> {
     const url = `${API_URL}unit-measures/delete/${id}?enterpriseId=${enterpriseId}`;

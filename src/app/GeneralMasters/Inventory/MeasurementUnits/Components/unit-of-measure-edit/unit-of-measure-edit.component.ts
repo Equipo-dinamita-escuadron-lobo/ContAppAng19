@@ -73,7 +73,6 @@ export class UnitOfMeasureEditComponent implements OnInit {
         this.isLoading = false;
       },
       error => {
-        console.error('Error al cargar los datos de la unidad de medida:', error);
         this.isLoading = false;
         Swal.fire({
           title: 'Error',
@@ -124,7 +123,6 @@ export class UnitOfMeasureEditComponent implements OnInit {
           });
         },
         error => {
-          console.error('Error al actualizar la unidad de medida:', error);
           Swal.fire({
             title: 'Error',
             text: 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.',

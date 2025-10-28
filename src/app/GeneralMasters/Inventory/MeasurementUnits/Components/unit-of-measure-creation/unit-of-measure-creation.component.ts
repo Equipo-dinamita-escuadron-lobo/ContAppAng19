@@ -72,7 +72,6 @@ export class UnitOfMeasureCreationComponent implements OnInit {
           });
         },
         error => {
-          console.error('Error al crear la unidad de medida:', error);
           Swal.fire({
             title: 'Error',
             text: 'Ha ocurrido un error al crear la unidad de medida. Por favor, inténtelo de nuevo.',

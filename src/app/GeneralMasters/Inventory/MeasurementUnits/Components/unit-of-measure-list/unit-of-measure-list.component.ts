@@ -74,8 +74,6 @@ export class UnitOfMeasureListComponent implements OnInit {
     this.entData = this.localStorageMethods.getIdEnterprise();
     if (this.entData) {
       this.loadUnitsLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
-    } else {
-      console.error('No se pudo obtener el ID de la empresa');
     }
   }
 
@@ -103,7 +101,6 @@ export class UnitOfMeasureListComponent implements OnInit {
         this.totalRecords = page?.totalElements || 0;
       },
       error: (error: any) => {
-        console.error('Error al obtener las unidades de medida:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -144,6 +141,11 @@ export class UnitOfMeasureListComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory/measurement-units/create']);
   }
 
+  // Método para volver al menú de inventory
+  goBack(): void {
+    this.router.navigate(['/gen-masters/inventory']);
+  }
+
   // Método para eliminar unidad
   deleteUnit(unitId: number): void {
     const enterpriseId = this.getEnterpriseId();
@@ -181,7 +183,6 @@ export class UnitOfMeasureListComponent implements OnInit {
       error: (error: any) => {
         // Revertir el cambio si hay error
         unit.state = previousState;
-        console.error('Error al cambiar el estado de la unidad de medida:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -218,10 +219,6 @@ export class UnitOfMeasureListComponent implements OnInit {
 
   formatState(state: boolean): string {
     return state ? 'Activo' : 'Inactivo';
-  }
-
-  isActive(state: boolean): boolean {
-    return state;
   }
 
 }

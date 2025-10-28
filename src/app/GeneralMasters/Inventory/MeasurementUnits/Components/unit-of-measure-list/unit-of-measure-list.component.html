@@ -16,12 +16,18 @@
       </div>
 
       <!-- Botones de acción -->
-      <div class="flex gap-3">
+      <div class="flex gap-3">        
         <p-button
           label="Crear"
           icon="pi pi-plus"
           (click)="redirectToCreate()"
           styleClass="p-button-primary"
+        >
+        </p-button>
+        <p-button
+          icon="pi pi-arrow-left"
+          (click)="goBack()"
+          styleClass="p-button-text p-button-secondary"
         >
         </p-button>
       </div>
