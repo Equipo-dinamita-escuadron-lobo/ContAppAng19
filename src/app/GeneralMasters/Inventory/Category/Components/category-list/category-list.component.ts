@@ -181,7 +181,6 @@ export class CategoryListComponent implements OnInit {
     
     // Verificar si el ID existe en la lista de cuentas
     const account = this.accounts.find(cuenta => {
-      // Asegurar comparación exacta de tipos
       return cuenta.id === numericId || cuenta.id === id;
     });
     
@@ -189,19 +188,16 @@ export class CategoryListComponent implements OnInit {
       return `N/A`;
     }
     
-    // Retornar código y descripción de la cuenta
     const code = account.code || '';
     const description = account.description || 'Sin descripción';
     
     return code ? `${code} - ${description}` : description;
   }
 
-  // Método para redirigir a una ruta específica
   redirectToCreate(): void {
     this.router.navigate(['/gen-masters/inventory/categories/create']);
   }
 
-  // Método para redirigir a la página de edición con un solo clic
   redirectToEdit(categoryId: string): void {
     this.router.navigate(['/gen-masters/inventory/categories/edit/', categoryId]);
   }
@@ -210,22 +206,23 @@ export class CategoryListComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory']);
   }
 
-  deleteCategory(categoryId: string): void {
+  deleteCategory(category: Category): void {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
     this.confirmationService.confirm({
-      message: '¿Estás seguro de que deseas eliminar esta categoría?',
+      message: `¿Desea eliminar la categoría "${category.name}"?`,
       header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
+      rejectButtonStyleClass: 'p-button-text p-button-secondary',
       accept: () => {
-        this.categoryService.deleteCategory(categoryId, enterpriseId).subscribe({
+        this.categoryService.deleteCategory(category.id!.toString(), enterpriseId).subscribe({
           next: () => {
             this.messageService.add({
               severity: 'success',
-              summary: 'Éxito',
+              summary: 'Eliminada',
               detail: 'Categoría eliminada correctamente'
             });
             this.reloadCurrentPage();

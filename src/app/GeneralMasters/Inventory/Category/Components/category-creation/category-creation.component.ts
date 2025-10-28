@@ -2,14 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
-
-// --- Importaciones Standalone y de PrimeNG ---
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../Services/category.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
@@ -50,6 +48,7 @@ export class CategoryCreationComponent implements OnInit {
     private readonly categoryService: CategoryService,
     private readonly router: Router,
     private readonly chartAccountService: ChartAccountService,
+    private readonly messageService: MessageService
   ) {
     // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     this.categoryForm = this.formBuilder.group({
@@ -67,7 +66,11 @@ export class CategoryCreationComponent implements OnInit {
     this.entData = this.localStorageMethods.getIdEnterprise();
     if (!this.entData) {
       console.error("No se encontró el ID de la empresa. No se pueden cargar los datos del formulario.");
-      Swal.fire('Error', 'No se pudo identificar la empresa. Vuelva a iniciar sesión.', 'error');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo identificar la empresa. Vuelva a iniciar sesión.'
+      });
     } else {
       this.loadInitialData();
     }
@@ -80,7 +83,11 @@ export class CategoryCreationComponent implements OnInit {
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.categoryForm.invalid) {
-      Swal.fire('Formulario Inválido', 'Por favor, revise todos los campos requeridos.', 'warning');
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario Inválido',
+        detail: 'Por favor, revise todos los campos requeridos.'
+      });
       // Marcar todos los campos como "tocados" para mostrar los errores
       this.categoryForm.markAllAsTouched();
       return;
@@ -102,21 +109,19 @@ export class CategoryCreationComponent implements OnInit {
 
     this.categoryService.createCategory(categoryData).subscribe({
       next: () => {
-        Swal.fire({
-          title: 'Creación exitosa',
-          text: 'Se ha creado la categoría con éxito.',
-          icon: 'success',
-          confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Registro exitoso',
+          detail: 'Se ha creado la categoría con éxito.'
         });
         this.router.navigate(['/gen-masters/inventory/categories/list']); // Redirigir a la lista
       },
       error: (err: any) => {
         console.error('Error al crear la categoría:', err);
-        Swal.fire({
-          title: 'Error',
-          text: 'Ha ocurrido un error al crear la categoría.',
-          icon: 'error',
-          confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Ha ocurrido un error al crear la categoría.'
         });
       }
     });
