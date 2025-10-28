@@ -28,7 +28,7 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
 export class UnitOfMeasureCreationComponent implements OnInit {
   unitOfMeasureForm: FormGroup;
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string | null = null;
   formSubmitAttempt = false;
 
   constructor(
@@ -59,8 +59,8 @@ export class UnitOfMeasureCreationComponent implements OnInit {
         state: true
       };
 
-      this.unitOfMeasureService.createUnitOfMeasure(unitOfMeasureData).subscribe(
-        () => {
+      this.unitOfMeasureService.createUnitOfMeasure(unitOfMeasureData).subscribe({
+        next: () => {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -71,19 +71,19 @@ export class UnitOfMeasureCreationComponent implements OnInit {
             this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
           }, 1500);
         },
-        error => {
-          const Message = error.error?.message || 'Ha ocurrido un error al crear la unidad de medida. Por favor, inténtelo de nuevo.';
+        error: (error) => {
+          const message = error.error?.message || 'Ha ocurrido un error al crear la unidad de medida. Por favor, inténtelo de nuevo.';
           let summary = 'Error';
-          if (Message.includes('Ya existe')) {
+          if (message.includes('Ya existe')) {
             summary = 'Registro Duplicado';
           }
           this.messageService.add({
             severity: 'error',
             summary: summary,
-            detail: Message
+            detail: message
           });
         }
-      );
+      });
     } else {
       this.messageService.add({
         severity: 'warn',

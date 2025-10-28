@@ -36,7 +36,7 @@ export class UnitOfMeasureEditComponent implements OnInit {
   private originalUnitData!: UnitOfMeasure;
 
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string | null = null;
 
   constructor(
     private readonly formBuilder: FormBuilder,
@@ -60,9 +60,10 @@ export class UnitOfMeasureEditComponent implements OnInit {
   }
 
   loadUnitData(): void {
+    if (!this.entData) return;
     this.isLoading = true;
-    this.unitOfMeasureService.getUnitOfMeasuresId(this.currentUnitId, this.entData).subscribe(
-      (unitOfMeasure: UnitOfMeasure) => {
+    this.unitOfMeasureService.getUnitOfMeasuresId(this.currentUnitId, this.entData).subscribe({
+      next: (unitOfMeasure: UnitOfMeasure) => {
         this.originalUnitData = unitOfMeasure;
         this.unitOfMeasureForm.patchValue({
           name: unitOfMeasure.name,
@@ -71,7 +72,7 @@ export class UnitOfMeasureEditComponent implements OnInit {
         });
         this.isLoading = false;
       },
-      error => {
+      error: (error) => {
         this.isLoading = false;
         this.messageService.add({
           severity: 'error',
@@ -80,13 +81,13 @@ export class UnitOfMeasureEditComponent implements OnInit {
         });
         this.goBack();
       }
-    );
+    });
   }
 
   onSubmit(): void {
     this.formSubmitAttempt = true;
 
-    if (this.unitOfMeasureForm.valid) {
+    if (this.unitOfMeasureForm.valid && this.entData) {
       // Verificar si hubo cambios
       const formData = this.unitOfMeasureForm.value;
       const hasChanges = this.hasFormChanges(formData);
@@ -107,8 +108,8 @@ export class UnitOfMeasureEditComponent implements OnInit {
         state: this.originalUnitData.state
       };
 
-      this.unitOfMeasureService.updateUnitOfMeasureId(this.currentUnitId, updatedUnitData, this.entData).subscribe(
-        () => {
+      this.unitOfMeasureService.updateUnitOfMeasureId(this.currentUnitId, updatedUnitData, this.entData).subscribe({
+        next: () => {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -119,19 +120,19 @@ export class UnitOfMeasureEditComponent implements OnInit {
             this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
           }, 1500);
         },
-        error => {
-          const Message = error.error?.message || 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.';
+        error: (error) => {
+          const message = error.error?.message || 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.';
           let summary = 'Error';
-          if (Message.includes('Ya existe')) {
+          if (message.includes('Ya existe')) {
             summary = 'Registro Duplicado';
           }
           this.messageService.add({
             severity: 'error',
             summary: summary,
-            detail: Message
+            detail: message
           });
         }
-      );
+      });
     } else {
       this.messageService.add({
         severity: 'warn',

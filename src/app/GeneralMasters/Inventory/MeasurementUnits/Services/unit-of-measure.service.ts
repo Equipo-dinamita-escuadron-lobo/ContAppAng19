@@ -19,7 +19,7 @@ let API_URL = environment.API_URL;
 })
 export class UnitOfMeasureService {
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
  
   // Método para obtener todas las unidades de medida con paginación
