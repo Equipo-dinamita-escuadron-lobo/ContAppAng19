@@ -118,11 +118,19 @@ export class CategoryCreationComponent implements OnInit {
       },
       error: (err: any) => {
         console.error('Error al crear la categoría:', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ha ocurrido un error al crear la categoría.'
-        });
+        if (err.error?.message) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Registro Duplicado',
+            detail: err.error.message
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Ha ocurrido un error al crear la categoría.'
+          });
+        }
       }
     });
   }
