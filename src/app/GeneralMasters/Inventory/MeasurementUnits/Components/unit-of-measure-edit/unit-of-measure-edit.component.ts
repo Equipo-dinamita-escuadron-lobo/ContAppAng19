@@ -125,10 +125,15 @@ export class UnitOfMeasureEditComponent implements OnInit {
           }, 1500);
         },
         error => {
+          const Message = error.error?.message || 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.';
+          let summary = 'Error';
+          if (Message.includes('Ya existe')) {
+            summary = 'Registro Duplicado';
+          }
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.'
+            summary: summary,
+            detail: Message
           });
         }
       );
