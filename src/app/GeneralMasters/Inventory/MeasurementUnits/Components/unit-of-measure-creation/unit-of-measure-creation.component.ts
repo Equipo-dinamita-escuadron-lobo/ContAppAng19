@@ -63,7 +63,7 @@ export class UnitOfMeasureCreationComponent implements OnInit {
         next: () => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro Exitoso',
             detail: 'La unidad de medida ha sido creada exitosamente.',
             life: 3000
           });

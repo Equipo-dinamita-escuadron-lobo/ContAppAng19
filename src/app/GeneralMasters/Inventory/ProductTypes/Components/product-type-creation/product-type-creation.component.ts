@@ -88,7 +88,7 @@ export class ProductTypeCreationComponent implements OnInit {
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: 'Éxito',
+          summary: 'Registro Exitoso',
           detail: 'El tipo de producto ha sido creado exitosamente.',
           life: 3000
         });

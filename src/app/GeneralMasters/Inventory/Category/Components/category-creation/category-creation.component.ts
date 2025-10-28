@@ -114,7 +114,7 @@ export class CategoryCreationComponent implements OnInit {
           summary: 'Registro exitoso',
           detail: 'Se ha creado la categoría con éxito.'
         });
-        this.router.navigate(['/gen-masters/inventory/categories/list']); // Redirigir a la lista
+        this.router.navigate(['/gen-masters/inventory/categories/list']); 
       },
       error: (err: any) => {
         console.error('Error al crear la categoría:', err);
