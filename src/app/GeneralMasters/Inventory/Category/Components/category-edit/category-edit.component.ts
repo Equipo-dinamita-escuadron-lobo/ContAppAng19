@@ -53,11 +53,11 @@ export class CategoryEditComponent implements OnInit {
   return: any[] = [];
 
   constructor(
-    private route: ActivatedRoute,
-    private categoryService: CategoryService,
-    private formBuilder: FormBuilder,
-    private router: Router,
-    private chartAccountService: ChartAccountService,
+    private readonly route: ActivatedRoute,
+    private readonly categoryService: CategoryService,
+    private readonly formBuilder: FormBuilder,
+    private readonly router: Router,
+    private readonly chartAccountService: ChartAccountService,
   ) {
     // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     this.editForm = this.formBuilder.group({

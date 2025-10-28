@@ -46,10 +46,10 @@ export class CategoryCreationComponent implements OnInit {
   return: any[] = [];
 
   constructor(
-    private formBuilder: FormBuilder,
-    private categoryService: CategoryService,
-    private router: Router,
-    private chartAccountService: ChartAccountService,
+    private readonly formBuilder: FormBuilder,
+    private readonly categoryService: CategoryService,
+    private readonly router: Router,
+    private readonly chartAccountService: ChartAccountService,
   ) {
     // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     this.categoryForm = this.formBuilder.group({

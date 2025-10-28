@@ -1,5 +1,5 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
@@ -8,9 +8,7 @@ import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalo
 import { Category } from '../../Models/Category';
 import { CategoryService } from '../../Services/category.service';
 
-// PrimeNG Imports
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -21,7 +19,6 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
-import { ReactiveFormsModule } from '@angular/forms';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -70,12 +67,12 @@ export class CategoryListComponent implements OnInit {
   selectedCategory: Category | null = null;
 
   constructor(
-    private categoryService: CategoryService,
-    private router: Router,
-    private chartAccountService: ChartAccountService,
-    private fb: FormBuilder,
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private readonly categoryService: CategoryService,
+    private readonly router: Router,
+    private readonly chartAccountService: ChartAccountService,
+    private readonly fb: FormBuilder,
+    private readonly confirmationService: ConfirmationService,
+    private readonly messageService: MessageService
   ) {
     this.form = this.fb.group(this.validationsAll());
   }
