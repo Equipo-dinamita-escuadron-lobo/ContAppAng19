@@ -18,7 +18,8 @@ export interface Product {
     name: string; 
     description: string;
     quantity: number;
-    taxPercentage: number; 
+    taxPercentage: number[]; 
+    taxes?: number[]; // Campo adicional para envío al backend
     creationDate: Date;
     unitOfMeasureId: number; 
     categoryId: number; 
@@ -37,7 +38,7 @@ export interface ProductList {
     name: string; 
     description: string;
     quantity: number;
-    taxPercentage: number;
+    taxPercentage: number[];
     taxDisplayText?: string; 
     creationDate: Date;
     unitOfMeasureName: string;

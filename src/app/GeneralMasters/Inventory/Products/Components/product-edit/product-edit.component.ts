@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ProductType } from '../../../ProductTypes/Models/ProductType';
@@ -28,6 +29,7 @@ import { TaxService } from '../../../../Taxes/services/tax.service';
     RouterModule,
     InputTextModule,
     SelectModule,
+    MultiSelectModule,
     ButtonModule,
     InputNumberModule,
   ],
@@ -45,7 +47,7 @@ export class ProductEditComponent implements OnInit {
   formSubmitAttempt = false;
   
   userModifiedFields = {
-    taxPercentage: false,
+    taxes: false,
     productTypeId: false,
     unitOfMeasureId: false,
     categoryId: false
@@ -72,7 +74,7 @@ export class ProductEditComponent implements OnInit {
       reference: [''],
       presentation: [''], // Campo opcional
       quantity: [0, [Validators.required, Validators.min(0)]],
-      taxPercentage: [null, [Validators.required, Validators.min(0), Validators.max(100)]],
+      taxes: [[], Validators.required], // Cambiado de taxPercentage a taxes
       cost: [0, [Validators.required, Validators.min(0)]],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
@@ -101,16 +103,16 @@ export class ProductEditComponent implements OnInit {
     if (!this.entData) return;
     this.unitOfMeasureService.findActivate(this.entData).subscribe(data => this.unitOfMeasures = data);
     this.categoryService.findActivate(this.entData).subscribe(data => this.categories = data);
-    this.productTypeService.getProductTypes(this.entData).subscribe((data: any) => this.productTypes = data);
-    this.taxService.getTaxes(this.entData).subscribe({
+    this.productTypeService.findActivate(this.entData).subscribe((data: ProductType[]) => this.productTypes = data);
+    this.taxService.getActiveTaxes(this.entData).subscribe({
       next: (data) => {
-        // Agregar displayText para el filtro del p-select
+        // Agregar displayText para el filtro del p-multiselect
         this.taxes = data.map(tax => ({
           ...tax,
           displayText: `${tax.code} (${tax.interest}%)`
         }));
       },
-      error: (err) => console.error('Error al obtener los impuestos:', err)
+      error: (err) => console.error('Error al obtener los impuestos activos:', err)
     });
   }
 
@@ -122,7 +124,7 @@ export class ProductEditComponent implements OnInit {
         this.originalProductData = {
           ...product,
           quantity: Number(product.quantity),
-          taxPercentage: Number(product.taxPercentage),
+          taxPercentage: Array.isArray(product.taxPercentage) ? product.taxPercentage : [Number(product.taxPercentage)],
           cost: Number(product.cost),
           unitOfMeasureId: Number(product.unitOfMeasureId),
           categoryId: Number(product.categoryId),
@@ -176,7 +178,7 @@ export class ProductEditComponent implements OnInit {
       reference: formData.reference,
       presentation: formData.presentation,
       quantity: Number(formData.quantity),
-      taxPercentage: formData.taxPercentage !== null ? [formData.taxPercentage.toString()] : ["0"],
+      taxes: formData.taxes && formData.taxes.length > 0 ? formData.taxes : [],
       cost: Number(formData.cost),
       unitOfMeasureId: formData.unitOfMeasureId, 
       categoryId: formData.categoryId, 
@@ -230,14 +232,14 @@ export class ProductEditComponent implements OnInit {
       reference: compareValues(formData.reference, this.originalProductData.reference),
       presentation: compareValues(formData.presentation, this.originalProductData.presentation),
       quantity: compareValues(formData.quantity, this.originalProductData.quantity),
-      taxPercentage: compareValues(formData.taxPercentage, this.originalProductData.taxPercentage),
+      taxes: !this.arraysEqual(formData.taxes || [], this.originalProductData.taxPercentage || []),
       cost: compareValues(formData.cost, this.originalProductData.cost),
       unitOfMeasureId: compareValues(formData.unitOfMeasureId, this.originalProductData.unitOfMeasureId),
       categoryId: compareValues(formData.categoryId, this.originalProductData.categoryId),
       productTypeId: compareValues(formData.productTypeId, this.originalProductData.productTypeId)
     };
 
-    return Object.values(changes).some(changed => changed === true);
+    return Object.values(changes).includes(true);
   }
 
   get hasChanges(): boolean {
@@ -255,5 +257,10 @@ export class ProductEditComponent implements OnInit {
     const hasValue = fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
     const wasModified = this.userModifiedFields[fieldName];
     return hasValue && wasModified;
+  }
+
+  private arraysEqual(a: any[], b: any[]): boolean {
+    if (a.length !== b.length) return false;
+    return a.every((val, index) => val === b[index]);
   }
 }

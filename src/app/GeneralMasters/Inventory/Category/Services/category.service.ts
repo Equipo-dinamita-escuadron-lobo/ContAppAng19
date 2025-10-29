@@ -1,14 +1,15 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { Category } from '../Models/Category';
 
-//interface temporal para simular la respuesta de la API
-interface Cuenta {
-  id: number;
-  name: string;
-  description: string;
+interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
 }
 
 @Injectable({
@@ -16,48 +17,8 @@ interface Cuenta {
 })
 export class CategoryService {
 
-  private cuentas: Cuenta[] = [
-    {
-      id: 1,
-      name: 'Cuentas por cobrar',
-      description: 'Cuentas por cobrar a clientes'
-    },
-    {
-      id: 2,
-      name: 'Cuentas por pagar',
-      description: 'Cuentas por pagar a proveedores'
-    },
-    {
-      id: 3,
-      name: 'Caja',
-      description: 'Caja chica'
-    },
-    {
-      id: 4,
-      name: 'Bancos',
-      description: 'Cuentas bancarias'
-    },
-    {
-      id: 5,
-      name: 'Inventario',
-      description: 'Inventario de productos'
-    }
-  ];
-
-  constructor(private http: HttpClient) { }
-
-  getCuentas(): Observable<Cuenta[]> {
-    return of(this.cuentas);
-  }
-
-  getCuentaById(id: number): Observable<Cuenta> {
-    const cuenta = this.cuentas.find(c => c.id === id) || {
-      id: 0,
-      name: '',
-      description: ''
-    };
-    return of(cuenta);
-  }
+  
+  constructor(private readonly http: HttpClient) { }
 
   // Método para obtener todas las categorías con paginación, búsqueda y ordenamiento
   findAll(enterpriseId: string, page: number, size: number, sortField: string, sortOrder: string, search?: string): Observable<any> {
@@ -76,13 +37,15 @@ export class CategoryService {
     return this.http.get(url, { params });
   }
 
-  // Método para obtener categorías activas con paginación
-  findActivate(enterpriseId: string): Observable<any> {
+  // Método para obtener categorías activas
+  findActivate(enterpriseId: string): Observable<Category[]> {
     const params = new HttpParams()
       .set('enterpriseId', enterpriseId);
 
     const url = `${environment.API_URL}categories/findActivate`;
-    return this.http.get(url, { params });
+    return this.http.get<Page<Category>>(url, { params }).pipe(
+      map((page: Page<Category>) => page.content)
+    );
   }
 
   // Método para obtener una categoría por su ID

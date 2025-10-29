@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
@@ -30,6 +31,7 @@ import { TaxService } from '../../../../Taxes/services/tax.service';
     CardModule,
     InputTextModule,
     SelectModule,
+    MultiSelectModule,
     ButtonModule,
     InputNumberModule,
     CalendarModule
@@ -64,7 +66,7 @@ export class ProductCreationComponent implements OnInit {
       reference: [''],
       presentation: [''], // Nuevo campo
       quantity: [0, [Validators.required, Validators.min(0)]],
-      taxPercentage: [null, [Validators.required, Validators.min(0), Validators.max(100)]],
+      taxes: [[], Validators.required], // Cambiado de taxPercentage a taxes
       cost: [0, [Validators.required, Validators.min(0)]],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
@@ -93,9 +95,9 @@ export class ProductCreationComponent implements OnInit {
   }
 
   loadProductTypes(): void {
-    this.productTypeService.getProductTypes(this.entData).subscribe({
-      next: (data: any) => this.productTypes = data,
-      error: (err: any) => console.error('Error al cargar tipos de producto', err)
+    this.productTypeService.findActivate(this.entData).subscribe({
+      next: (data: ProductType[]) => this.productTypes = data,
+      error: (err: any) => console.error('Error al cargar tipos de producto activos', err)
     });
   }
 
@@ -119,15 +121,15 @@ export class ProductCreationComponent implements OnInit {
 
   getTaxes(): void {
     if (!this.entData) return;
-    this.taxService.getTaxes(this.entData).subscribe({
+    this.taxService.getActiveTaxes(this.entData).subscribe({
       next: (data) => {
-        // Agregar displayText para el filtro del p-select
+
         this.taxes = data.map(tax => ({
           ...tax,
           displayText: `${tax.code} (${tax.interest}%)`
         }));
       },
-      error: (err) => console.error('Error al obtener los impuestos:', err)
+      error: (err) => console.error('Error al obtener los impuestos activos:', err)
     });
   }
 
@@ -148,7 +150,7 @@ export class ProductCreationComponent implements OnInit {
       reference: formData.reference,
       presentation: formData.presentation,
       quantity: Number(formData.quantity),
-      taxPercentage: formData.taxPercentage !== null ? [formData.taxPercentage.toString()] : ["0"],
+      taxes: formData.taxes && formData.taxes.length > 0 ? formData.taxes : [],
       cost: Number(formData.cost),
       unitOfMeasureId: formData.unitOfMeasureId, // Ya es ID gracias a optionValue
       categoryId: formData.categoryId, // Ya es ID gracias a optionValue

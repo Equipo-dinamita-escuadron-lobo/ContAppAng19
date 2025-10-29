@@ -70,14 +70,30 @@ export class ProductService {
               }
               
               // Buscar información del impuesto - hacerlo más robusto
-              let taxInfo = taxMap.get(product.taxPercentage);
-              
-              // Si no se encuentra exactamente, buscar por aproximación
-              if (!taxInfo && taxes.length > 0) {
-                taxInfo = taxes.find((tax: any) => Math.abs(tax.interest - product.taxPercentage) < 0.01);
+              let taxDisplayText = '';
+              if (Array.isArray(product.taxPercentage)) {
+                // Si es un array, buscar cada impuesto
+                const taxTexts: string[] = [];
+                product.taxPercentage.forEach((taxPercent: number) => {
+                  let taxInfo = taxMap.get(taxPercent);
+                  if (!taxInfo && taxes.length > 0) {
+                    taxInfo = taxes.find((tax: any) => Math.abs(tax.interest - taxPercent) < 0.01);
+                  }
+                  if (taxInfo) {
+                    taxTexts.push(`${taxInfo.code} (${taxInfo.interest}%)`);
+                  } else {
+                    taxTexts.push(`${taxPercent}%`);
+                  }
+                });
+                taxDisplayText = taxTexts.join(', ');
+              } else {
+                // Si es un solo valor (compatibilidad hacia atrás)
+                let taxInfo = taxMap.get(product.taxPercentage);
+                if (!taxInfo && taxes.length > 0) {
+                  taxInfo = taxes.find((tax: any) => Math.abs(tax.interest - product.taxPercentage) < 0.01);
+                }
+                taxDisplayText = taxInfo ? `${taxInfo.code} (${taxInfo.interest}%)` : `${product.taxPercentage}%`;
               }
-              
-              const taxDisplayText = taxInfo ? `${taxInfo.code} (${taxInfo.interest}%)` : `${product.taxPercentage}%`;
               
               // Obtener nombres de manera segura
               const unitOfMeasure = unitOfMeasureMap.get(product.unitOfMeasureId);
