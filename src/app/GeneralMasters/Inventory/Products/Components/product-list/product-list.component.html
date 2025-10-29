@@ -33,17 +33,14 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()"
-            placeholder="Buscar por código, nombre, descripción..."
-            class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none" />
-          <p-inputicon class="cursor-pointer" (click)="onSearch()">
-            <i class="pi pi-search text-primary"></i>
-          </p-inputicon>
-          @if (searchTerm) {
-            <p-inputicon class="cursor-pointer ml-2" (click)="clearSearch()">
-              <i class="pi pi-times text-red-500"></i>
-            </p-inputicon>
-          }
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Buscar producto (código/nombre/referencia)..."
+            class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
+          />
         </p-iconfield>
       </div>
     </div>

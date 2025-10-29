@@ -112,7 +112,7 @@ export class ProductListComponent implements OnInit {
   }
 
   // Método para manejar búsqueda
-  onSearch(): void {
+  onSearchChange(): void {
     this.currentPage = 0; // Resetear a la primera página al buscar
     this.getProducts();
   }
