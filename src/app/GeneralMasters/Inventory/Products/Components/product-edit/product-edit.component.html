@@ -35,23 +35,29 @@
           
           <!-- Nombre del Producto -->
           <div class="flex flex-col gap-2">
-            <label for="name" class="font-semibold text-primary">Nombre del Producto</label>
+            <label for="name" class="font-semibold text-primary label-required">Nombre del Producto</label>
             <input pInputText id="name" formControlName="name" class="w-full md:w-2/3" />
             @if (productForm.get('name')?.invalid && productForm.get('name')?.touched) {
-              <small class="text-red-500">El nombre es requerido.</small>
+              <small class="error-message">El nombre es requerido.</small>
             }
           </div>
 
           <!-- Referencia -->
           <div class="flex flex-col gap-2">
-            <label for="reference" class="font-semibold text-primary">Referencia / SKU</label>
+            <label for="reference" class="font-semibold text-primary label-required">Referencia / SKU</label>
             <input pInputText id="reference" formControlName="reference" class="w-full md:w-2/3" />
+            @if (productForm.get('reference')?.invalid && productForm.get('reference')?.touched) {
+              <small class="error-message">La referencia es requerida.</small>
+            }
           </div>
 
           <!-- Presentación -->
           <div class="flex flex-col gap-2">
-            <label for="presentation" class="font-semibold text-primary">Presentación</label>
+            <label for="presentation" class="font-semibold text-primary label-required">Presentación</label>
             <input pInputText id="presentation" formControlName="presentation" class="w-full md:w-2/3" />
+            @if (productForm.get('presentation')?.invalid && productForm.get('presentation')?.touched) {
+              <small class="error-message">La presentación es requerida.</small>
+            }
           </div>
 
           <!-- Cantidad (Normalmente no se edita aquí, pero se mantiene si es un requisito) -->
@@ -59,13 +65,13 @@
             <label for="quantity" class="font-semibold text-primary">Cantidad en Inventario</label>
             <p-inputNumber inputId="quantity" formControlName="quantity" [min]="0" styleClass="w-full md:w-2/3"></p-inputNumber>
             @if (productForm.get('quantity')?.invalid && productForm.get('quantity')?.touched) {
-              <small class="text-red-500">La cantidad es requerida y no puede ser negativa.</small>
+              <small class="error-message">La cantidad es requerida y no puede ser negativa.</small>
             }
           </div>
 
           <!-- Impuesto(s) -->
           <div class="flex flex-col gap-2">
-            <label for="taxPercentage" class="font-semibold text-primary">Impuesto(s)</label>
+            <label for="taxPercentage" class="font-semibold text-primary label-required">Impuesto(s)</label>
             <p-multiSelect
               id="taxSelect"
               [options]="taxes"
@@ -92,7 +98,7 @@
               </ng-template>
             </p-multiSelect>
             @if (productForm.get('taxes')?.invalid && productForm.get('taxes')?.touched) {
-              <small class="text-red-500">Debe seleccionar al menos un impuesto.</small>
+              <small class="error-message">Debe seleccionar al menos un impuesto.</small>
             }
           </div>
 
@@ -101,13 +107,13 @@
             <label for="cost" class="font-semibold text-primary">Costo</label>
             <p-inputNumber inputId="cost" formControlName="cost" mode="currency" currency="COP" locale="es-CO" [min]="0" styleClass="w-full md:w-2/3"></p-inputNumber>
             @if (productForm.get('cost')?.invalid && productForm.get('cost')?.touched) {
-              <small class="text-red-500">El costo es requerido y no puede ser negativo.</small>
+              <small class="error-message">El costo es requerido y no puede ser negativo.</small>
             }
           </div>
 
           <!-- Tipo de Producto -->
           <div class="flex flex-col gap-2">
-            <label for="productTypeId" class="font-semibold text-primary">Tipo de Producto</label>
+            <label for="productTypeId" class="font-semibold text-primary label-required">Tipo de Producto</label>
             <p-select
               id="productTypeId"
               formControlName="productTypeId"
@@ -130,13 +136,13 @@
               </ng-template>
             </p-select>
             @if (productForm.get('productTypeId')?.invalid && productForm.get('productTypeId')?.touched) {
-              <small class="text-red-500">Debe seleccionar un tipo de producto.</small>
+              <small class="error-message">Debe seleccionar un tipo de producto.</small>
             }
           </div>
 
           <!-- Unidad de Medida -->
           <div class="flex flex-col gap-2">
-            <label for="unitOfMeasureId" class="font-semibold text-primary">Unidad de Medida</label>
+            <label for="unitOfMeasureId" class="font-semibold text-primary label-required">Unidad de Medida</label>
             <p-select
               id="unitOfMeasureId"
               formControlName="unitOfMeasureId"
@@ -159,13 +165,13 @@
               </ng-template>
             </p-select>
             @if (productForm.get('unitOfMeasureId')?.invalid && productForm.get('unitOfMeasureId')?.touched) {
-              <small class="text-red-500">Debe seleccionar una unidad de medida.</small>
+              <small class="error-message">Debe seleccionar una unidad de medida.</small>
             }
           </div>
 
           <!-- Categoría -->
           <div class="flex flex-col gap-2">
-            <label for="categoryId" class="font-semibold text-primary">Categoría</label>
+            <label for="categoryId" class="font-semibold text-primary label-required">Categoría</label>
             <p-select
               id="categoryId"
               formControlName="categoryId"
@@ -188,16 +194,16 @@
               </ng-template>
             </p-select>
             @if (productForm.get('categoryId')?.invalid && productForm.get('categoryId')?.touched) {
-              <small class="text-red-500">Debe seleccionar una categoría.</small>
+              <small class="error-message">Debe seleccionar una categoría.</small>
             }
           </div>
           
           <!-- Descripción -->
           <div class="md:col-span-2 flex flex-col gap-2">
-            <label for="description" class="font-semibold text-primary">Descripción</label>
+            <label for="description" class="font-semibold text-primary label-required">Descripción</label>
             <textarea id="description" formControlName="description" placeholder="Añade aquí cualquier observación..." rows="3" pInputTextarea class="p-inputtext w-full md:w-2/3"></textarea>
             @if (productForm.get('description')?.invalid && productForm.get('description')?.touched) {
-              <small class="text-red-500">La descripción es requerida.</small>
+              <small class="error-message">La descripción es requerida.</small>
             }
           </div>
         </div>

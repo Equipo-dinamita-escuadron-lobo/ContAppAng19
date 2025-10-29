@@ -71,8 +71,8 @@ export class ProductEditComponent implements OnInit {
     this.productForm = this.formBuilder.group({
       name: ['', Validators.required], 
       description: ['', Validators.required],
-      reference: [''],
-      presentation: [''], // Campo opcional
+      reference: ['', Validators.required],
+      presentation: ['', Validators.required], // Campo opcional
       quantity: [0, [Validators.required, Validators.min(0)]],
       taxes: [[], Validators.required], // Cambiado de taxPercentage a taxes
       cost: [0, [Validators.required, Validators.min(0)]],

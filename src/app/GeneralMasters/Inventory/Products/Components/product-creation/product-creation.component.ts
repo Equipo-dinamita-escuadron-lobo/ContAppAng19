@@ -63,16 +63,16 @@ export class ProductCreationComponent implements OnInit {
     this.productForm = this.formBuilder.group({
       name: ['', Validators.required],
       description: ['', Validators.required],
-      reference: [''],
-      presentation: [''], // Nuevo campo
+      reference: ['', Validators.required],
+      presentation: ['', Validators.required], 
       quantity: [0, [Validators.required, Validators.min(0)]],
-      taxes: [[], Validators.required], // Cambiado de taxPercentage a taxes
+      taxes: [[], Validators.required], 
       cost: [0, [Validators.required, Validators.min(0)]],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
       productTypeId: [null, Validators.required],
       creationDate: [today, Validators.required],
-      state: [true], // Nuevo campo con valor por defecto true
+      state: [true],
     });
   }
 
