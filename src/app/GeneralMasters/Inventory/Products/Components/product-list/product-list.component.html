@@ -48,7 +48,7 @@
     <!-- 3. TABLA DE PRODUCTOS: Estilizada para ser coherente con el diseño -->
     <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage?.totalElements || 0"
       [lazy]="true" (onPage)="onPageChange($event)" (onSort)="onSort($event)"
-      [rowsPerPageOptions]="[5, 10, 20, 50]" [loading]="false"
+      [rowsPerPageOptions]="[5, 10, 20]" [loading]="false"
       styleClass="p-datatable-striped font-family-sans" [tableStyle]="{ 'min-width': '50rem' }"
       [responsiveLayout]="'scroll'">
       <ng-template pTemplate="header">
@@ -232,7 +232,7 @@
   }
 
   <ng-template pTemplate="footer">
-    <p-button label="Cerrar" styleClass="p-button-text" (click)="isDetailsDialogVisible = false"></p-button>
+    <p-button label="Cerrar" severity="secondary" (click)="isDetailsDialogVisible = false"></p-button>
   </ng-template>
 </p-dialog>
 
