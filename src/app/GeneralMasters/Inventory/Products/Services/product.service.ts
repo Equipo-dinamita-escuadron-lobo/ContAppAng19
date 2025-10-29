@@ -39,6 +39,17 @@ export class ProductService {
     );
   }
 
+  
+  getActiveProducts(enterpriseId: string): Observable<Page<ProductList>> {
+    let params: any = { enterpriseId };
+    return this.http.get<Page<Product>>(`${API_URL}products/findActivate`, { params }).pipe(
+      switchMap((page: Page<Product>) => this.transformProductsPage(page, enterpriseId)),
+      catchError(err => {
+        return of(this.createEmptyPage());
+      })
+    );
+  }
+
   /**
    * Transforma una página de productos agregando información relacionada
    */
