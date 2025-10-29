@@ -89,17 +89,6 @@ export class TaxService {
     return this.http.get<Tax>(url);
   }
 
-  /**
-   * Obtiene un impuesto específico utilizando su ID numérico.
-   *
-   * @param id - El ID numérico del impuesto que se desea obtener.
-   * @returns Un observable que emite el impuesto correspondiente de tipo `Tax`.
-   */
-  getTaxByNumericId(id: number): Observable<Tax> {
-    const url = this.apiURL + id;
-    return this.http.get<Tax>(url);
-  }
-
   
   deleteTax(id: number, enterpriseId: string): Observable<void> {
     const url = `${this.apiURL}${id}/${enterpriseId}`;

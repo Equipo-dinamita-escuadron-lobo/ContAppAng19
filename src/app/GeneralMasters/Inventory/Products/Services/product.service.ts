@@ -136,28 +136,30 @@ export class ProductService {
     });
 
     return forkJoin(queries).pipe(
-      map(results => results.filter(result => result !== null))
+      map(results => results.filter(result => result !== null)),
+      catchError(err => {
+        console.warn(`Error en forkJoin para ${type}:`, err);
+        return of([]);
+      })
     );
   }
 
   /**
-   * Obtiene datos de impuestos (por ID y todos los activos)
+   * Obtiene datos de impuestos (todos para mantener compatibilidad con históricos)
    */
   private getTaxData(taxIds: Set<number>, enterpriseId: string): Observable<{byId: any[], all: any[]}> {
-    const byId$ = taxIds.size > 0
-      ? forkJoin(Array.from(taxIds).map(id =>
-          this.taxService.getTaxByNumericId(id).pipe(
-            catchError(() => of(null))
-          )
-        )).pipe(map(results => results.filter(r => r !== null)))
-      : of([]);
-
+    // Usar getTaxes para obtener todos los impuestos (incluyendo inactivos para históricos)
     const all$ = this.taxService.getTaxes(enterpriseId).pipe(
-      catchError(() => of([]))
+      catchError(err => {
+        console.warn('Error al obtener todos los impuestos:', err);
+        return of([]);
+      }),
+      map(taxes => Array.isArray(taxes) ? taxes : [])
     );
 
-    return combineLatest([byId$, all$]).pipe(
-      map(([byId, all]) => ({ byId, all }))
+    // Retornamos array vacío para byId por ahora
+    return all$.pipe(
+      map(all => ({ byId: [], all }))
     );
   }
 
@@ -165,12 +167,19 @@ export class ProductService {
    * Crea mapas de búsqueda
    */
   private createLookupMaps(unitOfMeasures: any[], categories: any[], productTypes: any[], taxData: {byId: any[], all: any[]}) {
+    // Asegurar que todos los arrays sean válidos
+    const safeUnitOfMeasures = Array.isArray(unitOfMeasures) ? unitOfMeasures : [];
+    const safeCategories = Array.isArray(categories) ? categories : [];
+    const safeProductTypes = Array.isArray(productTypes) ? productTypes : [];
+    const safeTaxById = Array.isArray(taxData.byId) ? taxData.byId : [];
+    const safeTaxAll = Array.isArray(taxData.all) ? taxData.all : [];
+
     return {
-      unitOfMeasure: new Map(unitOfMeasures.map(item => [item.id, item])),
-      category: new Map(categories.map(item => [item.id, item])),
-      productType: new Map(productTypes.map(item => [item.id, item])),
-      taxById: new Map(taxData.byId.map(item => [item.id, item])),
-      taxByPercentage: new Map(taxData.all.map(item => [item.interest, item]))
+      unitOfMeasure: new Map(safeUnitOfMeasures.map(item => [item.id, item])),
+      category: new Map(safeCategories.map(item => [item.id, item])),
+      productType: new Map(safeProductTypes.map(item => [item.id, item])),
+      taxById: new Map(safeTaxById.map(item => [item.id, item])),
+      taxByPercentage: new Map(safeTaxAll.map(item => [item.interest, item]))
     };
   }
 
@@ -200,35 +209,45 @@ export class ProductService {
   private buildTaxDisplayText(product: Product, maps: any): string {
     if (product.taxes && Array.isArray(product.taxes)) {
       return product.taxes.map((taxId: number, index: number) => {
-        const taxInfo = maps.taxById.get(taxId);
-        if (taxInfo) {
-          return `${taxInfo.code} (${taxInfo.interest}%)`;
-        }
-
-        // Fallback: buscar por porcentaje
+        // Obtener porcentaje correspondiente
         const taxPercent = Array.isArray(product.taxPercentage) && product.taxPercentage[index] !== undefined
           ? product.taxPercentage[index]
           : (typeof product.taxPercentage === 'number' ? product.taxPercentage : null);
 
+        // Buscar en todos los impuestos disponibles
+        const allTaxes = Array.from(maps.taxByPercentage.values());
+        let taxInfo = null;
+
+        // Primero buscar por porcentaje exacto
         if (taxPercent !== null) {
-          const fallbackTax = maps.taxByPercentage.get(taxPercent);
-          if (fallbackTax) {
-            return `${fallbackTax.code} (${fallbackTax.interest}%)`;
-          }
+          taxInfo = allTaxes.find((tax: any) => tax?.interest === taxPercent);
+        }
+
+        // Si no encontró por porcentaje, buscar por ID
+        if (!taxInfo) {
+          taxInfo = allTaxes.find((tax: any) =>
+            tax && (
+              tax.id === taxId ||
+              tax.numericId === taxId ||
+              tax.taxId === taxId ||
+              tax.code === taxId.toString() ||
+              tax.id?.toString() === taxId.toString()
+            )
+          );
+        }
+
+        // Si encontró el impuesto, mostrar código y porcentaje
+        if (taxInfo && (taxInfo as any).code && (taxInfo as any).interest !== undefined) {
+          return `${(taxInfo as any).code} (${(taxInfo as any).interest}%)`;
+        }
+
+        // Fallback: mostrar porcentaje si está disponible
+        if (taxPercent !== null) {
           return `${taxPercent}%`;
         }
 
-        // Último fallback: buscar en todos los impuestos activos por otros criterios
-        const allTaxes = maps.taxByPercentage.values();
-        for (const tax of allTaxes) {
-          // Si el ID del impuesto coincide parcialmente o hay alguna otra coincidencia
-          if (tax.id === taxId || tax.numericId === taxId) {
-            return `${tax.code} (${tax.interest}%)`;
-          }
-        }
-
-        console.warn(`No se pudo resolver impuesto ID: ${taxId} para producto ${product.id}. Taxes disponibles:`, Array.from(maps.taxById.keys()));
-        return `Impuesto no disponible`;
+        // Último recurso: mostrar ID
+        return `ID: ${taxId}`;
       }).join(', ');
     }
 
@@ -236,13 +255,13 @@ export class ProductService {
     if (Array.isArray(product.taxPercentage)) {
       return product.taxPercentage.map((percent: number) => {
         const taxInfo = maps.taxByPercentage.get(percent);
-        return taxInfo ? `${taxInfo.code} (${taxInfo.interest}%)` : `${percent}%`;
+        return taxInfo && (taxInfo as any).code ? `${(taxInfo as any).code} (${(taxInfo as any).interest}%)` : `${percent}%`;
       }).join(', ');
     }
 
     if (typeof product.taxPercentage === 'number') {
       const taxInfo = maps.taxByPercentage.get(product.taxPercentage);
-      return taxInfo ? `${taxInfo.code} (${taxInfo.interest}%)` : `${product.taxPercentage}%`;
+      return taxInfo && (taxInfo as any).code ? `${(taxInfo as any).code} (${(taxInfo as any).interest}%)` : `${product.taxPercentage}%`;
     }
 
     return '';
