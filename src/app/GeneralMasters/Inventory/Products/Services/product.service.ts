@@ -145,21 +145,20 @@ export class ProductService {
   }
 
   /**
-   * Obtiene datos de impuestos (todos para mantener compatibilidad con históricos)
+   * Obtiene datos de impuestos
    */
   private getTaxData(taxIds: Set<number>, enterpriseId: string): Observable<{byId: any[], all: any[]}> {
-    // Usar getTaxes para obtener todos los impuestos (incluyendo inactivos para históricos)
-    const all$ = this.taxService.getTaxes(enterpriseId).pipe(
+    
+    const all$ = this.taxService.findAll(enterpriseId).pipe(
       catchError(err => {
         console.warn('Error al obtener todos los impuestos:', err);
-        return of([]);
+        return of({ content: [] });
       }),
-      map(taxes => Array.isArray(taxes) ? taxes : [])
+      map(page => Array.isArray(page.content) ? page.content : [])
     );
 
-    // Retornamos array vacío para byId por ahora
     return all$.pipe(
-      map(all => ({ byId: [], all }))
+      map(all => ({ byId: all, all }))
     );
   }
 
@@ -213,25 +212,18 @@ export class ProductService {
           ? product.taxPercentage[index]
           : (typeof product.taxPercentage === 'number' ? product.taxPercentage : null);
 
-        // Buscar por ID primero
         let taxInfo = maps.taxById.get(taxId);
 
-        // Si no encontró por ID, buscar por porcentaje
         if (!taxInfo && taxPercent !== null) {
           taxInfo = maps.taxByPercentage.get(taxPercent);
         }
-
-        // Si encontró el impuesto, mostrar código y porcentaje
         if (taxInfo && taxInfo.code && taxInfo.interest !== undefined) {
           return `${taxInfo.code} (${taxInfo.interest}%)`;
         }
 
-        // Fallback: mostrar porcentaje si está disponible
         if (taxPercent !== null) {
           return `${taxPercent}%`;
         }
-
-        // Último recurso: mostrar ID
         return `ID: ${taxId}`;
       }).join(', ');
     }
