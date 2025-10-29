@@ -35,26 +35,72 @@ export class ProductService {
 
     return this.http.get<Page<Product>>(`${API_URL}products/findAll`, { params }).pipe(
       switchMap((page: Page<Product>) => {
-        // Obtener datos relacionados
-        const unitOfMeasures$ = this.unitOfMeasureService.findActivate(enterpriseId);
-        const categories$ = this.categoryService.findActivate(enterpriseId);
-        const productTypes$ = this.productTypeService.getProductTypes(enterpriseId);
+        // Recopilar IDs únicos de elementos relacionados
+        const unitOfMeasureIds = new Set<number>();
+        const categoryIds = new Set<number>();
+        const productTypeIds = new Set<number>();
+
+        page.content.forEach((product: any) => {
+          if (product.unitOfMeasureId) unitOfMeasureIds.add(product.unitOfMeasureId);
+          if (product.categoryId) categoryIds.add(product.categoryId);
+          if (product.productTypeId) productTypeIds.add(product.productTypeId);
+        });
+
+        // Crear observables para obtener elementos por ID
+        const unitOfMeasureQueries = Array.from(unitOfMeasureIds).map(id =>
+          this.unitOfMeasureService.getUnitOfMeasuresId(id.toString(), enterpriseId).pipe(
+            catchError(err => {
+              console.warn(`Error al obtener unidad de medida ${id}:`, err);
+              return of(null);
+            })
+          )
+        );
+
+        const categoryQueries = Array.from(categoryIds).map(id =>
+          this.categoryService.getCategoryById(id.toString(), enterpriseId).pipe(
+            catchError(err => {
+              console.warn(`Error al obtener categoría ${id}:`, err);
+              return of(null);
+            })
+          )
+        );
+
+        const productTypeQueries = Array.from(productTypeIds).map(id =>
+          this.productTypeService.getProductTypeById(id.toString(), enterpriseId).pipe(
+            catchError(err => {
+              console.warn(`Error al obtener tipo de producto ${id}:`, err);
+              return of(null);
+            })
+          )
+        );
+
         const taxes$ = this.taxService.getTaxes(enterpriseId).pipe(
           map(taxes => taxes),
-          // Si falla la obtención de impuestos, continuar con array vacío
           catchError(err => {
             console.warn('Error al obtener impuestos, continuando sin información de impuestos:', err);
             return of([]);
           })
         );
-        
-        return combineLatest([unitOfMeasures$, categories$, productTypes$, taxes$]).pipe(
+
+        // Ejecutar todas las consultas en paralelo
+        return combineLatest([
+          unitOfMeasureQueries.length > 0 ? forkJoin(unitOfMeasureQueries) : of([]),
+          categoryQueries.length > 0 ? forkJoin(categoryQueries) : of([]),
+          productTypeQueries.length > 0 ? forkJoin(productTypeQueries) : of([]),
+          taxes$
+        ]).pipe(
           switchMap(([unitOfMeasures, categories, productTypes, taxes]) => {
+            // Filtrar resultados nulos y validar arrays
+            const safeUnitOfMeasures = Array.isArray(unitOfMeasures) ? unitOfMeasures.filter(um => um !== null) : [];
+            const safeCategories = Array.isArray(categories) ? categories.filter(cat => cat !== null) : [];
+            const safeProductTypes = Array.isArray(productTypes) ? productTypes.filter(pt => pt !== null) : [];
+            const safeTaxes = Array.isArray(taxes) ? taxes : [];
+
             // Crear mapas para búsqueda rápida
-            const unitOfMeasureMap = new Map<number, any>(unitOfMeasures.map((um: any) => [um.id, um]));
-            const categoryMap = new Map<number, any>(categories.map((cat: any) => [cat.id, cat]));
-            const productTypeMap = new Map<number, any>(productTypes.map((pt: any) => [pt.id, pt]));
-            const taxMap = new Map<number, any>(taxes.map((tax: any) => [tax.interest, tax]));
+            const unitOfMeasureMap = new Map<number, any>(safeUnitOfMeasures.map((um: any) => [um.id, um]));
+            const categoryMap = new Map<number, any>(safeCategories.map((cat: any) => [cat.id, cat]));
+            const productTypeMap = new Map<number, any>(safeProductTypes.map((pt: any) => [pt.id, pt]));
+            const taxMap = new Map<number, any>(safeTaxes.map((tax: any) => [tax.interest, tax]));
             
                           // Transformar productos a ProductList con nombres
             const transformedProducts = page.content.map((product: any) => {
@@ -76,8 +122,8 @@ export class ProductService {
                 const taxTexts: string[] = [];
                 product.taxPercentage.forEach((taxPercent: number) => {
                   let taxInfo = taxMap.get(taxPercent);
-                  if (!taxInfo && taxes.length > 0) {
-                    taxInfo = taxes.find((tax: any) => Math.abs(tax.interest - taxPercent) < 0.01);
+                  if (!taxInfo && safeTaxes.length > 0) {
+                    taxInfo = safeTaxes.find((tax: any) => Math.abs(tax.interest - taxPercent) < 0.01);
                   }
                   if (taxInfo) {
                     taxTexts.push(`${taxInfo.code} (${taxInfo.interest}%)`);
@@ -89,8 +135,8 @@ export class ProductService {
               } else {
                 // Si es un solo valor (compatibilidad hacia atrás)
                 let taxInfo = taxMap.get(product.taxPercentage);
-                if (!taxInfo && taxes.length > 0) {
-                  taxInfo = taxes.find((tax: any) => Math.abs(tax.interest - product.taxPercentage) < 0.01);
+                if (!taxInfo && safeTaxes.length > 0) {
+                  taxInfo = safeTaxes.find((tax: any) => Math.abs(tax.interest - product.taxPercentage) < 0.01);
                 }
                 taxDisplayText = taxInfo ? `${taxInfo.code} (${taxInfo.interest}%)` : `${product.taxPercentage}%`;
               }
@@ -111,47 +157,27 @@ export class ProductService {
               } as ProductList;
             });
 
-            // Si no hay tipos de productos en el mapa, hacer consultas individuales
-            const productsNeedingIndividualQueries = transformedProducts.filter((product: any) =>
-              product.productTypeId && !product.productType
-            );
-
-            if (productsNeedingIndividualQueries.length > 0) {
-              const individualQueries = productsNeedingIndividualQueries.map((product: any) =>
-                this.productTypeService.getProductTypeById(product.productTypeId.toString(), enterpriseId).pipe(
-                  map((productType: ProductType) => ({ productId: product.id, productType }))
-                )
-              );
-
-              return forkJoin(individualQueries).pipe(
-                map((results: any[]) => {
-                  const individualProductTypeMap = new Map(results.map((r: any) => [r.productId, r.productType]));
-
-                  const finalProducts = transformedProducts.map((product: any) => {
-                    if (product.productTypeId && !product.productType) {
-                      const individualProductType = individualProductTypeMap.get(product.id);
-                      if (individualProductType) {
-                        product.productType = individualProductType;
-                        product.productTypeName = individualProductType.name;
-                      }
-                    }
-                    return product;
-                  });
-
-                  return {
-                    ...page,
-                    content: finalProducts
-                  } as Page<ProductList>;
-                })
-              );
-            }
-
             return of({
               ...page,
               content: transformedProducts
             } as Page<ProductList>);
           })
         );
+      }),
+      catchError(err => {
+        console.error('Error al obtener productos:', err);
+        // Retornar una página vacía en caso de error
+        return of({
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          size: 10,
+          number: 0,
+          numberOfElements: 0,
+          first: true,
+          last: true,
+          empty: true
+        } as Page<ProductList>);
       })
     );
   }

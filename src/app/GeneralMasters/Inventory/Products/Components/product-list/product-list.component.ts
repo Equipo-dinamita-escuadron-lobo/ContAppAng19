@@ -46,7 +46,17 @@ import { TooltipModule } from 'primeng/tooltip';
 export class ProductListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
-  productsPage: Page<ProductList> | null = null;
+  productsPage: Page<ProductList> = {
+    content: [],
+    totalElements: 0,
+    totalPages: 0,
+    size: 10,
+    number: 0,
+    numberOfElements: 0,
+    first: true,
+    last: true,
+    empty: true
+  };
   products: ProductList[] = []; // Mantener para compatibilidad con la plantilla
 
   // Propiedades para paginación y búsqueda
