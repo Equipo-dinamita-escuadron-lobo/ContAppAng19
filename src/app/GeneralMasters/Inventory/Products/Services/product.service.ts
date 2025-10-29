@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
 import { delay, Observable, of, switchMap, combineLatest, map, forkJoin, from, catchError } from 'rxjs';
-import { Product, ProductList } from '../Models/Product';
+import { Product, ProductList, Page } from '../Models/Product';
 import { ProductType } from '../../ProductTypes/Models/ProductType';
 import { UnitOfMeasure } from '../../MeasurementUnits/Models/UnitOfMeasure';
 import { Category } from '../../Category/Models/Category';
@@ -25,7 +25,7 @@ export class ProductService {
     private taxService: TaxService
   ) {}
 
-  getProducts(enterpriseId: string, numPage?: number, size?: number, sortField: string = 'name', sortOrder: string = 'asc', search?: string): Observable<ProductList[]> {
+  getProducts(enterpriseId: string, numPage?: number, size?: number, sortField: string = 'name', sortOrder: string = 'asc', search?: string): Observable<Page<ProductList>> {
     let params: any = { enterpriseId };
     if (numPage !== undefined) params.numPage = numPage;
     if (size !== undefined) params.size = size;
@@ -33,8 +33,8 @@ export class ProductService {
     params.sortOrder = sortOrder;
     if (search) params.search = search;
 
-    return this.http.get<Product[]>(`${API_URL}products/findAll`, { params }).pipe(
-      switchMap((products: Product[]) => {
+    return this.http.get<Page<Product>>(`${API_URL}products/findAll`, { params }).pipe(
+      switchMap((page: Page<Product>) => {
         // Obtener datos relacionados
         const unitOfMeasures$ = this.unitOfMeasureService.findActivate(enterpriseId);
         const categories$ = this.categoryService.findActivate(enterpriseId);
@@ -57,7 +57,7 @@ export class ProductService {
             const taxMap = new Map<number, any>(taxes.map((tax: any) => [tax.interest, tax]));
             
                           // Transformar productos a ProductList con nombres
-            const transformedProducts = products.map((product: any) => {
+            const transformedProducts = page.content.map((product: any) => {
               let productType: ProductType | null = null;
               
               // Verificar si el producto ya tiene el objeto productType completo
@@ -111,7 +111,7 @@ export class ProductService {
                 map((results: any[]) => {
                   const individualProductTypeMap = new Map(results.map((r: any) => [r.productId, r.productType]));
 
-                  return transformedProducts.map((product: any) => {
+                  const finalProducts = transformedProducts.map((product: any) => {
                     if (product.productTypeId && !product.productType) {
                       const individualProductType = individualProductTypeMap.get(product.id);
                       if (individualProductType) {
@@ -121,9 +121,19 @@ export class ProductService {
                     }
                     return product;
                   });
+
+                  return {
+                    ...page,
+                    content: finalProducts
+                  } as Page<ProductList>;
                 })
               );
-            }            return of(transformedProducts);
+            }
+
+            return of({
+              ...page,
+              content: transformedProducts
+            } as Page<ProductList>);
           })
         );
       })

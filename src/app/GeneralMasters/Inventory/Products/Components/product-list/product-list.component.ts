@@ -12,7 +12,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
 
-import { Product, ProductList } from '../../Models/Product';
+import { Product, ProductList, Page } from '../../Models/Product';
 import { ProductService } from '../../Services/product.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { TagModule } from 'primeng/tag';
@@ -46,10 +46,18 @@ import { TooltipModule } from 'primeng/tooltip';
 export class ProductListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
-  products: ProductList[] = [];
+  productsPage: Page<ProductList> | null = null;
+  products: ProductList[] = []; // Mantener para compatibilidad con la plantilla
+
+  // Propiedades para paginación y búsqueda
+  currentPage = 0;
+  pageSize = 10;
+  sortField = 'name';
+  sortOrder: 'asc' | 'desc' = 'asc';
+  searchTerm = '';
 
   isDetailsDialogVisible = false;
-  selectedProduct: ProductList | null = null
+  selectedProduct: ProductList | null = null;
 
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
@@ -68,14 +76,49 @@ export class ProductListComponent implements OnInit {
 
   getProducts(): void {
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
-    this.productService.getProducts(enterpriseId).subscribe({
-      next: (data: ProductList[]) => {
-        this.products = data;
+    this.productService.getProducts(
+      enterpriseId,
+      this.currentPage,
+      this.pageSize,
+      this.sortField,
+      this.sortOrder,
+      this.searchTerm || undefined
+    ).subscribe({
+      next: (data: Page<ProductList>) => {
+        this.productsPage = data;
+        this.products = data.content; // Mantener para compatibilidad con la plantilla
       },
       error: (error) => {
         console.error('Error al obtener los productos:', error);
       }
     });
+  }
+
+  // Método para manejar cambios de página
+  onPageChange(event: any): void {
+    this.currentPage = event.page;
+    this.pageSize = event.rows;
+    this.getProducts();
+  }
+
+  // Método para manejar búsqueda
+  onSearch(): void {
+    this.currentPage = 0; // Resetear a la primera página al buscar
+    this.getProducts();
+  }
+
+  // Método para manejar ordenamiento
+  onSort(event: any): void {
+    this.sortField = event.field;
+    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    this.getProducts();
+  }
+
+  // Método para limpiar búsqueda
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.currentPage = 0;
+    this.getProducts();
   }
 
   // --- AHORA: El filtro se maneja en la plantilla directamente con una referencia de PrimeNG ---

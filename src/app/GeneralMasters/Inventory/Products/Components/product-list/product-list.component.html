@@ -32,15 +32,24 @@
         <p-inputicon>
           <i class="pi pi-search text-gray-500"></i>
         </p-inputicon>
-        <input pInputText type="text" #filterInput (input)="productsTable.filterGlobal(filterInput.value, 'contains')"
+        <input pInputText type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()"
           placeholder="Buscar por código, nombre, descripción..."
           class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none" />
+        <p-inputicon class="cursor-pointer" (click)="onSearch()">
+          <i class="pi pi-search text-primary"></i>
+        </p-inputicon>
+        @if (searchTerm) {
+          <p-inputicon class="cursor-pointer ml-2" (click)="clearSearch()">
+            <i class="pi pi-times text-red-500"></i>
+          </p-inputicon>
+        }
       </p-iconfield>
     </div>
 
     <!-- 3. TABLA DE PRODUCTOS: Estilizada para ser coherente con el diseño -->
-    <p-table #productsTable [value]="products" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 20]"
-      [globalFilterFields]="['code', 'name', 'description', 'taxDisplayText', 'reference', 'presentation', 'unitOfMeasureName', 'categoryName', 'productTypeName']"
+    <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage?.totalElements || 0"
+      [lazy]="true" (onPage)="onPageChange($event)" (onSort)="onSort($event)"
+      [rowsPerPageOptions]="[5, 10, 20, 50]" [loading]="!productsPage"
       styleClass="p-datatable-striped font-family-sans" [tableStyle]="{ 'min-width': '50rem' }"
       [responsiveLayout]="'scroll'">
       <ng-template pTemplate="header">
