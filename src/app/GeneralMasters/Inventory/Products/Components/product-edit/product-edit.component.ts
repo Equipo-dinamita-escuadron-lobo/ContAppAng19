@@ -1,4 +1,3 @@
-// src/app/GeneralMasters/Inventory/Products/Components/product-edit/product-edit.component.ts
 
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -6,7 +5,6 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
 
-// --- Tus importaciones... ---
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
@@ -46,7 +44,6 @@ export class ProductEditComponent implements OnInit {
   isLoading = true;
   formSubmitAttempt = false;
   
-  // Seguimiento de campos que han sido modificados por el usuario
   userModifiedFields = {
     taxPercentage: false,
     productTypeId: false,
@@ -54,21 +51,20 @@ export class ProductEditComponent implements OnInit {
     categoryId: false
   };
 
-  // --- CAMBIO 1: Añade esta propiedad para guardar datos originales ---
   private originalProductData!: Product;
 
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private productService: ProductService,
-    private unitOfMeasureService: UnitOfMeasureService,
-    private categoryService: CategoryService,
-    private productTypeService: ProductTypeService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private taxService: TaxService
+    private readonly formBuilder: FormBuilder,
+    private readonly productService: ProductService,
+    private readonly unitOfMeasureService: UnitOfMeasureService,
+    private readonly categoryService: CategoryService,
+    private readonly productTypeService: ProductTypeService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly taxService: TaxService
   ) {
     this.productForm = this.formBuilder.group({
       name: ['', Validators.required], 
@@ -86,8 +82,7 @@ export class ProductEditComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Las migas de pan se manejan a través del enrutamiento y el componente bread-crumb
-
+  
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.loadDropdownData();
 
@@ -119,7 +114,6 @@ export class ProductEditComponent implements OnInit {
     });
   }
 
-  // --- CAMBIO 2: Modifica este método para guardar el producto original ---
   loadProductData(id: number): void {
     const enterpriseId = this.localStorageMethods.getIdEnterprise();
     this.productService.getProductById(id, enterpriseId).subscribe({
@@ -135,7 +129,6 @@ export class ProductEditComponent implements OnInit {
           productTypeId: Number(product.productTypeId)
         };
         
-        // Para el formulario, configurar taxPercentage como null si es 0 para que no aparezca la X
         const formData: any = { ...this.originalProductData };
         if (formData.taxPercentage === 0) {
           formData.taxPercentage = null;
@@ -149,12 +142,11 @@ export class ProductEditComponent implements OnInit {
         console.error('Error al cargar el producto:', err);
         Swal.fire('Error', 'No se pudieron cargar los datos del producto.', 'error');
         this.isLoading = false;
-        this.router.navigate(['/gen-masters/inventory/products/list']); // Ruta corregida
+        this.router.navigate(['/gen-masters/inventory/products/list']); 
       }
     });
   }
 
-  // --- CAMBIO 3: Reemplaza este método por completo ---
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.productForm.invalid) {
@@ -163,7 +155,6 @@ export class ProductEditComponent implements OnInit {
       return;
     }
 
-    // Verificar si hubo cambios
     const hasChanges = this.hasFormChanges();
 
     if (!hasChanges) {
@@ -176,7 +167,6 @@ export class ProductEditComponent implements OnInit {
       return;
     }
 
-    // Combina los datos originales (id, state, etc.) con los datos actualizados del formulario
     const formData = { ...this.productForm.value };
     
     // Mapear los datos correctamente para el backend
@@ -200,8 +190,6 @@ export class ProductEditComponent implements OnInit {
       ...this.originalProductData,
       ...productData
     };
-
-    // Llama al servicio con los dos argumentos correctos: (ID, DATOS)
     this.productService.updateProduct(this.currentProductId, payload as any).subscribe({
       next: () => {
         Swal.fire({
@@ -211,7 +199,7 @@ export class ProductEditComponent implements OnInit {
           timer: 2000,
           showConfirmButton: false,
         }).then(() => {
-          this.router.navigate(['/gen-masters/inventory/products/list']); // Ruta corregida
+          this.router.navigate(['/gen-masters/inventory/products/list']); 
         });
       },
       error: (err) => {
@@ -222,15 +210,13 @@ export class ProductEditComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/gen-masters/inventory/products/list']); // Ruta corregida
+    this.router.navigate(['/gen-masters/inventory/products/list']); 
   }
 
-  // Método para verificar si hubo cambios en el formulario
   private hasFormChanges(): boolean {
     if (!this.originalProductData) return false;
     const formData = this.productForm.value;
     
-    // Convertir los valores numéricos a números para comparación consistente
     const compareValues = (val1: any, val2: any) => {
       if (typeof val1 === 'number' || typeof val2 === 'number') {
         return Number(val1) !== Number(val2);
@@ -251,30 +237,23 @@ export class ProductEditComponent implements OnInit {
       productTypeId: compareValues(formData.productTypeId, this.originalProductData.productTypeId)
     };
 
-    // Devolver true si hay al menos un cambio
     return Object.values(changes).some(changed => changed === true);
   }
 
-  // Método público para verificar si hubo cambios (usado en el template)
   get hasChanges(): boolean {
     if (!this.originalProductData) return false;
     return this.hasFormChanges();
   }
 
-  // Métodos para manejar la selección en los desplegables
   onFieldChange(fieldName: keyof typeof this.userModifiedFields): void {
     const fieldValue = this.productForm.get(fieldName)?.value;
-    // Solo marcar como modificado si realmente tiene un valor seleccionado
     this.userModifiedFields[fieldName] = fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
   }
 
-  // Método para verificar si se debe mostrar el clear en un campo específico
   shouldShowClear(fieldName: keyof typeof this.userModifiedFields): boolean {
     const fieldValue = this.productForm.get(fieldName)?.value;
     const hasValue = fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
     const wasModified = this.userModifiedFields[fieldName];
-    
-    // Mostrar clear solo si tiene valor Y ha sido modificado por el usuario
     return hasValue && wasModified;
   }
 }

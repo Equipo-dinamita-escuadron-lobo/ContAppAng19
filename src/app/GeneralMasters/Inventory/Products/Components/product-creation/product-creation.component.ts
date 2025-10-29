@@ -1,5 +1,3 @@
-// src/app/GeneralMasters/Inventory/Products/Components/product-creation/product-creation.component.ts
-
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -19,7 +17,6 @@ import { ProductService } from '../../Services/product.service';
 import { UnitOfMeasureService } from '../../../MeasurementUnits/Services/unit-of-measure.service';
 import { CategoryService } from '../../../Category/Services/category.service';
 import { ProductTypeService } from '../../../ProductTypes/Services/product-type.service';
-import { MenuItem } from 'primeng/api';
 import { TaxList } from '../../../../Taxes/models/Tax';
 import { TaxService } from '../../../../Taxes/services/tax.service';
 
@@ -52,18 +49,17 @@ export class ProductCreationComponent implements OnInit {
   formSubmitAttempt = false;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private productService: ProductService,
-    private unitOfMeasureService: UnitOfMeasureService,
-    private categoryService: CategoryService,
-    private productTypeService: ProductTypeService,
-    private router: Router,
-    private taxService: TaxService
+    private readonly formBuilder: FormBuilder,
+    private readonly productService: ProductService,
+    private readonly unitOfMeasureService: UnitOfMeasureService,
+    private readonly categoryService: CategoryService,
+    private readonly productTypeService: ProductTypeService,
+    private readonly router: Router,
+    private readonly taxService: TaxService
   ) {
-    // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     const today = new Date().toISOString().split('T')[0];
     this.productForm = this.formBuilder.group({
-      name: ['', Validators.required], // Cambiado de itemType a name
+      name: ['', Validators.required],
       description: ['', Validators.required],
       reference: [''],
       presentation: [''], // Nuevo campo
@@ -75,12 +71,10 @@ export class ProductCreationComponent implements OnInit {
       productTypeId: [null, Validators.required],
       creationDate: [today, Validators.required],
       state: [true], // Nuevo campo con valor por defecto true
-      // No necesitamos 'id' en el formulario de creación, la API debería generarlo.
     });
   }
 
   ngOnInit(): void {
-    // Las migas de pan se manejan a través del enrutamiento y el componente bread-crumb
 
     this.entData = this.localStorageMethods.getIdEnterprise();
     if (this.entData) {

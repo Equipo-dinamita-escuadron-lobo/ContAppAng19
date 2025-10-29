@@ -1,23 +1,17 @@
-// src/app/GeneralMasters/Inventory/Products/Components/product-list/product-list.component.ts
-
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
-// --- AHORA: Importaciones Standalone y de PrimeNG ---
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
 
-// --- Servicios y Modelos (asegúrate de que las rutas sean correctas) ---
 import { Product, ProductList } from '../../Models/Product';
 import { ProductService } from '../../Services/product.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
@@ -25,9 +19,6 @@ import { TagModule } from 'primeng/tag';
 import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
 import { TooltipModule } from 'primeng/tooltip';
-
-// --- Componente de Detalles (debe ser standalone también) ---
-// import { ProductDetailsComponent } from '../product-details/product-details.component';
 
 @Component({
   selector: 'app-product-list',
@@ -57,21 +48,17 @@ export class ProductListComponent implements OnInit {
   entData: any | null = null;
   products: ProductList[] = [];
 
-  // --- VARIABLES PARA EL MODAL ---
   isDetailsDialogVisible = false;
   selectedProduct: ProductList | null = null
 
-  // --- ANTES: No se necesita MatTableDataSource ni MatPaginator ---
-  // dataSource = new MatTableDataSource<Product>(this.products);
-  // @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
 
   constructor(
-    private productService: ProductService,
-    private router: Router,
-    private localstorageMethods: LocalStorageMethods,
-    private messageService: MessageService
+    private readonly productService: ProductService,
+    private readonly router: Router,
+    private readonly localstorageMethods: LocalStorageMethods,
+    private readonly messageService: MessageService
   ) { }
 
   ngOnInit(): void {
