@@ -25,8 +25,15 @@ export class ProductService {
     private taxService: TaxService
   ) {}
 
-  getProducts(enterpriseId:string): Observable<ProductList[]> {
-    return this.http.get<Product[]>(`${API_URL}products/findAll/${enterpriseId}`).pipe(
+  getProducts(enterpriseId: string, numPage?: number, size?: number, sortField: string = 'name', sortOrder: string = 'asc', search?: string): Observable<ProductList[]> {
+    let params: any = { enterpriseId };
+    if (numPage !== undefined) params.numPage = numPage;
+    if (size !== undefined) params.size = size;
+    params.sortField = sortField;
+    params.sortOrder = sortOrder;
+    if (search) params.search = search;
+
+    return this.http.get<Product[]>(`${API_URL}products/findAll`, { params }).pipe(
       switchMap((products: Product[]) => {
         // Obtener datos relacionados
         const unitOfMeasures$ = this.unitOfMeasureService.findActivate(enterpriseId);
@@ -123,9 +130,15 @@ export class ProductService {
     );
   }
 
-  getProductsBasic(enterpriseId:string): Observable<Product[]> {
-    const url = `${API_URL}products/findAll/${enterpriseId}`;
-    return this.http.get<Product[]>(url);
+  getProductsBasic(enterpriseId: string, numPage?: number, size?: number, sortField: string = 'name', sortOrder: string = 'asc', search?: string): Observable<Product[]> {
+    let params: any = { enterpriseId };
+    if (numPage !== undefined) params.numPage = numPage;
+    if (size !== undefined) params.size = size;
+    params.sortField = sortField;
+    params.sortOrder = sortOrder;
+    if (search) params.search = search;
+
+    return this.http.get<Product[]>(`${API_URL}products/findAll`, { params });
   }
 
   createProduct(product: Product): Observable<Product> {
@@ -133,25 +146,23 @@ export class ProductService {
     return this.http.post<Product>(url, product);
   }
 
-  // Ahora acepta el ID y los datos como parámetros separados.
-  updateProduct(id: number, productData: Product, enterpriseId: string): Observable<Product> {
-    const url = `${API_URL}products/update/${enterpriseId}/${id}`; // La URL se construye con el ID recibido.
-    // El cuerpo de la petición son los datos del producto.
+  updateProduct(id: number, productData: Product): Observable<Product> {
+    const url = `${API_URL}products/update/${id}`;
     return this.http.put<Product>(url, productData);
   }
   
   getProductById(id: number, enterpriseId: string): Observable<Product> {
-    const url = `${environment.API_URL}products/findById/${enterpriseId}/${id}`;
+    const url = `${environment.API_URL}products/findById/${id}/${enterpriseId}`;
     return this.http.get<Product>(url);
   }
 
   deleteProduct(id: number, enterpriseId: string): Observable<Product> {
-    const url = `${API_URL}products/delete/${enterpriseId}/${id}`;
+    const url = `${API_URL}products/delete/${id}/${enterpriseId}`;
     return this.http.delete<Product>(url);
   }
 
   changeProductState(id: number, enterpriseId: string): Observable<void> {
-    const url = `${API_URL}products/changeState/${enterpriseId}/${id}`;
+    const url = `${API_URL}products/changeState/${id}/${enterpriseId}`;
     return this.http.put<void>(url, {});
   }
 }

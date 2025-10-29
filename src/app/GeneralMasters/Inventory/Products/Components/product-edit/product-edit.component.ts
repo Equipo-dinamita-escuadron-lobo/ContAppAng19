@@ -12,14 +12,12 @@ import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ProductType } from '../../../ProductTypes/Models/ProductType';
-import { UnitOfMeasure } from '../../../MeasurementUnits/Models/UnitOfMeasure';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ProductService } from '../../Services/product.service';
 import { UnitOfMeasureService } from '../../../MeasurementUnits/Services/unit-of-measure.service';
 import { CategoryService } from '../../../Category/Services/category.service';
 import { ProductTypeService } from '../../../ProductTypes/Services/product-type.service';
 import { Product } from '../../Models/Product';
-import { MenuItem } from 'primeng/api';
 import { TaxList } from '../../../../Taxes/models/Tax';
 import { TaxService } from '../../../../Taxes/services/tax.service';
 
@@ -204,8 +202,7 @@ export class ProductEditComponent implements OnInit {
     };
 
     // Llama al servicio con los dos argumentos correctos: (ID, DATOS)
-    const enterpriseId = this.localStorageMethods.getIdEnterprise();
-    this.productService.updateProduct(this.currentProductId, payload as any, enterpriseId).subscribe({
+    this.productService.updateProduct(this.currentProductId, payload as any).subscribe({
       next: () => {
         Swal.fire({
           title: '¡Actualizado!',
