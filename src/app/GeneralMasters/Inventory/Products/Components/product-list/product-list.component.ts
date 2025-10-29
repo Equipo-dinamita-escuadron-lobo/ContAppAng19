@@ -177,12 +177,6 @@ export class ProductListComponent implements OnInit {
     return cost.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
   }
 
-  formatDate(date: Date): string {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('es-ES', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
-  }
   getStateSeverity(state: boolean): 'success' | 'danger' {
     return state ? 'success' : 'danger';
   }

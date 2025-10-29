@@ -183,7 +183,6 @@ export class ProductEditComponent implements OnInit {
       unitOfMeasureId: formData.unitOfMeasureId, 
       categoryId: formData.categoryId, 
       productTypeId: formData.productTypeId, 
-      creationDate: this.originalProductData.creationDate,
       state: formData.state,
       enterpriseId: this.originalProductData.enterpriseId
     };
