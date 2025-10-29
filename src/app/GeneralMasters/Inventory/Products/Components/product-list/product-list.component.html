@@ -119,7 +119,7 @@
           <td class="py-3 text-center whitespace-nowrap">
             <!-- 4. BOTONES DE ACCIÓN -->
             <div class="flex justify-center gap-2 items-center">
-              <p-button icon="pi pi-eye" pTooltip="Ver Detalles" tooltipPosition="top"
+              <p-button icon="pi pi-eye" pTooltip="Detalles" tooltipPosition="top"
                 (click)="openDetailsModal(product)"
                 styleClass="p-button-rounded p-button-text text-primary-60"></p-button>
               <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"
@@ -130,7 +130,7 @@
               <p-toggleSwitch
                 [(ngModel)]="product.state"
                 (onChange)="changeProductState(product)"
-                pTooltip="Cambiar Estado"
+                [pTooltip]="product.state ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"
