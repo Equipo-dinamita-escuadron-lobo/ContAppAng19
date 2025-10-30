@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PaymentMethodsServiceService, PageResponse } from '../../services/payment-methods-service.service';
+import { PaymentMethodsValidationMessagesService } from '../../services/payment-methods-validation-messages.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
 import { PaymentMethod } from '../../models/PaymentMethods';
@@ -51,6 +52,7 @@ export class PaymentMethodsListComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly localStorageMethod = inject(LocalStorageMethods);
   private readonly router = inject(Router);
+  public readonly paymentMethodsValidationMessagesService = inject(PaymentMethodsValidationMessagesService);
 
   private enterpriseId: string = '';
 
@@ -243,14 +245,6 @@ export class PaymentMethodsListComponent implements OnInit {
           paymentMethod.status = !newStatus;
         }
       });
-  }
-
-  getStateSeverity(status: boolean): string {
-    return status ? 'success' : 'danger';
-  }
-
-  formatState(status: boolean): string {
-    return status ? 'Activo' : 'Inactivo';
   }
 
   getAccountingAccountDisplay(accountingAccount: string): string {
