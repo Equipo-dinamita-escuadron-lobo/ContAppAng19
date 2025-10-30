@@ -27,6 +27,8 @@
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
       />
     </div>
   </div>
@@ -118,7 +120,7 @@
       <div class="col-span-1 flex"></div>
 
       <!-- 4. Botón -->
-      <div class="col-span-1 flex justify-center items-center">
+      <div class="col-span-1 flex justify-center items-center h-full">
         <button
           pButton
           type="button"

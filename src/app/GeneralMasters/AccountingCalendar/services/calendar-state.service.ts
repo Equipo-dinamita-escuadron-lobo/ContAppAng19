@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { takeUntil, switchMap, map } from 'rxjs/operators';
+import { takeUntil, switchMap, map, debounceTime } from 'rxjs/operators';
 import { AccountingCalendarService } from './accounting-calendar.service';
 import { CalendarGeneratorService } from './calendar-generator.service';
 import { CalendarOperationsService } from './calendar-operations.service';
@@ -36,6 +36,9 @@ export class CalendarStateService {
   // Subject para gestionar la cancelación de suscripciones
   private destroy$ = new Subject<void>();
   
+  // Subject para debounce de actualizaciones rápidas
+  private stateUpdate$ = new Subject<Partial<CalendarState>>();
+  
   // Flag para detectar interacciones de usuario vs automáticas
   private isUserInteraction = false;
 
@@ -44,7 +47,10 @@ export class CalendarStateService {
     private calendarGenerator: CalendarGeneratorService,
     private calendarOperations: CalendarOperationsService,
     private calendarData: CalendarDataService
-  ) {}
+  ) {
+    // Configurar debounce para actualizaciones rápidas
+    this.setupDebouncedUpdates();
+  }
 
   // Getters públicos para el estado consolidado
   get state$(): Observable<CalendarState> {
@@ -86,7 +92,7 @@ export class CalendarStateService {
    */
   changeYear(year: number): void {
     // Limpiar cache del año anterior
-    this.calendarData.clearActiveEntries();
+    this.calendarData.clearCache();
     
     this.updateState({
       ...this.currentState,
@@ -124,11 +130,10 @@ export class CalendarStateService {
       return;
     }
 
-    this.calendarService.findActiveByEnterpriseAndYear(enterpriseId, this.currentState.selectedYear)
+    this.calendarService.findAllByYear(enterpriseId, this.currentState.selectedYear)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const calendarData = response?.content || [];
+        next: (calendarData) => {
           this.updateCalendarWithData(calendarData);
         },
         error: (error: any) => {
@@ -181,12 +186,10 @@ export class CalendarStateService {
     const { enterpriseId, selectedYear } = this.currentState;
     if (!enterpriseId) return;
     
-    // Validar que sea una interacción de usuario
     if (!this.isUserInteraction) {
       return;
     }
 
-    // ACTUALIZACIÓN OPTIMISTA: Cambiar inmediatamente el estado en el frontend
     const updatedMonths = this.currentState.calendarMonths.map(month => {
       if (month.month === day.date.getMonth() && month.year === day.date.getFullYear()) {
         const updatedMonth = { ...month };
@@ -197,14 +200,12 @@ export class CalendarStateService {
           return d;
         });
         
-        // Recalcular estado del mes
         this.calendarData.updateMonthStatus(updatedMonth);
         return updatedMonth;
       }
       return month;
     });
 
-    // Aplicar cambio inmediato en la UI
     this.updateState({
       ...this.currentState,
       calendarMonths: updatedMonths,
@@ -213,17 +214,14 @@ export class CalendarStateService {
 
     const activeEntriesMap = this.calendarData.getActiveEntriesMap();
     
-    // Operación en el backend
+  
     this.calendarOperations.toggleDate(day, enterpriseId, selectedYear, activeEntriesMap)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const calendarData = response?.content || [];
-          // Sincronizar con el backend
+        next: (calendarData) => {
           this.updateCalendarWithData(calendarData);
         },
         error: (error) => {
-          // REVERTIR CAMBIO OPTIMISTA en caso de error
           this.updateState({
             ...this.currentState,
             error: 'Error al cambiar el estado de la fecha'
@@ -284,19 +282,16 @@ export class CalendarStateService {
     this.calendarOperations.changeMonthState(month, enterpriseId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const calendarData = response?.content || [];
+        next: (calendarData) => {
           // Sincronizar con el backend
           this.updateCalendarWithData(calendarData);
         },
         error: (error) => {
-          // REVERTIR CAMBIO OPTIMISTA en caso de error
           this.updateState({
             ...this.currentState,
             error: 'Error al cambiar el estado del mes'
           });
           
-          // Recargar datos del backend para revertir cambios
           this.loadExistingCalendarDataOnly();
         }
       });
@@ -330,15 +325,14 @@ export class CalendarStateService {
 
     this.updateState({
       ...this.currentState,
-      calendarMonths: updatedMonths
+      calendarMonths: updatedMonths,
+      error: null
     });
 
-    // Proceder con la llamada al backend
     this.calendarOperations.changeAllPeriodsState(openAll, enterpriseId, selectedYear)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response: any) => {
-          const calendarData = response?.content || [];
+        next: (calendarData) => {
           this.updateCalendarWithData(calendarData);
         },
         error: () => {
@@ -377,13 +371,44 @@ export class CalendarStateService {
   }
 
   /**
+   * Configura el sistema de debounce para actualizaciones rápidas
+   * Evita renders múltiples en operaciones masivas
+   */
+  private setupDebouncedUpdates(): void {
+    this.stateUpdate$.pipe(
+      debounceTime(50), // Esperar 50ms antes de aplicar actualización
+      takeUntil(this.destroy$)
+    ).subscribe(partialState => {
+      this.updateStateImmediate(partialState);
+    });
+  }
+
+  /**
+   * Actualiza el estado con debounce (para operaciones rápidas)
+   * @param partialState Estado parcial a actualizar
+   */
+  updateStateDeb(partialState: Partial<CalendarState>): void {
+    this.stateUpdate$.next(partialState);
+  }
+
+  /**
+   * Actualiza el estado inmediatamente (sin debounce)
+   * @param partialState Estado parcial a actualizar
+   */
+  private updateStateImmediate(partialState: Partial<CalendarState>): void {
+    this.updateState({
+      ...this.currentState,
+      ...partialState
+    });
+  }
+
+  /**
    * Limpia las suscripciones al destruir el servicio
    */
   destroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    
-    // Limpiar cache para liberar memoria
+    this.stateUpdate$.complete();    
     this.calendarData.clearCache();
   }
 }

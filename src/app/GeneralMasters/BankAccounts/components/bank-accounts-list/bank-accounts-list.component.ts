@@ -1,15 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { BankAccountsService, BankAccount } from '../../services/bank-accounts.service';
+import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -19,51 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 
 // PrimeNG Services
-import { MessageService } from 'primeng/api';
-import { ConfirmationService } from 'primeng/api';
-
-// Interfaces
-interface Bank {
-  id: number;
-  codigo: string;
-  nombre: string;
-  moneda: string;
-  status: boolean;
-}
-
-interface BankAccount {
-  id?: number;
-  accountNumber: number;
-  bank: Bank;
-  accountType: string;
-  cuentaContable: string;
-  status: boolean;
-  isDeleted?: boolean;
-  idEnterprise?: string;
-}
-
-interface AccountType {
-  code: string;
-  description: string;
-}
-
-interface BankAccountCreateRequest {
-  accountNumber: number;
-  bankId: number;
-  accountType: string;
-  cuentaContable: string;
-  idEnterprise: string;
-}
-
-interface BankAccountUpdateRequest {
-  id: number;
-  accountNumber: number;
-  bankId: number;
-  accountType: string;
-  cuentaContable: string;
-  status: boolean;
-  idEnterprise: string;
-}
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 
 @Component({
@@ -71,12 +27,10 @@ interface BankAccountUpdateRequest {
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
     FormsModule,
     ButtonModule,
     TableModule,
     InputTextModule,
-    DropdownModule,
     ToggleSwitchModule,
     ToastModule,
     ConfirmDialogModule,
@@ -90,121 +44,71 @@ interface BankAccountUpdateRequest {
   styleUrl: './bank-accounts-list.component.css'
 })
 export class BankAccountsListComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private http = inject(HttpClient);
-  private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
-  private router = inject(Router);
-
-  // API Base URLs
-  private readonly BANK_ACCOUNT_API = '/api/accountCatalogue/bank-accounts';
-  private readonly BANK_API = '/api/accountCatalogue/banks';
+  private readonly bankAccountsService = inject(BankAccountsService);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly router = inject(Router);
+  private readonly localStorageMethod = inject(LocalStorageMethods);
+  private readonly chartAccountService = inject(ChartAccountService);
   
-  // Enterprise ID - En un caso real vendría del servicio de autenticación
-  private readonly enterpriseId = 'EMP001';
+  private enterpriseId: string = '';
 
-  // Form and UI State
-  bankAccountForm!: FormGroup;
-  showForm = false;
-  isEditing = false;
-  isSubmitting = false;
   loading = false;
 
-  // Data
   bankAccounts: BankAccount[] = [];
-  filteredBankAccounts: BankAccount[] = [];
-  banks: Bank[] = [];
-  editingBankAccount: BankAccount | null = null;
+  accountingAccountsMap: Map<string, string> = new Map();
 
-  // Pagination
   pageSize = 10;
   totalRecords = 0;
   currentPage = 0;
 
-  // Search
   searchTerm = '';
-
-  // Account Types
-  accountTypes: AccountType[] = [
-    { code: 'AHORROS', description: 'Cuenta de Ahorros' },
-    { code: 'CORRIENTE', description: 'Cuenta Corriente' }
-  ];
+  sortField: string | undefined;
+  sortOrder: string | undefined;
 
   ngOnInit(): void {
-    this.initializeForm();
-    this.loadBanks();
-    this.loadBankAccounts();
-  }
-
-  private initializeForm(): void {
-    this.bankAccountForm = this.fb.group({
-      accountNumber: ['', [
-        Validators.required,
-        Validators.pattern(/^[0-9]+$/),
-        Validators.maxLength(20)
-      ], [this.duplicateAccountValidator.bind(this)]],
-      bankId: ['', Validators.required],
-      accountType: ['', Validators.required],
-      cuentaContable: ['', [
-        Validators.required,
-        Validators.pattern(/^[a-zA-Z0-9]+$/),
-        Validators.maxLength(50)
-      ]],
-      status: [true]
-    });
-  }
-
-  // Custom Validators
-  private duplicateAccountValidator(control: AbstractControl): Promise<ValidationErrors | null> {
-    if (!control.value || (this.isEditing && this.editingBankAccount?.accountNumber === control.value)) {
-      return Promise.resolve(null);
-    }
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const exists = this.bankAccounts.some(account => 
-          account.accountNumber === control.value && 
-          (!this.isEditing || account.id !== this.editingBankAccount?.id)
-        );
-        resolve(exists ? { duplicateAccount: true } : null);
-      }, 300);
-    });
-  }
-
-  // Data Loading
-  private loadBanks(): void {
-    this.http.get<any>(`${this.BANK_API}/findAllByStatus/${this.enterpriseId}?status=true&page=0&size=100`)
-      .subscribe({
-        next: (response) => {
-          this.banks = response.content || [];
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error loading banks:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Error al cargar la lista de bancos'
-          });
-        }
+    this.enterpriseId = this.localStorageMethod.getIdEnterprise();
+    if (this.enterpriseId) {
+      this.loadAccountingAccounts();
+      this.loadBankAccounts();
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo obtener el ID de la empresa'
       });
+    }
+  }
+
+  private loadAccountingAccounts(): void {
+    this.chartAccountService.getListAuxiliaryAccounts(this.enterpriseId).subscribe({
+      next: (accounts) => {
+        accounts.forEach(account => {
+          if (account.id != null) {
+            this.accountingAccountsMap.set(account.id.toString(), `${account.code} - ${account.description}`);
+          }
+        });
+      },
+      error: () => {
+        // Silenciar error, no es crítico
+      }
+    });
   }
 
   private loadBankAccounts(): void {
     this.loading = true;
-    this.http.get<any>(`${this.BANK_ACCOUNT_API}/findAll/${this.enterpriseId}?page=${this.currentPage}&size=${this.pageSize}`)
+    this.bankAccountsService.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
       .subscribe({
         next: (response) => {
-          this.bankAccounts = response.content || [];
-          this.totalRecords = response.totalElements || 0;
-          this.applySearch();
+          this.bankAccounts = response.content;
+          this.totalRecords = response.page?.totalElements || response.totalElements || 0;
           this.loading = false;
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error loading bank accounts:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al cargar la lista de cuentas bancarias'
+            summary: error.title || 'Error',
+            detail: error.message
           });
           this.loading = false;
         }
@@ -214,173 +118,74 @@ export class BankAccountsListComponent implements OnInit {
 
   // Search Functionality
   onSearch(): void {
-    this.applySearch();
+    this.currentPage = 0; // Reset to first page when searching
+    this.loadBankAccounts();
   }
 
+  onSort(event: any): void {
+    const newSortField = event.field;
+    const newSortOrder = event.order === 1 ? 'asc' : 'desc';
 
-  private applySearch(): void {
-    if (!this.searchTerm.trim()) {
-      this.filteredBankAccounts = [...this.bankAccounts];
-    } else {
-      const term = this.searchTerm.toLowerCase();
-      this.filteredBankAccounts = this.bankAccounts.filter(account =>
-        account.accountNumber.toString().includes(term) ||
-        account.bank?.nombre?.toLowerCase().includes(term) ||
-        account.bank?.codigo?.toLowerCase().includes(term) ||
-        account.cuentaContable.toLowerCase().includes(term)
-      );
+    // Only reload if sort parameters actually changed
+    if (this.sortField !== newSortField || this.sortOrder !== newSortOrder) {
+      this.sortField = newSortField || undefined;
+      this.sortOrder = newSortOrder || undefined;
+      this.currentPage = 0; // Reset to first page when sorting
+      this.loadBankAccounts();
+    }
+  }
+
+  onPage(event: any): void {
+    const newPage = Math.floor(event.first / event.rows);
+    const newRows = event.rows;
+
+    if (this.currentPage !== newPage || this.pageSize !== newRows) {
+      this.currentPage = newPage;
+      this.pageSize = newRows;
+      this.loadBankAccounts();
     }
   }
 
   // Navigation
   navigateToBanks(): void {
-    this.router.navigate(['/general-masters/bank-accounts/banks']);
+    this.router.navigate(['/gen-masters/bank-accounts/banks']);
   }
 
-  // Form Operations
-  showCreateForm(): void {
-    this.isEditing = false;
-    this.editingBankAccount = null;
-    this.showForm = true;
-    this.bankAccountForm.reset();
-    this.bankAccountForm.patchValue({ status: true });
+  navigateToCreate(): void {
+    this.router.navigate(['/gen-masters/bank-accounts/create']);
   }
 
-  editBankAccount(account: BankAccount): void {
-    this.isEditing = true;
-    this.editingBankAccount = { ...account };
-    this.showForm = true;
-    this.bankAccountForm.patchValue({
-      accountNumber: account.accountNumber,
-      bankId: account.bank?.id,
-      accountType: account.accountType,
-      cuentaContable: account.cuentaContable,
-      status: account.status
-    });
+  navigateToEdit(account: BankAccount): void {
+    this.router.navigate(['/gen-masters/bank-accounts/edit', account.id]);
   }
 
-  cancelForm(): void {
-    this.showForm = false;
-    this.isEditing = false;
-    this.editingBankAccount = null;
-    this.bankAccountForm.reset();
-  }
-
-  onSubmit(): void {
-    if (this.bankAccountForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
-      
-      if (this.isEditing) {
-        this.updateBankAccount();
-      } else {
-        this.createBankAccount();
-      }
-    }
-  }
-
-  private createBankAccount(): void {
-    const formValue = this.bankAccountForm.value;
-    const createRequest: BankAccountCreateRequest = {
-      accountNumber: formValue.accountNumber,
-      bankId: formValue.bankId,
-      accountType: formValue.accountType,
-      cuentaContable: formValue.cuentaContable,
-      idEnterprise: this.enterpriseId
-    };
-
-    this.http.post<BankAccount>(`${this.BANK_ACCOUNT_API}/create`, createRequest)
-      .subscribe({
-        next: (response) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Cuenta bancaria creada correctamente'
-          });
-          this.loadBankAccounts();
-          this.cancelForm();
-          this.isSubmitting = false;
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error creating bank account:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error.error?.message || 'Error al crear la cuenta bancaria'
-          });
-          this.isSubmitting = false;
-        }
-      });
-  }
-
-  private updateBankAccount(): void {
-    if (!this.editingBankAccount?.id) return;
-
-    const formValue = this.bankAccountForm.value;
-    const updateRequest: BankAccountUpdateRequest = {
-      id: this.editingBankAccount.id,
-      accountNumber: formValue.accountNumber,
-      bankId: formValue.bankId,
-      accountType: formValue.accountType,
-      cuentaContable: formValue.cuentaContable,
-      status: formValue.status,
-      idEnterprise: this.enterpriseId
-    };
-
-    this.http.put<BankAccount>(`${this.BANK_ACCOUNT_API}/update`, updateRequest)
-      .subscribe({
-        next: (response) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Cuenta bancaria actualizada correctamente'
-          });
-          this.loadBankAccounts();
-          this.cancelForm();
-          this.isSubmitting = false;
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error updating bank account:', error);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error.error?.message || 'Error al actualizar la cuenta bancaria'
-          });
-          this.isSubmitting = false;
-        }
-      });
-  }
-
-  // Status Toggle
   toggleAccountStatus(account: BankAccount, newStatus: boolean): void {
     if (!account.id) return;
 
-    this.http.patch<BankAccount>(`${this.BANK_ACCOUNT_API}/changeState/${account.id}/${this.enterpriseId}?state=${newStatus}`, {})
+    this.bankAccountsService.changeState(account.id, this.enterpriseId, newStatus)
       .subscribe({
-        next: (response) => {
+        next: () => {
           account.status = newStatus;
           this.messageService.add({
-            severity: 'info',
-            summary: 'Estado actualizado',
-            detail: `Cuenta bancaria ${newStatus ? 'activada' : 'desactivada'} correctamente`
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Estado de la cuenta '${account.accountNumber}' cambiado correctamente`
           });
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error toggling account status:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al cambiar el estado de la cuenta bancaria'
+            summary: error.title || 'Error',
+            detail: error.message
           });
-          // Revert the toggle
           account.status = !newStatus;
         }
       });
   }
 
-  // Delete Confirmation
   confirmDelete(account: BankAccount): void {
     this.confirmationService.confirm({
-      message: `¿Está seguro de que desea eliminar la cuenta bancaria "${account.accountNumber}"?`,
+      message: `¿Desea eliminar la cuenta bancaria "${account.accountNumber}"?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',
@@ -396,9 +201,9 @@ export class BankAccountsListComponent implements OnInit {
   private deleteBankAccount(account: BankAccount): void {
     if (!account.id) return;
 
-    this.http.delete<BankAccount>(`${this.BANK_ACCOUNT_API}/delete/${account.id}/${this.enterpriseId}`)
+    this.bankAccountsService.delete(account.id, this.enterpriseId)
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
@@ -406,21 +211,22 @@ export class BankAccountsListComponent implements OnInit {
           });
           this.loadBankAccounts();
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error deleting bank account:', error);
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: error.error?.message || 'Error al eliminar la cuenta bancaria'
+            summary: error.title || 'Error',
+            detail: error.message
           });
         }
       });
   }
 
 
-  // Utility Methods
   getAccountTypeDisplay(accountType: string): string {
-    const type = this.accountTypes.find(t => t.code === accountType);
-    return type ? type.description : accountType;
+    return this.bankAccountsService.getAccountTypeDisplay(accountType);
+  }
+
+  getAccountingAccountDisplay(accountingAccountId: string): string {
+    return this.accountingAccountsMap.get(accountingAccountId.toString()) || accountingAccountId;
   }
 }

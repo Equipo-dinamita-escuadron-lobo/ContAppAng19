@@ -2,7 +2,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 // PrimeNG Imports
 import { TableModule, Table } from 'primeng/table';
@@ -16,9 +17,11 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { PaginatorModule } from 'primeng/paginator';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // Componentes internos
-import { ThirdImportComponent } from '../third-import/third-import.component';
+import { ThirdTemplateComponent } from '../third-template/third-template.component';
 import { ThirdExportComponent } from '../third-export/third-export.component';
 import { ThirdDetailsComponent } from '../third-details/third-details.component';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -29,13 +32,18 @@ import { ThirdService } from '../../Services/third.service';
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
-import { eThirdGender } from '../../models/eThirdGender';
-import { ePersonType } from '../../models/ePersonType';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
-// External libraries
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+// Interfaces para manejo de errores de importación
+interface ImportError {
+  rowNumber: number;
+  columnNumber: number;
+  columnName: string;
+  fieldValue: any;
+  errorCode: string;
+  errorMessage: string;
+  errorType: string;
+}
 
 @Component({
   selector: 'app-third-list',
@@ -55,11 +63,13 @@ import { saveAs } from 'file-saver';
     FileUploadModule,
     DialogModule,
     TooltipModule,
-    ThirdImportComponent,
+    PaginatorModule,
+    ToggleSwitchModule,
+    ThirdTemplateComponent,
     ThirdExportComponent,
     ThirdDetailsComponent
   ],
-  providers: [MessageService, ConfirmationService, DatePipe],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './third-list.component.html',
   styleUrl: './third-list.component.css'
 })
@@ -74,40 +84,52 @@ export class ThirdListComponent implements OnInit {
   
   // UI State
   loading = false;
+  loadingPdfRut = false;
   showDetailView = false;
-  globalFilterValue = '';
+  searchValue = '';
+
+  bulkStateToggle = true; // Default to active
   
   // Pagination
   totalRecords = 0;
   rows = 10;
   first = 0;
-  
+  sortField = 'names';
+  sortOrder: 'asc' | 'desc' = 'asc';
+
   // Modal states
   showTemplateModal = false;
   showImportModal = false;
   showExportModal = false;
+  showErrorModal = false;
 
   /** Control de visibilidad del modal de detalles */
   showDetailsModal = false;
+  
+  // Variables para manejar errores de importación
+  importErrors: ImportError[] = [];
+  totalErrors = 0;
+  totalRecordsImported = 0;
+  successfulImports = 0;
+  failedImportsCount = 0;
+  duplicatesOmitted = 0;
 
   /** Datos para el modal de detalles */
   detailsModalData: any = null;
-  createPdfRUT = false;
   
   // Company data
   entData: string = '';
-  
-  // Excel data
-  excelData: any[] = [];
+
+  // Constantes
+  private readonly EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
 
   constructor(
-    private thirdService: ThirdService,
-    private thirdConfigurationService: ThirdServiceConfigurationService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private router: Router,
-    private datePipe: DatePipe,
-    private localStorageMethods: LocalStorageMethods
+    private readonly thirdService: ThirdService,
+    private readonly thirdConfigurationService: ThirdServiceConfigurationService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly router: Router,
+    private readonly localStorageMethods: LocalStorageMethods
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
   }
@@ -119,18 +141,26 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Carga la lista de terceros
+   * Carga la lista de terceros con paginación desde el backend
    */
   loadThirds(): void {
     this.loading = true;
-    this.thirdService.getThirdList(this.entData).subscribe({
-      next: (data: Third[]) => {
-        this.thirds = data || [];
-        this.totalRecords = this.thirds.length;
+    const pageNumber = Math.floor(this.first / this.rows);
+
+    this.thirdService.getThirdParties(
+      this.entData,
+      pageNumber,
+      this.rows,
+      this.sortField,
+      this.sortOrder,
+      this.searchValue || undefined
+    ).subscribe({
+      next: (response) => {
+        this.thirds = response.content || [];
+        this.totalRecords = response.page?.totalElements || response.totalElements || 0;
         this.loading = false;
       },
       error: (error: any) => {
-        console.error('Error loading thirds:', error);
         this.thirds = [];
         this.totalRecords = 0;
         this.loading = false;
@@ -155,7 +185,6 @@ export class ThirdListComponent implements OnInit {
         this.thirdTypes = response;
       },
       error: (error: any) => {
-        console.error('Error loading third types:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -174,7 +203,6 @@ export class ThirdListComponent implements OnInit {
         this.typeIds = response;
       },
       error: (error: any) => {
-        console.error('Error loading ID types:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -185,12 +213,34 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Aplica filtro global a la tabla
+   * Maneja el cambio en el término de búsqueda
    */
-  applyGlobalFilter(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.globalFilterValue = target.value;
-    this.dt.filterGlobal(target.value, 'contains');
+  onSearch(): void {
+    this.first = 0; // Reset to first page when searching
+    this.loadThirds();
+  }
+
+  /**
+   * Maneja el cambio de página
+   */
+  onPageChange(event: any): void {
+    this.first = event.first;
+    this.rows = event.rows;
+    this.loadThirds();
+  }
+
+  /**
+   * Maneja el cambio de ordenamiento
+   */
+  onSort(event: any): void {
+    // Evitar llamadas recursivas si el ordenamiento no cambió
+    if (this.sortField === event.field && this.sortOrder === (event.order === 1 ? 'asc' : 'desc')) {
+      return;
+    }
+
+    this.sortField = event.field;
+    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    this.loadThirds();
   }
 
 
@@ -219,34 +269,113 @@ export class ThirdListComponent implements OnInit {
    * Cambia el estado de un tercero
    */
   changeThirdState(third: Third): void {
-    const action = third.state ? 'desactivar' : 'activar';
-    const severity = third.state ? 'warn' : 'info';
+    const previousState = third.state;
+
+    this.thirdService.changeThirdPartieState(third.thId, this.entData).subscribe({
+      next: (response: any) => {
+        if (response && typeof response === 'object' && 'state' in response) {
+          third.state = response.state;
+        } else {
+          // El backend no devuelve el tercero, obtener el estado actualizado
+          this.thirdService.getThirdPartie(third.thId, this.entData).subscribe({
+            next: (fetchedThird: any) => {
+              third.state = fetchedThird.state;
+            },
+            error: (fetchError) => {
+              third.state = !previousState;
+            }
+          });
+        }
+
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Estado del Tercero cambiado correctamente`
+        });
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `Error al cambiar el estado del tercero`
+        });
+      }
+    });
+  }
+
+  /**
+   * Confirma y elimina un tercero
+   */
+  confirmDelete(third: Third): void {
+    const displayName = this.getDisplayName(third);
     
     this.confirmationService.confirm({
-      message: `¿Está seguro que desea ${action} este tercero?`,
-      header: 'Confirmación',
+      message: `¿Desea eliminar a "${displayName}"? Esta acción no se puede deshacer.`,
+      header: 'Confirmar Eliminación',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí',
-      rejectLabel: 'No',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
       accept: () => {
-        this.thirdService.changeThirdPartieState(third.thId).subscribe({
+        this.thirdService.deleteThird(third.thId, this.entData).subscribe({
           next: () => {
-            third.state = !third.state;
+            this.thirds = this.thirds.filter(t => t.thId !== third.thId);
+            this.totalRecords--;
             this.messageService.add({
               severity: 'success',
-              summary: 'Éxito',
-              detail: `Tercero ${action} correctamente`
+              summary: 'Eliminado',
+              detail: 'Tercero eliminado correctamente'
+            });
+          },
+        });
+      }
+    });
+  }
+
+  /**
+   * Cambia el estado de todos los terceros de forma masiva
+   */
+  changeBulkState(): void {
+    const actionLower = this.bulkStateToggle ? 'activar' : 'inactivar';
+
+    this.confirmationService.confirm({
+      message: `¿Desea ${actionLower} todos los terceros? Esta acción no se puede deshacer.`,
+      header: 'Confirmar Cambio de Estado Masivo',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: `Sí, ${actionLower}`,
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: this.bulkStateToggle ? 'p-button-success' : 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
+      accept: () => {
+        this.loading = true;
+        this.thirdService.changeAllThirdsState(this.entData, this.bulkStateToggle).subscribe({
+          next: (response: any) => {
+            this.loadThirds();
+
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Cambio Masivo Exitoso',
+              detail: `${response.message}`
             });
           },
           error: (error) => {
-            console.error('Error changing third state:', error);
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: `Error al ${action} el tercero`
+              detail: 'Error al cambiar el estado masivo de los terceros'
             });
           }
+        }).add(() => {
+          this.loading = false;
         });
+      },
+      reject: () => {
+        this.bulkStateToggle = !this.bulkStateToggle;
       }
     });
   }
@@ -280,56 +409,6 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Exporta terceros a Excel
-   */
-  exportThirdsToExcel(): void {
-    if (this.thirds.length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Advertencia',
-        detail: 'No hay terceros para exportar'
-      });
-      return;
-    }
-
-    const exportData = this.thirds.map(third => ({
-      'Tipo Persona': third.personType,
-      'Tipos de Tercero': this.getThirdTypesText(third.thirdTypes),
-      'Nombres': third.names || '',
-      'Apellidos': third.lastNames || '',
-      'Razón Social': third.socialReason || '',
-      'Género': third.gender || '',
-      'Tipo ID': third.typeId.typeId,
-      'Identificación': third.idNumber,
-      'Número de Verificación': third.verificationNumber || '',
-      'Estado': this.getStateText(third.state),
-      'País': third.country,
-      'Departamento': third.province,
-      'Ciudad': third.city,
-      'Dirección': third.address,
-      'Teléfono': third.phoneNumber,
-      'Correo': third.email,
-      'Fecha Creación': third.creationDate,
-      'Fecha Actualización': third.updateDate
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Terceros');
-    
-    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const data = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    
-    saveAs(data, `terceros_${new Date().getTime()}.xlsx`);
-    
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Éxito',
-      detail: 'Terceros exportados correctamente'
-    });
-  }
-
-  /**
    * Maneja la selección de archivos para importación
    */
   onFileSelect(event: any): void {
@@ -339,165 +418,178 @@ export class ThirdListComponent implements OnInit {
     if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
       this.messageService.add({
         severity: 'error',
-        summary: 'Error',
-        detail: 'El archivo debe ser de tipo xlsx'
+        summary: 'Archivo inválido',
+        detail: 'Por favor, selecciona un archivo EXCEL válido'
       });
       return;
     }
 
-    this.readExcelFile(file);
+    this.importThirdsFromExcel(file);
     // Reset the input so the same file can be selected again
     event.target.value = '';
   }
 
   /**
-   * Lee y procesa un archivo Excel
+   * Importa terceros desde un archivo Excel usando el endpoint del backend
    */
-  private readExcelFile(file: File): void {
-    const fileReader = new FileReader();
-    fileReader.readAsBinaryString(file);
+  private importThirdsFromExcel(file: File): void {
+    this.loading = true;
     
-    fileReader.onload = (e) => {
-      try {
-        const workBook = XLSX.read(fileReader.result, { type: 'binary', cellText: true });
-        const sheetNames = workBook.SheetNames;
-        this.excelData = XLSX.utils.sheet_to_json(workBook.Sheets[sheetNames[0]]);
+    this.thirdService.importFromExcel(this.entData, file).subscribe({
+      next: (response) => {
+        this.loading = false;
+        const importResult = response.body;
         
-        this.processExcelData();
-      } catch (error) {
-        console.error('Error reading Excel file:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Error al procesar el archivo Excel'
-        });
-      }
-    };
-  }
-
-  /**
-   * Procesa los datos del Excel
-   */
-  private processExcelData(): void {
-    const currentDate = new Date();
-    let successCount = 0;
-    let errorCount = 0;
-
-    this.excelData.forEach((row: any) => {
-      try {
-        const third: Third = {
-          thId: 0,
-          entId: this.entData,
-          personType: this.convertPersonType(row["Tipo persona"]),
-          thirdTypes: this.convertThirdTypes(row["Tipos de tercero"]),
-          names: row["Nombres"],
-          lastNames: row["Apellidos"],
-          socialReason: row["Razon social"],
-          gender: this.convertGender(row["Genero"]),
-          typeId: this.convertTypeId(row["Tipo ID"]),
-          idNumber: row["Identificacion"],
-          verificationNumber: row["Numero de verificacion"],
-          state: this.convertState(row["Estado"]),
-          country: row["Pais"],
-          province: row["Departamento"],
-          city: row["Ciudad"],
-          address: row["Direccion"],
-          phoneNumber: row["Telefono"],
-          email: row["Correo"],
-          creationDate: this.datePipe.transform(currentDate, 'yyyy-MM-dd')!,
-          updateDate: this.datePipe.transform(currentDate, 'yyyy-MM-dd')!
-        };
-
-        this.createThirdFromExcel(third);
-        successCount++;
-      } catch (error) {
-        console.error('Error processing row:', error);
-        errorCount++;
-      }
-    });
-
-    this.messageService.add({
-      severity: successCount > 0 ? 'success' : 'error',
-      summary: 'Importación completada',
-      detail: `${successCount} terceros importados correctamente. ${errorCount} errores.`
-    });
-
-    if (successCount > 0) {
-      this.loadThirds();
-    }
-  }
-
-  /**
-   * Crea un tercero desde datos de Excel
-   */
-  private createThirdFromExcel(third: Third): void {
-    this.thirdService.createThird(third).subscribe({
-      next: () => {
-        // Success handled in processExcelData
+        if (importResult) {
+          const { status, totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = importResult;
+          
+          // Si hay errores, mostrar modal de errores Y notificación de resumen
+          if (errors && errors.length > 0) {
+           
+            let detail = `Total procesados: ${totalRecords || 0}\n`;
+            detail += `Exitosos: ${successfulImports || 0}\n`;
+            detail += `Fallidos: ${failedImports}\n`;
+            if (duplicatesSkipped > 0) {
+              detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
+            }
+            
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Importación Completada con Errores',
+              detail,
+              life: 8000
+            });
+            
+            // Mostrar modal con detalles de errores
+            this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
+            
+            // Recargar lista si hubo importaciones exitosas
+            if (successfulImports > 0) {
+              this.loadThirds();
+            }
+            return;
+          }
+          
+          // Si no hay errores, mostrar resumen de importación exitosa
+          let severity: 'success' | 'info' | 'warn' | 'error' = 'success';
+          let summary = 'Importación Exitosa';
+          
+          if (status === 'FAILED') {
+            severity = 'error';
+            summary = 'Error en Importación';
+          }
+          
+          // Construir mensaje detallado
+          let detail = `Total procesados: ${totalRecords || 0}\n`;
+          detail += `Exitosos: ${successfulImports || 0}\n`;
+          if (duplicatesSkipped > 0) {
+            detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
+          }
+          
+          this.messageService.add({
+            severity,
+            summary,
+            detail,
+            life: 8000
+          });
+          
+          // Recargar lista si hubo importaciones exitosas
+          if (successfulImports > 0) {
+            this.loadThirds();
+          }
+        }
       },
       error: (error) => {
-        console.error('Error creating third from Excel:', error);
+        this.loading = false;
+        
+        // Extraer los errores del backend
+        if (error.error && typeof error.error === 'object') {
+          const errorResponse = error.error;
+          const errors = errorResponse.errors || [];
+          
+          if (errors && errors.length > 0) {
+            // Mostrar modal de errores
+            this.showImportErrorsModal(
+              errors, 
+              errorResponse.fileName || file.name,
+              errorResponse.totalRecords,
+              errorResponse.failedImports,
+              errorResponse.successfulImports,
+              errorResponse.duplicatesSkipped
+            );
+            return;
+          }
+        }
+        
+        // Si no hay errores estructurados, intentar extraer mensaje genérico
+        let errorMessage = 'Error al procesar el archivo de importación';
+        
+        if (error.error) {
+          if (error.error instanceof Blob) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const errorObj = JSON.parse(reader.result as string);
+                this.handleGenericError(errorObj);
+              } catch (e) {
+                this.showErrorNotification(reader.result as string || errorMessage, '');
+              }
+            };
+            reader.onerror = () => {
+              this.showErrorNotification('Error al leer la respuesta del servidor', '');
+            };
+            reader.readAsText(error.error);
+          } else if (typeof error.error === 'object' && error.error !== null) {
+            this.handleGenericError(error.error);
+          } else if (typeof error.error === 'string') {
+            this.showErrorNotification(error.error, '');
+          } else {
+            this.showErrorNotification(errorMessage, `Código de error: ${error.status || 'desconocido'}`);
+          }
+        } else if (error.message) {
+          this.showErrorNotification(error.message, '');
+        } else {
+          this.showErrorNotification(errorMessage, `Código de error: ${error.status || 'desconocido'}`);
+        }
       }
     });
   }
-
-  // Conversion methods for Excel import
-  private convertPersonType(type: string): ePersonType {
-    switch (type?.trim().toLowerCase()) {
-      case 'natural':
-        return ePersonType.natural;
-      case 'juridica':
-        return ePersonType.juridica;
-      default:
-        throw new Error(`Tipo de persona desconocido: ${type}`);
-    }
+  
+  /**
+   * Maneja errores genéricos del servidor
+   */
+  private handleGenericError(errorObj: any): void {
+    const errorMessage = errorObj.message || errorObj.error || errorObj.detail || 'Error al procesar el archivo';
+    const errorDetails = errorObj.details || '';
+    this.showErrorNotification(errorMessage, errorDetails);
   }
 
-  private convertGender(gender: string): eThirdGender | null {
-    if (!gender || gender.trim() === '') {
-      return null;
-    }
+  /**
+   * Muestra el modal de errores de importación
+   */
+  private showImportErrorsModal(errors: ImportError[], fileName: string, totalRecords?: number, failedImports?: number, successfulImports?: number, duplicatesSkipped?: number): void {
+    this.importErrors = errors;
+    this.totalErrors = errors.length;
+    this.totalRecordsImported = totalRecords || 0;
+    this.failedImportsCount = failedImports || errors.length;
+    this.successfulImports = successfulImports || 0;
+    this.duplicatesOmitted = duplicatesSkipped || 0;
     
-    switch (gender.trim().toLowerCase()) {
-      case 'masculino':
-        return eThirdGender.masculino;
-      case 'femenino':
-        return eThirdGender.femenino;
-      case 'otro':
-        return eThirdGender.Otro;
-      default:
-        throw new Error(`Género desconocido: ${gender}`);
-    }
+    this.showErrorModal = true;
   }
 
-  private convertState(state: string): boolean {
-    switch (state?.trim().toLowerCase()) {
-      case 'activo':
-        return true;
-      case 'inactivo':
-        return false;
-      default:
-        throw new Error(`Estado desconocido: ${state}`);
-    }
-  }
-
-  private convertThirdTypes(thirdTypes: string): ThirdType[] {
-    const typeNames = (thirdTypes as string).split(",").map(item => item.trim());
-    return this.thirdTypes.filter(type => 
-      typeNames.includes(type.thirdTypeName)
-    );
-  }
-
-  private convertTypeId(typeId: string): TypeId {
-    const matchingType = this.typeIds.find(type => 
-      typeId.includes(type.typeId)
-    );
+  /**
+   * Muestra una notificación de error
+   */
+  private showErrorNotification(message: string, details: string): void {
+    const detailMessage = details ? `${message}\n${details}` : message;
     
-    if (!matchingType) {
-      throw new Error(`No se encontró el tipo de ID: ${typeId}`);
-    }
-    
-    return matchingType;
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error de Importación',
+      detail: detailMessage,
+      life: 8000
+    });
   }
 
   // Navigation methods
@@ -520,6 +612,29 @@ export class ThirdListComponent implements OnInit {
   closeExportModal(): void {
     this.showExportModal = false;
   }
+  
+  /**
+   * Cierra el modal de errores de importación
+   */
+  closeErrorModal(): void {
+    this.showErrorModal = false;
+    this.importErrors = [];
+    this.totalErrors = 0;
+  }
+  
+  /**
+   * Obtiene la etiqueta amigable para el tipo de error
+   */
+  getErrorTypeLabel(errorType: string): string {
+    const labels: { [key: string]: string } = {
+      'VALIDATION_ERROR': 'Error de Validación',
+      'REFERENCE_ERROR': 'Error de Referencia',
+      'BUSINESS_RULE_ERROR': 'Error de Regla de Negocio',
+      'DUPLICATE_ERROR': 'Error de Duplicado',
+      'PROCESSING_ERROR': 'Error de Procesamiento'
+    };
+    return labels[errorType] || errorType;
+  }
 
   /**
    * Abre el modal de detalles para un tercero específico
@@ -541,11 +656,203 @@ export class ThirdListComponent implements OnInit {
     this.detailsModalData = null;
   }
 
-  openCreatePDFRunt(): void {
-    this.createPdfRUT = true;
+  /**
+   * Maneja la selección de un archivo PDF RUT
+   * Procesa el archivo y redirige a la creación del tercero
+   */
+  onPdfRutSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (!file) {
+      return;
+    }
+
+    // Validar que sea un PDF
+    if (file.type !== 'application/pdf') {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo inválido',
+        detail: 'Por favor, selecciona un archivo PDF válido'
+      });
+      input.value = '';
+      return;
+    }
+
+    this.loadingPdfRut = true;
+    
+    this.thirdService.ExtractInfoPDFRUT(file).subscribe({
+      next: (response) => {
+        const pdfContent = response.content;
+        
+        if (pdfContent === this.EMPTY_PDF_CONTENT) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Sin información',
+            detail: 'No se encontró información para crear un tercero'
+          });
+          this.loadingPdfRut = false;
+        } else {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Archivo procesado correctamente'
+          });
+          
+          // Redirigir a la creación del tercero
+          this.thirdService.setInfoThirdRUT(pdfContent);
+          this.router.navigate(['/gen-masters/third-parties/create']);
+        }
+        
+        // Limpiar el input
+        input.value = '';
+      },
+      error: (err) => {
+        this.loadingPdfRut = false;
+        const errorMessage = err?.error?.message || 'No se pudo procesar el archivo PDF';
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de procesamiento',
+          detail: errorMessage
+        });
+        
+        // Limpiar el input
+        input.value = '';
+      }
+    });
   }
 
-  closeCreatePDFRunt(): void {
-    this.createPdfRUT = false;
+  /**
+   * Convierte un número de columna a letra de Excel
+   * @param columnNumber Número de columna (1-based: 1=A, 2=B, ..., 26=Z, 27=AA, etc.)
+   * @returns Letra(s) de columna correspondiente en Excel
+   */
+  getExcelColumnLetter(columnNumber: number): string {
+    let columnLetter = '';
+    let temp = columnNumber;
+    
+    while (temp > 0) {
+      const remainder = (temp - 1) % 26;
+      columnLetter = String.fromCharCode(65 + remainder) + columnLetter;
+      temp = Math.floor((temp - 1) / 26);
+    }
+    
+    return columnLetter;
+  }
+
+  /**
+   * Exporta los errores de importación a un archivo Excel
+   * Genera un archivo con formato estructurado incluyendo resumen de estadísticas y detalle de errores
+   */
+  exportImportErrors(): void {
+    try {
+      // Validar que existan errores para exportar
+      if (!this.importErrors || this.importErrors.length === 0) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Sin Errores',
+          detail: 'No hay errores para exportar'
+        });
+        return;
+      }
+
+      // Crear el workbook y worksheet
+      const wb: XLSX.WorkBook = XLSX.utils.book_new();
+      const ws: XLSX.WorkSheet = {};
+
+      // Información del encabezado
+      const headerInfo = [
+        ['ERRORES DE IMPORTACIÓN DE TERCEROS'],
+        [''],
+        ['Fecha de exportación:', new Date().toLocaleDateString('es-CO', { 
+          day: '2-digit', 
+          month: 'long', 
+          year: 'numeric' 
+        })],
+        ['Hora:', new Date().toLocaleTimeString('es-CO')],
+        [''],
+        ['RESUMEN DE IMPORTACIÓN'],
+        ['Total procesados:', this.totalRecordsImported],
+        ['Exitosos:', this.successfulImports],
+        ['Fallidos:', this.failedImportsCount],
+        ['Duplicados omitidos:', this.duplicatesOmitted],
+        [''],
+        ['DETALLE DE ERRORES']
+      ];
+
+      // Agregar la información del encabezado
+      XLSX.utils.sheet_add_aoa(ws, headerInfo, { origin: 'A1' });
+
+      // Encabezados de la tabla
+      const tableHeaders = [
+        ['Fila', 'Columna', 'Campo', 'Valor', 'Error']
+      ];
+
+      // Agregar encabezados de la tabla
+      XLSX.utils.sheet_add_aoa(ws, tableHeaders, { origin: 'A14' });
+
+      // Preparar los datos de la tabla
+      const tableData = this.importErrors.map(error => [
+        error.rowNumber,
+        this.getExcelColumnLetter(error.columnNumber),
+        error.columnName,
+        error.fieldValue || '(vacío)',
+        error.errorMessage
+      ]);
+
+      // Agregar los datos de la tabla
+      XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A15' });
+
+      // Establecer el rango de la hoja
+      const totalRows = headerInfo.length + 2 + tableData.length;
+      ws['!ref'] = `A1:E${totalRows}`;
+
+      // Configurar anchos de columnas
+      ws['!cols'] = [
+        { wch: 8 },  // A - Fila
+        { wch: 10 }, // B - Columna
+        { wch: 25 }, // C - Campo
+        { wch: 25 }, // D - Valor
+        { wch: 60 }  // E - Error
+      ];
+
+      // Combinar celdas para el título
+      if (!ws['!merges']) ws['!merges'] = [];
+      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }); // A1:E1 (Título)
+
+      // Agregar el worksheet al workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Errores Importación');
+
+      // Generar el nombre del archivo con fecha local
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const timestamp = `${year}-${month}-${day}`;
+      const fileName = `Errores_Importacion_Terceros_${timestamp}.xlsx`;
+
+      // Generar el archivo y descargarlo
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      saveAs(blob, fileName);
+
+      // Cerrar el modal
+      this.closeErrorModal();
+
+      // Mostrar notificación de éxito
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Exportación exitosa',
+        detail: `El archivo se ha exportado correctamente.`
+      });
+
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error de Exportación',
+        detail: 'No se pudo exportar el archivo de errores. Por favor, intente nuevamente.'
+      });
+    }
   }
 }

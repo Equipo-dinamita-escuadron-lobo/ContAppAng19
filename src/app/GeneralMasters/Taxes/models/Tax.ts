@@ -3,9 +3,10 @@ export interface Tax {
     code: string;
     description: string;
     interest: number;
-    refundAccount: string; // Id cuenta devolución
-    depositAccount: string; // Id cuenta depósito
+    purchaseTax: string; // Código cuenta impuesto de compra
+    salesTax: string; // Código cuenta impuesto de venta
     idEnterprise: string;
+    status: boolean;
 }
 
 export interface TaxList {
@@ -13,19 +14,20 @@ export interface TaxList {
     code: string;
     description: string;
     interest: number;
-    depositAccount: string; // Código de cuenta depósito
-    refundAccount: string; // Código de cuenta devolución
-    depositAccountName: string;
-    refundAccountName: string;
+    salesTax: string; // Código de cuenta impuesto de venta
+    purchaseTax: string; // Código de cuenta impuesto de compra
+    salesTaxName: string;
+    purchaseTaxName: string;
     idEnterprise: string;
+    status: boolean;
 }
 
 export interface TaxCreateRequest {
     code: string;
     description: string;
     interest: number;
-    refundAccount: string;
-    depositAccount: string;
+    purchaseTaxId?: number; // Opcional
+    salesTaxId?: number; // Opcional
     idEnterprise: string;
 }
 
@@ -34,7 +36,7 @@ export interface TaxUpdateRequest {
     code: string;
     description: string;
     interest: number;
-    refundAccount: string;
-    depositAccount: string;
+    purchaseTaxId?: number; // Opcional
+    salesTaxId?: number; // Opcional
     idEnterprise: string;
 } 

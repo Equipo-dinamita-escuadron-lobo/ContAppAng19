@@ -1,19 +1,21 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 
 // PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
-import { FileUploadModule } from 'primeng/fileupload';
+import { FileUpload, FileUploadModule, FileSelectEvent, FileUploadErrorEvent } from 'primeng/fileupload';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 // Services
 import { ThirdService } from '../../Services/third.service';
+
+// Constantes
+const DIALOG_TITLE = 'Crear Tercero a partir del RUT';
+const EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
+const MAX_FILE_SIZE = 50000000; // 50 MB
 
 @Component({
   selector: 'app-third-creation-pdf-rut',
@@ -23,8 +25,7 @@ import { ThirdService } from '../../Services/third.service';
     DialogModule,
     ButtonModule,
     FileUploadModule,
-    ToastModule,
-    ProgressSpinnerModule
+    ToastModule
   ],
   providers: [MessageService],
   templateUrl: './third-creation-pdf-rut.component.html',
@@ -34,30 +35,25 @@ export class ThirdCreationPdfRUTComponent {
   /** Control de visibilidad del modal */
   @Input() visible: boolean = false;
   
-  /** Datos de entrada del componente */
-  @Input() inputData: any = { title: 'Crear Tercero a partir del RUT' };
-  
   /** Evento para cerrar el componente */
   @Output() close = new EventEmitter<void>();
 
-  /** URL segura del PDF cargado */
-  pdfUrl: SafeResourceUrl | null = null;
+  /** Referencia al componente de carga de archivos */
+  @ViewChild('fileUpload') fileUpload!: FileUpload;
 
   /** Archivo PDF seleccionado */
   selectedFile: File | null = null;
 
-  /** Indica si se ha cargado un archivo */
-  isFileLoaded = false;
-
   /** Estado de carga durante el procesamiento */
   loading = false;
+
+  /** Título del diálogo (constante para el template) */
+  readonly dialogTitle = DIALOG_TITLE;
 
   /**
    * Constructor del componente
    */
   constructor(
-    private sanitizer: DomSanitizer, 
-    private http: HttpClient, 
     private thirdService: ThirdService, 
     private router: Router,
     private messageService: MessageService
@@ -67,37 +63,24 @@ export class ThirdCreationPdfRUTComponent {
    * Se ejecuta cuando se oculta el diálogo
    */
   onHide(): void {
+    this.resetComponent();
     this.close.emit();
   }
 
   /**
    * Maneja el cambio de archivo seleccionado
-   * Verifica que sea un PDF y lo carga para su visualización
+   * Verifica que sea un PDF y lo carga
    */
-  onFileSelect(event: any): void {
+  onFileSelect(event: FileSelectEvent): void {
     const files = event.files;
     if (files && files.length > 0) {
       const file = files[0];
       if (file.type === 'application/pdf') {
         this.selectedFile = file;
-        const reader = new FileReader();
-        reader.onload = () => {
-          this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(reader.result as string);
-          this.isFileLoaded = true;
-        };
-        reader.readAsDataURL(file);
         
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Archivo cargado',
-          detail: 'PDF cargado correctamente para vista previa'
-        });
+        this.showSuccessMessage('Archivo cargado', 'PDF seleccionado correctamente');
       } else {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Archivo inválido',
-          detail: 'Por favor, selecciona un archivo PDF válido'
-        });
+        this.handleInvalidFileType();
       }
     }
   }
@@ -105,12 +88,27 @@ export class ThirdCreationPdfRUTComponent {
   /**
    * Maneja errores en la carga de archivos
    */
-  onFileError(event: any): void {
-    this.messageService.add({
-      severity: 'error',
-      summary: 'Error de carga',
-      detail: 'Error al cargar el archivo'
-    });
+  onFileError(event: FileUploadErrorEvent): void {
+    this.messageService.clear();
+    
+    if (event.error) {
+      this.showErrorMessage('Archivo inválido', 'Por favor, selecciona un archivo PDF válido');
+    } else {
+      this.showErrorMessage('Error de carga', 'Error al cargar el archivo');
+    }
+  }
+
+  /**
+   * Maneja el caso de tipo de archivo inválido
+   */
+  private handleInvalidFileType(): void {
+    this.messageService.clear();
+    this.showErrorMessage('Archivo inválido', 'Por favor, selecciona un archivo PDF válido');
+    this.selectedFile = null;
+    
+    if (this.fileUpload) {
+      this.fileUpload.clear();
+    }
   }
 
   /**
@@ -119,11 +117,7 @@ export class ThirdCreationPdfRUTComponent {
    */
   uploadFile(): void {
     if (!this.selectedFile) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Archivo requerido',
-        detail: 'Por favor selecciona un archivo PDF'
-      });
+      this.showWarningMessage('Archivo requerido', 'Por favor selecciona un archivo PDF');
       return;
     }
 
@@ -131,35 +125,54 @@ export class ThirdCreationPdfRUTComponent {
     
     this.thirdService.ExtractInfoPDFRUT(this.selectedFile).subscribe({
       next: (response) => {
-        console.log('Respuesta del servicio:', response);
         const pdfContent = response.content;
-        
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Archivo procesado correctamente'
-        });
 
-        if (pdfContent === ";;0;;;;;;;;;0") {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Sin información',
-            detail: 'No se encontró información para crear un tercero'
-          });
+        if (pdfContent === EMPTY_PDF_CONTENT) {
+          this.showErrorMessage('Sin información', 'No se encontró información para crear un tercero');
+          this.loading = false;
         } else {
+          // Navegar inmediatamente a la página de creación (la notificación se mostrará allí)
           this.redirectToCreateThird(pdfContent);
         }
-        
-        this.loading = false;
       },
       error: (err) => {
-        this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error de procesamiento',
-          detail: 'Error al procesar el archivo: ' + (err.message || 'Error desconocido')
-        });
+        this.loading = false;        
+        const errorMessage = err?.error?.message || 'No se pudo procesar el archivo PDF';        
+        this.showErrorMessage('Error de procesamiento', errorMessage);
       }
+    });
+  }
+
+  /**
+   * Muestra un mensaje de éxito
+   */
+  private showSuccessMessage(summary: string, detail: string): void {
+    this.messageService.add({
+      severity: 'success',
+      summary,
+      detail
+    });
+  }
+
+  /**
+   * Muestra un mensaje de error
+   */
+  private showErrorMessage(summary: string, detail: string): void {
+    this.messageService.add({
+      severity: 'error',
+      summary,
+      detail
+    });
+  }
+
+  /**
+   * Muestra un mensaje de advertencia
+   */
+  private showWarningMessage(summary: string, detail: string): void {
+    this.messageService.add({
+      severity: 'warn',
+      summary,
+      detail
     });
   }
 
@@ -175,17 +188,19 @@ export class ThirdCreationPdfRUTComponent {
    * Reinicia el estado del componente
    */
   private resetComponent(): void {
-    this.pdfUrl = null;
     this.selectedFile = null;
-    this.isFileLoaded = false;
     this.loading = false;
+    
+    if (this.fileUpload) {
+      this.fileUpload.clear();
+    }
   }
 
   /**
    * Redirige a la página de creación de tercero con la información extraída
    */
   private redirectToCreateThird(infoThird: string): void {
-    this.thirdService.setInfoThirdRUT(infoThird); 
+    this.thirdService.setInfoThirdRUT(infoThird);
     this.router.navigate(['/gen-masters/third-parties/create']);
     this.closePopUp();
   }

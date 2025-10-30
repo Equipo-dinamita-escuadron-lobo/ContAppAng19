@@ -1,23 +1,23 @@
 <form [formGroup]="formNewAccount">
-    <div class="account-section font-titillium">
-        <!-- section to show the text and information drawers -->
+    <div class="account-section font-family-sans mb-20">
+        
         <div class="w-full flex sm:w-auto">
             <label *ngIf="currentLevelAccount != 'clase'" for="subcuenta"
                 class="col-span-1 mr-4 mt-1">{{parent?.code}}</label>
-            <input type="text" id="code" formControlName="code" placeholder="Código" class="input-base mb-2 sm:mb-0"
+            <input type="text" id="code" formControlName="code" placeholder="Código" class="input-base mb-2 sm:mb-0 placeholder:text-neutral-500"
                 inputmode="numeric" pattern="[0-9]*" 
                 (keydown)="onCodeKeyDown($event)"
                 (input)="onCodeInput($event)"
                 maxlength="2">
         </div>
         <div class="w-full sm:w-auto">
-            <input type="text" id="name" formControlName="name" placeholder="Nombre" class="input-base sm:ml-1"
+            <input type="text" id="name" formControlName="name" placeholder="Nombre" class="input-base sm:ml-1 placeholder:text-neutral-500"
                 (keydown)="onNameKeyDown($event)">
         </div>
-        <!-- Section to display messages when information is required or an error occurs -->
+
         <div>
             <div *ngIf="formNewAccount.get('code')?.hasError('required') && (formNewAccount.get('code')?.dirty || formNewAccount.get('code')?.touched)"
-                class="error-message">* Código es requerido</div>
+                class="error-message">Código es requerido</div>
             <div *ngIf="formNewAccount.get('code')?.hasError('maxlength') && (formNewAccount.get('code')?.dirty || formNewAccount.get('code')?.touched)"
                 class="error-message">Código solo debe tener {{messageLength}}</div>
             <div *ngIf="formNewAccount.get('code')?.hasError('minlength') && (formNewAccount.get('code')?.dirty || formNewAccount.get('code')?.touched)"
@@ -25,19 +25,17 @@
         </div>
         <div>
             <div *ngIf="formNewAccount.get('name')?.hasError('required') && (formNewAccount.get('name')?.dirty || formNewAccount.get('name')?.touched)"
-                class="error-message">* Nombre es requerido</div>
+                class="error-message">Nombre es requerido</div>
         </div>
         <div class="floating-label">{{currentLevelAccount}}</div>
     </div>
     <hr class="w-auto h-0.5 mx-auto my-4 bg-gray-100 border-0 rounded md:my-5 dark:bg-gray-700">
-    <h1 class="section-title">Datos Adicionales</h1>
+    <h1 class="section-title mt-20">Datos adicionales</h1>
 
-    <!-- component that defines the selector of the information of the nature of the account -->
     <!-- Naturaleza -->
-    <div class="mb-4">
-        <label for="nature" class="label-title">
+    <div class="mt-20">
+        <label for="nature" class="label-title label-required">
             Naturaleza
-            <span *ngIf="!parent" class="text-red-500">*</span>
         </label>
         <p-dropdown inputId="nature" name="nature" [options]="listNature" optionLabel="name" optionValue="name"
             formControlName="selectedNatureType" [placeholder]="placeNatureType" [showClear]="false" [filter]="true"
@@ -46,10 +44,9 @@
     </div>
 
     <!-- Estado Financiero -->
-    <div class="mb-4">
-        <label for="financialState" class="label-title">
+    <div class="mt-20">
+        <label for="financialState" class="label-title label-required">
             Estado Financiero
-            <span *ngIf="!parent" class="text-red-500">*</span>
         </label>
         <p-dropdown inputId="financialState" name="financialState" [options]="listFinancialState" optionLabel="name"
             optionValue="name" formControlName="selectedFinancialStateType" [placeholder]="placeFinancialStateType"
@@ -58,10 +55,9 @@
     </div>
 
     <!-- Clasificación -->
-    <div class="mb-4">
-        <label for="classification" class="label-title">
+    <div class="mt-20">
+        <label for="classification" class="label-title label-required">
             Clasificación
-            <span *ngIf="!parent" class="text-red-500">*</span>
         </label>
         <p-dropdown inputId="classification" name="classification" [options]="listClasification" optionLabel="name"
             optionValue="name" formControlName="selectedClassificationType" [placeholder]="placeClassificationType"
@@ -89,17 +85,16 @@
             </div>
         </div>
     </div>
-    <!-- section to show the save and cancel buttons -->
-    <!-- Contenedor Flexbox mejorado para alinear y espaciar los botones -->
+
     <div class="flex flex-wrap justify-center items-center mt-30 gap-3">
 
         <!-- Botón Cancelar -->
-        <p-button label="Cancelar" (click)="cancel()" styleClass="p-button-danger p-button-raised">
+        <p-button label="Cancelar" (click)="cancel()" severity="secondary">
         </p-button>
 
         <!-- Botón Guardar (Aparece cuando el formulario es válido) -->
         <div *ngIf="formNewAccount.valid">
-            <p-button [label]="'Guardar ' + currentLevelAccount"  (click)="sendAccount()" styleClass="p-button-raised">
+            <p-button [label]="'Guardar ' + currentLevelAccount"  (click)="sendAccount()">
             </p-button>
         </div>
 

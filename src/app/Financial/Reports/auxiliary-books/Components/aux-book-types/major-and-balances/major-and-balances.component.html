@@ -27,6 +27,8 @@
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
       />
     </div>
   </div>
@@ -102,18 +104,23 @@
           Periodo <span class="text-[var(--color-secondary)]"> *</span>
         </h4>
         <p-datepicker
-          [(ngModel)]="criteria.endDate"
+          [(ngModel)]="datePeriod"
+          selectionMode="multiple"
+          maxDateCount="2"
           dateFormat="dd/mm/yy"
-          placeholder="DD-MM-YYYY"
+          placeholder="DD/MM/YYYY - DD/MM/YYYY"
           [showIcon]="true"
+          showClear="true"
           styleClass="w-full text-xs"
+          multipleSeparator="-"
+          [style]="{ width: '100%', minWidth: '310px' }"
         ></p-datepicker>
       </div>
 
       <div class="col-span-1 flex"></div>
 
       <!-- 4. Botón -->
-      <div class="col-span-1 flex justify-center items-center">
+      <div class="col-span-1 flex justify-center items-center h-full">
         <button
           pButton
           type="button"
@@ -140,19 +147,17 @@
       <ng-template pTemplate="header">
         <tr>
           <th class="text-center" pResizableColumn colspan="2">Cuenta</th>
-          <th class="text-center" pResizableColumn colspan="2">
-            Saldo Anterior
+          <th class="text-center" pResizableColumn colspan="2" rowspan="2">
+            Saldo Inicial
           </th>
           <th class="text-center" pResizableColumn colspan="2">Movimiento</th>
-          <th class="text-center" pResizableColumn colspan="2">Nuevo Saldo</th>
+          <th class="text-center" pResizableColumn colspan="2" rowspan="2">
+            Nuevo Saldo
+          </th>
         </tr>
         <tr>
           <th class="text-center">Código</th>
           <th class="text-center">Descripción</th>
-          <th class="text-center">Débito</th>
-          <th class="text-center">Crédito</th>
-          <th class="text-center">Débito</th>
-          <th class="text-center">Crédito</th>
           <th class="text-center">Débito</th>
           <th class="text-center">Crédito</th>
         </tr>

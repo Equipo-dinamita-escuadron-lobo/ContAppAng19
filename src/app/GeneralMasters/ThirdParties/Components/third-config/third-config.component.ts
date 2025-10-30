@@ -21,7 +21,6 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { RadioButtonModule } from 'primeng/radiobutton';
 
 // Models and Services
-import { ThirdService } from '../../Services/third.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ThirdServiceConfigurationService } from '../../Services/third-configuration.service';
 import { ThirdType } from '../../models/ThirdType';
@@ -54,82 +53,72 @@ import { TypeId } from '../../models/TypeId';
   styleUrl: './third-config.component.css'
 })
 export class ThirdConfigComponent implements OnInit {
-  /** Control de visibilidad del modal */
   @Input() visible: boolean = false;
   
-  /** Datos recibidos como input al componente */
   @Input() inputData: any;
   
-  /** Evento para cerrar el modal */
   @Output() close = new EventEmitter<void>();
 
-  /** Datos de la empresa actual */
   entData: string = '';
 
-  /** Controla la visibilidad del input para nuevo tipo de tercero */
   showInputThirdType = false;
 
-  /** Controla la visibilidad del input para editar tipo de tercero */
   showEditThirdType = false;
 
-  /** Controla la visibilidad del input para nuevo tipo de identificación */
   showInputTypeId = false;
 
-  /** Controla la visibilidad del input para editar tipo de identificación */
   showEditTypeId = false;
-
-  /** Código para nueva identificación */
   newIdentificationCode = '';
 
-  /** Nombre para nueva identificación */
   newIdentificationName = '';
 
-  /** Formulario reactivo para tipos de identificación */
   typeIdForm: FormGroup;
   
-  /** Formulario reactivo para editar tipos de identificación */
   editTypeIdForm: FormGroup;
   
-  /** Formulario reactivo para tipos de terceros */
   thirdTypeForm: FormGroup;
-
-  /** Formulario reactivo para editar tipos de terceros */
   editThirdTypeForm: FormGroup;
 
-  /** Índice del tipo de tercero que se está editando */
   editingThirdTypeIndex: number = -1;
 
-  /** Tipo de tercero original antes de editar */
   originalThirdType: ThirdType | null = null;
 
-  /** Valor inicial del formulario de edición de ThirdType para detectar cambios */
   initialThirdTypeValue: any = {};
 
-  /** Índice del tipo de identificación que se está editando */
   editingTypeIdIndex: number = -1;
 
-  /** Tipo de identificación original antes de editar */
   originalTypeId: TypeId | null = null;
 
-  /** Valor inicial del formulario de edición para detectar cambios */
   initialTypeIdValue: any = {};
 
-  /** Nombre para nuevo tipo de tercero */
   newThirdTypeName = '';
 
-  /** Array de tipos de identificación */
   typesId: TypeId[] = [];
 
-  /** Array de tipos de terceros */
   thirdTypes: ThirdType[] = [];
 
-  /** Pestaña activa por defecto */
   activeTab: string = '0';
 
   /** Estados de carga */
   loading = false;
   loadingTypeIds = false;
   loadingThirdTypes = false;
+
+  /** Variables para paginación de tipos de ID */
+  totalRecordsTypeIds: number = 0;
+  currentPageTypeIds: number = 0;
+  currentSizeTypeIds: number = 10;
+  currentSortFieldTypeIds: string = 'tiName';
+  currentSortOrderTypeIds: string = 'asc';
+  searchTermTypeIds: string = '';
+
+  /** Variables para paginación de tipos de tercero */
+  totalRecordsThirdTypes: number = 0;
+  currentPageThirdTypes: number = 0;
+  currentSizeThirdTypes: number = 10;
+  currentSortFieldThirdTypes: string = 'thirdTypeName';
+  currentSortOrderThirdTypes: string = 'asc';
+  searchTermThirdTypes: string = '';
 
   /**
    * Constructor del componente
@@ -190,17 +179,25 @@ export class ThirdConfigComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de tercero
+   * Carga los tipos de tercero 
    */
   private loadThirdTypes(): void {
     this.loadingThirdTypes = true;
-    this.thirdServiceConfiguration.getThirdTypes(this.entData).subscribe({
-      next: (response: ThirdType[]) => {
-        this.thirdTypes = response;
+    this.thirdServiceConfiguration.getThirdTypes(
+      this.entData,
+      this.currentPageThirdTypes,
+      this.currentSizeThirdTypes,
+      undefined, // No enviar sortField, el backend siempre ordena por ttName
+      this.currentSortOrderThirdTypes,
+      this.searchTermThirdTypes || undefined
+    ).subscribe({
+      next: (response: any) => {
+        this.thirdTypes = Array.isArray(response.content) ? response.content : [];
+        this.totalRecordsThirdTypes = response?.page?.totalElements || 0;
         this.loadingThirdTypes = false;
       },
       error: (error: any) => {
-        console.error('Error loading third types:', error);
+        this.thirdTypes = [];
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -212,17 +209,25 @@ export class ThirdConfigComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de identificación
+   * Carga los tipos de identificación con paginación
    */
   private loadTypeIds(): void {
     this.loadingTypeIds = true;
-    this.thirdServiceConfiguration.getTypeIds(this.entData).subscribe({
-      next: (response: TypeId[]) => {
-        this.typesId = response;
+    this.thirdServiceConfiguration.getTypeIds(
+      this.entData,
+      this.currentPageTypeIds,
+      this.currentSizeTypeIds,
+      this.currentSortFieldTypeIds,
+      this.currentSortOrderTypeIds,
+      this.searchTermTypeIds || undefined
+    ).subscribe({
+      next: (response: any) => {
+        this.typesId = Array.isArray(response.content) ? response.content : [];
+        this.totalRecordsTypeIds = response?.page?.totalElements || 0;
         this.loadingTypeIds = false;
       },
       error: (error: any) => {
-        console.error('Error loading type IDs:', error);
+        this.typesId = [];
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -233,6 +238,42 @@ export class ThirdConfigComponent implements OnInit {
     });
   }
 
+  /**
+   * Carga los tipos de identificación con paginación lazy
+   */
+  loadTypeIdsLazy(event: any): void {
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) return;
+
+    // Calcular página y tamaño desde los controles de PrimeNG
+    this.currentPageTypeIds = Math.floor(event.first / event.rows);
+    this.currentSizeTypeIds = event.rows;
+    
+    // Manejar ordenamiento si está presente
+    if (event.sortField) {
+      this.currentSortFieldTypeIds = event.sortField;
+      this.currentSortOrderTypeIds = event.sortOrder === 1 ? 'asc' : 'desc';
+    }
+    
+    this.loadTypeIds();
+  }
+
+  /**
+   * Maneja el cambio en el término de búsqueda para tipos de ID
+   */
+  onSearchTypeIdsChange(searchTerm: string): void {
+    this.searchTermTypeIds = searchTerm;
+    this.currentPageTypeIds = 0; // Resetear a la primera página
+    this.loadTypeIds();
+  }
+
+  /**
+   * Recarga la página actual de tipos de ID
+   */
+  reloadCurrentPageTypeIds(): void {
+    this.loadTypeIds();
+  }
+
 
   /**
    * Cambia el estado de un tipo de identificación (activar/desactivar)
@@ -241,11 +282,18 @@ export class ThirdConfigComponent implements OnInit {
     const newStatus = !typeId.status;
     const action = newStatus ? 'activar' : 'desactivar';
     
-    const updatedTypeId = { ...typeId, status: newStatus };
+    const updatedTypeId: TypeId = {
+      id: typeId.id,
+      entId: typeId.entId,
+      typeId: typeId.typeId,
+      typeIdname: typeId.typeIdname,
+      status: newStatus,
+      classification: typeId.classification
+    };
     
     this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
       next: (response: TypeId) => {
-        this.typesId[index] = response;
+        this.reloadCurrentPageTypeIds();
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -253,11 +301,16 @@ export class ThirdConfigComponent implements OnInit {
         });
       },
       error: (error: any) => {
-        console.error('Error updating type ID status:', error);
+        
+        let errorMessage = `Error al ${action} el tipo de identificación`;
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `Error al ${action} el tipo de identificación`
+          detail: errorMessage
         });
       }
     });
@@ -270,7 +323,13 @@ export class ThirdConfigComponent implements OnInit {
     const newStatus = !thirdType.status;
     const action = newStatus ? 'activar' : 'desactivar';
     
-    const updatedThirdType = { ...thirdType, status: newStatus };
+
+    const updatedThirdType: ThirdType = {
+      entId: this.entData,
+      thirdTypeId: thirdType.thirdTypeId,
+      thirdTypeName: thirdType.thirdTypeName,
+      status: newStatus
+    };
     
     this.thirdServiceConfiguration.updateThirdType(updatedThirdType).subscribe({
       next: (response: ThirdType) => {
@@ -282,7 +341,6 @@ export class ThirdConfigComponent implements OnInit {
         });
       },
       error: (error: any) => {
-        console.error('Error updating third type status:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -299,18 +357,6 @@ export class ThirdConfigComponent implements OnInit {
     if (this.typeIdForm.valid) {
       const code = this.typeIdForm.get('code')?.value?.trim();
       const name = this.typeIdForm.get('name')?.value?.trim();
-      
-      // Verificar si ya existe el código
-      const existingTypeId = array.find(t => t.typeId.toLowerCase() === code.toLowerCase());
-      if (existingTypeId) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ya existe un tipo de identificación con ese código'
-        });
-        return;
-      }
-
       const classification = this.typeIdForm.get('classification')?.value;
       
       const newTypeId: TypeId = {
@@ -323,29 +369,42 @@ export class ThirdConfigComponent implements OnInit {
 
       this.thirdServiceConfiguration.createTypeId(newTypeId).subscribe({
         next: (response: TypeId) => {
-          array.push(response);
           this.typeIdForm.reset();
           this.typeIdForm.patchValue({
             classification: 'NATURAL_PERSON'
           });
           this.showInputTypeId = false;
+          this.reloadCurrentPageTypeIds();
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro exitoso',
             detail: 'Tipo de identificación creado correctamente'
           });
         },
-        error: (error: any) => {
-          console.error('Error creating type ID:', error);
+        error: (error: any) => {          
+          let errorMessage = 'Error al crear el tipo de identificación';
+          let errorSummary = 'Error';
+          if (error.error?.message) {
+            errorMessage = error.error.message;
+            if (error.error.message.includes('Ya existe un tipo de identificación')) {
+              if (error.error.message.includes('con el código')) {
+                errorSummary = 'Tipo ID Duplicado';
+              } else if (error.error.message.includes('con el nombre')) {
+                errorSummary = 'Nombre Duplicado';
+              } else {
+                errorSummary = 'Tipo ID Duplicado';
+              }
+            }
+          }
+          
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al crear el tipo de identificación'
+            summary: errorSummary,
+            detail: errorMessage
           });
         }
       });
     } else {
-      // Marcar todos los campos como tocados para mostrar errores
       Object.keys(this.typeIdForm.controls).forEach(key => {
         this.typeIdForm.get(key)?.markAsTouched();
       });
@@ -358,9 +417,6 @@ export class ThirdConfigComponent implements OnInit {
     }
   }
 
-  /**
-   * Cancela la adición de un tipo de identificación
-   */
   cancelAddTypeId(): void {
     this.typeIdForm.reset();
     this.typeIdForm.patchValue({
@@ -369,38 +425,28 @@ export class ThirdConfigComponent implements OnInit {
     this.showInputTypeId = false;
   }
 
-  /**
-   * Inicia la edición de un tipo de identificación
-   */
   editTypeId(typeId: TypeId, index: number): void {
-    // Cerrar otros formularios
     this.showInputTypeId = false;
     this.showInputThirdType = false;
     
-    // Guardar referencia del elemento original
     this.originalTypeId = { ...typeId };
     this.editingTypeIdIndex = index;
     
-    // Llenar el formulario con los datos actuales
     this.editTypeIdForm.patchValue({
       code: typeId.typeId,
       name: typeId.typeIdname,
       classification: typeId.classification
     });
     
-    // Guardar valor inicial para detectar cambios
     this.initialTypeIdValue = {
-      name: typeId.typeIdname,
+      code: typeId.typeId?.trim(),
+      name: typeId.typeIdname?.trim(),
       classification: typeId.classification
     };
     
-    // Mostrar el formulario de edición
     this.showEditTypeId = true;
   }
 
-  /**
-   * Actualiza un tipo de identificación existente
-   */
   updateTypeId(): void {
     if (this.editTypeIdForm.invalid || !this.hasTypeIdChanges()) {
       this.editTypeIdForm.markAllAsTouched();
@@ -409,28 +455,14 @@ export class ThirdConfigComponent implements OnInit {
     
     if (this.originalTypeId) {
       const formValue = this.editTypeIdForm.value;
+      const code = formValue.code?.trim();
       const name = formValue.name?.trim();
-      
-      // Verificar si ya existe otro tipo con el mismo nombre (excluyendo el actual)
-      const existingTypeId = this.typesId.find((t, index) => 
-        t.typeIdname.toLowerCase() === name.toLowerCase() && 
-        index !== this.editingTypeIdIndex
-      );
-      
-      if (existingTypeId) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ya existe otro tipo de identificación con ese nombre'
-        });
-        return;
-      }
-
       const classification = this.editTypeIdForm.get('classification')?.value;
       
       const updatedTypeId: TypeId = {
+        id: this.originalTypeId.id,
         entId: this.originalTypeId.entId,
-        typeId: this.originalTypeId.typeId, // El código no cambia
+        typeId: code,
         typeIdname: name,
         status: this.originalTypeId.status, // Mantener el estado actual
         classification: classification
@@ -438,29 +470,40 @@ export class ThirdConfigComponent implements OnInit {
 
       this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
         next: (response: TypeId) => {
-          // Actualizar el elemento en el array
-          this.typesId[this.editingTypeIdIndex] = response;
-          
-          // Limpiar el formulario y ocultar
           this.cancelEditTypeId();
+          this.reloadCurrentPageTypeIds();
           
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización exitosa',
             detail: 'Tipo de identificación actualizado correctamente'
           });
         },
         error: (error: any) => {
-          console.error('Error updating type ID:', error);
+          
+          let errorMessage = 'Error al actualizar el tipo de identificación';
+          let errorSummary = 'Error';
+          if (error.error?.message) {
+            errorMessage = error.error.message;
+            if (error.error.message.includes('Ya existe un tipo de identificación')) {
+              if (error.error.message.includes('con el código')) {
+                errorSummary = 'Tipo ID Duplicado';
+              } else if (error.error.message.includes('con el nombre')) {
+                errorSummary = 'Nombre Duplicado';
+              } else {
+                errorSummary = 'Tipo ID Duplicado';
+              }
+            }
+          }
+          
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al actualizar el tipo de identificación'
+            summary: errorSummary,
+            detail: errorMessage
           });
         }
       });
     } else {
-      // Marcar todos los campos como tocados para mostrar errores
       Object.keys(this.editTypeIdForm.controls).forEach(key => {
         this.editTypeIdForm.get(key)?.markAsTouched();
       });
@@ -477,9 +520,11 @@ export class ThirdConfigComponent implements OnInit {
    * Verifica si hay cambios en el formulario de edición de TypeId
    */
   hasTypeIdChanges(): boolean {
-    const currentName = this.editTypeIdForm.get('name')?.value;
+    const currentCode = this.editTypeIdForm.get('code')?.value?.trim();
+    const currentName = this.editTypeIdForm.get('name')?.value?.trim();
     const currentClassification = this.editTypeIdForm.get('classification')?.value;
-    return this.initialTypeIdValue.name !== currentName || 
+    return this.initialTypeIdValue.code !== currentCode ||
+           this.initialTypeIdValue.name !== currentName || 
            this.initialTypeIdValue.classification !== currentClassification;
   }
 
@@ -495,23 +540,75 @@ export class ThirdConfigComponent implements OnInit {
   }
 
   /**
+   * Solicita confirmación para eliminar un tipo de identificación
+   */
+  confirmDeleteTypeId(typeId: TypeId, index: number): void {
+    this.confirmationService.confirm({
+      message: `¿Desea eliminar el tipo de identificación "${typeId.typeIdname}"?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      rejectButtonProps: { severity: 'secondary' },
+      accept: () => {
+        this.deleteTypeId(typeId, index);
+      }
+    });
+  }
+
+  /**
+   * Elimina un tipo de identificación
+   */
+  deleteTypeId(typeId: TypeId, index: number): void {
+    // Validar que el typeId tenga un id
+    if (!typeId.id) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se puede eliminar el tipo de identificación: ID no disponible'
+      });
+      return;
+    }
+
+    this.thirdServiceConfiguration.deleteTypeId(typeId.id, this.entData).subscribe({
+      next: (response: boolean) => {
+        if (response) {
+          this.reloadCurrentPageTypeIds();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tipo de identificación eliminado correctamente'
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo eliminar el tipo de identificación'
+          });
+        }
+      },
+      error: (error: any) => {        
+        let errorMessage = 'Error al eliminar el tipo de identificación';
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se puede eliminar',
+          detail: errorMessage
+        });
+      }
+    });
+  }
+
+  /**
    * Agrega un nuevo tipo de tercero
    */
   addThirdType(array: ThirdType[]): void {
     if (this.thirdTypeForm.valid) {
       const name = this.thirdTypeForm.get('name')?.value?.trim();
       
-      // Verificar si ya existe el nombre
-      const existingThirdType = array.find(t => t.thirdTypeName.toLowerCase() === name.toLowerCase());
-      if (existingThirdType) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ya existe un tipo de tercero con ese nombre'
-        });
-        return;
-      }
-
       const newThirdType: ThirdType = {
         entId: this.entData,
         thirdTypeId: 0,
@@ -521,21 +618,32 @@ export class ThirdConfigComponent implements OnInit {
 
       this.thirdServiceConfiguration.createThirdType(newThirdType).subscribe({
         next: (response: ThirdType) => {
-          array.push(response);
           this.thirdTypeForm.reset();
           this.showInputThirdType = false;
+          this.reloadCurrentPageThirdTypes();
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro exitoso',
             detail: 'Tipo de tercero creado correctamente'
           });
         },
         error: (error: any) => {
-          console.error('Error creating third type:', error);
+          let errorMessage = 'Error al actualizar el tipo de tercero';
+          let errorSummary = 'Error';
+          if (error.error?.message) {
+            errorMessage = error.error.message;
+            if (error.error.message.includes('Ya existe un tipo de tercero')) {
+              if (error.error.message.includes('con el nombre')) {
+                errorSummary = 'Nombre Duplicado';
+              } else {
+                errorSummary = 'Tipo de Tercero Duplicado';
+              }
+            }
+          }
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al crear el tipo de tercero'
+            summary: errorSummary,
+            detail: errorMessage
           });
         }
       });
@@ -575,7 +683,7 @@ export class ThirdConfigComponent implements OnInit {
     
     // Guardar valor inicial para detectar cambios
     this.initialThirdTypeValue = {
-      name: thirdType.thirdTypeName
+      name: thirdType.thirdTypeName?.trim()
     };
     
     // Mostrar el formulario de edición
@@ -586,7 +694,7 @@ export class ThirdConfigComponent implements OnInit {
    * Verifica si hay cambios en el formulario de edición de ThirdType
    */
   hasThirdTypeChanges(): boolean {
-    const currentName = this.editThirdTypeForm.get('name')?.value;
+    const currentName = this.editThirdTypeForm.get('name')?.value?.trim();
     return this.initialThirdTypeValue.name !== currentName;
   }
 
@@ -603,23 +711,8 @@ export class ThirdConfigComponent implements OnInit {
       const formValue = this.editThirdTypeForm.value;
       const name = formValue.name?.trim();
       
-      // Verificar si ya existe otro tipo con el mismo nombre (excluyendo el actual)
-      const existingThirdType = this.thirdTypes.find((t, index) => 
-        t.thirdTypeName.toLowerCase() === name.toLowerCase() && 
-        index !== this.editingThirdTypeIndex
-      );
-      
-      if (existingThirdType) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ya existe otro tipo de tercero con ese nombre'
-        });
-        return;
-      }
-
       const updatedThirdType: ThirdType = {
-        entId: this.originalThirdType.entId,
+        entId: this.entData,
         thirdTypeId: this.originalThirdType.thirdTypeId,
         thirdTypeName: name,
         status: this.originalThirdType.status // Mantener el estado actual
@@ -635,16 +728,27 @@ export class ThirdConfigComponent implements OnInit {
           
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización exitosa',
             detail: 'Tipo de tercero actualizado correctamente'
           });
         },
         error: (error: any) => {
-          console.error('Error updating third type:', error);
+          let errorMessage = 'Error al crear el tipo de tercero';
+          let errorSummary = 'Error';
+          if (error.error?.message) {
+            errorMessage = error.error.message;
+            if (error.error.message.includes('Ya existe un tipo de tercero')) {
+              if (error.error.message.includes('con el nombre')) {
+                errorSummary = 'Nombre Duplicado';
+              } else {
+                errorSummary = 'Tipo de Tercero Duplicado';
+              }
+            }
+          }
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Error al actualizar el tipo de tercero'
+            summary: errorSummary,
+            detail: errorMessage
           });
         }
       });
@@ -660,6 +764,96 @@ export class ThirdConfigComponent implements OnInit {
     this.editingThirdTypeIndex = -1;
     this.originalThirdType = null;
     this.initialThirdTypeValue = {};
+  }
+
+  /**
+   * Solicita confirmación para eliminar un tipo de tercero
+   */
+  confirmDeleteThirdType(thirdType: ThirdType, index: number): void {
+    this.confirmationService.confirm({
+      message: `¿Desea eliminar el tipo de tercero "${thirdType.thirdTypeName}"?`,
+      header: 'Confirmar Eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      rejectButtonProps: { severity: 'secondary' },
+      accept: () => {
+        this.deleteThirdType(thirdType, index);
+      }
+    });
+  }
+
+  /**
+   * Elimina un tipo de tercero
+   */
+  deleteThirdType(thirdType: ThirdType, index: number): void {
+    // Validar que el thirdType tenga un id
+    if (!thirdType.thirdTypeId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se puede eliminar el tipo de tercero: ID no disponible'
+      });
+      return;
+    }
+
+    this.thirdServiceConfiguration.deleteThirdType(thirdType.thirdTypeId, this.entData).subscribe({
+      next: (response: boolean) => {
+        if (response) {
+          this.reloadCurrentPageThirdTypes();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Tipo de tercero eliminado correctamente'
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo eliminar el tipo de tercero'
+          });
+        }
+      },
+      error: (error: any) => {
+        let errorMessage = 'Error al eliminar el tipo de tercero';
+        
+        // Capturar el mensaje del backend
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        }
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'No se puede eliminar',
+          detail: errorMessage
+        });
+      }
+    });
+  }
+
+  /**
+   * Maneja el cambio en el término de búsqueda para tipos de tercero
+   */
+  onSearchThirdTypesChange(): void {
+    this.currentPageThirdTypes = 0;
+    this.loadThirdTypes();
+  }
+
+  /**
+   * Maneja la carga lazy de tipos de tercero
+   */
+  loadThirdTypesLazy(event: any): void {
+    this.currentPageThirdTypes = event.first / event.rows;
+    this.currentSizeThirdTypes = event.rows;
+    this.currentSortOrderThirdTypes = event.sortOrder === 1 ? 'asc' : 'desc';
+    this.loadThirdTypes();
+  }
+
+  /**
+   * Recarga la página actual de tipos de tercero
+   */
+  reloadCurrentPageThirdTypes(): void {
+    this.loadThirdTypes();
   }
 
   /**

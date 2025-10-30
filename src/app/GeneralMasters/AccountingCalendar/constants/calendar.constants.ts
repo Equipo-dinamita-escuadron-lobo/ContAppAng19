@@ -17,12 +17,6 @@ export const CALENDAR_CONSTANTS = {
   MAX_DAYS_IN_YEAR: 366   // Año bisiesto máximo
 } as const;
 
-// Constantes de paginación
-export const PAGINATION_CONSTANTS = {
-  DEFAULT_PAGE_SIZE: 1000,
-  DEFAULT_PAGE: 0
-} as const;
-
 // Constantes de nombres
 export const NAME_CONSTANTS = {
   MONTH_NAMES: [

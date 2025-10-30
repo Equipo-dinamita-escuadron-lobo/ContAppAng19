@@ -48,14 +48,14 @@ export class KardexService {
    * Crea un ajuste de compra en el kardex
    */
   purchaseAdjustment(request: KardexPurchaseRequest): Observable<ResponseDto<any>> {
-    return this.http.post<ResponseDto<any>>(`${this.apiUrl}purchase-agreement`, request);
+    return this.http.post<ResponseDto<any>>(`${this.apiUrl}purchase-adjustment`, request);
   }
 
   /**
    * Crea un ajuste de venta en el kardex
    */
   saleAdjustment(request: KardexSaleRequest): Observable<ResponseDto<any>> {
-    return this.http.post<ResponseDto<any>>(`${this.apiUrl}sale-agreement`, request);
+    return this.http.post<ResponseDto<any>>(`${this.apiUrl}sale-adjustment`, request);
   }
 
   /**

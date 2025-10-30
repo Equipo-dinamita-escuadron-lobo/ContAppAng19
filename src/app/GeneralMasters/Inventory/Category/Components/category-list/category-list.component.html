@@ -1,168 +1,179 @@
 <!-- Contenedor Principal con la fuente Titillium -->
 <div class="flex w-full h-full font-titillium">
   <!-- Tarjeta de Contenido Principal, aplicando el estilo de la guía -->
-  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
-    <!-- 1. CABECERA: Título y Botones de Acción -->
-    <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-12">
-      <!-- Título con el estilo de marca (borde inferior) -->
-      <div class="items-center mb-6">
-        <h1
-          class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1"
-        >
-          Categorías
+  <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
+
+    <!-- 1. CABECERA: Título y Botón de Crear -->
+    <div class="flex justify-between items-start mb-40">
+      <!-- Título con el estilo de marca -->
+      <div class="items-center">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Categorías</span>
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
-          Administra y organiza todas las categorías de productos del sistema.
+        <p class="font-family-sans font-normal text-sm mt-12">
+          Gestione las categorías utilizadas en el sistema.
         </p>
       </div>
 
-      <!-- Contenedor de botones alineado a la derecha en pantallas grandes -->
-      <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
-        <div class="flex flex-wrap gap-3">
-          <!-- Botón "Crear Categoría" utilizando p-button -->
-          <p-button
-            label="Crear Categoría"
-            icon="pi pi-plus"
-            (click)="redirectTo('/gen-masters/inventory/categories/create')"
-          >
-          </p-button>
-        </div>
+      <!-- Botones de acción -->
+      <div class="flex gap-3">        
+        <p-button
+          label="Crear"
+          icon="pi pi-plus"
+          (click)="redirectToCreate()"
+          (onKeyUp)="redirectToCreate()"
+          styleClass="p-button-primary"
+        >
+        </p-button>
+        <p-button
+          icon="pi pi-arrow-left"
+          (click)="goBack()"
+          (onKeyUp)="goBack()"
+          styleClass="p-button-text p-button-secondary"
+        >
+        </p-button>
       </div>
     </div>
 
     <!-- 2. BARRA DE BÚSQUEDA: Con el estilo minimalista -->
-    <div class="mb-16 w-1/2 sm:w-1/3">
-      <p-iconfield iconPosition="left">
-        <p-inputicon>
-          <i class="pi pi-search text-gray-500"></i>
-        </p-inputicon>
-        <input
-          pInputText
-          type="text"
-          #filterInput
-          (input)="categoriesTable.filterGlobal(filterInput.value, 'contains')"
-          placeholder="Buscar por nombre, descripción..."
-          class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
-        />
-      </p-iconfield>
+    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+      <div class="w-full sm:w-[30rem]">
+        <p-iconfield iconPosition="left">
+          <p-inputicon>
+            <i class="pi pi-search text-gray-500"></i>
+          </p-inputicon>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Buscar categoría (nombre/descripción)..."
+            class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
+          />
+        </p-iconfield>
+      </div>
     </div>
 
     <!-- 3. TABLA DE CATEGORÍAS: Estilizada para ser coherente con el diseño -->
     <p-table
       #categoriesTable
       [value]="categories"
+      [lazy]="true"
+      (onLazyLoad)="loadCategoriesLazy($event)"
       [paginator]="true"
-      [rows]="10"
+      [rows]="currentSize"
       [rowsPerPageOptions]="[5, 10, 20]"
-      [globalFilterFields]="['name', 'description']"
+      [totalRecords]="totalRecords"
       styleClass="p-datatable-striped font-family-sans"
-      [tableStyle]="{ 'min-width': '50rem' }"
-      [responsiveLayout]="'scroll'"
+      [tableStyle]="{ 'min-width': '70rem' }"
+      responsiveLayout="scroll"
     >
       <ng-template pTemplate="header">
         <tr>
           <!-- Cabeceras de tabla con el estilo de la guía -->
           <th
-            pSortableColumn="id"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
-          >
-            ID <p-sortIcon field="id"></p-sortIcon>
-          </th>
-          <th
             pSortableColumn="name"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary"
           >
             Nombre <p-sortIcon field="name"></p-sortIcon>
           </th>
           <th
-            pSortableColumn="description"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary"
           >
-            Descripción <p-sortIcon field="description"></p-sortIcon>
+            Descripción
           </th>
           <th
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary"
           >
             Inventario
           </th>
           <th
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary"
           >
             Costo
           </th>
           <th
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary"
           >
             Venta
           </th>
           <th
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary"
           >
             Devolución
           </th>
           <th
-            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary text-center"
           >
             Estado
           </th>
           <th
-            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary text-center"
           >
             Acciones
           </th>
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-cat>
+      <ng-template pTemplate="body" let-category>
         <tr class="text-neutral-20">
-          <td class="py-3 whitespace-nowrap">{{ cat.id }}</td>
-          <td class="py-3 whitespace-nowrap">{{ cat.name }}</td>
-          <td class="py-3 whitespace-nowrap">{{ cat.description }}</td>
-                     <td class="py-3 whitespace-nowrap">
-             <span [class]="accounts.length === 0 ? 'text-gray-400 italic' : ''">
-               {{ getCategoryName(cat.inventoryId) }}
-             </span>
-           </td>
-           <td class="py-3 whitespace-nowrap">
-             <span [class]="accounts.length === 0 ? 'text-gray-400 italic' : ''">
-               {{ getCategoryName(cat.costId) }}
-             </span>
-           </td>
-           <td class="py-3 whitespace-nowrap">
-             <span [class]="accounts.length === 0 ? 'text-gray-400 italic' : ''">
-               {{ getCategoryName(cat.saleId) }}
-             </span>
-           </td>
-           <td class="py-3 whitespace-nowrap">
-             <span [class]="accounts.length === 0 ? 'text-gray-400 italic' : ''">
-               {{ getCategoryName(cat.returnId) }}
-             </span>
-           </td>
-           <td class="py-3 text-center">
-             <p-tag [value]="getStateLabel(cat.state)" [severity]="getStateSeverity(cat.state)">
-             </p-tag>
-           </td>
-          <td class="py-3 text-center whitespace-nowrap">
+          <td class="py-3">{{ category.name }}</td>
+          <td class="py-3">{{ category.description }}</td>
+          <td class="py-3">
+            <span [class]="accounts.length === 0 ? 'text-gray-400 italic' : ''">
+              {{ getCategoryName(category.inventoryId) }}
+            </span>
+          </td>
+          <td class="py-3">
+            <span [class]="accounts.length === 0 ? 'text-gray-400 italic' : ''">
+              {{ getCategoryName(category.costId) }}
+            </span>
+          </td>
+          <td class="py-3">
+            <span [class]="accounts.length === 0 ? 'text-gray-400 italic' : ''">
+              {{ getCategoryName(category.saleId) }}
+            </span>
+          </td>
+          <td class="py-3">
+            <span [class]="accounts.length === 0 ? 'text-gray-400 italic' : ''">
+              {{ getCategoryName(category.returnId) }}
+            </span>
+          </td>
+          <td class="py-3 text-center">
+            <p-tag [value]="formatState(category.state)" [severity]="getStateSeverity(category.state)">
+            </p-tag>
+          </td>
+          <td class="py-3 text-center">
             <!-- 4. BOTONES DE ACCIÓN -->
             <div class="flex justify-center gap-2 items-center">
               <p-button
                 icon="pi pi-pencil"
                 pTooltip="Editar"
                 tooltipPosition="top"
-                (click)="redirectToEdit(cat.id)"
+                (click)="redirectToEdit(category.id)"
+                (onKeyUp)="redirectToEdit(category.id)"
                 styleClass="p-button-rounded p-button-text text-complementary-green"
               ></p-button>
               <p-button
                 icon="pi pi-trash"
                 pTooltip="Eliminar"
                 tooltipPosition="top"
-                (click)="deleteCategory(cat.id)"
+                (click)="deleteCategory(category)"
+                (onKeyUp)="deleteCategory(category)"
                 styleClass="p-button-rounded p-button-text text-secondary"
               ></p-button>
               <p-toggleSwitch
-                [ngModel]="isActive(cat.state)"
-                (onChange)="changeCategoryState(cat)"
-                pTooltip="Cambiar Estado"
+                [(ngModel)]="category.state"
+                (onChange)="changeCategoryState(category)"
+                [pTooltip]="formatState(category.state)"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"
@@ -174,8 +185,17 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9" class="text-center py-6 font-family-sans text-neutral-50">
+          <td colspan="8" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron categorías.
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td colspan="8" class="text-center py-6 font-family-sans text-neutral-50">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p class="mt-2 text-primary">Cargando categorías...</p>
           </td>
         </tr>
       </ng-template>

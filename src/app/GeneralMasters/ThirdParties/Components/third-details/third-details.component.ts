@@ -8,11 +8,15 @@ import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
 
+// Componentes compartidos
+import { FormPanelComponent } from '../shared/form-panel.component';
+import { FormFieldLabelComponent } from '../shared/form-field-label.component';
+
 // Models and Services
 import { ThirdService } from '../../Services/third.service';
 import { Third } from '../../models/Third';
-import { TypeId } from '../../models/TypeId';
 import { ePersonType } from '../../models/ePersonType';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 @Component({
   selector: 'app-third-details',
@@ -23,8 +27,11 @@ import { ePersonType } from '../../models/ePersonType';
     ButtonModule,
     CardModule,
     TagModule,
-    DividerModule
+    DividerModule,
+    FormPanelComponent,
+    FormFieldLabelComponent
   ],
+  providers: [LocalStorageMethods],
   templateUrl: './third-details.component.html',
   styleUrl: './third-details.component.css'
 })
@@ -54,14 +61,12 @@ export class ThirdDetailsComponent implements OnInit {
     verificationNumber: undefined,
     state: false,
     photoPath: undefined,
-    country: '0',
-    province: '0',
-    city: '0',
+    country: null,
+    province: null,
+    city: null,
     address: 'Calle Principal',
     phoneNumber: '1234567890',
-    email: 'email@example.com',
-    creationDate: '2024-04-27',
-    updateDate: '2024-04-29',
+    email: 'email@example.com'
   };
 
   /** Estado de carga de datos */
@@ -70,9 +75,11 @@ export class ThirdDetailsComponent implements OnInit {
   /**
    * Constructor del componente
    * @param thirdService Servicio para gestionar terceros
+   * @param localStorageMethods Métodos para acceder al local storage
    */
   constructor(
-    private thirdService: ThirdService
+    private thirdService: ThirdService,
+    private localStorageMethods: LocalStorageMethods
   ) { }
 
   /**
@@ -97,13 +104,13 @@ export class ThirdDetailsComponent implements OnInit {
   private loadThirdData(): void {
     if (this.inputData?.thId && this.inputData.thId > 0) {
       this.loading = true;
-      this.thirdService.getThirdPartie(this.inputData.thId).subscribe({
+      const entId = this.localStorageMethods.getIdEnterprise();
+      this.thirdService.getThirdPartie(this.inputData.thId, entId).subscribe({
         next: (third: Third) => {
           this.thirdData = third;
           this.loading = false;
         },
         error: (error: any) => {
-          console.error('Error loading third data:', error);
           this.loading = false;
         }
       });
@@ -125,51 +132,123 @@ export class ThirdDetailsComponent implements OnInit {
   }
 
   /**
+   * Obtiene el título del modal con el nombre del tercero
+   * @returns String con el título formateado
+   */
+  getModalTitle(): string {
+    if (this.thirdData.personType === ePersonType.natural) {
+      const names = this.thirdData.names || '';
+      const lastNames = this.thirdData.lastNames || '';
+      const fullName = `${names} ${lastNames}`.trim();
+      return fullName ? `Detalles - ${fullName}` : 'Detalles del Tercero';
+    } else {
+      const socialReason = this.thirdData.socialReason || '';
+      return socialReason ? `Detalles - ${socialReason}` : 'Detalles del Tercero';
+    }
+  }
+
+  /**
    * Concatena los nombres de los tipos de terceros
    * @returns String con los nombres de los tipos concatenados
    */
   getThirdTypesNames(): string {
     if (!this.thirdData.thirdTypes || this.thirdData.thirdTypes.length === 0) {
-      return 'NO APLICA';
+      return 'N/A';
     }
     return this.thirdData.thirdTypes.map(type => type.thirdTypeName).join(', ');
   }
 
   /**
-   * Verifica y retorna el género o "NO APLICA" si está vacío
-   * @returns String con el género o "NO APLICA"
+   * Obtiene el tipo de ID
+   * @returns String con el tipo de ID o "N/A"
    */
-  getGender(): string {
-    return this.thirdData.gender ? this.thirdData.gender : 'NO APLICA';
+  getTypeId(): string {
+    return this.thirdData.typeId?.typeId || 'N/A';
   }
 
   /**
-   * Verifica y retorna el número de verificación o "NO APLICA" si está vacío
-   * @returns String con el número de verificación o "NO APLICA"
+   * Verifica y retorna el género o "N/A" si está vacío
+   * @returns String con el género o "N/A"
+   */
+  getGender(): string {
+    return this.thirdData.gender || 'N/A';
+  }
+
+  /**
+   * Verifica y retorna el número de verificación o "N/A" si está vacío
+   * @returns String con el número de verificación o "N/A"
    */
   getVerificationNumber(): string {
-    return this.thirdData.verificationNumber ? this.thirdData.verificationNumber.toString() : 'NO APLICA';
+    return this.thirdData.verificationNumber ? this.thirdData.verificationNumber.toString() : 'N/A';
   }
 
   /**
    * Obtiene el nombre completo para personas naturales
-   * @returns String con el nombre completo o "NO APLICA"
+   * @returns String con el nombre completo o "N/A"
    */
   getFullName(): string {
     if (this.thirdData.personType === ePersonType.natural) {
       const names = this.thirdData.names || '';
       const lastNames = this.thirdData.lastNames || '';
-      return `${names} ${lastNames}`.trim() || 'NO APLICA';
+      return `${names} ${lastNames}`.trim() || 'N/A';
     }
-    return 'NO APLICA';
+    return 'N/A';
   }
 
   /**
    * Obtiene la razón social para personas jurídicas
-   * @returns String con la razón social o "NO APLICA"
+   * @returns String con la razón social o "N/A"
    */
   getSocialReason(): string {
-    return this.thirdData.socialReason || 'NO APLICA';
+    return this.thirdData.socialReason || 'N/A';
+  }
+
+  /**
+   * Obtiene el país
+   * @returns String con el nombre del país o "N/A"
+   */
+  getCountry(): string {
+    return this.thirdData.country?.countryName || 'N/A';
+  }
+
+  /**
+   * Obtiene el departamento
+   * @returns String con el nombre del departamento o "N/A"
+   */
+  getDepartment(): string {
+    return this.thirdData.province?.stateName || 'N/A';
+  }
+
+  /**
+   * Obtiene la ciudad
+   * @returns String con el nombre de la ciudad o "N/A"
+   */
+  getCity(): string {
+    return this.thirdData.city?.cityName || 'N/A';
+  }
+
+  /**
+   * Obtiene la dirección
+   * @returns String con la dirección o "N/A"
+   */
+  getAddress(): string {
+    return this.thirdData.address || 'N/A';
+  }
+
+  /**
+   * Obtiene el teléfono
+   * @returns String con el teléfono o "N/A"
+   */
+  getPhoneNumber(): string {
+    return this.thirdData.phoneNumber || 'N/A';
+  }
+
+  /**
+   * Obtiene el email
+   * @returns String con el email o "N/A"
+   */
+  getEmail(): string {
+    return this.thirdData.email || 'N/A';
   }
 
   /**
@@ -202,19 +281,5 @@ export class ThirdDetailsComponent implements OnInit {
    */
   isJuridicPerson(): boolean {
     return this.thirdData.personType === ePersonType.juridica;
-  }
-
-  /**
-   * Formatea una fecha para mostrar
-   * @param date Fecha a formatear
-   * @returns String con la fecha formateada
-   */
-  formatDate(date: string): string {
-    if (!date) return 'NO APLICA';
-    try {
-      return new Date(date).toLocaleDateString('es-CO');
-    } catch {
-      return date;
-    }
   }
 }

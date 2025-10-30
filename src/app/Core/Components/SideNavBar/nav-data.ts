@@ -86,7 +86,7 @@ export const navbarData: INavbarData[] = [
         label:'Etiquetas no comerciales'
       },
       {
-        routeLink: '/gen-masters/help-panels',
+        routeLink: '/gen-masters/help-center/list',
         icon: 'help',
         label: 'Centro de Ayuda',
       },
@@ -125,7 +125,7 @@ export const navbarData: INavbarData[] = [
             label: 'Libros Auxiliares',
           },
           {
-            routeLink: 'TO DO',
+            routeLink: '/financial/reports/financial-statements/list',
             icon: 'article',
             label: 'Estados Financieros',
           },
@@ -183,7 +183,7 @@ export const navbarData: INavbarData[] = [
             icon: 'analytics',
             label: 'Reportes',
           },
-          
+
         ],
       },
     ],
@@ -246,28 +246,6 @@ export const navbarData: INavbarData[] = [
          routeLink: 'TO DO',
          icon: 'analytics',
          label: 'Reportes',
-       },
-       {
-         routeLink: 'TO DO',
-         icon: 'shelves',
-         label: 'Ajustes de Inventario',
-         items: [
-           {
-             routeLink: 'TO DO',
-             icon: 'arrows_input',
-             label: 'Entradas',
-           },
-           {
-             routeLink: 'TO DO',
-             icon: 'arrows_output',
-             label: 'Salidas',
-           },
-           {
-             routeLink: 'TO DO',
-             icon: 'difference',
-             label: 'Recalculos',
-           },
-         ],
        },
      ],
    },

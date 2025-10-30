@@ -38,7 +38,7 @@
   </div>
 
   <div class="flex flex-wrap justify-center items-center mt-4 gap-3">
-    <p-button label="Cancelar" (click)="cancel()" styleClass="p-button-danger p-button-raised"></p-button>
+    <p-button label="Cancelar" (click)="cancel()" severity="secondary"></p-button>
     <div *ngIf="form.valid">
       <p-button [label]="'Guardar ' + (currentLevel === 'costo' ? 'Costo' : (currentLevel === 'subcosto' ? 'Subcosto' : 'Auxiliar costo'))" (click)="send()" styleClass="p-button-raised"></p-button>
     </div>

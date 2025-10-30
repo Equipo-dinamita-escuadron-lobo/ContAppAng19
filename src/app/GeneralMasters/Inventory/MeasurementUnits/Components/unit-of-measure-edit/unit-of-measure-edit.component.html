@@ -7,10 +7,10 @@
     <div class="flex justify-between items-start mb-12">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Editar Unidad de Medida
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Editar</span> Unidad de Medida
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Modifique la información de la unidad de medida según sea necesario.
         </p>
       </div>
@@ -39,32 +39,32 @@
 
         <!-- Nombre de la Unidad -->
         <div class="flex flex-col gap-2">
-          <label for="name" class="font-semibold text-primary">Nombre de la Unidad</label>
+          <label for="name" class="font-semibold text-primary label-required">Nombre</label>
           <input pInputText id="name" formControlName="name" placeholder="Ej: Kilogramo"
             class="w-full md:w-2/3" />
           @if (hasFieldError('name')) {
-          <small class="text-red-500">{{ getFieldError('name') }}</small>
+          <small class="error-message">{{ getFieldError('name') }}</small>
           }
         </div>
 
         <!-- Abreviatura -->
         <div class="flex flex-col gap-2">
-          <label for="abbreviation" class="font-semibold text-primary">Abreviatura</label>
+          <label for="abbreviation" class="font-semibold text-primary label-required">Abreviatura</label>
           <input pInputText id="abbreviation" formControlName="abbreviation" placeholder="Ej: Kg"
             class="w-full md:w-2/3" />
           @if (hasFieldError('abbreviation')) {
-          <small class="text-red-500">{{ getFieldError('abbreviation') }}</small>
+          <small class="error-message">{{ getFieldError('abbreviation') }}</small>
           }
         </div>
 
         <!-- Descripción -->
         <div class="flex flex-col gap-2 md:col-span-2">
-          <label for="description" class="font-semibold text-primary">Descripción</label>
+          <label for="description" class="font-semibold text-primary label-required">Descripción</label>
           <textarea pInputText id="description" formControlName="description" 
             placeholder="Ej: Unidad de medida de masa utilizada para pesar productos"
             class="w-full md:w-1/2" rows="3" pInputTextarea></textarea>
           @if (hasFieldError('description')) {
-          <small class="text-red-500">{{ getFieldError('description') }}</small>
+          <small class="error-message">{{ getFieldError('description') }}</small>
           }
         </div>
 
@@ -80,8 +80,8 @@
         </p-button>
         <p-button 
           type="submit"
-          label="Guardar Cambios"
-          [disabled]="unitOfMeasureForm.invalid || !hasChanges()">
+          label="Actualizar"
+          [disabled]="isSubmitDisabled">
         </p-button>
       </div>
     </form>
@@ -89,3 +89,6 @@
     }
   </div>
 </div>
+
+<!-- Toast para mensajes -->
+<p-toast></p-toast>

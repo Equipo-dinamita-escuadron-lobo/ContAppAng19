@@ -2,61 +2,40 @@
 <p-toast></p-toast>
 
 <p-dialog
-  [header]="inputData?.title || 'Crear Tercero a partir del RUT'"
+  [header]="dialogTitle"
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: isFileLoaded ? '90vw' : '500px', maxWidth: '1000px' }"
+  [style]="{ width: '500px', maxWidth: '90vw' }"
   [closable]="true"
   [draggable]="false"
   [resizable]="false"
+  styleClass="font-family-sans"
   (onHide)="onHide()">
 
   <!-- Contenido del modal -->
   <div class="p-fluid">
     
     <!-- Descripción -->
-    <div class="text-center mb-4">
-      <i class="pi pi-file-pdf text-6xl text-red-500 mb-3"></i>
-      <p class="text-gray-600 mb-4 max-w-md mx-auto">
-        Por favor, selecciona un archivo PDF para cargar. Asegúrate de que el archivo tenga la información con la cual se va a crear el nuevo tercero.
+    <div class="text-center mb-30">
+      <p class="font-family-sans text-base leading-relaxed text-neutral-30">
+        Por favor, selecciona un archivo PDF (máx. 50 MB) para cargar. Asegúrate de que el archivo tenga la información con la cual se va a crear el nuevo tercero.
       </p>
     </div>
 
     <!-- Upload de archivo -->
-    <div class="mb-4">
+    <div class="mb-30">
       <p-fileUpload
+        #fileUpload
         mode="basic"
         name="pdfFile[]"
         accept="application/pdf"
-        [maxFileSize]="10000000"
+        [maxFileSize]="50000000"
         chooseLabel="Seleccionar PDF"
         [auto]="false"
         (onSelect)="onFileSelect($event)"
         (onError)="onFileError($event)"
         class="w-full">
       </p-fileUpload>
-    </div>
-
-    <!-- Vista previa del PDF -->
-    <div *ngIf="pdfUrl" class="mt-4">
-      <h4 class="text-lg font-semibold text-gray-900 mb-3">Vista previa del PDF:</h4>
-      <div class="border border-gray-300 rounded-lg overflow-hidden shadow-lg">
-        <iframe 
-          [src]="pdfUrl" 
-          class="w-full h-96 border-0">
-        </iframe>
-      </div>
-    </div>
-
-    <!-- Estado de carga -->
-    <div *ngIf="loading" class="flex justify-content-center align-items-center p-4">
-      <p-progressSpinner 
-        styleClass="w-4rem h-4rem" 
-        strokeWidth="8" 
-        fill="var(--surface-ground)" 
-        animationDuration=".5s">
-      </p-progressSpinner>
-      <span class="ml-3 text-primary font-semibold">Procesando archivo...</span>
     </div>
   </div>
 
@@ -65,7 +44,6 @@
     <div class="flex justify-content-end gap-2">
       <p-button 
         label="Cancelar" 
-        icon="pi pi-times"
         severity="secondary"
         (onClick)="closePopUp()"
         [disabled]="loading">
@@ -73,7 +51,6 @@
       
       <p-button 
         label="Crear Tercero" 
-        icon="pi pi-check"
         (onClick)="uploadFile()"
         [disabled]="!selectedFile || loading"
         [loading]="loading">
