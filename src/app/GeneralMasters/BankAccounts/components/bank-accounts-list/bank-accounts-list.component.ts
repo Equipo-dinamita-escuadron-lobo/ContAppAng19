@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { BankAccountsService, BankAccount } from '../../services/bank-accounts.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
+import { BankAccountsPresentationService } from '../../services/bank-accounts-presentation.service';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -50,6 +51,7 @@ export class BankAccountsListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly localStorageMethod = inject(LocalStorageMethods);
   private readonly chartAccountService = inject(ChartAccountService);
+  public readonly bankAccountsPresentationService = inject(BankAccountsPresentationService);
   
   private enterpriseId: string = '';
 
@@ -240,14 +242,5 @@ export class BankAccountsListComponent implements OnInit {
           });
         }
       });
-  }
-
-
-  getAccountTypeDisplay(accountType: string): string {
-    return this.bankAccountsService.getAccountTypeDisplay(accountType);
-  }
-
-  getAccountingAccountDisplay(accountingAccountId: string): string {
-    return this.accountingAccountsMap.get(accountingAccountId.toString()) || accountingAccountId;
   }
 }
