@@ -6,7 +6,6 @@ import { PaymentMethodsServiceService, PageResponse } from '../../services/payme
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
 import { PaymentMethod } from '../../models/PaymentMethods';
-import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 
 // PrimeNG Imports
@@ -66,6 +65,7 @@ export class PaymentMethodsListComponent implements OnInit {
   sortField: string | undefined;
   sortOrder: string | undefined;
 
+  accountingAccounts: any[] = [];
   accountingAccountsMap: Map<string, string> = new Map();
 
   ngOnInit(): void {
@@ -84,17 +84,12 @@ export class PaymentMethodsListComponent implements OnInit {
   private loadAccountingAccounts(): void {
     this.chartAccountService.getListAccounts(this.enterpriseId).subscribe({
       next: (accounts: Account[]) => {
-        // Obtener todas las cuentas auxiliares para crear el mapa
-        const auxiliaryAccounts: Account[] = [];
-        for (const account of accounts) {
-          PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
+        this.accountingAccounts = this.flattenAccounts(accounts);
+        for (const account of this.accountingAccounts) {
+          if (account.code != null) {
+            this.accountingAccountsMap.set(account.code.toString(), `${account.code} - ${account.description}`);
+          }
         }
-
-        // Crear mapa de código -> descripción
-        for (const account of auxiliaryAccounts) {
-          this.accountingAccountsMap.set(account.code, account.description);
-        }
-
         // Una vez que tenemos el mapa, cargar los métodos de pago
         this.loadPaymentMethods();
       },
@@ -106,6 +101,25 @@ export class PaymentMethodsListComponent implements OnInit {
     });
   }
 
+  /**
+   * Aplana la estructura jerárquica de cuentas
+   */
+  private flattenAccounts(accounts: any[]): any[] {
+    const result: any[] = [];
+
+    const flatten = (items: any[]) => {
+      for (const item of items) {
+        result.push(item);
+        if (item.children && item.children.length > 0) {
+          flatten(item.children);
+        }
+      }
+    };
+
+    flatten(accounts);
+    return result;
+  }
+
   private loadPaymentMethods(): void {
     this.loading = true;
     this.service.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
@@ -113,7 +127,7 @@ export class PaymentMethodsListComponent implements OnInit {
         next: (response: PageResponse<PaymentMethod>) => {
           this.paymentMethods = response.content.map(pm => ({
             ...pm,
-            accountingAccountDisplay: pm.accountingAccount || 'Sin cuenta asignada'
+            accountingAccountDisplay: this.getAccountingAccountDisplay(pm.accountingAccount)
           }));
           this.totalRecords = response.page?.totalElements || response.totalElements || 0;
           this.loading = false;
@@ -237,5 +251,9 @@ export class PaymentMethodsListComponent implements OnInit {
 
   formatState(status: boolean): string {
     return status ? 'Activo' : 'Inactivo';
+  }
+
+  getAccountingAccountDisplay(accountingAccount: string): string {
+    return this.accountingAccountsMap.get(accountingAccount) || accountingAccount || 'Sin cuenta asignada';
   }
 }
