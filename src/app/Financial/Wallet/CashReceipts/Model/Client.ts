@@ -5,9 +5,4 @@
 export interface Client {
     id: number;
     name: string;
-    accountsReceivableAccount: {
-        id: number;
-        code: string; 
-        name: string;
-    };
 }

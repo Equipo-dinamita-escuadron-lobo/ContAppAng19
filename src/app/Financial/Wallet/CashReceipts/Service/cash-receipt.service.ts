@@ -23,12 +23,12 @@ export class CashReceiptService {
   private paymentMethodsCache: PaymentMethod[] = [];
 
   private mockClientsDB: Client[] = [
-    { id: 1, name: 'Julian Ruano Majin', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 2, name: 'Maria Lopez', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 3, name: 'Pedro Gomez', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 4, name: 'Ana Fernandez', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 5, name: 'Julian Piamba', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } },
-    { id: 6, name: 'Juliana Campo', accountsReceivableAccount: { id: 1, code: '130505', name: 'Clientes Nacionales' } }
+    { id: 1, name: 'Julian Ruano Majin' },
+    { id: 2, name: 'Maria Lopez' },
+    { id: 3, name: 'Pedro Gomez' },
+    { id: 4, name: 'Ana Fernandez' },
+    { id: 5, name: 'Julian Piamba' },
+    { id: 6, name: 'Juliana Campo' }
   ];
 
   constructor(
@@ -164,9 +164,8 @@ export class CashReceiptService {
     return this.http.get<ReceiptResponse[]>(`${this.apiUrl}/by-enterprise/${enterpriseId}`).pipe(
       map(apiReceipts => {
 
-        if (!apiReceipts) {
+        if (!apiReceipts) 
           return [];
-        }
 
         // 4. Transformar cada `ReceiptResponse` (de la API) en un `ReceiptView` (para la UI)
         return apiReceipts.map(receiptFromApi => {
