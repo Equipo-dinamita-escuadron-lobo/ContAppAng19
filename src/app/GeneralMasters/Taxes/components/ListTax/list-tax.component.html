@@ -52,20 +52,20 @@
         <tr class="text-neutral-20">
           <td class="py-3">{{ tax.code }}</td>
           <td class="py-3">{{ tax.description }}</td>
-          <td class="py-3 text-right">{{ formatPercentage(tax.interest) }}</td>
+          <td class="py-3 text-right">{{ taxValidationMessagesService.formatPercentage(tax.interest) }}</td>
           <td class="py-3">{{ tax.purchaseTaxName }}</td>
           <td class="py-3">{{ tax.salesTaxName }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="formatState(tax.status)" [severity]="getStateSeverity(tax.status)"></p-tag>
+            <p-tag [value]="tax.status ? taxValidationMessagesService.getActiveStateText() : taxValidationMessagesService.getInactiveStateText()" [severity]="tax.status ? taxValidationMessagesService.getActiveStateSeverity() : taxValidationMessagesService.getInactiveStateSeverity()"></p-tag>
           </td>
           <td class="py-3 text-center">
             <div class="flex justify-center gap-2 items-center">
               <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" (onClick)="editTax(tax)" styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
               <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" (onClick)="deleteTax(tax)" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
               <p-toggleSwitch
-                [ngModel]="isActive(tax.status)"
+                [ngModel]="tax.status"
                 (onChange)="changeTaxState(tax.id, tax)"
-                [pTooltip]="isActive(tax.status) ? 'Activo' : 'Inactivo'"
+                [pTooltip]="tax.status ? taxValidationMessagesService.getActiveStateText() : taxValidationMessagesService.getInactiveStateText()"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"
