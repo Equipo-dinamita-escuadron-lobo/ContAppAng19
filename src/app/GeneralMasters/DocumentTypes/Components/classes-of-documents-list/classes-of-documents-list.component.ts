@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,6 +15,7 @@ import { TagModule } from 'primeng/tag';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
 import { DocumentClass } from '../../models/ClassesOfDocuments';
+import { DocumentTypesPresentationService } from '../../services/document-types-presentation.service';
 
 @Component({
   selector: 'app-classes-of-documents-list',
@@ -37,7 +38,7 @@ import { DocumentClass } from '../../models/ClassesOfDocuments';
   templateUrl: './classes-of-documents-list.component.html',
   styleUrl: './classes-of-documents-list.component.css'
 })
-export class ClassesOfDocumentsListComponent {
+export class ClassesOfDocumentsListComponent implements OnInit {
   list: DocumentClass[] = [];
   filtered: DocumentClass[] = [];
   totalRecords: number = 0;
@@ -52,7 +53,8 @@ export class ClassesOfDocumentsListComponent {
     private readonly service: ClassesOfDocumentsServiceService,
     private readonly router: Router,
     private readonly messageService: MessageService,
-    private readonly confirmationService: ConfirmationService
+    private readonly confirmationService: ConfirmationService,
+    public readonly documentTypesPresentationService: DocumentTypesPresentationService
   ) {}
   ngOnInit(): void {
     // Cargar datos iniciales
@@ -225,7 +227,7 @@ export class ClassesOfDocumentsListComponent {
     const enterpriseId = this.getEnterpriseId();
     if (!documentClass?.id || !enterpriseId) return;
 
-    const newStatus = !this.isActive(documentClass.status);
+    const newStatus = !this.documentTypesPresentationService.isActive(documentClass.status);
     
     this.service.changeState(documentClass.id, enterpriseId, newStatus).subscribe({
       next: () => {
@@ -246,18 +248,5 @@ export class ClassesOfDocumentsListComponent {
         });
       }
     });
-  }
-
-  // Métodos para manejar el estado
-  getStateSeverity(status: boolean): 'success' | 'danger' {
-    return status ? 'success' : 'danger';
-  }
-
-  formatState(status: boolean): string {
-    return status ? 'Activo' : 'Inactivo';
-  }
-
-  isActive(status: boolean): boolean {
-    return status === true;
   }
 }
