@@ -1,51 +1,72 @@
 <div class="p-6">
+    <!-- 1. Encabezado de la página -->
     <div class="mb-10">
         <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
             Cartera de Facturas Pendientes
         </h1>
         <p class="font-normal text-sm mt-2 text-gray-600">
-            Listado de facturas de venta con saldo pendiente de pago.
+            Listado de facturas de venta con saldo pendiente de pago, aqui podra observar parte de la información relevante de cada factura y acceder a su detalle.
         </p>
     </div>
 
-    <p-table #dt [value]="invoices" [loading]="isLoading" [rows]="10" [paginator]="true"
-        [globalFilterFields]="['factCode', 'thirdId', 'pendingValue']"
-        [tableStyle]="{'min-width': '75rem'}"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} facturas"
-        [showCurrentPageReport]="true">
-        <ng-template pTemplate="caption">
-            <div class="flex justify-end">
-                <span class="p-input-icon-left">
-                    <i class="pi pi-search"></i>
-                    <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar factura..." />
-                </span>
-            </div>
-        </ng-template>
-        <ng-template pTemplate="header">
-            <tr>
-                <th pSortableColumn="factCode">Código Factura <p-sortIcon field="factCode"></p-sortIcon></th>
-                <th pSortableColumn="thirdId">ID Tercero <p-sortIcon field="thirdId"></p-sortIcon></th>
-                <th pSortableColumn="expirationDate">Fecha Vencimiento <p-sortIcon field="expirationDate"></p-sortIcon></th>
-                <th pSortableColumn="pendingValue" class="text-right">Valor Pendiente <p-sortIcon field="pendingValue"></p-sortIcon></th>
-                <th class="text-center">Acciones</th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-invoice>
-            <tr>
-                <td>{{ invoice.factCode }}</td>
-                <td>{{ invoice.thirdId }}</td>
-                <td>{{ invoice.expirationDate | date:'dd/MM/yyyy' }}</td>
-                <td class="text-right font-semibold">{{ invoice.pendingValue | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                <td class="text-center">
-                    <button pButton pRipple icon="pi pi-eye" class="p-button-rounded p-button-info p-button-text"
-                        [routerLink]="['/financial/wallet/invoices/details/', invoice.id]" pTooltip="Ver Detalles"></button>
-                </td>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-            <tr>
-                <td colspan="5" class="text-center p-4">No se encontraron facturas pendientes.</td>
-            </tr>
-        </ng-template>
-    </p-table>
+    <!-- 2. Buscador (Fuera de la tabla, alineado a la izquierda) -->
+    <div class="flex justify-start mb-10 mt-40 ml-5">
+        <p-iconfield iconPosition="left">
+            <p-inputicon>
+                <i class="pi pi-search text-gray-500"></i>
+            </p-inputicon>
+            <input
+                pInputText
+                type="text"
+                (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+                placeholder="Buscar factura por código, tercero o valor"
+                class="w-full sm:w-[25rem]"
+            />
+        </p-iconfield>
+    </div>
+
+    <!-- 3. Tabla de Facturas (sin el pTemplate="caption") -->
+    <div class="overflow-x-auto">
+        <p-table #dt 
+            [value]="invoices" 
+            [loading]="isLoading" 
+            [rows]="10" 
+            [paginator]="true"
+            [globalFilterFields]="['factCode', 'thirdId', 'pendingValue']"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} facturas"
+            [showCurrentPageReport]="true"
+            styleClass="p-datatable-striped w-full"
+            [tableStyle]="{'min-width': '50rem'}"
+            responsiveLayout="scroll">
+            
+            <!-- La sección "caption" ha sido eliminada de aquí -->
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Código Factura </th>
+                    <th>Tercero</th>
+                    <th>Fecha Vencimiento </th>
+                    <th class="text-right">Valor Pendiente</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-invoice>
+                <tr>
+                    <td>{{ invoice.factCode }}</td>
+                    <td>{{ invoice.thirdId }}</td>
+                    <td>{{ invoice.expirationDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="text-right font-semibold">{{ invoice.pendingValue | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                    <td class="text-center">
+                        <button pButton pRipple icon="pi pi-eye" class="p-button-rounded p-button-info p-button-text"
+                            [routerLink]="['/financial/wallet/invoices/details/', invoice.id]" pTooltip="Ver Detalles"></button>
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="5" class="text-center p-4">No se encontraron facturas pendientes.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
 </div>

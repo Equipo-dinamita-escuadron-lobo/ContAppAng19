@@ -9,6 +9,8 @@ import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { Invoice } from '../../../CashReceipts/Model';
 import { InvoicePortfolioService } from '../../Service/invoice-portfolio.service';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-invoice-list',
@@ -19,7 +21,9 @@ import { InvoicePortfolioService } from '../../Service/invoice-portfolio.service
     TableModule,
     ButtonModule,
     InputTextModule,
-    TooltipModule
+    TooltipModule, 
+    IconFieldModule,
+    InputIconModule
   ],
   templateUrl: './invoice-list.component.html',
   styleUrl: './invoice-list.component.css'

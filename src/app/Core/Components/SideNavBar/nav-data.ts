@@ -176,7 +176,7 @@ export const navbarData: INavbarData[] = [
           {
             routeLink: '/financial/wallet/invoices',
             icon: 'description',
-            label: 'Facturas',
+            label: 'Facturas pendientes',
           },
           {
             routeLink: '/financial/wallet/reports',
