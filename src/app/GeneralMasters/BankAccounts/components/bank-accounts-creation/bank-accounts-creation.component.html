@@ -23,8 +23,11 @@
 
         <div class="flex flex-col gap-2">
           <label class="font-semibold text-primary label-required">Número de Cuenta</label>
-          <input pInputText pKeyFilter="num" formControlName="accountNumber" placeholder="Ej: 5306917213883684" maxlength="20" class="w-full md:w-2/3" />
-          <small style="color: var(--color-error);" *ngIf="form.get('accountNumber')?.touched && form.get('accountNumber')?.invalid">Número de cuenta requerido</small>
+          <input pInputText pKeyFilter="pint" formControlName="accountNumber" placeholder="Ej: 5306917213883684" maxlength="16" class="w-full md:w-2/3" />
+          <small class="error-message" *ngIf="form.get('accountNumber')?.touched && form.get('accountNumber')?.invalid">
+            <span *ngIf="form.get('accountNumber')?.errors?.['required']">Número de cuenta requerido</span>
+            <span *ngIf="form.get('accountNumber')?.errors?.['pattern']">Debe tener entre 8 y 16 dígitos</span>
+          </small>
         </div>
 
         <div class="flex flex-col gap-2">
@@ -41,8 +44,8 @@
 
         <div class="flex flex-col gap-2">
           <label class="font-semibold text-primary label-required">Cuenta Contable</label>
-          <p-select [options]="auxiliaryAccountsOptions" formControlName="cuentaContable" placeholder="Seleccione cuenta contable" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
-          <small style="color: var(--color-error);" *ngIf="form.get('cuentaContable')?.touched && form.get('cuentaContable')?.invalid">Seleccione una cuenta contable</small>
+          <p-select [options]="auxiliaryAccountsOptions" formControlName="accountingAccountId" placeholder="Seleccione cuenta contable" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
+          <small class="error-message" *ngIf="form.get('accountingAccountId')?.touched && form.get('accountingAccountId')?.invalid">Seleccione una cuenta contable</small>
         </div>
 
       </div>

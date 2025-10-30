@@ -27,11 +27,11 @@ export class PaymentMethodsCreationComponent {
   accountingAccountsOptions: AccountingAccountOption[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private messageService: MessageService,
-    private service: PaymentMethodsServiceService,
-    private chartAccountService: ChartAccountService
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: PaymentMethodsServiceService,
+    private readonly chartAccountService: ChartAccountService
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -51,9 +51,9 @@ export class PaymentMethodsCreationComponent {
 
           // Obtener solo las cuentas auxiliares (8 dígitos) que son las que se usan para registrar movimientos
           const auxiliaryAccounts: Account[] = [];
-          accounts.forEach(account => {
+          for (const account of accounts) {
             PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
-          });
+          }
 
           // Filtrar cuentas válidas (con código y descripción)
           const validAuxiliaryAccounts = PaymentMethodsUtils.filterValidAuxiliaryAccounts(auxiliaryAccounts);
@@ -132,14 +132,14 @@ export class PaymentMethodsCreationComponent {
             const n = (nameMatch[1] || nameMatch[0])?.toString().replace(/^[^']*'|'/g,'');
             this.messageService.add({
               severity: 'error',
-              summary: 'Nombre duplicado',
+              summary: 'Registro duplicado',
               detail: `El método de pago "${n}" ya existe.`
             });
             return;
           }
           this.messageService.add({
             severity: 'error',
-            summary: 'Duplicado',
+            summary: 'Registro duplicado',
             detail: 'Ya existe un método de pago con el mismo nombre.'
           });
           return;

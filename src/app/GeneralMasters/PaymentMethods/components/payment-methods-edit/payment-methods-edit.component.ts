@@ -28,20 +28,18 @@ export class PaymentMethodsEditComponent implements OnInit {
   accountingAccountsOptions: AccountingAccountOption[] = [];
   initialValue: any = {};
   isEditMode: boolean = true; // Siempre es true en este componente de edición
-  accountingAccountLocked: boolean = true; // La cuenta contable siempre está bloqueada en edición
 
   constructor(
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private messageService: MessageService,
-    private service: PaymentMethodsServiceService,
-    private chartAccountService: ChartAccountService
+    private readonly fb: FormBuilder,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: PaymentMethodsServiceService,
+    private readonly chartAccountService: ChartAccountService
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
-      accountingAccount: [null, []], // Inicialmente habilitado, se deshabilitará después de cargar datos
-      accountingAccountId: [null, []] // Campo oculto para almacenar el ID
+      accountingAccount: [null, []]
     });
   }
 
@@ -73,16 +71,13 @@ export class PaymentMethodsEditComponent implements OnInit {
 
         this.form.patchValue({
           name: paymentMethod.name,
-          accountingAccount: accountId,
-          accountingAccountId: accountId
+          accountingAccount: accountId
         });
 
-        // Deshabilitar el campo accountingAccount después de cargar los datos
-        this.form.get('accountingAccount')?.disable();
-
-        // NOTA: accountingAccount está bloqueado, por lo que no se compara en hasChanges()
+        // Guardar valores iniciales para comparar cambios
         this.initialValue = {
-          name: paymentMethod.name
+          name: paymentMethod.name,
+          accountingAccount: accountId
         };
       },
       error: (error) => {
@@ -100,9 +95,9 @@ export class PaymentMethodsEditComponent implements OnInit {
       next: (accounts: Account[]) => {
         // Obtener solo las cuentas auxiliares (8 dígitos) que son las que se usan para registrar movimientos
         const auxiliaryAccounts: Account[] = [];
-        accounts.forEach(account => {
+        for (const account of accounts) {
           PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
-        });
+        }
 
         // Filtrar cuentas válidas
         const validAuxiliaryAccounts = PaymentMethodsUtils.filterValidAuxiliaryAccounts(auxiliaryAccounts);
@@ -136,9 +131,11 @@ export class PaymentMethodsEditComponent implements OnInit {
   }
 
   hasChanges(): boolean {
-    // Solo comparar el campo 'name' ya que 'accountingAccount' está bloqueado
     const currentName = this.form.get('name')?.value;
-    return this.initialValue.name !== currentName;
+    const currentAccountingAccount = this.form.get('accountingAccount')?.value;
+
+    return this.initialValue.name !== currentName ||
+           this.initialValue.accountingAccount !== currentAccountingAccount;
   }
 
   onSubmit() {
@@ -149,18 +146,13 @@ export class PaymentMethodsEditComponent implements OnInit {
 
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
-    // Usamos getRawValue() para incluir valores de campos deshabilitados
-    const formValues = this.form.getRawValue();
-
-    // Para edición, obtener el ID de la cuenta contable
-    // Como el campo está deshabilitado, el valor debería ser el ID original
-    const accountingAccountId = formValues.accountingAccountId;
+    const formValues = this.form.value;
 
     const payload = {
       id: this.id,
       idEnterprise: enterpriseId,
       name: formValues.name,
-      accountingAccountId: accountingAccountId
+      accountingAccountId: formValues.accountingAccount
     };
 
     this.service.update(payload as any).subscribe({

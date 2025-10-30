@@ -246,9 +246,12 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   }
 
   private getThirdPartyOptions(): void {
+    //TODO: ESTE METODO NO SE UTILIZA YA QUE LISTA LOS DATOS GENERALES SIN IMPORTAR EL ESTADO: ACTIVO O INACTIVO
+    // FAVOR USAR EL METODO getActiveThirds DE LA CLASE ThirdService
+    // Sin otro particular -------------------------------------
     this.thirdService.getThirdParties(this.enterpriseData.id, 1).subscribe({
-      next: (response: Third[]) => {
-        this.thirdPartyOptions = response;
+      next: (response) => {
+        this.thirdPartyOptions = response.content || [];
       },
       error: (err: any) => {
         console.error('Error fetching third parties:', err);
