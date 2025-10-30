@@ -192,7 +192,7 @@ export class HelpCenterListComponent {
     return status === true;
   }
 
-  truncateDescription(description: string, maxLength: number = 100): string {
+  truncateDescription(description: string, maxLength: number = 30): string {
     if (!description) return '';
     return description.length > maxLength ? description.substring(0, maxLength) + '...' : description;
   }
