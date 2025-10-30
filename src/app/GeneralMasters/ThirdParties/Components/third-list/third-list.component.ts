@@ -86,7 +86,7 @@ export class ThirdListComponent implements OnInit {
   loading = false;
   loadingPdfRut = false;
   showDetailView = false;
-  globalFilterValue = '';
+  searchValue = '';
 
   bulkStateToggle = true; // Default to active
   
@@ -96,8 +96,7 @@ export class ThirdListComponent implements OnInit {
   first = 0;
   sortField = 'names';
   sortOrder: 'asc' | 'desc' = 'asc';
-  searchValue = '';
-  
+
   // Modal states
   showTemplateModal = false;
   showImportModal = false;
@@ -125,12 +124,12 @@ export class ThirdListComponent implements OnInit {
   private readonly EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
 
   constructor(
-    private thirdService: ThirdService,
-    private thirdConfigurationService: ThirdServiceConfigurationService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private router: Router,
-    private localStorageMethods: LocalStorageMethods
+    private readonly thirdService: ThirdService,
+    private readonly thirdConfigurationService: ThirdServiceConfigurationService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly router: Router,
+    private readonly localStorageMethods: LocalStorageMethods
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
   }
@@ -156,13 +155,12 @@ export class ThirdListComponent implements OnInit {
       this.sortOrder,
       this.searchValue || undefined
     ).subscribe({
-      next: (response: any) => {
+      next: (response) => {
         this.thirds = response.content || [];
-        this.totalRecords = response.totalElements || 0;
+        this.totalRecords = response.page?.totalElements || response.totalElements || 0;
         this.loading = false;
       },
       error: (error: any) => {
-        console.error('Error loading thirds:', error);
         this.thirds = [];
         this.totalRecords = 0;
         this.loading = false;
@@ -187,7 +185,6 @@ export class ThirdListComponent implements OnInit {
         this.thirdTypes = response;
       },
       error: (error: any) => {
-        console.error('Error loading third types:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -206,7 +203,6 @@ export class ThirdListComponent implements OnInit {
         this.typeIds = response;
       },
       error: (error: any) => {
-        console.error('Error loading ID types:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -217,12 +213,10 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Aplica filtro global a la tabla
+   * Maneja el cambio en el término de búsqueda
    */
-  applyGlobalFilter(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.searchValue = target.value;
-    this.first = 0;
+  onSearch(): void {
+    this.first = 0; // Reset to first page when searching
     this.loadThirds();
   }
 
@@ -300,7 +294,6 @@ export class ThirdListComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error changing third state:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -371,7 +364,6 @@ export class ThirdListComponent implements OnInit {
             });
           },
           error: (error) => {
-            console.error('Error changing bulk state:', error);
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
@@ -856,7 +848,6 @@ export class ThirdListComponent implements OnInit {
       });
 
     } catch (error) {
-      console.error('Error al exportar errores:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error de Exportación',

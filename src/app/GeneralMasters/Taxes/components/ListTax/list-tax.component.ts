@@ -127,7 +127,7 @@ export class ListTaxComponent implements OnInit {
     }
 
     this.taxService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page: any) => {
+      next: (page) => {
         const content: any[] = page.content || [];
         this.taxes = content.map((tax: any) => ({
           ...tax,
@@ -135,7 +135,7 @@ export class ListTaxComponent implements OnInit {
           salesTaxName: this.getAccountName(tax.salesTax),
           purchaseTaxName: this.getAccountName(tax.purchaseTax)
         }));
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || page.totalElements || 0;
         this.loading = false;
       },
       error: (error) => {
@@ -158,7 +158,7 @@ export class ListTaxComponent implements OnInit {
 
     this.loading = true;
     this.taxService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page: any) => {
+      next: (page) => {
         const content: any[] = page.content || [];
         this.taxes = content.map((tax: any) => ({
           ...tax,
@@ -166,7 +166,7 @@ export class ListTaxComponent implements OnInit {
           salesTaxName: this.getAccountName(tax.salesTax),
           purchaseTaxName: this.getAccountName(tax.purchaseTax)
         }));
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || page.totalElements || 0;
         this.loading = false;
       },
       error: (error) => {

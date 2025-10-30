@@ -25,22 +25,22 @@ export class BankAccountsCreationComponent implements OnInit {
   form: FormGroup;
   banksOptions: { label: string; value: number }[] = [];
   accountTypesOptions: { label: string; value: string }[] = [];
-  auxiliaryAccountsOptions: { label: string; value: string }[] = [];
+  auxiliaryAccountsOptions: { label: string; value: number }[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private messageService: MessageService,
-    private bankService: BankService,
-    private bankAccountsService: BankAccountsService,
-    private chartAccountService: ChartAccountService,
-    private localStorageMethod: LocalStorageMethods
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly bankService: BankService,
+    private readonly bankAccountsService: BankAccountsService,
+    private readonly chartAccountService: ChartAccountService,
+    private readonly localStorageMethod: LocalStorageMethods
   ) {
     this.form = this.fb.group({
-      accountNumber: ['', [Validators.required, Validators.pattern('^[0-9]+$'), Validators.maxLength(20)]],
+      accountNumber: ['', [Validators.required, Validators.pattern('^[0-9]{8,16}$')]],
       bankId: [null, [Validators.required]],
       accountType: ['', [Validators.required]],
-      cuentaContable: ['', [Validators.required]]
+      accountingAccountId: ['', [Validators.required]]
     });
   }
 
@@ -65,7 +65,7 @@ export class BankAccountsCreationComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.banksOptions = response.content.map(bank => ({
-            label: `${bank.codigo} - ${bank.nombre}`,
+            label: `${bank.code} - ${bank.name}`,
             value: bank.id!
           }));
         },
@@ -82,10 +82,12 @@ export class BankAccountsCreationComponent implements OnInit {
   private loadAuxiliaryAccounts(enterpriseId: string): void {
     this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (accounts) => {
-        this.auxiliaryAccountsOptions = accounts.map(account => ({
-          label: `${account.code} - ${account.description}`,
-          value: account.code
-        }));
+        this.auxiliaryAccountsOptions = accounts
+          .filter(account => account.id != null)
+          .map(account => ({
+            label: `${account.code} - ${account.description}`,
+            value: account.id!
+          }));
       },
       error: (err) => {
         this.messageService.add({
@@ -123,7 +125,7 @@ export class BankAccountsCreationComponent implements OnInit {
       accountNumber: this.form.value.accountNumber,
       bankId: this.form.value.bankId,
       accountType: this.form.value.accountType,
-      cuentaContable: this.form.value.cuentaContable
+      accountingAccountId: this.form.value.accountingAccountId
     };
 
     this.bankAccountsService.create(payload).subscribe({

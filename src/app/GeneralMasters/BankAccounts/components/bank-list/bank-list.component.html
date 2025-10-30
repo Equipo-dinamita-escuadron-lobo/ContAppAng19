@@ -41,27 +41,29 @@
         </div>
 
         <!-- Banks Table -->
-        <p-table 
-            [value]="filteredBanks" 
-            [paginator]="true" 
+        <p-table
+            [value]="banks"
+            [paginator]="true"
             [rows]="pageSize"
             [totalRecords]="totalRecords"
             [loading]="loading"
+            [lazy]="true"
             [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
-            [globalFilterFields]="['codigo', 'nombre', 'moneda']"
+            (onSort)="onSort($event)"
+            (onPage)="onPage($event)"
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}">
             
             <ng-template pTemplate="header">
                 <tr>
-                    <th pSortableColumn="codigo" class="font-semibold text-primary border-b-2 border-primary">
+                    <th pSortableColumn="code" class="font-semibold text-primary border-b-2 border-primary">
                         Código
-                        <p-sortIcon field="codigo"></p-sortIcon>
+                        <p-sortIcon field="code"></p-sortIcon>
                     </th>
-                    <th pSortableColumn="nombre" class="font-semibold text-primary border-b-2 border-primary">
+                    <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">
                         Nombre
-                        <p-sortIcon field="nombre"></p-sortIcon>
+                        <p-sortIcon field="name"></p-sortIcon>
                     </th>
                     <th class="font-semibold text-primary border-b-2 border-primary">
                         Moneda
@@ -73,9 +75,9 @@
 
             <ng-template pTemplate="body" let-bank>
                 <tr class="text-neutral-20">
-                    <td class="py-3">{{ bank.codigo }}</td>
-                    <td class="py-3">{{ bank.nombre }}</td>
-                    <td class="py-3">{{ getCurrencyDisplay(bank.moneda) }}</td>
+                    <td class="py-3">{{ bank.code }}</td>
+                    <td class="py-3">{{ bank.name }}</td>
+                    <td class="py-3">{{ getCurrenciesDisplay(bank.currencies) }}</td>
                     <td class="py-3 text-center">
                         <p-tag 
                             [value]="bank.status ? 'Activo' : 'Inactivo'" 

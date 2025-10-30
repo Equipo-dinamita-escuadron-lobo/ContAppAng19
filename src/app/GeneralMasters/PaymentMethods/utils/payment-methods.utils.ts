@@ -22,7 +22,9 @@ export class PaymentMethodsUtils {
 
     // Recorrer recursivamente todos los hijos para encontrar más cuentas auxiliares
     if (item.children && item.children.length > 0) {
-      item.children.forEach((child: Account) => PaymentMethodsUtils.collectAuxiliaryAccounts(child, auxiliaryAccounts));
+      for (const child of item.children) {
+        PaymentMethodsUtils.collectAuxiliaryAccounts(child, auxiliaryAccounts);
+      }
     }
 
     return auxiliaryAccounts;
