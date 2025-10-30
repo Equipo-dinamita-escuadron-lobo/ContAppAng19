@@ -19,7 +19,7 @@
             <!-- ✅ CORREGIDO: Contenedor con ancho fijo para un logo más grande -->
             <div class="w-4/5 flex-shrink-0">
               <img
-                [src]="logoUrl"
+                [src]="enterpriseData?.logo"
                 alt="Logo"
                 class="w-full h-auto object-contain"
               />
@@ -28,7 +28,7 @@
             <div>
               <!-- ✅ CORREGIDO: Se eliminan clases de tamaño fijo y se usan relativas -->
               <h1 class="font-bold text-[1.2em] leading-tight">
-                {{ companyName }}
+                {{ enterpriseData?.name }}
               </h1>
               <h2 class="font-semibold uppercase text-[0.9em] text-gray-600">
                 {{ reportTitle }}
@@ -38,7 +38,7 @@
           <!-- Caso Centro: Muestra solo el logo -->
           <div *ngSwitchCase="'center'" class="w-4/5">
             <img
-              [src]="logoUrl"
+              [src]="enterpriseData?.logo"
               alt="Logo"
               class="w-full h-auto object-contain"
             />
@@ -57,7 +57,7 @@
           <!-- ✅ CORREGIDO: Se usan h1/h2 para estructura y se ajustan estilos -->
           <div>
             <h1 class="font-bold text-[1.5em] leading-tight">
-              {{ companyName }}
+              {{ enterpriseData?.name }}
             </h1>
             <h2 class="font-semibold uppercase text-[1.1em] text-gray-600">
               {{ reportTitle }}
@@ -86,14 +86,14 @@
             <!-- ✅ CORREGIDO: Se mueve el logo al principio para evitar el desbordamiento. -->
             <div class="w-4/5 flex-shrink-0">
               <img
-                [src]="logoUrl"
+                [src]="enterpriseData?.logo"
                 alt="Logo"
                 class="w-full h-auto object-contain"
               />
             </div>
             <div class="text-right">
               <h1 class="font-bold text-[1.2em] leading-tight">
-                {{ companyName }}
+                {{ enterpriseData?.name }}
               </h1>
               <h2 class="font-semibold uppercase text-[0.9em] text-gray-600">
                 {{ reportTitle }}

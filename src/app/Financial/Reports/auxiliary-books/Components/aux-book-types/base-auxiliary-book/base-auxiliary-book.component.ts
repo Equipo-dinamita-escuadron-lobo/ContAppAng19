@@ -65,7 +65,6 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   dataTable: any;
 
-  // ✅ CORREGIDO: Se inicializan en null para diferenciar entre "no calculado" y un total de "0".
   totalDebit: number | null = null;
   totalCredit: number | null = null;
 
@@ -101,7 +100,6 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   private getEnterpriseInfo(): void {
     this.enterpriseData = this.enterpriseService.getSelectedEnterprise();
-    console.log(this.enterpriseData);
   }
 
   onLevelChange() {
@@ -177,6 +175,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     if (this.isRangeOptionSelected && this.levelRange.to !== null) {
       this.criteria.criteriaRange!.to = this.levelRange.to;
     }
+    ``;
   }
 
   private resetRangeDropDowns(): void {
@@ -246,12 +245,12 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   }
 
   private getThirdPartyOptions(): void {
-    //TODO: ESTE METODO NO SE UTILIZA YA QUE LISTA LOS DATOS GENERALES SIN IMPORTAR EL ESTADO: ACTIVO O INACTIVO
-    // FAVOR USAR EL METODO getActiveThirds DE LA CLASE ThirdService
-    // Sin otro particular -------------------------------------
-    this.thirdService.getThirdParties(this.enterpriseData.id, 1).subscribe({
-      next: (response) => {
-        this.thirdPartyOptions = response.content || [];
+    this.thirdService.getThirdList(this.enterpriseData.id).subscribe({
+      next: (response: Third[]) => {
+        this.thirdPartyOptions = response.map((third) => ({
+          ...third,
+          fullName: `${third.names} ${third.lastNames}`,
+        }));
       },
       error: (err: any) => {
         console.error('Error fetching third parties:', err);
@@ -276,6 +275,8 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
           name: `${seleccionado.names} ${seleccionado.lastNames}`,
           types: this.concatenateThirdTypeInfo(seleccionado.thirdTypes),
         };
+
+        this.criteria.thirdPartyId = seleccionado.thId;
       }, 300);
     } else {
       this.thirdPartyInfo = null;
@@ -302,19 +303,21 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
     this.organizeRequest();
 
-    console.log('Generando reporte con la petición:', this.request);
-    console.log(
-      'Id del Tercero asociado a los criterios:',
-      this.request.criteria.thirdPartyId
-    );
-
     this.auxiliaryBookService.registerAuxiliaryBook(this.request).subscribe({
       next: (response: auxBookResponse) => {
         this.dataTable = response.data;
         this.calculateTotals();
-        console.log(this.dataTable);
-
         this.isReportGenerated = true;
+
+        if (this.dataTable.length === 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Advertencia',
+            detail:
+              'La consulta no arrojó resultados con los criterios seleccionados.',
+          });
+          return;
+        }
 
         this.messageService.add({
           severity: 'success',
@@ -332,12 +335,10 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
         });
       },
     });
-
-    //this.resetForm();
   }
 
   private validateCriteria(): boolean {
-    this.errors = []; // reiniciamos errores
+    this.errors = [];
 
     if (!this.isLevelValid()) {
       this.errors.push('No ha seleccionado un nivel.');
@@ -371,7 +372,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       );
     }
 
-    return this.errors.length === 0; // ✅ retorna true solo si no hay errores
+    return this.errors.length === 0;
   }
 
   private isLevelValid(): boolean {
@@ -402,12 +403,11 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       auxBookType: this.auxiliaryBookInfo.type,
       criteria: this.criteria,
       dataTable: this.dataTable,
-      headerConfig: (this as any).headerConfig || [], // Se usa 'as any' para acceder a la propiedad del hijo
-      // Pasamos un objeto con los totales calculados.
+      headerConfig: (this as any).headerConfig || [],
+      enterpriseData: this.enterpriseData,
       totals: {
         totalDebit: this.totalDebit,
         totalCredit: this.totalCredit,
-        // Aquí se podrían añadir otros totales si fueran necesarios en el futuro.
       },
     };
 
