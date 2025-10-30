@@ -56,6 +56,7 @@ export class BankAccountsListComponent implements OnInit {
   loading = false;
 
   bankAccounts: BankAccount[] = [];
+  accountingAccounts: any[] = [];
   accountingAccountsMap: Map<string, string> = new Map();
 
   pageSize = 10;
@@ -81,18 +82,38 @@ export class BankAccountsListComponent implements OnInit {
   }
 
   private loadAccountingAccounts(): void {
-    this.chartAccountService.getListAuxiliaryAccounts(this.enterpriseId).subscribe({
+    this.chartAccountService.getListAccounts(this.enterpriseId).subscribe({
       next: (accounts) => {
-        accounts.forEach(account => {
+        this.accountingAccounts = this.flattenAccounts(accounts);
+        for (const account of this.accountingAccounts) {
           if (account.id != null) {
             this.accountingAccountsMap.set(account.id.toString(), `${account.code} - ${account.description}`);
           }
-        });
+        }
       },
       error: () => {
         // Silenciar error, no es crítico
       }
     });
+  }
+
+  /**
+   * Aplana la estructura jerárquica de cuentas
+   */
+  private flattenAccounts(accounts: any[]): any[] {
+    const result: any[] = [];
+
+    const flatten = (items: any[]) => {
+      for (const item of items) {
+        result.push(item);
+        if (item.children && item.children.length > 0) {
+          flatten(item.children);
+        }
+      }
+    };
+
+    flatten(accounts);
+    return result;
   }
 
   private loadBankAccounts(): void {
