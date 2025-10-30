@@ -106,7 +106,7 @@
           <td class="py-3">{{ unit.abbreviation }}</td>
           <td class="py-3">{{ unit.description }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="formatState(unit.state)" [severity]="getStateSeverity(unit.state)">
+            <p-tag [value]="unit.state ? 'Activo' : 'Inactivo'" [severity]="unit.state ? 'success' : 'danger'">
             </p-tag>
           </td>
           <td class="py-3 text-center">
@@ -129,7 +129,7 @@
               <p-toggleSwitch
                 [(ngModel)]="unit.state"
                 (onChange)="changeUnitState(unit)"
-                [pTooltip]="formatState(unit.state)"
+                [pTooltip]="unit.state ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"

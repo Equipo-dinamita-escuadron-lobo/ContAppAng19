@@ -97,22 +97,6 @@ export class UnitOfMeasureCreationComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
   }
 
-  // Método auxiliar para verificar errores de validación
-  hasFieldError(fieldName: string): boolean {
-    const field = this.unitOfMeasureForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched || this.formSubmitAttempt));
-  }
-
-  // Método auxiliar para obtener el mensaje de error
-  getFieldError(fieldName: string): string {
-    const field = this.unitOfMeasureForm.get(fieldName);
-    if (field?.errors?.['required']) {
-      return `El campo ${fieldName} es requerido.`;
-    }
-    return '';
-  }
-
-
   get isSubmitDisabled(): boolean {
     return this.unitOfMeasureForm.invalid;
   }

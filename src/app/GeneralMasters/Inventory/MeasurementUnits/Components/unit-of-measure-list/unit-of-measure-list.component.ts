@@ -204,13 +204,4 @@ export class UnitOfMeasureListComponent implements OnInit {
     });
   }
 
-  // Métodos para manejar el estado
-  getStateSeverity(state: boolean): 'success' | 'danger' {
-    return state ? 'success' : 'danger';
-  }
-
-  formatState(state: boolean): string {
-    return state ? 'Activo' : 'Inactivo';
-  }
-
 }
