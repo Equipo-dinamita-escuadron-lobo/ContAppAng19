@@ -1110,15 +1110,6 @@ export class AccountListComponent implements OnInit {
   deleteAccount() {
     // Validate if the account is linked to any tax
     if (this.accountSelected?.id) {
-      const isLinked = this.searchIfAccountIsLinked(this.accountSelected.code);
-      if (isLinked) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error al eliminar',
-          detail: 'No es posible eliminar porque está asociado a un impuesto.'
-        });
-        return
-      }
       try {
         this.confirmationService.confirm({
           message: '¿Desea eliminar esta cuenta? Esta acción no se puede deshacer.',
@@ -1170,8 +1161,8 @@ export class AccountListComponent implements OnInit {
                   }
 
                   this.messageService.add({
-                    severity: 'error',
-                    summary: 'Error al eliminar',
+                    severity: 'info',
+                    summary: 'Información',
                     detail: errorMessage
                   });
                 }
