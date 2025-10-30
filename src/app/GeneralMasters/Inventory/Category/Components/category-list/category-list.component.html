@@ -148,7 +148,7 @@
             </span>
           </td>
           <td class="py-3 text-center">
-            <p-tag [value]="formatState(category.state)" [severity]="getStateSeverity(category.state)">
+            <p-tag [value]="category.state ? categoryValidationMessagesService.getActiveStateText() : categoryValidationMessagesService.getInactiveStateText()" [severity]="category.state ? categoryValidationMessagesService.getActiveStateSeverity() : categoryValidationMessagesService.getInactiveStateSeverity()">
             </p-tag>
           </td>
           <td class="py-3 text-center">
@@ -173,7 +173,7 @@
               <p-toggleSwitch
                 [(ngModel)]="category.state"
                 (onChange)="changeCategoryState(category)"
-                [pTooltip]="formatState(category.state)"
+                [pTooltip]="category.state ? categoryValidationMessagesService.getActiveStateText() : categoryValidationMessagesService.getInactiveStateText()"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"

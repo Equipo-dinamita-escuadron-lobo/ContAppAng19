@@ -10,6 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../Services/category.service';
+import { CategoryValidationMessagesService } from '../../Services/category-validation-messages.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
@@ -48,7 +49,8 @@ export class CategoryCreationComponent implements OnInit {
     private readonly categoryService: CategoryService,
     private readonly router: Router,
     private readonly chartAccountService: ChartAccountService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    public readonly categoryValidationMessagesService: CategoryValidationMessagesService
   ) {
     // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     this.categoryForm = this.formBuilder.group({
