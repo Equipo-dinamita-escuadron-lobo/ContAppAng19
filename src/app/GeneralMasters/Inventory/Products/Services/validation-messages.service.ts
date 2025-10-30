@@ -15,12 +15,6 @@ export class ValidationMessagesService {
     presentation: {
       required: 'La presentación es requerida.'
     },
-    quantity: {
-      required: 'La cantidad es requerida y no puede ser negativa.'
-    },
-    cost: {
-      required: 'El costo es requerido y no puede ser negativo.'
-    },
     taxes: {
       required: 'Debe seleccionar al menos un impuesto.'
     },

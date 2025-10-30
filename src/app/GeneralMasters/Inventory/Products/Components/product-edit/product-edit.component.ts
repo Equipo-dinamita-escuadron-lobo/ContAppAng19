@@ -78,9 +78,9 @@ export class ProductEditComponent implements OnInit {
       description: ['', Validators.required],
       reference: ['', Validators.required],
       presentation: ['', Validators.required], // Campo opcional
-      quantity: [0, [Validators.required, Validators.min(0)]],
+      quantity: [0],
       taxes: [[], Validators.required], // Cambiado de taxPercentage a taxes
-      cost: [0, [Validators.required, Validators.min(0)]],
+      cost: [0],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
       productTypeId: [null, Validators.required],
