@@ -28,23 +28,23 @@
 
         <!-- Nombre del Tipo de Producto -->
         <div class="flex flex-col gap-2">
-          <label for="name" class="font-semibold" style="color: var(--color-primary);">Nombre del Tipo de Producto</label>
+          <label for="name" class="label-required font-semibold text-primary">Nombre</label>
           <input pInputText id="name" formControlName="name" placeholder="Ej: Producto Físico, Servicio, Digital"
             class="w-full md:w-2/3" />
-          @if (productTypeForm.get('name')?.invalid && productTypeForm.get('name')?.touched) {
-          <small style="color: var(--color-error-35);">El nombre es requerido.</small>
+          @if (isNameInvalid) {
+          <small class="error-message">El nombre es requerido.</small>
           }
         </div>
 
         <!-- Descripción -->
         <div class="md:col-span-2 flex flex-col gap-2 mt-24">
-          <label for="description" class="font-semibold" style="color: var(--color-primary);">Descripción</label>
+          <label for="description" class="label-required font-semibold text-primary">Descripción</label>
           <textarea id="description" formControlName="description"
             placeholder="Añade aquí una descripción detallada del tipo de producto, sus características y propósito..."
-            rows="3" pInputTextarea
+            rows="3" pTextarea
             class="p-inputtext w-full md:w-2/3"></textarea>
-          @if (productTypeForm.get('description')?.invalid && productTypeForm.get('description')?.touched) {
-          <small style="color: var(--color-error-35);">La descripción es requerida.</small>
+          @if (isDescriptionInvalid) {
+          <small class="error-message">La descripción es requerida.</small>
           }
         </div>
 
@@ -61,7 +61,7 @@
         <p-button 
           type="submit"
           label="Guardar"
-          [disabled]="productTypeForm.invalid">
+          [disabled]="isSubmitDisabled">
         </p-button>
       </div>
     </form>
