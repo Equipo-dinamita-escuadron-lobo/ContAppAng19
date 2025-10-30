@@ -37,7 +37,7 @@
         <p-table #helpCentersTable [value]="list" [lazy]="true" (onLazyLoad)="loadHelpCentersLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="moduleId" class="font-semibold text-primary border-b-2 border-primary" style="width: 122px;">ID Módulo <p-sortIcon field="moduleId"></p-sortIcon></th>
+          <th class="font-semibold text-primary border-b-2 border-primary" style="width: 122px;">ID Módulo</th>
           <th pSortableColumn="module" class="font-semibold text-primary border-b-2 border-primary">Módulo <p-sortIcon field="module"></p-sortIcon></th>
           <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">Nombre <p-sortIcon field="name"></p-sortIcon></th>
           <th class="font-semibold text-primary border-b-2 border-primary">Descripción</th>

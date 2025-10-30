@@ -16,7 +16,6 @@ import { FormsModule } from '@angular/forms';
 import { HelpCenterServiceService } from '../../services/help-center.service';
 import { DocumentTypesServiceService } from '../../../DocumentTypes/services/document-types-service.service';
 import { HelpCenter, HelpCenterList } from '../../models/HelpCenter';
-import { DocumentModule } from '../../../DocumentTypes/models/DocumentModule';
 
 @Component({
   selector: 'app-help-center-list',
@@ -50,11 +49,11 @@ export class HelpCenterListComponent {
   searchTerm: string = '';
 
   constructor(
-    private service: HelpCenterServiceService,
-    private modulesService: DocumentTypesServiceService,
-    private router: Router,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private readonly service: HelpCenterServiceService,
+    private readonly modulesService: DocumentTypesServiceService,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
