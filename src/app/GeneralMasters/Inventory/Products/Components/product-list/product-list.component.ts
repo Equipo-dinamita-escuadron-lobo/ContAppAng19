@@ -71,6 +71,9 @@ export class ProductListComponent implements OnInit {
   isDetailsDialogVisible = false;
   selectedProduct: ProductList | null = null;
 
+  // Control de vista completa/resumida
+  showDetailView = false;
+
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
 
@@ -132,6 +135,11 @@ export class ProductListComponent implements OnInit {
     this.searchTerm = '';
     this.currentPage = 0;
     this.getProducts();
+  }
+
+  // Método para alternar entre vista detallada y resumida
+  toggleDetailView(): void {
+    this.showDetailView = !this.showDetailView;
   }
 
   // --- AHORA: El filtro se maneja en la plantilla directamente con una referencia de PrimeNG ---

@@ -29,7 +29,7 @@
     </div>
 
     <!-- 2. BARRA DE BÚSQUEDA: Con el estilo minimalista -->
-    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16 gap-12 items-center">
       <div class="w-full sm:w-[30rem]">
         <p-iconfield iconPosition="left">
           <p-inputicon>
@@ -45,6 +45,10 @@
           />
         </p-iconfield>
       </div>
+
+      <p-button [label]="showDetailView ? 'Vista resumida' : 'Vista completa'" icon="pi pi-eye" severity="secondary"
+        (click)="toggleDetailView()">
+      </p-button>
     </div>
 
     <!-- 3. TABLA DE PRODUCTOS: Estilizada para ser coherente con el diseño -->
@@ -69,10 +73,10 @@
           <th scope="col" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Presentación
           </th>
-          <th scope="col" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Descripción
           </th>
-          <th scope="col" class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
+          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
             Impuesto(s)
           </th>
           <th scope="col" class="font-semibold text-primary border-b-2 border-primary text-right whitespace-nowrap">
@@ -81,14 +85,13 @@
           <th scope="col" class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
             Cantidad
           </th>
-          <th scope="col" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Unidad de Medida
           </th>
-          <th scope="col" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Categoría
           </th>
-
-          <th scope="col" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Tipo de Producto
           </th>
           <th class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
@@ -106,13 +109,13 @@
           <td class="py-3 whitespace-nowrap">{{ product.name }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.reference }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.presentation }}</td>
-          <td class="py-3 whitespace-nowrap">{{ product.description }}</td>
-          <td class="py-3 text-center whitespace-nowrap">{{ product.taxDisplayText }}</td>
+          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.description }}</td>
+          <td *ngIf="showDetailView" class="py-3 text-center whitespace-nowrap">{{ product.taxDisplayText }}</td>
           <td class="py-3 text-right whitespace-nowrap">{{ formatCost(product.cost) }}</td>
           <td class="py-3 text-center whitespace-nowrap">{{ product.quantity }}</td>
-          <td class="py-3 whitespace-nowrap">{{ product.unitOfMeasureName }}</td>
-          <td class="py-3 whitespace-nowrap">{{ product.categoryName }}</td>
-          <td class="py-3 whitespace-nowrap">{{ product.productTypeName }}</td>
+          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.unitOfMeasureName }}</td>
+          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.categoryName }}</td>
+          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.productTypeName }}</td>
           <td class="py-3 text-center whitespace-nowrap">
             <p-tag [value]="formatState(product.state)" [severity]="getStateSeverity(product.state)">
             </p-tag>
@@ -120,7 +123,7 @@
           <td class="py-3 text-center whitespace-nowrap">
             <!-- 4. BOTONES DE ACCIÓN -->
             <div class="flex justify-center gap-2 items-center">
-              <p-button icon="pi pi-eye" pTooltip="Detalles" tooltipPosition="top"
+              <p-button *ngIf="!showDetailView" icon="pi pi-eye" pTooltip="Detalles" tooltipPosition="top"
                 (click)="openDetailsModal(product)"
                 styleClass="p-button-rounded p-button-text text-primary-60"></p-button>
               <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"
@@ -143,8 +146,8 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <!-- Se ajusta el colspan a 13 columnas -->
-          <td colspan="13" class="text-center py-6 font-family-sans text-neutral-50">
+          <!-- Se ajusta el colspan dinámicamente según la vista -->
+          <td [attr.colspan]="showDetailView ? 13 : 8" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron productos.
           </td>
         </tr>
@@ -152,8 +155,8 @@
 
       <ng-template pTemplate="loadingbody">
         <tr>
-          <!-- Se ajusta el colspan a 13 columnas -->
-          <td colspan="13" class="text-center py-6 font-family-sans text-neutral-50">
+          <!-- Se ajusta el colspan dinámicamente según la vista -->
+          <td [attr.colspan]="showDetailView ? 13 : 8" class="text-center py-6 font-family-sans text-neutral-50">
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             <p class="mt-2 text-primary">Cargando productos...</p>
           </td>
@@ -200,7 +203,7 @@
           </p>
         </div>
         <div>
-          <p class="font-semibold text-primary">Tipo</p>
+          <p class="font-semibold text-primary">Tipo de Producto</p>
           <p>
             {{ selectedProduct.productType.name || 'N/A' }}
           </p>

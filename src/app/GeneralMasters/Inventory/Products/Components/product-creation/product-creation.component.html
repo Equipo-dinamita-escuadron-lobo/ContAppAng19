@@ -29,7 +29,7 @@
 
         <!-- Nombre del Producto -->
         <div class="flex flex-col gap-2">
-          <label for="name" class="font-semibold text-primary label-required">Nombre del Producto</label>
+          <label for="name" class="font-semibold text-primary label-required">Nombre</label>
           <input pInputText id="name" formControlName="name" placeholder="Ej: Banano de exportación"
             class="w-full md:w-2/3" />
           @if (productForm.get('name')?.invalid && productForm.get('name')?.touched) {
