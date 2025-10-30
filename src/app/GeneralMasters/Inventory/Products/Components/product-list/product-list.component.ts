@@ -8,6 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
@@ -31,6 +32,7 @@ import { TooltipModule } from 'primeng/tooltip';
     ButtonModule,
     InputTextModule,
     ToastModule,
+    ConfirmDialogModule,
     DialogModule,
     TagModule,
     InputIcon,
@@ -39,7 +41,7 @@ import { TooltipModule } from 'primeng/tooltip';
     ToggleSwitchModule,
     FormsModule
 ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css'],
 })
@@ -76,7 +78,8 @@ export class ProductListComponent implements OnInit {
     private readonly productService: ProductService,
     private readonly router: Router,
     private readonly localstorageMethods: LocalStorageMethods,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService
   ) { }
 
   ngOnInit(): void {
@@ -145,7 +148,27 @@ export class ProductListComponent implements OnInit {
   // --- MÉTODO PARA ELIMINAR UN PRODUCTO ---
   deleteProduct(productId: number): void {
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
-    this.productService.deleteProduct(productId, enterpriseId).subscribe({
+    if (!enterpriseId) return;
+
+    const product = this.products.find(p => p.id === productId);
+    if (!product) return;
+
+    this.confirmationService.confirm({
+      header: 'Confirmar Eliminación',
+      message: `¿Desea eliminar el producto "${product.name}"?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
+      accept: () => this.confirmDeleteProduct(product, enterpriseId)
+    });
+  }
+
+  // Método privado para confirmar la eliminación del producto
+  private confirmDeleteProduct(product: ProductList, enterpriseId: string): void {
+    this.productService.deleteProduct(product.id, enterpriseId).subscribe({
       next: (data: Product) => {
         this.getProducts();
         this.messageService.add({

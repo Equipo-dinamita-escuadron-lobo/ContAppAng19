@@ -999,6 +999,37 @@ export const routes: Routes = [
                     './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
                   ).then((m) => m.ReceiptAccountingEntriesComponent),
               },
+              {
+                path: 'invoices',
+                data: {
+                  breadcrumb: 'Facturas',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioManagement/Components/invoice-list/invoice-list.component'
+                  ).then((m) => m.InvoiceListComponent),
+              },
+              {
+                path: 'invoices/details/:id',
+                data: {
+                  breadcrumb: 'Detalles de la Factura',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioManagement/Components/invoice-detail/invoice-detail.component'
+                  ).then((m) => m.InvoiceDetailComponent),
+              },
+            {
+              path: 'accounting-entries',
+              data: {
+                breadcrumb: 'Asientos Contables',
+            },
+              loadComponent: () =>
+                import(
+                  './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
+                ).then((m) => m.ReceiptAccountingEntriesComponent),
+            },
+
             ],
           },
           {

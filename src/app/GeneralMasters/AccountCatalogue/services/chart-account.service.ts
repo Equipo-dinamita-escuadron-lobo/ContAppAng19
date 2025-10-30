@@ -17,9 +17,9 @@ let API_URL = environment.API_URL + 'accountCatalogue/';
 export class ChartAccountService {
 
  
-  private apiURL = API_URL
+  private readonly apiURL = API_URL
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   /**
      * Lista predefinida de tipos de naturaleza para las cuentas.
