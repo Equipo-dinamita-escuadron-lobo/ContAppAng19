@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
@@ -17,6 +17,7 @@ import { DocumentTypesServiceService } from '../../services/document-types-servi
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
 import { DocumentType, DocumentTypeList } from '../../models/DocumentTypes';
 import { DocumentClass } from '../../models/ClassesOfDocuments';
+import { DocumentTypesPresentationService } from '../../services/document-types-presentation.service';
 
 @Component({
   selector: 'app-document-types-list',
@@ -39,7 +40,7 @@ import { DocumentClass } from '../../models/ClassesOfDocuments';
   templateUrl: './document-types-list.component.html',
   styleUrl: './document-types-list.component.css'
 })
-export class DocumentTypesListComponent {
+export class DocumentTypesListComponent implements OnInit {
   list: DocumentTypeList[] = [];
   filtered: DocumentTypeList[] = [];
   classIdToName = new Map<number, string>();
@@ -56,7 +57,8 @@ export class DocumentTypesListComponent {
     private readonly classesService: ClassesOfDocumentsServiceService,
     private readonly router: Router,
     private readonly messageService: MessageService,
-    private readonly confirmationService: ConfirmationService
+    private readonly confirmationService: ConfirmationService,
+    public readonly documentTypesPresentationService: DocumentTypesPresentationService
   ) {}
 
   ngOnInit(): void {
@@ -75,7 +77,9 @@ export class DocumentTypesListComponent {
   private loadModuleNames(): void {
     this.service.getAllModules().subscribe({
       next: (modules) => {
-        modules.forEach(m => this.moduleIdToName.set(m.id, m.name));
+        for (const m of modules) {
+          this.moduleIdToName.set(m.id, m.name);
+        }
       },
       error: (error) => {
         console.error('Error al cargar nombres de módulos:', error);
@@ -97,7 +101,9 @@ export class DocumentTypesListComponent {
     this.classesService.findAll(enterpriseId, 0, 500).subscribe({
       next: (page: any) => {
         const content: DocumentClass[] = page?.content || page || [];
-        content.forEach(c => this.classIdToName.set(c.id, c.name));
+        for (const c of content) {
+          this.classIdToName.set(c.id, c.name);
+        }
         this.loadTypesLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 }); // Cargar tipos de documentos después de cargar las clases
       },
       error: (error) => {
@@ -235,18 +241,6 @@ export class DocumentTypesListComponent {
         });
       }
     });
-  }
-
-  getStateSeverity(status: boolean): string {
-    return status ? 'success' : 'danger';
-  }
-
-  formatState(status: boolean): string {
-    return status ? 'Activo' : 'Inactivo';
-  }
-
-  isActive(status: boolean): boolean {
-    return status === true;
   }
 
   private confirmDeleteType(row: DocumentType): void {
