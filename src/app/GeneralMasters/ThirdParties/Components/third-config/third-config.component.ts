@@ -124,12 +124,12 @@ export class ThirdConfigComponent implements OnInit {
    * Constructor del componente
    */
   constructor(
-    private thirdServiceConfiguration: ThirdServiceConfigurationService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private localStorageMethods: LocalStorageMethods,
-    private fb: FormBuilder,
-    private router: Router
+    private readonly thirdServiceConfiguration: ThirdServiceConfigurationService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly localStorageMethods: LocalStorageMethods,
+    private readonly fb: FormBuilder,
+    private readonly router: Router
   ) {
     this.typeIdForm = this.fb.group({
       code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],

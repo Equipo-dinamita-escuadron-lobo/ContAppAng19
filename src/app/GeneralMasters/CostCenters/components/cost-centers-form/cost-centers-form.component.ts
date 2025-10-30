@@ -23,7 +23,7 @@ export class CostCentersFormComponent implements OnChanges {
   form: FormGroup;
   messageLength = 'dos dígitos';
 
-  constructor(private fb: FormBuilder) {
+  constructor(private readonly fb: FormBuilder) {
     this.form = this.fb.group({
       code: ['', []],
       name: ['', [Validators.required]]

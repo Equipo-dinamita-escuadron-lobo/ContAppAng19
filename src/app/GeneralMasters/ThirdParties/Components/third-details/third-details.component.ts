@@ -78,8 +78,8 @@ export class ThirdDetailsComponent implements OnInit {
    * @param localStorageMethods Métodos para acceder al local storage
    */
   constructor(
-    private thirdService: ThirdService,
-    private localStorageMethods: LocalStorageMethods
+    private readonly thirdService: ThirdService,
+    private readonly localStorageMethods: LocalStorageMethods
   ) { }
 
   /**

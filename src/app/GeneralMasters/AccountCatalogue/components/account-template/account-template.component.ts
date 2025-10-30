@@ -63,9 +63,9 @@ export class AccountTemplateComponent implements OnInit {
   ];
 
   constructor(
-    private chartAccountService: ChartAccountService,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods
+    private readonly chartAccountService: ChartAccountService,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
   }

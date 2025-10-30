@@ -49,10 +49,10 @@ export class ClassesOfDocumentsListComponent {
   searchTimeout: any;
 
   constructor(
-    private service: ClassesOfDocumentsServiceService,
-    private router: Router,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private readonly service: ClassesOfDocumentsServiceService,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService
   ) {}
   ngOnInit(): void {
     // Cargar datos iniciales

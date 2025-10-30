@@ -87,11 +87,11 @@ export class CostCentersListComponent implements OnDestroy {
   private initialCodeSegment: string = '';
 
   constructor(
-    private fb: FormBuilder,
-    private service: CostCenterService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private localStorageMethods: LocalStorageMethods
+    private readonly fb: FormBuilder,
+    private readonly service: CostCenterService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly localStorageMethods: LocalStorageMethods
   ) {
     this.form = this.fb.group({
       codeSegment: [''],

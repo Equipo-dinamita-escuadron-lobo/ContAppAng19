@@ -52,11 +52,11 @@ export class DocumentTypesListComponent {
   searchTerm: string = '';
 
   constructor(
-    private service: DocumentTypesServiceService,
-    private classesService: ClassesOfDocumentsServiceService,
-    private router: Router,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private readonly service: DocumentTypesServiceService,
+    private readonly classesService: ClassesOfDocumentsServiceService,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
