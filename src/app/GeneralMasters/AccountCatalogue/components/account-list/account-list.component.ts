@@ -8,6 +8,7 @@ import { FinancialStateType } from '../../models/FinancialStateType';
 import { NatureType } from '../../models/NatureType';
 import { ClasificationType } from '../../models/ClasificationType';
 import { ChartAccountService } from '../../services/chart-account.service';
+import { AccountCataloguePresentationService } from '../../services/account-catalogue-presentation.service';
 import { firstValueFrom } from 'rxjs';
 import { AccountFormComponent } from '../account-form/account-form.component';
 import { AccountTemplateComponent } from '../account-template/account-template.component';
@@ -23,6 +24,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
@@ -51,7 +53,7 @@ interface ImportError {
     IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
     RadioButtonModule,
     ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule,
-    TableModule, PaginatorModule
+    TooltipModule, TableModule, PaginatorModule
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.css',
@@ -164,7 +166,7 @@ export class AccountListComponent implements OnInit {
     private readonly _accountService: ChartAccountService,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
- 
+    public readonly accountCataloguePresentationService: AccountCataloguePresentationService
   ) {
 
     this.accountForm = this.fb.group({})
@@ -1418,7 +1420,14 @@ export class AccountListComponent implements OnInit {
  * @returns `true` si el código de la cuenta está presente en alguna de las listas, `false` en caso contrario.
  */
   searchIfAccountIsLinked(accountCode: string) {
-    return this.listRefundAccount.includes(accountCode) || this.listDepositAccount.includes(accountCode)
+    return this.accountCataloguePresentationService.isAccountLinked(accountCode, this.listRefundAccount, this.listDepositAccount);
+  }
+
+  /**
+   * Verifica si la cuenta seleccionada está vinculada a algún impuesto
+   */
+  get isSelectedAccountLinked(): boolean {
+    return this.accountSelected ? this.accountCataloguePresentationService.isAccountLinked(this.accountSelected.code, this.listRefundAccount, this.listDepositAccount) : false;
   }
 
   /**
