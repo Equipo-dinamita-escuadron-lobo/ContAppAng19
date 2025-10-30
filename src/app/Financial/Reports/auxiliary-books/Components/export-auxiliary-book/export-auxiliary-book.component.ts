@@ -21,6 +21,7 @@ import {
   InfoReportTemplate,
 } from '../../Models/Requests/ExportAuxiliaryBookRequest';
 import { MessageService } from 'primeng/api';
+import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 
 @Component({
   selector: 'app-export-auxiliary-book',
@@ -44,10 +45,10 @@ export class ExportAuxiliaryBookComponent implements OnInit {
   previewData: any[] = [];
   headerConfig: ColumnDefinition[][] = [];
   reportTitle: string = 'Reporte Auxiliar';
-  companyName: string = 'Mi Empresa S.A.S';
   generationDate: Date = new Date();
   criteriaForPreview: { key: string; value: string }[] = [];
   totals: any = {}; // ✅ NUEVO: Propiedad para almacenar los totales.
+  enterpriseData: any = null;
 
   // --- ESTADO DE LAS OPCIONES ---
   formatSelected: 'pdf' | 'excel' = 'pdf';
@@ -114,10 +115,15 @@ export class ExportAuxiliaryBookComponent implements OnInit {
 
   ngOnInit() {
     if (this.config.data) {
+      console.log(
+        'Informacion de empresa recibida en ExportAuxiliaryBookComponent:',
+        this.config.data.enterpriseData
+      );
+
       this.reportTitle = this.config.data.reportTitle || this.reportTitle;
       this.headerConfig = this.config.data.headerConfig || [];
       this.previewData = this.config.data.dataTable || [];
-      this.companyName = this.config.data.companyName || this.companyName;
+      this.enterpriseData = this.config.data.enterpriseData || null;
       this.generationDate = this.config.data.generationDate || new Date();
       this.totals = this.config.data.totals || {}; // ✅ NUEVO: Recibimos los totales.
       this.reportTitle = this.config.data.reportTitle;
@@ -146,8 +152,7 @@ export class ExportAuxiliaryBookComponent implements OnInit {
     const infoTemplate: InfoReportTemplate = {
       id: this.selectedTemplate?.id || 0,
       name: this.reportTitle,
-      pathLogotype:
-        'https://static.rfstat.com/renderforest/images/v2/logo-homepage/logo-5-1.png', // URL del logo
+      pathLogotype: this.enterpriseData?.logo, // URL del logo
       alienation: this.styles.align.toUpperCase() as
         | 'LEFT'
         | 'CENTER'
@@ -159,7 +164,7 @@ export class ExportAuxiliaryBookComponent implements OnInit {
 
     const request: ExportAuxiliaryBookRequest = {
       format: this.formatSelected.toUpperCase() as 'PDF' | 'EXCEL',
-      entName: this.companyName,
+      entName: this.enterpriseData?.name || 'Empresa',
       criteriaUsed: this.config.data.criteria,
       auxBookType: this.config.data.auxBookType,
       auxBookData: this.previewData,
