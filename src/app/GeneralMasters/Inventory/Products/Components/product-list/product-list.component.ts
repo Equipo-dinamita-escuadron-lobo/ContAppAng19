@@ -142,6 +142,11 @@ export class ProductListComponent implements OnInit {
     this.showDetailView = !this.showDetailView;
   }
 
+  // Método para volver al menú de inventory
+  goBack(): void {
+    this.router.navigate(['/gen-masters/inventory']);
+  }
+
   // --- AHORA: El filtro se maneja en la plantilla directamente con una referencia de PrimeNG ---
   // No se necesita el método applyFilter(event: Event)
 

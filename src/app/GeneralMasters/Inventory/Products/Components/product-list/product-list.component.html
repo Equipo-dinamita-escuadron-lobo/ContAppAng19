@@ -24,6 +24,10 @@
           <p-button label="Crear" icon="pi pi-plus"
             (click)="redirectTo('/gen-masters/inventory/products/create')">
           </p-button>
+          <!-- Botón "Volver" para regresar al menú de inventory -->
+          <p-button icon="pi pi-arrow-left" (click)="goBack()"
+            styleClass="p-button-text p-button-secondary">
+          </p-button>
         </div>
       </div>
     </div>
