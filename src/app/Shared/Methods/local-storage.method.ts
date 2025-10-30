@@ -5,6 +5,7 @@ export interface EntData {
   name: string;
   nit: string;
   logo: string;
+  inventoryConfigType?: 'PEPS' | 'WEIGHTED_AVERAGE';
 }
 
 
@@ -33,6 +34,15 @@ export class LocalStorageMethods {
       return String(id);
     }
     return '';
+  }
+
+  public getInventoryConfigType(): 'PEPS' | 'WEIGHTED_AVERAGE' {
+    const enterpriseData = localStorage.getItem('entData');
+    if (enterpriseData) {
+      const parsedData = JSON.parse(enterpriseData);
+      return parsedData.inventoryConfigType || 'WEIGHTED_AVERAGE';
+    }
+    return 'WEIGHTED_AVERAGE';
   }
 
   public clearLocalStorage(): void {
