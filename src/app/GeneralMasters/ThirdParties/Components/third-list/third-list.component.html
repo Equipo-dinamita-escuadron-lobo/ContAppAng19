@@ -263,7 +263,7 @@
     <ng-template pTemplate="body" let-error>
       <tr>
         <td class="font-family-sans text-sm">{{ error.rowNumber }}</td>
-        <td class="font-family-sans text-sm">{{ getExcelColumnLetter(error.columnNumber) }}</td>
+        <td class="font-family-sans text-sm">{{ thirdValidationMessagesService.getExcelColumnLetter(error.columnNumber) }}</td>
         <td class="font-family-sans text-sm font-semibold">{{ error.columnName }}</td>
         <td class="font-family-sans text-sm text-neutral-50">{{ error.fieldValue || '(vacío)' }}</td>
         <td class="font-family-sans text-sm text-error">{{ error.errorMessage }}</td>

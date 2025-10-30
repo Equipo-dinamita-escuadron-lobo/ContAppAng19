@@ -33,6 +33,7 @@ import { ThirdServiceConfigurationService } from '../../Services/third-configura
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { ThirdValidationMessagesService } from '../../Services/third-validation-messages.service';
 
 // Interfaces para manejo de errores de importación
 interface ImportError {
@@ -129,7 +130,8 @@ export class ThirdListComponent implements OnInit {
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
     private readonly router: Router,
-    private readonly localStorageMethods: LocalStorageMethods
+    private readonly localStorageMethods: LocalStorageMethods,
+    public readonly thirdValidationMessagesService: ThirdValidationMessagesService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
   }
@@ -724,24 +726,6 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Convierte un número de columna a letra de Excel
-   * @param columnNumber Número de columna (1-based: 1=A, 2=B, ..., 26=Z, 27=AA, etc.)
-   * @returns Letra(s) de columna correspondiente en Excel
-   */
-  getExcelColumnLetter(columnNumber: number): string {
-    let columnLetter = '';
-    let temp = columnNumber;
-    
-    while (temp > 0) {
-      const remainder = (temp - 1) % 26;
-      columnLetter = String.fromCharCode(65 + remainder) + columnLetter;
-      temp = Math.floor((temp - 1) / 26);
-    }
-    
-    return columnLetter;
-  }
-
-  /**
    * Exporta los errores de importación a un archivo Excel
    * Genera un archivo con formato estructurado incluyendo resumen de estadísticas y detalle de errores
    */
@@ -795,7 +779,7 @@ export class ThirdListComponent implements OnInit {
       // Preparar los datos de la tabla
       const tableData = this.importErrors.map(error => [
         error.rowNumber,
-        this.getExcelColumnLetter(error.columnNumber),
+        this.thirdValidationMessagesService.getExcelColumnLetter(error.columnNumber),
         error.columnName,
         error.fieldValue || '(vacío)',
         error.errorMessage

@@ -37,12 +37,12 @@
         <p-table #helpCentersTable [value]="list" [lazy]="true" (onLazyLoad)="loadHelpCentersLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th class="font-semibold text-primary border-b-2 border-primary" style="width: 122px;">ID Módulo</th>
-          <th pSortableColumn="module" class="font-semibold text-primary border-b-2 border-primary">Módulo <p-sortIcon field="module"></p-sortIcon></th>
-          <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">Nombre <p-sortIcon field="name"></p-sortIcon></th>
-          <th class="font-semibold text-primary border-b-2 border-primary">Descripción</th>
-          <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
-          <th class="font-semibold text-primary border-b-2 border-primary text-center">Acciones</th>
+          <th class="font-semibold text-primary border-b-2 border-primary" style="width: 122px;" scope="col">ID Módulo</th>
+          <th pSortableColumn="module" class="font-semibold text-primary border-b-2 border-primary" scope="col">Módulo <p-sortIcon field="module"></p-sortIcon></th>
+          <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary" scope="col">Nombre <p-sortIcon field="name"></p-sortIcon></th>
+          <th class="font-semibold text-primary border-b-2 border-primary" scope="col">Descripción</th>
+          <th class="font-semibold text-primary border-b-2 border-primary text-center" scope="col">Estado</th>
+          <th class="font-semibold text-primary border-b-2 border-primary text-center" scope="col">Acciones</th>
         </tr>
       </ng-template>
 
@@ -51,16 +51,16 @@
           <td class="py-3">{{ row.moduleId }}</td>
           <td class="py-3">{{ row.moduleName }}</td>
           <td class="py-3">{{ row.name }}</td>
-          <td class="py-3">{{ truncateDescription(row.description) }}</td>
+          <td class="py-3">{{ helpCenterPresentationService.truncateDescription(row.description) }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="formatState(row.status)" [severity]="getStateSeverity(row.status)"></p-tag>
+            <p-tag [value]="helpCenterPresentationService.formatState(row.status)" [severity]="helpCenterPresentationService.getStateSeverity(row.status)"></p-tag>
           </td>
           <td class="py-3 text-center">
             <div class="flex justify-center gap-2 items-center">
               <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" (onClick)="editHelpCenter(row)" styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
               <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" (onClick)="deleteHelpCenter(row)" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
               <p-toggleSwitch
-                [ngModel]="isActive(row.status)"
+                [ngModel]="helpCenterPresentationService.isActive(row.status)"
                 (onChange)="changeHelpCenterState(row)"
                 [pTooltip]="(row.status ? 'Activo' : 'Inactivo')"
                 tooltipPosition="top"

@@ -128,7 +128,7 @@
               </small>
             </div>
 
-            <div class="flex flex-col gap-2" *ngIf="isJuridicPerson()">
+            <div class="flex flex-col gap-2" *ngIf="thirdValidationMessagesService.isJuridicPerson(createdThirdForm.get('personType')?.value)">
               <app-form-field-label label="DV"></app-form-field-label>
               <input 
                 pInputText 
@@ -144,7 +144,7 @@
         </app-form-panel>
 
         <!-- Panel: Información Personal (Persona Natural) -->
-        <app-form-panel title="Información Personal" *ngIf="isNaturalPerson()">
+        <app-form-panel title="Información Personal" *ngIf="thirdValidationMessagesService.isNaturalPerson(createdThirdForm.get('personType')?.value)">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="flex flex-col gap-2">
               <app-form-field-label label="Nombres" [required]="true"></app-form-field-label>
@@ -185,7 +185,7 @@
         </app-form-panel>
 
         <!-- Panel: Información de Empresa (Persona Jurídica) -->
-        <app-form-panel title="Información de Empresa" *ngIf="isJuridicPerson()">
+        <app-form-panel title="Información de Empresa" *ngIf="thirdValidationMessagesService.isJuridicPerson(createdThirdForm.get('personType')?.value)">
           <div class="grid grid-cols-1 gap-12">
             <div class="flex flex-col gap-2">
               <app-form-field-label label="Razón Social" [required]="true"></app-form-field-label>

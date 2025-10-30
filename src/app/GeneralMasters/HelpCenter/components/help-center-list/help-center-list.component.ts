@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
@@ -16,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { HelpCenterServiceService } from '../../services/help-center.service';
 import { DocumentTypesServiceService } from '../../../DocumentTypes/services/document-types-service.service';
 import { HelpCenter, HelpCenterList } from '../../models/HelpCenter';
+import { HelpCenterPresentationService } from '../../services/help-center-presentation.service';
 
 @Component({
   selector: 'app-help-center-list',
@@ -38,7 +39,7 @@ import { HelpCenter, HelpCenterList } from '../../models/HelpCenter';
   templateUrl: './help-center-list.component.html',
   styleUrl: './help-center-list.component.css'
 })
-export class HelpCenterListComponent {
+export class HelpCenterListComponent implements OnInit {
   list: HelpCenterList[] = [];
   moduleIdToName = new Map<number, string>();
   totalRecords: number = 0;
@@ -53,7 +54,8 @@ export class HelpCenterListComponent {
     private readonly modulesService: DocumentTypesServiceService,
     private readonly router: Router,
     private readonly messageService: MessageService,
-    private readonly confirmationService: ConfirmationService
+    private readonly confirmationService: ConfirmationService,
+    public readonly helpCenterPresentationService: HelpCenterPresentationService
   ) {}
 
   ngOnInit(): void {
@@ -63,7 +65,9 @@ export class HelpCenterListComponent {
   private loadModuleNames(): void {
     this.modulesService.getAllModules().subscribe({
       next: (modules) => {
-        modules.forEach(m => this.moduleIdToName.set(m.id, m.name));
+        for (const m of modules) {
+          this.moduleIdToName.set(m.id, m.name);
+        }
                 this.loadHelpCentersLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 }); // Cargar centros de ayuda después de cargar las clases
       },
       error: (error: any) => {
@@ -178,23 +182,6 @@ export class HelpCenterListComponent {
         });
       }
     });
-  }
-
-  getStateSeverity(status: boolean): string {
-    return status ? 'success' : 'danger';
-  }
-
-  formatState(status: boolean): string {
-    return status ? 'Activo' : 'Inactivo';
-  }
-
-  isActive(status: boolean): boolean {
-    return status === true;
-  }
-
-  truncateDescription(description: string, maxLength: number = 30): string {
-    if (!description) return '';
-    return description.length > maxLength ? description.substring(0, maxLength) + '...' : description;
   }
 
   private confirmDeleteHelpCenter(row: HelpCenter): void {
