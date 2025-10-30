@@ -1,16 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import Swal from 'sweetalert2';
-
-// --- AHORA: Importaciones Standalone y de PrimeNG ---
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
-// --- Servicios y Modelos ---
 import { UnitOfMeasureService } from '../../Services/unit-of-measure.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 
@@ -22,21 +18,24 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     ReactiveFormsModule,
     RouterModule,
     InputTextModule,
-    ButtonModule
+    ButtonModule,
+    ToastModule
   ],
+  providers: [MessageService],
   templateUrl: './unit-of-measure-creation.component.html',
   styleUrls: ['./unit-of-measure-creation.component.css']
 })
 export class UnitOfMeasureCreationComponent implements OnInit {
   unitOfMeasureForm: FormGroup;
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string | null = null;
   formSubmitAttempt = false;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private unitOfMeasureService: UnitOfMeasureService,
-    private router: Router
+    private readonly formBuilder: FormBuilder,
+    private readonly unitOfMeasureService: UnitOfMeasureService,
+    private readonly router: Router,
+    private readonly messageService: MessageService
   ) {
     // Inicializa el formulario en el constructor
     this.unitOfMeasureForm = this.formBuilder.group({
@@ -57,36 +56,39 @@ export class UnitOfMeasureCreationComponent implements OnInit {
       const unitOfMeasureData = {
         ...this.unitOfMeasureForm.value,
         enterpriseId: this.entData,
-        state: 'ACTIVE'
+        state: true
       };
 
-      this.unitOfMeasureService.createUnitOfMeasure(unitOfMeasureData).subscribe(
-        () => {
-          Swal.fire({
-            title: '¡Éxito!',
-            text: 'La unidad de medida ha sido creada exitosamente.',
-            icon: 'success',
-            confirmButtonText: 'Aceptar'
-          }).then(() => {
-            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+      this.unitOfMeasureService.createUnitOfMeasure(unitOfMeasureData).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Registro Exitoso',
+            detail: 'La unidad de medida ha sido creada exitosamente.',
+            life: 3000
           });
+          setTimeout(() => {
+            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+          }, 1500);
         },
-        error => {
-          console.error('Error al crear la unidad de medida:', error);
-          Swal.fire({
-            title: 'Error',
-            text: 'Ha ocurrido un error al crear la unidad de medida. Por favor, inténtelo de nuevo.',
-            icon: 'error',
-            confirmButtonText: 'Aceptar'
+        error: (error) => {
+          const message = error.error?.message || 'Ha ocurrido un error al crear la unidad de medida. Por favor, inténtelo de nuevo.';
+          let summary = 'Error';
+          if (message.includes('Ya existe')) {
+            summary = 'Registro Duplicado';
+          }
+          this.messageService.add({
+            severity: 'error',
+            summary: summary,
+            detail: message
           });
         }
-      );
+      });
     } else {
-      Swal.fire({
-        title: 'Formulario incompleto',
-        text: 'Por favor, complete todos los campos requeridos.',
-        icon: 'warning',
-        confirmButtonText: 'Aceptar'
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Por favor, complete todos los campos requeridos.'
       });
     }
   }
@@ -108,5 +110,10 @@ export class UnitOfMeasureCreationComponent implements OnInit {
       return `El campo ${fieldName} es requerido.`;
     }
     return '';
+  }
+
+
+  get isSubmitDisabled(): boolean {
+    return this.unitOfMeasureForm.invalid;
   }
 }

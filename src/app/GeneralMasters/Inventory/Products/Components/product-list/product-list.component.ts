@@ -1,33 +1,24 @@
-// src/app/GeneralMasters/Inventory/Products/Components/product-list/product-list.component.ts
-
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
-// --- AHORA: Importaciones Standalone y de PrimeNG ---
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
 
-// --- Servicios y Modelos (asegúrate de que las rutas sean correctas) ---
-import { Product, ProductList } from '../../Models/Product';
+import { Product, ProductList, Page } from '../../Models/Product';
 import { ProductService } from '../../Services/product.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { TagModule } from 'primeng/tag';
 import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
 import { TooltipModule } from 'primeng/tooltip';
-
-// --- Componente de Detalles (debe ser standalone también) ---
-// import { ProductDetailsComponent } from '../product-details/product-details.component';
 
 @Component({
   selector: 'app-product-list',
@@ -55,23 +46,37 @@ import { TooltipModule } from 'primeng/tooltip';
 export class ProductListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
-  products: ProductList[] = [];
+  productsPage: Page<ProductList> = {
+    content: [],
+    totalElements: 0,
+    totalPages: 0,
+    size: 10,
+    number: 0,
+    numberOfElements: 0,
+    first: true,
+    last: true,
+    empty: true
+  };
+  products: ProductList[] = []; // Mantener para compatibilidad con la plantilla
 
-  // --- VARIABLES PARA EL MODAL ---
+  // Propiedades para paginación y búsqueda
+  currentPage = 0;
+  pageSize = 10;
+  sortField = 'name';
+  sortOrder: 'asc' | 'desc' = 'asc';
+  searchTerm = '';
+
   isDetailsDialogVisible = false;
-  selectedProduct: ProductList | null = null
+  selectedProduct: ProductList | null = null;
 
-  // --- ANTES: No se necesita MatTableDataSource ni MatPaginator ---
-  // dataSource = new MatTableDataSource<Product>(this.products);
-  // @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
 
   constructor(
-    private productService: ProductService,
-    private router: Router,
-    private localstorageMethods: LocalStorageMethods,
-    private messageService: MessageService
+    private readonly productService: ProductService,
+    private readonly router: Router,
+    private readonly localstorageMethods: LocalStorageMethods,
+    private readonly messageService: MessageService
   ) { }
 
   ngOnInit(): void {
@@ -81,14 +86,49 @@ export class ProductListComponent implements OnInit {
 
   getProducts(): void {
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
-    this.productService.getProducts(enterpriseId).subscribe({
-      next: (data: ProductList[]) => {
-        this.products = data;
+    this.productService.getProducts(
+      enterpriseId,
+      this.currentPage,
+      this.pageSize,
+      this.sortField,
+      this.sortOrder,
+      this.searchTerm || undefined
+    ).subscribe({
+      next: (data: Page<ProductList>) => {
+        this.productsPage = data;
+        this.products = data.content; // Mantener para compatibilidad con la plantilla
       },
       error: (error) => {
         console.error('Error al obtener los productos:', error);
       }
     });
+  }
+
+  // Método para manejar cambios de página
+  onPageChange(event: any): void {
+    this.currentPage = event.page;
+    this.pageSize = event.rows;
+    this.getProducts();
+  }
+
+  // Método para manejar búsqueda
+  onSearchChange(): void {
+    this.currentPage = 0; // Resetear a la primera página al buscar
+    this.getProducts();
+  }
+
+  // Método para manejar ordenamiento
+  onSort(event: any): void {
+    this.sortField = event.field;
+    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    this.getProducts();
+  }
+
+  // Método para limpiar búsqueda
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.currentPage = 0;
+    this.getProducts();
   }
 
   // --- AHORA: El filtro se maneja en la plantilla directamente con una referencia de PrimeNG ---
@@ -104,7 +144,8 @@ export class ProductListComponent implements OnInit {
 
   // --- MÉTODO PARA ELIMINAR UN PRODUCTO ---
   deleteProduct(productId: number): void {
-    this.productService.deleteProduct(productId).subscribe({
+    const enterpriseId = this.localstorageMethods.getIdEnterprise();
+    this.productService.deleteProduct(productId, enterpriseId).subscribe({
       next: (data: Product) => {
         this.getProducts();
         this.messageService.add({
@@ -136,12 +177,6 @@ export class ProductListComponent implements OnInit {
     return cost.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
   }
 
-  formatDate(date: Date): string {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('es-ES', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
-  }
   getStateSeverity(state: boolean): 'success' | 'danger' {
     return state ? 'success' : 'danger';
   }
@@ -156,7 +191,8 @@ export class ProductListComponent implements OnInit {
     const newState = product.state;
     const previousState = !newState; // El estado anterior es el opuesto al actual
     
-    this.productService.changeProductState(product.id).subscribe({
+    const enterpriseId = this.localstorageMethods.getIdEnterprise();
+    this.productService.changeProductState(product.id, enterpriseId).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
