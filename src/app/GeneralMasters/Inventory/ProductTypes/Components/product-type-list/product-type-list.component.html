@@ -101,7 +101,7 @@
           <td class="py-3">{{ productType.name }}</td>
           <td class="py-3">{{ productType.description }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="formatState(productType.state)" [severity]="getStateSeverity(productType.state)">
+            <p-tag [value]="productType.state ? 'Activo' : 'Inactivo'" [severity]="productType.state ? 'success' : 'danger'">
             </p-tag>
           </td>
           <td class="py-3 text-center">
@@ -124,7 +124,7 @@
               <p-toggleSwitch
                 [(ngModel)]="productType.state"
                 (onChange)="changeProductTypeState(productType)"
-                [pTooltip]="formatState(productType.state)"
+                [pTooltip]="productType.state ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"

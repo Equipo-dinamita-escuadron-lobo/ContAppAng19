@@ -115,16 +115,6 @@ export class ProductTypeCreationComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory/product-types/list']);
   }
 
-  get isNameInvalid(): boolean {
-    const nameControl = this.productTypeForm.get('name');
-    return !!(nameControl?.invalid && nameControl?.touched);
-  }
-
-  get isDescriptionInvalid(): boolean {
-    const descriptionControl = this.productTypeForm.get('description');
-    return !!(descriptionControl?.invalid && descriptionControl?.touched);
-  }
-
   get isSubmitDisabled(): boolean {
     return this.productTypeForm.invalid;
   }

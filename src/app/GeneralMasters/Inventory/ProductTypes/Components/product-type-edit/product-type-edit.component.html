@@ -31,8 +31,8 @@
           <label for="name" class="label-required font-semibold text-primary">Nombre</label>
           <input pInputText id="name" formControlName="name" placeholder="Ej: Producto Físico, Servicio, Digital"
             class="w-full md:w-2/3" />
-          @if (isNameInvalid) {
-          <small class="error-message">El nombre es requerido.</small>
+          @if (productTypeForm.get('name')?.invalid && productTypeForm.get('name')?.touched) {
+          <small class="error-message">{{ getValidationMessage('name') }}</small>
           }
         </div>
 
@@ -43,8 +43,8 @@
             placeholder="Añade aquí una descripción detallada del tipo de producto, sus características y propósito..."
             rows="3" pTextarea
             class="p-inputtext w-full md:w-2/3"></textarea>
-          @if (isDescriptionInvalid) {
-          <small class="error-message">La descripción es requerida.</small>
+          @if (productTypeForm.get('description')?.invalid && productTypeForm.get('description')?.touched) {
+          <small class="error-message">{{ getValidationMessage('description') }}</small>
           }
         </div>
 
