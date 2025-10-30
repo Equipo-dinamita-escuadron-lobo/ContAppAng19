@@ -77,11 +77,11 @@
                 <tr class="text-neutral-20">
                     <td class="py-3">{{ bank.code }}</td>
                     <td class="py-3">{{ bank.name }}</td>
-                    <td class="py-3">{{ getCurrenciesDisplay(bank.currencies) }}</td>
+                    <td class="py-3">{{ bankPresentationService.getCurrenciesDisplay(bank.currencies) }}</td>
                     <td class="py-3 text-center">
                         <p-tag 
-                            [value]="bank.status ? 'Activo' : 'Inactivo'" 
-                            [severity]="bank.status ? 'success' : 'danger'">
+                            [value]="bankPresentationService.formatState(bank.status)" 
+                            [severity]="bankPresentationService.getStateSeverity(bank.status)">
                         </p-tag>
                     </td>
                     <td class="py-3 text-center">
@@ -101,9 +101,9 @@
                                 styleClass="p-button-rounded p-button-text text-secondary">
                             </p-button>
                             <p-toggleSwitch
-                                [ngModel]="bank.status"
+                                [ngModel]="bankPresentationService.isActive(bank.status)"
                                 (onChange)="toggleBankStatus(bank, $event.checked)"
-                                [pTooltip]="bank.status ? 'Activo' : 'Inactivo'"
+                                [pTooltip]="bankPresentationService.formatState(bank.status)"
                                 tooltipPosition="top"
                                 styleClass="p-toggleSwitch-sm"
                                 [style]="{'transform': 'scale(0.8)'}">

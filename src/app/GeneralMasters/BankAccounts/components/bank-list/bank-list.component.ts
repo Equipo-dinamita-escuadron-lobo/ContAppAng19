@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { BankService, Bank } from '../../services/bank.service';
+import { BankPresentationService } from '../../services/bank-presentation.service';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -47,6 +48,7 @@ export class BankListComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly localStorageMethod = inject(LocalStorageMethods);
   private readonly router = inject(Router);
+  public readonly bankPresentationService = inject(BankPresentationService);
 
   private enterpriseId: string = '';
 
@@ -194,9 +196,5 @@ export class BankListComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/gen-masters/bank-accounts']);
-  }
-
-  getCurrenciesDisplay(currencyCodes: string[]): string {
-    return this.bankService.getCurrenciesDisplay(currencyCodes);
   }
 }

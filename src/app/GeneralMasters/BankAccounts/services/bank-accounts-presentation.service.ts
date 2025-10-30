@@ -5,8 +5,7 @@ import { BankAccountsService } from './bank-accounts.service';
   providedIn: 'root'
 })
 export class BankAccountsPresentationService {
-    
-  public readonly bankAccountsService = inject(BankAccountsService);
+  private readonly bankAccountsService = inject(BankAccountsService);
 
   /**
    * Obtiene la severidad para el componente Tag de PrimeNG basado en el estado
