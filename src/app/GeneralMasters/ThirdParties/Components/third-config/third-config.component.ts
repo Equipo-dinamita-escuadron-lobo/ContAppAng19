@@ -293,7 +293,7 @@ export class ThirdConfigComponent implements OnInit {
     
     this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
       next: (response: TypeId) => {
-        this.reloadCurrentPageTypeIds();
+        this.typesId[index] = response;
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
