@@ -120,7 +120,7 @@ export class CreateTaxComponent implements OnInit {
         next: (response) => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro Exitoso',
             detail: 'Impuesto creado exitosamente',
             life: 3000
           });

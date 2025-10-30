@@ -69,6 +69,7 @@ export class CostCentersListComponent implements OnDestroy {
   isCreatingRoot = false;
   isLoading = false;
   isInitialLoad = true;
+  isExporting = false;
   private sliderTimeout: any;
 
   // Export filter
@@ -86,11 +87,11 @@ export class CostCentersListComponent implements OnDestroy {
   private initialCodeSegment: string = '';
 
   constructor(
-    private fb: FormBuilder,
-    private service: CostCenterService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private localStorageMethods: LocalStorageMethods
+    private readonly fb: FormBuilder,
+    private readonly service: CostCenterService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly localStorageMethods: LocalStorageMethods
   ) {
     this.form = this.fb.group({
       codeSegment: [''],
@@ -695,8 +696,11 @@ export class CostCentersListComponent implements OnDestroy {
     const enterpriseId = entData?.id || this.getIdEnterprise();
     const companyName = entData?.name || '';
 
+    this.isExporting = true;
+
     this.service.exportToExcel(enterpriseId, companyName, status).subscribe({
       next: (response) => {
+        this.isExporting = false; 
         if (!response.body) {
           this.messageService.add({
             severity: 'error',
@@ -714,6 +718,7 @@ export class CostCentersListComponent implements OnDestroy {
         });
       },
       error: (err) => {
+        this.isExporting = false; 
         // Cuando la respuesta es un blob, el error también puede ser un blob que necesita ser leído
         const reader = new FileReader();
         reader.onload = () => {

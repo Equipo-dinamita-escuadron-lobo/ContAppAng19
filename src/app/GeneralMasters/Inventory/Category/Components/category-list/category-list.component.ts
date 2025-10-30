@@ -18,6 +18,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { Category } from '../../Models/Category';
 import { CategoryService } from '../../Services/category.service';
+import { CategoryValidationMessagesService } from '../../Services/category-validation-messages.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
@@ -64,7 +65,8 @@ export class CategoryListComponent implements OnInit {
     private readonly router: Router,
     private readonly confirmationService: ConfirmationService,
     private readonly messageService: MessageService,
-    private readonly chartAccountService: ChartAccountService
+    private readonly chartAccountService: ChartAccountService,
+    public readonly categoryValidationMessagesService: CategoryValidationMessagesService
   ) { }
 
   ngOnInit(): void {
@@ -270,22 +272,5 @@ export class CategoryListComponent implements OnInit {
         });
       }
     });
-  }
-
-  // Métodos para manejar el estado
-  getStateSeverity(state: boolean): 'success' | 'danger' {
-    if (state) {
-      return 'success';
-    } else {
-      return 'danger';
-    }
-  }
-
-  formatState(state: boolean): string {
-    if (state) {
-      return 'Activo';
-    } else {
-      return 'Inactivo';
-    }
   }
 }

@@ -54,9 +54,9 @@ export class ThirdCreationPdfRUTComponent {
    * Constructor del componente
    */
   constructor(
-    private thirdService: ThirdService, 
-    private router: Router,
-    private messageService: MessageService
+    private readonly thirdService: ThirdService, 
+    private readonly router: Router,
+    private readonly messageService: MessageService
   ) {}
 
   /**

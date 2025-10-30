@@ -10,6 +10,7 @@ import { MessageService } from 'primeng/api';
 import { UnitOfMeasure } from '../../Models/UnitOfMeasure';
 import { UnitOfMeasureService } from '../../Services/unit-of-measure.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
+import { UnitOfMeasureValidationMessagesService } from '../../Services/unit-of-measure-validation-messages.service';
 
 @Component({
   selector: 'app-unit-of-measure-edit',
@@ -43,7 +44,8 @@ export class UnitOfMeasureEditComponent implements OnInit {
     private readonly unitOfMeasureService: UnitOfMeasureService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly validationMessagesService: UnitOfMeasureValidationMessagesService
   ) {
     this.unitOfMeasureForm = this.formBuilder.group({
       name: ['', Validators.required],
@@ -162,19 +164,10 @@ export class UnitOfMeasureEditComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
   }
 
-  // Método auxiliar para verificar errores de validación
-  hasFieldError(fieldName: string): boolean {
-    const field = this.unitOfMeasureForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched || this.formSubmitAttempt));
-  }
-
-  // Método auxiliar para obtener el mensaje de error
-  getFieldError(fieldName: string): string {
-    const field = this.unitOfMeasureForm.get(fieldName);
-    if (field?.errors?.['required']) {
-      return `El campo ${fieldName} es requerido.`;
-    }
-    return '';
+  // Método para obtener mensajes de validación
+  getValidationMessage(fieldName: string): string {
+    const control = this.unitOfMeasureForm.get(fieldName);
+    return this.validationMessagesService.getFieldErrorMessage(control, fieldName) || '';
   }
 
   // Getter para mantener dumb templates

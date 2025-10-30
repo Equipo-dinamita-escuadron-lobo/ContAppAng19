@@ -195,21 +195,4 @@ export class ProductTypeListComponent implements OnInit {
       }
     });
   }
-
-  // Métodos para manejar el estado
-  getStateSeverity(state: boolean): 'success' | 'danger' {
-    if (state) {
-      return 'success';
-    } else {
-      return 'danger';
-    }
-  }
-
-  formatState(state: boolean): string {
-    if (state) {
-      return 'Activo';
-    } else {
-      return 'Inactivo';
-    }
-  }
 }

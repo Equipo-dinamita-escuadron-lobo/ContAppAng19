@@ -23,11 +23,11 @@ export class ClassesOfDocumentsEditComponent {
   private initialName = '';
 
   constructor(
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private messageService: MessageService,
-    private service: ClassesOfDocumentsServiceService,
+    private readonly fb: FormBuilder,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: ClassesOfDocumentsServiceService,
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required]],

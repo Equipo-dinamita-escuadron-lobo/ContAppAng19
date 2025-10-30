@@ -90,12 +90,12 @@
                             <span class="font-medium">{{ account.bank?.code }} - {{ account.bank?.name }}</span>
                         </div>
                     </td>
-                    <td class="py-3">{{ getAccountTypeDisplay(account.accountType) }}</td>
-                    <td class="py-3">{{ getAccountingAccountDisplay(account.accountingAccountId) }}</td>
+                    <td class="py-3">{{ bankAccountsPresentationService.getAccountTypeDisplay(account.accountType) }}</td>
+                    <td class="py-3">{{ bankAccountsPresentationService.getAccountingAccountDisplay(account.accountingAccountId, accountingAccountsMap) }}</td>
                     <td class="py-3 text-center">
                         <p-tag 
-                            [value]="account.status ? 'Activo' : 'Inactivo'" 
-                            [severity]="account.status ? 'success' : 'danger'">
+                            [value]="bankAccountsPresentationService.formatState(account.status)" 
+                            [severity]="bankAccountsPresentationService.getStateSeverity(account.status)">
                         </p-tag>
                     </td>
                     <td class="py-3 text-center">
@@ -115,9 +115,9 @@
                                 styleClass="p-button-rounded p-button-text text-secondary">
                             </p-button>
                             <p-toggleSwitch
-                                [ngModel]="account.status"
+                                [ngModel]="bankAccountsPresentationService.isActive(account.status)"
                                 (onChange)="toggleAccountStatus(account, $event.checked)"
-                                [pTooltip]="account.status ? 'Activo' : 'Inactivo'"
+                                [pTooltip]="bankAccountsPresentationService.formatState(account.status)"
                                 tooltipPosition="top"
                                 styleClass="p-toggleSwitch-sm"
                                 [style]="{'transform': 'scale(0.8)'}">

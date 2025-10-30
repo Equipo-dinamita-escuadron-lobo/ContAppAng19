@@ -12,7 +12,6 @@ import { PaymentMethodsServiceService } from '../../services/payment-methods-ser
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
 import { AccountingAccountOption, PaymentMethod } from '../../models/PaymentMethods';
-import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
 
 @Component({
   selector: 'app-payment-methods-edit',
@@ -91,22 +90,13 @@ export class PaymentMethodsEditComponent implements OnInit {
   }
 
   private loadAccountingAccounts(enterpriseId: string, callback?: () => void): void {
-    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
+    this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (accounts: Account[]) => {
-        // Obtener solo las cuentas auxiliares (8 dígitos) que son las que se usan para registrar movimientos
-        const auxiliaryAccounts: Account[] = [];
-        for (const account of accounts) {
-          PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
-        }
-
-        // Filtrar cuentas válidas
-        const validAuxiliaryAccounts = PaymentMethodsUtils.filterValidAuxiliaryAccounts(auxiliaryAccounts);
-
-        this.accountingAccountsOptions = validAuxiliaryAccounts
+        this.accountingAccountsOptions = accounts
           .filter((account: Account) => account.id !== undefined)
           .map((account: Account) => ({
             label: `${account.code} - ${account.description}`,
-            value: account.id!, // Usar ID como value (ya filtrado)
+            value: account.id!, // Usar ID como value
             code: account.code // Mantener código para referencia
           }));
 

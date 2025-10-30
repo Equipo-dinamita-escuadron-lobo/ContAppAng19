@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { BankAccountsService, BankAccount } from '../../services/bank-accounts.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
+import { BankAccountsPresentationService } from '../../services/bank-accounts-presentation.service';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -50,12 +51,14 @@ export class BankAccountsListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly localStorageMethod = inject(LocalStorageMethods);
   private readonly chartAccountService = inject(ChartAccountService);
+  public readonly bankAccountsPresentationService = inject(BankAccountsPresentationService);
   
   private enterpriseId: string = '';
 
   loading = false;
 
   bankAccounts: BankAccount[] = [];
+  accountingAccounts: any[] = [];
   accountingAccountsMap: Map<string, string> = new Map();
 
   pageSize = 10;
@@ -81,18 +84,38 @@ export class BankAccountsListComponent implements OnInit {
   }
 
   private loadAccountingAccounts(): void {
-    this.chartAccountService.getListAuxiliaryAccounts(this.enterpriseId).subscribe({
+    this.chartAccountService.getListAccounts(this.enterpriseId).subscribe({
       next: (accounts) => {
-        accounts.forEach(account => {
+        this.accountingAccounts = this.flattenAccounts(accounts);
+        for (const account of this.accountingAccounts) {
           if (account.id != null) {
             this.accountingAccountsMap.set(account.id.toString(), `${account.code} - ${account.description}`);
           }
-        });
+        }
       },
       error: () => {
         // Silenciar error, no es crítico
       }
     });
+  }
+
+  /**
+   * Aplana la estructura jerárquica de cuentas
+   */
+  private flattenAccounts(accounts: any[]): any[] {
+    const result: any[] = [];
+
+    const flatten = (items: any[]) => {
+      for (const item of items) {
+        result.push(item);
+        if (item.children && item.children.length > 0) {
+          flatten(item.children);
+        }
+      }
+    };
+
+    flatten(accounts);
+    return result;
   }
 
   private loadBankAccounts(): void {
@@ -219,14 +242,5 @@ export class BankAccountsListComponent implements OnInit {
           });
         }
       });
-  }
-
-
-  getAccountTypeDisplay(accountType: string): string {
-    return this.bankAccountsService.getAccountTypeDisplay(accountType);
-  }
-
-  getAccountingAccountDisplay(accountingAccountId: string): string {
-    return this.accountingAccountsMap.get(accountingAccountId.toString()) || accountingAccountId;
   }
 }

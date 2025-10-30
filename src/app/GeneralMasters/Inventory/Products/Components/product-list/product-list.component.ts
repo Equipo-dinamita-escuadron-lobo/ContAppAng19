@@ -8,6 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +20,7 @@ import { TagModule } from 'primeng/tag';
 import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
 import { TooltipModule } from 'primeng/tooltip';
+import { CurrencyFormatPipe } from '../../Pipes/currency-format.pipe';
 
 @Component({
   selector: 'app-product-list',
@@ -31,21 +33,23 @@ import { TooltipModule } from 'primeng/tooltip';
     ButtonModule,
     InputTextModule,
     ToastModule,
+    ConfirmDialogModule,
     DialogModule,
     TagModule,
     InputIcon,
     IconField,
     TooltipModule,
     ToggleSwitchModule,
-    FormsModule
+    FormsModule,
+    CurrencyFormatPipe
 ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css'],
 })
 export class ProductListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: Record<string, any> | null = null;
   productsPage: Page<ProductList> = {
     content: [],
     totalElements: 0,
@@ -69,6 +73,9 @@ export class ProductListComponent implements OnInit {
   isDetailsDialogVisible = false;
   selectedProduct: ProductList | null = null;
 
+  // Control de vista completa/resumida
+  showDetailView = false;
+
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
 
@@ -76,7 +83,8 @@ export class ProductListComponent implements OnInit {
     private readonly productService: ProductService,
     private readonly router: Router,
     private readonly localstorageMethods: LocalStorageMethods,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService
   ) { }
 
   ngOnInit(): void {
@@ -131,6 +139,16 @@ export class ProductListComponent implements OnInit {
     this.getProducts();
   }
 
+  // Método para alternar entre vista detallada y resumida
+  toggleDetailView(): void {
+    this.showDetailView = !this.showDetailView;
+  }
+
+  // Método para volver al menú de inventory
+  goBack(): void {
+    this.router.navigate(['/gen-masters/inventory']);
+  }
+
   // --- AHORA: El filtro se maneja en la plantilla directamente con una referencia de PrimeNG ---
   // No se necesita el método applyFilter(event: Event)
 
@@ -145,7 +163,27 @@ export class ProductListComponent implements OnInit {
   // --- MÉTODO PARA ELIMINAR UN PRODUCTO ---
   deleteProduct(productId: number): void {
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
-    this.productService.deleteProduct(productId, enterpriseId).subscribe({
+    if (!enterpriseId) return;
+
+    const product = this.products.find(p => p.id === productId);
+    if (!product) return;
+
+    this.confirmationService.confirm({
+      header: 'Confirmar Eliminación',
+      message: `¿Desea eliminar el producto "${product.name}"?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
+      accept: () => this.confirmDeleteProduct(product, enterpriseId)
+    });
+  }
+
+  // Método privado para confirmar la eliminación del producto
+  private confirmDeleteProduct(product: ProductList, enterpriseId: string): void {
+    this.productService.deleteProduct(product.id, enterpriseId).subscribe({
       next: (data: Product) => {
         this.getProducts();
         this.messageService.add({
@@ -169,20 +207,6 @@ export class ProductListComponent implements OnInit {
   openDetailsModal(product: ProductList): void {
     this.selectedProduct = product;
     this.isDetailsDialogVisible = true;
-  }
-
-  // --- MÉTODOS DE FORMATO (puedes moverlos a un pipe si lo prefieres) ---
-  formatCost(cost: number): string {
-    if (cost === null || cost === undefined) return '$ 0';
-    return cost.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
-  }
-
-  getStateSeverity(state: boolean): 'success' | 'danger' {
-    return state ? 'success' : 'danger';
-  }
-
-  formatState(state: boolean): string {
-    return state ? 'Activo' : 'Inactivo';
   }
 
   // Método para cambiar el estado del producto

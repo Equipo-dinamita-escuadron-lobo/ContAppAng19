@@ -32,8 +32,8 @@
         <div class="flex flex-col gap-2">
           <label for="name" class="font-semibold text-primary label-required">Nombre</label>
           <input pInputText id="name" formControlName="name" placeholder="Ej: Kilogramo" class="w-full md:w-2/3" />
-          @if (hasFieldError('name')) {
-          <small class="error-message">{{ getFieldError('name') }}</small>
+          @if (unitOfMeasureForm.get('name')?.invalid && (unitOfMeasureForm.get('name')?.touched || formSubmitAttempt)) {
+          <small class="error-message">El nombre es requerido.</small>
           }
         </div>
 
@@ -41,8 +41,8 @@
         <div class="flex flex-col gap-2">
           <label for="abbreviation" class="font-semibold text-primary label-required">Abreviatura</label>
           <input pInputText id="abbreviation" formControlName="abbreviation" placeholder="Ej: Kg" class="w-full md:w-2/3" />
-          @if (hasFieldError('abbreviation')) {
-          <small class="error-message">{{ getFieldError('abbreviation') }}</small>
+          @if (unitOfMeasureForm.get('abbreviation')?.invalid && (unitOfMeasureForm.get('abbreviation')?.touched || formSubmitAttempt)) {
+          <small class="error-message">La abreviatura es requerida.</small>
           }
         </div>
 
@@ -52,8 +52,8 @@
           <textarea pInputText id="description" formControlName="description" 
             placeholder="Ej: Unidad de medida de masa utilizada para pesar productos"
             class="w-full md:w-1/2" rows="3" pInputTextarea></textarea>
-          @if (hasFieldError('description')) {
-          <small class="error-message">{{ getFieldError('description') }}</small>
+          @if (unitOfMeasureForm.get('description')?.invalid && (unitOfMeasureForm.get('description')?.touched || formSubmitAttempt)) {
+          <small class="error-message">La descripción es requerida.</small>
           }
         </div>
 

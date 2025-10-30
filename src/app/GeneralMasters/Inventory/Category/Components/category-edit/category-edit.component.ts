@@ -12,6 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../Services/category.service';
+import { CategoryValidationMessagesService } from '../../Services/category-validation-messages.service';
 import { Category } from '../../Models/Category';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
@@ -58,7 +59,8 @@ export class CategoryEditComponent implements OnInit {
     private readonly formBuilder: FormBuilder,
     private readonly router: Router,
     private readonly chartAccountService: ChartAccountService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    public readonly categoryValidationMessagesService: CategoryValidationMessagesService
   ) {
     // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     this.editForm = this.formBuilder.group({

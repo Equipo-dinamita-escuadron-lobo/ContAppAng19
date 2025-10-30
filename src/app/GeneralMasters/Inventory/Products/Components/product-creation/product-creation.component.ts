@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
 
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -11,6 +10,8 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { ProductType } from '../../../ProductTypes/Models/ProductType';
 import { UnitOfMeasure } from '../../../MeasurementUnits/Models/UnitOfMeasure';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
@@ -20,6 +21,7 @@ import { CategoryService } from '../../../Category/Services/category.service';
 import { ProductTypeService } from '../../../ProductTypes/Services/product-type.service';
 import { TaxList } from '../../../../Taxes/models/Tax';
 import { TaxService } from '../../../../Taxes/services/tax.service';
+import { ValidationMessagesService } from '../../Services/validation-messages.service';
 
 @Component({
   selector: 'app-product-creation',
@@ -34,7 +36,8 @@ import { TaxService } from '../../../../Taxes/services/tax.service';
     MultiSelectModule,
     ButtonModule,
     InputNumberModule,
-    CalendarModule
+    CalendarModule,
+    ToastModule
   ],
   templateUrl: './product-creation.component.html',
   styleUrls: ['./product-creation.component.css'],
@@ -47,7 +50,7 @@ export class ProductCreationComponent implements OnInit {
   taxes: TaxList[] = [];
 
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string = '';
   formSubmitAttempt = false;
 
   constructor(
@@ -57,7 +60,9 @@ export class ProductCreationComponent implements OnInit {
     private readonly categoryService: CategoryService,
     private readonly productTypeService: ProductTypeService,
     private readonly router: Router,
-    private readonly taxService: TaxService
+    private readonly taxService: TaxService,
+    private readonly messageService: MessageService,
+    private readonly validationMessagesService: ValidationMessagesService
   ) {
     const today = new Date().toISOString().split('T')[0];
     this.productForm = this.formBuilder.group({
@@ -65,9 +70,9 @@ export class ProductCreationComponent implements OnInit {
       description: ['', Validators.required],
       reference: ['', Validators.required],
       presentation: ['', Validators.required], 
-      quantity: [0, [Validators.required, Validators.min(0)]],
+      quantity: [0],
       taxes: [[], Validators.required], 
-      cost: [0, [Validators.required, Validators.min(0)]],
+      cost: [0],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
       productTypeId: [null, Validators.required],
@@ -83,8 +88,18 @@ export class ProductCreationComponent implements OnInit {
       this.loadInitialData();
     } else {
       console.error("No se encontró el ID de la empresa. No se pueden cargar los datos del formulario.");
-      Swal.fire('Error', 'No se pudo identificar la empresa. Vuelva a iniciar sesión.', 'error');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo identificar la empresa. Vuelva a iniciar sesión.'
+      });
     }
+  }
+
+  // Método para obtener mensajes de validación
+  getValidationMessage(fieldName: string): string {
+    const control = this.productForm.get(fieldName);
+    return this.validationMessagesService.getFieldErrorMessage(control, fieldName) || '';
   }
 
   loadInitialData(): void {
@@ -136,7 +151,6 @@ export class ProductCreationComponent implements OnInit {
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.productForm.invalid) {
-      Swal.fire('Formulario Inválido', 'Por favor, revise todos los campos requeridos.', 'warning');
       // Marcar todos los campos como "tocados" para mostrar los errores
       this.productForm.markAllAsTouched();
       return;
@@ -163,21 +177,27 @@ export class ProductCreationComponent implements OnInit {
 
     this.productService.createProduct(productData as any).subscribe({
       next: () => {
-        Swal.fire({
-          title: 'Creación exitosa',
-          text: 'Se ha creado el producto con éxito.',
-          icon: 'success',
-          confirmButtonColor:   '#000066',
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Registro Exitoso',
+          detail: 'El producto ha sido creado exitosamente.',
+          life: 3000
         });
-        this.router.navigate(['/gen-masters/inventory/products/list']); // Redirigir a la lista
+        setTimeout(() => {
+          this.router.navigate(['/gen-masters/inventory/products/list']); // Redirigir a la lista
+        }, 1500);
       },
       error: (err) => {
         console.error('Error al crear el producto:', err);
-        Swal.fire({
-          title: 'Error',
-          text: 'Ha ocurrido un error al crear el producto.',
-          icon: 'error',
-          confirmButtonColor: '#000066',
+        const message = err.error?.message || 'Ha ocurrido un error al crear el producto. Por favor, inténtelo de nuevo.';
+        let summary = 'Error';
+        if (message.includes('Ya existe') || message.includes('duplicado') || message.includes('Duplicate')) {
+          summary = 'Registro Duplicado';
+        }
+        this.messageService.add({
+          severity: 'error',
+          summary: summary,
+          detail: message
         });
       }
     });

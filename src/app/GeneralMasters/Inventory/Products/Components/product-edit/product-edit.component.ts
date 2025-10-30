@@ -3,13 +3,14 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
+import { MessageService } from 'primeng/api';
 
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { ToastModule } from 'primeng/toast';
 import { ProductType } from '../../../ProductTypes/Models/ProductType';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ProductService } from '../../Services/product.service';
@@ -19,6 +20,7 @@ import { ProductTypeService } from '../../../ProductTypes/Services/product-type.
 import { Product } from '../../Models/Product';
 import { TaxList } from '../../../../Taxes/models/Tax';
 import { TaxService } from '../../../../Taxes/services/tax.service';
+import { ValidationMessagesService } from '../../Services/validation-messages.service';
 
 @Component({
   selector: 'app-product-edit',
@@ -32,6 +34,7 @@ import { TaxService } from '../../../../Taxes/services/tax.service';
     MultiSelectModule,
     ButtonModule,
     InputNumberModule,
+    ToastModule,
   ],
   templateUrl: './product-edit.component.html',
   styleUrls: ['./product-edit.component.css'],
@@ -56,7 +59,7 @@ export class ProductEditComponent implements OnInit {
   private originalProductData!: Product;
 
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string = '';
 
   constructor(
     private readonly formBuilder: FormBuilder,
@@ -66,16 +69,18 @@ export class ProductEditComponent implements OnInit {
     private readonly productTypeService: ProductTypeService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
-    private readonly taxService: TaxService
+    private readonly taxService: TaxService,
+    private readonly messageService: MessageService,
+    private readonly validationMessagesService: ValidationMessagesService
   ) {
     this.productForm = this.formBuilder.group({
       name: ['', Validators.required], 
       description: ['', Validators.required],
       reference: ['', Validators.required],
       presentation: ['', Validators.required], // Campo opcional
-      quantity: [0, [Validators.required, Validators.min(0)]],
+      quantity: [0],
       taxes: [[], Validators.required], // Cambiado de taxPercentage a taxes
-      cost: [0, [Validators.required, Validators.min(0)]],
+      cost: [0],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
       productTypeId: [null, Validators.required],
@@ -90,13 +95,23 @@ export class ProductEditComponent implements OnInit {
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.currentProductId = parseInt(id, 10);
+      this.currentProductId = Number.parseInt(id, 10);
       this.loadProductData(this.currentProductId);
     } else {
       console.error('ID de producto no encontrado en la ruta');
-      Swal.fire('Error', 'No se encontró un ID de producto para editar.', 'error');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se encontró un ID de producto para editar.'
+      });
       this.router.navigate(['/gen-masters/inventory/products/list']);
     }
+  }
+
+  // Método para obtener mensajes de validación
+  getValidationMessage(fieldName: string): string {
+    const control = this.productForm.get(fieldName);
+    return this.validationMessagesService.getFieldErrorMessage(control, fieldName) || '';
   }
 
   loadDropdownData(): void {
@@ -142,7 +157,11 @@ export class ProductEditComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error al cargar el producto:', err);
-        Swal.fire('Error', 'No se pudieron cargar los datos del producto.', 'error');
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los datos del producto.'
+        });
         this.isLoading = false;
         this.router.navigate(['/gen-masters/inventory/products/list']); 
       }
@@ -152,7 +171,6 @@ export class ProductEditComponent implements OnInit {
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.productForm.invalid) {
-      Swal.fire('Formulario Inválido', 'Por favor, revise todos los campos requeridos.', 'warning');
       this.productForm.markAllAsTouched();
       return;
     }
@@ -160,11 +178,10 @@ export class ProductEditComponent implements OnInit {
     const hasChanges = this.hasFormChanges();
 
     if (!hasChanges) {
-      Swal.fire({
-        title: 'Sin cambios',
-        text: 'No se han detectado cambios en el producto.',
-        icon: 'info',
-        confirmButtonText: 'Aceptar'
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Sin cambios',
+        detail: 'No se han detectado cambios en el producto.'
       });
       return;
     }
@@ -193,19 +210,23 @@ export class ProductEditComponent implements OnInit {
     };
     this.productService.updateProduct(this.currentProductId, payload as any).subscribe({
       next: () => {
-        Swal.fire({
-          title: '¡Actualizado!',
-          text: 'El producto ha sido actualizado con éxito.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false,
-        }).then(() => {
-          this.router.navigate(['/gen-masters/inventory/products/list']); 
+        this.messageService.add({
+          severity: 'success',
+          summary: '¡Actualizado!',
+          detail: 'El producto ha sido actualizado con éxito.'
         });
+        setTimeout(() => {
+          this.router.navigate(['/gen-masters/inventory/products/list']);
+        }, 2000);
       },
       error: (err) => {
         console.error('Error al actualizar el producto:', err);
-        Swal.fire('Error', 'Ha ocurrido un problema al actualizar el producto.', 'error');
+        const errorMessage = err?.error?.message || 'Ha ocurrido un problema al actualizar el producto.';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage
+        });
       }
     });
   }

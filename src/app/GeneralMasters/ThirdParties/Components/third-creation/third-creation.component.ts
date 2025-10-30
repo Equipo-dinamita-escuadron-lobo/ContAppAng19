@@ -31,6 +31,7 @@ import { ePersonType } from '../../models/ePersonType';
 import { ThirdFormService } from '../../Services/third-form.service';
 import { ThirdValidationService } from '../../Services/third-validation.service';
 import { GeographyHelperService } from '../../Services/geography-helper.service';
+import { ThirdValidationMessagesService } from '../../Services/third-validation-messages.service';
 
 // Shared Components
 import { FormFieldLabelComponent } from '../shared/form-field-label.component';
@@ -161,7 +162,8 @@ export class ThirdCreationComponent implements OnInit {
     private readonly localStorageMethods: LocalStorageMethods,
     private readonly thirdFormService: ThirdFormService,
     private readonly thirdValidationService: ThirdValidationService,
-    private readonly geographyHelper: GeographyHelperService
+    private readonly geographyHelper: GeographyHelperService,
+    public readonly thirdValidationMessagesService: ThirdValidationMessagesService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
@@ -826,20 +828,6 @@ export class ThirdCreationComponent implements OnInit {
   onCancel(): void {
     this.thirdService.clearInfoThirdRUT();
     this.router.navigate(['/gen-masters/third-parties/list']);
-  }
-
-  /**
-   * Verifica si es persona natural
-   */
-  isNaturalPerson(): boolean {
-    return this.thirdFormService.isNaturalPerson(this.createdThirdForm);
-  }
-
-  /**
-   * Verifica si es persona jurídica
-   */
-  isJuridicPerson(): boolean {
-    return this.thirdFormService.isJuridicPerson(this.createdThirdForm);
   }
 
   /**

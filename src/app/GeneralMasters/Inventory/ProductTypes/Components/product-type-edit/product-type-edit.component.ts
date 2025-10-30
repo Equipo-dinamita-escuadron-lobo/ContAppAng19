@@ -12,6 +12,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { ProductType } from '../../Models/ProductType';
 import { ProductTypeService } from '../../Services/product-type.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
+import { ProductTypeValidationMessagesService } from '../../Services/product-type-validation-messages.service';
 
 @Component({
   selector: 'app-product-type-edit',
@@ -41,7 +42,8 @@ export class ProductTypeEditComponent implements OnInit {
     private readonly formBuilder: FormBuilder,
     private readonly productTypeService: ProductTypeService,
     private readonly router: Router,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly validationMessagesService: ProductTypeValidationMessagesService
   ) {}
 
   ngOnInit(): void {
@@ -135,32 +137,20 @@ export class ProductTypeEditComponent implements OnInit {
 
 
   private markFormGroupTouched(): void {
-    Object.keys(this.productTypeForm.controls).forEach(key => {
+    for (const key of Object.keys(this.productTypeForm.controls)) {
       const control = this.productTypeForm.get(key);
       control?.markAsTouched();
-    });
+    }
   }
 
   goBack(): void {
     this.router.navigate(['/gen-masters/inventory/product-types/list']);
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.productTypeForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
-  }
-
-  getFieldError(fieldName: string): string {
-    const field = this.productTypeForm.get(fieldName);
-    if (field && field.errors) {
-      if (field.errors['required']) {
-        return `El campo ${fieldName === 'name' ? 'Nombre' : 'Descripción'} es requerido.`;
-      }
-      if (field.errors['maxlength']) {
-        return `El campo ${fieldName === 'name' ? 'Nombre' : 'Descripción'} excede la longitud máxima permitida.`;
-      }
-    }
-    return '';
+  // Método para obtener mensajes de validación
+  getValidationMessage(fieldName: string): string {
+    const control = this.productTypeForm.get(fieldName);
+    return this.validationMessagesService.getFieldErrorMessage(control, fieldName) || '';
   }
 
   // Método para verificar si hubo cambios en el formulario
@@ -178,15 +168,6 @@ export class ProductTypeEditComponent implements OnInit {
   hasChanges(): boolean {
     if (!this.originalProductTypeData) return false;
     return this.hasFormChanges();
-  }
-
-  // Getters para mantener dumb templates
-  get isNameInvalid(): boolean {
-    return this.isFieldInvalid('name');
-  }
-
-  get isDescriptionInvalid(): boolean {
-    return this.isFieldInvalid('description');
   }
 
   get isSubmitDisabled(): boolean {

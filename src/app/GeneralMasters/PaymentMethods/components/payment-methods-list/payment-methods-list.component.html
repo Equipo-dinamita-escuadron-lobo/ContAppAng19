@@ -69,7 +69,7 @@
           <td class="py-3">{{ row.name }}</td>
           <td class="py-3">{{ row.accountingAccountDisplay }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="formatState(row.status)" [severity]="getStateSeverity(row.status)"></p-tag>
+            <p-tag [value]="row.status ? paymentMethodsValidationMessagesService.getActiveStateText() : paymentMethodsValidationMessagesService.getInactiveStateText()" [severity]="row.status ? paymentMethodsValidationMessagesService.getActiveStateSeverity() : paymentMethodsValidationMessagesService.getInactiveStateSeverity()"></p-tag>
           </td>
           <td class="py-3 text-center">
             <div class="flex justify-center gap-2 items-center">
@@ -78,7 +78,7 @@
               <p-toggleSwitch
                 [ngModel]="row.status"
                 (onChange)="togglePaymentMethodStatus(row, $event.checked)"
-                [pTooltip]="row.status ? 'Activo' : 'Inactivo'"
+                [pTooltip]="row.status ? paymentMethodsValidationMessagesService.getActiveStateText() : paymentMethodsValidationMessagesService.getInactiveStateText()"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"

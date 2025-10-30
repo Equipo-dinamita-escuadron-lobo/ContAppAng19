@@ -39,10 +39,11 @@
           <p-button label="Crear" icon="pi pi-plus" (click)="showFormAddNewRoot()"></p-button>
           <p-button 
             label="Exportar" 
-            icon="pi pi-download" 
+            [icon]="isExporting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"
             severity="success"
             (click)="showExportConfirmDialog()"
-            [outlined]="true">
+            [outlined]="true"
+            [disabled]="isExporting">
           </p-button>
         </div>
       </div>
