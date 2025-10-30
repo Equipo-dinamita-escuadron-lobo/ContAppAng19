@@ -871,6 +871,26 @@ export const routes: Routes = [
                     './Financial/Wallet/PortfolioWriteOffs/Components/write-off-details/write-off-details.component'
                   ).then((m) => m.WriteOffDetailsComponent),
               },
+              {
+                path: 'invoices',
+                data: {
+                  breadcrumb: 'Facturas',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioManagement/Components/invoice-list/invoice-list.component'
+                  ).then((m) => m.InvoiceListComponent),
+              },
+              {
+                path: 'invoices/details/:id',
+                data: {
+                  breadcrumb: 'Detalles de la Factura',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioManagement/Components/invoice-detail/invoice-detail.component'
+                  ).then((m) => m.InvoiceDetailComponent),
+              },
             {
               path: 'accounting-entries',
               data: {

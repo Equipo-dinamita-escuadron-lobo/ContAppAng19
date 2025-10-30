@@ -5,8 +5,10 @@
 export interface Invoice {
     id: number;
     factCode: string;
+    creationDate: Date;
     expirationDate: Date;
     pendingValue: number;
+    thirdId: number;
     
     // Propiedades opcionales añadidas por el frontend para la interacción del usuario.
     selectedForPayment?: boolean; 

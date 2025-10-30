@@ -1,0 +1,75 @@
+<div class="p-6 font-sans">
+    <p-toast></p-toast>
+
+    @if (invoice) {
+    <div>
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
+            <div>
+                <h1
+                    class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+                    Detalle de Factura
+                </h1>
+                <p class="font-normal text-sm mt-2 text-gray-600">
+                    Información detallada de la factura <span class="font-semibold">{{ invoice.factCode }}</span>.
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button pButton pRipple label="Cambiar Vencimiento" icon="pi pi-calendar-plus"
+                    (click)="showDialog = true"></button>
+                <button pButton pRipple label="Volver al listado" icon="pi pi-arrow-left" class="p-button-secondary"
+                    [routerLink]="['/financial/wallet/invoices']"></button>
+            </div>
+        </div>
+
+        <div
+            class="bg-white shadow-lg rounded-lg border border-gray-200 p-8 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+            <div class="flex flex-col">
+                <label class="text-sm text-gray-500">Código de Factura</label>
+                <span class="font-semibold text-lg text-gray-800">{{ invoice.factCode }}</span>
+            </div>
+            <div class="flex flex-col">
+                <label class="text-sm text-gray-500">ID Tercero</label>
+                <span class="font-semibold text-lg text-gray-800">{{ invoice.thirdId }}</span>
+            </div>
+            <div class="flex flex-col">
+                <label class="text-sm text-gray-500">Fecha de Creación</label>
+                <span class="font-semibold text-lg text-gray-800">{{ invoice.creationDate | date:'fullDate' }}</span>
+            </div>
+            <div class="flex flex-col">
+                <label class="text-sm text-gray-500">Fecha de Vencimiento</label>
+                <span class="font-semibold text-lg text-[var(--color-secondary)]">{{ invoice.expirationDate |
+                    date:'fullDate' }}</span>
+            </div>
+            <div class="flex flex-col">
+                <label class="text-sm text-gray-500">Valor Total</label>
+                <span class="font-semibold text-lg text-gray-800">{{ invoice.totalValue |
+                    currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            </div>
+            <div class="flex flex-col">
+                <label class="text-sm text-gray-500">Valor Pendiente</label>
+                <span class="font-bold text-2xl text-[var(--color-primary)]">{{ invoice.pendingValue |
+                    currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            </div>
+        </div>
+    </div>
+    } @else if (isLoading) {
+    <p class="text-center p-10">Cargando detalles de la factura...</p>
+    }
+
+    <!-- Diálogo para cambiar la fecha -->
+    <p-dialog header="Cambiar Fecha de Vencimiento" [(visible)]="showDialog" [modal]="true" [style]="{width: '450px'}">
+        <form [formGroup]="dueDateForm" class="p-fluid">
+            <div class="field">
+                <label class="label-title">Nueva Fecha de Vencimiento</label>
+                <p-calendar formControlName="newDueDate" [showIcon]="true" dateFormat="dd/mm/yy" [minDate]="minDate"
+                    appendTo="body"></p-calendar>
+            </div>
+        </form>
+        <ng-template pTemplate="footer">
+            <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text"
+                (click)="showDialog=false"></button>
+            <button pButton pRipple label="Guardar" icon="pi pi-check" (click)="saveNewDueDate()" [loading]="isSaving"
+                [disabled]="dueDateForm.invalid"></button>
+        </ng-template>
+    </p-dialog>
+</div>
