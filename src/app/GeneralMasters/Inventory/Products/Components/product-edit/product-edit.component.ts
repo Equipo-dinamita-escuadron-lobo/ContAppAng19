@@ -20,6 +20,7 @@ import { ProductTypeService } from '../../../ProductTypes/Services/product-type.
 import { Product } from '../../Models/Product';
 import { TaxList } from '../../../../Taxes/models/Tax';
 import { TaxService } from '../../../../Taxes/services/tax.service';
+import { ValidationMessagesService } from '../../Services/validation-messages.service';
 
 @Component({
   selector: 'app-product-edit',
@@ -58,7 +59,7 @@ export class ProductEditComponent implements OnInit {
   private originalProductData!: Product;
 
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string = '';
 
   constructor(
     private readonly formBuilder: FormBuilder,
@@ -69,7 +70,8 @@ export class ProductEditComponent implements OnInit {
     private readonly router: Router,
     private readonly route: ActivatedRoute,
     private readonly taxService: TaxService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly validationMessagesService: ValidationMessagesService
   ) {
     this.productForm = this.formBuilder.group({
       name: ['', Validators.required], 
@@ -104,6 +106,12 @@ export class ProductEditComponent implements OnInit {
       });
       this.router.navigate(['/gen-masters/inventory/products/list']);
     }
+  }
+
+  // Método para obtener mensajes de validación
+  getValidationMessage(fieldName: string): string {
+    const control = this.productForm.get(fieldName);
+    return this.validationMessagesService.getFieldErrorMessage(control, fieldName) || '';
   }
 
   loadDropdownData(): void {

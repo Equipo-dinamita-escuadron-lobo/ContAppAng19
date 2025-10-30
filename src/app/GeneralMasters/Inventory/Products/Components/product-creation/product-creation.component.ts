@@ -21,6 +21,7 @@ import { CategoryService } from '../../../Category/Services/category.service';
 import { ProductTypeService } from '../../../ProductTypes/Services/product-type.service';
 import { TaxList } from '../../../../Taxes/models/Tax';
 import { TaxService } from '../../../../Taxes/services/tax.service';
+import { ValidationMessagesService } from '../../Services/validation-messages.service';
 
 @Component({
   selector: 'app-product-creation',
@@ -49,7 +50,7 @@ export class ProductCreationComponent implements OnInit {
   taxes: TaxList[] = [];
 
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string = '';
   formSubmitAttempt = false;
 
   constructor(
@@ -60,7 +61,8 @@ export class ProductCreationComponent implements OnInit {
     private readonly productTypeService: ProductTypeService,
     private readonly router: Router,
     private readonly taxService: TaxService,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
+    private readonly validationMessagesService: ValidationMessagesService
   ) {
     const today = new Date().toISOString().split('T')[0];
     this.productForm = this.formBuilder.group({
@@ -92,6 +94,12 @@ export class ProductCreationComponent implements OnInit {
         detail: 'No se pudo identificar la empresa. Vuelva a iniciar sesión.'
       });
     }
+  }
+
+  // Método para obtener mensajes de validación
+  getValidationMessage(fieldName: string): string {
+    const control = this.productForm.get(fieldName);
+    return this.validationMessagesService.getFieldErrorMessage(control, fieldName) || '';
   }
 
   loadInitialData(): void {

@@ -20,6 +20,7 @@ import { TagModule } from 'primeng/tag';
 import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
 import { TooltipModule } from 'primeng/tooltip';
+import { CurrencyFormatPipe } from '../../Pipes/currency-format.pipe';
 
 @Component({
   selector: 'app-product-list',
@@ -39,7 +40,8 @@ import { TooltipModule } from 'primeng/tooltip';
     IconField,
     TooltipModule,
     ToggleSwitchModule,
-    FormsModule
+    FormsModule,
+    CurrencyFormatPipe
 ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
@@ -47,7 +49,7 @@ import { TooltipModule } from 'primeng/tooltip';
 })
 export class ProductListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: Record<string, any> | null = null;
   productsPage: Page<ProductList> = {
     content: [],
     totalElements: 0,
@@ -205,20 +207,6 @@ export class ProductListComponent implements OnInit {
   openDetailsModal(product: ProductList): void {
     this.selectedProduct = product;
     this.isDetailsDialogVisible = true;
-  }
-
-  // --- MÉTODOS DE FORMATO (puedes moverlos a un pipe si lo prefieres) ---
-  formatCost(cost: number): string {
-    if (cost === null || cost === undefined) return '$ 0';
-    return cost.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
-  }
-
-  getStateSeverity(state: boolean): 'success' | 'danger' {
-    return state ? 'success' : 'danger';
-  }
-
-  formatState(state: boolean): string {
-    return state ? 'Activo' : 'Inactivo';
   }
 
   // Método para cambiar el estado del producto

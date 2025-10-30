@@ -115,13 +115,13 @@
           <td class="py-3 whitespace-nowrap">{{ product.presentation }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.description }}</td>
           <td *ngIf="showDetailView" class="py-3 text-center whitespace-nowrap">{{ product.taxDisplayText }}</td>
-          <td class="py-3 text-right whitespace-nowrap">{{ formatCost(product.cost) }}</td>
+          <td class="py-3 text-right whitespace-nowrap">{{ product.cost | currencyFormat }}</td>
           <td class="py-3 text-center whitespace-nowrap">{{ product.quantity }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.unitOfMeasureName }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.categoryName }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.productTypeName }}</td>
           <td class="py-3 text-center whitespace-nowrap">
-            <p-tag [value]="formatState(product.state)" [severity]="getStateSeverity(product.state)">
+            <p-tag [value]="product.state ? 'Activo' : 'Inactivo'" [severity]="product.state ? 'success' : 'danger'">
             </p-tag>
           </td>
           <td class="py-3 text-center whitespace-nowrap">
@@ -203,7 +203,7 @@
         <div>
           <p class="font-semibold text-primary">Costo</p>
           <p>
-            {{ formatCost(selectedProduct.cost) }}
+            {{ selectedProduct.cost | currencyFormat }}
           </p>
         </div>
         <div>
@@ -222,7 +222,7 @@
       <div class="space-y-8">
         <div>
           <p class="font-semibold text-primary">Estado</p>
-          <p-tag [value]="formatState(selectedProduct.state)" [severity]="getStateSeverity(selectedProduct.state)">
+          <p-tag [value]="selectedProduct.state ? 'Activo' : 'Inactivo'" [severity]="selectedProduct.state ? 'success' : 'danger'">
           </p-tag>
         </div>
         <div>
