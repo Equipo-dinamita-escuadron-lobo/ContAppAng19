@@ -233,7 +233,7 @@ export class ListTaxComponent implements OnInit {
           next: () => {
             this.messageService.add({
               severity: 'success',
-              summary: 'Éxito',
+              summary: 'Eliminado',
               detail: 'Impuesto eliminado exitosamente'
             });
             this.reloadCurrentPage(); // Recargar la página actual

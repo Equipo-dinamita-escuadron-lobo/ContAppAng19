@@ -216,7 +216,7 @@ export class EditTaxComponent implements OnInit {
         next: (response) => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización Exitosa',
             detail: 'Impuesto actualizado exitosamente',
             life: 3000 // Mantener notificación visible por 3 segundos
           });
