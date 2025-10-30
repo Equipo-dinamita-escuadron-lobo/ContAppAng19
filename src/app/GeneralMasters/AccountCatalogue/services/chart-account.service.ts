@@ -1,12 +1,11 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams, HttpResponse } from '@angular/common/http';
 import { NatureType } from '../models/NatureType';
 import { FinancialStateType } from '../models/FinancialStateType';
 import { ClasificationType } from '../models/ClasificationType';
 import { Observable, map, catchError, of, throwError } from 'rxjs';
 import { Account, AccountCatalogueListRes, ItemAccountCatalogueSearchRes, AccountCatalogueCreateRes, AccountCatalogueUpdateRes, AuxiliaryAccountsApiResponse } from '../models/ChartAccount';
-import { HttpResponse } from '@angular/common/http';
 
 
 let API_URL = environment.API_URL + 'accountCatalogue/';

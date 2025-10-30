@@ -121,6 +121,11 @@ export class AccountListComponent implements OnInit {
   hasActiveSearch: boolean = false;
 
   /**
+   * Variable para controlar el estado de carga durante la importación
+   */
+  isImporting: boolean = false;
+
+  /**
    * Variables para controlar la visibilidad de los checkboxes en la edición
    */
   showCrossingCheckboxEdit: boolean = false;
@@ -2132,9 +2137,11 @@ export class AccountListComponent implements OnInit {
     if (!file) return;
 
     const entId = this.getIdEnterprise();
+    this.isImporting = true;
 
     this._accountService.importAccounts(entId, file).subscribe({
       next: (response) => {
+        this.isImporting = false; 
         const importResult = response.body;
 
         if (importResult) {
@@ -2196,6 +2203,7 @@ export class AccountListComponent implements OnInit {
         }
       },
       error: (error) => {
+        this.isImporting = false;
         // Extraer los errores del backend
         if (error.error && typeof error.error === 'object') {
           const errorResponse = error.error;
