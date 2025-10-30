@@ -58,115 +58,62 @@ interface ImportError {
   providers: [MessageService, ConfirmationService]
 })
 export class AccountListComponent implements OnInit {
-  /**
-  * Formulario reactivo que contiene los campos de entrada para la gestión de cuentas contables.
-  */
+
   accountForm: FormGroup;
 
-  /**
-  * Formulario reactivo que contiene los selectores para los tipos de naturaleza,
-  * estado financiero y clasificación.
-  */
   formTransactional: FormGroup;
-
-  /**
-   * Cuenta seleccionada y estado de conmutación para la interfaz de usuario.
-   */
+ 
   accountSelected?: Account;
   toggle: boolean = false;
 
-  /**
-  * Variables para almacenar la información relacionada con una cuenta contable.
-  */
   num: number = 0;
   code: string = '';
   name: string = '';
   parentId: string = '';
 
-  /**
-  * Variables para controlar la visibilidad de los formularios en la interfaz de usuario.
-  */
   showPrincipalForm: boolean = false;
   showFormTransactional: boolean = false;
 
-  /**
-   * Variable que indica si una cuenta ha sido seleccionada.
-   */
   selectedAccount: boolean = false;
-
-  /**
-   * Valores originales de la cuenta seleccionada para comparar cambios reales.
-   */
   private originalAccountValues: any = null;
 
-  /**
-  * Variables para controlar la visibilidad de los botones en la interfaz de usuario.
-  */
   showButton = false;
   showUpdateButton = false;
   showAddNewClass: boolean = false;
   showButtonDelete: boolean = false;
 
-  /**
-   * Controla la visibilidad del modal de plantilla
-   */
   showTemplateModal: boolean = false;
 
-  /**
-   * Variables para la funcionalidad de búsqueda
-   */
   searchTerm: string = '';
   searchResults: Account[] = [];
   isLoading: boolean = false;
   hasActiveSearch: boolean = false;
 
-  /**
-   * Variable para controlar el estado de carga durante la importación
-   */
   isImporting: boolean = false;
+  isExporting: boolean = false;
 
-  /**
-   * Variables para controlar la visibilidad de los checkboxes en la edición
-   */
   showCrossingCheckboxEdit: boolean = false;
   showCostCenterCheckboxEdit: boolean = false;
 
-  /**
-   * Controla si los inputs deben estar bloqueados cuando no hay cambios reales
-   */
-  inputsLocked: boolean = false;    /**
-   * Variables determinadas según el nivel de la cuenta.
-   * Estas variables gestionan el tipo de cuenta y si se deben agregar subcuentas o hijos.
-   */
+  inputsLocked: boolean = false;    
+
   private _currentLevelAccount: 'Grupo' | 'Cuenta' | 'Subcuenta' | 'Auxiliar' | 'Clase' = 'Clase';
   addChild: boolean = false;
 
-  /**
-   * Getter que devuelve el valor de currentLevelAccount (ya capitalizado)
-   */
   get currentLevelAccount(): string {
     return this._currentLevelAccount;
   }
 
-  /**
-   * Setter para currentLevelAccount
-   */
   set currentLevelAccount(value: 'Grupo' | 'Cuenta' | 'Subcuenta' | 'Auxiliar' | 'Clase') {
     this._currentLevelAccount = value;
   }
 
-  /**
-  * Variables para almacenar los nombres de las diferentes cuentas contables.
-  */
   className = '';
   groupName = '';
   accountName = '';
   subAccountName = '';
   auxiliaryName = '';
 
-  /**
-  * Determina qué campos de entrada deben ser bloqueados según el nivel seleccionado de la cuenta.
-  */
   inputAccess = {
     class: true,
     group: true,
@@ -175,10 +122,7 @@ export class AccountListComponent implements OnInit {
     auxiliary: true
   };
 
-  /**
-  * Arreglos que almacenan la información de los servicios relacionados con los tipos de estado financiero,
-  * cuentas, naturaleza, clasificación, y otras cuentas relacionadas con reembolsos y depósitos.
-  */
+ 
   listFinancialState: FinancialStateType[] = [];
   listAccounts: Account[] = [];
   listAccountsAux: Account[] = [];
@@ -187,10 +131,6 @@ export class AccountListComponent implements OnInit {
   listRefundAccount: string[] = [];
   listDepositAccount: string[] = [];
 
-  /**
-  * Propiedades del componente para gestionar los valores y datos relacionados con los tipos de naturaleza,
-  * estado financiero, clasificación y otros datos de la aplicación.
-  */
   placeNatureType: string = '';
   placeFinancialStateType: string = '';
   placeClasificationType: string = '';
@@ -218,18 +158,7 @@ export class AccountListComponent implements OnInit {
     { label: 'Inactivos', value: false }
   ];
 
-  /**
-  * Constructor del componente.
-  * Inicializa los formularios reactivos para la gestión de cuentas y transacciones,
-  * y provee la inyección de dependencias necesarias para la exportación de cuentas,
-  * servicios de cuenta, impuestos y manejo de diálogos.
-  *
-  * @param accountExportComponent Componente para exportar cuentas.
-  * @param fb Constructor de formularios reactivos.
-  * @param _accountService Servicio para gestionar las cuentas contables.
-  * @param dialog Servicio para manejar diálogos modales.
-  * @param taxService Servicio para gestionar los impuestos.
-  */
+ 
   constructor(
     private readonly fb: FormBuilder,
     private readonly _accountService: ChartAccountService,
@@ -1827,8 +1756,11 @@ export class AccountListComponent implements OnInit {
     const entId = entData?.id || this.getIdEnterprise();
     const companyName = entData?.name || '';
 
+    this.isExporting = true; // Activar estado de carga
+
     this._accountService.exportAccounts(entId, companyName, status).subscribe({
       next: (response) => {
+        this.isExporting = false; // Desactivar estado de carga
         if (!response.body) {
           this.messageService.add({
             severity: 'error',
@@ -1846,6 +1778,7 @@ export class AccountListComponent implements OnInit {
         });
       },
       error: (error) => {
+        this.isExporting = false; // Desactivar estado de carga en caso de error
         if (error.error instanceof Blob) {
           const reader = new FileReader();
           reader.onload = () => {
