@@ -1,4 +1,3 @@
-import { Facture } from './../../../../../../frontend_accounting_software/src/app/modules/commercial/purchase-invoice/models/facture';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { EntData, LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
@@ -19,7 +18,7 @@ export class SkeletonNonCommercialService {
   private entData: EntData | null = this.localStorageMethods.loadEnterpriseData();
   private enterpriseId: string = '';
 
-  constructor(private http:HttpClient) { 
+  constructor(private http:HttpClient) {
     this.enterpriseIdLocalStorage();
   }
 
