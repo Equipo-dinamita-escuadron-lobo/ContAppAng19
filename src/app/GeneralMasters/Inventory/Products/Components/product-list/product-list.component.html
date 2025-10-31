@@ -79,9 +79,6 @@
           <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Descripción
           </th>
-          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
-            Impuesto(s)
-          </th>
           <th scope="col" class="font-semibold text-primary border-b-2 border-primary text-right whitespace-nowrap">
             Costo
           </th>
@@ -149,7 +146,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 13 : 8" class="text-center py-6 font-family-sans text-neutral-50">
+          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron productos.
           </td>
         </tr>
@@ -158,7 +155,7 @@
       <ng-template pTemplate="loadingbody">
         <tr>
           <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 13 : 8" class="text-center py-6 font-family-sans text-neutral-50">
+          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             <p class="mt-2 text-primary">Cargando productos...</p>
           </td>
