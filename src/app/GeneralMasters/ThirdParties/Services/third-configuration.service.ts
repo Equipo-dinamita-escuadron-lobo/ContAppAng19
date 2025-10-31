@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 import { ThirdType } from '../models/ThirdType';
 import { TypeId } from '../models/TypeId';
 
@@ -10,7 +10,7 @@ import { TypeId } from '../models/TypeId';
 })
 export class ThirdServiceConfigurationService {
   /** URL base para las operaciones de configuración de terceros */
-  private thirdApiUrl = environment.API_URL + 'thirds/configuration/';
+  private readonly thirdApiUrl = environment.API_URL + 'thirds/configuration/';
 
   /**
    * Método genérico para extraer arrays de respuestas que pueden venir en diferentes formatos
@@ -51,7 +51,7 @@ export class ThirdServiceConfigurationService {
    * Constructor del servicio
    * @param http Cliente HTTP para realizar peticiones
    */
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   /**
    * Obtiene los tipos de terceros para una empresa específica con paginación y búsqueda

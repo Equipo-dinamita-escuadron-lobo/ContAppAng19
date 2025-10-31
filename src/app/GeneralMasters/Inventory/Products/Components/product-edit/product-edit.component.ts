@@ -1,16 +1,16 @@
-// src/app/GeneralMasters/Inventory/Products/Components/product-edit/product-edit.component.ts
 
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
+import { MessageService } from 'primeng/api';
 
-// --- Tus importaciones... ---
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { ToastModule } from 'primeng/toast';
 import { ProductType } from '../../../ProductTypes/Models/ProductType';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ProductService } from '../../Services/product.service';
@@ -18,9 +18,9 @@ import { UnitOfMeasureService } from '../../../MeasurementUnits/Services/unit-of
 import { CategoryService } from '../../../Category/Services/category.service';
 import { ProductTypeService } from '../../../ProductTypes/Services/product-type.service';
 import { Product } from '../../Models/Product';
-import { MenuItem } from 'primeng/api';
 import { TaxList } from '../../../../Taxes/models/Tax';
 import { TaxService } from '../../../../Taxes/services/tax.service';
+import { ValidationMessagesService } from '../../Services/validation-messages.service';
 
 @Component({
   selector: 'app-product-edit',
@@ -31,8 +31,10 @@ import { TaxService } from '../../../../Taxes/services/tax.service';
     RouterModule,
     InputTextModule,
     SelectModule,
+    MultiSelectModule,
     ButtonModule,
     InputNumberModule,
+    ToastModule,
   ],
   templateUrl: './product-edit.component.html',
   styleUrls: ['./product-edit.component.css'],
@@ -47,38 +49,38 @@ export class ProductEditComponent implements OnInit {
   isLoading = true;
   formSubmitAttempt = false;
   
-  // Seguimiento de campos que han sido modificados por el usuario
   userModifiedFields = {
-    taxPercentage: false,
+    taxes: false,
     productTypeId: false,
     unitOfMeasureId: false,
     categoryId: false
   };
 
-  // --- CAMBIO 1: Añade esta propiedad para guardar datos originales ---
   private originalProductData!: Product;
 
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string = '';
 
   constructor(
-    private formBuilder: FormBuilder,
-    private productService: ProductService,
-    private unitOfMeasureService: UnitOfMeasureService,
-    private categoryService: CategoryService,
-    private productTypeService: ProductTypeService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private taxService: TaxService
+    private readonly formBuilder: FormBuilder,
+    private readonly productService: ProductService,
+    private readonly unitOfMeasureService: UnitOfMeasureService,
+    private readonly categoryService: CategoryService,
+    private readonly productTypeService: ProductTypeService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly taxService: TaxService,
+    private readonly messageService: MessageService,
+    private readonly validationMessagesService: ValidationMessagesService
   ) {
     this.productForm = this.formBuilder.group({
       name: ['', Validators.required], 
       description: ['', Validators.required],
-      reference: [''],
-      presentation: [''], // Campo opcional
-      quantity: [0, [Validators.required, Validators.min(0)]],
-      taxPercentage: [null, [Validators.required, Validators.min(0), Validators.max(100)]],
-      cost: [0, [Validators.required, Validators.min(0)]],
+      reference: ['', Validators.required],
+      presentation: ['', Validators.required], // Campo opcional
+      quantity: [0],
+      taxes: [[], Validators.required], // Cambiado de taxPercentage a taxes
+      cost: [0],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
       productTypeId: [null, Validators.required],
@@ -87,55 +89,63 @@ export class ProductEditComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Las migas de pan se manejan a través del enrutamiento y el componente bread-crumb
-
+  
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.loadDropdownData();
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.currentProductId = parseInt(id, 10);
+      this.currentProductId = Number.parseInt(id, 10);
       this.loadProductData(this.currentProductId);
     } else {
       console.error('ID de producto no encontrado en la ruta');
-      Swal.fire('Error', 'No se encontró un ID de producto para editar.', 'error');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se encontró un ID de producto para editar.'
+      });
       this.router.navigate(['/gen-masters/inventory/products/list']);
     }
   }
 
+  // Método para obtener mensajes de validación
+  getValidationMessage(fieldName: string): string {
+    const control = this.productForm.get(fieldName);
+    return this.validationMessagesService.getFieldErrorMessage(control, fieldName) || '';
+  }
+
   loadDropdownData(): void {
     if (!this.entData) return;
-    this.unitOfMeasureService.getUnitOfMeasures(this.entData).subscribe(data => this.unitOfMeasures = data);
-    this.categoryService.getCategories(this.entData).subscribe(data => this.categories = data);
-    this.productTypeService.getProductTypes(this.entData).subscribe((data: any) => this.productTypes = data);
-    this.taxService.getTaxes(this.entData).subscribe({
+    this.unitOfMeasureService.findActivate(this.entData).subscribe(data => this.unitOfMeasures = data);
+    this.categoryService.findActivate(this.entData).subscribe(data => this.categories = data);
+    this.productTypeService.findActivate(this.entData).subscribe((data: ProductType[]) => this.productTypes = data);
+    this.taxService.getActiveTaxes(this.entData).subscribe({
       next: (data) => {
-        // Agregar displayText para el filtro del p-select
+        // Agregar displayText para el filtro del p-multiselect
         this.taxes = data.map(tax => ({
           ...tax,
           displayText: `${tax.code} (${tax.interest}%)`
         }));
       },
-      error: (err) => console.error('Error al obtener los impuestos:', err)
+      error: (err) => console.error('Error al obtener los impuestos activos:', err)
     });
   }
 
-  // --- CAMBIO 2: Modifica este método para guardar el producto original ---
   loadProductData(id: number): void {
-    this.productService.getProductById(id).subscribe({
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    this.productService.getProductById(id, enterpriseId).subscribe({
       next: (product: Product) => {
         // Convertir valores numéricos explícitamente
         this.originalProductData = {
           ...product,
           quantity: Number(product.quantity),
-          taxPercentage: Number(product.taxPercentage),
+          taxPercentage: Array.isArray(product.taxPercentage) ? product.taxPercentage : [Number(product.taxPercentage)],
           cost: Number(product.cost),
           unitOfMeasureId: Number(product.unitOfMeasureId),
           categoryId: Number(product.categoryId),
           productTypeId: Number(product.productTypeId)
         };
         
-        // Para el formulario, configurar taxPercentage como null si es 0 para que no aparezca la X
         const formData: any = { ...this.originalProductData };
         if (formData.taxPercentage === 0) {
           formData.taxPercentage = null;
@@ -147,36 +157,35 @@ export class ProductEditComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error al cargar el producto:', err);
-        Swal.fire('Error', 'No se pudieron cargar los datos del producto.', 'error');
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los datos del producto.'
+        });
         this.isLoading = false;
-        this.router.navigate(['/gen-masters/inventory/products/list']); // Ruta corregida
+        this.router.navigate(['/gen-masters/inventory/products/list']); 
       }
     });
   }
 
-  // --- CAMBIO 3: Reemplaza este método por completo ---
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.productForm.invalid) {
-      Swal.fire('Formulario Inválido', 'Por favor, revise todos los campos requeridos.', 'warning');
       this.productForm.markAllAsTouched();
       return;
     }
 
-    // Verificar si hubo cambios
     const hasChanges = this.hasFormChanges();
 
     if (!hasChanges) {
-      Swal.fire({
-        title: 'Sin cambios',
-        text: 'No se han detectado cambios en el producto.',
-        icon: 'info',
-        confirmButtonText: 'Aceptar'
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Sin cambios',
+        detail: 'No se han detectado cambios en el producto.'
       });
       return;
     }
 
-    // Combina los datos originales (id, state, etc.) con los datos actualizados del formulario
     const formData = { ...this.productForm.value };
     
     // Mapear los datos correctamente para el backend
@@ -186,12 +195,11 @@ export class ProductEditComponent implements OnInit {
       reference: formData.reference,
       presentation: formData.presentation,
       quantity: Number(formData.quantity),
-      taxPercentage: formData.taxPercentage !== null ? [formData.taxPercentage.toString()] : ["0"],
+      taxes: formData.taxes && formData.taxes.length > 0 ? formData.taxes : [],
       cost: Number(formData.cost),
       unitOfMeasureId: formData.unitOfMeasureId, 
       categoryId: formData.categoryId, 
       productTypeId: formData.productTypeId, 
-      creationDate: this.originalProductData.creationDate,
       state: formData.state,
       enterpriseId: this.originalProductData.enterpriseId
     };
@@ -200,37 +208,37 @@ export class ProductEditComponent implements OnInit {
       ...this.originalProductData,
       ...productData
     };
-
-    // Llama al servicio con los dos argumentos correctos: (ID, DATOS)
     this.productService.updateProduct(this.currentProductId, payload as any).subscribe({
       next: () => {
-        Swal.fire({
-          title: '¡Actualizado!',
-          text: 'El producto ha sido actualizado con éxito.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false,
-        }).then(() => {
-          this.router.navigate(['/gen-masters/inventory/products/list']); // Ruta corregida
+        this.messageService.add({
+          severity: 'success',
+          summary: '¡Actualizado!',
+          detail: 'El producto ha sido actualizado con éxito.'
         });
+        setTimeout(() => {
+          this.router.navigate(['/gen-masters/inventory/products/list']);
+        }, 2000);
       },
       error: (err) => {
         console.error('Error al actualizar el producto:', err);
-        Swal.fire('Error', 'Ha ocurrido un problema al actualizar el producto.', 'error');
+        const errorMessage = err?.error?.message || 'Ha ocurrido un problema al actualizar el producto.';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage
+        });
       }
     });
   }
 
   goBack(): void {
-    this.router.navigate(['/gen-masters/inventory/products/list']); // Ruta corregida
+    this.router.navigate(['/gen-masters/inventory/products/list']); 
   }
 
-  // Método para verificar si hubo cambios en el formulario
   private hasFormChanges(): boolean {
     if (!this.originalProductData) return false;
     const formData = this.productForm.value;
     
-    // Convertir los valores numéricos a números para comparación consistente
     const compareValues = (val1: any, val2: any) => {
       if (typeof val1 === 'number' || typeof val2 === 'number') {
         return Number(val1) !== Number(val2);
@@ -244,37 +252,35 @@ export class ProductEditComponent implements OnInit {
       reference: compareValues(formData.reference, this.originalProductData.reference),
       presentation: compareValues(formData.presentation, this.originalProductData.presentation),
       quantity: compareValues(formData.quantity, this.originalProductData.quantity),
-      taxPercentage: compareValues(formData.taxPercentage, this.originalProductData.taxPercentage),
+      taxes: !this.arraysEqual(formData.taxes || [], this.originalProductData.taxPercentage || []),
       cost: compareValues(formData.cost, this.originalProductData.cost),
       unitOfMeasureId: compareValues(formData.unitOfMeasureId, this.originalProductData.unitOfMeasureId),
       categoryId: compareValues(formData.categoryId, this.originalProductData.categoryId),
       productTypeId: compareValues(formData.productTypeId, this.originalProductData.productTypeId)
     };
 
-    // Devolver true si hay al menos un cambio
-    return Object.values(changes).some(changed => changed === true);
+    return Object.values(changes).includes(true);
   }
 
-  // Método público para verificar si hubo cambios (usado en el template)
   get hasChanges(): boolean {
     if (!this.originalProductData) return false;
     return this.hasFormChanges();
   }
 
-  // Métodos para manejar la selección en los desplegables
   onFieldChange(fieldName: keyof typeof this.userModifiedFields): void {
     const fieldValue = this.productForm.get(fieldName)?.value;
-    // Solo marcar como modificado si realmente tiene un valor seleccionado
     this.userModifiedFields[fieldName] = fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
   }
 
-  // Método para verificar si se debe mostrar el clear en un campo específico
   shouldShowClear(fieldName: keyof typeof this.userModifiedFields): boolean {
     const fieldValue = this.productForm.get(fieldName)?.value;
     const hasValue = fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
     const wasModified = this.userModifiedFields[fieldName];
-    
-    // Mostrar clear solo si tiene valor Y ha sido modificado por el usuario
     return hasValue && wasModified;
+  }
+
+  private arraysEqual(a: any[], b: any[]): boolean {
+    if (a.length !== b.length) return false;
+    return a.every((val, index) => val === b[index]);
   }
 }

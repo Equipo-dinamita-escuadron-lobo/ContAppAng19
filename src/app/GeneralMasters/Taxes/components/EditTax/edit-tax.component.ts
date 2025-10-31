@@ -130,23 +130,13 @@ export class EditTaxComponent implements OnInit {
       return;
     }
 
-    // Fallback: intentar cargar desde API (aunque puede no estar implementado)
-    if (this.taxId) {
-      this.taxService.getTaxByNumericId(this.taxId).subscribe({
-        next: (tax) => {
-          this.setFormValues(tax);
-        },
-        error: (error) => {
-          console.error('Error al cargar el impuesto desde API:', error);
-          const errorMessage = error?.error?.message || 'No se pudo cargar el impuesto. Por favor, regrese a la lista e intente nuevamente.';
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: errorMessage
-          });
-        }
-      });
-    }
+    // Si no hay datos del estado de navegación, mostrar mensaje de error
+    console.error('No se encontraron datos del impuesto para editar');
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'No se pudieron cargar los datos del impuesto.'
+    });
   }
 
   /**
@@ -226,7 +216,7 @@ export class EditTaxComponent implements OnInit {
         next: (response) => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización Exitosa',
             detail: 'Impuesto actualizado exitosamente',
             life: 3000 // Mantener notificación visible por 3 segundos
           });
@@ -238,9 +228,11 @@ export class EditTaxComponent implements OnInit {
         error: (error) => {
           console.error('Error al actualizar el impuesto:', error);
           const errorMessage = error?.error?.message || 'No se pudo actualizar el impuesto';
+          const isDuplicateError = errorMessage.toLowerCase().includes('ya existe') ||
+                                   errorMessage.toLowerCase().includes('duplicado');
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: isDuplicateError ? 'Registro Duplicado' : 'Error',
             detail: errorMessage
           });
         }

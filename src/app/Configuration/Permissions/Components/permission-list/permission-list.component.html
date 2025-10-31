@@ -19,134 +19,126 @@
       </div>
     </div>
 
-    <!-- Actions Bar -->
+    <!-- Filtros y acciones -->
     <div class="mb-6">
       <div
-        class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4"
+        class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 p-4"
       >
-        <!-- Search -->
-        <div class="w-full sm:w-[30rem]">
-          <p-iconfield iconPosition="left">
-            <p-inputicon>
-              <i class="pi pi-search text-gray-500"></i>
-            </p-inputicon>
-            <input
-              pInputText
-              type="text"
-              (input)="
-                permissionsTable.filterGlobal(
-                  $any($event.target).value,
-                  'contains'
-                )
-              "
-              placeholder="Buscar por perfil..."
-              class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
-            />
-          </p-iconfield>
+        <!-- Selectores -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full lg:w-auto">
+          <!-- Perfil -->
+          <div class="w-full sm:w-[22rem]">
+            <label class="block mb-2 font-semibold">Perfil:</label>
+            <p-dropdown
+              [options]="rolesOptions"
+              [(ngModel)]="selectedRoleName"
+              optionLabel="label"
+              optionValue="value"
+              [showClear]="true"
+              placeholder="Selecciona un perfil"
+              (onChange)="onRoleChange()"
+              class="w-full"
+            ></p-dropdown>
+          </div>
+
+          <!-- Módulo -->
+          <div class="w-full sm:w-[22rem]">
+            <label class="block mb-2 font-semibold">Módulo:</label>
+            <p-dropdown
+              [options]="moduleOptionsForRole"
+              [(ngModel)]="selectedModule"
+              optionLabel="label"
+              optionValue="value"
+              [showClear]="true"
+              placeholder="Selecciona un módulo"
+              (onChange)="onModuleChange()"
+              [disabled]="!selectedRoleName"
+              class="w-full"
+            ></p-dropdown>
+          </div>
         </div>
 
-        <!-- Button -->
-        <div class="flex flex-wrap justify-start sm:justify-end gap-2">
+        <!-- Acciones -->
+        <div class="flex flex-wrap justify-start lg:justify-end gap-2">
           <p-button
             label="Asignar Permisos"
             icon="pi pi-plus"
             (onClick)="assignPermissions()"
             size="small"
-          >
-          </p-button>
+          ></p-button>
+
+          <p-button
+            icon="pi pi-file-pdf"
+            label="Exportar PDF"
+            [disabled]="!selectedRoleName"
+            (onClick)="exportProfilePermissionsToPDF()"
+            styleClass="p-button-outlined"
+            size="small"
+          ></p-button>
+
+          <p-button
+            icon="pi pi-pencil"
+            label="Editar"
+            [disabled]="!selectedRoleName"
+            (onClick)="editSelected()"
+            styleClass="p-button-outlined"
+            size="small"
+          ></p-button>
         </div>
       </div>
     </div>
 
-    <!-- Table -->
-    <p-table
-      #permissionsTable
-      [value]="filteredRolesWithPermissions"
-      [loading]="loading"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[5, 10, 20]"
-      [globalFilterFields]="['role', 'permissions.name']"
-      styleClass="p-datatable-striped font-family-sans custom-table-alignment"
-      [tableStyle]="{ 'min-width': '55rem' }"
-      responsiveLayout="scroll"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th
-            pSortableColumn="role"
-            class="font-semibold text-primary border-b-2 border-primary"
+    <!-- Resultado -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <!-- Estado: cargando -->
+      <div *ngIf="loading" class="text-center py-10 text-neutral-50">
+        <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+        <p class="mt-2 text-primary">Cargando permisos...</p>
+      </div>
+
+      <!-- Estado: sin selección -->
+      <div *ngIf="!loading && !selectedRoleName" class="p-6 text-gray-600">
+        Selecciona un <span class="font-semibold">perfil</span> y luego un
+        <span class="font-semibold">módulo</span> para ver los permisos
+        asignados.
+      </div>
+
+      <!-- Estado: selección sin módulo -->
+      <div
+        *ngIf="!loading && selectedRoleName && !selectedModule"
+        class="p-6 text-gray-600"
+      >
+        Ahora elige un <span class="font-semibold">módulo</span> para
+        <span class="font-semibold">{{ selectedRoleName }}</span
+        >.
+      </div>
+
+      <!-- Estado: con resultados -->
+      <div *ngIf="!loading && selectedRoleName && selectedModule" class="p-6">
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4"
+        >
+          <h3 class="text-lg font-semibold text-[var(--color-primary)]">
+            Permisos de <span class="underline">{{ selectedRoleName }}</span> en
+            módulo
+            <span class="underline">{{ selectedModule }}</span>
+          </h3>
+        </div>
+
+        <div *ngIf="!displayedPermissions?.length" class="text-gray-600">
+          Este perfil no tiene permisos asignados en el módulo seleccionado.
+        </div>
+
+        <ul *ngIf="displayedPermissions?.length" class="space-y-2">
+          <li
+            *ngFor="let perm of displayedPermissions"
+            class="flex items-center gap-2"
           >
-            Perfil
-            <p-sortIcon field="role"></p-sortIcon>
-          </th>
-          <th class="font-semibold text-primary border-b-2 border-primary">
-            Permisos
-          </th>
-          <th
-            class="font-semibold text-primary border-b-2 border-primary text-center"
-            style="width: 150px"
-          >
-            Acciones
-          </th>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="body" let-role>
-        <tr class="text-neutral-20">
-          <td class="py-3 align-top">
-            {{ role.role }}
-          </td>
-          <td class="py-3 align-top">
-            <div *ngFor="let group of role.groupedPermissions" class="mb-3">
-              <!-- Módulo con negrita menos intensa -->
-              <h4 class="module-title">
-                {{ group.module }}
-              </h4>
-
-              <!-- Permisos alineados con el módulo -->
-              <ul class="permissions-list">
-                <li *ngFor="let perm of group.permissions">
-                  {{ perm.name }}
-                </li>
-              </ul>
-            </div>
-          </td>
-
-          <td class="py-3 text-center align-top">
-            <p-button
-              icon="pi pi-pencil"
-              pTooltip="Editar Permisos"
-              tooltipPosition="top"
-              (onClick)="editPermisos(role)"
-              styleClass="p-button-rounded p-button-text text-complementary-green mr-2"
-            ></p-button>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td
-            colspan="3"
-            class="text-center py-6 font-family-sans text-neutral-50"
-          >
-            No hay permisos asignados.
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <td
-            colspan="3"
-            class="text-center py-6 font-family-sans text-neutral-50"
-          >
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p class="mt-2 text-primary">Cargando permisos...</p>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+            <i class="pi pi-check-circle text-[var(--color-secondary)]"></i>
+            <span>{{ perm.name }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 </div>

@@ -4,12 +4,18 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Tax, TaxList, TaxCreateRequest, TaxUpdateRequest } from '../models/Tax';
 
-interface Page<T> {
+export interface PageResponse<T> {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  page?: {
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  };
 }
 
 @Injectable({
@@ -19,17 +25,6 @@ export class TaxService {
   private readonly http = inject(HttpClient);
   
   private readonly apiURL = environment.API_URL + 'tax/';
-
-  /**
-   * Obtiene la lista de impuestos asociados a una empresa
-   *
-   * @param enterpriseId - El ID de la empresa para la que se desean obtener los impuestos.
-   * @returns Un observable que emite la lista de impuestos de tipo `TaxList[]`.
-   */
-  getTaxes(enterpriseId: string): Observable<TaxList[]> {
-    const url = this.apiURL + 'taxes/' + enterpriseId;
-    return this.http.get<TaxList[]>(url);
-  }
 
   /**
    * Obtiene la lista paginada de impuestos asociados a una empresa específica con opciones de búsqueda y ordenamiento.
@@ -42,12 +37,12 @@ export class TaxService {
    * @param search - Término de búsqueda (opcional).
    * @returns Un observable que emite una página de impuestos.
    */
-  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'description', sortOrder = 'asc', search = ''): Observable<Page<Tax>> {
+  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'description', sortOrder = 'asc', search = ''): Observable<PageResponse<TaxList>> {
     let url = `${this.apiURL}taxes/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
     if (search && search.trim().length > 0) {
       url += `&search=${encodeURIComponent(search.trim())}`;
     }
-    return this.http.get<Page<Tax>>(url);
+    return this.http.get<PageResponse<TaxList>>(url);
   }
 
   /**
@@ -80,17 +75,6 @@ export class TaxService {
    */
   getTaxById(code: string, enterpriseId: string): Observable<Tax> {
     const url = this.apiURL + code + '/' + enterpriseId;
-    return this.http.get<Tax>(url);
-  }
-
-  /**
-   * Obtiene un impuesto específico utilizando su ID numérico.
-   *
-   * @param id - El ID numérico del impuesto que se desea obtener.
-   * @returns Un observable que emite el impuesto correspondiente de tipo `Tax`.
-   */
-  getTaxByNumericId(id: number): Observable<Tax> {
-    const url = this.apiURL + id;
     return this.http.get<Tax>(url);
   }
 

@@ -179,6 +179,11 @@ export const navbarData: INavbarData[] = [
             label: 'Castigos de cartera',
           },
           {
+            routeLink: '/financial/wallet/invoices',
+            icon: 'description',
+            label: 'Facturas pendientes',
+          },
+          {
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',

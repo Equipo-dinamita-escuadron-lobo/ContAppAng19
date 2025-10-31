@@ -1,5 +1,5 @@
 <p-dialog
-  [header]="getModalTitle()"
+  [header]="thirdValidationMessagesService.getModalTitle(thirdData)"
   [(visible)]="visible"
   [modal]="true"
   [style]="{ width: '90vw', maxWidth: '1000px' }"
@@ -17,7 +17,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
           <div class="flex flex-col gap-2">
             <app-form-field-label label="Tipo de ID"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getTypeId() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getTypeId(thirdData.typeId) }}</span>
           </div>
           
           <div class="flex flex-col gap-2">
@@ -29,15 +29,15 @@
             <app-form-field-label label="Estado"></app-form-field-label>
             <div>
               <p-tag 
-                [value]="getStateText()" 
-                [severity]="getStateSeverity()">
+                [value]="thirdValidationMessagesService.getStateText(thirdData.state)" 
+                [severity]="thirdValidationMessagesService.getStateSeverity(thirdData.state)">
               </p-tag>
             </div>
           </div>
           
           <div class="flex flex-col gap-2 md:col-span-3">
             <app-form-field-label label="Tipos de Tercero"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getThirdTypesNames() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getThirdTypesNames(thirdData.thirdTypes) }}</span>
           </div>
         </div>
       </app-form-panel>
@@ -50,34 +50,34 @@
             <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdData.idNumber }}</span>
           </div>
 
-          <div class="flex flex-col gap-2" *ngIf="isJuridicPerson()">
+          <div class="flex flex-col gap-2" *ngIf="thirdValidationMessagesService.isJuridicPerson(thirdData.personType)">
             <app-form-field-label label="Dígito de Verificación (DV)"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getVerificationNumber() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getVerificationNumber(thirdData.verificationNumber) }}</span>
           </div>
         </div>
       </app-form-panel>
 
       <!-- Panel: Información Personal (Persona Natural) -->
-      <app-form-panel title="Información Personal" *ngIf="isNaturalPerson()">
+      <app-form-panel title="Información Personal" *ngIf="thirdValidationMessagesService.isNaturalPerson(thirdData.personType)">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
           <div class="flex flex-col gap-2">
             <app-form-field-label label="Nombre Completo"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getFullName() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getFullName(thirdData) }}</span>
           </div>
 
           <div class="flex flex-col gap-2">
             <app-form-field-label label="Género"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getGender() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getGender(thirdData.gender) }}</span>
           </div>
         </div>
       </app-form-panel>
 
       <!-- Panel: Información de Empresa (Persona Jurídica) -->
-      <app-form-panel title="Información de Empresa" *ngIf="isJuridicPerson()">
+      <app-form-panel title="Información de Empresa" *ngIf="thirdValidationMessagesService.isJuridicPerson(thirdData.personType)">
         <div class="grid grid-cols-1 gap-12">
           <div class="flex flex-col gap-2">
             <app-form-field-label label="Razón Social"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getSocialReason() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getSocialReason(thirdData.socialReason) }}</span>
           </div>
         </div>
       </app-form-panel>
@@ -87,22 +87,22 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
           <div class="flex flex-col gap-2">
             <app-form-field-label label="País"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getCountry() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getCountry(thirdData.country) }}</span>
           </div>
 
           <div class="flex flex-col gap-2">
             <app-form-field-label label="Departamento"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getDepartment() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getDepartment(thirdData.province) }}</span>
           </div>
 
           <div class="flex flex-col gap-2">
             <app-form-field-label label="Ciudad"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getCity() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getCity(thirdData.city) }}</span>
           </div>
 
           <div class="flex flex-col gap-2">
             <app-form-field-label label="Dirección"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getAddress() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getAddress(thirdData.address) }}</span>
           </div>
         </div>
       </app-form-panel>
@@ -112,12 +112,12 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
           <div class="flex flex-col gap-2">
             <app-form-field-label label="Teléfono"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getPhoneNumber() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getPhoneNumber(thirdData.phoneNumber) }}</span>
           </div>
 
           <div class="flex flex-col gap-2">
             <app-form-field-label label="Correo Electrónico"></app-form-field-label>
-            <span class="font-family-sans font-normal text-base text-neutral-20">{{ getEmail() }}</span>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getEmail(thirdData.email) }}</span>
           </div>
         </div>
       </app-form-panel>

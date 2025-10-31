@@ -120,7 +120,7 @@ export class CreateTaxComponent implements OnInit {
         next: (response) => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro Exitoso',
             detail: 'Impuesto creado exitosamente',
             life: 3000
           });
@@ -131,9 +131,11 @@ export class CreateTaxComponent implements OnInit {
         error: (error) => {
           console.error('Error al crear el impuesto:', error);
           const errorMessage = error?.error?.message || 'No se pudo crear el impuesto';
+          const isDuplicateError = errorMessage.toLowerCase().includes('ya existe') ||
+                                   errorMessage.toLowerCase().includes('duplicado');
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: isDuplicateError ? 'Registro Duplicado' : 'Error',
             detail: errorMessage
           });
         }

@@ -287,7 +287,22 @@ body {
 }
 
 .input-base {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900 transition duration-150 ease-in-out;
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 transition duration-150 ease-in-out;
+}
+
+.input-base:focus {
+  --tw-ring-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+
+.input-base::placeholder {
+  color: var(--color-neutral-40);
+}
+
+.input-base[readonly]::placeholder,
+.input-base:disabled::placeholder {
+  color: var(--color-neutral-40);
 }
 
 .error-message {
@@ -296,7 +311,8 @@ body {
 }
 
 .floating-label {
-  @apply absolute left-6 -top-12 bg-transparent rounded-md px-1.5 text-blue-950;
+  @apply absolute left-6 -top-12 bg-transparent rounded-md px-1.5;
+  color: var(--color-primary);
 }
 
 .delete-button {
@@ -310,15 +326,20 @@ body {
 .select-base {
   /* Estilo base para ng-select similar a input-base */
   @apply px-3 py-2 border border-gray-300 rounded-md shadow-sm
-    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900
-    transition duration-150 ease-in-out;
+    focus:outline-none focus:ring-1 transition duration-150 ease-in-out;
+}
+
+.select-base:focus {
+  --tw-ring-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .select-option {
   @apply py-2 px-4 bg-white text-gray-800 cursor-pointer transition-all duration-150 rounded-md;
 
   &:hover {
-    @apply bg-blue-950 text-white;
+    background-color: var(--color-primary);
+    @apply text-white;
   }
 }
 
@@ -329,8 +350,12 @@ body {
 /* Estilo base del dropdown de PrimeNG */
 .dropdown-custom {
   @apply w-full max-h-40 px-3 py-2 border border-gray-300 rounded-md shadow-sm
-    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900
-    transition duration-150 ease-in-out text-gray-800 font-normal;
+    focus:outline-none focus:ring-1 transition duration-150 ease-in-out text-gray-800 font-normal;
+}
+
+.dropdown-custom:focus {
+  --tw-ring-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 /* Para el contenido de la lista desplegable */
@@ -345,7 +370,11 @@ body {
 
 /* Items individuales */
 ::ng-deep .p-dropdown-item {
-  @apply px-4 py-2 text-sm text-gray-800 hover:bg-blue-900 hover:text-white cursor-pointer;
+  @apply px-4 py-2 text-sm text-gray-800 hover:text-white cursor-pointer;
+}
+
+::ng-deep .p-dropdown-item:hover {
+  background-color: var(--color-primary);
 }
 
 /* Icono del dropdown */
@@ -354,11 +383,13 @@ body {
 }
 
 .section-title {
-  @apply text-xl font-semibold  text-blue-950 mb-6;
+  @apply text-xl font-semibold mb-6;
+  color: var(--color-primary);
 }
 
 .label-title {
-  @apply block mb-1 text-sm font-sans text-blue-950;
+  @apply block mb-1 text-sm font-sans;
+  color: var(--color-primary);
 }
 
 /* --- Estilos para el panel desplegable y las opciones --- */

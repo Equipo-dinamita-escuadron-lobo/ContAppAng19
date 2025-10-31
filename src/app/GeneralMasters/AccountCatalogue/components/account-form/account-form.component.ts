@@ -62,9 +62,9 @@ export class AccountFormComponent implements OnInit {
  * @param fb Constructor de formularios reactivos.
  */
   constructor(
-    private _accountService: ChartAccountService,
-    private fb: FormBuilder, 
-    private localStorage: LocalStorageMethods) {
+    private readonly _accountService: ChartAccountService,
+    private readonly fb: FormBuilder,
+    private readonly localStorage: LocalStorageMethods) {
     this.formNewAccount = this.fb.group({
       code: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
       name: ['', [Validators.required, Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1]+[a-zA-ZÀ-ÿ\u00f1\u00d1\\d,.()\\/\\-+&% ]*$')]],

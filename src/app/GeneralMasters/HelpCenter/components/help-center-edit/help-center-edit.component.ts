@@ -38,11 +38,11 @@ export class HelpCenterEditComponent implements OnInit {
   initialFormValue: any = null;
 
   constructor(
-    private fb: FormBuilder,
-    private service: HelpCenterServiceService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private messageService: MessageService
+    private readonly fb: FormBuilder,
+    private readonly service: HelpCenterServiceService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly messageService: MessageService
   ) {
     this.form = this.fb.group({
       id: [null],

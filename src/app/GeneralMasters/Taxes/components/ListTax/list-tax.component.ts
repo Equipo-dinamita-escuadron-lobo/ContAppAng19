@@ -15,6 +15,7 @@ import { TagModule } from 'primeng/tag';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TaxList } from '../../models/Tax';
 import { TaxService } from '../../services/tax.service';
+import { TaxValidationMessagesService } from '../../services/tax-validation-messages.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 
@@ -44,6 +45,7 @@ export class ListTaxComponent implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly chartAccountService = inject(ChartAccountService);
+  public readonly taxValidationMessagesService = inject(TaxValidationMessagesService);
 
   taxes: TaxList[] = [];
   totalRecords: number = 0;
@@ -127,7 +129,7 @@ export class ListTaxComponent implements OnInit {
     }
 
     this.taxService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page: any) => {
+      next: (page) => {
         const content: any[] = page.content || [];
         this.taxes = content.map((tax: any) => ({
           ...tax,
@@ -135,7 +137,7 @@ export class ListTaxComponent implements OnInit {
           salesTaxName: this.getAccountName(tax.salesTax),
           purchaseTaxName: this.getAccountName(tax.purchaseTax)
         }));
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || page.totalElements || 0;
         this.loading = false;
       },
       error: (error) => {
@@ -158,7 +160,7 @@ export class ListTaxComponent implements OnInit {
 
     this.loading = true;
     this.taxService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page: any) => {
+      next: (page) => {
         const content: any[] = page.content || [];
         this.taxes = content.map((tax: any) => ({
           ...tax,
@@ -166,7 +168,7 @@ export class ListTaxComponent implements OnInit {
           salesTaxName: this.getAccountName(tax.salesTax),
           purchaseTaxName: this.getAccountName(tax.purchaseTax)
         }));
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || page.totalElements || 0;
         this.loading = false;
       },
       error: (error) => {
@@ -231,7 +233,7 @@ export class ListTaxComponent implements OnInit {
           next: () => {
             this.messageService.add({
               severity: 'success',
-              summary: 'Éxito',
+              summary: 'Eliminado',
               detail: 'Impuesto eliminado exitosamente'
             });
             this.reloadCurrentPage(); // Recargar la página actual
@@ -283,26 +285,5 @@ export class ListTaxComponent implements OnInit {
    */
   formatPercentage(value: number): string {
     return `${value.toFixed(2)}%`;
-  }
-
-  /**
-   * Obtiene la severidad del tag de estado
-   */
-  getStateSeverity(status: boolean): string {
-    return status ? 'success' : 'danger';
-  }
-
-  /**
-   * Formatea el estado para mostrar
-   */
-  formatState(status: boolean): string {
-    return status ? 'Activo' : 'Inactivo';
-  }
-
-  /**
-   * Verifica si el estado está activo
-   */
-  isActive(status: boolean): boolean {
-    return status === true;
   }
 }

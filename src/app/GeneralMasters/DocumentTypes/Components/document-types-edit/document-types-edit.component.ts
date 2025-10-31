@@ -30,12 +30,12 @@ export class DocumentTypesEditComponent implements OnInit {
   initialValue: any = {};
 
   constructor(
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private messageService: MessageService,
-    private service: DocumentTypesServiceService,
-    private classesService: ClassesOfDocumentsServiceService
+    private readonly fb: FormBuilder,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: DocumentTypesServiceService,
+    private readonly classesService: ClassesOfDocumentsServiceService
   ) {
     this.form = this.fb.group({
       prefix: ['', [Validators.required, Validators.maxLength(10), Validators.pattern('^[a-zA-Z0-9]+$')]],

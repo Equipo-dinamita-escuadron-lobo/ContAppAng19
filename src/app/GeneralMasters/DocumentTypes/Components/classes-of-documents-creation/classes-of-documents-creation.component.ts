@@ -21,10 +21,10 @@ export class ClassesOfDocumentsCreationComponent {
   form: FormGroup;
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private messageService: MessageService,
-    private service: ClassesOfDocumentsServiceService,
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: ClassesOfDocumentsServiceService,
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required]],

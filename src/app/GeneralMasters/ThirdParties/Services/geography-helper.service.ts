@@ -21,7 +21,7 @@ export interface SelectOption {
 })
 export class GeographyHelperService {
 
-  constructor(private geographyService: GeographyService) { }
+  constructor(private readonly geographyService: GeographyService) { }
 
   /**
    * Carga los países y los transforma en opciones para select

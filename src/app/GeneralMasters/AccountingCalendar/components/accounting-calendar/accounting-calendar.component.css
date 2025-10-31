@@ -51,10 +51,11 @@
   border-top: none;
   border-radius: 0 0 8px 8px;
   padding: 1.5rem;
+  font-family: var(--font-family-sans);
 }
 
 :host ::ng-deep .info-panel .p-panel-title {
-  font-family: var(--font-family-titillium);
+  font-family: var(--font-family-sans);
   font-weight: 600;
   font-size: 1.1rem;
 }
@@ -82,6 +83,23 @@
 /* Estilos para el icono de estado cerrado */
 .status-closed-icon {
   color: var(--color-notification-success-title);
+}
+
+/* Estilos para el selector de años */
+:host ::ng-deep .p-select {
+  font-family: var(--font-family-sans);
+}
+
+:host ::ng-deep .p-select .p-select-label {
+  font-family: var(--font-family-sans);
+}
+
+:host ::ng-deep .p-select .p-select-item {
+  font-family: var(--font-family-sans);
+}
+
+:host ::ng-deep .p-select .p-select-overlay .p-select-item {
+  font-family: var(--font-family-sans);
 }
 
 /* Estilos para fuentes del sistema */

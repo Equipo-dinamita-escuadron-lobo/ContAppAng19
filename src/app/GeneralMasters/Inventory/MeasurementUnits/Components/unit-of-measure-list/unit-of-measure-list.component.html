@@ -4,7 +4,7 @@
   <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
 
     <!-- 1. CABECERA: Título y Botón de Crear -->
-    <div class="flex justify-between items-start mb-12">
+    <div class="flex justify-between items-start mb-40">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
         <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
@@ -16,7 +16,7 @@
       </div>
 
       <!-- Botones de acción -->
-      <div class="flex gap-3">
+      <div class="flex gap-3">        
         <p-button
           label="Crear"
           icon="pi pi-plus"
@@ -24,34 +24,44 @@
           styleClass="p-button-primary"
         >
         </p-button>
+        <p-button
+          icon="pi pi-arrow-left"
+          (click)="goBack()"
+          styleClass="p-button-text p-button-secondary"
+        >
+        </p-button>
       </div>
     </div>
 
     <!-- 2. BARRA DE BÚSQUEDA: Con el estilo minimalista -->
-    <div class="mb-16 w-1/2 sm:w-1/3">
-      <p-iconfield iconPosition="left">
-        <p-inputicon>
-          <i class="pi pi-search text-gray-500"></i>
-        </p-inputicon>
-        <input
-          pInputText
-          type="text"
-          #filterInput
-          (input)="unitsTable.filterGlobal(filterInput.value, 'contains')"
-          placeholder="Buscar por nombre, abreviatura, descripción..."
-          class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
-        />
-      </p-iconfield>
+    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+      <div class="w-full sm:w-[30rem]">
+        <p-iconfield iconPosition="left">
+          <p-inputicon>
+            <i class="pi pi-search text-gray-500"></i>
+          </p-inputicon>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Buscar unidad (nombre/abreviatura)..."
+            class="w-full font-family-sans font-normal text-sm placeholder-neutral-400 text-inherit focus:text-primary bg-transparent outline-none"
+          />
+        </p-iconfield>
+      </div>
     </div>
 
     <!-- 3. TABLA DE UNIDADES DE MEDIDA: Estilizada para ser coherente con el diseño -->
     <p-table
       #unitsTable
       [value]="unitOfMeasures"
+      [lazy]="true"
+      (onLazyLoad)="loadUnitsLazy($event)"
       [paginator]="true"
-      [rows]="10"
+      [rows]="currentSize"
       [rowsPerPageOptions]="[5, 10, 20]"
-      [globalFilterFields]="['name', 'abbreviation', 'description']"
+      [totalRecords]="totalRecords"
       styleClass="p-datatable-striped font-family-sans"
       [tableStyle]="{ 'min-width': '50rem' }"
       responsiveLayout="scroll"
@@ -59,12 +69,6 @@
       <ng-template pTemplate="header">
         <tr>
           <!-- Cabeceras de tabla con el estilo de la guía -->
-          <th
-            pSortableColumn="id"
-            class="font-semibold text-primary border-b-2 border-primary"
-          >
-            ID <p-sortIcon field="id"></p-sortIcon>
-          </th>
           <th
             pSortableColumn="name"
             class="font-semibold text-primary border-b-2 border-primary"
@@ -78,10 +82,10 @@
             Abreviatura <p-sortIcon field="abbreviation"></p-sortIcon>
           </th>
           <th
-            pSortableColumn="description"
+            scope="col"
             class="font-semibold text-primary border-b-2 border-primary"
           >
-            Descripción <p-sortIcon field="description"></p-sortIcon>
+            Descripción
           </th>
           <th
             class="font-semibold text-primary border-b-2 border-primary text-center"
@@ -98,12 +102,11 @@
 
       <ng-template pTemplate="body" let-unit>
         <tr>
-          <td class="py-3">{{ unit.id }}</td>
           <td class="py-3">{{ unit.name }}</td>
           <td class="py-3">{{ unit.abbreviation }}</td>
           <td class="py-3">{{ unit.description }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="formatState(unit.state)" [severity]="getStateSeverity(unit.state)">
+            <p-tag [value]="unit.state ? 'Activo' : 'Inactivo'" [severity]="unit.state ? 'success' : 'danger'">
             </p-tag>
           </td>
           <td class="py-3 text-center">
@@ -126,7 +129,7 @@
               <p-toggleSwitch
                 [(ngModel)]="unit.state"
                 (onChange)="changeUnitState(unit)"
-                pTooltip="Cambiar Estado"
+                [pTooltip]="unit.state ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"
@@ -139,7 +142,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td
-            colspan="6"
+            colspan="5"
             class="text-center py-6 font-family-sans text-neutral-50"
           >
             No se encontraron unidades de medida.
@@ -150,7 +153,7 @@
       <ng-template pTemplate="loadingbody">
         <tr>
           <td
-            colspan="6"
+            colspan="5"
             class="text-center py-6 font-family-sans text-neutral-50"
           >
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>

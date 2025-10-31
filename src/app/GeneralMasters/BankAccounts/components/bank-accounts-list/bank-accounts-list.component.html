@@ -40,7 +40,7 @@
                         type="text"
                         [(ngModel)]="searchTerm"
                         (input)="onSearch()"
-                        placeholder="Buscar cuenta (número, banco)..."
+                        placeholder="Buscar número de cuenta..."
                         class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
                     />
                 </p-iconfield>
@@ -48,15 +48,17 @@
         </div>
 
         <!-- Bank Accounts Table -->
-        <p-table 
-            [value]="filteredBankAccounts" 
-            [paginator]="true" 
+        <p-table
+            [value]="bankAccounts"
+            [paginator]="true"
             [rows]="pageSize"
             [totalRecords]="totalRecords"
             [loading]="loading"
+            [lazy]="true"
             [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
-            [globalFilterFields]="['accountNumber', 'bank.nombre', 'bank.codigo', 'accountType', 'accountingAccount']"
+            (onSort)="onSort($event)"
+            (onPage)="onPage($event)"
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}">
             
@@ -66,9 +68,8 @@
                         Número de Cuenta
                         <p-sortIcon field="accountNumber"></p-sortIcon>
                     </th>
-                    <th pSortableColumn="bank.nombre" class="font-semibold text-primary border-b-2 border-primary">
+                    <th class="font-semibold text-primary border-b-2 border-primary">
                         Banco
-                        <p-sortIcon field="bank.nombre"></p-sortIcon>
                     </th>
                     <th class="font-semibold text-primary border-b-2 border-primary">
                         Tipo de Cuenta
@@ -86,15 +87,15 @@
                     <td class="py-3">{{ account.accountNumber }}</td>
                     <td class="py-3">
                         <div class="flex flex-col">
-                            <span class="font-medium">{{ account.bank?.codigo }} - {{ account.bank?.nombre }}</span>
+                            <span class="font-medium">{{ account.bank?.code }} - {{ account.bank?.name }}</span>
                         </div>
                     </td>
-                    <td class="py-3">{{ getAccountTypeDisplay(account.accountType) }}</td>
-                    <td class="py-3">{{ getAccountingAccountDisplay(account.cuentaContable) }}</td>
+                    <td class="py-3">{{ bankAccountsPresentationService.getAccountTypeDisplay(account.accountType) }}</td>
+                    <td class="py-3">{{ bankAccountsPresentationService.getAccountingAccountDisplay(account.accountingAccountId, accountingAccountsMap) }}</td>
                     <td class="py-3 text-center">
                         <p-tag 
-                            [value]="account.status ? 'Activo' : 'Inactivo'" 
-                            [severity]="account.status ? 'success' : 'danger'">
+                            [value]="bankAccountsPresentationService.formatState(account.status)" 
+                            [severity]="bankAccountsPresentationService.getStateSeverity(account.status)">
                         </p-tag>
                     </td>
                     <td class="py-3 text-center">
@@ -114,9 +115,9 @@
                                 styleClass="p-button-rounded p-button-text text-secondary">
                             </p-button>
                             <p-toggleSwitch
-                                [ngModel]="account.status"
+                                [ngModel]="bankAccountsPresentationService.isActive(account.status)"
                                 (onChange)="toggleAccountStatus(account, $event.checked)"
-                                [pTooltip]="account.status ? 'Activo' : 'Inactivo'"
+                                [pTooltip]="bankAccountsPresentationService.formatState(account.status)"
                                 tooltipPosition="top"
                                 styleClass="p-toggleSwitch-sm"
                                 [style]="{'transform': 'scale(0.8)'}">

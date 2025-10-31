@@ -2,17 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
 
-// --- Importaciones Standalone y de PrimeNG ---
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea';
 
-import { ProductType } from '../../Models/ProductType';
 import { ProductTypeService } from '../../Services/product-type.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 
@@ -25,7 +22,7 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     RouterModule,
     CardModule,
     InputTextModule,
-    InputTextarea,
+    TextareaModule,
     ButtonModule,
     ToastModule
   ],
@@ -35,16 +32,15 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
 export class ProductTypeCreationComponent implements OnInit {
   productTypeForm: FormGroup;
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string | null = null;
   formSubmitAttempt = false;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private productTypeService: ProductTypeService,
-    private router: Router,
-    private messageService: MessageService
+    private readonly formBuilder: FormBuilder,
+    private readonly productTypeService: ProductTypeService,
+    private readonly router: Router,
+    private readonly messageService: MessageService
   ) {
-    // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     this.productTypeForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
       description: ['', [Validators.required, Validators.maxLength(500)]]
@@ -55,41 +51,61 @@ export class ProductTypeCreationComponent implements OnInit {
     this.entData = this.localStorageMethods.getIdEnterprise();
     if (!this.entData) {
       console.error("No se encontró el ID de la empresa. No se pueden cargar los datos del formulario.");
-      Swal.fire('Error', 'No se pudo identificar la empresa. Vuelva a iniciar sesión.', 'error');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo identificar la empresa. Vuelva a iniciar sesión.'
+      });
     }
   }
 
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.productTypeForm.invalid) {
-      Swal.fire('Formulario Inválido', 'Por favor, revise todos los campos requeridos.', 'warning');
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Por favor, complete todos los campos requeridos.'
+      });
       // Marcar todos los campos como "tocados" para mostrar los errores
       this.productTypeForm.markAllAsTouched();
+      return;
+    }
+
+    if (!this.entData) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo identificar la empresa. Vuelva a iniciar sesión.'
+      });
       return;
     }
 
     const formData = { ...this.productTypeForm.value };
     formData.enterpriseId = this.entData;
 
-    console.log('Datos del formulario:', formData);
-
     this.productTypeService.createProductType(formData).subscribe({
       next: () => {
-        Swal.fire({
-          title: 'Creación exitosa',
-          text: 'Se ha creado el tipo de producto con éxito.',
-          icon: 'success',
-          confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Registro Exitoso',
+          detail: 'El tipo de producto ha sido creado exitosamente.',
+          life: 3000
         });
-        this.router.navigate(['/gen-masters/inventory/product-types/list']); // Redirigir a la lista
+        setTimeout(() => {
+          this.router.navigate(['/gen-masters/inventory/product-types/list']);
+        }, 1500);
       },
-      error: (err: any) => {
-        console.error('Error al crear el tipo de producto:', err);
-        Swal.fire({
-          title: 'Error',
-          text: 'Ha ocurrido un error al crear el tipo de producto.',
-          icon: 'error',
-          confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
+      error: (error) => {
+        const message = error.error?.message || 'Ha ocurrido un error al crear el tipo de producto. Por favor, inténtelo de nuevo.';
+        let summary = 'Error';
+        if (message.includes('Ya existe')) {
+          summary = 'Registro Duplicado';
+        }
+        this.messageService.add({
+          severity: 'error',
+          summary: summary,
+          detail: message
         });
       }
     });
@@ -97,5 +113,9 @@ export class ProductTypeCreationComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/gen-masters/inventory/product-types/list']);
+  }
+
+  get isSubmitDisabled(): boolean {
+    return this.productTypeForm.invalid;
   }
 }

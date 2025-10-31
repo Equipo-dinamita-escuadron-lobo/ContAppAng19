@@ -4,6 +4,20 @@ import { Observable, catchError, map, throwError } from 'rxjs';
 import { Third } from '../models/Third';
 import { environment } from '../../../../environments/environment';
 
+export interface PageResponse<T> {
+  content: T[];
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  page?: {
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -12,15 +26,13 @@ export class ThirdService {
   private infoThirdRUT: string |null=null;
 
   /** URL base para las operaciones con terceros */
-  private thirdApiUrl = environment.API_URL + 'thirds/'
-  //Cambiar para desarrollo local
-  //private thirdApiUrl = 'http://localhost:8081/api/thirds/'
+  private readonly thirdApiUrl = environment.API_URL + 'thirds/'
 
   /**
    * Constructor del servicio
    * @param http Cliente HTTP para realizar peticiones
    */
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   /**
    * Establece la información del RUT
@@ -51,10 +63,8 @@ export class ThirdService {
    * @returns Observable con el tercero creado
    */
   createThird(Third:Third): Observable<Third>{
-    console.log('Request Body:', Third); 
     return this.http.post<Third>(this.thirdApiUrl,Third).pipe(
       catchError((error) => {
-        console.error('Error occurred: ', error);
         return throwError(() => error);
       })
     );
@@ -70,8 +80,6 @@ export class ThirdService {
     formData.append('file', file, file.name);
     return this.http.post<any>(this.thirdApiUrl+"content-PDF-RUT", formData).pipe(
       catchError((error) => {
-        console.error('Error occurred: ', error);
-
         return throwError(() => error);
       })
     );
@@ -83,10 +91,9 @@ export class ThirdService {
    * @returns Observable con el tercero actualizado
    */
   UpdateThird(Third:object): Observable<Third>{
-    console.log('Request Body:', Third); 
+
     return this.http.post<Third>(this.thirdApiUrl+"update",Third).pipe(
       catchError((error) => {
-        console.error('Error occurred: ', error);
         return throwError(() => error);
       })
     );
@@ -102,7 +109,7 @@ export class ThirdService {
    * @param search Término de búsqueda (opcional)
    * @returns Observable con la respuesta paginada del backend
    */
-  getThirdParties(entId: String, numPage: number = 0, size?: number, sortField: string = "names", sortOrder: string = "asc", search?: string): Observable<any> {
+  getThirdParties(entId: String, numPage: number = 0, size?: number, sortField: string = "names", sortOrder: string = "asc", search?: string): Observable<PageResponse<Third>> {
     let params = new HttpParams()
       .set('entId', entId.toString())
       .set('numPage', numPage.toString())
@@ -117,7 +124,7 @@ export class ThirdService {
       params = params.set('search', search.trim());
     }
 
-    return this.http.get<any>(this.thirdApiUrl, { params });
+    return this.http.get<PageResponse<Third>>(this.thirdApiUrl, { params });
   }
 
   /**
@@ -125,8 +132,8 @@ export class ThirdService {
    * @param entId ID de la empresa
    * @returns Observable con la lista de terceros
    */
-  getThirdList(entId: String): Observable<Third[]> {  
-    return this.getThirdParties(entId, 0).pipe(
+  getThirdList(entId: String): Observable<Third[]> {
+    return this.getThirdParties(entId).pipe(
       map(response => response.content as Third[])
     );
   }
@@ -142,24 +149,16 @@ export class ThirdService {
   }
 
   /**
-   * Verifica si existe un tercero con el ID y empresa especificados
-   * @param thId ID del tercero
-   * @param entId ID de la empresa
-   * @returns Observable con el resultado de la verificación
-   */
-  existThird(thId:number, entId:String): Observable<boolean>{
-    return this.http.get<boolean>(`${this.thirdApiUrl}existBy?idNumber=${thId}&entId=${entId}`);
-  }
-
-  /**
    * Cambia el estado de un tercero
    * @param thId ID del tercero
+   * @param entId ID de la empresa
    * @returns Observable con el resultado del cambio de estado
    */
-  changeThirdPartieState(thId:number): Observable<Boolean>{
+  changeThirdPartieState(thId:number, entId: string): Observable<Third>{
     let params = new HttpParams()
-    .set('thId', thId);
-    return this.http.put<any>(this.thirdApiUrl,null,{params})
+    .set('thId', thId)
+    .set('entId', entId);
+    return this.http.put<Third>(this.thirdApiUrl,null,{params})
   }
 
   /**
@@ -174,7 +173,6 @@ export class ThirdService {
       .set('entId', entId);
     return this.http.delete<boolean>(this.thirdApiUrl + 'delete', { params }).pipe(
       catchError((error) => {
-        console.error('Error al eliminar tercero:', error);
         return throwError(() => error);
       })
     );
@@ -192,7 +190,6 @@ export class ThirdService {
       responseType: 'blob'
     }).pipe(
       catchError((error) => {
-        console.error('Error al descargar la plantilla:', error);
         return throwError(() => new Error('Error al descargar la plantilla de terceros'));
       })
     );
@@ -229,7 +226,6 @@ export class ThirdService {
       observe: 'response'
     }).pipe(
       catchError((error) => {
-        console.error('Error al exportar terceros:', error);
         return throwError(() => error);
       })
     );
@@ -248,18 +244,45 @@ export class ThirdService {
     let params = new HttpParams().set('entId', entId);
 
     const url = this.thirdApiUrl + 'import/excel';
-    console.log('URL de importación:', url);
-    console.log('Parámetros:', { entId });
-    console.log('Archivo:', file.name);
 
     return this.http.post(url, formData, {
       params,
       observe: 'response'
     }).pipe(
       catchError((error) => {
-        console.error('Error al importar terceros:', error);
-        console.error('Status:', error.status);
-        console.error('Error completo:', JSON.stringify(error, null, 2));
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene una lista de terceros activos
+   * @param entId ID de la empresa
+   * @returns Observable con la lista de terceros activos
+   */
+  getActiveThirds(entId: string): Observable<any> {
+    const params = new HttpParams().set('entId', entId);
+
+    return this.http.get<any>(`${this.thirdApiUrl}findAllActive`, { params }).pipe(
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Cambia el estado de todos los terceros de una empresa de forma masiva
+   * @param entId ID de la empresa
+   * @param newState Nuevo estado para todos los terceros
+   * @returns Observable con la respuesta del cambio masivo
+   */
+  changeAllThirdsState(entId: string, newState: boolean): Observable<any> {
+    let params = new HttpParams()
+      .set('entId', entId)
+      .set('newState', newState.toString());
+
+    return this.http.patch<any>(`${this.thirdApiUrl}allState`, null, { params }).pipe(
+      catchError((error) => {
         return throwError(() => error);
       })
     );

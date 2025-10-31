@@ -22,30 +22,23 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Nombre</label>
+          <label class="label-required font-semibold text-primary">Nombre</label>
           <input pInputText formControlName="name" placeholder="Ej: Efectivo, Transferencia bancaria" class="w-full md:w-2/3" maxlength="100" />
-          <small class="text-red-500" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido (máx. 100 caracteres)</small>
+          <small class="error-message" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido (máx. 100 caracteres)</small>
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary flex items-center gap-2">
-            Cuenta Contable
-            <i *ngIf="form.get('accountingAccount')?.disabled"
-               class="pi pi-lock text-gray-500"
-               pTooltip="La cuenta contable no se puede modificar después de crear el método de pago"
-               tooltipPosition="top"></i>
-          </label>
+          <label class="label-required font-semibold text-primary">Cuenta Contable</label>
           <p-select
             [options]="accountingAccountsOptions"
             formControlName="accountingAccount"
             optionValue="value"
             placeholder="Seleccione una cuenta"
             [filter]="true"
-            [showClear]="false"
-            class="w-full md:w-2/3"
-            [styleClass]="form.get('accountingAccount')?.disabled ? 'p-select-disabled' : ''">
+            [showClear]="true"
+            class="w-full md:w-2/3">
           </p-select>
-          
+
         </div>
 
       </div>

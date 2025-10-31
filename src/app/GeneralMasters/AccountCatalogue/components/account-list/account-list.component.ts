@@ -8,6 +8,7 @@ import { FinancialStateType } from '../../models/FinancialStateType';
 import { NatureType } from '../../models/NatureType';
 import { ClasificationType } from '../../models/ClasificationType';
 import { ChartAccountService } from '../../services/chart-account.service';
+import { AccountCataloguePresentationService } from '../../services/account-catalogue-presentation.service';
 import { firstValueFrom } from 'rxjs';
 import { AccountFormComponent } from '../account-form/account-form.component';
 import { AccountTemplateComponent } from '../account-template/account-template.component';
@@ -23,6 +24,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
@@ -51,117 +53,69 @@ interface ImportError {
     IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
     RadioButtonModule,
     ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule,
-    TableModule, PaginatorModule
+    TooltipModule, TableModule, PaginatorModule
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.css',
   providers: [MessageService, ConfirmationService]
 })
 export class AccountListComponent implements OnInit {
-  /**
-  * Formulario reactivo que contiene los campos de entrada para la gestión de cuentas contables.
-  */
+
   accountForm: FormGroup;
 
-  /**
-  * Formulario reactivo que contiene los selectores para los tipos de naturaleza,
-  * estado financiero y clasificación.
-  */
   formTransactional: FormGroup;
-
-  /**
-   * Cuenta seleccionada y estado de conmutación para la interfaz de usuario.
-   */
+ 
   accountSelected?: Account;
   toggle: boolean = false;
 
-  /**
-  * Variables para almacenar la información relacionada con una cuenta contable.
-  */
   num: number = 0;
   code: string = '';
   name: string = '';
   parentId: string = '';
 
-  /**
-  * Variables para controlar la visibilidad de los formularios en la interfaz de usuario.
-  */
   showPrincipalForm: boolean = false;
   showFormTransactional: boolean = false;
 
-  /**
-   * Variable que indica si una cuenta ha sido seleccionada.
-   */
   selectedAccount: boolean = false;
-
-  /**
-   * Valores originales de la cuenta seleccionada para comparar cambios reales.
-   */
   private originalAccountValues: any = null;
 
-  /**
-  * Variables para controlar la visibilidad de los botones en la interfaz de usuario.
-  */
   showButton = false;
   showUpdateButton = false;
   showAddNewClass: boolean = false;
   showButtonDelete: boolean = false;
 
-  /**
-   * Controla la visibilidad del modal de plantilla
-   */
   showTemplateModal: boolean = false;
 
-  /**
-   * Variables para la funcionalidad de búsqueda
-   */
   searchTerm: string = '';
   searchResults: Account[] = [];
   isLoading: boolean = false;
   hasActiveSearch: boolean = false;
 
-  /**
-   * Variables para controlar la visibilidad de los checkboxes en la edición
-   */
+  isImporting: boolean = false;
+  isExporting: boolean = false;
+
   showCrossingCheckboxEdit: boolean = false;
   showCostCenterCheckboxEdit: boolean = false;
 
-  /**
-   * Controla si los inputs deben estar bloqueados cuando no hay cambios reales
-   */
-  inputsLocked: boolean = false;    /**
-   * Variables determinadas según el nivel de la cuenta.
-   * Estas variables gestionan el tipo de cuenta y si se deben agregar subcuentas o hijos.
-   */
+  inputsLocked: boolean = false;    
+
   private _currentLevelAccount: 'Grupo' | 'Cuenta' | 'Subcuenta' | 'Auxiliar' | 'Clase' = 'Clase';
   addChild: boolean = false;
 
-  /**
-   * Getter que devuelve el valor de currentLevelAccount (ya capitalizado)
-   */
   get currentLevelAccount(): string {
     return this._currentLevelAccount;
   }
 
-  /**
-   * Setter para currentLevelAccount
-   */
   set currentLevelAccount(value: 'Grupo' | 'Cuenta' | 'Subcuenta' | 'Auxiliar' | 'Clase') {
     this._currentLevelAccount = value;
   }
 
-  /**
-  * Variables para almacenar los nombres de las diferentes cuentas contables.
-  */
   className = '';
   groupName = '';
   accountName = '';
   subAccountName = '';
   auxiliaryName = '';
 
-  /**
-  * Determina qué campos de entrada deben ser bloqueados según el nivel seleccionado de la cuenta.
-  */
   inputAccess = {
     class: true,
     group: true,
@@ -170,10 +124,7 @@ export class AccountListComponent implements OnInit {
     auxiliary: true
   };
 
-  /**
-  * Arreglos que almacenan la información de los servicios relacionados con los tipos de estado financiero,
-  * cuentas, naturaleza, clasificación, y otras cuentas relacionadas con reembolsos y depósitos.
-  */
+ 
   listFinancialState: FinancialStateType[] = [];
   listAccounts: Account[] = [];
   listAccountsAux: Account[] = [];
@@ -182,10 +133,6 @@ export class AccountListComponent implements OnInit {
   listRefundAccount: string[] = [];
   listDepositAccount: string[] = [];
 
-  /**
-  * Propiedades del componente para gestionar los valores y datos relacionados con los tipos de naturaleza,
-  * estado financiero, clasificación y otros datos de la aplicación.
-  */
   placeNatureType: string = '';
   placeFinancialStateType: string = '';
   placeClasificationType: string = '';
@@ -213,24 +160,13 @@ export class AccountListComponent implements OnInit {
     { label: 'Inactivos', value: false }
   ];
 
-  /**
-  * Constructor del componente.
-  * Inicializa los formularios reactivos para la gestión de cuentas y transacciones,
-  * y provee la inyección de dependencias necesarias para la exportación de cuentas,
-  * servicios de cuenta, impuestos y manejo de diálogos.
-  *
-  * @param accountExportComponent Componente para exportar cuentas.
-  * @param fb Constructor de formularios reactivos.
-  * @param _accountService Servicio para gestionar las cuentas contables.
-  * @param dialog Servicio para manejar diálogos modales.
-  * @param taxService Servicio para gestionar los impuestos.
-  */
+ 
   constructor(
     private readonly fb: FormBuilder,
     private readonly _accountService: ChartAccountService,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
- 
+    public readonly accountCataloguePresentationService: AccountCataloguePresentationService
   ) {
 
     this.accountForm = this.fb.group({})
@@ -1174,22 +1110,14 @@ export class AccountListComponent implements OnInit {
   deleteAccount() {
     // Validate if the account is linked to any tax
     if (this.accountSelected?.id) {
-      const isLinked = this.searchIfAccountIsLinked(this.accountSelected.code);
-      if (isLinked) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error al eliminar',
-          detail: 'No es posible eliminar porque está asociado a un impuesto.'
-        });
-        return
-      }
       try {
         this.confirmationService.confirm({
-          message: '¿Desea eliminar esta cuenta?',
+          message: '¿Desea eliminar esta cuenta? Esta acción no se puede deshacer.',
           header: 'Confirmar eliminación',
           icon: 'pi pi-exclamation-triangle',
           acceptLabel: 'Sí, Eliminar',
           rejectLabel: 'Cancelar',
+          rejectButtonStyleClass: 'p-button-secondary',
           accept: () => {
             if (this.accountSelected?.id) {
               this._accountService.deleteAccount(this.accountSelected.id.toString(), this.getIdEnterprise()).subscribe(
@@ -1221,10 +1149,21 @@ export class AccountListComponent implements OnInit {
                   });
                 },
                 (error) => {
+                  // Extraer el mensaje específico del backend
+                  let errorMessage = 'Ha ocurrido un error al eliminar la cuenta!.';
+
+                  if (error.error) {
+                    if (typeof error.error === 'string') {
+                      errorMessage = error.error;
+                    } else if (error.error.message) {
+                      errorMessage = error.error.message;
+                    }
+                  }
+
                   this.messageService.add({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: 'Ha ocurrido un error al eliminar la cuenta!.'
+                    severity: 'info',
+                    summary: 'Información',
+                    detail: errorMessage
                   });
                 }
               );
@@ -1472,7 +1411,14 @@ export class AccountListComponent implements OnInit {
  * @returns `true` si el código de la cuenta está presente en alguna de las listas, `false` en caso contrario.
  */
   searchIfAccountIsLinked(accountCode: string) {
-    return this.listRefundAccount.includes(accountCode) || this.listDepositAccount.includes(accountCode)
+    return this.accountCataloguePresentationService.isAccountLinked(accountCode, this.listRefundAccount, this.listDepositAccount);
+  }
+
+  /**
+   * Verifica si la cuenta seleccionada está vinculada a algún impuesto
+   */
+  get isSelectedAccountLinked(): boolean {
+    return this.accountSelected ? this.accountCataloguePresentationService.isAccountLinked(this.accountSelected.code, this.listRefundAccount, this.listDepositAccount) : false;
   }
 
   /**
@@ -1791,7 +1737,8 @@ export class AccountListComponent implements OnInit {
     this.confirmationService.confirm({
       key: 'exportDialog',
       header: 'Exportar',
-      acceptLabel: 'Aceptar',
+      acceptLabel: 'Exportar',
+      acceptIcon: 'pi pi-download',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary',
@@ -1809,8 +1756,11 @@ export class AccountListComponent implements OnInit {
     const entId = entData?.id || this.getIdEnterprise();
     const companyName = entData?.name || '';
 
+    this.isExporting = true; // Activar estado de carga
+
     this._accountService.exportAccounts(entId, companyName, status).subscribe({
       next: (response) => {
+        this.isExporting = false; // Desactivar estado de carga
         if (!response.body) {
           this.messageService.add({
             severity: 'error',
@@ -1828,17 +1778,32 @@ export class AccountListComponent implements OnInit {
         });
       },
       error: (error) => {
+        this.isExporting = false; // Desactivar estado de carga en caso de error
         if (error.error instanceof Blob) {
           const reader = new FileReader();
           reader.onload = () => {
             try {
               const errorData = JSON.parse(reader.result as string);
               const errorMessage = errorData.message || 'No se pudo exportar las cuentas.';
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error de Exportación',
-                detail: errorMessage
-              });
+
+              // Verificar si es un mensaje informativo sobre cuentas no disponibles
+              const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
+
+              if (isNoAccountsMessage) {
+                // Mostrar como información en lugar de error
+                this.messageService.add({
+                  severity: 'info',
+                  summary: 'Información',
+                  detail: this.getNoAccountsMessage(status)
+                });
+              } else {
+                // Mostrar como error para otros casos
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error de Exportación',
+                  detail: errorMessage
+                });
+              }
             } catch (e) {
               this.messageService.add({
                 severity: 'error',
@@ -1857,14 +1822,61 @@ export class AccountListComponent implements OnInit {
           reader.readAsText(error.error);
         } else {
           const errorMessage = error.error?.message || error.message || 'Error desconocido al exportar cuentas';
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error de Exportación',
-            detail: errorMessage
-          });
+
+          // Verificar si es un mensaje informativo sobre cuentas no disponibles
+          const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
+
+          if (isNoAccountsMessage) {
+            // Mostrar como información en lugar de error
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: this.getNoAccountsMessage(status)
+            });
+          } else {
+            // Mostrar como error para otros casos
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: errorMessage
+            });
+          }
         }
       }
     });
+  }
+
+  /**
+   * Verifica si el mensaje de error indica que no hay cuentas disponibles para exportar.
+   */
+  private isNoAccountsAvailableMessage(message: string): boolean {
+    const noAccountsPatterns = [
+      'no hay cuentas',
+      'no existen cuentas',
+      'no se encontraron cuentas',
+      'no hay registros',
+      'empty',
+      'sin cuentas'
+    ];
+
+    return noAccountsPatterns.some(pattern =>
+      message.toLowerCase().includes(pattern.toLowerCase())
+    );
+  }
+
+  /**
+   * Retorna el mensaje informativo apropiado según el filtro de estado aplicado.
+   */
+  private getNoAccountsMessage(status: boolean | undefined): string {
+    switch (status) {
+      case true:
+        return 'No hay cuentas activas para exportar';
+      case false:
+        return 'No hay cuentas inactivas para exportar';
+      case undefined:
+      default:
+        return 'No hay cuentas para exportar';
+    }
   }
 
   /**
@@ -2058,9 +2070,11 @@ export class AccountListComponent implements OnInit {
     if (!file) return;
 
     const entId = this.getIdEnterprise();
+    this.isImporting = true;
 
     this._accountService.importAccounts(entId, file).subscribe({
       next: (response) => {
+        this.isImporting = false; 
         const importResult = response.body;
 
         if (importResult) {
@@ -2122,6 +2136,7 @@ export class AccountListComponent implements OnInit {
         }
       },
       error: (error) => {
+        this.isImporting = false;
         // Extraer los errores del backend
         if (error.error && typeof error.error === 'object') {
           const errorResponse = error.error;

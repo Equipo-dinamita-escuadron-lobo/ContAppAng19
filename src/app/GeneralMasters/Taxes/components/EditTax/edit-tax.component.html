@@ -22,7 +22,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Código <span class="text-red-500">*</span></label>
+          <label for="code" class="label-required font-semibold text-primary">Código</label>
           <input
             pInputText
             id="code"
@@ -31,11 +31,11 @@
             class="w-full md:w-2/3"
             maxlength="10"
           />
-          <small class="text-red-500" *ngIf="editForm.get('code')?.touched && editForm.get('code')?.invalid">El código es requerido</small>
+          <small class="error-message" *ngIf="editForm.get('code')?.touched && editForm.get('code')?.invalid">El código es requerido</small>
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Descripción <span class="text-red-500">*</span></label>
+          <label for="description" class="label-required font-semibold text-primary">Descripción</label>
           <input
             pInputText
             id="description"
@@ -44,11 +44,11 @@
             class="w-full md:w-2/3"
             maxlength="100"
           />
-          <small class="text-red-500" *ngIf="editForm.get('description')?.touched && editForm.get('description')?.invalid">La descripción es requerida</small>
+          <small class="error-message" *ngIf="editForm.get('description')?.touched && editForm.get('description')?.invalid">La descripción es requerida</small>
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Tarifa (%) <span class="text-red-500">*</span></label>
+          <label for="interest" class="label-required font-semibold text-primary">Tarifa (%)</label>
           <p-inputNumber
             id="interest"
             formControlName="interest"
@@ -61,7 +61,7 @@
             placeholder="0.00%"
             class="w-full md:w-2/3"
           ></p-inputNumber>
-          <small class="text-red-500" *ngIf="editForm.get('interest')?.touched && editForm.get('interest')?.invalid">El porcentaje es requerido y debe ser mayor o igual a 0</small>
+          <small class="error-message" *ngIf="editForm.get('interest')?.touched && editForm.get('interest')?.invalid">El porcentaje es requerido y debe ser mayor o igual a 0</small>
         </div>
 
         <div class="flex flex-col gap-2">
@@ -116,7 +116,7 @@
 
       <!-- Error de validación personalizada -->
       <div class="mt-8" *ngIf="getCustomError()">
-        <small class="text-red-500">{{ getCustomError() }}</small>
+        <small class="error-message">{{ getCustomError() }}</small>
       </div>
 
       <!-- Botones de acción -->

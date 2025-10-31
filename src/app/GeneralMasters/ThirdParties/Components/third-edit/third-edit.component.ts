@@ -31,6 +31,7 @@ import { eThirdGender } from '../../models/eThirdGender';
 import { ThirdFormService } from '../../Services/third-form.service';
 import { ThirdValidationService } from '../../Services/third-validation.service';
 import { GeographyHelperService } from '../../Services/geography-helper.service';
+import { ThirdValidationMessagesService } from '../../Services/third-validation-messages.service';
 
 // Shared Components
 import { FormFieldLabelComponent } from '../shared/form-field-label.component';
@@ -207,18 +208,19 @@ export class ThirdEditComponent implements OnInit {
   entData: string = '';
 
   constructor(
-    private fb: FormBuilder,
-    private thirdService: ThirdService,
-    private thirdConfigurationService: ThirdServiceConfigurationService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private datePipe: DatePipe,
-    private http: HttpClient,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods,
-    private thirdFormService: ThirdFormService,
-    private thirdValidationService: ThirdValidationService,
-    private geographyHelperService: GeographyHelperService
+    private readonly fb: FormBuilder,
+    private readonly thirdService: ThirdService,
+    private readonly thirdConfigurationService: ThirdServiceConfigurationService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly datePipe: DatePipe,
+    private readonly http: HttpClient,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods,
+    private readonly thirdFormService: ThirdFormService,
+    private readonly thirdValidationService: ThirdValidationService,
+    private readonly geographyHelperService: GeographyHelperService,
+    public readonly thirdValidationMessagesService: ThirdValidationMessagesService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
@@ -295,12 +297,12 @@ export class ThirdEditComponent implements OnInit {
       const genderControl = this.createdThirdForm.get('gender');
 
       if (value === ePersonType.natural) {
-        // Persona natural: nombres y apellidos requeridos
+        // Persona natural: nombres y apellidos requeridos, género opcional
         namesControl?.setValidators([Validators.required]);
         lastNamesControl?.setValidators([Validators.required]);
         socialReasonControl?.clearValidators();
-        genderControl?.setValidators([Validators.required]);
-        
+        genderControl?.clearValidators(); // Género ahora opcional
+
         this.button2Checked = true;
         this.button1Checked = false;
         this.PersonaCargadaNatural = true;
@@ -311,7 +313,7 @@ export class ThirdEditComponent implements OnInit {
 
         // Limpiar DV para persona natural
         this.createdThirdForm.get('verificationNumber')?.setValue(null);
-        
+
         // Restaurar validaciones básicas del número de identificación
         const idNumberControl = this.createdThirdForm.get('idNumber');
         idNumberControl?.setValidators([Validators.required, Validators.min(1)]);
@@ -821,25 +823,8 @@ export class ThirdEditComponent implements OnInit {
     this.thirdValidationService.updateIdNumberValidations(
       this.createdThirdForm,
       this.thirdFormService.getTypeId(this.createdThirdForm),
-      this.thirdFormService.getPersonType(this.createdThirdForm),
-      this.entData,
-      this.thirdService
+      this.thirdFormService.getPersonType(this.createdThirdForm)
     );
-  }
-
-  /**
-  /**
-   * Verifica si es persona natural
-   */
-  isNaturalPerson(): boolean {
-    return this.thirdFormService.isNaturalPerson(this.createdThirdForm);
-  }
-
-  /**
-   * Verifica si es persona jurídica
-   */
-  isJuridicPerson(): boolean {
-    return this.thirdFormService.isJuridicPerson(this.createdThirdForm);
   }
 
   /**

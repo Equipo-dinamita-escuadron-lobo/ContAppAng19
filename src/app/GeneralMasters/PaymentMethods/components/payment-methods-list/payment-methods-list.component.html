@@ -16,7 +16,7 @@
       <!-- Botones -->
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
-          <p-button label="Crear" icon="pi pi-plus" (onClick)="createPaymentMethod()"></p-button>
+          <p-button label="Crear" icon="pi pi-plus" (onClick)="navigateToCreate()"></p-button>
         </div>
       </div>
     </div>
@@ -28,13 +28,33 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" (input)="filterGlobal($event, paymentMethodsTable)" placeholder="Buscar método de pago..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
+          <input pInputText
+                 type="text"
+                 [(ngModel)]="searchTerm"
+                 (input)="onSearch()"
+                 placeholder="Buscar método de pago (nombre/cuenta contable)..."
+                 class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
         </p-iconfield>
       </div>
     </div>
 
     <!-- Tabla -->
-    <p-table #paymentMethodsTable [value]="list" [lazy]="true" (onLazyLoad)="loadPaymentMethodsLazy($event)" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [globalFilterFields]="['name','accountingAccount','accountingAccountDisplay']" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+    <p-table #paymentMethodsTable
+             [value]="paymentMethods"
+             [lazy]="true"
+             [loading]="loading"
+             [paginator]="true"
+             [rows]="pageSize"
+             [rowsPerPageOptions]="[5,10,20]"
+             [totalRecords]="totalRecords"
+             [sortField]="sortField"
+             [sortOrder]="sortOrder === 'asc' ? 1 : -1"
+             (onLazyLoad)="onPage($event)"
+             (onSort)="onSort($event)"
+             (onPage)="onPage($event)"
+             styleClass="p-datatable-striped font-family-sans"
+             [tableStyle]="{'min-width': '50rem'}"
+             responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">Nombre <p-sortIcon field="name"></p-sortIcon></th>
@@ -49,16 +69,16 @@
           <td class="py-3">{{ row.name }}</td>
           <td class="py-3">{{ row.accountingAccountDisplay }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="formatState(row.status)" [severity]="getStateSeverity(row.status)"></p-tag>
+            <p-tag [value]="row.status ? paymentMethodsValidationMessagesService.getActiveStateText() : paymentMethodsValidationMessagesService.getInactiveStateText()" [severity]="row.status ? paymentMethodsValidationMessagesService.getActiveStateSeverity() : paymentMethodsValidationMessagesService.getInactiveStateSeverity()"></p-tag>
           </td>
           <td class="py-3 text-center">
             <div class="flex justify-center gap-2 items-center">
-              <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" (onClick)="editPaymentMethod(row)" styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
-              <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" (onClick)="deletePaymentMethod(row)" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
+              <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" (onClick)="navigateToEdit(row)" styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
+              <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" (onClick)="confirmDelete(row)" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
               <p-toggleSwitch
-                [ngModel]="isActive(row.status)"
-                (onChange)="changePaymentMethodState(row)"
-                pTooltip="Cambiar Estado"
+                [ngModel]="row.status"
+                (onChange)="togglePaymentMethodStatus(row, $event.checked)"
+                [pTooltip]="row.status ? paymentMethodsValidationMessagesService.getActiveStateText() : paymentMethodsValidationMessagesService.getInactiveStateText()"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"

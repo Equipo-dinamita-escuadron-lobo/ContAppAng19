@@ -63,9 +63,9 @@ export class AccountTemplateComponent implements OnInit {
   ];
 
   constructor(
-    private chartAccountService: ChartAccountService,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods
+    private readonly chartAccountService: ChartAccountService,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
   }
@@ -127,6 +127,7 @@ export class AccountTemplateComponent implements OnInit {
           summary: 'Descarga exitosa',
           detail: 'La plantilla se ha descargado correctamente'
         });
+        this.closePopUp();
       },
       error: (error) => {
         console.error('Error al descargar la plantilla:', error);

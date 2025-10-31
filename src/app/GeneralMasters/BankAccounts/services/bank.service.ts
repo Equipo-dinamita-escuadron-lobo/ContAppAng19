@@ -1,15 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 
 export interface Bank {
   id?: number;
-  codigo: string;
-  nombre: string;
-  moneda: string;
+  code: string;
+  name: string;
+  currencies: string[];
   status: boolean;
   isDeleted?: boolean;
   idEnterprise?: string;
@@ -17,16 +17,16 @@ export interface Bank {
 
 export interface BankCreateRequest {
   idEnterprise: string;
-  codigo: string;
-  nombre: string;
-  moneda: string;
+  code: string;
+  name: string;
+  currencies: string[];
 }
 
 export interface BankUpdateRequest {
   id: number;
-  codigo: string;
-  nombre: string;
-  moneda: string;
+  code: string;
+  name: string;
+  currencies: string[];
   status: boolean;
   idEnterprise: string;
 }
@@ -38,10 +38,16 @@ export interface Currency {
 
 export interface PageResponse<T> {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  page?: {
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  };
 }
 
 @Injectable({
@@ -54,8 +60,20 @@ export class BankService {
   /**
    * Obtiene la lista de bancos paginada
    */
-  findAll(enterpriseId: string, page: number = 0, size: number = 10): Observable<PageResponse<Bank>> {
-    return this.http.get<PageResponse<Bank>>(`${this.API_BASE}/findAll/${enterpriseId}?page=${page}&size=${size}`)
+  findAll(enterpriseId: string, page: number = 0, size: number = 10, sortField?: string, sortOrder?: string, search?: string): Observable<PageResponse<Bank>> {
+    let url = `${this.API_BASE}/findAll/${enterpriseId}?page=${page}&size=${size}`;
+
+    if (sortField?.trim()) {
+      url += `&sortField=${sortField}`;
+    }
+    if (sortOrder?.trim()) {
+      url += `&sortOrder=${sortOrder}`;
+    }
+    if (search?.trim()) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+
+    return this.http.get<PageResponse<Bank>>(url)
       .pipe(catchError(this.handleError));
   }
 
@@ -63,7 +81,7 @@ export class BankService {
    * Obtiene la lista de bancos activos
    */
   findAllActive(enterpriseId: string, page: number = 0, size: number = 100): Observable<PageResponse<Bank>> {
-    return this.http.get<PageResponse<Bank>>(`${this.API_BASE}/findAllByStatus/${enterpriseId}?status=true&page=${page}&size=${size}`)
+    return this.http.get<PageResponse<Bank>>(`${this.API_BASE}/findAllActive/${enterpriseId}?page=${page}&size=${size}`)
       .pipe(catchError(this.handleError));
   }
 
@@ -130,6 +148,18 @@ export class BankService {
   }
 
   /**
+   * Obtiene las descripciones de múltiples monedas
+   */
+  getCurrenciesDisplay(currencyCodes: string[]): string {
+    if (!currencyCodes || currencyCodes.length === 0) {
+      return '';
+    }
+
+    const descriptions = currencyCodes.map(code => this.getCurrencyDisplay(code));
+    return descriptions.join(', ');
+  }
+
+  /**
    * Validador personalizado para el código del banco
    * Valida que sea un número positivo de máximo 2 dígitos
    */
@@ -146,14 +176,14 @@ export class BankService {
     }
 
     // Validar que sea un número positivo
-    const numValue = parseInt(value, 10);
+    const numValue = Number.parseInt(value, 10);
     if (numValue <= 0) {
       return { notPositive: true };
     }
 
-    // Validar que tenga máximo 2 dígitos
-    if (value.length > 2) {
-      return { maxDigits: true };
+    // Validar que tenga exactamente 2 dígitos
+    if (value.length !== 2) {
+      return { invalidLength: true };
     }
 
     return null;
@@ -169,11 +199,18 @@ export class BankService {
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Capturar mensaje del backend
       if (typeof error.error === 'string' && error.error.trim()) {
         errorMessage = error.error;
       } else if (error.error?.message) {
         errorMessage = error.error.message;
+      } else if (error.error?.fieldErrors && typeof error.error.fieldErrors === 'object') {
+        const fieldErrorMessages = Object.values(error.error.fieldErrors);
+        errorMessage = fieldErrorMessages.join('. ');
+      } else if (error.error?.errors && Array.isArray(error.error.errors)) {
+        const validationErrors = error.error.errors.map((err: any) => err.defaultMessage || err.message);
+        errorMessage = validationErrors.join('. ');
+      } else if (error.error?.field && error.error?.defaultMessage) {
+        errorMessage = error.error.defaultMessage;
       } else if (error.message) {
         errorMessage = error.message;
       }

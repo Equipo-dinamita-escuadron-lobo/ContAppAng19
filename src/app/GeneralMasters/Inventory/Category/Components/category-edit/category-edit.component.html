@@ -28,28 +28,28 @@
 
         <!-- Nombre de la Categoría -->
         <div class="flex flex-col gap-2">
-          <label for="name" class="font-semibold" style="color: var(--color-primary);">Nombre de la Categoría <span class="text-red-500">*</span></label>
+          <label for="name" class="label-required font-semibold text-primary">Nombre</label>
           <input pInputText id="name" formControlName="name" placeholder="Ej: Electrónicos, Ropa, Alimentos"
             class="w-full md:w-2/3" />
-          @if (editForm.get('name')?.invalid && editForm.get('name')?.touched) {
-          <small style="color: var(--color-error-35);">El nombre es requerido.</small>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('name'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('name'), 'name') }}</div>
           }
         </div>
 
         <!-- Descripción -->
         <div class="flex flex-col gap-2">
-          <label for="description" class="font-semibold" style="color: var(--color-primary);">Descripción <span class="text-red-500">*</span></label>
+          <label for="description" class="label-required font-semibold text-primary">Descripción</label>
           <textarea pInputText id="description" formControlName="description" 
             placeholder="Descripción de la categoría"
             class="w-full md:w-2/3" rows="1" pInputTextarea></textarea>
-          @if (editForm.get('description')?.invalid && editForm.get('description')?.touched) {
-          <small style="color: var(--color-error-35);">La descripción es requerida.</small>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('description'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('description'), 'description') }}</div>
           }
         </div>
 
         <!-- Cuenta de Inventario -->
         <div class="flex flex-col gap-2">
-          <label for="inventory" class="font-semibold" style="color: var(--color-primary);">Cuenta de Inventario <span class="text-red-500">*</span></label>
+          <label for="inventory" class="label-required font-semibold text-primary">Cuenta de Inventario</label>
           <p-select
             id="inventory"
             formControlName="inventory"
@@ -70,14 +70,14 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          @if (editForm.get('inventory')?.invalid && editForm.get('inventory')?.touched) {
-          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de inventario.</small>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('inventory'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('inventory'), 'inventory') }}</div>
           }
         </div>
 
         <!-- Cuenta de Costo -->
         <div class="flex flex-col gap-2">
-          <label for="cost" class="font-semibold" style="color: var(--color-primary);">Cuenta de Costo <span class="text-red-500">*</span></label>
+          <label for="cost" class="label-required font-semibold text-primary">Cuenta de Costo</label>
           <p-select
             id="cost"
             formControlName="cost"
@@ -98,14 +98,14 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          @if (editForm.get('cost')?.invalid && editForm.get('cost')?.touched) {
-          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de costo.</small>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('cost'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('cost'), 'cost') }}</div>
           }
         </div>
 
         <!-- Cuenta de Venta -->
         <div class="flex flex-col gap-2">
-          <label for="sale" class="font-semibold" style="color: var(--color-primary);">Cuenta de Venta <span class="text-red-500">*</span></label>
+          <label for="sale" class="label-required font-semibold text-primary">Cuenta de Venta</label>
           <p-select
             id="sale"
             formControlName="sale"
@@ -126,14 +126,14 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          @if (editForm.get('sale')?.invalid && editForm.get('sale')?.touched) {
-          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de venta.</small>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('sale'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('sale'), 'sale') }}</div>
           }
         </div>
 
         <!-- Cuenta de Devolución -->
         <div class="flex flex-col gap-2">
-          <label for="return" class="font-semibold" style="color: var(--color-primary);">Cuenta de Devolución <span class="text-red-500">*</span></label>
+          <label for="return" class="label-required font-semibold text-primary">Cuenta de Devolución</label>
           <p-select
             id="return"
             formControlName="return"
@@ -154,8 +154,8 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          @if (editForm.get('return')?.invalid && editForm.get('return')?.touched) {
-          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de devolución.</small>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('return'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('return'), 'return') }}</div>
           }
         </div>
 

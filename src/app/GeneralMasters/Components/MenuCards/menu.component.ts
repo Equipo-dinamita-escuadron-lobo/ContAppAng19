@@ -88,7 +88,7 @@ export class MenuComponent {
     
   ];
 
-  constructor(private router: Router) {}
+  constructor(private readonly router: Router) {}
 
   navigateTo(route: string): void {
     this.router.navigate([route]);

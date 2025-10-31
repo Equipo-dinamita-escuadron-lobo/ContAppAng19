@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
 
 // --- Importaciones Standalone y de PrimeNG ---
 import { CardModule } from 'primeng/card';
@@ -10,8 +9,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../Services/category.service';
+import { CategoryValidationMessagesService } from '../../Services/category-validation-messages.service';
 import { Category } from '../../Models/Category';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
@@ -38,7 +39,7 @@ export class CategoryEditComponent implements OnInit {
   category: Category = {} as Category;
   editForm: FormGroup;
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: any = null;
   formSubmitAttempt = false;
   loading = false;
   
@@ -53,11 +54,13 @@ export class CategoryEditComponent implements OnInit {
   return: any[] = [];
 
   constructor(
-    private route: ActivatedRoute,
-    private categoryService: CategoryService,
-    private formBuilder: FormBuilder,
-    private router: Router,
-    private chartAccountService: ChartAccountService,
+    private readonly route: ActivatedRoute,
+    private readonly categoryService: CategoryService,
+    private readonly formBuilder: FormBuilder,
+    private readonly router: Router,
+    private readonly chartAccountService: ChartAccountService,
+    private readonly messageService: MessageService,
+    public readonly categoryValidationMessagesService: CategoryValidationMessagesService
   ) {
     // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     this.editForm = this.formBuilder.group({
@@ -71,9 +74,13 @@ export class CategoryEditComponent implements OnInit {
   }
   ngOnInit(): void {
     this.entData = this.localStorageMethods.getIdEnterprise();
-    if (!this.entData) {
+    if (this.entData === null) {
       console.error("No se encontró el ID de la empresa. No se pueden cargar los datos del formulario.");
-      Swal.fire('Error', 'No se pudo identificar la empresa. Vuelva a iniciar sesión.', 'error');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo identificar la empresa. Vuelva a iniciar sesión.'
+      });
     } else {
       this.route.params.subscribe(params => {
         this.categoryId = params['id'];
@@ -88,13 +95,9 @@ export class CategoryEditComponent implements OnInit {
   }
 
   getCategoryDetails(): void {
-    console.log('Iniciando getCategoryDetails()...');
-    console.log('Formulario sin editar:', this.editForm.value);
-    console.log('Cuentas disponibles:', this.accounts);
-
-    this.categoryService.getCategoryById(this.categoryId).subscribe(
-      (category: Category) => {
-        console.log('Categoría obtenida:', category);
+    const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
+    this.categoryService.getCategoryById(this.categoryId, enterpriseId).subscribe({
+      next: (category: Category) => {
 
         this.category = category;
         // Guardar los datos originales para comparación
@@ -106,12 +109,6 @@ export class CategoryEditComponent implements OnInit {
         const saleAccount = this.accounts.find(acc => acc.id === category.saleId || acc.id === Number(category.saleId));
         const returnAccount = this.accounts.find(acc => acc.id === category.returnId || acc.id === Number(category.returnId));
 
-        console.log('Buscando cuenta de inventario con ID:', category.inventoryId, 'tipo:', typeof category.inventoryId);
-        console.log('Buscando cuenta de costo con ID:', category.costId, 'tipo:', typeof category.costId);
-        console.log('Buscando cuenta de venta con ID:', category.saleId, 'tipo:', typeof category.saleId);
-        console.log('Buscando cuenta de devolución con ID:', category.returnId, 'tipo:', typeof category.returnId);
-        console.log('Tipos de IDs de cuentas disponibles:', this.accounts.slice(0, 3).map(acc => ({ id: acc.id, tipo: typeof acc.id })));
-
         this.editForm.patchValue({
           name: category.name,
           description: category.description,
@@ -120,41 +117,30 @@ export class CategoryEditComponent implements OnInit {
           sale: saleAccount || null,
           return: returnAccount || null
         });
-
-        console.log('Formulario editado:', this.editForm.value);
-        console.log('Cuenta de inventario encontrada:', inventoryAccount);
-        console.log('Cuenta de costo encontrada:', costAccount);
-        console.log('Cuenta de venta encontrada:', saleAccount);
-        console.log('Cuenta de devolución encontrada:', returnAccount);
       },
-      (error: any) => {
+      error: (error: any) => {
         console.error('Error obteniendo detalles de la categoría: ', error);
       }
-    );
+    });
   }
 
     //cuentas
    // Cuentas
   getCuentas(): void {
-    console.log('Cargando cuentas en edición con entData:', this.entData);
     const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
-    console.log('Enterprise ID para cuentas en edición:', enterpriseId);
-    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
+    this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (data: any[]) => {
-        console.log('Cuentas recibidas en edición:', data);
         this.accounts = this.mapAccountToList(data);
         this.cost = this.accounts;
         this.inventory = this.accounts;
         this.sale = this.accounts;
         this.return = this.accounts;
-        console.log('Cuentas mapeadas en edición:', this.accounts);
-        console.log('Primeras 5 cuentas como ejemplo:', this.accounts.slice(0, 5));
         
         // Ahora que las cuentas están cargadas, obtener los detalles de la categoría
         this.getCategoryDetails();
       },
       error: (error: any) => {
-        console.error('Error al obtener las cuentas en edición:', error);
+        console.error('Error al obtener las cuentas auxiliares en edición:', error);
       }
     });
   }
@@ -169,11 +155,15 @@ mapAccountToList(data: Account[]): Account[] {
 
       // Llamamos recursivamente para cada hijo
       if (children && children.length > 0) {
-          children.forEach((child: Account) => traverse(child));
+          for (const child of children) {
+            traverse(child);
+          }
       }
   }
 
-  data.forEach(account => traverse(account));
+  for (const account of data) {
+    traverse(account);
+  }
   return result;
 }
 get filteredAccounts() {
@@ -200,7 +190,11 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.editForm.invalid) {
-      Swal.fire('Formulario Inválido', 'Por favor, revise todos los campos requeridos.', 'warning');
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario Inválido',
+        detail: 'Por favor, revise todos los campos requeridos.'
+      });
       // Marcar todos los campos como "tocados" para mostrar los errores
       this.editForm.markAllAsTouched();
       return;
@@ -212,11 +206,10 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
     const hasChanges = this.hasFormChanges(formData);
 
     if (!hasChanges) {
-      Swal.fire({
-        title: 'Sin cambios',
-        text: 'No se han detectado cambios en la categoría.',
-        icon: 'info',
-        confirmButtonText: 'Aceptar'
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Sin cambios',
+        detail: 'No se han detectado cambios en la categoría.'
       });
       return;
     }
@@ -234,26 +227,31 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
       state: this.category.state
     };
 
-    console.log('Datos de categoría a actualizar:', categoryData);
-
-    this.categoryService.updateCategory(categoryData).subscribe({
+    const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
+    this.categoryService.updateCategory(categoryData, enterpriseId).subscribe({
       next: () => {
-        Swal.fire({
-          title: 'Actualización exitosa',
-          text: 'Se ha actualizado la categoría con éxito.',
-          icon: 'success',
-          confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Actualización Exitosa',
+          detail: 'Se ha actualizado la categoría con éxito.'
         });
         this.router.navigate(['/gen-masters/inventory/categories/list']); // Redirigir a la lista
       },
       error: (err: any) => {
         console.error('Error al actualizar la categoría:', err);
-        Swal.fire({
-          title: 'Error',
-          text: 'Ha ocurrido un error al actualizar la categoría.',
-          icon: 'error',
-          confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-        });
+        if (err.error?.message) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Registro Duplicado',
+            detail: err.error.message
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Ha ocurrido un error al actualizar la categoría.'
+          });
+        }
       }
     });
   }

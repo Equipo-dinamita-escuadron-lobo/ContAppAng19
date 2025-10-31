@@ -17,7 +17,7 @@ export class GeographyService {
   /** URL base de la API de geografía */
   private readonly baseUrl = `${environment.API_URL}thirds/geography`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
   /**
    * Obtiene todos los países activos
