@@ -25,6 +25,9 @@ export class CategoryValidationMessagesService {
     },
     return: {
       required: 'Debe seleccionar una cuenta de devolución.'
+    },
+    taxes: {
+      required: 'Debe seleccionar al menos un impuesto.'
     }
   };
 

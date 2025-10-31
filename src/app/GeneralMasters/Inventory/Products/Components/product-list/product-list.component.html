@@ -55,8 +55,7 @@
       </p-button>
     </div>
 
-    <!-- 3. TABLA DE PRODUCTOS: Estilizada para ser coherente con el diseño -->
-    <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage?.totalElements || 0"
+    <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage.totalElements || 0"
       [lazy]="true" (onPage)="onPageChange($event)" (onSort)="onSort($event)"
       [rowsPerPageOptions]="[5, 10, 20]" [loading]="false"
       styleClass="p-datatable-striped font-family-sans" [tableStyle]="{ 'min-width': '50rem' }"
@@ -114,7 +113,6 @@
           <td class="py-3 whitespace-nowrap">{{ product.reference }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.presentation }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.description }}</td>
-          <td *ngIf="showDetailView" class="py-3 text-center whitespace-nowrap">{{ product.taxDisplayText }}</td>
           <td class="py-3 text-right whitespace-nowrap">{{ product.cost | currencyFormat }}</td>
           <td class="py-3 text-center whitespace-nowrap">{{ product.quantity }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.unitOfMeasureName }}</td>

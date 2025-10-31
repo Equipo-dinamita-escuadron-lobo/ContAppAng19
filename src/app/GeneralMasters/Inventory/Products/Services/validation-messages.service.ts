@@ -15,9 +15,6 @@ export class ValidationMessagesService {
     presentation: {
       required: 'La presentación es requerida.'
     },
-    taxes: {
-      required: 'Debe seleccionar al menos un impuesto.'
-    },
     productTypeId: {
       required: 'Debe seleccionar un tipo de producto.'
     },

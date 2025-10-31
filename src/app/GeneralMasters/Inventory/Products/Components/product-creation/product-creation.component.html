@@ -67,38 +67,6 @@
           }
         </div>
 
-        <!-- Impuesto(s) -->
-        <div class="flex flex-col gap-2">
-          <label for="taxPercentage" class="font-semibold text-primary label-required">Impuesto(s)</label>
-          <p-multiSelect
-            id="taxSelect"
-            [options]="taxes"
-            optionLabel="displayText"
-            optionValue="id"
-            placeholder="Seleccione los impuestos"
-            [filter]="true"
-            [showClear]="true"
-            [maxSelectedLabels]="3"
-            selectedItemsLabel="{0} impuestos seleccionados"
-            class="w-full md:w-2/3"
-            formControlName="taxes"
-          >
-            <ng-template pTemplate="selectedItems" let-selectedOptions>
-              <div *ngIf="selectedOptions && selectedOptions.length > 0">
-                <span *ngFor="let option of selectedOptions; let i = index">
-                  {{ option.code }} ({{ option.interest }}%){{ i < selectedOptions.length - 1 ? ', ' : '' }}
-                </span>
-              </div>
-            </ng-template>
-            <ng-template pTemplate="item" let-option>
-              <div>{{ option.code }} ({{ option.interest }}%)</div>
-            </ng-template>
-          </p-multiSelect>
-          @if (productForm.get('taxes')?.invalid && productForm.get('taxes')?.touched) {
-            <small class="error-message">{{ getValidationMessage('taxes') }}</small>
-          }
-        </div>
-
         <!-- Costo -->
         <div class="flex flex-col gap-2">
           <label for="cost" class="font-semibold text-primary">Costo</label>

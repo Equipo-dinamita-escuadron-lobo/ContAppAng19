@@ -6,7 +6,6 @@ import { Product, ProductList, Page } from '../Models/Product';
 import { UnitOfMeasureService } from '../../MeasurementUnits/Services/unit-of-measure.service';
 import { CategoryService } from '../../Category/Services/category.service';
 import { ProductTypeService } from '../../ProductTypes/Services/product-type.service';
-import { TaxService } from '../../../Taxes/services/tax.service';
 
 
 let API_URL = environment.API_URL;
@@ -18,8 +17,7 @@ export class ProductService {
     private readonly http: HttpClient,
     private readonly unitOfMeasureService: UnitOfMeasureService,
     private readonly categoryService: CategoryService,
-    private readonly productTypeService: ProductTypeService,
-    private readonly taxService: TaxService
+    private readonly productTypeService: ProductTypeService
   ) {}
 
   getProducts(enterpriseId: string, numPage?: number, size?: number, sortField: string = 'name', sortOrder: string = 'asc', search?: string): Observable<Page<ProductList>> {
@@ -61,12 +59,11 @@ export class ProductService {
     return combineLatest([
       this.getRelatedData(ids.unitOfMeasureIds, 'unitOfMeasure', enterpriseId),
       this.getRelatedData(ids.categoryIds, 'category', enterpriseId),
-      this.getRelatedData(ids.productTypeIds, 'productType', enterpriseId),
-      this.getTaxData(ids.taxIds, enterpriseId)
+      this.getRelatedData(ids.productTypeIds, 'productType', enterpriseId)
     ]).pipe(
-      map(([unitOfMeasures, categories, productTypes, taxData]) => {
+      map(([unitOfMeasures, categories, productTypes]) => {
         // Crear mapas
-        const maps = this.createLookupMaps(unitOfMeasures, categories, productTypes, taxData);
+        const maps = this.createLookupMaps(unitOfMeasures, categories, productTypes);
 
         // Transformar productos
         const transformedProducts = page.content.map(product =>
@@ -84,24 +81,19 @@ export class ProductService {
   private collectRelatedIds(products: Product[]): {
     unitOfMeasureIds: Set<number>,
     categoryIds: Set<number>,
-    productTypeIds: Set<number>,
-    taxIds: Set<number>
+    productTypeIds: Set<number>
   } {
     const unitOfMeasureIds = new Set<number>();
     const categoryIds = new Set<number>();
     const productTypeIds = new Set<number>();
-    const taxIds = new Set<number>();
 
     products.forEach(product => {
       if (product.unitOfMeasureId) unitOfMeasureIds.add(product.unitOfMeasureId);
       if (product.categoryId) categoryIds.add(product.categoryId);
       if (product.productTypeId) productTypeIds.add(product.productTypeId);
-      if (product.taxes && Array.isArray(product.taxes)) {
-        product.taxes.forEach((taxId: number) => taxIds.add(taxId));
-      }
     });
 
-    return { unitOfMeasureIds, categoryIds, productTypeIds, taxIds };
+    return { unitOfMeasureIds, categoryIds, productTypeIds };
   }
 
   /**
@@ -144,40 +136,20 @@ export class ProductService {
     );
   }
 
-  /**
-   * Obtiene datos de impuestos
-   */
-  private getTaxData(taxIds: Set<number>, enterpriseId: string): Observable<{byId: any[], all: any[]}> {
-    
-    const all$ = this.taxService.findAll(enterpriseId).pipe(
-      catchError(err => {
-        console.warn('Error al obtener todos los impuestos:', err);
-        return of({ content: [] });
-      }),
-      map(page => Array.isArray(page.content) ? page.content : [])
-    );
-
-    return all$.pipe(
-      map(all => ({ byId: all, all }))
-    );
-  }
-
+  
   /**
    * Crea mapas de búsqueda
    */
-  private createLookupMaps(unitOfMeasures: any[], categories: any[], productTypes: any[], taxData: {byId: any[], all: any[]}) {
+  private createLookupMaps(unitOfMeasures: any[], categories: any[], productTypes: any[]) {
     // Asegurar que todos los arrays sean válidos
     const safeUnitOfMeasures = Array.isArray(unitOfMeasures) ? unitOfMeasures : [];
     const safeCategories = Array.isArray(categories) ? categories : [];
     const safeProductTypes = Array.isArray(productTypes) ? productTypes : [];
-    const safeTaxAll = Array.isArray(taxData.all) ? taxData.all : [];
 
     return {
       unitOfMeasure: new Map(safeUnitOfMeasures.map(item => [item.id, item])),
       category: new Map(safeCategories.map(item => [item.id, item])),
       productType: new Map(safeProductTypes.map(item => [item.id, item])),
-      taxById: new Map(safeTaxAll.map(item => [item.id, item])),
-      taxByPercentage: new Map(safeTaxAll.map(item => [item.interest, item]))
     };
   }
 
@@ -188,7 +160,6 @@ export class ProductService {
     const productType = product.productType || maps.productType.get(product.productTypeId);
     const unitOfMeasure = maps.unitOfMeasure.get(product.unitOfMeasureId);
     const category = maps.category.get(product.categoryId);
-    const taxDisplayText = this.buildTaxDisplayText(product, maps);
 
     return {
       ...product,
@@ -196,53 +167,10 @@ export class ProductService {
       categoryName: category?.name || 'N/A',
       productType: productType || null,
       productTypeName: productType?.name || 'N/A',
-      taxDisplayText,
       state: typeof product.state === 'boolean' ? product.state : product.state === 'true'
     } as ProductList;
   }
 
-  /**
-   * Construye el texto de display para impuestos
-   */
-  private buildTaxDisplayText(product: Product, maps: any): string {
-    if (product.taxes && Array.isArray(product.taxes)) {
-      return product.taxes.map((taxId: number, index: number) => {
-        // Obtener porcentaje correspondiente (por compatibilidad)
-        const taxPercent = Array.isArray(product.taxPercentage) && product.taxPercentage[index] !== undefined
-          ? product.taxPercentage[index]
-          : (typeof product.taxPercentage === 'number' ? product.taxPercentage : null);
-
-        let taxInfo = maps.taxById.get(taxId);
-
-        if (!taxInfo && taxPercent !== null) {
-          taxInfo = maps.taxByPercentage.get(taxPercent);
-        }
-        if (taxInfo && taxInfo.code && taxInfo.interest !== undefined) {
-          return `${taxInfo.code} (${taxInfo.interest}%)`;
-        }
-
-        if (taxPercent !== null) {
-          return `${taxPercent}%`;
-        }
-        return `ID: ${taxId}`;
-      }).join(', ');
-    }
-
-    // Compatibilidad hacia atrás
-    if (Array.isArray(product.taxPercentage)) {
-      return product.taxPercentage.map((percent: number) => {
-        const taxInfo = maps.taxByPercentage.get(percent);
-        return taxInfo && taxInfo.code ? `${taxInfo.code} (${taxInfo.interest}%)` : `${percent}%`;
-      }).join(', ');
-    }
-
-    if (typeof product.taxPercentage === 'number') {
-      const taxInfo = maps.taxByPercentage.get(product.taxPercentage);
-      return taxInfo && taxInfo.code ? `${taxInfo.code} (${taxInfo.interest}%)` : `${product.taxPercentage}%`;
-    }
-
-    return '';
-  }
 
   /**
    * Crea una página vacía para errores
