@@ -75,7 +75,7 @@
 
         <!---Botón-->
         <div class="min-w-[220px] flex justify-end mt-16">
-             <!-- Botón Exportar -->
+            
             <p-button
                 label="Exportar Excel"
                 icon="pi pi-download"
@@ -88,10 +88,14 @@
             <p-button
                 label="Ajuste de inventario"
                 icon="pi pi-sliders-h"
-            />
+                [disabled]="!isInventoryAdjustmentEnabled()"
+                (onClick)="openInventoryAdjustment()"
+                [pTooltip]="!isInventoryAdjustmentEnabled() ? 'Debe seleccionar un producto para realizar ajustes de inventario' : ''"
+                tooltipPosition="top">
+            </p-button>
         </div>
     </div>
-    <!---Tabla inventario con PEPS-->   
+    <!---Tabla PEPS-->   
     <div class="mt-16">
         <p-table
             [value]="kardexList"
@@ -193,7 +197,7 @@
 
 
                 
-                <!-- CASO 2: Salida simple con múltiples balances O sin balance (balance vacío después de venta) -->
+                <!-- CASO 2: Salida simple con múltiples balances O sin balance-->
                 <ng-container *ngIf="(!kardexRow.outputDetails || kardexRow.outputDetails.length <= 1)">
                     <!-- Si hay balance, mostrar múltiples filas -->
                     <ng-container *ngIf="kardexRow.balance && kardexRow.balance.length > 0">
@@ -239,7 +243,7 @@
                         </tr>
                     </ng-container>
                     
-                    <!--Si NO hay balance (se agotó el stock), mostrar una sola fila con balance en cero -->
+                    <!--Si NO hay balance, mostrar una sola fila con balance en cero -->
                     <tr *ngIf="!kardexRow.balance || kardexRow.balance.length === 0">
                         <td>{{ kardexRow.formattedDate }}</td>
                         <td>{{ kardexRow.detail }}</td>
@@ -293,5 +297,14 @@
         </p-table>
     </div>
 
+
+    <p-toast></p-toast>
+
+    <app-inventory-adjustment-peps
+        [visible]="showInventoryAdjustment"
+        [productData]="selectedProduct || null"
+        (adjustmentCompleted)="onAdjustmentCompleted()"
+        (dialogClosed)="onDialogClosed()">
+    </app-inventory-adjustment-peps>
 
 </div>

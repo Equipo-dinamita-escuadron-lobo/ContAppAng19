@@ -18,6 +18,9 @@ import { ExcelExportService } from '../services/excel-export.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
+import { InputTextModule } from 'primeng/inputtext';
+
+import { InventoryAdjustmentComponent } from '../inventory-adjustment/inventory-adjustment.component';
 
 interface AutoCompleteCompleteEvent {
   originalEvent: Event;
@@ -26,6 +29,7 @@ interface AutoCompleteCompleteEvent {
 
 @Component({
   selector: 'app-list-kardex-peps',
+  standalone: true,
   imports: [
     TableModule,
     CommonModule,
@@ -36,8 +40,11 @@ interface AutoCompleteCompleteEvent {
     InputIconModule,
     CurrencyPipe,
     ToastModule,
-    TooltipModule
+    TooltipModule,
+    InputTextModule,
+    InventoryAdjustmentComponent
   ],
+  providers: [MessageService],
   templateUrl: './list-kardex-peps.component.html',
   styleUrl: './list-kardex-peps.component.css'
 })
@@ -65,11 +72,10 @@ export class ListKardexPepsComponent {
   startDate: Date | null = null;
   endDate: Date | null = null;
 
-  // Variable para controlar el estado de carga de la exportación
+  //controlar el estado de carga de la exportación
   exportLoading: boolean = false;
 
-
-  // Variables para el diálogo de ajuste de inventario
+  //el diálogo de ajuste de inventario
   showInventoryAdjustment: boolean = false;
 
   onStartDateChange() {
@@ -166,7 +172,7 @@ export class ListKardexPepsComponent {
     this.first = event.first;
     const sort = event.sortField ? `${event.sortField},${event.sortOrder === 1 ? 'asc' : 'desc'}` : 'date,asc';
 
-    this.kardexPepsService.getKardexByProduc(this.productId, page, size, sort, this.startDate, this.endDate)
+    this.kardexPepsService.getKardexByProduct(this.productId, page, size, sort, this.startDate, this.endDate)
       .subscribe({
         next: (res) => {
           const pageData = res.data;
@@ -203,7 +209,6 @@ export class ListKardexPepsComponent {
         }
       });
   }
-
 
   /**
    * Calcula la cantidad total de salida desde outputDetails
@@ -245,8 +250,6 @@ export class ListKardexPepsComponent {
     return balance.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
   }
 
-
-  
   /**
    * Verifica si el botón de ajuste de inventario debe estar habilitado
    */
@@ -259,14 +262,41 @@ export class ListKardexPepsComponent {
    */
   openInventoryAdjustment() {
     if (this.isInventoryAdjustmentEnabled()) {
+      console.log('Abriendo dialog de ajuste con producto:', this.selectedProduct);
       this.showInventoryAdjustment = true;
     }
   }
 
+  
+  onAdjustmentCompleted() {
+    console.log('Ajuste completado, recargando kardex...');
+    this.showInventoryAdjustment = false;
+    
+    if (this.startDate && this.endDate && this.productId !== 0) {
+      this.loadKardex({ 
+        first: this.first, 
+        rows: 5, 
+        sortField: '', 
+        sortOrder: 1 
+      });
+    }
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Éxito',
+      detail: 'El inventario se ha actualizado correctamente'
+    });
+  }
 
   /**
-   * Exporta todos los registros del kardex a un archivo Excel
+   * Se ejecuta cuando se cierra el diálogo sin completar el ajuste
    */
+  onDialogClosed() {
+    console.log('Dialog de ajuste cerrado');
+    this.showInventoryAdjustment = false;
+  }
+
+
   exportToExcel() {
     if (!this.isInventoryAdjustmentEnabled()) {
       return;
@@ -274,7 +304,6 @@ export class ListKardexPepsComponent {
 
     this.exportLoading = true;
 
-    // Solo enviar fechas si ambas están seleccionadas
     const startDateToSend = (this.startDate && this.endDate) ? this.startDate : null;
     const endDateToSend = (this.startDate && this.endDate) ? this.endDate : null;
 
@@ -283,12 +312,8 @@ export class ListKardexPepsComponent {
         try {
           const rawList = res.data.content;
 
-          // Procesar los datos usando el servicio
-          const processedData = this.excelExportService.processKardexData(rawList);
-
-          // Exportar usando el servicio
           this.excelExportService.exportKardexToExcel(
-            processedData,
+            rawList,
             this.selectedProduct!,
             startDateToSend,
             endDateToSend
@@ -323,5 +348,6 @@ export class ListKardexPepsComponent {
     });
   }
 
-
+ 
+  
 }

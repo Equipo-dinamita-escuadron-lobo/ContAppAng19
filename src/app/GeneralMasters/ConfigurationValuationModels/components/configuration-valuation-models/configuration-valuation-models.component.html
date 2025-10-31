@@ -8,6 +8,7 @@
         Configure el método de valuación de inventario que se aplicará a sus productos.
     </p>
 
+
     <div class="mt-6">
         <form [formGroup]="configurationForm" (ngSubmit)="onSubmit()" class="mt-4">
             <div class="w-full">
@@ -32,6 +33,7 @@
                             (onChange)="onValuationMethodChange($event)">
                         </p-select>
 
+
                         @if (configurationForm.get('valuationMethod')?.touched && configurationForm.get('valuationMethod')?.invalid) {
                             <p-message
                                 severity="error"
@@ -39,6 +41,7 @@
                             </p-message>
                         }
                     </div>
+
 
                     <!-- Información del Método Seleccionado -->
                     @if (selectedMethod) {
@@ -65,11 +68,13 @@
                     }
                 </div>
 
+
                 <!-- Configuración por Empresa -->
                 <div class="border border-gray-300 rounded-lg p-6 mb-6 bg-white shadow-sm">
                     <h3 class="text-xl font-semibold text-[var(--color-primary)] mb-4">
                         Configuración por Empresa
                     </h3>
+
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -85,6 +90,7 @@
                                 class="w-full">
                             </p-select>
 
+
                             @if (configurationForm.get('enterpriseId')?.touched && configurationForm.get('enterpriseId')?.invalid) {
                                 <p-message
                                     severity="error"
@@ -92,6 +98,7 @@
                                 </p-message>
                             }
                         </div>
+
 
                         <div>
                             <label class="block mb-2 font-semibold">
@@ -105,6 +112,7 @@
                                 [minDate]="today">
                             </p-calendar>
 
+
                             @if (configurationForm.get('effectiveDate')?.touched && configurationForm.get('effectiveDate')?.invalid) {
                                 <p-message
                                     severity="error"
@@ -113,47 +121,8 @@
                             }
                         </div>
                     </div>
-
-                    <!-- Configuraciones Adicionales -->
-                    <div class="mt-6">
-                        <h4 class="font-semibold mb-3">Configuraciones Adicionales</h4>
-                        
-                        <div class="space-y-4">
-                            <div class="flex items-center">
-                                <p-checkbox
-                                    formControlName="applyToExistingInventory"
-                                    binary="true"
-                                    inputId="existing-inventory">
-                                </p-checkbox>
-                                <label for="existing-inventory" class="ml-2 text-sm">
-                                    Aplicar a inventario existente
-                                </label>
-                            </div>
-
-                            <div class="flex items-center">
-                                <p-checkbox
-                                    formControlName="enableAutomaticRevaluation"
-                                    binary="true"
-                                    inputId="auto-revaluation">
-                                </p-checkbox>
-                                <label for="auto-revaluation" class="ml-2 text-sm">
-                                    Habilitar revaluación automática
-                                </label>
-                            </div>
-
-                            <div class="flex items-center">
-                                <p-checkbox
-                                    formControlName="generateAuditTrail"
-                                    binary="true"
-                                    inputId="audit-trail">
-                                </p-checkbox>
-                                <label for="audit-trail" class="ml-2 text-sm">
-                                    Generar pista de auditoría
-                                </label>
-                            </div>
-                        </div>
-                    </div>
                 </div>
+
 
                 <!-- Configuraciones Avanzadas -->
                 <div class="border border-gray-300 rounded-lg p-6 mb-6 bg-white shadow-sm">
@@ -171,6 +140,7 @@
                         </p-button>
                     </div>
 
+
                     @if (showAdvancedSettings) {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -187,6 +157,7 @@
                                 </p-inputNumber>
                             </div>
 
+
                             <div>
                                 <label class="block mb-2 font-semibold">
                                     Moneda Base
@@ -200,6 +171,7 @@
                                     class="w-full">
                                 </p-select>
                             </div>
+
 
                             <div class="md:col-span-2">
                                 <label class="block mb-2 font-semibold">
@@ -216,6 +188,7 @@
                         </div>
                     }
                 </div>
+
 
                 <!-- Configuración Actual -->
                 @if (currentConfiguration) {
@@ -240,6 +213,7 @@
                         </div>
                     </div>
                 }
+
 
                 <!-- Botones de Acción -->
                 <div class="flex justify-center gap-4 mt-8">
@@ -269,6 +243,7 @@
         </form>
     </div>
 </div>
+
 
 <!-- Modal de Vista Previa -->
 <p-dialog
@@ -302,6 +277,7 @@
                 </div>
             </div>
 
+
             <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
                 <p class="text-yellow-800 text-sm">
                     <i class="pi pi-exclamation-triangle mr-2"></i>
@@ -311,6 +287,7 @@
             </div>
         }
     </div>
+
 
     <ng-template pTemplate="footer">
         <div class="flex justify-end gap-2">

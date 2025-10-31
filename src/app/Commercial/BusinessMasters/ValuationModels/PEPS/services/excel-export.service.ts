@@ -1,24 +1,8 @@
 import { Injectable } from '@angular/core';
 import { ProductResponse } from '../models/ProductResponse';
+import { KardexRecordsDTOResponse, Balance, SaleDetail } from '../models/KardexResponse';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-
-
-export interface KardexExportData {
-  Fecha: string;
-  Detalle: string;
-  Cantidad: number;
-  'Valor Unitario': number;
-  'Entrada - Cantidad': number | string;
-  'Entrada - Valor Unitario': number | string;
-  'Entrada - Valor Total': number | string;
-  'Salida - Cantidad': number | string;
-  'Salida - Valor Unitario': number | string;
-  'Salida - Valor Total': number | string;
-  'Saldo - Cantidad': number;
-  'Saldo - Valor Unitario': number;
-  'Saldo - Valor Total': number;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -28,181 +12,283 @@ export class ExcelExportService {
   constructor() { }
 
   /**
-   * Procesa los datos crudos del kardex para el formato de exportación
+   * Procesa los datos del kardex PEPS con lotes apilados en una sola fila
    */
-  processKardexData(rawList: any[]): KardexExportData[] {
-    return rawList.map((item: any) => {
-      const balanceTotal = item.totalBalance;
-      let entryQuantity: number | string = '';
-      let entryUnitPrice: number | string = '';
-      let entryTotal: number | string = '';
-      let exitQuantity: number | string = '';
-      let exitUnitPrice: number | string = '';
-      let exitTotal: number | string = '';
+  processKardexData(rawList: KardexRecordsDTOResponse[]): any[][] {
+    const exportData: any[][] = [];
 
-      if (item.type === 'PURCHASE') {
-        entryQuantity = item.quantity;
-        entryUnitPrice = parseFloat(item.unitPrice);
-        entryTotal = Number(entryQuantity) * Number(entryUnitPrice);
-      }
-      if (item.type === 'PURCHASERETURN') {
-        entryQuantity = -item.quantity;
-        entryUnitPrice = parseFloat(item.unitPrice);
-        entryTotal = Number(entryQuantity) * Number(entryUnitPrice);
-      }
-      if (item.type === 'SALE') {
-        exitQuantity = item.quantity;
-        exitUnitPrice = parseFloat(item.unitPrice);
-        exitTotal = Number(exitQuantity) * Number(exitUnitPrice);
-      }
-      if (item.type === 'SALESRETURN') {
-        exitQuantity = -item.quantity;
-        exitUnitPrice = parseFloat(item.unitPrice);
-        exitTotal = Number(exitQuantity) * Number(exitUnitPrice);
+    rawList.forEach((record) => {
+      const formattedDate = this.formatDate(record.date);
+
+  
+      let salidaCantidad = '';
+      let salidaVrUnitario = '';
+      let salidaVrTotal = '';
+
+      if (record.outputDetails && record.outputDetails.length > 0) {
+        const cantidades = record.outputDetails.map(o => o.quantityUsed.toString());
+        const vrUnitarios = record.outputDetails.map(o => this.formatCurrencyValue(o.unitPrice));
+        const vrTotales = record.outputDetails.map(o => this.formatCurrencyValue(o.totalPrice));
+
+        salidaCantidad = cantidades.join('\n');
+        salidaVrUnitario = vrUnitarios.join('\n');
+        salidaVrTotal = vrTotales.join('\n');
       }
 
-      const formattedDate = new Date(item.date).toLocaleDateString('es-CO', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      }).replace(/ de /g, '-');
+      // Procesar SALDOS
+      let saldoCantidad = '';
+      let saldoVrUnitario = '';
+      let saldoVrTotal = '';
 
-      return {
-        Fecha: formattedDate,
-        Detalle: item.details,
-        Cantidad: item.quantity,
-        'Valor Unitario': item.unitPrice,
-        'Entrada - Cantidad': entryQuantity,
-        'Entrada - Valor Unitario': entryUnitPrice,
-        'Entrada - Valor Total': entryTotal,
-        'Salida - Cantidad': exitQuantity,
-        'Salida - Valor Unitario': exitUnitPrice,
-        'Salida - Valor Total': exitTotal,
-        'Saldo - Cantidad': item.balanceQuantity,
-        'Saldo - Valor Unitario': item.balanceUnitPrice,
-        'Saldo - Valor Total': balanceTotal
-      };
+      if (record.balance && record.balance.length > 0) {
+        const cantidades = record.balance.map(b => b.quantity.toString());
+        const vrUnitarios = record.balance.map(b => this.formatCurrencyValue(b.unitPrice));
+        const vrTotales = record.balance.map(b => this.formatCurrencyValue(b.totalPrice));
+
+        saldoCantidad = cantidades.join('\n');
+        saldoVrUnitario = vrUnitarios.join('\n');
+        saldoVrTotal = vrTotales.join('\n');
+      } else {
+        saldoCantidad = '0';
+        saldoVrUnitario = '-';
+        saldoVrTotal = '$0.00';
+      }
+
+      const outputQuantity = this.calculateOutputQuantity(record.outputDetails);
+
+      let valorUnitario: any;
+      let cantidad: any;
+
+      if (record.entryQuantity) {
+        cantidad = record.entryQuantity;
+        valorUnitario = record.entryUnitPrice 
+          ? { v: record.entryUnitPrice, t: 'n', z: '$#,##0.00' }
+          : '-';
+      } else if (outputQuantity > 0) {
+        cantidad = outputQuantity;
+        valorUnitario = '-';
+      } else {
+        cantidad = '';
+        valorUnitario = '-';
+      }
+
+      const row = [
+        formattedDate,
+        record.detail,
+        cantidad,
+        valorUnitario,
+        record.entryQuantity || '',
+        record.entryUnitPrice ? { v: record.entryUnitPrice, t: 'n', z: '$#,##0.00' } : '',
+        record.entryTotalPrice ? { v: record.entryTotalPrice, t: 'n', z: '$#,##0.00' } : '',
+        salidaCantidad,
+        salidaVrUnitario,
+        salidaVrTotal,
+        saldoCantidad,
+        saldoVrUnitario,
+        saldoVrTotal
+      ];
+
+      exportData.push(row);
     });
+
+    return exportData;
   }
 
   /**
-     * Exporta los datos del kardex a un archivo Excel
-     */
-    exportKardexToExcel(
-      processedData: KardexExportData[],
-      product: ProductResponse,
-      startDate: Date | null,
-      endDate: Date | null
-    ): void {
-      // Crear el workbook y worksheet vacío
-      const wb: XLSX.WorkBook = XLSX.utils.book_new();
-      const ws: XLSX.WorkSheet = {};
+   * Exporta el kardex con formato profesional y bonito
+   */
+  exportKardexToExcel(
+    rawList: KardexRecordsDTOResponse[],
+    product: ProductResponse,
+    startDate: Date | null,
+    endDate: Date | null
+  ): void {
+    const processedData = this.processKardexData(rawList);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    const ws: XLSX.WorkSheet = {};
+
+    const productName = product?.name || 'Producto no especificado';
+    const productReference = product?.reference || 'N/A';
+    const productPresentation = product?.presentation || 'N/A';
+    const dateRange = (startDate && endDate)
+      ? `${startDate.toLocaleDateString('es-CO')} - ${endDate.toLocaleDateString('es-CO')}`
+      : 'Todos los registros';
+
+    // Encabezado con información del producto
+    const headerInfo = [
+      ['KARDEX - MÉTODO PEPS (FIFO)'],
+      [''],
+      ['Producto:', productName],
+      ['Referencia:', productReference],
+      ['Presentación:', productPresentation],
+      ['Rango de fechas:', dateRange],
+      ['Fecha de exportación:', new Date().toLocaleDateString('es-CO')],
+      [''],
+      ['']
+    ];
+
+    XLSX.utils.sheet_add_aoa(ws, headerInfo, { origin: 'A1' });
+
+    // Encabezados de la tabla
+    const tableHeadersGroup = [
+      ['Fecha', 'Detalle', 'Cant', 'VR Unit', 'Entradas', '', '', 'Salidas', '', '', 'Saldo', '', '']
+    ];
+
+    const tableHeadersSub = [
+      ['', '', '', '', 'Cant', 'Vr Unit', 'Vr Total', 'Cant', 'Vr Unit', 'Vr Total', 'Cant', 'Vr Unit', 'Vr Total']
+    ];
+
+    XLSX.utils.sheet_add_aoa(ws, tableHeadersGroup, { origin: 'A10' });
+    XLSX.utils.sheet_add_aoa(ws, tableHeadersSub, { origin: 'A11' });
+    XLSX.utils.sheet_add_aoa(ws, processedData, { origin: 'A12' });
+
+    const totalRows = headerInfo.length + 3 + processedData.length;
+    ws['!ref'] = `A1:M${totalRows}`;
+
+    ws['!cols'] = [
+      { wch: 15 }, { wch: 35 }, { wch: 8 }, { wch: 12 },
+      { wch: 8 }, { wch: 12 }, { wch: 15 },
+      { wch: 8 }, { wch: 12 }, { wch: 15 },
+      { wch: 8 }, { wch: 12 }, { wch: 15 }
+    ];
+
+    // ✨ APLICAR ESTILOS BONITOS ✨
+
+    // Estilo para el título principal (fila 1)
+    const titleCell = ws['A1'];
+    if (titleCell) {
+      titleCell.s = {
+        font: { name: 'Arial', sz: 16, bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '4472C4' } },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border: {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } }
+        }
+      };
+    }
+
+    // Estilo para información del producto (filas 3-7)
+    for (let row = 2; row <= 6; row++) {
+      ['A', 'B'].forEach(col => {
+        const cell = ws[`${col}${row + 1}`];
+        if (cell) {
+          cell.s = {
+            font: { name: 'Arial', sz: 10, bold: col === 'A' },
+            alignment: { horizontal: col === 'A' ? 'right' : 'left', vertical: 'center' }
+          };
+        }
+      });
+    }
+
   
-      // Agregar metadatos en las primeras filas
-      const productName = product?.name || 'Producto no especificado';
-      const productReference = product?.reference || 'N/A';
-      const dateRange = (startDate && endDate)
-        ? `${startDate.toLocaleDateString('es-CO')} - ${endDate.toLocaleDateString('es-CO')}`
-        : 'Todos los registros';
-  
-      // Información del encabezado
-      const headerInfo = [
-        ['KARDEX - PROMEDIO PONDERADO'],
-        [''],
-        ['Producto:', productName],
-        ['Referencia:', productReference],
-        ['Rango de fechas:', dateRange],
-        ['Fecha de exportación:', new Date().toLocaleDateString('es-CO')],
-        [''],
-        ['']
-      ];
-  
-      // Agregar la información del encabezado
-      XLSX.utils.sheet_add_aoa(ws, headerInfo, { origin: 'A1' });
-  
-      // Crear encabezados de la tabla con estructura jerárquica
-      // Primera fila de encabezados (grupos principales)
-      const tableHeadersGroup = [
-        ['Fecha', 'Detalle', 'Cantidad', 'Valor Unitario', 'Entradas', '', '', 'Salidas', '', '', 'Saldo', '', '']
-      ];
-  
-      // Segunda fila de encabezados (sub-columnas)
-      const tableHeadersSub = [
-        ['', '', '', '', 'Cantidad', 'Valor Unitario', 'Valor Total', 'Cantidad', 'Valor Unitario', 'Valor Total', 'Cantidad', 'Valor Unitario', 'Valor Total']
-      ];
-  
-      // Agregar encabezados de la tabla en las filas 9 y 10
-      XLSX.utils.sheet_add_aoa(ws, tableHeadersGroup, { origin: 'A9' });
-      XLSX.utils.sheet_add_aoa(ws, tableHeadersSub, { origin: 'A10' });
-  
-      // Agregar los datos de la tabla
-      const tableData = processedData.map((item: any) => [
-        item.Fecha,
-        item.Detalle,
-        item.Cantidad,
-        { v: item['Valor Unitario'], t: 'n', z: '$#,##0.00' },
-        item['Entrada - Cantidad'],
-        item['Entrada - Valor Unitario'] !== '' ? { v: item['Entrada - Valor Unitario'], t: 'n', z: '$#,##0.00' } : '',
-        item['Entrada - Valor Total'] !== '' ? { v: item['Entrada - Valor Total'], t: 'n', z: '$#,##0.00' } : '',
-        item['Salida - Cantidad'],
-        item['Salida - Valor Unitario'] !== '' ? { v: item['Salida - Valor Unitario'], t: 'n', z: '$#,##0.00' } : '',
-        item['Salida - Valor Total'] !== '' ? { v: item['Salida - Valor Total'], t: 'n', z: '$#,##0.00' } : '',
-        item['Saldo - Cantidad'],
-        { v: item['Saldo - Valor Unitario'], t: 'n', z: '$#,##0.00' },
-        { v: item['Saldo - Valor Total'], t: 'n', z: '$#,##0.00' }
-      ]);
-  
-      XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A11', cellDates: true });
-  
-      // Establecer el rango de la hoja
-      const totalRows = headerInfo.length + 2 + tableData.length; // +2 por las dos filas de encabezados
-      const totalCols = 13; // M (13 columnas)
-      ws['!ref'] = `A1:${XLSX.utils.encode_col(totalCols - 1)}${totalRows}`;
-  
-      // Configurar anchos de columnas
-      ws['!cols'] = [
-        { wch: 15 }, // A - Fecha
-        { wch: 30 }, // B - Detalle
-        { wch: 12 }, // C - Cantidad
-        { wch: 15 }, // D - Valor Unitario
-        { wch: 12 }, // E - Entrada Cantidad
-        { wch: 18 }, // F - Entrada Valor Unitario
-        { wch: 18 }, // G - Entrada Valor Total
-        { wch: 12 }, // H - Salida Cantidad
-        { wch: 18 }, // I - Salida Valor Unitario
-        { wch: 18 }, // J - Salida Valor Total
-        { wch: 12 }, // K - Saldo Cantidad
-        { wch: 18 }, // L - Saldo Valor Unitario
-        { wch: 18 }  // M - Saldo Valor Total
-      ];
-  
-      // Combinar celdas para el título y encabezados de grupos
-      if (!ws['!merges']) ws['!merges'] = [];
-  
-      // Título principal
-      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 12 } }); // A1:M1
-  
-      // Combinar celdas para los encabezados individuales que no tienen subcolumnas
-      ws['!merges'].push({ s: { r: 8, c: 0 }, e: { r: 9, c: 0 } }); // Fecha (A9:A10)
-      ws['!merges'].push({ s: { r: 8, c: 1 }, e: { r: 9, c: 1 } }); // Detalle (B9:B10)
-      ws['!merges'].push({ s: { r: 8, c: 2 }, e: { r: 9, c: 2 } }); // Cantidad (C9:C10)
-      ws['!merges'].push({ s: { r: 8, c: 3 }, e: { r: 9, c: 3 } }); // Valor Unitario (D9:D10)
-  
-      // Combinar celdas para los grupos principales
-      ws['!merges'].push({ s: { r: 8, c: 4 }, e: { r: 8, c: 6 } }); // Entradas (E9:G9)
-      ws['!merges'].push({ s: { r: 8, c: 7 }, e: { r: 8, c: 9 } }); // Salidas (H9:J9)
-      ws['!merges'].push({ s: { r: 8, c: 10 }, e: { r: 8, c: 12 } }); // Saldo (K9:M9)
-  
-      XLSX.utils.book_append_sheet(wb, ws, 'Kardex');
-  
-      // Generar el nombre del archivo
-      const fileName = `Kardex_${productName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
-  
-      // Guardar el archivo
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(blob, fileName);
+    for (let col = 0; col < 13; col++) {
+      const colLetter = XLSX.utils.encode_col(col);
+      
+      
+      const headerCell1 = ws[`${colLetter}11`];
+      if (headerCell1) {
+        headerCell1.s = {
+          font: { name: 'Arial', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: '2F5496' } },
+          alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+          }
+        };
+      }
+
+      const headerCell2 = ws[`${colLetter}12`];
+      if (headerCell2) {
+        headerCell2.s = {
+          font: { name: 'Arial', sz: 10, bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: '5B9BD5' } },
+          alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+          border: {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+          }
+        };
+      }
     }
 
 
+    const dataStartRow = 11;
+    for (let i = 0; i < processedData.length; i++) {
+      const rowIndex = dataStartRow + i;
+      const isEvenRow = i % 2 === 0;
+
+      for (let col = 0; col < 13; col++) {
+        const colLetter = XLSX.utils.encode_col(col);
+        const cellAddress = `${colLetter}${rowIndex + 1}`;
+        
+        if (!ws[cellAddress]) ws[cellAddress] = { v: '', t: 's' };
+        
+        ws[cellAddress].s = {
+          font: { name: 'Arial', sz: 10 },
+          fill: { fgColor: { rgb: isEvenRow ? 'FFFFFF' : 'F2F2F2' } },
+          alignment: { 
+            horizontal: col <= 1 ? 'left' : 'center', 
+            vertical: 'top', 
+            wrapText: col >= 7  
+          },
+          border: {
+            top: { style: 'thin', color: { rgb: 'D3D3D3' } },
+            bottom: { style: 'thin', color: { rgb: 'D3D3D3' } },
+            left: { style: 'thin', color: { rgb: 'D3D3D3' } },
+            right: { style: 'thin', color: { rgb: 'D3D3D3' } }
+          }
+        };
+      }
+    }
+
+    if (!ws['!merges']) ws['!merges'] = [];
+    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 12 } });
+    ws['!merges'].push({ s: { r: 9, c: 0 }, e: { r: 10, c: 0 } });
+    ws['!merges'].push({ s: { r: 9, c: 1 }, e: { r: 10, c: 1 } });
+    ws['!merges'].push({ s: { r: 9, c: 2 }, e: { r: 10, c: 2 } });
+    ws['!merges'].push({ s: { r: 9, c: 3 }, e: { r: 10, c: 3 } });
+    ws['!merges'].push({ s: { r: 9, c: 4 }, e: { r: 9, c: 6 } });
+    ws['!merges'].push({ s: { r: 9, c: 7 }, e: { r: 9, c: 9 } });
+    ws['!merges'].push({ s: { r: 9, c: 10 }, e: { r: 9, c: 12 } });
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Kardex PEPS');
+
+    const fileName = `Kardex_PEPS_${productName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, fileName);
+  }
+
+
+
+  private calculateOutputQuantity(outputDetails: SaleDetail[] | null): number {
+    if (!outputDetails || outputDetails.length === 0) return 0;
+    return outputDetails.reduce((sum, detail) => sum + detail.quantityUsed, 0);
+  }
+
+  private calculateOutputTotalPrice(outputDetails: SaleDetail[] | null): number {
+    if (!outputDetails || outputDetails.length === 0) return 0;
+    return outputDetails.reduce((sum, detail) => sum + detail.totalPrice, 0);
+  }
+
+  private formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-CO', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    }).replace(/ de /g, '-');
+  }
+
+  private formatCurrencyValue(value: number): string {
+    return `$${value.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
 }

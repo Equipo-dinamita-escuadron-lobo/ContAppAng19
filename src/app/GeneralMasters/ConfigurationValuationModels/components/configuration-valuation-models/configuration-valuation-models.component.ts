@@ -6,11 +6,11 @@ import { SelectModule } from 'primeng/select';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
-import { CheckboxModule } from 'primeng/checkbox';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
+
 
 interface ValuationMethod {
   label: string;
@@ -19,15 +19,18 @@ interface ValuationMethod {
   advantages?: string[];
 }
 
+
 interface Enterprise {
   id: string;
   name: string;
 }
 
+
 interface Currency {
   label: string;
   value: string;
 }
+
 
 interface CurrentConfiguration {
   methodLabel: string;
@@ -35,12 +38,14 @@ interface CurrentConfiguration {
   status: string;
 }
 
+
 interface PreviewData {
   methodLabel: string;
   enterpriseName: string;
   effectiveDate: Date;
   affectedProducts: number;
 }
+
 
 @Component({
   selector: 'app-valuation-method-config',
@@ -53,7 +58,6 @@ interface PreviewData {
     CalendarModule,
     InputNumberModule,
     TextareaModule,
-    CheckboxModule,
     MessageModule,
     ToastModule,
     DialogModule
@@ -69,9 +73,11 @@ export class ValuationMethodConfigComponent implements OnInit {
   showPreviewModal = false;
   today = new Date();
 
+
   selectedMethod: ValuationMethod | null = null;
   currentConfiguration: CurrentConfiguration | null = null;
   previewData: PreviewData | null = null;
+
 
   valuationMethods: ValuationMethod[] = [
     {
@@ -96,17 +102,20 @@ export class ValuationMethodConfigComponent implements OnInit {
     },
   ];
 
+
   enterprises: Enterprise[] = [
     { id: '1', name: 'Empresa Principal S.A.S.' },
     { id: '2', name: 'Sucursal Norte Ltda.' },
     { id: '3', name: 'Almacén Central' }
   ];
 
+
   currencies: Currency[] = [
     { label: 'Peso Colombiano (COP)', value: 'COP' },
     { label: 'Dólar Americano (USD)', value: 'USD' },
     { label: 'Euro (EUR)', value: 'EUR' }
   ];
+
 
   constructor(
     private formBuilder: FormBuilder,
@@ -115,38 +124,41 @@ export class ValuationMethodConfigComponent implements OnInit {
     this.configurationForm = this.createConfigurationForm();
   }
 
+
   ngOnInit(): void {
     this.loadCurrentConfiguration();
   }
+
 
   private createConfigurationForm(): FormGroup {
     return this.formBuilder.group({
       valuationMethod: ['', Validators.required],
       enterpriseId: ['', Validators.required],
       effectiveDate: [new Date(), Validators.required],
-      applyToExistingInventory: [false],
-      enableAutomaticRevaluation: [true],
-      generateAuditTrail: [true],
       decimalPrecision: [2, [Validators.min(2), Validators.max(6)]],
       baseCurrency: ['COP'],
       notes: ['']
     });
   }
 
+
   onValuationMethodChange(event: any): void {
     const methodValue = event.value;
     this.selectedMethod = this.valuationMethods.find(method => method.value === methodValue) || null;
   }
 
+
   toggleAdvancedSettings(): void {
     this.showAdvancedSettings = !this.showAdvancedSettings;
   }
+
 
   previewChanges(): void {
     if (this.configurationForm.valid) {
       const formValue = this.configurationForm.value;
       const selectedEnterprise = this.enterprises.find(e => e.id === formValue.enterpriseId);
       const selectedMethod = this.valuationMethods.find(m => m.value === formValue.valuationMethod);
+
 
       this.previewData = {
         methodLabel: selectedMethod?.label || '',
@@ -155,24 +167,29 @@ export class ValuationMethodConfigComponent implements OnInit {
         affectedProducts: Math.floor(Math.random() * 500) + 100
       };
 
+
       this.showPreviewModal = true;
     }
   }
+
 
   closePreview(): void {
     this.showPreviewModal = false;
     this.previewData = null;
   }
 
+
   confirmApplication(): void {
     this.showPreviewModal = false;
     this.onSubmit();
   }
 
+
   onSubmit(): void {
     if (this.configurationForm.valid) {
       this.isLoading = true;
       const formValue = this.configurationForm.value;
+
 
       setTimeout(() => {
         this.messageService.add({
@@ -182,6 +199,7 @@ export class ValuationMethodConfigComponent implements OnInit {
           life: 5000
         });
 
+
         this.loadCurrentConfiguration();
         this.isLoading = false;
       }, 2000);
@@ -190,12 +208,14 @@ export class ValuationMethodConfigComponent implements OnInit {
     }
   }
 
+
   private markFormGroupTouched(): void {
     Object.keys(this.configurationForm.controls).forEach(key => {
       const control = this.configurationForm.get(key);
       control?.markAsTouched();
     });
   }
+
 
   private loadCurrentConfiguration(): void {
     this.currentConfiguration = {
@@ -204,6 +224,7 @@ export class ValuationMethodConfigComponent implements OnInit {
       status: 'Activo'
     };
   }
+
 
   cancelForm(): void {
     this.configurationForm.reset();

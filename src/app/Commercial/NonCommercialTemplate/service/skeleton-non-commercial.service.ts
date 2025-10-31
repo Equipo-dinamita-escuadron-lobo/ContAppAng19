@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Facture2 } from '../../InvoiceTemplate/models/Facture2';
 import { ProductList2 } from '../models/Product2';
+import { Tag } from '../models/Tag';
 
 
 let API_URL = environment.API_URL;
@@ -26,12 +27,16 @@ export class SkeletonNonCommercialService {
   createNonCommercialEntry(facture: Facture2):Observable<void>{
     return this.http.post<void>(`${API_URL}factures/skeleton/non-commercial-entry`,facture);
   }
-  createNonCommercialExit(facture:Facture):Observable<void>{
+  createNonCommercialExit(facture:Facture2):Observable<void>{
     return this.http.post<void>(`${API_URL}factures/skeleton/non-commercial-exit`,facture);
 
   }
   getAllProductsByEnterpriseId(): Observable<ProductList2[]> {
     return this.http.get<ProductList2[]>(`${API_URL}products/findAll/${this.enterpriseId}`);
+  }
+
+  getAllNonCommercialTag():Observable<Tag[]>{
+    return this.http.get<Tag[]>(`${API_URL}config/tag/findAll/${this.enterpriseId}`);
   }
 
   private enterpriseIdLocalStorage() {
@@ -40,4 +45,5 @@ export class SkeletonNonCommercialService {
     }
     this.enterpriseId = this.entData.id;
   }
+
 }

@@ -14,6 +14,7 @@ import { Product2, ProductList2 } from '../../models/Product2';
 import { SkeletonNonCommercialService } from '../../service/skeleton-non-commercial.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { Tag } from '../../models/Tag';
 
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
@@ -55,6 +56,9 @@ export class CreateNonCommercialComponent implements OnInit {
   filteredProducts: ProductList2[] = [];
   selectedProduct: ProductList2 | undefined;
 
+  allTags: Tag[] = [];
+  selectedTag: Tag | undefined;
+
   eventTypes: NonCommercialEventType[] = [
     { label: 'Entrada no Comercial', value: 'entry' },
     { label: 'Salida no Comercial', value: 'exit' }
@@ -83,6 +87,22 @@ export class CreateNonCommercialComponent implements OnInit {
         console.error('Error cargando productos:', error);
       }
     });
+
+    this.skeletonNonCommercialService.getAllNonCommercialTag().subscribe({
+      next: (response) => {
+        this.allTags = response;
+        console.log('Tags cargados:', this.allTags);
+      },
+      error: (error) => {
+        console.error('Error cargando tags:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las etiquetas'
+        });
+      }
+    });
+
   }
 
   private createNonCommercialForm(): FormGroup {
@@ -93,6 +113,7 @@ export class CreateNonCommercialComponent implements OnInit {
       factCode: [{ value: randomFactCode, disabled: true }, Validators.required],
       thId: [1, Validators.required],
       accountingAccount: [5, Validators.required],
+      tagTitle: ['', Validators.required],
       factProducts: this.formBuilder.array([this.createProductForm()]),
       totalValue: [{ value: 0, disabled: true }]
     });
@@ -100,7 +121,7 @@ export class CreateNonCommercialComponent implements OnInit {
 
   private createProductForm(): FormGroup {
     const productForm = this.formBuilder.group({
-      productId: [this.productId || '', Validators.required], // ✅ CAMBIO: Usar this.productId
+      productId: [this.productId || '', Validators.required], 
       amount: [5, [Validators.required, Validators.min(1)]],
       description: ['', Validators.required],
       descount: [0, [Validators.min(0), Validators.max(100)]],
@@ -108,7 +129,6 @@ export class CreateNonCommercialComponent implements OnInit {
       subtotal: [{ value: 0, disabled: true }]
     });
 
-    // Suscribirse a cambios para calcular subtotal
     productForm.get('amount')?.valueChanges.subscribe(() => this.calculateSubtotal(productForm));
     productForm.get('unitPrice')?.valueChanges.subscribe(() => this.calculateSubtotal(productForm));
     productForm.get('descount')?.valueChanges.subscribe(() => this.calculateSubtotal(productForm));
@@ -125,7 +145,7 @@ export class CreateNonCommercialComponent implements OnInit {
     return this.factProducts.controls;
   }
 
-  // ✅ Helper method para type casting seguro
+
   private getProductFormGroup(index: number): FormGroup {
     return this.factProducts.at(index) as FormGroup;
   }
@@ -147,11 +167,10 @@ export class CreateNonCommercialComponent implements OnInit {
     }
   }
 
-  // ✅ MÉTODO CORREGIDO: Basado en tu código de facturas que funciona
   onProductSelect(event: ProductList2): void {
-    console.log('Producto seleccionado:', event); // Para debug
+    console.log('Producto seleccionado:', event); 
     
-    // Obtener el último producto agregado (como en tu código de facturas)
+    // Obtener el último producto agregado
     const productForm = this.factProducts.at(this.factProducts.length - 1) as FormGroup;
     
     if (productForm && event) {
@@ -161,23 +180,31 @@ export class CreateNonCommercialComponent implements OnInit {
       // Recalcular subtotal
       this.calculateSubtotal(productForm);
       
-      console.log('Formulario actualizado:', productForm.value); // Para debug
+      console.log('Formulario actualizado:', productForm.value); 
     }
   }
 
-  // ✅ MÉTODO CORREGIDO: Idéntico a tu código de facturas
+  onTagChange(event: any): void {
+    const selectedTitle = event.value;
+    this.selectedTag = this.allTags.find(tag => tag.title === selectedTitle);
+    console.log('Tag seleccionado:', this.selectedTag);
+    console.log('Título:', selectedTitle);
+  }
+
+
+
   filterProducts(event: AutoCompleteCompleteEvent): void {
     const query = event.query.toLowerCase();
-    console.log('Filtrando productos con query:', query); // Para debug
+    console.log('Filtrando productos con query:', query); 
     
     this.filteredProducts = this.allProducts.filter(product => {
       return product.name.toLowerCase().includes(query);
     });
     
-    console.log('Productos filtrados:', this.filteredProducts.length); // Para debug
+    console.log('Productos filtrados:', this.filteredProducts.length); 
   }
 
-  // ✅ MÉTODO CORREGIDO: Con type casting apropiado
+
   private calculateSubtotal(productForm: FormGroup): void {
     const amount = productForm.get('amount')?.value || 0;
     const unitPrice = productForm.get('unitPrice')?.value || 0;
@@ -189,11 +216,10 @@ export class CreateNonCommercialComponent implements OnInit {
 
     productForm.get('subtotal')?.setValue(subtotal);
 
-    // Recalcular el total general
     this.calculateTotalValue();
   }
 
-  // ✅ MÉTODO CORREGIDO: Con type casting apropiado
+
   private calculateTotalValue(): void {
     let total = 0;
     this.factProducts.controls.forEach(control => {
@@ -209,7 +235,7 @@ export class CreateNonCommercialComponent implements OnInit {
     if (this.nonCommercialForm.valid) {
       const formValue = this.nonCommercialForm.getRawValue();
 
-      // Preparar productos
+    
       const products: Product2[] = formValue.factProducts.map((product: any) => ({
         productId: product.productId,
         amount: product.amount,
@@ -230,10 +256,10 @@ export class CreateNonCommercialComponent implements OnInit {
         totalPay: '0',
         pendingValue: formValue.totalValue.toString(),
         expirationDate: new Date().toISOString().split('T')[0],
-        accountingAccount: formValue.accountingAccount
+        accountingAccount: formValue.accountingAccount,
+        tagTitle: formValue.tagTitle
       };
 
-      // Llamar al servicio correspondiente según el tipo de evento
       const serviceCall = formValue.eventType === 'entry'
         ? this.skeletonNonCommercialService.createNonCommercialEntry(factureData)
         : this.skeletonNonCommercialService.createNonCommercialExit(factureData as any);
@@ -263,7 +289,6 @@ export class CreateNonCommercialComponent implements OnInit {
     }
   }
 
-  // ✅ MÉTODO CORREGIDO: Con mejor manejo de FormArray
   private markFormGroupTouched(): void {
     Object.keys(this.nonCommercialForm.controls).forEach(key => {
       const control = this.nonCommercialForm.get(key);

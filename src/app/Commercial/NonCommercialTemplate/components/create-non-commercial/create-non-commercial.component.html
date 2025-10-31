@@ -101,8 +101,29 @@
                         }
                     </div>
                     <div class="w-1/2">
-            
+                        <label for="tagTitle" class="block mb-2 font-semibold">
+                            Etiqueta No Comercial <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                            id="tagTitle"
+                            formControlName="tagTitle"
+                            [options]="allTags"
+                            optionLabel="title"
+                            optionValue="title"
+                            placeholder="Seleccione una etiqueta"
+                            class="w-full"
+                            (onChange)="onTagChange($event)">
+                        </p-select>
+
+                        @if (nonCommercialForm.get('tagTitle')?.touched && nonCommercialForm.get('tagTitle')?.invalid) {
+                            <p-message
+                                severity="error"
+                                text="La etiqueta es requerida">
+                            </p-message>
+                        }
                     </div>
+
+
                 </div>
 
                 <!-- Sección de Productos -->

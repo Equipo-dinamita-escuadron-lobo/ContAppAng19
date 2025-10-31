@@ -11,4 +11,5 @@ export interface Facture2 {
   pendingValue: string;
   expirationDate: string;
   accountingAccount: number;
+  tagTitle?: string;
 }
