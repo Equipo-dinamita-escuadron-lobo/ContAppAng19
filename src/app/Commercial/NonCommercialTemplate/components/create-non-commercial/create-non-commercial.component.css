@@ -52,7 +52,6 @@
   }
 }
 
-/* Custom styles for PrimeNG components */
 ::ng-deep .p-select {
   width: 100%;
 }
