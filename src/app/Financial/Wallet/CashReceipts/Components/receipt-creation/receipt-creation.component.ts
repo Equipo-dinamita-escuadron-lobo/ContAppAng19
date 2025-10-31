@@ -113,7 +113,7 @@ export class ReceiptCreationComponent {
       this.receiptTypes = data;
     });
 
-    this.paymentMethodService.findAllActive(enterpriseId, 0, 10).subscribe((page) => {
+    this.paymentMethodService.findAllActive(enterpriseId).subscribe((page) => {
       this.paymentMethods = page.content;
     });
 
