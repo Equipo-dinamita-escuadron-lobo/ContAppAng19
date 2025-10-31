@@ -14,7 +14,13 @@ import { ProductResponse } from '../models/ProductResponse';
 import { KardexRecordsDTOResponse } from '../models/KardexResponse';
 import { ResponseDto } from '../../models/ResponseDto';
 import { CurrencyPipe } from '@angular/common';
+import { ExcelExportService } from '../services/excel-export.service';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
+import { InputTextModule } from 'primeng/inputtext';
 
+import { InventoryAdjustmentComponent } from '../inventory-adjustment/inventory-adjustment.component';
 
 interface AutoCompleteCompleteEvent {
   originalEvent: Event;
@@ -23,6 +29,7 @@ interface AutoCompleteCompleteEvent {
 
 @Component({
   selector: 'app-list-kardex-peps',
+  standalone: true,
   imports: [
     TableModule,
     CommonModule,
@@ -31,16 +38,24 @@ interface AutoCompleteCompleteEvent {
     FormsModule,
     DatePickerModule,
     InputIconModule,
-     CurrencyPipe
+    CurrencyPipe,
+    ToastModule,
+    TooltipModule,
+    InputTextModule,
+    InventoryAdjustmentComponent
   ],
+  providers: [MessageService],
   templateUrl: './list-kardex-peps.component.html',
   styleUrl: './list-kardex-peps.component.css'
 })
 export class ListKardexPepsComponent {
 
-  constructor(private kardexPepsService:KardexPepsService,
-              private productService:ProductService
-  ){}
+  constructor(
+    private kardexPepsService: KardexPepsService,
+    private productService: ProductService,
+    private excelExportService: ExcelExportService,
+    private messageService: MessageService,
+  ) {}
 
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
@@ -57,6 +72,12 @@ export class ListKardexPepsComponent {
   startDate: Date | null = null;
   endDate: Date | null = null;
 
+  //controlar el estado de carga de la exportación
+  exportLoading: boolean = false;
+
+  //el diálogo de ajuste de inventario
+  showInventoryAdjustment: boolean = false;
+
   onStartDateChange() {
     if (this.endDate && this.startDate && this.endDate < this.startDate) {
       this.endDate = null;
@@ -66,6 +87,7 @@ export class ListKardexPepsComponent {
       this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
     }
   }
+
   onEndDateChange() {
     if (this.startDate && this.endDate && this.endDate < this.startDate) {
       this.startDate = null;
@@ -89,7 +111,7 @@ export class ListKardexPepsComponent {
             product.reference.toLowerCase().includes(query);
     });
     
-    console.log('Productos filtrados:', this.filteredProducts); // Para debug
+    console.log('Productos filtrados:', this.filteredProducts);
   }
 
   ngOnInit() {
@@ -100,7 +122,7 @@ export class ListKardexPepsComponent {
       return;
     }
     
-    console.log('Enterprise ID:', this.entData.id); // Para debug
+    console.log('Enterprise ID:', this.entData.id);
     
     this.productService.getAllProducts().subscribe({
       next: (response: ResponseDto<ProductResponse[]>) => {
@@ -121,18 +143,15 @@ export class ListKardexPepsComponent {
     });
   }
 
-
-onProductSelect(event: any) {
-  // El valor seleccionado está en event.value
-  this.selectedProduct = event.value;
-  this.productId = event.value.id;
-  console.log('Producto seleccionado:', this.selectedProduct);
-  // Al seleccionar un producto se carga el kardex con la configuración actual de fechas
-  if (this.startDate && this.endDate) {
-    this.loadKardex({ first: 0, rows: 5 });
+  onProductSelect(event: any) {
+    this.selectedProduct = event.value;
+    this.productId = event.value.id;
+    console.log('Producto seleccionado:', this.selectedProduct);
+    
+    if (this.startDate && this.endDate) {
+      this.loadKardex({ first: 0, rows: 5 });
+    }
   }
-}
-
 
   trackByIndex(index: number, item: any): number {
     return index;
@@ -153,22 +172,27 @@ onProductSelect(event: any) {
     this.first = event.first;
     const sort = event.sortField ? `${event.sortField},${event.sortOrder === 1 ? 'asc' : 'desc'}` : 'date,asc';
 
-    this.kardexPepsService.getKardexByProduc(this.productId, page, size, sort, this.startDate, this.endDate)
+    this.kardexPepsService.getKardexByProduct(this.productId, page, size, sort, this.startDate, this.endDate)
       .subscribe({
         next: (res) => {
-          // --- CORRECCIÓN AQUÍ ---
-          const pageData = res.data; // Objeto Page del backend
+          const pageData = res.data;
           
           if (pageData && pageData.content) {
-            // Mapea el contenido de la página
             this.kardexList = pageData.content.map((item: KardexRecordsDTOResponse) => {
               const formattedDate = new Date(item.date).toLocaleDateString('es-CO', {
                 day: '2-digit', month: 'long', year: 'numeric'
               }).replace(/ de /g, '-');
-              return { ...item, formattedDate } as KardexRow;
+              
+              return {
+                ...item,
+                formattedDate,
+                outputQuantity: this.calculateOutputQuantity(item.outputDetails),
+                outputTotalPrice: this.calculateOutputTotalPrice(item.outputDetails),
+                totalBalanceQuantity: this.calculateBalanceQuantity(item.balance),
+                totalBalanceValue: this.calculateBalanceValue(item.balance)
+              } as KardexRow;
             });
 
-            // Asigna el total de elementos para la paginación
             this.totalRecords = pageData.totalElements;
           } else {
             this.kardexList = [];
@@ -186,5 +210,144 @@ onProductSelect(event: any) {
       });
   }
 
+  /**
+   * Calcula la cantidad total de salida desde outputDetails
+   */
+  private calculateOutputQuantity(outputDetails: any[] | null): number {
+    if (!outputDetails || outputDetails.length === 0) {
+      return 0;
+    }
+    return outputDetails.reduce((sum, detail) => sum + (detail.quantityUsed || 0), 0);
+  }
 
+  /**
+   * Calcula el precio total de salida desde outputDetails
+   */
+  private calculateOutputTotalPrice(outputDetails: any[] | null): number {
+    if (!outputDetails || outputDetails.length === 0) {
+      return 0;
+    }
+    return outputDetails.reduce((sum, detail) => sum + (detail.totalPrice || 0), 0);
+  }
+
+  /**
+   * Calcula la cantidad total del balance
+   */
+  private calculateBalanceQuantity(balance: any[] | null): number {
+    if (!balance || balance.length === 0) {
+      return 0;
+    }
+    return balance.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  }
+
+  /**
+   * Calcula el valor total del balance
+   */
+  private calculateBalanceValue(balance: any[] | null): number {
+    if (!balance || balance.length === 0) {
+      return 0;
+    }
+    return balance.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+  }
+
+  /**
+   * Verifica si el botón de ajuste de inventario debe estar habilitado
+   */
+  isInventoryAdjustmentEnabled(): boolean {
+    return this.selectedProduct !== undefined && this.productId !== 0;
+  }
+
+  /**
+   * Abre el diálogo de ajuste de inventario
+   */
+  openInventoryAdjustment() {
+    if (this.isInventoryAdjustmentEnabled()) {
+      console.log('Abriendo dialog de ajuste con producto:', this.selectedProduct);
+      this.showInventoryAdjustment = true;
+    }
+  }
+
+  
+  onAdjustmentCompleted() {
+    console.log('Ajuste completado, recargando kardex...');
+    this.showInventoryAdjustment = false;
+    
+    if (this.startDate && this.endDate && this.productId !== 0) {
+      this.loadKardex({ 
+        first: this.first, 
+        rows: 5, 
+        sortField: '', 
+        sortOrder: 1 
+      });
+    }
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Éxito',
+      detail: 'El inventario se ha actualizado correctamente'
+    });
+  }
+
+  /**
+   * Se ejecuta cuando se cierra el diálogo sin completar el ajuste
+   */
+  onDialogClosed() {
+    console.log('Dialog de ajuste cerrado');
+    this.showInventoryAdjustment = false;
+  }
+
+
+  exportToExcel() {
+    if (!this.isInventoryAdjustmentEnabled()) {
+      return;
+    }
+
+    this.exportLoading = true;
+
+    const startDateToSend = (this.startDate && this.endDate) ? this.startDate : null;
+    const endDateToSend = (this.startDate && this.endDate) ? this.endDate : null;
+
+    this.kardexPepsService.getAllKardexForExport(this.productId, startDateToSend, endDateToSend).subscribe({
+      next: (res) => {
+        try {
+          const rawList = res.data.content;
+
+          this.excelExportService.exportKardexToExcel(
+            rawList,
+            this.selectedProduct!,
+            startDateToSend,
+            endDateToSend
+          );
+
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Archivo Excel exportado correctamente'
+          });
+
+        } catch (error) {
+          console.error('Error al generar el archivo Excel:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Error al generar el archivo Excel'
+          });
+        } finally {
+          this.exportLoading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener los datos para exportar:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al obtener los datos para exportar'
+        });
+        this.exportLoading = false;
+      }
+    });
+  }
+
+ 
+  
 }

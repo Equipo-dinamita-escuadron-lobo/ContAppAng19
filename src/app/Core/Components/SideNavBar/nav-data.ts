@@ -86,6 +86,11 @@ export const navbarData: INavbarData[] = [
         label:'Etiquetas no comerciales'
       },
       {
+        routeLink:'/gen-masters/configuration-valuation-models',
+        icon:'Subtitles',
+        label:'Configuración metodo Valoración'
+      },
+      {
         routeLink: '/gen-masters/help-center/list',
         icon: 'help',
         label: 'Centro de Ayuda',
@@ -241,6 +246,11 @@ export const navbarData: INavbarData[] = [
          routeLink: '/commercial/return-template',
          icon: 'replay',
          label: 'Devoluciones',
+       },
+       {
+        routeLink:'/commercial/non-commercial-template',
+        icon:'',
+        label:'Movimiento de Inventario No Comercial'
        },
        {
          routeLink: 'TO DO',

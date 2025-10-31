@@ -1,0 +1,50 @@
+/* Estilos personalizados para configuración de métodos de valuación */
+
+.invoice-form-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Custom styles for PrimeNG components */
+::ng-deep .p-select {
+  width: 100%;
+}
+
+::ng-deep .p-inputnumber {
+  width: 100%;
+}
+
+::ng-deep .p-datepicker {
+  width: 100%;
+}
+
+::ng-deep .p-message {
+  margin-top: 0.25rem;
+  width: 100%;
+}
+
+::ng-deep .p-checkbox {
+  margin-right: 0.5rem;
+}
+
+::ng-deep .p-dialog .p-dialog-content {
+  padding: 1rem;
+}
+
+/* Utility classes */
+.text-required {
+  color: #ef4444;
+}
+
+.section-title {
+  color: var(--color-primary, #3b82f6);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

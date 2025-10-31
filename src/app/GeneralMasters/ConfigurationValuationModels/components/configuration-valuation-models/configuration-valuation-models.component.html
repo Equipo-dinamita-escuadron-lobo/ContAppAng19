@@ -1,0 +1,305 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20">
+    <p-toast></p-toast>
+    
+    <h1 class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4">
+        Configuración de Métodos de Valuación
+    </h1>
+    <p class="mb-6 text-lg text-gray-700">
+        Configure el método de valuación de inventario que se aplicará a sus productos.
+    </p>
+
+
+    <div class="mt-6">
+        <form [formGroup]="configurationForm" (ngSubmit)="onSubmit()" class="mt-4">
+            <div class="w-full">
+                
+                <!-- Método de Valuación Principal -->
+                <div class="border border-gray-300 rounded-lg p-6 mb-6 bg-white shadow-sm">
+                    <h3 class="text-xl font-semibold text-[var(--color-primary)] mb-4">
+                        Método de Valuación de Inventario
+                    </h3>
+                    
+                    <div class="mb-6">
+                        <label class="block mb-2 font-semibold">
+                            Seleccione el Método <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                            formControlName="valuationMethod"
+                            [options]="valuationMethods"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="Seleccione el método de valuación"
+                            class="w-full"
+                            (onChange)="onValuationMethodChange($event)">
+                        </p-select>
+
+
+                        @if (configurationForm.get('valuationMethod')?.touched && configurationForm.get('valuationMethod')?.invalid) {
+                            <p-message
+                                severity="error"
+                                text="Debe seleccionar un método de valuación">
+                            </p-message>
+                        }
+                    </div>
+
+
+                    <!-- Información del Método Seleccionado -->
+                    @if (selectedMethod) {
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-start">
+                                <i class="pi pi-info-circle text-blue-500 mr-3 mt-1"></i>
+                                <div>
+                                    <h4 class="font-semibold text-blue-800 mb-2">{{ selectedMethod.label }}</h4>
+                                    <p class="text-blue-700 text-sm">{{ selectedMethod.description }}</p>
+                                    
+                                    @if (selectedMethod.advantages) {
+                                        <div class="mt-3">
+                                            <h5 class="font-medium text-blue-800 mb-1">Ventajas:</h5>
+                                            <ul class="list-disc list-inside text-blue-700 text-sm">
+                                                @for (advantage of selectedMethod.advantages; track advantage) {
+                                                    <li>{{ advantage }}</li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+
+                <!-- Configuración por Empresa -->
+                <div class="border border-gray-300 rounded-lg p-6 mb-6 bg-white shadow-sm">
+                    <h3 class="text-xl font-semibold text-[var(--color-primary)] mb-4">
+                        Configuración por Empresa
+                    </h3>
+
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block mb-2 font-semibold">
+                                Empresa <span class="text-red-500">*</span>
+                            </label>
+                            <p-select
+                                formControlName="enterpriseId"
+                                [options]="enterprises"
+                                optionLabel="name"
+                                optionValue="id"
+                                placeholder="Seleccione una empresa"
+                                class="w-full">
+                            </p-select>
+
+
+                            @if (configurationForm.get('enterpriseId')?.touched && configurationForm.get('enterpriseId')?.invalid) {
+                                <p-message
+                                    severity="error"
+                                    text="Debe seleccionar una empresa">
+                                </p-message>
+                            }
+                        </div>
+
+
+                        <div>
+                            <label class="block mb-2 font-semibold">
+                                Fecha de Aplicación <span class="text-red-500">*</span>
+                            </label>
+                            <p-calendar
+                                formControlName="effectiveDate"
+                                placeholder="Seleccione la fecha"
+                                class="w-full"
+                                dateFormat="dd/mm/yy"
+                                [minDate]="today">
+                            </p-calendar>
+
+
+                            @if (configurationForm.get('effectiveDate')?.touched && configurationForm.get('effectiveDate')?.invalid) {
+                                <p-message
+                                    severity="error"
+                                    text="La fecha de aplicación es requerida">
+                                </p-message>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Configuraciones Avanzadas -->
+                <div class="border border-gray-300 rounded-lg p-6 mb-6 bg-white shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-[var(--color-primary)]">
+                            Configuraciones Avanzadas
+                        </h3>
+                        <p-button
+                            type="button"
+                            label="Expandir"
+                            icon="pi pi-chevron-down"
+                            [text]="true"
+                            size="small"
+                            (onClick)="toggleAdvancedSettings()">
+                        </p-button>
+                    </div>
+
+
+                    @if (showAdvancedSettings) {
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block mb-2 font-semibold">
+                                    Redondeo de Decimales
+                                </label>
+                                <p-inputNumber
+                                    formControlName="decimalPrecision"
+                                    placeholder="2"
+                                    class="w-full"
+                                    [min]="2"
+                                    [max]="6"
+                                    [useGrouping]="false">
+                                </p-inputNumber>
+                            </div>
+
+
+                            <div>
+                                <label class="block mb-2 font-semibold">
+                                    Moneda Base
+                                </label>
+                                <p-select
+                                    formControlName="baseCurrency"
+                                    [options]="currencies"
+                                    optionLabel="label"
+                                    optionValue="value"
+                                    placeholder="COP"
+                                    class="w-full">
+                                </p-select>
+                            </div>
+
+
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 font-semibold">
+                                    Observaciones
+                                </label>
+                                <textarea
+                                    pTextarea
+                                    formControlName="notes"
+                                    placeholder="Ingrese observaciones sobre esta configuración..."
+                                    class="w-full"
+                                    rows="3">
+                                </textarea>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+
+                <!-- Configuración Actual -->
+                @if (currentConfiguration) {
+                    <div class="border border-green-300 rounded-lg p-6 mb-6 bg-green-50">
+                        <h3 class="text-xl font-semibold text-green-800 mb-4">
+                            Configuración Actual
+                        </h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <span class="font-medium text-green-700">Método Actual:</span>
+                                <p class="text-green-800">{{ currentConfiguration.methodLabel }}</p>
+                            </div>
+                            <div>
+                                <span class="font-medium text-green-700">Fecha de Aplicación:</span>
+                                <p class="text-green-800">{{ currentConfiguration.effectiveDate | date:'dd/MM/yyyy' }}</p>
+                            </div>
+                            <div>
+                                <span class="font-medium text-green-700">Estado:</span>
+                                <p class="text-green-800">{{ currentConfiguration.status }}</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+
+                <!-- Botones de Acción -->
+                <div class="flex justify-center gap-4 mt-8">
+                    <p-button
+                        type="button"
+                        label="Cancelar"
+                        severity="secondary"
+                        (onClick)="cancelForm()">
+                    </p-button>
+                    <p-button
+                        type="button"
+                        label="Vista Previa"
+                        severity="info"
+                        icon="pi pi-eye"
+                        (onClick)="previewChanges()"
+                        [disabled]="configurationForm.invalid">
+                    </p-button>
+                    <p-button
+                        type="submit"
+                        label="Aplicar Configuración"
+                        icon="pi pi-save"
+                        [disabled]="configurationForm.invalid"
+                        [loading]="isLoading">
+                    </p-button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- Modal de Vista Previa -->
+<p-dialog
+    [(visible)]="showPreviewModal"
+    header="Vista Previa de Cambios"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '50vw' }"
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }">
+    
+    <div class="p-4">
+        <h4 class="font-semibold mb-3">Resumen de Cambios:</h4>
+        
+        @if (previewData) {
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="font-medium">Método de Valuación:</span>
+                    <span class="text-blue-600">{{ previewData.methodLabel }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-medium">Empresa:</span>
+                    <span>{{ previewData.enterpriseName }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-medium">Fecha de Aplicación:</span>
+                    <span>{{ previewData.effectiveDate | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-medium">Productos Afectados:</span>
+                    <span class="text-orange-600">{{ previewData.affectedProducts }} productos</span>
+                </div>
+            </div>
+
+
+            <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <p class="text-yellow-800 text-sm">
+                    <i class="pi pi-exclamation-triangle mr-2"></i>
+                    Esta operación afectará el cálculo de costos de {{ previewData.affectedProducts }} productos.
+                    Asegúrese de revisar los reportes después de aplicar los cambios.
+                </p>
+            </div>
+        }
+    </div>
+
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button
+                label="Cancelar"
+                severity="secondary"
+                (onClick)="closePreview()">
+            </p-button>
+            <p-button
+                label="Confirmar Aplicación"
+                (onClick)="confirmApplication()">
+            </p-button>
+        </div>
+    </ng-template>
+</p-dialog>
