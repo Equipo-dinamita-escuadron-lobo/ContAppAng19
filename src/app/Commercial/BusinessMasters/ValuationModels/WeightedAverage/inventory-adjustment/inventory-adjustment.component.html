@@ -94,6 +94,7 @@
           </div>
 
           <!-- Cantidad -->
+                    <!-- Cantidad -->
           <div class="flex flex-col gap-2">
             <label for="quantity" class="font-semibold" style="color: var(--color-primary);">
               Cantidad <span style="color: var(--color-error);">*</span>
@@ -112,11 +113,34 @@
               }
               @if (adjustmentForm.get('adjustmentType')?.value === 'sale' && !canSubmitSale()) {
                 <small class="p-error error-message">
-                  La cantidad no puede ser mayor al saldo disponible ({{ getMaxSaleQuantity() }}).
+                  La cantidad solicitada excede el inventario disponible ({{ getMaxSaleQuantity() }} unidades).
                 </small>
               }
             </div>
           </div>
+
+          <!-- Fecha (opcional) -->
+          <div class="flex flex-col gap-2">
+            <label for="date" class="font-semibold" style="color: var(--color-primary);">
+              Fecha (Opcional)
+            </label>
+            <div class="w-full">
+              <p-datePicker
+                id="date"
+                formControlName="date"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                placeholder="Seleccione una fecha"
+                [styleClass]="'w-full'"
+                appendTo="body">
+              </p-datePicker>
+              <small class="text-xs" style="color: var(--color-neutral-40);">
+                Si no se especifica, se usará la fecha actual
+              </small>
+            </div>
+          </div>
+
+          <!-- Precio Unitario (solo para compras) -->
 
           <!-- Precio Unitario (solo para compras) -->
           @if (adjustmentForm.get('adjustmentType')?.value === 'purchase') {

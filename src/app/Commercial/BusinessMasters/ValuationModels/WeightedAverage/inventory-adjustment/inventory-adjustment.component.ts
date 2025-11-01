@@ -7,6 +7,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
+import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { KardexService } from '../services/kardex.service';
 import { KardexPurchaseRequest } from '../models/KardexPurchaseRequest';
@@ -25,7 +26,8 @@ import { ProductResponse } from '../models/ProductResponse';
     InputNumberModule,
     DropdownModule,
     DialogModule,
-    ToastModule
+    ToastModule,
+    DatePickerModule
   ],
   providers: [MessageService],
   templateUrl: './inventory-adjustment.component.html',
@@ -65,7 +67,8 @@ export class InventoryAdjustmentComponent implements OnInit {
       adjustmentType: ['', Validators.required],
       quantity: [null, [Validators.required, Validators.min(1)]],
       unitPrice: [null],
-      details: ['', Validators.required]
+      details: ['', Validators.required],
+      date: [null] // Fecha opcional
     });
 
     // Escuchar cambios en el tipo de ajuste
@@ -160,6 +163,11 @@ export class InventoryAdjustmentComponent implements OnInit {
           productId: this.productData.productId
         };
 
+        // Agregar fecha si está presente
+        if (formValue.date) {
+          request.date = new Date(formValue.date).toISOString();
+        }
+
         this.kardexService.purchaseAdjustment(request).subscribe({
           next: (response) => {
             this.messageService.add({
@@ -184,6 +192,11 @@ export class InventoryAdjustmentComponent implements OnInit {
           details: formValue.details,
           productId: this.productData.productId
         };
+
+        // Agregar fecha si está presente
+        if (formValue.date) {
+          request.date = new Date(formValue.date).toISOString();
+        }
 
         this.kardexService.saleAdjustment(request).subscribe({
           next: (response) => {
