@@ -22,6 +22,7 @@ import { CategoryValidationMessagesService } from '../../Services/category-valid
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
+import { TaxService } from '../../../../Taxes/services/tax.service';
 
 @Component({
   selector: 'app-category-list',
@@ -51,6 +52,7 @@ export class CategoryListComponent implements OnInit {
   entData: string | null = null;
   categories: Category[] = [];
   accounts: any[] = [];
+  taxes: any[] = [];
   loading: boolean = false;
 
   totalRecords: number = 0;
@@ -66,6 +68,7 @@ export class CategoryListComponent implements OnInit {
     private readonly confirmationService: ConfirmationService,
     private readonly messageService: MessageService,
     private readonly chartAccountService: ChartAccountService,
+    private readonly taxService: TaxService,
     public readonly categoryValidationMessagesService: CategoryValidationMessagesService
   ) { }
 
@@ -74,6 +77,7 @@ export class CategoryListComponent implements OnInit {
     if (this.entData) {
       this.loadCategoriesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
       this.getCuentas();
+      this.getTaxes();
     }
   }
 
@@ -138,6 +142,19 @@ export class CategoryListComponent implements OnInit {
     });
   }
 
+  getTaxes(): void {
+    const enterpriseId = this.getEnterpriseId();
+    this.taxService.findAll(enterpriseId).subscribe({
+      next: (page: any) => {
+        this.taxes = page.content || [];
+      },
+      error: (error: any) => {
+        console.error('Error al obtener los impuestos:', error);
+        this.taxes = [];
+      }
+    });
+  }
+
   mapAccountToList(data: Account[]): Account[] {
     let result: Account[] = [];
 
@@ -194,6 +211,23 @@ export class CategoryListComponent implements OnInit {
     const description = account.description || 'Sin descripción';
     
     return code ? `${code} - ${description}` : description;
+  }
+
+  getTaxNames(taxIds: number[] | undefined): string {
+    if (!taxIds || taxIds.length === 0) {
+      return '';
+    }
+    
+    if (this.taxes.length === 0) {
+      return taxIds.join(', '); // Mostrar IDs si no se cargaron los nombres
+    }
+    
+    const taxNames = taxIds.map(id => {
+      const tax = this.taxes.find(t => t.id === id);
+      return tax ? `${tax.code} (${tax.interest}%)` : `ID ${id}`;
+    });
+    
+    return taxNames.join(', ');
   }
 
   redirectToCreate(): void {
