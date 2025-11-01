@@ -61,7 +61,7 @@ export class NoCommercialTagService {
  
   getAllTags(enterpriseId?: string): Observable<NoCommercialTagResponse[]> {
     const targetEnterpriseId = enterpriseId || this.enterpriseId;
-    const url = `${this.apiUrl}/tags/${targetEnterpriseId}`;
+    const url = `${this.apiUrl}/findAll/${targetEnterpriseId}`;
     
     return this.http
       .get<NoCommercialTagResponse[]>(url)

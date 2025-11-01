@@ -55,6 +55,7 @@
       </p-button>
     </div>
 
+
     <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage.totalElements || 0"
       [lazy]="true" (onPage)="onPageChange($event)" (onSort)="onSort($event)"
       [rowsPerPageOptions]="[5, 10, 20]" [loading]="false"
