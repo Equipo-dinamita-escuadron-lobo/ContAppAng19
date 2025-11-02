@@ -56,9 +56,9 @@
     </div>
 
 
-    <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage.totalElements || 0"
+    <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage.page.totalElements"
       [lazy]="true" (onPage)="onPageChange($event)" (onSort)="onSort($event)"
-      [rowsPerPageOptions]="[5, 10, 20]" [loading]="false"
+      [rowsPerPageOptions]="[5, 10, 20]" [loading]="false" [first]="first"
       styleClass="p-datatable-striped font-family-sans" [tableStyle]="{ 'min-width': '50rem' }"
       [responsiveLayout]="'scroll'">
       <ng-template pTemplate="header">

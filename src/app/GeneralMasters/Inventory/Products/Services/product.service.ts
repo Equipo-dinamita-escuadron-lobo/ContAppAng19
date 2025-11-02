@@ -22,7 +22,7 @@ export class ProductService {
 
   getProducts(enterpriseId: string, numPage?: number, size?: number, sortField: string = 'name', sortOrder: string = 'asc', search?: string): Observable<Page<ProductList>> {
     let params: any = { enterpriseId };
-    if (numPage !== undefined) params.numPage = numPage;
+    if (numPage !== undefined) params.numPage = numPage;  // Usar 'numPage' como en terceros
     if (size !== undefined) params.size = size;
     params.sortField = sortField;
     params.sortOrder = sortOrder;
@@ -178,14 +178,12 @@ export class ProductService {
   private createEmptyPage(): Page<ProductList> {
     return {
       content: [],
-      totalElements: 0,
-      totalPages: 0,
-      size: 10,
-      number: 0,
-      numberOfElements: 0,
-      first: true,
-      last: true,
-      empty: true
+      page: {
+        totalElements: 0,
+        totalPages: 0,
+        size: 10,
+        number: 0
+      }
     };
   }
 

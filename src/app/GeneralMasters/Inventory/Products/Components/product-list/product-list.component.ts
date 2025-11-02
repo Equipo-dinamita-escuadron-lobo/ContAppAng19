@@ -52,20 +52,19 @@ export class ProductListComponent implements OnInit {
   entData: Record<string, any> | null = null;
   productsPage: Page<ProductList> = {
     content: [],
-    totalElements: 0,
-    totalPages: 0,
-    size: 10,
-    number: 0,
-    numberOfElements: 0,
-    first: true,
-    last: true,
-    empty: true
+    page: {
+      size: 0,
+      number: 0,
+      totalElements: 0,
+      totalPages: 0
+    }
   };
   products: ProductList[] = []; // Mantener para compatibilidad con la plantilla
 
   // Propiedades para paginación y búsqueda
   currentPage = 0;
   pageSize = 10;
+  first = 0; // Agregar first para controlar el estado del p-table
   sortField = 'name';
   sortOrder: 'asc' | 'desc' = 'asc';
   searchTerm = '';
@@ -114,13 +113,15 @@ export class ProductListComponent implements OnInit {
 
   // Método para manejar cambios de página
   onPageChange(event: any): void {
-    this.currentPage = event.page;
+    this.first = event.first;
     this.pageSize = event.rows;
+    this.currentPage = Math.floor(this.first / this.pageSize);
     this.getProducts();
   }
 
   // Método para manejar búsqueda
   onSearchChange(): void {
+    this.first = 0; // Resetear first
     this.currentPage = 0; // Resetear a la primera página al buscar
     this.getProducts();
   }
@@ -135,6 +136,7 @@ export class ProductListComponent implements OnInit {
   // Método para limpiar búsqueda
   clearSearch(): void {
     this.searchTerm = '';
+    this.first = 0;
     this.currentPage = 0;
     this.getProducts();
   }
