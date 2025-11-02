@@ -86,10 +86,21 @@ export class CreateInvoiceComponent implements OnInit {
       this.calculatePendingValue();
     });
 
-    this.steletonService.getAllProductsByEnterpriseId().subscribe(response => {
-      this.allProducts = response;
+    // Cargar todos los productos
+    this.steletonService.getAllProductsByEnterpriseId().subscribe({
+      next: (response) => {
+        this.allProducts = response.content; // Extraer el array de productos del objeto paginado
+        console.log('Productos cargados:', this.allProducts);
+      },
+      error: (error) => {
+        console.error('Error al cargar productos:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los productos'
+        });
+      }
     });
-
   }
 
   private createInvoiceForm(): FormGroup {

@@ -78,13 +78,19 @@ export class CreateNonCommercialComponent implements OnInit {
     this.entData = this.localStorageMethods.loadEnterpriseData();
     console.log('Datos de empresa cargados:', this.entData);
 
+    // Cargar productos activos
     this.skeletonNonCommercialService.getAllProductsByEnterpriseId().subscribe({
       next: (response) => {
-        this.allProducts = response;
-        console.log('Productos cargados:', this.allProducts); // Para debug
+        this.allProducts = response.content; // Extraer el array de productos del objeto paginado
+        console.log('Productos cargados:', this.allProducts);
       },
       error: (error) => {
         console.error('Error cargando productos:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los productos'
+        });
       }
     });
 
@@ -121,7 +127,7 @@ export class CreateNonCommercialComponent implements OnInit {
 
   private createProductForm(): FormGroup {
     const productForm = this.formBuilder.group({
-      productId: [this.productId || '', Validators.required], 
+      productId: [this.productId || '', Validators.required],
       amount: [5, [Validators.required, Validators.min(1)]],
       description: ['', Validators.required],
       descount: [0, [Validators.min(0), Validators.max(100)]],
@@ -168,19 +174,19 @@ export class CreateNonCommercialComponent implements OnInit {
   }
 
   onProductSelect(event: ProductList2): void {
-    console.log('Producto seleccionado:', event); 
-    
+    console.log('Producto seleccionado:', event);
+
     // Obtener el último producto agregado
     const productForm = this.factProducts.at(this.factProducts.length - 1) as FormGroup;
-    
+
     if (productForm && event) {
       productForm.get('productId')?.setValue(event.id);
       productForm.get('description')?.setValue(event.name);
-      
+
       // Recalcular subtotal
       this.calculateSubtotal(productForm);
-      
-      console.log('Formulario actualizado:', productForm.value); 
+
+      console.log('Formulario actualizado:', productForm.value);
     }
   }
 
@@ -195,13 +201,13 @@ export class CreateNonCommercialComponent implements OnInit {
 
   filterProducts(event: AutoCompleteCompleteEvent): void {
     const query = event.query.toLowerCase();
-    console.log('Filtrando productos con query:', query); 
-    
+    console.log('Filtrando productos con query:', query);
+
     this.filteredProducts = this.allProducts.filter(product => {
       return product.name.toLowerCase().includes(query);
     });
-    
-    console.log('Productos filtrados:', this.filteredProducts.length); 
+
+    console.log('Productos filtrados:', this.filteredProducts.length);
   }
 
 
@@ -235,7 +241,7 @@ export class CreateNonCommercialComponent implements OnInit {
     if (this.nonCommercialForm.valid) {
       const formValue = this.nonCommercialForm.getRawValue();
 
-    
+
       const products: Product2[] = formValue.factProducts.map((product: any) => ({
         productId: product.productId,
         amount: product.amount,
