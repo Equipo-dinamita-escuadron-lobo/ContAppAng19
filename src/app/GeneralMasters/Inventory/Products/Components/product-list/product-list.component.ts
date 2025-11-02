@@ -21,11 +21,12 @@ import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
 import { TooltipModule } from 'primeng/tooltip';
 import { CurrencyFormatPipe } from '../../Pipes/currency-format.pipe';
+import { ProductsTemplateComponent } from '../products-template/products-template.component';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  // --- AHORA: Importa todos los módulos necesarios aquí ---
+
   imports: [
     CommonModule,
     RouterModule,
@@ -41,7 +42,8 @@ import { CurrencyFormatPipe } from '../../Pipes/currency-format.pipe';
     TooltipModule,
     ToggleSwitchModule,
     FormsModule,
-    CurrencyFormatPipe
+    CurrencyFormatPipe,
+    ProductsTemplateComponent
 ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
@@ -59,7 +61,7 @@ export class ProductListComponent implements OnInit {
       totalPages: 0
     }
   };
-  products: ProductList[] = []; // Mantener para compatibilidad con la plantilla
+  products: ProductList[] = []; 
 
   // Propiedades para paginación y búsqueda
   currentPage = 0;
@@ -71,9 +73,8 @@ export class ProductListComponent implements OnInit {
 
   isDetailsDialogVisible = false;
   selectedProduct: ProductList | null = null;
-
-  // Control de vista completa/resumida
   showDetailView = false;
+  showTemplateModal = false;
 
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
@@ -103,7 +104,7 @@ export class ProductListComponent implements OnInit {
     ).subscribe({
       next: (data: Page<ProductList>) => {
         this.productsPage = data;
-        this.products = data.content; // Mantener para compatibilidad con la plantilla
+        this.products = data.content;
       },
       error: (error) => {
         console.error('Error al obtener los productos:', error);
@@ -121,8 +122,8 @@ export class ProductListComponent implements OnInit {
 
   // Método para manejar búsqueda
   onSearchChange(): void {
-    this.first = 0; // Resetear first
-    this.currentPage = 0; // Resetear a la primera página al buscar
+    this.first = 0; 
+    this.currentPage = 0; 
     this.getProducts();
   }
 
@@ -151,9 +152,6 @@ export class ProductListComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory']);
   }
 
-  // --- AHORA: El filtro se maneja en la plantilla directamente con una referencia de PrimeNG ---
-  // No se necesita el método applyFilter(event: Event)
-
   redirectTo(route: string): void {
     this.router.navigateByUrl(route);
   }
@@ -162,7 +160,7 @@ export class ProductListComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory/products/edit/', productId.toString()]);
   }
 
-  // --- MÉTODO PARA ELIMINAR UN PRODUCTO ---
+
   deleteProduct(productId: number): void {
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
     if (!enterpriseId) return;
@@ -183,7 +181,7 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  // Método privado para confirmar la eliminación del producto
+
   private confirmDeleteProduct(product: ProductList, enterpriseId: string): void {
     this.productService.deleteProduct(product.id, enterpriseId).subscribe({
       next: (data: Product) => {
@@ -205,15 +203,21 @@ export class ProductListComponent implements OnInit {
     });
   }
 
-  // --- MÉTODO PARA ABRIR EL MODAL ---
+
   openDetailsModal(product: ProductList): void {
     this.selectedProduct = product;
     this.isDetailsDialogVisible = true;
   }
 
-  // Método para cambiar el estado del producto
+  openTemplateModal(): void {
+    this.showTemplateModal = true;
+  }
+
+  closeTemplateModal(): void {
+    this.showTemplateModal = false;
+  }
+
   changeProductState(product: ProductList): void {
-    // Guardar el estado actual
     const newState = product.state;
     const previousState = !newState; // El estado anterior es el opuesto al actual
     
@@ -227,7 +231,6 @@ export class ProductListComponent implements OnInit {
         });
       },
       error: (error: any) => {
-        // Revertir el cambio si hay error
         product.state = previousState;
         console.error('Error al cambiar el estado del producto:', error);
         this.messageService.add({

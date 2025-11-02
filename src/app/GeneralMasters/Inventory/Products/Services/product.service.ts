@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
-import { Observable, of, switchMap, combineLatest, map, forkJoin, catchError } from 'rxjs';
+import { Observable, of, switchMap, combineLatest, map, forkJoin, catchError, throwError } from 'rxjs';
 import { Product, ProductList, Page } from '../Models/Product';
 import { UnitOfMeasureService } from '../../MeasurementUnits/Services/unit-of-measure.service';
 import { CategoryService } from '../../Category/Services/category.service';
@@ -210,5 +210,18 @@ export class ProductService {
   changeProductState(id: number, enterpriseId: string): Observable<void> {
     const url = `${API_URL}products/changeState/${id}/${enterpriseId}`;
     return this.http.put<void>(url, {});
+  }
+
+  downloadTemplate(entId: string): Observable<HttpResponse<Blob>> {
+    let params = new HttpParams().set('entId', entId);
+    return this.http.get(`${API_URL}products/template/excel`, {
+      params,
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error) => {
+        return throwError(() => new Error('Error al descargar la plantilla de productos'));
+      })
+    );
   }
 }

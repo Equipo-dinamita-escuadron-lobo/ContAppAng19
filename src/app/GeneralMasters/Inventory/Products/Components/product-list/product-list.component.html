@@ -24,6 +24,10 @@
           <p-button label="Crear" icon="pi pi-plus"
             (click)="redirectTo('/gen-masters/inventory/products/create')">
           </p-button>
+          <!-- Botón "Plantilla" para descargar plantilla de productos -->
+          <p-button label="Plantilla" icon="pi pi-download" severity="primary"
+            (click)="openTemplateModal()">
+          </p-button>
           <!-- Botón "Volver" para regresar al menú de inventory -->
           <p-button icon="pi pi-arrow-left" (click)="goBack()"
             styleClass="p-button-text p-button-secondary">
@@ -240,6 +244,12 @@
     <p-button label="Cerrar" severity="secondary" (click)="isDetailsDialogVisible = false"></p-button>
   </ng-template>
 </p-dialog>
+
+<!-- Modal de Plantilla de Productos -->
+<app-products-template
+  [visible]="showTemplateModal"
+  (close)="closeTemplateModal()">
+</app-products-template>
 
 <!-- Toast para mensajes -->
 <p-toast></p-toast>
