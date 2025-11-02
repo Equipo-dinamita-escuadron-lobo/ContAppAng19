@@ -1,6 +1,4 @@
-<!-- Contenedor Principal con la fuente Titillium -->
 <div class="flex w-full h-full font-titillium">
-  <!-- Tarjeta de Contenido Principal, aplicando el estilo de la guía -->
   <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
     <p-toast></p-toast>
     <p-confirmDialog></p-confirmDialog>
@@ -45,14 +43,14 @@
           <!-- Botón "Crear Producto" utilizando p-button -->
           <p-button label="Crear" icon="pi pi-plus"
             (click)="redirectTo('/gen-masters/inventory/products/create')">
+          </p-button>          
+          <!-- Botón "Exportar" para exportar productos a Excel -->
+          <p-button label="Exportar" icon="pi pi-download" severity="success"
+            (click)="showExportConfirmDialog()">            
           </p-button>
           <!-- Botón "Plantilla" para descargar plantilla de productos -->
           <p-button label="Plantilla" icon="pi pi-download" severity="primary"
             (click)="openTemplateModal()">
-          </p-button>
-          <!-- Botón "Exportar" para exportar productos a Excel -->
-          <p-button label="Exportar" icon="pi pi-download" severity="success"
-            (click)="showExportConfirmDialog()">
           </p-button>
           <!-- Botón "Volver" para regresar al menú de inventory -->
           <p-button icon="pi pi-arrow-left" (click)="goBack()"
