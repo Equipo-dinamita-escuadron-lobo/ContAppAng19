@@ -28,7 +28,6 @@ import { cuentasDiferentesValidator, collectLeaves } from '../../CustomValidator
     MessageModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './edit-tax.component.html',
   styleUrl: './edit-tax.component.css'
 })
@@ -221,9 +220,7 @@ export class EditTaxComponent implements OnInit {
             life: 3000 // Mantener notificación visible por 3 segundos
           });
           // Navegación después de 1.5 segundos para permitir leer la notificación
-          setTimeout(() => {
-            this.goBack();
-          }, 1500);
+          this.goBack();
         },
         error: (error) => {
           console.error('Error al actualizar el impuesto:', error);
