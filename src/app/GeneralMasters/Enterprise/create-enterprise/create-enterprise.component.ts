@@ -19,6 +19,9 @@ import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
 import { Enterprise } from '../models/enterprise';
 import { EnterpriseList } from '../models/EnterpriseList';
+import { SubjectService } from '../../Subjects/services/subjects.service';
+import { Subject } from '../../Subjects/models/subjects';
+
 
 @Component({
   selector: 'app-create-enterprise',
@@ -84,17 +87,24 @@ export class CreateEnterpriseComponent implements OnInit {
     { id: 4, name: 'Bogotá', departmentId: 4 },
   ];
 
+  subjectsList: Subject[] = [];
+
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private enterpriseService: EnterpriseService,
+    private subjectService: SubjectService,
     private messageService: MessageService
   ) {}
 
+  // Inicialización del componente
   ngOnInit(): void {
     this.initForm();
+    this.loadSubjects();
   }
 
+  // Inicialización del formulario reactivo
   initForm(): void {
     this.enterpriseForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -111,6 +121,8 @@ export class CreateEnterpriseComponent implements OnInit {
       country: [null],
       department: [null, Validators.required],
       city: [null, Validators.required],
+      subject: [null, Validators.required],
+      semester: [null, Validators.required],
       address: ['', [Validators.required, Validators.minLength(10)]],
       phone: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
       email: ['', [Validators.required, Validators.email]],
@@ -120,6 +132,7 @@ export class CreateEnterpriseComponent implements OnInit {
     this.updateFormValidations();
   }
 
+  // Actualiza las validaciones del formulario según el tipo de persona
   updateFormValidations(): void {
     if (this.personType === 'juridica') {
       this.enterpriseForm
@@ -142,6 +155,7 @@ export class CreateEnterpriseComponent implements OnInit {
     this.enterpriseForm.get('lastNames')?.updateValueAndValidity();
   }
 
+  // Manejo del cambio de tipo de persona
   onPersonTypeChange(type: 'juridica' | 'natural'): void {
     this.personType = type;
     this.updateFormValidations();
@@ -153,6 +167,7 @@ export class CreateEnterpriseComponent implements OnInit {
     }
   }
 
+  // Manejo de la selección de archivo
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
@@ -162,6 +177,7 @@ export class CreateEnterpriseComponent implements OnInit {
     }
   }
 
+  // Envío del formulario
   onSubmit(): void {
     if (this.enterpriseForm.valid && this.selectedFile) {
       this.loading = true;
@@ -204,6 +220,13 @@ export class CreateEnterpriseComponent implements OnInit {
           department: f.department.id || f.department,
           country: f.country.id || f.country,
         },
+        subjects: [
+          {
+            name: f.subject.name,
+            code: f.subject.code,
+          },
+        ],
+        semester: f.semester,
       };
 
       console.log('🧾 JSON enviado al backend (enterpriseDetailsApi):');
@@ -228,6 +251,7 @@ export class CreateEnterpriseComponent implements OnInit {
     }
   }
 
+  // Navegación de regreso a la lista de empresas
   goBack(): void {
     this.router.navigate(['/enterprise/list']);
   }
@@ -253,4 +277,22 @@ export class CreateEnterpriseComponent implements OnInit {
       event.preventDefault();
     }
   }
+
+  /* ==================== CARGAR MATERIAS ==================== */
+  loadSubjects(): void {
+    this.subjectService.getAllSubjects().subscribe({
+      next: (data) => {
+        this.subjectsList = data;
+      },
+      error: (err) => {
+        console.error('Error al cargar materias:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las materias desde el servidor.',
+        });
+      },
+    });
+  }
+
 }

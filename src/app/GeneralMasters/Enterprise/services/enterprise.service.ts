@@ -1,7 +1,9 @@
+import { Department } from './../../ThirdParties/models/Department';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { environmentLocal } from '../../../../environments/environment.local';
 import { EnterpriseList } from '../models/EnterpriseList';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
 import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
@@ -10,7 +12,7 @@ import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.metho
   providedIn: 'root',
 })
 export class EnterpriseService {
-  private apiUrl = environment.API_URL + 'enterprises/';
+  private apiUrl = environmentLocal.API_URL + 'enterprises/';
   private localStorageMethods = new LocalStorageMethods();
 
   constructor(private http: HttpClient) {}
@@ -42,6 +44,7 @@ export class EnterpriseService {
     return this.http.post<EnterpriseDetails>(this.apiUrl, enterprise);
   }
 
+  // Actualiza todos los datos de la empresa
   updateEnterprise(
     id: string,
     enterprise: EnterpriseDetails
@@ -72,4 +75,14 @@ export class EnterpriseService {
   backupEnterprise(id: string): Observable<any> {
     return this.http.post(`${this.apiUrl}backup/${id}`, {});
   }
+
+  /** ==================== COMPARTIR EMPRESA ==================== */
+  shareEnterprise(payload: { enterpriseId: number; emails: string[] }): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}share`, payload);
+  }
+
+  /** ==================== Departamentos ==================== */
+  // getDepartaments(): Observable<DepartmentList[]> {
+  //   return this.http.get<DepartmentList[]>(this.apiUrl);
+  // }
 }

@@ -209,10 +209,10 @@
               </p-dropdown>
             </div>
 
-            <!-- Departamento -->
+            <!-- Ciudad -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Cudad <span class="text-red-500">*</span>
+                Ciudad <span class="text-red-500">*</span>
               </label>
               <p-dropdown formControlName="city" [options]="city" optionLabel="name" placeholder="Seleccione una opción"
                 class="w-full">
@@ -226,7 +226,6 @@
               </label>
               <input pInputText formControlName="email" placeholder="Ej. nombredeusuario@example.com" class="w-full">
             </div>
-
           </div>
 
           <!-- Columna derecha -->
@@ -246,6 +245,33 @@
               </label>
               <input pInputText formControlName="phone" placeholder="Ej: 1234567890" class="w-full" maxlength="10"
                 inputmode="numeric" pattern="[0-9]*" (keypress)="validateNumberInput($event, 10)">
+            </div>
+
+            <!-- Seleccionar semestre -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Semestre <span class="text-red-500">*</span>
+              </label>
+              <p-dropdown
+                formControlName="semester"
+                [options]="[1,2,3,4,5,6,7,8,9]"
+                placeholder="Seleccione un semestre"
+                class="w-full">
+              </p-dropdown>
+            </div>
+            
+            <!-- Seleccionar materia -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Materia <span class="text-red-500">*</span>
+              </label>
+              <p-dropdown
+                formControlName="subject"
+                [options]="subjectsList"
+                optionLabel="name"
+                placeholder="Seleccione una materia"
+                class="w-full">
+              </p-dropdown>
             </div>
           </div>
         </div>

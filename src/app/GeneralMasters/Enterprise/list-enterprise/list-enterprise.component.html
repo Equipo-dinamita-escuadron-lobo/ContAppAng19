@@ -33,15 +33,18 @@
 
     <!-- Botones de acción -->
     <div class="flex gap-3">
+      <p-button label="Ver Materias" icon="pi pi-book" (click)="onListSubjects()"
+        class="bg-green-600 text-white rounded-full">
+      </p-button>
       <p-button label="PDF RUT" icon="pi pi-file-pdf" (click)="showPdfRutModal()"
         class="bg-blue-600 text-white rounded-full">
       </p-button>
       <p-button label="Agregar" icon="pi pi-plus" (click)="onCreateEnterprise()"
         class="bg-primary text-white rounded-full">
       </p-button>
-      <p-button label="Importar" icon="pi pi-upload" (click)="onImportEnterprise()"
+      <!-- <p-button label="Importar" icon="pi pi-upload" (click)="onImportEnterprise()"
         class="bg-green-600 text-white rounded-full">
-      </p-button>
+      </p-button> -->
     </div>
   </div>
 
@@ -181,4 +184,39 @@
       <p-button label="Eliminar" icon="pi pi-check" class="p-button-danger2" (click)="confirmDelete()"></p-button>
     </div>
   </div>
+</p-dialog>
+
+<!-- Modal Compartir Empresa -->
+<p-dialog header="Compartir Empresa" [(visible)]="showShareModal" [modal]="true" [closable]="false" [draggable]="false"
+  [resizable]="false" styleClass="w-96" [style]="{ width: '500px' }">
+  <div class="p-6">
+    <p class="text-gray-600 mb-4 text-sm">
+      Ingresa los correos electrónicos de los estudiantes con los que deseas
+      compartir esta empresa.
+    </p>
+
+    <!-- Campo de correos -->
+    <div class="flex gap-3 mb-3">
+      <input type="email" placeholder="Correo del estudiante" [(ngModel)]="newEmail"
+        class="flex-1 py-2 px-3 border rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
+      <p-button icon="pi pi-plus" (click)="addEmail()" class="bg-primary text-white rounded-full"></p-button>
+    </div>
+
+    <!-- Lista de correos agregados -->
+    <div *ngIf="emailList.length > 0" class="mt-4 space-y-2">
+      <div *ngFor="let email of emailList; let i = index"
+        class="flex justify-between items-center bg-gray-100 p-2 rounded-md">
+        <span class="text-sm">{{ email }}</span>
+        <button pButton icon="pi pi-times" class="p-button-text text-red-500" (click)="removeEmail(i)"></button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-3">
+      <p-button label="Cancelar" icon="pi pi-times" class="p-button-secondary" (click)="closeShareModal()"></p-button>
+      <p-button label="Compartir" icon="pi pi-share-alt" class="bg-green-600 text-white" (click)="confirmShare()"
+        [disabled]="emailList.length === 0"></p-button>
+    </div>
+  </ng-template>
 </p-dialog>

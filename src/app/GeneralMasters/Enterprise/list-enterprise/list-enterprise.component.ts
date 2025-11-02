@@ -65,6 +65,11 @@ export class ListEnterpriseComponent implements OnInit {
   LocalStorageMethods = new LocalStorageMethods();
   entData: EntData | null = null;
 
+  showShareModal = false;
+  selectedEnterpriseToShare: EnterpriseList | null = null;
+  emailList: string[] = [];
+  newEmail: string = '';
+
   constructor(
     private enterpriseService: EnterpriseService,
     private router: Router,
@@ -134,9 +139,10 @@ export class ListEnterpriseComponent implements OnInit {
           this.duplicateEnterprise(this.selectedEnterpriseForMenu!),
       },
       {
-        label: 'Copia de seguridad',
+        label: 'Compartir',
         icon: 'pi pi-save',
-        command: () => this.backupEnterprise(this.selectedEnterpriseForMenu!),
+        // command: () => this.backupEnterprise(this.selectedEnterpriseForMenu!),
+        command: () => this.shareEnterprise(this.selectedEnterpriseForMenu!),
       },
       {
         label: 'inactivar',
@@ -168,6 +174,10 @@ export class ListEnterpriseComponent implements OnInit {
 
   onCreateEnterprise(): void {
     this.router.navigate(['/enterprise/create']);
+  }
+
+  onListSubjects(): void {
+    this.router.navigate(['/subjects/list']);
   }
 
   /* ==================== ABRIR ARCHIVADAS ==================== */
@@ -348,6 +358,86 @@ export class ListEnterpriseComponent implements OnInit {
   openArchivedEnterprise(enterprise: EnterpriseList) {
     this.saveSelectedEnterprise(enterprise);
     this.router.navigate(['/enterprise/archive']);
+  }
+
+  /* ==================== COMPARTIR EMPRESA ==================== */
+  shareEnterprise(enterprise: EnterpriseList) {
+    if (!enterprise.id) return;
+
+    this.selectedEnterpriseToShare = enterprise;
+    this.showShareModal = true; // 👈 abre el modal
+  }
+
+  /* ==================== AGREGAR CORREO ==================== */
+  addEmail() {
+    if (!this.newEmail.trim()) return;
+
+    // Validar formato del correo
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(this.newEmail)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Correo inválido',
+        detail: 'Por favor ingresa un correo válido.',
+      });
+      return;
+    }
+
+    // Evitar duplicados
+    if (this.emailList.includes(this.newEmail.trim())) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Duplicado',
+        detail: 'Este correo ya fue agregado.',
+      });
+      return;
+    }
+
+    this.emailList.push(this.newEmail.trim());
+    this.newEmail = '';
+  }
+
+  /* ==================== ELIMINAR CORREO ==================== */
+  removeEmail(index: number) {
+    this.emailList.splice(index, 1);
+  }
+
+  /* ==================== CANCELAR COMPARTIR ==================== */
+  closeShareModal() {
+    this.showShareModal = false;
+    this.emailList = [];
+    this.newEmail = '';
+    this.selectedEnterpriseToShare = null;
+  }
+
+  /* ==================== CONFIRMAR COMPARTIR ==================== */
+  confirmShare() {
+    if (!this.selectedEnterpriseToShare?.id) return;
+
+    const payload = {
+      enterpriseId: this.selectedEnterpriseToShare.id,
+      emails: this.emailList,
+    };
+
+    // Aquí puedes conectar con el backend
+    this.enterpriseService.shareEnterprise(payload).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Compartida',
+          detail: 'La empresa fue compartida exitosamente.',
+        });
+        this.closeShareModal();
+      },
+      error: (err) => {
+        console.error('Error al compartir empresa:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo compartir la empresa.',
+        });
+      },
+    });
   }
 
   /* ==================== INACTIVAR ==================== */

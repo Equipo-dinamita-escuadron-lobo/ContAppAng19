@@ -5,6 +5,9 @@ import { ForgotPasswordComponent } from './Core/auth/forgot-password/forgot-pass
 import { RegisterComponent } from './Core/auth/register/register.component';
 import { ResetPasswordComponent } from './Core/auth/reset-password/reset-password.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
+import { EditEnterpriseComponent } from './GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component';
+import { CreateEnterpriseComponent } from './GeneralMasters/Enterprise/create-enterprise/create-enterprise.component';
+import { ListSubjectsComponent } from './GeneralMasters/Subjects/list-subjects/list-subjects.component';
 import { ArchiveEnterpriseComponent } from './GeneralMasters/Enterprise/archive-enterprise/archive-enterprise.component';
 import { hasRoleChildGuard, hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
@@ -68,6 +71,16 @@ export const routes: Routes = [
       import(
         './GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component'
       ).then((m) => m.EditEnterpriseComponent),
+  },
+  {
+    path: 'subjects/list',
+    data: {
+      breadcrumb: 'subjects-list',
+    },
+    loadComponent: () =>
+      import(
+        './GeneralMasters/Subjects/list-subjects/list-subjects.component'
+      ).then((m) => m.ListSubjectsComponent),
   },
   {
     path: '',
