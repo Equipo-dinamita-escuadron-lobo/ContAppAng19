@@ -18,8 +18,6 @@ export interface Product {
     name: string; 
     description: string;
     quantity: number;
-    taxPercentage: number[]; 
-    taxes?: number[]; // Campo adicional para envío al backend
     unitOfMeasureId: number; 
     categoryId: number; 
     enterpriseId: string;
@@ -37,8 +35,6 @@ export interface ProductList {
     name: string; 
     description: string;
     quantity: number;
-    taxPercentage: number[];
-    taxDisplayText?: string; 
     unitOfMeasureName: string;
     categoryName: string;
     enterpriseId: string;

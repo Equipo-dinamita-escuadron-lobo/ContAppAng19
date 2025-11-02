@@ -88,6 +88,12 @@
             scope="col"
             class="font-semibold text-primary border-b-2 border-primary"
           >
+            Impuesto(s)
+          </th>
+          <th
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary"
+          >
             Inventario
           </th>
           <th
@@ -127,6 +133,7 @@
         <tr class="text-neutral-20">
           <td class="py-3">{{ category.name }}</td>
           <td class="py-3">{{ category.description }}</td>
+          <td class="py-3">{{ getTaxNames(category.taxes) }}</td>
           <td class="py-3">
             <span [class]="accounts.length === 0 ? 'text-gray-400 italic' : ''">
               {{ getCategoryName(category.inventoryId) }}
@@ -185,7 +192,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="text-center py-6 font-family-sans text-neutral-50">
+          <td colspan="9" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron categorías.
           </td>
         </tr>
@@ -193,7 +200,7 @@
 
       <ng-template pTemplate="loadingbody">
         <tr>
-          <td colspan="8" class="text-center py-6 font-family-sans text-neutral-50">
+          <td colspan="9" class="text-center py-6 font-family-sans text-neutral-50">
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             <p class="mt-2 text-primary">Cargando categorías...</p>
           </td>

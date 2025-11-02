@@ -55,8 +55,8 @@
       </p-button>
     </div>
 
-    <!-- 3. TABLA DE PRODUCTOS: Estilizada para ser coherente con el diseño -->
-    <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage.totalElements"
+
+    <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage.totalElements || 0"
       [lazy]="true" (onPage)="onPageChange($event)" (onSort)="onSort($event)"
       [rowsPerPageOptions]="[5, 10, 20]" [loading]="false"
       styleClass="p-datatable-striped font-family-sans" [tableStyle]="{ 'min-width': '50rem' }"
@@ -79,9 +79,6 @@
           </th>
           <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
             Descripción
-          </th>
-          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
-            Impuesto(s)
           </th>
           <th scope="col" class="font-semibold text-primary border-b-2 border-primary text-right whitespace-nowrap">
             Costo
@@ -114,7 +111,6 @@
           <td class="py-3 whitespace-nowrap">{{ product.reference }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.presentation }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.description }}</td>
-          <td *ngIf="showDetailView" class="py-3 text-center whitespace-nowrap">{{ product.taxDisplayText }}</td>
           <td class="py-3 text-right whitespace-nowrap">{{ product.cost | currencyFormat }}</td>
           <td class="py-3 text-center whitespace-nowrap">{{ product.quantity }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.unitOfMeasureName }}</td>
@@ -151,7 +147,7 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 13 : 8" class="text-center py-6 font-family-sans text-neutral-50">
+          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
             No se encontraron productos.
           </td>
         </tr>
@@ -160,7 +156,7 @@
       <ng-template pTemplate="loadingbody">
         <tr>
           <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 13 : 8" class="text-center py-6 font-family-sans text-neutral-50">
+          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
             <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
             <p class="mt-2 text-primary">Cargando productos...</p>
           </td>

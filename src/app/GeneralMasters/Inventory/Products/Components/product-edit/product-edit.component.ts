@@ -7,7 +7,6 @@ import { MessageService } from 'primeng/api';
 
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { MultiSelectModule } from 'primeng/multiselect';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToastModule } from 'primeng/toast';
@@ -18,8 +17,6 @@ import { UnitOfMeasureService } from '../../../MeasurementUnits/Services/unit-of
 import { CategoryService } from '../../../Category/Services/category.service';
 import { ProductTypeService } from '../../../ProductTypes/Services/product-type.service';
 import { Product } from '../../Models/Product';
-import { TaxList } from '../../../../Taxes/models/Tax';
-import { TaxService } from '../../../../Taxes/services/tax.service';
 import { ValidationMessagesService } from '../../Services/validation-messages.service';
 
 @Component({
@@ -31,7 +28,6 @@ import { ValidationMessagesService } from '../../Services/validation-messages.se
     RouterModule,
     InputTextModule,
     SelectModule,
-    MultiSelectModule,
     ButtonModule,
     InputNumberModule,
     ToastModule,
@@ -44,13 +40,11 @@ export class ProductEditComponent implements OnInit {
   unitOfMeasures: any[] = [];
   categories: any[] = [];
   productTypes: ProductType[] = [];
-  taxes: TaxList[] = [];
   currentProductId!: number;
   isLoading = true;
   formSubmitAttempt = false;
   
   userModifiedFields = {
-    taxes: false,
     productTypeId: false,
     unitOfMeasureId: false,
     categoryId: false
@@ -69,7 +63,6 @@ export class ProductEditComponent implements OnInit {
     private readonly productTypeService: ProductTypeService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
-    private readonly taxService: TaxService,
     private readonly messageService: MessageService,
     private readonly validationMessagesService: ValidationMessagesService
   ) {
@@ -79,7 +72,6 @@ export class ProductEditComponent implements OnInit {
       reference: ['', Validators.required],
       presentation: ['', Validators.required], // Campo opcional
       quantity: [0],
-      taxes: [[], Validators.required], // Cambiado de taxPercentage a taxes
       cost: [0],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
@@ -119,16 +111,6 @@ export class ProductEditComponent implements OnInit {
     this.unitOfMeasureService.findActivate(this.entData).subscribe(data => this.unitOfMeasures = data);
     this.categoryService.findActivate(this.entData).subscribe(data => this.categories = data);
     this.productTypeService.findActivate(this.entData).subscribe((data: ProductType[]) => this.productTypes = data);
-    this.taxService.getActiveTaxes(this.entData).subscribe({
-      next: (data) => {
-        // Agregar displayText para el filtro del p-multiselect
-        this.taxes = data.map(tax => ({
-          ...tax,
-          displayText: `${tax.code} (${tax.interest}%)`
-        }));
-      },
-      error: (err) => console.error('Error al obtener los impuestos activos:', err)
-    });
   }
 
   loadProductData(id: number): void {
@@ -139,17 +121,13 @@ export class ProductEditComponent implements OnInit {
         this.originalProductData = {
           ...product,
           quantity: Number(product.quantity),
-          taxPercentage: Array.isArray(product.taxPercentage) ? product.taxPercentage : [Number(product.taxPercentage)],
           cost: Number(product.cost),
           unitOfMeasureId: Number(product.unitOfMeasureId),
           categoryId: Number(product.categoryId),
           productTypeId: Number(product.productTypeId)
         };
         
-        const formData: any = { ...this.originalProductData };
-        if (formData.taxPercentage === 0) {
-          formData.taxPercentage = null;
-        }
+        const formData: any = { ...this.originalProductData };        
         
         // Usar los datos modificados para el formulario
         this.productForm.patchValue(formData);
@@ -195,7 +173,6 @@ export class ProductEditComponent implements OnInit {
       reference: formData.reference,
       presentation: formData.presentation,
       quantity: Number(formData.quantity),
-      taxes: formData.taxes && formData.taxes.length > 0 ? formData.taxes : [],
       cost: Number(formData.cost),
       unitOfMeasureId: formData.unitOfMeasureId, 
       categoryId: formData.categoryId, 
@@ -252,7 +229,6 @@ export class ProductEditComponent implements OnInit {
       reference: compareValues(formData.reference, this.originalProductData.reference),
       presentation: compareValues(formData.presentation, this.originalProductData.presentation),
       quantity: compareValues(formData.quantity, this.originalProductData.quantity),
-      taxes: !this.arraysEqual(formData.taxes || [], this.originalProductData.taxPercentage || []),
       cost: compareValues(formData.cost, this.originalProductData.cost),
       unitOfMeasureId: compareValues(formData.unitOfMeasureId, this.originalProductData.unitOfMeasureId),
       categoryId: compareValues(formData.categoryId, this.originalProductData.categoryId),
