@@ -14,6 +14,7 @@ import { LocalStorageMethods, EntData } from '../../../Shared/Methods/local-stor
 import { InputTextModule } from 'primeng/inputtext';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { ValuationMethodConfigComponent } from '../../ConfigurationValuationModels/components/configuration-valuation-models/configuration-valuation-models.component';
 
 @Component({
   selector: 'app-list-enterprise',
@@ -28,6 +29,7 @@ import { environment } from '../../../../environments/environment';
     InputIconModule,
     InputTextModule,
     DropdownModule,
+    ValuationMethodConfigComponent
 ],
   templateUrl: './list-enterprise.component.html',
   styleUrl: './list-enterprise.component.css'
@@ -38,6 +40,7 @@ export class ListEnterpriseComponent {
   selectedStatus: string = 'active';
   searchTerm: string = '';
   showPdfModal: boolean = false;
+  showValuationModal: boolean = false;
   selectedPdfFile: File | null = null;
 
   constructor(
@@ -50,6 +53,7 @@ export class ListEnterpriseComponent {
   entData: EntData | null = null;
 
   ngOnInit() {
+    //this.LocalStorageMethods.clearEnterpriseData();
     this.getEnterpriseActive();
   }
 
@@ -103,13 +107,22 @@ export class ListEnterpriseComponent {
       id: enterprise.id,
       name: enterprise.name,
       nit: enterprise.nit,
-      logo: enterprise.logo
+      logo: enterprise.logo,
+      inventoryConfigType: enterprise.inventoryConfigType || 'WEIGHTED_AVERAGE'
     };
     this.LocalStorageMethods.saveEnterpriseData(this.entData);
   }
 
   onCreateEnterprise(): void {
     this.router.navigate(['/enterprise/create']);
+  }
+
+  showValuationConfigModal(): void {
+    this.showValuationModal = true;
+  }
+
+  closeValuationModal(): void {
+    this.showValuationModal = false;
   }
 
   showPdfRutModal(): void {
