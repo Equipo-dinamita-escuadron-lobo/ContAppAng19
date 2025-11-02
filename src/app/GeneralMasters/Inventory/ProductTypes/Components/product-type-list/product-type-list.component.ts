@@ -51,7 +51,7 @@ export class ProductTypeListComponent implements OnInit {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
-  first: number = 0; // Agregar first para controlar el estado del p-table
+  first: number = 0;
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   searchTerm: string = '';

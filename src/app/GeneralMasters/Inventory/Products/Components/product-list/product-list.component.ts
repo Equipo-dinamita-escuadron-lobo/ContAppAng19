@@ -64,7 +64,7 @@ export class ProductListComponent implements OnInit {
   // Propiedades para paginación y búsqueda
   currentPage = 0;
   pageSize = 10;
-  first = 0; // Agregar first para controlar el estado del p-table
+  first = 0;
   sortField = 'name';
   sortOrder: 'asc' | 'desc' = 'asc';
   searchTerm = '';
