@@ -51,6 +51,7 @@ export class ProductTypeListComponent implements OnInit {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  first: number = 0; // Agregar first para controlar el estado del p-table
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   searchTerm: string = '';
@@ -77,7 +78,8 @@ export class ProductTypeListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
-    // Calcular página y tamaño desde los controles de PrimeNG
+    // Actualizar first y calcular página
+    this.first = event.first;
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
     
@@ -90,7 +92,7 @@ export class ProductTypeListComponent implements OnInit {
     this.productTypeService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.productTypes = page.content || [];
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || 0;
       },
       error: (error: any) => {
         this.messageService.add({
@@ -109,13 +111,14 @@ export class ProductTypeListComponent implements OnInit {
     this.productTypeService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.productTypes = page.content || [];
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || 0;
       }
     });
   }
 
   onSearchChange(): void {
     // Resetear a la primera página cuando se busca
+    this.first = 0;
     this.currentPage = 0;
     // Recargar datos con el nuevo término de búsqueda
     this.loadProductTypesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
