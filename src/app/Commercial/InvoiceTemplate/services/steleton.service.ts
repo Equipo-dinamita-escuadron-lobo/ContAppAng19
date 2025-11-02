@@ -49,8 +49,9 @@ export class SteletonService {
     return this.http.get<number>(`${API_URL}factures/skeleton/${factCode}/products/${productId}/returned-quantity`);
   }
 
-  getAllProductsByEnterpriseId(): Observable<ProductList2[]> {
-    return this.http.get<ProductList2[]>(`${API_URL}products/findAll/${this.enterpriseId}`);
+  getAllProductsByEnterpriseId(): Observable<{ content: ProductList2[], page: any }> {
+    const params = new HttpParams().set('enterpriseId', this.enterpriseId);
+    return this.http.get<{ content: ProductList2[], page: any }>(`${API_URL}products/findActivate`, { params });
   }
 
   private enterpriseIdLocalStorage() {
