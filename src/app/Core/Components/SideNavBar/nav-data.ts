@@ -86,11 +86,6 @@ export const navbarData: INavbarData[] = [
         label:'Etiquetas no comerciales'
       },
       {
-        routeLink:'/gen-masters/configuration-valuation-models',
-        icon:'Subtitles',
-        label:'Configuración metodo Valoración'
-      },
-      {
         routeLink: '/gen-masters/help-center/list',
         icon: 'help',
         label: 'Centro de Ayuda',

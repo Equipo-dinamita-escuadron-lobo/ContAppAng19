@@ -50,6 +50,10 @@ export class InventoryAdjustmentComponent implements OnInit {
   previewResult: any = null;
   showPreview: boolean = false;
 
+  // Fechas límite para el calendario
+  minDate: Date | null = null;
+  maxDate: Date = new Date(); // Fecha actual como máximo
+
   constructor(
     private fb: FormBuilder,
     private kardexService: KardexService,
@@ -60,6 +64,18 @@ export class InventoryAdjustmentComponent implements OnInit {
 
   ngOnInit() {
     this.initializeForm();
+    this.setDateLimits();
+  }
+
+  private setDateLimits() {
+    // Si hay un último registro de kardex, usar su fecha como mínimo
+    if (this.lastKardexRecord && this.lastKardexRecord.date) {
+      this.minDate = new Date(this.lastKardexRecord.date);
+    } else {
+      // Si no hay registros, permitir cualquier fecha hasta hoy
+      this.minDate = null;
+    }
+    // maxDate ya está establecido en la inicialización como new Date()
   }
 
   private initializeForm() {
@@ -67,7 +83,7 @@ export class InventoryAdjustmentComponent implements OnInit {
       adjustmentType: ['', Validators.required],
       quantity: [null, [Validators.required, Validators.min(1)]],
       unitPrice: [null],
-      details: ['', Validators.required],
+      details: [''], // Campo opcional
       date: [null] // Fecha opcional
     });
 
@@ -173,16 +189,19 @@ export class InventoryAdjustmentComponent implements OnInit {
             this.messageService.add({
               severity: 'success',
               summary: 'Éxito',
-              detail: 'Ajuste de compra registrado correctamente'
+              detail: 'Ajuste de compra registrado correctamente',
+              life: 5000
             });
             this.resetForm();
             this.adjustmentCompleted.emit();
           },
           error: (error) => {
+            const errorMessage = error?.error?.message || 'Error al registrar el ajuste de compra';
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: 'Error al registrar el ajuste de compra'
+              detail: errorMessage,
+              life: 5000
             });
           }
         });
@@ -203,16 +222,19 @@ export class InventoryAdjustmentComponent implements OnInit {
             this.messageService.add({
               severity: 'success',
               summary: 'Éxito',
-              detail: 'Ajuste de venta registrado correctamente'
+              detail: 'Ajuste de venta registrado correctamente',
+              life: 7000
             });
             this.resetForm();
             this.adjustmentCompleted.emit();
           },
           error: (error) => {
+            const errorMessage = error?.error?.message || 'Error al registrar el ajuste de venta';
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: 'Error al registrar el ajuste de venta'
+              detail: errorMessage,
+              life: 7000
             });
           }
         });

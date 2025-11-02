@@ -132,10 +132,16 @@
                 dateFormat="dd/mm/yy"
                 placeholder="Seleccione una fecha"
                 [styleClass]="'w-full'"
+                [minDate]="minDate"
+                [maxDate]="maxDate"
                 appendTo="body">
               </p-datePicker>
               <small class="text-xs" style="color: var(--color-neutral-40);">
-                Si no se especifica, se usará la fecha actual
+                @if (lastKardexRecord) {
+                  Fecha entre {{ minDate | date:'dd/MM/yyyy' }} y {{ maxDate | date:'dd/MM/yyyy' }}
+                } @else {
+                  Si no se especifica, se usará la fecha actual
+                }
               </small>
             </div>
           </div>
@@ -169,7 +175,7 @@
           <!-- Detalles -->
           <div class="flex flex-col gap-2" [ngClass]="adjustmentForm.get('adjustmentType')?.value === 'purchase' ? '' : 'md:col-span-2'">
             <label for="details" class="font-semibold" style="color: var(--color-primary);">
-              Detalles <span style="color: var(--color-error);">*</span>
+              Detalles (Opcional)
             </label>
             <div class="w-full">
               <textarea
@@ -180,9 +186,6 @@
                 placeholder="Ingrese los detalles del ajuste"
                 class="input-base w-full">
               </textarea>
-              @if (adjustmentForm.get('details')?.touched && adjustmentForm.get('details')?.invalid) {
-                <small class="p-error error-message">Los detalles son requeridos.</small>
-              }
             </div>
           </div>
         </div>
