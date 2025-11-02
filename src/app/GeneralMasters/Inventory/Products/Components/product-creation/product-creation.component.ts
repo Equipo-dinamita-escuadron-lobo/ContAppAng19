@@ -160,9 +160,7 @@ export class ProductCreationComponent implements OnInit {
           detail: 'El producto ha sido creado exitosamente.',
           life: 3000
         });
-        setTimeout(() => {
-          this.router.navigate(['/gen-masters/inventory/products/list']); // Redirigir a la lista
-        }, 1500);
+        this.router.navigate(['/gen-masters/inventory/products/list']); // Redirigir a la lista
       },
       error: (err) => {
         console.error('Error al crear el producto:', err);
