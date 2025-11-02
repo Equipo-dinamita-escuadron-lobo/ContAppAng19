@@ -61,7 +61,7 @@ import { FormFieldErrorComponent } from '../shared/form-field-error.component';
     FormPanelComponent,
     FormFieldErrorComponent
   ],
-  providers: [MessageService, DatePipe, LocalStorageMethods],
+  providers: [DatePipe, LocalStorageMethods],
   templateUrl: './third-creation.component.html',
   styleUrl: './third-creation.component.css'
 })
@@ -786,9 +786,7 @@ export class ThirdCreationComponent implements OnInit {
           // Limpiar datos del RUT si existen
           this.thirdService.clearInfoThirdRUT();
 
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/third-parties/list']);
-          }, 2000);
+          this.router.navigate(['/gen-masters/third-parties/list']);
         },
         error: (error: any) => {
           // Extraer el mensaje de error más específico disponible

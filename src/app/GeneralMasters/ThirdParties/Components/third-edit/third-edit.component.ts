@@ -63,7 +63,7 @@ import Swal from 'sweetalert2';
     FormPanelComponent,
     FormFieldErrorComponent
   ],
-  providers: [MessageService, DatePipe],
+  providers: [DatePipe],
   templateUrl: './third-edit.component.html',
   styleUrl: './third-edit.component.css'
 })
@@ -743,9 +743,7 @@ export class ThirdEditComponent implements OnInit {
             detail: 'Tercero actualizado correctamente'
           });
           
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/third-parties/list']);
-          }, 2000);
+          this.router.navigate(['/gen-masters/third-parties/list']);
         },
         error: (error: any) => {
           // Extraer el mensaje de error más específico disponible

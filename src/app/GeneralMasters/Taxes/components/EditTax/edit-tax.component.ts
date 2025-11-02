@@ -9,7 +9,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageModule } from 'primeng/message';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { Tax, TaxUpdateRequest } from '../../models/Tax';
+import { TaxUpdateRequest } from '../../models/Tax';
 import { TaxService } from '../../services/tax.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
