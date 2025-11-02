@@ -23,7 +23,6 @@ import { UnitOfMeasureValidationMessagesService } from '../../Services/unit-of-m
     ButtonModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './unit-of-measure-edit.component.html',
   styleUrls: ['./unit-of-measure-edit.component.css']
 })
@@ -118,9 +117,7 @@ export class UnitOfMeasureEditComponent implements OnInit {
             detail: 'La unidad de medida ha sido actualizada exitosamente.',
             life: 3000
           });
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
-          }, 1500);
+          this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
         },
         error: (error) => {
           const message = error.error?.message || 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.';
