@@ -3,7 +3,7 @@ import { environment } from '../../../../environments/environment';
 import { EntData, LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Facture2 } from '../../InvoiceTemplate/models/Facture2';
+import { Facture2 } from '../models/Facture';
 import { ProductList2 } from '../models/Product2';
 import { Tag } from '../models/Tag';
 
