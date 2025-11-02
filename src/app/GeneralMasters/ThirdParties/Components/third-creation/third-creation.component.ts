@@ -568,12 +568,11 @@ export class ThirdCreationComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de tercero con soporte para búsqueda
-   * @param searchTerm Término de búsqueda opcional
+   * Carga los tipos de tercero activos
    */
-  private loadThirdTypes(searchTerm?: string): void {
+  private loadThirdTypes(): void {
     this.loadingThirdTypes = true;
-    this.thirdServiceConfigurationService.getActiveThirdTypes(this.entData, 0, 50, 'thirdTypename', 'asc', searchTerm).subscribe({
+    this.thirdServiceConfigurationService.getActiveThirdTypes(this.entData, 0, 50).subscribe({
       next: (response: any) => {
         this.thirdTypes = Array.isArray(response.content) ? response.content : [];
         this.loadingThirdTypes = false;
@@ -590,12 +589,11 @@ export class ThirdCreationComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de identificación con soporte para búsqueda
-   * @param searchTerm Término de búsqueda opcional
+   * Carga los tipos de identificación activos
    */
-  private loadTypeIds(searchTerm?: string): void {
+  private loadTypeIds(): void {
     this.loadingTypeIds = true;
-    this.thirdServiceConfigurationService.getActiveTypeIds(this.entData, 0, 50, 'typeIdname', 'asc', searchTerm).subscribe({
+    this.thirdServiceConfigurationService.getActiveTypeIds(this.entData, 0, 50).subscribe({
       next: (response: any) => {
         this.typeIds = Array.isArray(response.content) ? response.content : [];
         // Aplicar filtro por tipo de persona
@@ -627,33 +625,6 @@ export class ThirdCreationComponent implements OnInit {
     }
   }
 
-  /**
-   * Maneja el evento de filtro del dropdown de tipos de identificación
-   * @param event Evento del filtro con el término de búsqueda
-   */
-  onTypeIdFilter(event: any): void {
-    const searchTerm = event.filter || '';
-    this.typeIdSearchTerm = searchTerm;
-
-    // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
-    if (searchTerm.length >= 2 || searchTerm.length === 0) {
-      this.loadTypeIds(searchTerm);
-    }
-  }
-
-  /**
-   * Maneja el evento de filtro del dropdown de tipos de tercero
-   * @param event Evento del filtro con el término de búsqueda
-   */
-  onThirdTypeFilter(event: any): void {
-    const searchTerm = event.filter || '';
-    this.thirdTypeSearchTerm = searchTerm;
-
-    // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
-    if (searchTerm.length >= 2 || searchTerm.length === 0) {
-      this.loadThirdTypes(searchTerm);
-    }
-  }
 
   /**
    * Maneja el cambio de tipo de persona para actualizar el filtro de tipos de identificación
