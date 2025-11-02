@@ -6,10 +6,12 @@ import { UnitOfMeasure } from '../Models/UnitOfMeasure';
 
 interface Page<T> {
   content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
+  page: {
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+  };
 }
 
 let API_URL = environment.API_URL;
