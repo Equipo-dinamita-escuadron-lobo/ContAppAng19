@@ -2,7 +2,7 @@ export interface Product2 {
   productId: number;
   amount: number;
   description: string;
-  descount: number;
+  discount: number;  // Cambiado de 'descount' a 'discount'
   unitPrice: number;
   subtotal: number;
   taxPercentage: number[];
