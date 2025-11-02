@@ -16,8 +16,7 @@ import { BankService } from '../../services/bank.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, MultiSelectModule],
   templateUrl: './bank-edit.component.html',
-  styleUrl: './bank-edit.component.css',
-  providers: [MessageService]
+  styleUrl: './bank-edit.component.css'
 })
 export class BankEditComponent implements OnInit {
   form: FormGroup;
@@ -146,9 +145,7 @@ export class BankEditComponent implements OnInit {
           summary: 'Actualización exitosa',
           detail: 'Banco actualizado correctamente.'
         });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         this.messageService.add({
