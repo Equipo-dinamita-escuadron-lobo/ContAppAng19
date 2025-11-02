@@ -705,14 +705,6 @@ export const routes: Routes = [
               ).then((m) => m.MenuComponent),
           },
           {
-            path:'configuration-valuation-models',
-            data:{Breadcrumb:'Configuracion metodos de Valoracion'},
-            loadComponent:()=>
-              import(
-                './GeneralMasters/ConfigurationValuationModels/components/configuration-valuation-models/configuration-valuation-models.component'
-              ).then((m) =>m.ValuationMethodConfigComponent),
-          },
-          {
             path: 'help-panels',
             data: { breadcrumb: 'Centro de Ayuda' },
             loadComponent: () =>

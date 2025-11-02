@@ -242,6 +242,10 @@ body {
   padding: 11px 20px !important;
 }
 
+.p-button .p-button-icon {
+  color: white !important;
+}
+
 .p-button-label {
   font-family: var(--font-family-sans) !important;
   font-weight: 600 !important;
@@ -250,6 +254,10 @@ body {
 
 .p-button:hover {
   background-color: var(--color-button-primary-hover) !important;
+}
+
+.p-button:enabled .p-button-icon {
+  color: white !important;
 }
 
 .p-button:disabled {
@@ -268,6 +276,10 @@ body {
   border: 1px solid var(--color-button-primary) !important;
 }
 
+.p-button.p-button-secondary .p-button-icon {
+  color: var(--color-primary) !important;
+}
+
 .p-button.p-button-secondary:hover {
   background-color: var(--color-button-secondary-hover) !important;
 }
@@ -278,6 +290,21 @@ body {
   color: var(--color-primary) !important;
   opacity: 0.6 !important;
   cursor: not-allowed !important;
+}
+
+/* Botón de información (info) */
+.p-button.p-button-info {
+  background-color: var(--color-tertiary) !important;
+  border-color: var(--color-tertiary) !important;
+}
+
+.p-button.p-button-info:hover {
+  background-color: var(--color-tertiary-60) !important;
+  border-color: var(--color-tertiary-60) !important;
+}
+
+.p-button.p-button-info .p-button-icon {
+  color: white !important;
 }
 
 /*Estilos personalizados para la seccion del formulario de catalogo de cuentas*/
@@ -1009,4 +1036,31 @@ body {
   --p-tabs-active-bar-background: var(--color-primary) !important;
   --p-tabs-tab-active-indicator-background: var(--color-primary) !important;
   --p-tabs-tab-active-border-color: var(--color-primary) !important;
+}
+
+/* ================================
+   ESTILOS PARA P-INPUTNUMBER
+   ================================ */
+
+/* Hacer los botones de incremento/decremento más pequeños y compactos */
+.p-inputnumber-horizontal .p-inputnumber-button {
+  width: 1.75rem !important;
+  padding: 0 !important;
+  min-width: 1.75rem !important;
+}
+
+.p-inputnumber-horizontal .p-inputnumber-button .p-button-icon {
+  font-size: 0.75rem !important;
+}
+
+/* Ajustar el input del número */
+.p-inputnumber-horizontal .p-inputnumber-input {
+  padding: 0.375rem 0.5rem !important;
+  text-align: center !important;
+  min-width: 3rem !important;
+}
+
+/* Reducir el espacio entre los botones y el input */
+.p-inputnumber-horizontal .p-inputnumber-button-group {
+  gap: 0.125rem !important;
 }

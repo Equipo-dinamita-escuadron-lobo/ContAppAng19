@@ -1,15 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
-import { CalendarModule } from 'primeng/calendar';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { TextareaModule } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
-import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
+import { LocalStorageMethods, EntData } from '../../../../Shared/Methods/local-storage.method';
+import { Router } from '@angular/router';
+import { EnterpriseService } from '../../../Enterprise/services/enterprise.service';
+import { EnterpriseList } from '../../../Enterprise/models/EnterpriseList';
+import { ValuationMethodConfigService } from '../../services/valuation-method-config.service';
+import {
+  ValuationMethodConfig,
+  InventoryConfigType
+} from '../../models/valuation-method.model';
 
 
 interface ValuationMethod {
@@ -17,33 +22,13 @@ interface ValuationMethod {
   value: string;
   description: string;
   advantages?: string[];
+  disabled?: boolean;
 }
 
 
 interface Enterprise {
   id: string;
   name: string;
-}
-
-
-interface Currency {
-  label: string;
-  value: string;
-}
-
-
-interface CurrentConfiguration {
-  methodLabel: string;
-  effectiveDate: Date;
-  status: string;
-}
-
-
-interface PreviewData {
-  methodLabel: string;
-  enterpriseName: string;
-  effectiveDate: Date;
-  affectedProducts: number;
 }
 
 
@@ -55,34 +40,33 @@ interface PreviewData {
     ReactiveFormsModule,
     ButtonModule,
     SelectModule,
-    CalendarModule,
-    InputNumberModule,
-    TextareaModule,
     MessageModule,
-    ToastModule,
-    DialogModule
+    ToastModule
   ],
   providers: [MessageService],
   templateUrl: './configuration-valuation-models.component.html',
   styleUrl: './configuration-valuation-models.component.css'
 })
 export class ValuationMethodConfigComponent implements OnInit {
+  @Output() closeModal = new EventEmitter<void>();
+
   configurationForm: FormGroup;
   isLoading = false;
-  showAdvancedSettings = false;
-  showPreviewModal = false;
   today = new Date();
 
-
   selectedMethod: ValuationMethod | null = null;
-  currentConfiguration: CurrentConfiguration | null = null;
-  previewData: PreviewData | null = null;
+
+  localStorageMethods = new LocalStorageMethods();
+  currentEnterprise: EntData | null = null;
+  currentInventoryConfigType: 'PEPS' | 'WEIGHTED_AVERAGE' = 'WEIGHTED_AVERAGE';
+  isEnterpriseSelected = false;
+  showEnterpriseWarning = false;
 
 
   valuationMethods: ValuationMethod[] = [
     {
       label: 'PEPS (Primero en Entrar, Primero en Salir)',
-      value: 'FIFO',
+      value: 'PEPS',
       description: 'Los productos que entraron primero al inventario son los primeros en salir. Ideal para productos perecederos.',
       advantages: [
         'Refleja mejor el flujo físico real de productos',
@@ -103,41 +87,63 @@ export class ValuationMethodConfigComponent implements OnInit {
   ];
 
 
-  enterprises: Enterprise[] = [
-    { id: '1', name: 'Empresa Principal S.A.S.' },
-    { id: '2', name: 'Sucursal Norte Ltda.' },
-    { id: '3', name: 'Almacén Central' }
-  ];
-
-
-  currencies: Currency[] = [
-    { label: 'Peso Colombiano (COP)', value: 'COP' },
-    { label: 'Dólar Americano (USD)', value: 'USD' },
-    { label: 'Euro (EUR)', value: 'EUR' }
-  ];
+  enterprises: Enterprise[] = [];
 
 
   constructor(
     private formBuilder: FormBuilder,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private router: Router,
+    private enterpriseService: EnterpriseService,
+    private valuationMethodConfigService: ValuationMethodConfigService
   ) {
     this.configurationForm = this.createConfigurationForm();
   }
 
 
   ngOnInit(): void {
-    this.loadCurrentConfiguration();
+    this.loadEnterpriseFromLocalStorage();
+    this.loadEnterprises();
   }
 
+  loadEnterpriseFromLocalStorage(): void {
+    this.currentEnterprise = this.localStorageMethods.loadEnterpriseData();
+
+    if (this.currentEnterprise) {
+      this.isEnterpriseSelected = true;
+      this.currentInventoryConfigType = this.currentEnterprise.inventoryConfigType || 'WEIGHTED_AVERAGE';
+
+      // Deshabilitar el método actual
+      this.valuationMethods = this.valuationMethods.map(method => ({
+        ...method,
+        disabled: method.value === this.currentInventoryConfigType
+      }));
+
+      // Preseleccionar la empresa en el formulario
+      this.configurationForm.patchValue({
+        enterpriseId: this.currentEnterprise.id
+      });
+    }
+  }
+
+  loadEnterprises(): void {
+    this.enterpriseService.getEnterprisesActive().subscribe({
+      next: (data: EnterpriseList[]) => {
+        this.enterprises = data.map(e => ({
+          id: String(e.id),
+          name: e.name
+        }));
+      },
+      error: (error) => {
+        console.error('Error al cargar empresas:', error);
+      }
+    });
+  }
 
   private createConfigurationForm(): FormGroup {
     return this.formBuilder.group({
       valuationMethod: ['', Validators.required],
-      enterpriseId: ['', Validators.required],
-      effectiveDate: [new Date(), Validators.required],
-      decimalPrecision: [2, [Validators.min(2), Validators.max(6)]],
-      baseCurrency: ['COP'],
-      notes: ['']
+      enterpriseId: ['', Validators.required]
     });
   }
 
@@ -148,67 +154,68 @@ export class ValuationMethodConfigComponent implements OnInit {
   }
 
 
-  toggleAdvancedSettings(): void {
-    this.showAdvancedSettings = !this.showAdvancedSettings;
-  }
-
-
-  previewChanges(): void {
-    if (this.configurationForm.valid) {
-      const formValue = this.configurationForm.value;
-      const selectedEnterprise = this.enterprises.find(e => e.id === formValue.enterpriseId);
-      const selectedMethod = this.valuationMethods.find(m => m.value === formValue.valuationMethod);
-
-
-      this.previewData = {
-        methodLabel: selectedMethod?.label || '',
-        enterpriseName: selectedEnterprise?.name || '',
-        effectiveDate: formValue.effectiveDate,
-        affectedProducts: Math.floor(Math.random() * 500) + 100
-      };
-
-
-      this.showPreviewModal = true;
-    }
-  }
-
-
-  closePreview(): void {
-    this.showPreviewModal = false;
-    this.previewData = null;
-  }
-
-
-  confirmApplication(): void {
-    this.showPreviewModal = false;
-    this.onSubmit();
-  }
-
-
   onSubmit(): void {
     if (this.configurationForm.valid) {
       this.isLoading = true;
       const formValue = this.configurationForm.value;
 
+      // Crear el objeto de configuración
+      const config: ValuationMethodConfig = {
+        enterpriseId: formValue.enterpriseId,
+        valuationMethod: formValue.valuationMethod as InventoryConfigType,
+        effectiveDate: new Date()
+      };
 
-      setTimeout(() => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Configuración Aplicada',
-          detail: 'El método de valuación ha sido configurado exitosamente',
-          life: 5000
-        });
+      // Llamar al servicio para aplicar la configuración
+      this.valuationMethodConfigService.applyValuationMethodConfig(config).subscribe({
+        next: (response) => {
+          // Actualizar el método de valuación en el localStorage
+          if (this.currentEnterprise) {
+            const updatedEntData: EntData = {
+              ...this.currentEnterprise,
+              inventoryConfigType: formValue.valuationMethod
+            };
+            this.localStorageMethods.saveEnterpriseData(updatedEntData);
+            this.currentInventoryConfigType = formValue.valuationMethod;
+          }
 
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Configuración Aplicada',
+            detail: response.message || 'El método de valuación ha sido configurado exitosamente',
+            life: 5000
+          });
 
-        this.loadCurrentConfiguration();
-        this.isLoading = false;
-      }, 2000);
+          // Actualizar la lista de métodos para deshabilitar el nuevo método actual
+          this.valuationMethods = this.valuationMethods.map(method => ({
+            ...method,
+            disabled: method.value === this.currentInventoryConfigType
+          }));
+
+          this.isLoading = false;
+
+          // Cerrar el modal después de guardar
+          setTimeout(() => {
+            this.closeModal.emit();
+          }, 1500);
+        },
+        error: (error) => {
+          console.error('Error al aplicar la configuración:', error);
+
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.error?.message || 'No se pudo aplicar la configuración del método de valuación',
+            life: 5000
+          });
+
+          this.isLoading = false;
+        }
+      });
     } else {
       this.markFormGroupTouched();
     }
   }
-
-
   private markFormGroupTouched(): void {
     Object.keys(this.configurationForm.controls).forEach(key => {
       const control = this.configurationForm.get(key);
@@ -217,18 +224,10 @@ export class ValuationMethodConfigComponent implements OnInit {
   }
 
 
-  private loadCurrentConfiguration(): void {
-    this.currentConfiguration = {
-      methodLabel: 'Promedio Ponderado',
-      effectiveDate: new Date(2024, 0, 1),
-      status: 'Activo'
-    };
-  }
-
 
   cancelForm(): void {
     this.configurationForm.reset();
     this.selectedMethod = null;
-    this.showAdvancedSettings = false;
+    this.closeModal.emit();
   }
 }
