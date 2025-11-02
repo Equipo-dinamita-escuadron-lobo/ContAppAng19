@@ -4,6 +4,28 @@
   <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
     <p-toast></p-toast>
     <p-confirmDialog></p-confirmDialog>
+    
+    <!-- Confirm Dialog personalizado para exportar -->
+    <p-confirmDialog key="exportDialog" [style]="{width: '30rem'}">
+      <ng-template pTemplate="message">
+        <div class="font-family-sans text-sm">
+          <div class="flex items-center gap-2 mb-20">
+            <p>{{ exportDialogMessage }}</p>
+          </div>          
+          <div class="flex justify-start gap-12 mb-12">
+            <div *ngFor="let option of exportStatusOptions" class="flex items-center mt-4">
+              <p-radioButton 
+                [inputId]="option.label" 
+                [value]="option.value" 
+                [(ngModel)]="exportStatusFilter"
+                name="exportFilter">
+              </p-radioButton>
+              <label [for]="option.label" class="ml-4 cursor-pointer">{{ option.label }}</label>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </p-confirmDialog>
     <!-- 1. CABECERA: Título y Botones de Acción -->
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <!-- Título con el estilo de marca (borde inferior) -->
@@ -27,6 +49,10 @@
           <!-- Botón "Plantilla" para descargar plantilla de productos -->
           <p-button label="Plantilla" icon="pi pi-download" severity="primary"
             (click)="openTemplateModal()">
+          </p-button>
+          <!-- Botón "Exportar" para exportar productos a Excel -->
+          <p-button label="Exportar" icon="pi pi-download" severity="success"
+            (click)="showExportConfirmDialog()">
           </p-button>
           <!-- Botón "Volver" para regresar al menú de inventory -->
           <p-button icon="pi pi-arrow-left" (click)="goBack()"

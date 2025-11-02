@@ -1,13 +1,9 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-// PrimeNG Imports
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-
-// Services
 import { ProductService } from '../../Services/product.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { HttpResponse } from '@angular/common/http';
@@ -26,10 +22,8 @@ import { HttpResponse } from '@angular/common/http';
   styleUrl: './products-template.component.css'
 })
 export class ProductsTemplateComponent implements OnInit {
-  /** Control de visibilidad del modal */
   @Input() visible: boolean = false;
 
-  /** Datos de entrada para el componente */
   @Input() inputData: any = {
     title: 'Plantilla de Importación de Productos'
   };
@@ -37,10 +31,8 @@ export class ProductsTemplateComponent implements OnInit {
   /** Evento emitido al cerrar el modal */
   @Output() close = new EventEmitter<void>();
 
-  /** ID de la empresa */
   private entData: string = '';
 
-  /** Estado de carga de la descarga */
   downloading: boolean = false;
 
   /** Lista de campos obligatorios */
@@ -51,7 +43,6 @@ export class ProductsTemplateComponent implements OnInit {
     'Categoría'
   ];
 
-  /** Lista de campos opcionales */
   optionalFields: string[] = [
     'Costo',
     'Cantidad'
@@ -66,20 +57,15 @@ export class ProductsTemplateComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Inicialización si es necesaria
   }
 
-  /**
-   * Cierra el modal y emite el evento de cierre
-   */
+  
   closePopUp(): void {
     this.visible = false;
     this.close.emit();
   }
 
-  /**
-   * Descarga la plantilla Excel
-   */
+ 
   downloadExcel(): void {
     if (this.downloading) {
       return;
@@ -95,7 +81,6 @@ export class ProductsTemplateComponent implements OnInit {
         if (!contentDisposition) {
           throw new Error('No se proporcionó el nombre del archivo en el header Content-Disposition');
         }
-
         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
         if (!filenameMatch || !filenameMatch[1]) {
           throw new Error('No se pudo extraer el nombre del archivo del header Content-Disposition');
@@ -137,9 +122,6 @@ export class ProductsTemplateComponent implements OnInit {
     });
   }
 
-  /**
-   * Maneja el evento de visibilidad del diálogo
-   */
   onHide(): void {
     this.closePopUp();
   }

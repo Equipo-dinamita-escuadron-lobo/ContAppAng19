@@ -22,6 +22,7 @@ import { IconField } from "primeng/iconfield";
 import { TooltipModule } from 'primeng/tooltip';
 import { CurrencyFormatPipe } from '../../Pipes/currency-format.pipe';
 import { ProductsTemplateComponent } from '../products-template/products-template.component';
+import { RadioButtonModule } from 'primeng/radiobutton';
 
 @Component({
   selector: 'app-product-list',
@@ -43,7 +44,8 @@ import { ProductsTemplateComponent } from '../products-template/products-templat
     ToggleSwitchModule,
     FormsModule,
     CurrencyFormatPipe,
-    ProductsTemplateComponent
+    ProductsTemplateComponent,
+    RadioButtonModule
 ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
@@ -76,6 +78,19 @@ export class ProductListComponent implements OnInit {
   showDetailView = false;
   showTemplateModal = false;
 
+  // Estado de exportación
+  isExporting = false;
+
+  /**
+   * Propiedades para el modal de exportación
+   */
+  exportStatusFilter: string | null = null;
+  exportDialogMessage = '¿Qué tipo de productos desea exportar?';
+  exportStatusOptions = [
+    { label: 'Todos', value: null },
+    { label: 'Activos', value: 'active' },
+    { label: 'Inactivos', value: 'inactive' }
+  ];
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
 
@@ -240,6 +255,183 @@ export class ProductListComponent implements OnInit {
         });
       }
     });
+  }
+
+  /**
+   * Muestra el modal de confirmación para exportar productos
+   */
+  showExportConfirmDialog() {
+    this.exportStatusFilter = null; // "Todos" por defecto
+    
+    this.confirmationService.confirm({
+      key: 'exportDialog',
+      header: 'Exportar',
+      acceptLabel: 'Exportar',
+      acceptIcon: 'pi pi-download',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-success',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        const status = this.exportStatusFilter === 'active' ? true : this.exportStatusFilter === 'inactive' ? false : undefined;
+        this.exportProducts(status);
+      }
+    });
+  }
+
+  /**
+   * Exporta productos a formato Excel.
+   */
+  exportProducts(status: boolean | undefined): void {
+    const entData = this.localStorageMethods.loadEnterpriseData();
+    const entId = entData?.id || this.localstorageMethods.getIdEnterprise();
+    const companyName = entData?.name || '';
+
+    this.isExporting = true; // Activar estado de carga
+
+    this.productService.exportProducts(entId, companyName, status).subscribe({
+      next: (response) => {
+        this.isExporting = false; // Desactivar estado de carga
+        if (!response.body) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Exportación',
+            detail: 'No se recibió el archivo del servidor'
+          });
+          return;
+        }
+
+        this.downloadFile(response);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Exportación Exitosa',
+          detail: `Se ha exportado el catálogo de productos correctamente`
+        });
+      },
+      error: (error) => {
+        this.isExporting = false; // Desactivar estado de carga en caso de error
+        if (error.error instanceof Blob) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const errorData = JSON.parse(reader.result as string);
+              const errorMessage = errorData.message || 'No se pudo exportar los productos.';
+
+              // Verificar si es un mensaje informativo sobre productos no disponibles
+              const isNoProductsMessage = this.isNoProductsAvailableMessage(errorMessage);
+
+              if (isNoProductsMessage) {
+                // Mostrar como información en lugar de error
+                this.messageService.add({
+                  severity: 'info',
+                  summary: 'Información',
+                  detail: this.getNoProductsMessage(status)
+                });
+              } else {
+                // Mostrar como error para otros casos
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error de Exportación',
+                  detail: errorMessage
+                });
+              }
+            } catch (e) {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error de Exportación',
+                detail: 'Ocurrió un error inesperado.'
+              });
+            }
+          };
+          reader.onerror = () => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: 'No se pudo leer el mensaje de error.'
+            });
+          };
+          reader.readAsText(error.error);
+        } else {
+          const errorMessage = error.error?.message || error.message || 'Error desconocido al exportar productos';
+
+          // Verificar si es un mensaje informativo sobre productos no disponibles
+          const isNoProductsMessage = this.isNoProductsAvailableMessage(errorMessage);
+
+          if (isNoProductsMessage) {
+            // Mostrar como información en lugar de error
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: this.getNoProductsMessage(status)
+            });
+          } else {
+            // Mostrar como error para otros casos
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: errorMessage
+            });
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Verifica si el mensaje de error indica que no hay productos disponibles para exportar.
+   */
+  private isNoProductsAvailableMessage(message: string): boolean {
+    const noProductsPatterns = [
+      'no hay productos',
+      'no existen productos',
+      'no se encontraron productos',
+      'no hay registros',
+      'empty',
+      'sin productos'
+    ];
+
+    return noProductsPatterns.some(pattern =>
+      message.toLowerCase().includes(pattern.toLowerCase())
+    );
+  }
+
+  /**
+   * Retorna el mensaje informativo apropiado según el filtro de estado aplicado.
+   */
+  private getNoProductsMessage(status: boolean | undefined): string {
+    switch (status) {
+      case true:
+        return 'No hay productos activos para exportar';
+      case false:
+        return 'No hay productos inactivos para exportar';
+      case undefined:
+      default:
+        return 'No hay productos para exportar';
+    }
+  }
+
+  /**
+   * Procesa la respuesta HTTP para descargar el archivo.
+   */
+  private downloadFile(response: any): void {
+    const blob = response.body;
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'productos.xlsx';
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   }
 
 }

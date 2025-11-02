@@ -1,4 +1,4 @@
-import { HttpClient, HttpResponse, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpResponse, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
 import { Observable, of, switchMap, combineLatest, map, forkJoin, catchError, throwError } from 'rxjs';
@@ -221,6 +221,30 @@ export class ProductService {
     }).pipe(
       catchError((error) => {
         return throwError(() => new Error('Error al descargar la plantilla de productos'));
+      })
+    );
+  }
+
+  exportProducts(entId: string, companyName?: string, status?: boolean): Observable<HttpResponse<Blob>> {
+    const params = new URLSearchParams();
+    params.set('entId', entId);
+
+    if (status !== undefined && status !== null) {
+      params.set('status', status.toString());
+    }
+
+    if (companyName && companyName.trim()) {
+      params.set('companyName', companyName.trim());
+    }
+
+    const url = `${API_URL}products/export/excel?${params.toString()}`;
+
+    return this.http.get(url, {
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
       })
     );
   }
