@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { AccountingEntryView, ReceiptView } from '../../Model/view';
-import { CashReceiptService } from '../../Service/cash-receipt.service';
+import { AccountingEntryView, ReceiptView } from '../../../CashReceipts/Model/view';
+import { CashReceiptService } from '../../../CashReceipts/Service/cash-receipt.service';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { TagModule } from 'primeng/tag'; // Importar TagModule si se usa p-tag
+import { AccountingEntriesService } from '../../Service/accounting-entries.service';
 
 // Extiende la interfaz para incluir opcionalmente los detalles y el estado de carga
 interface ReceiptViewWithDetails extends ReceiptView {
@@ -14,19 +15,19 @@ interface ReceiptViewWithDetails extends ReceiptView {
 }
 
 @Component({
-  selector: 'app-receipt-accounting-entries',
+  selector: 'app-accounting-entries',
   imports: [CommonModule, TableModule, ButtonModule, RippleModule, TagModule], // Añadir TagModule
-  templateUrl: './receipt-accounting-entries.component.html',
-  styleUrls: ['./receipt-accounting-entries.component.css'],
+  templateUrl: './accounting-entries.component.html',
+  styleUrls: ['./accounting-entries.component.css'],
   standalone: true
 })
-export class ReceiptAccountingEntriesComponent implements OnInit {
+export class AccountingEntriesComponent implements OnInit {
   
   receipts: ReceiptViewWithDetails[] = [];
   isLoading = false;
   expandedRows: { [key: string]: boolean } = {};
 
-  constructor(private cashReceiptService: CashReceiptService) { }
+  constructor(private accountingEntriesService: AccountingEntriesService, private cashReceiptService: CashReceiptService) { }
 
   ngOnInit(): void {
     this.loadInitialReceipts();
@@ -55,7 +56,7 @@ export class ReceiptAccountingEntriesComponent implements OnInit {
     }
 
     receipt.isDetailLoading = true;
-    this.cashReceiptService.getAccountingEntryViewByReceiptId(receipt.id).subscribe({
+    this.accountingEntriesService.getAccountingEntryViewByReceiptId(receipt.id).subscribe({
       next: (accountingEntryView) => {
         receipt.accountingEntry = accountingEntryView;
         receipt.isDetailLoading = false;
