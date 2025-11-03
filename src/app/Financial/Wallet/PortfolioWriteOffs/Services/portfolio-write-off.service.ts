@@ -30,7 +30,7 @@ export class PortfolioWriteOffService {
    */
   confirmWriteOff(writeOffId: number): Observable<void> {
     const url = `${this.apiUrl}/${writeOffId}/confirm`;
-    return this.http.post<void>(url, {}); // Enviamos un cuerpo vacío
+    return this.http.put<void>(url, {}); // Enviamos un cuerpo vacío
   }
 
   /**
@@ -40,7 +40,7 @@ export class PortfolioWriteOffService {
    */
   voidWriteOff(writeOffId: number): Observable<void> {
     const url = `${this.apiUrl}/${writeOffId}/void`;
-    return this.http.post<void>(url, {}); // Enviamos un cuerpo vacío
+    return this.http.put<void>(url, {}); // Enviamos un cuerpo vacío
   }
 
   /**
