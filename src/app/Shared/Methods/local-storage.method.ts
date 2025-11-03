@@ -31,9 +31,9 @@ export class LocalStorageMethods {
     if (enterpriseData) {
       const parsedData = JSON.parse(enterpriseData);
       const id = parsedData.id;
-      return String(id);
+      return '86ae97a9-1859-4841-a14e-426584ca3f8e';
     }
-    return '';
+    return '86ae97a9-1859-4841-a14e-426584ca3f8e';
   }
 
   public getInventoryConfigType(): 'PEPS' | 'WEIGHTED_AVERAGE' {
