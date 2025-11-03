@@ -69,6 +69,7 @@ export class AccountingEntriesComponent implements OnInit {
       next: ({ receipts, writeOffs }) => {
         // Mapeamos los recibos a nuestra interfaz unificada
         const receiptDocuments: SourceDocumentView[] = receipts.map(r => ({
+          uniqueId: `RECEIPT-${r.id}`,
           id: r.id,
           code: r.receiptCode,
           date: r.issueDate,
@@ -80,13 +81,15 @@ export class AccountingEntriesComponent implements OnInit {
 
         // Mapeamos los castigos a nuestra interfaz unificada
          const writeOffDocuments: SourceDocumentView[] = writeOffs.map(w => ({
-           id: w.id,
-           code: w.code,
-           date: w.writeOffDate,
-           description: `Castigo de cartera para ${w.thirdName}`,
-           totalAmount: w.totalAmount,
-           type: 'PORTFOLIO_WRITEOFF',
-           typeName: 'Castigo de Cartera'
+          uniqueId: `PORTFOLIO_WRITEOFF-${w.id}`,
+          id: w.id,
+          code: w.code,
+          date: w.writeOffDate,
+          description: `Castigo de cartera para ${w.thirdName}`,
+          totalAmount: w.totalAmount,
+          type: 'PORTFOLIO_WRITEOFF',
+          typeName: 'Castigo de Cartera'
+
          }));
 
         // Combinamos y ordenamos por fecha
