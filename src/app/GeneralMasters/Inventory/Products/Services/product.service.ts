@@ -248,4 +248,16 @@ export class ProductService {
       })
     );
   }
+
+  importProducts(entId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('entId', entId);
+    formData.append('excelFile', file);
+
+    return this.http.post(`${API_URL}products/import/excel`, formData).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
 }
