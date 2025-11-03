@@ -144,7 +144,7 @@
           <td class="py-3 whitespace-nowrap">{{ product.presentation }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.description }}</td>
           <td class="py-3 text-right whitespace-nowrap">{{ product.cost | currencyFormat }}</td>
-          <td class="py-3 text-center whitespace-nowrap">{{ product.quantity }}</td>
+          <td class="py-3 text-center whitespace-nowrap">{{ product.quantity ?? 0 }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.unitOfMeasureName }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.categoryName }}</td>
           <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.productTypeName }}</td>
@@ -255,7 +255,7 @@
         </div>
         <div>
           <p class="font-semibold text-primary">Cantidad</p>
-          <p>{{ selectedProduct.quantity }}</p>
+          <p>{{ selectedProduct.quantity ?? 0 }}</p>
         </div>
         <div>
           <p class="font-semibold text-primary">Unidad de Medida</p>

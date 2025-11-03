@@ -15,11 +15,11 @@ export interface Product {
     code: string;
     name: string; 
     description: string;
-    quantity: number;
+    quantity: number | null;
     unitOfMeasureId: number; 
     categoryId: number; 
     enterpriseId: string;
-    cost: number; 
+    cost: number | null; 
     state: string; 
     reference: string;
     productTypeId?: number;
@@ -32,11 +32,11 @@ export interface ProductList {
     code: string;
     name: string; 
     description: string;
-    quantity: number;
+    quantity: number | null;
     unitOfMeasureName: string;
     categoryName: string;
     enterpriseId: string;
-    cost: number;
+    cost: number | null;
     state: boolean; 
     reference: string;
     presentation?: string; 
