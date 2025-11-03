@@ -26,7 +26,6 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     ButtonModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './product-type-creation.component.html',
 })
 export class ProductTypeCreationComponent implements OnInit {
@@ -92,9 +91,7 @@ export class ProductTypeCreationComponent implements OnInit {
           detail: 'El tipo de producto ha sido creado exitosamente.',
           life: 3000
         });
-        setTimeout(() => {
-          this.router.navigate(['/gen-masters/inventory/product-types/list']);
-        }, 1500);
+        this.router.navigate(['/gen-masters/inventory/product-types/list']);
       },
       error: (error) => {
         const message = error.error?.message || 'Ha ocurrido un error al crear el tipo de producto. Por favor, inténtelo de nuevo.';

@@ -14,8 +14,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast],
   templateUrl: './classes-of-documents-creation.component.html',
-  styleUrl: './classes-of-documents-creation.component.css',
-  providers: [MessageService]
+  styleUrl: './classes-of-documents-creation.component.css'
 })
 export class ClassesOfDocumentsCreationComponent {
   form: FormGroup;
@@ -46,9 +45,7 @@ export class ClassesOfDocumentsCreationComponent {
     this.service.create(payload.name, enterpriseId).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Registro exitoso', detail: 'Clase de documento creada correctamente.' });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         if (err?.status === 409) {

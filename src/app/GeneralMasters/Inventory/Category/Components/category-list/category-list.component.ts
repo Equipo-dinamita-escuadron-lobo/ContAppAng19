@@ -58,6 +58,7 @@ export class CategoryListComponent implements OnInit {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  first: number = 0;
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   searchTerm: string = '';
@@ -89,6 +90,7 @@ export class CategoryListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.first = event.first;
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
     
@@ -100,7 +102,7 @@ export class CategoryListComponent implements OnInit {
     this.categoryService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.categories = page.content || [];
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || 0;
       },
       error: (error: any) => {
         this.messageService.add({
@@ -119,12 +121,13 @@ export class CategoryListComponent implements OnInit {
     this.categoryService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.categories = page.content || [];
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || 0;
       }
     });
   }
 
   onSearchChange(): void {
+    this.first = 0;
     this.currentPage = 0;
     this.loadCategoriesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
   }

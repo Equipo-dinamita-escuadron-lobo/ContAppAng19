@@ -1,4 +1,3 @@
-
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
@@ -192,9 +191,7 @@ export class ProductEditComponent implements OnInit {
           summary: '¡Actualizado!',
           detail: 'El producto ha sido actualizado con éxito.'
         });
-        setTimeout(() => {
-          this.router.navigate(['/gen-masters/inventory/products/list']);
-        }, 2000);
+        this.router.navigate(['/gen-masters/inventory/products/list']);
       },
       error: (err) => {
         console.error('Error al actualizar el producto:', err);
