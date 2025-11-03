@@ -28,7 +28,6 @@ import { cuentasDiferentesValidator, collectLeaves } from '../../CustomValidator
     MessageModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './create-tax.component.html',
   styleUrl: './create-tax.component.css'
 })
@@ -124,9 +123,7 @@ export class CreateTaxComponent implements OnInit {
             detail: 'Impuesto creado exitosamente',
             life: 3000
           });
-          setTimeout(() => {
-            this.goBack();
-          }, 1500);
+          this.goBack();
         },
         error: (error) => {
           console.error('Error al crear el impuesto:', error);

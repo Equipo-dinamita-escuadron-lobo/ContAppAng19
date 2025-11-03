@@ -18,8 +18,7 @@ import { AccountingAccountOption } from '../../models/PaymentMethods';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule],
   templateUrl: './payment-methods-creation.component.html',
-  styleUrl: './payment-methods-creation.component.css',
-  providers: [MessageService]
+  styleUrl: './payment-methods-creation.component.css'
 })
 export class PaymentMethodsCreationComponent {
   form: FormGroup;
@@ -106,9 +105,7 @@ export class PaymentMethodsCreationComponent {
           summary: 'Registro exitoso',
           detail: 'Método de pago creado correctamente.'
         });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         if (err?.status === 409) {

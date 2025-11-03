@@ -10,17 +10,13 @@ import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { DocumentTypesServiceService } from '../../services/document-types-service.service';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
-import { DocumentType } from '../../models/DocumentTypes';
-import { DocumentClass } from '../../models/ClassesOfDocuments';
-import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-document-types-edit',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
   templateUrl: './document-types-edit.component.html',
-  styleUrl: './document-types-edit.component.css',
-  providers: [MessageService]
+  styleUrl: './document-types-edit.component.css'
 })
 export class DocumentTypesEditComponent implements OnInit {
   form: FormGroup;
@@ -107,9 +103,7 @@ export class DocumentTypesEditComponent implements OnInit {
     this.service.update(payload).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Actualización exitosa', detail: 'Tipo de documento actualizado correctamente.' });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         if (err?.status === 409) {

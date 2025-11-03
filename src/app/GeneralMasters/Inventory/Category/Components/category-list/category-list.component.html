@@ -54,7 +54,6 @@
       </div>
     </div>
 
-    <!-- 3. TABLA DE CATEGORÍAS: Estilizada para ser coherente con el diseño -->
     <p-table
       #categoriesTable
       [value]="categories"
@@ -64,6 +63,7 @@
       [rows]="currentSize"
       [rowsPerPageOptions]="[5, 10, 20]"
       [totalRecords]="totalRecords"
+      [first]="first"
       styleClass="p-datatable-striped font-family-sans"
       [tableStyle]="{ 'min-width': '70rem' }"
       responsiveLayout="scroll"

@@ -26,7 +26,6 @@ import katex from 'katex';
     EditorModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './help-center-edit.component.html',
   styleUrl: './help-center-edit.component.css'
 })
@@ -118,9 +117,7 @@ export class HelpCenterEditComponent implements OnInit {
             summary: 'Actualización exitosa',
             detail: 'Centro de ayuda actualizado correctamente.'
           });
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/help-center/list']);
-          }, 1000);
+          this.router.navigate(['/gen-masters/help-center/list']);
         },
         error: (error: any) => {
           let errorMessage = 'No se pudo actualizar el centro de ayuda.';

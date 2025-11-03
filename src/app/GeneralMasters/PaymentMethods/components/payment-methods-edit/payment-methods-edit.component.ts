@@ -18,8 +18,7 @@ import { AccountingAccountOption, PaymentMethod } from '../../models/PaymentMeth
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule, TooltipModule],
   templateUrl: './payment-methods-edit.component.html',
-  styleUrl: './payment-methods-edit.component.css',
-  providers: [MessageService]
+  styleUrl: './payment-methods-edit.component.css'
 })
 export class PaymentMethodsEditComponent implements OnInit {
   form: FormGroup;
@@ -152,9 +151,7 @@ export class PaymentMethodsEditComponent implements OnInit {
           summary: 'Actualización exitosa',
           detail: 'Método de pago actualizado correctamente.'
         });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         if (err?.status === 409) {

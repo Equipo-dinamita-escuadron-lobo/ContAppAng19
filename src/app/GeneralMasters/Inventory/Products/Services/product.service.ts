@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
-import { Observable, of, switchMap, combineLatest, map, forkJoin, catchError } from 'rxjs';
+import { Observable, of, switchMap, combineLatest, map, forkJoin, catchError, throwError } from 'rxjs';
 import { Product, ProductList, Page } from '../Models/Product';
 import { UnitOfMeasureService } from '../../MeasurementUnits/Services/unit-of-measure.service';
 import { CategoryService } from '../../Category/Services/category.service';
@@ -22,7 +22,7 @@ export class ProductService {
 
   getProducts(enterpriseId: string, numPage?: number, size?: number, sortField: string = 'name', sortOrder: string = 'asc', search?: string): Observable<Page<ProductList>> {
     let params: any = { enterpriseId };
-    if (numPage !== undefined) params.numPage = numPage;
+    if (numPage !== undefined) params.numPage = numPage;  // Usar 'numPage' como en terceros
     if (size !== undefined) params.size = size;
     params.sortField = sortField;
     params.sortOrder = sortOrder;
@@ -178,14 +178,12 @@ export class ProductService {
   private createEmptyPage(): Page<ProductList> {
     return {
       content: [],
-      totalElements: 0,
-      totalPages: 0,
-      size: 10,
-      number: 0,
-      numberOfElements: 0,
-      first: true,
-      last: true,
-      empty: true
+      page: {
+        totalElements: 0,
+        totalPages: 0,
+        size: 10,
+        number: 0
+      }
     };
   }
 
@@ -212,5 +210,54 @@ export class ProductService {
   changeProductState(id: number, enterpriseId: string): Observable<void> {
     const url = `${API_URL}products/changeState/${id}/${enterpriseId}`;
     return this.http.put<void>(url, {});
+  }
+
+  downloadTemplate(entId: string): Observable<HttpResponse<Blob>> {
+    let params = new HttpParams().set('entId', entId);
+    return this.http.get(`${API_URL}products/template/excel`, {
+      params,
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error) => {
+        return throwError(() => new Error('Error al descargar la plantilla de productos'));
+      })
+    );
+  }
+
+  exportProducts(entId: string, companyName?: string, status?: boolean): Observable<HttpResponse<Blob>> {
+    const params = new URLSearchParams();
+    params.set('entId', entId);
+
+    if (status !== undefined && status !== null) {
+      params.set('status', status.toString());
+    }
+
+    if (companyName && companyName.trim()) {
+      params.set('companyName', companyName.trim());
+    }
+
+    const url = `${API_URL}products/export/excel?${params.toString()}`;
+
+    return this.http.get(url, {
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  importProducts(entId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('entId', entId);
+    formData.append('excelFile', file);
+
+    return this.http.post(`${API_URL}products/import/excel`, formData).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
   }
 }
