@@ -63,7 +63,7 @@ export class PortfolioWriteOffService {
   getWriteOffsByEnterprise(enterpriseId: string): Observable<PortfolioWriteOffView[]> {
     const url = `${this.apiUrl}/by-enterprise/${enterpriseId}`;
     return this.http.get<PortfolioWriteOffResponseDto[]>(url).pipe(
-      map(dtos => dtos.map(dto => this.mapDtoToView(dto)))
+      map(dtos => (dtos || []).map(dto => this.mapDtoToView(dto)))
     );
   }
 
