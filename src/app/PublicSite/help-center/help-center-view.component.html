@@ -1,13 +1,13 @@
 <!-- Header con Logo -->
 <div class="w-full border-b" style="background-color: white; border-color: var(--color-neutral-90);">
-  <div class="max-w-[1400px] mx-auto px-8 py-4">
+  <div class="max-w-1400px mx-auto px-8 py-4">
     <a href="/#/" class="inline-block cursor-pointer hover:opacity-80 transition-opacity">
       <img src="logo_unicauca_horizontal.png" alt="Logo Unicauca" class="max-h-72 w-auto">
     </a>
   </div>
 </div>
 
-<div class="max-w-[1400px] mx-auto px-8 py-8">
+<div class="max-w-1400px mx-auto px-8 py-8">
   <!-- Título -->
   <div class="mt-12 mb-6">
     <h1 class="font-family-titillium font-bold text-3xl text-primary">
@@ -65,9 +65,9 @@
   <div class="grid grid-cols-1 lg:grid-cols-[1fr_450px] gap-8 items-start">
 
     <!-- Columna izquierda: Contenido seleccionado -->
-    <div class="min-h-[500px]">
+    <div class="min-h-500px">
       @if (loading) {
-        <div class="flex flex-col items-center justify-center min-h-[400px]" style="color: var(--color-primary);">
+        <div class="flex flex-col items-center justify-center min-h-400px" style="color: var(--color-primary);">
           <i class="pi pi-spin pi-spinner text-5xl"></i>
           <p class="mt-4">Cargando contenido...</p>
         </div>
@@ -102,7 +102,7 @@
           </p-editor>
         </div>
       } @else {
-        <div class="flex flex-col items-center justify-center min-h-[400px] text-center bg-white rounded-2xl p-12 border-2 border-dashed"
+        <div class="flex flex-col items-center justify-center min-h-400px text-center bg-white rounded-2xl p-12 border-2 border-dashed"
              style="border-color: var(--color-neutral-80); color: var(--color-neutral-50);">
           <i class="pi pi-inbox text-7xl mb-4" style="color: var(--color-neutral-70);"></i>
           <h3 class="text-xl font-semibold mb-2" style="color: var(--color-neutral-30);">No hay contenido disponible</h3>
