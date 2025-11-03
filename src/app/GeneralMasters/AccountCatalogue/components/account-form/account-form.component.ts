@@ -62,9 +62,9 @@ export class AccountFormComponent implements OnInit {
  * @param fb Constructor de formularios reactivos.
  */
   constructor(
-    private _accountService: ChartAccountService,
-    private fb: FormBuilder, 
-    private localStorage: LocalStorageMethods) {
+    private readonly _accountService: ChartAccountService,
+    private readonly fb: FormBuilder,
+    private readonly localStorage: LocalStorageMethods) {
     this.formNewAccount = this.fb.group({
       code: ['', [Validators.required, Validators.pattern('^[0-9]*$')]],
       name: ['', [Validators.required, Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1]+[a-zA-ZÀ-ÿ\u00f1\u00d1\\d,.()\\/\\-+&% ]*$')]],
@@ -167,9 +167,8 @@ export class AccountFormComponent implements OnInit {
    */
   sendAccount() {
     
-    const account: Account = {
-      //idEnterprise: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
-      idEnterprise: this.getIdEnterprise(), //Descomentar esta línea si tienes un método para obtener el ID de la empresa
+    const account: Account = {    
+      idEnterprise: this.getIdEnterprise(),
       code: this.formNewAccount.value.code,
       description: this.formNewAccount.value.name,
       nature: this.formNewAccount.value.selectedNatureType,
@@ -348,7 +347,7 @@ export class AccountFormComponent implements OnInit {
 
   /**
    * Maneja la entrada de teclado en el campo nombre.
-   * Bloquea caracteres que no sean letras, espacios y caracteres especiales permitidos.
+   * Bloquea caracteres que no sean letras, números, espacios y caracteres especiales permitidos.
    * @param event Evento de teclado.
    */
   onNameKeyDown(event: KeyboardEvent) {
@@ -363,13 +362,13 @@ export class AccountFormComponent implements OnInit {
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
       'Home', 'End', ' '
     ];
-    
+
     if (allowedKeys.includes(event.key)) {
       return;
     }
 
-    // Solo permitir letras, espacios y caracteres especiales permitidos
-    const allowedPattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d1,.()\/\-+&%]$/;
+    // Solo permitir letras, números, espacios y caracteres especiales permitidos
+    const allowedPattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d1\d,.()\/\-+&%]$/;
     if (!allowedPattern.test(event.key)) {
       event.preventDefault();
     }

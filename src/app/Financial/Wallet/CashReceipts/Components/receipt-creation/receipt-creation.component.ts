@@ -113,7 +113,7 @@ export class ReceiptCreationComponent {
       this.receiptTypes = data;
     });
 
-    this.paymentMethodService.findAll(enterpriseId, 0, 10).subscribe((page) => {
+    this.paymentMethodService.findAllActive(enterpriseId).subscribe((page) => {
       this.paymentMethods = page.content;
     });
 
@@ -124,7 +124,6 @@ export class ReceiptCreationComponent {
 
     this.cashReceiptService.getAuxiliaryAccountsCached(enterpriseId).subscribe(data => {
       this.auxiliaryAccounts = data;
-      console.log('Cuentas Auxiliares cargadas:', this.auxiliaryAccounts);
     });
   }
 

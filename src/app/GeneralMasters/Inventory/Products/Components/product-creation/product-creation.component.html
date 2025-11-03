@@ -1,5 +1,6 @@
 <!-- Contenedor Principal con la fuente y fondo estandarizados -->
 <div class="flex w-full h-full font-titillium">
+  <p-toast></p-toast>
   <!-- Tarjeta de Contenido Principal, aplicando el estilo de la guía -->
   <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
 
@@ -7,10 +8,10 @@
     <div class="flex justify-between items-start mb-12">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Crear Producto
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Crear</span> Producto
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Ingrese la información requerida para registrar un nuevo producto en el sistema.
         </p>
       </div>
@@ -28,61 +29,41 @@
 
         <!-- Nombre del Producto -->
         <div class="flex flex-col gap-2">
-          <label for="name" class="font-semibold text-primary">Nombre del Producto</label>
+          <label for="name" class="font-semibold text-primary label-required">Nombre</label>
           <input pInputText id="name" formControlName="name" placeholder="Ej: Banano de exportación"
             class="w-full md:w-2/3" />
           @if (productForm.get('name')?.invalid && productForm.get('name')?.touched) {
-          <small class="text-red-500">El nombre es requerido.</small>
+          <small class="error-message">{{ getValidationMessage('name') }}</small>
           }
         </div>
 
         <!-- Referencia -->
         <div class="flex flex-col gap-2">
-          <label for="reference" class="font-semibold text-primary">Referencia / SKU</label>
+          <label for="reference" class="font-semibold text-primary label-required">Referencia / SKU</label>
           <input pInputText id="reference" formControlName="reference" placeholder="Ej: TROP-001"
             class="w-full md:w-2/3" />
+          @if (productForm.get('reference')?.invalid && productForm.get('reference')?.touched) {
+          <small class="error-message">{{ getValidationMessage('reference') }}</small>
+          }
         </div>
 
         <!-- Presentación -->
         <div class="flex flex-col gap-2">
-          <label for="presentation" class="font-semibold text-primary">Presentación</label>
+          <label for="presentation" class="font-semibold text-primary label-required">Presentación</label>
           <input pInputText id="presentation" formControlName="presentation" placeholder="Ej: Caja de 12 unidades"
             class="w-full md:w-2/3" />
+          @if (productForm.get('presentation')?.invalid && productForm.get('presentation')?.touched) {
+          <small class="error-message">{{ getValidationMessage('presentation') }}</small>
+          }
         </div>
 
         <!-- Cantidad -->
         <div class="flex flex-col gap-2">
           <label for="quantity" class="font-semibold text-primary">Cantidad Inicial</label>
           <p-inputNumber inputId="quantity" formControlName="quantity" [min]="0" placeholder="0"
-            styleClass="w-full md:w-2/3"></p-inputNumber>
+            styleClass="w-full md:w-1/3"></p-inputNumber>
           @if (productForm.get('quantity')?.invalid && productForm.get('quantity')?.touched) {
-          <small class="text-red-500">La cantidad es requerida y no puede ser negativa.</small>
-          }
-        </div>
-
-        <!-- Impuesto(s) -->
-        <div class="flex flex-col gap-2">
-          <label for="taxPercentage" class="font-semibold text-primary">Impuesto(s)</label>
-          <p-select
-            id="taxSelect"
-            [options]="taxes"
-            optionLabel="displayText"
-            [optionValue]="'interest'"
-            placeholder="Seleccione un impuesto"
-            [filter]="true"
-            [showClear]="true"
-            class="w-full md:w-2/3"
-            formControlName="taxPercentage"
-          >
-            <ng-template pTemplate="selectedItem" let-selectedOption>
-              <div *ngIf="selectedOption">{{ selectedOption.code }} ({{ selectedOption.interest }}%)</div>
-            </ng-template>
-            <ng-template pTemplate="item" let-option>
-              <div>{{ option.code }} ({{ option.interest }}%)</div>
-            </ng-template>
-          </p-select>
-          @if (productForm.get('taxPercentage')?.invalid && productForm.get('taxPercentage')?.touched) {
-            <small class="text-red-500">El impuesto es requerido.</small>
+          <small class="error-message">{{ getValidationMessage('quantity') }}</small>
           }
         </div>
 
@@ -90,15 +71,15 @@
         <div class="flex flex-col gap-2">
           <label for="cost" class="font-semibold text-primary">Costo</label>
           <p-inputNumber inputId="cost" formControlName="cost" mode="currency" currency="COP" locale="es-CO" [min]="0"
-            placeholder="$ 0" styleClass="w-full md:w-2/3"></p-inputNumber>
+            placeholder="$ 0" styleClass="w-full md:w-1/3"></p-inputNumber>
           @if (productForm.get('cost')?.invalid && productForm.get('cost')?.touched) {
-          <small class="text-red-500">El costo es requerido y no puede ser negativo.</small>
+          <small class="error-message">{{ getValidationMessage('cost') }}</small>
           }
         </div>
 
         <!-- Tipo de Producto -->
         <div class="flex flex-col gap-2">
-          <label for="productTypeId" class="font-semibold text-primary">Tipo de Producto</label>
+          <label for="productTypeId" class="font-semibold text-primary label-required">Tipo de Producto</label>
           <p-select
             id="productTypeId"
             formControlName="productTypeId"
@@ -120,13 +101,13 @@
             </ng-template>
           </p-select>
           @if (productForm.get('productTypeId')?.invalid && productForm.get('productTypeId')?.touched) {
-          <small class="text-red-500">Debe seleccionar un tipo de producto.</small>
+          <small class="error-message">{{ getValidationMessage('productTypeId') }}</small>
           }
         </div>
 
         <!-- Unidad de Medida -->
         <div class="flex flex-col gap-2">
-          <label for="unitOfMeasureId" class="font-semibold text-primary">Unidad de Medida</label>
+          <label for="unitOfMeasureId" class="font-semibold text-primary label-required">Unidad de Medida</label>
           <p-select
             id="unitOfMeasureId"
             formControlName="unitOfMeasureId"
@@ -148,13 +129,13 @@
             </ng-template>
           </p-select>
           @if (productForm.get('unitOfMeasureId')?.invalid && productForm.get('unitOfMeasureId')?.touched) {
-          <small class="text-red-500">Debe seleccionar una unidad de medida.</small>
+          <small class="error-message">{{ getValidationMessage('unitOfMeasureId') }}</small>
           }
         </div>
 
         <!-- Categoría -->
         <div class="flex flex-col gap-2">
-          <label for="categoryId" class="font-semibold text-primary">Categoría</label>
+          <label for="categoryId" class="font-semibold text-primary label-required">Categoría</label>
           <p-select
             id="categoryId"
             formControlName="categoryId"
@@ -176,19 +157,19 @@
             </ng-template>
           </p-select>
           @if (productForm.get('categoryId')?.invalid && productForm.get('categoryId')?.touched) {
-          <small class="text-red-500">Debe seleccionar una categoría.</small>
+          <small class="error-message">{{ getValidationMessage('categoryId') }}</small>
           }
         </div>
 
         <!-- Descripción -->
         <div class="md:col-span-2 flex flex-col gap-2">
-          <label for="description" class="font-semibold text-primary">Descripción</label>
+          <label for="description" class="font-semibold text-primary label-required">Descripción</label>
           <textarea id="description" formControlName="description"
             placeholder="Añade aquí cualquier observación, detalle técnico o nota sobre el producto..."
             rows="3" pInputTextarea 
             class="p-inputtext w-full md:w-2/3"></textarea>
           @if (productForm.get('description')?.invalid && productForm.get('description')?.touched) {
-          <small class="text-red-500">La descripción es requerida.</small>
+          <small class="error-message">{{ getValidationMessage('description') }}</small>
           }
         </div>
 
@@ -204,7 +185,7 @@
         </p-button>
         <p-button 
           type="submit"
-          label="Crear Producto"
+          label="Guardar"
           [disabled]="productForm.invalid">
         </p-button>
       </div>

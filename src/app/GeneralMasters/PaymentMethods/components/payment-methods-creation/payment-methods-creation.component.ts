@@ -11,7 +11,6 @@ import { PaymentMethodsServiceService } from '../../services/payment-methods-ser
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
 import { AccountingAccountOption } from '../../models/PaymentMethods';
-import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
 
 
 @Component({
@@ -19,19 +18,18 @@ import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule],
   templateUrl: './payment-methods-creation.component.html',
-  styleUrl: './payment-methods-creation.component.css',
-  providers: [MessageService]
+  styleUrl: './payment-methods-creation.component.css'
 })
 export class PaymentMethodsCreationComponent {
   form: FormGroup;
   accountingAccountsOptions: AccountingAccountOption[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private messageService: MessageService,
-    private service: PaymentMethodsServiceService,
-    private chartAccountService: ChartAccountService
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: PaymentMethodsServiceService,
+    private readonly chartAccountService: ChartAccountService
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -44,29 +42,16 @@ export class PaymentMethodsCreationComponent {
     const enterpriseId = entData ? JSON.parse(entData).id : '';
 
     if (enterpriseId) {
-      // Cargar todas las cuentas contables activas para el dropdown
-
-      this.chartAccountService.getListAccounts(enterpriseId).subscribe({
+      // Cargar cuentas auxiliares activas para el dropdown
+      this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
         next: (accounts: Account[]) => {
-
-          // Obtener solo las cuentas auxiliares (8 dígitos) que son las que se usan para registrar movimientos
-          const auxiliaryAccounts: Account[] = [];
-          accounts.forEach(account => {
-            PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
-          });
-
-          // Filtrar cuentas válidas (con código y descripción)
-          const validAuxiliaryAccounts = PaymentMethodsUtils.filterValidAuxiliaryAccounts(auxiliaryAccounts);
-
-          this.accountingAccountsOptions = validAuxiliaryAccounts
+          this.accountingAccountsOptions = accounts
             .filter((account: Account) => account.id !== undefined)
             .map((account: Account) => ({
               label: `${account.code} - ${account.description}`,
-              value: account.id!, // Usar ID como value (ya filtrado)
+              value: account.id!, // Usar ID como value
               code: account.code // Mantener código para referencia
             }));
-
-
         },
         error: (error: any) => {
           this.messageService.add({
@@ -120,9 +105,7 @@ export class PaymentMethodsCreationComponent {
           summary: 'Registro exitoso',
           detail: 'Método de pago creado correctamente.'
         });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         if (err?.status === 409) {
@@ -132,14 +115,14 @@ export class PaymentMethodsCreationComponent {
             const n = (nameMatch[1] || nameMatch[0])?.toString().replace(/^[^']*'|'/g,'');
             this.messageService.add({
               severity: 'error',
-              summary: 'Nombre duplicado',
+              summary: 'Registro duplicado',
               detail: `El método de pago "${n}" ya existe.`
             });
             return;
           }
           this.messageService.add({
             severity: 'error',
-            summary: 'Duplicado',
+            summary: 'Registro duplicado',
             detail: 'Ya existe un método de pago con el mismo nombre.'
           });
           return;

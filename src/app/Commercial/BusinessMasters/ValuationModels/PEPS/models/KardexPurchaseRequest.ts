@@ -1,7 +1,8 @@
 export interface KardexPurchaseRequest {
+    details: string;
     quantity: number;
     unitPrice: string;
-    details: string;
-    idProduct: number;
+    factCode:number;
+    productId: number;
   }
   

@@ -10,17 +10,13 @@ import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { DocumentTypesServiceService } from '../../services/document-types-service.service';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
-import { DocumentType } from '../../models/DocumentTypes';
-import { DocumentClass } from '../../models/ClassesOfDocuments';
-import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-document-types-edit',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
   templateUrl: './document-types-edit.component.html',
-  styleUrl: './document-types-edit.component.css',
-  providers: [MessageService]
+  styleUrl: './document-types-edit.component.css'
 })
 export class DocumentTypesEditComponent implements OnInit {
   form: FormGroup;
@@ -30,12 +26,12 @@ export class DocumentTypesEditComponent implements OnInit {
   initialValue: any = {};
 
   constructor(
-    private fb: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private messageService: MessageService,
-    private service: DocumentTypesServiceService,
-    private classesService: ClassesOfDocumentsServiceService
+    private readonly fb: FormBuilder,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: DocumentTypesServiceService,
+    private readonly classesService: ClassesOfDocumentsServiceService
   ) {
     this.form = this.fb.group({
       prefix: ['', [Validators.required, Validators.maxLength(10), Validators.pattern('^[a-zA-Z0-9]+$')]],
@@ -107,9 +103,7 @@ export class DocumentTypesEditComponent implements OnInit {
     this.service.update(payload).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Actualización exitosa', detail: 'Tipo de documento actualizado correctamente.' });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         if (err?.status === 409) {

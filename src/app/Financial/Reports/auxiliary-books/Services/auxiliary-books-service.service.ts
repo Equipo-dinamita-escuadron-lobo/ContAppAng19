@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment.dev';
 import { auxBookResponse } from '../Models/Responses/BookResponse';
+import { ExportAuxiliaryBookRequest } from '../Models/Requests/ExportAuxiliaryBookRequest';
 
 @Injectable({
   providedIn: 'root',
@@ -17,5 +18,16 @@ export class AuxiliaryBooksServiceService {
    */
   registerAuxiliaryBook(request: any): Observable<auxBookResponse> {
     return this.http.post<auxBookResponse>(`${this.apiUrl}/register`, request);
+  }
+
+  /**
+   * Llama al endpoint POST /export para generar un archivo de reporte (PDF o Excel).
+   * @param request El cuerpo de la solicitud con los criterios del reporte.
+   * @returns Un Observable que emite el archivo como un Blob.
+   */
+  exportAuxiliaryBook(request: ExportAuxiliaryBookRequest): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/export`, request, {
+      responseType: 'blob',
+    });
   }
 }

@@ -54,9 +54,9 @@ export class ThirdCreationPdfRUTComponent {
    * Constructor del componente
    */
   constructor(
-    private thirdService: ThirdService, 
-    private router: Router,
-    private messageService: MessageService
+    private readonly thirdService: ThirdService, 
+    private readonly router: Router,
+    private readonly messageService: MessageService
   ) {}
 
   /**
@@ -126,12 +126,12 @@ export class ThirdCreationPdfRUTComponent {
     this.thirdService.ExtractInfoPDFRUT(this.selectedFile).subscribe({
       next: (response) => {
         const pdfContent = response.content;
-        
+
         if (pdfContent === EMPTY_PDF_CONTENT) {
           this.showErrorMessage('Sin información', 'No se encontró información para crear un tercero');
           this.loading = false;
         } else {
-          this.showSuccessMessage('Éxito', 'Archivo procesado correctamente');
+          // Navegar inmediatamente a la página de creación (la notificación se mostrará allí)
           this.redirectToCreateThird(pdfContent);
         }
       },
@@ -200,7 +200,7 @@ export class ThirdCreationPdfRUTComponent {
    * Redirige a la página de creación de tercero con la información extraída
    */
   private redirectToCreateThird(infoThird: string): void {
-    this.thirdService.setInfoThirdRUT(infoThird); 
+    this.thirdService.setInfoThirdRUT(infoThird);
     this.router.navigate(['/gen-masters/third-parties/create']);
     this.closePopUp();
   }

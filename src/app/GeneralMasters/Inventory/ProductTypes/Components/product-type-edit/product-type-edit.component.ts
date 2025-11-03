@@ -7,10 +7,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { TextareaModule } from 'primeng/textarea';
 
 import { ProductType } from '../../Models/ProductType';
 import { ProductTypeService } from '../../Services/product-type.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
+import { ProductTypeValidationMessagesService } from '../../Services/product-type-validation-messages.service';
 
 @Component({
   selector: 'app-product-type-edit',
@@ -19,28 +21,28 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     CommonModule,
     CardModule,
     InputTextModule,
+    TextareaModule,
     ButtonModule,
     ReactiveFormsModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './product-type-edit.component.html',
 })
 export class ProductTypeEditComponent implements OnInit {
   productTypeForm!: FormGroup;
   productTypeId: string | null = null;
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
-  loading = false;
+  entData: string | null = null;
   currentProductType: ProductType | null = null;
   private originalProductTypeData!: ProductType;
 
   constructor(
-    private route: ActivatedRoute,
-    private formBuilder: FormBuilder,
-    private productTypeService: ProductTypeService,
-    private router: Router,
-    private messageService: MessageService
+    private readonly route: ActivatedRoute,
+    private readonly formBuilder: FormBuilder,
+    private readonly productTypeService: ProductTypeService,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly validationMessagesService: ProductTypeValidationMessagesService
   ) {}
 
   ngOnInit(): void {
@@ -58,9 +60,8 @@ export class ProductTypeEditComponent implements OnInit {
   }
 
   loadProductType(): void {
-    if (this.productTypeId) {
-      this.loading = true;
-      this.productTypeService.getProductTypeById(this.productTypeId).subscribe({
+    if (this.productTypeId && this.entData) {
+      this.productTypeService.getProductTypeById(this.productTypeId, this.entData).subscribe({
         next: (productType) => {
           this.currentProductType = productType;
           this.originalProductTypeData = { ...productType };
@@ -68,7 +69,6 @@ export class ProductTypeEditComponent implements OnInit {
             name: productType.name,
             description: productType.description
           });
-          this.loading = false;
         },
         error: (error: any) => {
           console.error('Error al cargar el tipo de producto:', error);
@@ -77,7 +77,6 @@ export class ProductTypeEditComponent implements OnInit {
             summary: 'Error',
             detail: 'No se pudo cargar el tipo de producto'
           });
-          this.loading = false;
         }
       });
     }
@@ -97,8 +96,6 @@ export class ProductTypeEditComponent implements OnInit {
         return;
       }
 
-      this.loading = true;
-      
       const updatedProductType: ProductType = {
         ...this.currentProductType,
         name: this.productTypeForm.value.name,
@@ -110,22 +107,23 @@ export class ProductTypeEditComponent implements OnInit {
         next: (response) => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Actualización Exitosa',
             detail: 'Tipo de producto actualizado correctamente'
           });
           
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/inventory/product-types/list']);
-          }, 2000);
+          this.router.navigate(['/gen-masters/inventory/product-types/list']);
         },
-        error: (error: any) => {
-          console.error('Error al actualizar el tipo de producto:', error);
+        error: (error) => {
+          const message = error.error?.message || 'Ha ocurrido un error al actualizar el tipo de producto. Por favor, inténtelo de nuevo.';
+          let summary = 'Error';
+          if (message.includes('Ya existe')) {
+            summary = 'Registro Duplicado';
+          }
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo actualizar el tipo de producto'
+            summary: summary,
+            detail: message
           });
-          this.loading = false;
         }
       });
     } else {
@@ -136,32 +134,20 @@ export class ProductTypeEditComponent implements OnInit {
 
 
   private markFormGroupTouched(): void {
-    Object.keys(this.productTypeForm.controls).forEach(key => {
+    for (const key of Object.keys(this.productTypeForm.controls)) {
       const control = this.productTypeForm.get(key);
       control?.markAsTouched();
-    });
+    }
   }
 
   goBack(): void {
     this.router.navigate(['/gen-masters/inventory/product-types/list']);
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.productTypeForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
-  }
-
-  getFieldError(fieldName: string): string {
-    const field = this.productTypeForm.get(fieldName);
-    if (field && field.errors) {
-      if (field.errors['required']) {
-        return `El campo ${fieldName === 'name' ? 'Nombre' : 'Descripción'} es requerido.`;
-      }
-      if (field.errors['maxlength']) {
-        return `El campo ${fieldName === 'name' ? 'Nombre' : 'Descripción'} excede la longitud máxima permitida.`;
-      }
-    }
-    return '';
+  // Método para obtener mensajes de validación
+  getValidationMessage(fieldName: string): string {
+    const control = this.productTypeForm.get(fieldName);
+    return this.validationMessagesService.getFieldErrorMessage(control, fieldName) || '';
   }
 
   // Método para verificar si hubo cambios en el formulario
@@ -179,5 +165,9 @@ export class ProductTypeEditComponent implements OnInit {
   hasChanges(): boolean {
     if (!this.originalProductTypeData) return false;
     return this.hasFormChanges();
+  }
+
+  get isSubmitDisabled(): boolean {
+    return this.productTypeForm.invalid || !this.hasChanges();
   }
 }

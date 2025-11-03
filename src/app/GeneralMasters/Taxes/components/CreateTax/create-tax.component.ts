@@ -15,7 +15,6 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
 import { cuentasDiferentesValidator, collectLeaves } from '../../CustomValidators/validateTaxInputs';
-import { map } from 'rxjs';
 
 @Component({
   selector: 'app-create-tax',
@@ -29,7 +28,6 @@ import { map } from 'rxjs';
     MessageModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './create-tax.component.html',
   styleUrl: './create-tax.component.css'
 })
@@ -41,8 +39,8 @@ export class CreateTaxComponent implements OnInit {
   private readonly messageService = inject(MessageService);
 
   addForm: FormGroup;
-  depositAccounts: Account[] = [];
-  refundAccounts: Account[] = [];
+  salesTaxes: Account[] = [];
+  purchaseTaxes: Account[] = [];
   selectedAccount: any;
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
@@ -56,8 +54,8 @@ export class CreateTaxComponent implements OnInit {
       code: ['', Validators.required],
       description: ['', Validators.required],
       interest: [null, [Validators.required, Validators.min(0)]],
-      depositAccount: [null, Validators.required],
-      refundAccount: [null, Validators.required]
+      salesTax: [null], // Opcional
+      purchaseTax: [null] // Opcional
     }, { validators: cuentasDiferentesValidator });
   }
 
@@ -67,21 +65,21 @@ export class CreateTaxComponent implements OnInit {
   }
 
   /**
-   * Obtiene las cuentas del catálogo de cuentas
+   * Obtiene las cuentas auxiliares del catálogo de cuentas
    */
   getCuentas(): void {
     if (this.entData?.id) {
-      this.chartAccountService.getListAccounts(this.entData.id).subscribe({
+      this.chartAccountService.getListAuxiliaryAccounts(this.entData.id).subscribe({
         next: (data: Account[]) => {
           this.accounts = data;
           this.processAccounts();
         },
         error: (error) => {
-          console.error('Error al obtener las cuentas:', error);
+          const errorMessage = error?.error?.message || 'No se pudieron cargar las cuentas auxiliares';
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudieron cargar las cuentas'
+            detail: errorMessage
           });
         }
       });
@@ -96,9 +94,9 @@ export class CreateTaxComponent implements OnInit {
     this.accounts.forEach(account => {
       collectLeaves(account, leaves);
     });
-    
-    this.depositAccounts = [...leaves];
-    this.refundAccounts = [...leaves];
+
+    this.salesTaxes = [...leaves];
+    this.purchaseTaxes = [...leaves];
   }
 
   /**
@@ -107,13 +105,13 @@ export class CreateTaxComponent implements OnInit {
   onSubmit(): void {
     if (this.addForm.valid) {
       const formValue = this.addForm.value;
-      
+
       const taxData: TaxCreateRequest = {
         code: formValue.code,
         description: formValue.description,
         interest: formValue.interest,
-        depositAccount: formValue.depositAccount.code,
-        refundAccount: formValue.refundAccount.code,
+        salesTaxId: formValue.salesTax?.id || undefined,
+        purchaseTaxId: formValue.purchaseTax?.id || undefined,
         idEnterprise: this.entData?.id || ''
       };
 
@@ -121,21 +119,21 @@ export class CreateTaxComponent implements OnInit {
         next: (response) => {
           this.messageService.add({
             severity: 'success',
-            summary: 'Éxito',
+            summary: 'Registro Exitoso',
             detail: 'Impuesto creado exitosamente',
-            life: 3000 // Mantener notificación visible por 3 segundos
+            life: 3000
           });
-          // Navegación después de 1.5 segundos para permitir leer la notificación
-          setTimeout(() => {
-            this.goBack();
-          }, 1500);
+          this.goBack();
         },
         error: (error) => {
           console.error('Error al crear el impuesto:', error);
+          const errorMessage = error?.error?.message || 'No se pudo crear el impuesto';
+          const isDuplicateError = errorMessage.toLowerCase().includes('ya existe') ||
+                                   errorMessage.toLowerCase().includes('duplicado');
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo crear el impuesto'
+            summary: isDuplicateError ? 'Registro Duplicado' : 'Error',
+            detail: errorMessage
           });
         }
       });
@@ -182,7 +180,7 @@ export class CreateTaxComponent implements OnInit {
    */
   getCustomError(): string {
     if (this.addForm.errors?.['cuentasIguales'] && this.addForm.touched) {
-      return 'Las cuentas de depósito y devolución no pueden ser iguales';
+      return 'Las cuentas de impuesto de venta e impuesto de compra no pueden ser iguales';
     }
     return '';
   }

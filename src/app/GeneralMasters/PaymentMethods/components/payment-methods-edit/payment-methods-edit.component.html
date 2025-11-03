@@ -5,10 +5,10 @@
     <!-- Cabecera -->
     <div class="flex justify-between items-start mb-12">
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Editar Método de Pago
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Editar</span> Método de Pago
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Modifique la información del método de pago seleccionado.
         </p>
       </div>
@@ -22,30 +22,23 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Nombre</label>
+          <label class="label-required font-semibold text-primary">Nombre</label>
           <input pInputText formControlName="name" placeholder="Ej: Efectivo, Transferencia bancaria" class="w-full md:w-2/3" maxlength="100" />
-          <small class="text-red-500" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido (máx. 100 caracteres)</small>
+          <small class="error-message" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido (máx. 100 caracteres)</small>
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary flex items-center gap-2">
-            Cuenta Contable
-            <i *ngIf="form.get('accountingAccount')?.disabled"
-               class="pi pi-lock text-gray-500"
-               pTooltip="La cuenta contable no se puede modificar después de crear el método de pago"
-               tooltipPosition="top"></i>
-          </label>
+          <label class="label-required font-semibold text-primary">Cuenta Contable</label>
           <p-select
             [options]="accountingAccountsOptions"
             formControlName="accountingAccount"
             optionValue="value"
             placeholder="Seleccione una cuenta"
             [filter]="true"
-            [showClear]="false"
-            class="w-full md:w-2/3"
-            [styleClass]="form.get('accountingAccount')?.disabled ? 'p-select-disabled' : ''">
+            [showClear]="true"
+            class="w-full md:w-2/3">
           </p-select>
-          
+
         </div>
 
       </div>
@@ -53,7 +46,7 @@
       <!-- Botones de acción -->
       <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button type="button" label="Cancelar" severity="secondary" (click)="goBack()"></p-button>
-        <p-button type="submit" label="Guardar Cambios" [disabled]="form.invalid || !hasChanges()"></p-button>
+        <p-button type="submit" label="Actualizar" [disabled]="form.invalid || !hasChanges()"></p-button>
       </div>
     </form>
   </div>

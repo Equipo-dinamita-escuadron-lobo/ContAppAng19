@@ -125,7 +125,7 @@ export const navbarData: INavbarData[] = [
             label: 'Libros Auxiliares',
           },
           {
-            routeLink: 'TO DO',
+            routeLink: '/financial/reports/financial-statements/list',
             icon: 'article',
             label: 'Estados Financieros',
           },
@@ -174,11 +174,16 @@ export const navbarData: INavbarData[] = [
             label: 'Castigos de cartera',
           },
           {
+            routeLink: '/financial/wallet/invoices',
+            icon: 'description',
+            label: 'Facturas pendientes',
+          },
+          {
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',
           },
-          
+
         ],
       },
     ],
@@ -238,31 +243,14 @@ export const navbarData: INavbarData[] = [
          label: 'Devoluciones',
        },
        {
-         routeLink: 'TO DO',
-         icon: 'analytics',
-         label: 'Reportes',
+        routeLink:'/commercial/non-commercial-template',
+        icon:'',
+        label:'Movimiento de Inventario No Comercial'
        },
        {
          routeLink: 'TO DO',
-         icon: 'shelves',
-         label: 'Ajustes de Inventario',
-         items: [
-           {
-             routeLink: 'TO DO',
-             icon: 'arrows_input',
-             label: 'Entradas',
-           },
-           {
-             routeLink: 'TO DO',
-             icon: 'arrows_output',
-             label: 'Salidas',
-           },
-           {
-             routeLink: 'TO DO',
-             icon: 'difference',
-             label: 'Recalculos',
-           },
-         ],
+         icon: 'analytics',
+         label: 'Reportes',
        },
      ],
    },

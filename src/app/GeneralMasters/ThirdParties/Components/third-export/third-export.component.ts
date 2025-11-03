@@ -84,9 +84,9 @@ export class ThirdExportComponent implements OnInit {
    * @param localStorageMethods Servicio para manejar localStorage
    */
   constructor(
-    private thirdService: ThirdService,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods
+    private readonly thirdService: ThirdService,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods
   ) { }
 
   ngOnInit(): void {
@@ -186,8 +186,8 @@ export class ThirdExportComponent implements OnInit {
         
         this.messageService.add({
           severity: 'success',
-          summary: 'Estamos generando tu archivo',
-          detail: `El archivo se descargará automáticamente en unos segundos.`
+          summary: 'Exportación exitosa',
+          detail: `El archivo se ha exportado correctamente.`
         });
 
         this.loading = false;
@@ -198,7 +198,6 @@ export class ThirdExportComponent implements OnInit {
         }, 2000);
       },
       error: (err) => {
-        console.error('Error al exportar terceros:', err);
 
         // Intentar leer el mensaje de error si es un blob
         if (err.error instanceof Blob) {

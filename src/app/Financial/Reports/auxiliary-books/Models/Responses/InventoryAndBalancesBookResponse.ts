@@ -1,5 +1,7 @@
+import { Account } from '../Account';
+
 export interface InventoryAndBalancesResponse {
-  account: { accountCode: number; accountDescription: string };
+  account: Account;
   description: string;
   value: number;
 }

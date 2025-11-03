@@ -7,10 +7,10 @@
     <div class="flex justify-between items-start mb-12">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
-        <h1 class="font-bold text-3xl/41 inline-block pb-1" style="font-family: var(--font-family-titillium); color: var(--color-primary); border-bottom: 4px solid var(--color-secondary);">
-          Crear Categoría
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span style="border-bottom: 4px solid var(--color-secondary-light);">Crear</span> Categoría
         </h1>
-        <p class="font-normal text-sm mt-2" style="font-family: var(--font-family-sans);">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Ingrese la información requerida para registrar una nueva categoría en el sistema.
         </p>
       </div>
@@ -28,28 +28,60 @@
 
         <!-- Nombre de la Categoría -->
         <div class="flex flex-col gap-2">
-          <label for="name" class="font-semibold" style="color: var(--color-primary);">Nombre de la Categoría <span class="text-red-500">*</span></label>
+          <label for="name" class="label-required font-semibold text-primary">Nombre</label>
           <input pInputText id="name" formControlName="name" placeholder="Ej: Electrónicos, Ropa, Alimentos"
             class="w-full md:w-2/3" />
-          @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
-          <small style="color: var(--color-error-35);">El nombre es requerido.</small>
+          @if (categoryValidationMessagesService.hasFieldError(categoryForm.get('name'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(categoryForm.get('name'), 'name') }}</div>
           }
         </div>
 
         <!-- Descripción -->
         <div class="flex flex-col gap-2">
-          <label for="description" class="font-semibold" style="color: var(--color-primary);">Descripción <span class="text-red-500">*</span></label>
+          <label for="description" class="label-required font-semibold text-primary">Descripción</label>
           <textarea pInputText id="description" formControlName="description" 
             placeholder="Descripción de la categoría"
             class="w-full md:w-2/3" rows="1" pInputTextarea></textarea>
-          @if (categoryForm.get('description')?.invalid && categoryForm.get('description')?.touched) {
-          <small style="color: var(--color-error-35);">La descripción es requerida.</small>
+          @if (categoryValidationMessagesService.hasFieldError(categoryForm.get('description'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(categoryForm.get('description'), 'description') }}</div>
+          }
+        </div>
+
+        <!-- Impuesto(s) -->
+        <div class="flex flex-col gap-2">
+          <label for="taxes" class="label-required font-semibold text-primary">Impuesto(s)</label>
+          <p-multiSelect
+            id="taxSelect"
+            [options]="taxes"
+            optionLabel="displayText"
+            optionValue="id"
+            placeholder="Seleccione los impuestos"
+            [filter]="true"
+            [showClear]="true"
+            [maxSelectedLabels]="3"
+            selectedItemsLabel="{0} impuestos seleccionados"
+            class="w-full md:w-2/3"
+            formControlName="taxes"
+          >
+            <ng-template pTemplate="selectedItems" let-selectedOptions>
+              <div *ngIf="selectedOptions && selectedOptions.length > 0">
+                <span *ngFor="let option of selectedOptions; let i = index">
+                  {{ option.code }} ({{ option.interest }}%){{ i < selectedOptions.length - 1 ? ', ' : '' }}
+                </span>
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} ({{ option.interest }}%)</div>
+            </ng-template>
+          </p-multiSelect>
+          @if (categoryValidationMessagesService.hasFieldError(categoryForm.get('taxes'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(categoryForm.get('taxes'), 'taxes') }}</div>
           }
         </div>
 
         <!-- Cuenta de Inventario -->
         <div class="flex flex-col gap-2">
-          <label for="inventory" class="font-semibold" style="color: var(--color-primary);">Cuenta de Inventario <span class="text-red-500">*</span></label>
+          <label for="inventory" class="label-required font-semibold text-primary">Cuenta de Inventario</label>
           <p-select
             id="inventory"
             formControlName="inventory"
@@ -71,14 +103,14 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          @if (categoryForm.get('inventory')?.invalid && categoryForm.get('inventory')?.touched) {
-          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de inventario.</small>
+          @if (categoryValidationMessagesService.hasFieldError(categoryForm.get('inventory'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(categoryForm.get('inventory'), 'inventory') }}</div>
           }
         </div>
 
         <!-- Cuenta de Costo -->
         <div class="flex flex-col gap-2">
-          <label for="cost" class="font-semibold" style="color: var(--color-primary);">Cuenta de Costo <span class="text-red-500">*</span></label>
+          <label for="cost" class="label-required font-semibold text-primary">Cuenta de Costo</label>
           <p-select
             id="cost"
             formControlName="cost"
@@ -100,14 +132,14 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          @if (categoryForm.get('cost')?.invalid && categoryForm.get('cost')?.touched) {
-          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de costo.</small>
+          @if (categoryValidationMessagesService.hasFieldError(categoryForm.get('cost'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(categoryForm.get('cost'), 'cost') }}</div>
           }
         </div>
 
         <!-- Cuenta de Venta -->
         <div class="flex flex-col gap-2">
-          <label for="sale" class="font-semibold" style="color: var(--color-primary);">Cuenta de Venta <span class="text-red-500">*</span></label>
+          <label for="sale" class="label-required font-semibold text-primary">Cuenta de Venta</label>
           <p-select
             id="sale"
             formControlName="sale"
@@ -129,14 +161,14 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          @if (categoryForm.get('sale')?.invalid && categoryForm.get('sale')?.touched) {
-          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de venta.</small>
+          @if (categoryValidationMessagesService.hasFieldError(categoryForm.get('sale'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(categoryForm.get('sale'), 'sale') }}</div>
           }
         </div>
 
         <!-- Cuenta de Devolución -->
         <div class="flex flex-col gap-2">
-          <label for="return" class="font-semibold" style="color: var(--color-primary);">Cuenta de Devolución <span class="text-red-500">*</span></label>
+          <label for="return" class="label-required font-semibold text-primary">Cuenta de Devolución</label>
           <p-select
             id="return"
             formControlName="return"
@@ -158,8 +190,8 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          @if (categoryForm.get('return')?.invalid && categoryForm.get('return')?.touched) {
-          <small style="color: var(--color-error-35);">Debe seleccionar una cuenta de devolución.</small>
+          @if (categoryValidationMessagesService.hasFieldError(categoryForm.get('return'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(categoryForm.get('return'), 'return') }}</div>
           }
         </div>
 
@@ -175,7 +207,7 @@
         </p-button>
         <p-button 
           type="submit"
-          label="Crear Categoría"
+          label="Guardar"
           [disabled]="categoryForm.invalid">
         </p-button>
       </div>

@@ -4,7 +4,7 @@ export interface Category {
     description: string;
     enterpriseId: string;
     state: boolean; 
-    taxId?: number; 
+    taxes?: number[]; // Campo adicional para envío backendal 
     // Cuentas contables
     inventoryId: number; 
     costId: number;
@@ -16,8 +16,7 @@ export interface CategoryList {
     name: string; 
     description: string;
     enterpriseId: string;
-    state: boolean; // Cambiado de string a boolean para coincidir con backend
-    // Nombres de cuentas para visualización
+    state: boolean;
     inventoryName: string; 
     costName: string;
     saleName: string;

@@ -10,6 +10,8 @@ import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCat
 import { MessageService } from 'primeng/api';
 import { Select } from 'primeng/select';
 import { auxBookResponse } from '../../../Models/Responses/BookResponse';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { ExportAuxiliaryBookComponent } from '../../export-auxiliary-book/export-auxiliary-book.component';
 
 @Directive()
 export abstract class BaseAuxiliaryBookComponent implements OnInit {
@@ -63,15 +65,18 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   dataTable: any;
 
-  totalDebit: number = 0;
-  totalCredit: number = 0;
+  totalDebit: number | null = null;
+  totalCredit: number | null = null;
+
+  refDialog: DynamicDialogRef | undefined;
 
   constructor(
     protected auxiliaryBookService: AuxiliaryBooksServiceService,
     protected enterpriseService: EnterpriseService,
     protected thirdService: ThirdService,
     protected accountService: ChartAccountService,
-    protected messageService: MessageService
+    protected messageService: MessageService,
+    protected dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -95,7 +100,6 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   private getEnterpriseInfo(): void {
     this.enterpriseData = this.enterpriseService.getSelectedEnterprise();
-    console.log(this.enterpriseData);
   }
 
   onLevelChange() {
@@ -171,20 +175,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     if (this.isRangeOptionSelected && this.levelRange.to !== null) {
       this.criteria.criteriaRange!.to = this.levelRange.to;
     }
-  }
-
-  private resetForm(): void {
-    this.resetCriteria();
-    this.resetRangeDropDowns();
-    this.resetThirdPartySelect();
-
-    // ✅ Reset de checkboxes
-    this.isRangeOptionSelected = false;
-    this.isThirdPartyOptionSelected = false;
-
-    // ✅ Esto también borra la info del tercero en pantalla
-    this.thirdPartySelected = null;
-    this.thirdPartyInfo = null;
+    ``;
   }
 
   private resetRangeDropDowns(): void {
@@ -254,9 +245,12 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   }
 
   private getThirdPartyOptions(): void {
-    this.thirdService.getThirdParties(this.enterpriseData.id, 1).subscribe({
+    this.thirdService.getThirdList(this.enterpriseData.id).subscribe({
       next: (response: Third[]) => {
-        this.thirdPartyOptions = response;
+        this.thirdPartyOptions = response.map((third) => ({
+          ...third,
+          fullName: `${third.names} ${third.lastNames}`,
+        }));
       },
       error: (err: any) => {
         console.error('Error fetching third parties:', err);
@@ -281,6 +275,8 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
           name: `${seleccionado.names} ${seleccionado.lastNames}`,
           types: this.concatenateThirdTypeInfo(seleccionado.thirdTypes),
         };
+
+        this.criteria.thirdPartyId = seleccionado.thId;
       }, 300);
     } else {
       this.thirdPartyInfo = null;
@@ -307,19 +303,21 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
     this.organizeRequest();
 
-    console.log('Generando reporte con la petición:', this.request);
-    console.log(
-      'Id del Tercero asociado a los criterios:',
-      this.request.criteria.thirdPartyId
-    );
-
     this.auxiliaryBookService.registerAuxiliaryBook(this.request).subscribe({
       next: (response: auxBookResponse) => {
         this.dataTable = response.data;
         this.calculateTotals();
-        console.log(this.dataTable);
-
         this.isReportGenerated = true;
+
+        if (this.dataTable.length === 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Advertencia',
+            detail:
+              'La consulta no arrojó resultados con los criterios seleccionados.',
+          });
+          return;
+        }
 
         this.messageService.add({
           severity: 'success',
@@ -337,12 +335,10 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
         });
       },
     });
-
-    //this.resetForm();
   }
 
   private validateCriteria(): boolean {
-    this.errors = []; // reiniciamos errores
+    this.errors = [];
 
     if (!this.isLevelValid()) {
       this.errors.push('No ha seleccionado un nivel.');
@@ -376,7 +372,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       );
     }
 
-    return this.errors.length === 0; // ✅ retorna true solo si no hay errores
+    return this.errors.length === 0;
   }
 
   private isLevelValid(): boolean {
@@ -398,5 +394,70 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   private isDatePeriodValid(): boolean {
     return !(this.datePeriod[0].getTime() > this.datePeriod[1].getTime());
+  }
+
+  showExportDialog() {
+    // ✅ CORREGIDO: Se añaden los totales al objeto de datos del diálogo.
+    let data = {
+      reportTitle: this.auxiliaryBookInfo.name,
+      auxBookType: this.auxiliaryBookInfo.type,
+      criteria: this.criteria,
+      dataTable: this.dataTable,
+      headerConfig: (this as any).headerConfig || [],
+      enterpriseData: this.enterpriseData,
+      totals: {
+        totalDebit: this.totalDebit,
+        totalCredit: this.totalCredit,
+      },
+    };
+
+    this.refDialog = this.dialogService.open(ExportAuxiliaryBookComponent, {
+      data: data,
+    });
+  }
+
+  formatMoneyAligned(value: number | null | undefined): string {
+    if (value == null || Number.isNaN(value)) {
+      return '';
+    }
+
+    const locale = 'es-CO';
+    const currency = 'COP';
+
+    const parts = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).formatToParts(Math.abs(value));
+
+    const integer = parts
+      .filter((p) => p.type === 'integer' || p.type === 'group')
+      .map((p) => p.value)
+      .join('');
+
+    const decimal = parts.find((p) => p.type === 'decimal')?.value ?? ',';
+    const fraction = parts.find((p) => p.type === 'fraction')?.value ?? '00';
+    const symbol =
+      new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+        .formatToParts(Math.abs(value))
+        .find((p) => p.type === 'currency')?.value ?? '$';
+
+    const isNegative = value < 0;
+    const sign = isNegative ? '-' : '';
+
+    // Clase condicional si el valor es negativo
+    const colorClass = isNegative ? 'negative' : '';
+
+    return `
+    <span class="money font-mono ${colorClass}">
+      <span class="symbol">${symbol}</span>
+      <span class="integer">${sign}${integer}</span>
+      <span class="decimal">${decimal}${fraction}</span>
+    </span>
+  `;
   }
 }

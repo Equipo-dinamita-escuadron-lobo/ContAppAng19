@@ -6,10 +6,10 @@
     <!-- Cabecera -->
     <div class="flex justify-between items-start mb-12">
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Editar Tercero
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Editar</span> Tercero
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Modifique la información del tercero según sea necesario.
         </p>
       </div>
@@ -60,6 +60,9 @@
                 optionLabel="thirdTypeName"
                 [dataKey]="'thirdTypeId'"
                 placeholder="Seleccione tipos de tercero"
+                [filter]="true"
+                filterBy="thirdTypeName"
+                [loading]="loadingThirdTypes"
                 class="max-w-sm">
               </p-multiSelect>
               <app-form-field-error [form]="createdThirdForm" fieldName="thirdTypes" [submitted]="submitted">
@@ -83,7 +86,8 @@
                 [filter]="true"
                 filterBy="typeId"
                 [showClear]="true"
-                class="w-full">
+                [loading]="loadingTypeIds"
+                class="max-w-xs">
                 <ng-template pTemplate="selectedItem" let-selectedOption>
                   <div *ngIf="selectedOption">
                     {{ selectedOption.typeId }}
@@ -104,7 +108,7 @@
                 formControlName="idNumber"
                 placeholder="Ingrese número de identificación"
                 [useGrouping]="false"
-                class="w-full">
+                class="max-w-xs">
               </p-inputNumber>
               <small class="error-message" *ngIf="(submitted || createdThirdForm.get('idNumber')?.touched) && createdThirdForm.get('idNumber')?.invalid">
                 <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['required']">
@@ -122,7 +126,7 @@
               </small>
             </div>
 
-            <div class="flex flex-col gap-2" *ngIf="isJuridicPerson()">
+            <div class="flex flex-col gap-2" *ngIf="thirdValidationMessagesService.isJuridicPerson(createdThirdForm.get('personType')?.value)">
               <app-form-field-label label="DV"></app-form-field-label>
               <input 
                 pInputText 
@@ -138,7 +142,7 @@
         </app-form-panel>
 
         <!-- Panel: Información Personal (Persona Natural) -->
-        <app-form-panel title="Información Personal" *ngIf="isNaturalPerson()">
+        <app-form-panel title="Información Personal" *ngIf="thirdValidationMessagesService.isNaturalPerson(createdThirdForm.get('personType')?.value)">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="flex flex-col gap-2">
               <app-form-field-label label="Nombres" [required]="true"></app-form-field-label>
@@ -179,7 +183,7 @@
         </app-form-panel>
 
         <!-- Panel: Información de Empresa (Persona Jurídica) -->
-        <app-form-panel title="Información de Empresa" *ngIf="isJuridicPerson()">
+        <app-form-panel title="Información de Empresa" *ngIf="thirdValidationMessagesService.isJuridicPerson(createdThirdForm.get('personType')?.value)">
           <div class="grid grid-cols-1 gap-12">
             <div class="flex flex-col gap-2">
               <app-form-field-label label="Razón Social" [required]="true"></app-form-field-label>
@@ -291,7 +295,7 @@
                 pInputText 
                 formControlName="phoneNumber"
                 placeholder="Ingrese número de teléfono"
-                class="max-w-sm">
+                class="max-w-xs">
               <app-form-field-error [form]="createdThirdForm" fieldName="phoneNumber" [submitted]="submitted">
                 El número de teléfono es requerido
               </app-form-field-error>
@@ -321,7 +325,7 @@
       <!-- Botones de acción -->
       <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button type="button" label="Cancelar" severity="secondary" (onClick)="onCancel()"></p-button>
-        <p-button type="submit" label="Guardar Cambios" [disabled]="createdThirdForm.invalid || !hasChanges"></p-button>
+        <p-button type="submit" label="Actualizar" [disabled]="createdThirdForm.invalid || !hasChanges"></p-button>
       </div>
     </form>
   </div>

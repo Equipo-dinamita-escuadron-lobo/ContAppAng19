@@ -13,7 +13,7 @@ import { SplitButtonModule } from 'primeng/splitbutton';
 import { TableModule } from 'primeng/table';
 
 // Models
-import { GenerateAuxiliaryBookRequest } from '../../../Models/GenerateAuxiliaryBookRequest';
+import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
 
@@ -26,7 +26,6 @@ import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 import { CostCenterService } from '../../../../../../GeneralMasters/CostCenters/services/cost-center.service';
 import { CostCenter } from '../../../../../../GeneralMasters/CostCenters/models/cost-center.model';
-import { AccountingCalendarService } from '../../../../../../GeneralMasters/AccountingCalendar/services/accounting-calendar.service';
 
 // Interface para respuestas paginadas
 interface Page<T> {
@@ -36,6 +35,7 @@ interface Page<T> {
   size: number;
   number: number;
 }
+import { DialogService } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-account-book',
@@ -51,7 +51,7 @@ interface Page<T> {
     DatePickerModule,
     TableModule,
   ],
-  providers: [DatePipe],
+  providers: [DatePipe, DialogService],
   templateUrl: './account-book.component.html',
   styleUrl: './account-book.component.css',
   encapsulation: ViewEncapsulation.None,
@@ -86,6 +86,7 @@ export class AccountBookComponent extends BaseAuxiliaryBookComponent {
     thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
+    dialogService: DialogService,
     private costCenterService: CostCenterService,
     private datePipe: DatePipe
   ) {
@@ -94,7 +95,8 @@ export class AccountBookComponent extends BaseAuxiliaryBookComponent {
       enterpriseService,
       thirdService,
       accountService,
-      messageService
+      messageService,
+      dialogService
     );
   }
 

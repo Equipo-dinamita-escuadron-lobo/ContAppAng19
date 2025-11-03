@@ -1,19 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import Swal from 'sweetalert2';
-
-// --- AHORA: Importaciones Standalone y de PrimeNG ---
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
-// --- Servicios y Modelos ---
 import { UnitOfMeasure } from '../../Models/UnitOfMeasure';
 import { UnitOfMeasureService } from '../../Services/unit-of-measure.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
+import { UnitOfMeasureValidationMessagesService } from '../../Services/unit-of-measure-validation-messages.service';
 
 @Component({
   selector: 'app-unit-of-measure-edit',
@@ -23,7 +20,8 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     ReactiveFormsModule,
     RouterModule,
     InputTextModule,
-    ButtonModule
+    ButtonModule,
+    ToastModule
   ],
   templateUrl: './unit-of-measure-edit.component.html',
   styleUrls: ['./unit-of-measure-edit.component.css']
@@ -38,13 +36,15 @@ export class UnitOfMeasureEditComponent implements OnInit {
   private originalUnitData!: UnitOfMeasure;
 
   localStorageMethods = new LocalStorageMethods();
-  entData: any | null = null;
+  entData: string | null = null;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private unitOfMeasureService: UnitOfMeasureService,
-    private router: Router,
-    private route: ActivatedRoute
+    private readonly formBuilder: FormBuilder,
+    private readonly unitOfMeasureService: UnitOfMeasureService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly messageService: MessageService,
+    private readonly validationMessagesService: UnitOfMeasureValidationMessagesService
   ) {
     this.unitOfMeasureForm = this.formBuilder.group({
       name: ['', Validators.required],
@@ -61,9 +61,10 @@ export class UnitOfMeasureEditComponent implements OnInit {
   }
 
   loadUnitData(): void {
+    if (!this.entData) return;
     this.isLoading = true;
-    this.unitOfMeasureService.getUnitOfMeasuresId(this.currentUnitId).subscribe(
-      (unitOfMeasure: UnitOfMeasure) => {
+    this.unitOfMeasureService.getUnitOfMeasuresId(this.currentUnitId, this.entData).subscribe({
+      next: (unitOfMeasure: UnitOfMeasure) => {
         this.originalUnitData = unitOfMeasure;
         this.unitOfMeasureForm.patchValue({
           name: unitOfMeasure.name,
@@ -72,35 +73,31 @@ export class UnitOfMeasureEditComponent implements OnInit {
         });
         this.isLoading = false;
       },
-      error => {
-        console.error('Error al cargar los datos de la unidad de medida:', error);
+      error: (error) => {
         this.isLoading = false;
-        Swal.fire({
-          title: 'Error',
-          text: 'No se pudo cargar la información de la unidad de medida.',
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
-        }).then(() => {
-          this.goBack();
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cargar la información de la unidad de medida.'
         });
+        this.goBack();
       }
-    );
+    });
   }
 
   onSubmit(): void {
     this.formSubmitAttempt = true;
 
-    if (this.unitOfMeasureForm.valid) {
+    if (this.unitOfMeasureForm.valid && this.entData) {
       // Verificar si hubo cambios
       const formData = this.unitOfMeasureForm.value;
       const hasChanges = this.hasFormChanges(formData);
 
       if (!hasChanges) {
-        Swal.fire({
-          title: 'Sin cambios',
-          text: 'No se han detectado cambios en la unidad de medida.',
-          icon: 'info',
-          confirmButtonText: 'Aceptar'
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Sin cambios',
+          detail: 'No se han detectado cambios en la unidad de medida.'
         });
         return;
       }
@@ -112,33 +109,34 @@ export class UnitOfMeasureEditComponent implements OnInit {
         state: this.originalUnitData.state
       };
 
-      this.unitOfMeasureService.updateUnitOfMeasureId(this.currentUnitId, updatedUnitData).subscribe(
-        () => {
-          Swal.fire({
-            title: '¡Éxito!',
-            text: 'La unidad de medida ha sido actualizada exitosamente.',
-            icon: 'success',
-            confirmButtonText: 'Aceptar'
-          }).then(() => {
-            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+      this.unitOfMeasureService.updateUnitOfMeasureId(this.currentUnitId, updatedUnitData, this.entData).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Actualización Exitosa',
+            detail: 'La unidad de medida ha sido actualizada exitosamente.',
+            life: 3000
           });
+          this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
         },
-        error => {
-          console.error('Error al actualizar la unidad de medida:', error);
-          Swal.fire({
-            title: 'Error',
-            text: 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.',
-            icon: 'error',
-            confirmButtonText: 'Aceptar'
+        error: (error) => {
+          const message = error.error?.message || 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.';
+          let summary = 'Error';
+          if (message.includes('Ya existe')) {
+            summary = 'Registro Duplicado';
+          }
+          this.messageService.add({
+            severity: 'error',
+            summary: summary,
+            detail: message
           });
         }
-      );
+      });
     } else {
-      Swal.fire({
-        title: 'Formulario incompleto',
-        text: 'Por favor, complete todos los campos requeridos.',
-        icon: 'warning',
-        confirmButtonText: 'Aceptar'
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario incompleto',
+        detail: 'Por favor, complete todos los campos requeridos.'
       });
     }
   }
@@ -163,18 +161,14 @@ export class UnitOfMeasureEditComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
   }
 
-  // Método auxiliar para verificar errores de validación
-  hasFieldError(fieldName: string): boolean {
-    const field = this.unitOfMeasureForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched || this.formSubmitAttempt));
+  // Método para obtener mensajes de validación
+  getValidationMessage(fieldName: string): string {
+    const control = this.unitOfMeasureForm.get(fieldName);
+    return this.validationMessagesService.getFieldErrorMessage(control, fieldName) || '';
   }
 
-  // Método auxiliar para obtener el mensaje de error
-  getFieldError(fieldName: string): string {
-    const field = this.unitOfMeasureForm.get(fieldName);
-    if (field?.errors?.['required']) {
-      return `El campo ${fieldName} es requerido.`;
-    }
-    return '';
+  // Getter para mantener dumb templates
+  get isSubmitDisabled(): boolean {
+    return this.unitOfMeasureForm.invalid || !this.hasChanges();
   }
 }

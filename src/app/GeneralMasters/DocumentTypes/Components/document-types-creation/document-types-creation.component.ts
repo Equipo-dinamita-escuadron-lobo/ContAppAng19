@@ -16,8 +16,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
   templateUrl: './document-types-creation.component.html',
-  styleUrl: './document-types-creation.component.css',
-  providers: [MessageService]
+  styleUrl: './document-types-creation.component.css'
 })
 export class DocumentTypesCreationComponent {
   form: FormGroup;
@@ -25,11 +24,11 @@ export class DocumentTypesCreationComponent {
   modulesOptions: { label: string; value: number }[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private messageService: MessageService,
-    private service: DocumentTypesServiceService,
-    private classesService: ClassesOfDocumentsServiceService
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly service: DocumentTypesServiceService,
+    private readonly classesService: ClassesOfDocumentsServiceService
   ) {
     this.form = this.fb.group({
       prefix: ['', [Validators.required, Validators.maxLength(10), Validators.pattern('^[a-zA-Z0-9]+$')]],
@@ -85,9 +84,7 @@ export class DocumentTypesCreationComponent {
     this.service.create(payload as any).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Registro exitoso', detail: 'Tipo de documento creado correctamente.' });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         if (err?.status === 409) {

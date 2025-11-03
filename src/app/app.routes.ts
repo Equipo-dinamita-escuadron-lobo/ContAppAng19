@@ -677,12 +677,44 @@ export const routes: Routes = [
                   ).then((m) => m.BankAccountsListComponent),
               },
               {
+                path: 'create',
+                data: { breadcrumb: 'Crear Cuenta Bancaria' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-accounts-creation/bank-accounts-creation.component'
+                  ).then((m) => m.BankAccountsCreationComponent),
+              },
+              {
+                path: 'edit/:id',
+                data: { breadcrumb: 'Editar Cuenta Bancaria' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-accounts-edit/bank-accounts-edit.component'
+                  ).then((m) => m.BankAccountsEditComponent),
+              },
+              {
                 path: 'banks',
-                data: { breadcrumb: 'Gestión de Bancos' },
+                data: { breadcrumb: 'Bancos' },
                 loadComponent: () =>
                   import(
                     './GeneralMasters/BankAccounts/components/bank-list/bank-list.component'
                   ).then((m) => m.BankListComponent),
+              },
+              {
+                path: 'banks/create',
+                data: { breadcrumb: 'Crear Banco' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-creation/bank-creation.component'
+                  ).then((m) => m.BankCreationComponent),
+              },
+              {
+                path: 'banks/edit/:id',
+                data: { breadcrumb: 'Editar Banco' },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/BankAccounts/components/bank-edit/bank-edit.component'
+                  ).then((m) => m.BankEditComponent),
               },
             ],
           },
@@ -694,7 +726,6 @@ export const routes: Routes = [
                 './GeneralMasters/Components/MenuCards/menu.component'
               ).then((m) => m.MenuComponent),
           },
-
           {
             path: 'help-panels',
             data: { breadcrumb: 'Centro de Ayuda' },
@@ -789,6 +820,28 @@ export const routes: Routes = [
                       ).then((m) => m.AuxiliaryBooksListComponent),
                   },
                   {
+                    path: 'historial',
+                    canActivate: [hasRoleChildGuard],
+                    data: {
+                      breadcrumb: 'Historial',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/auxiliary-books/Components/auxiliary-books-historial/auxiliary-books-historial.component'
+                      ).then((m) => m.AuxiliaryBooksHistorialComponent),
+                  },
+                  {
+                    path: 'historial/details/:id',
+                    canActivate: [hasRoleChildGuard],
+                    data: {
+                      breadcrumb: 'Detalles del Historial',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/auxiliary-books/Components/auxiliary-books-historial/Components/auxiliary-books-details/auxiliary-books-details.component'
+                      ).then((m) => m.AuxiliaryBooksDetailsComponent),
+                  },
+                  {
                     path: 'inventory-and-balances',
                     data: {
                       breadcrumb: 'Libro de Inventario y Balances',
@@ -848,6 +901,35 @@ export const routes: Routes = [
                         './Financial/Reports/auxiliary-books/Components/aux-book-types/accounting-movement/accounting-movement.component'
                       ).then((m) => m.AccountingMovementComponent),
                   },
+                ],
+              },
+              {
+                path: 'financial-statements',
+                data: {
+                  breadcrumb: 'Estados Financieros',
+                },
+                children: [
+                  {
+                    path: 'list',
+                    pathMatch: 'full',
+                    data: {
+                      breadcrumb: null,
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statements-list/financial-statements-list.component'
+                      ).then((m) => m.FinancialStatementsListComponent),
+                  },
+                  /* {
+                    path: 'statement-financial-position',
+                    data: {
+                      breadcrumb: 'Estado de situacion Financiera',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Reports/financial-statements/Components/financial-statement-types/statement-financial-position/statement-financial-position.component'
+                      ).then((m) => m.InventoryAndBalancesComponent),
+                  },*/
                 ],
               },
             ],
@@ -927,6 +1009,36 @@ export const routes: Routes = [
                   import(
                     './Financial/Wallet/PortfolioWriteOffs/Components/write-off-details/write-off-details.component'
                   ).then((m) => m.WriteOffDetailsComponent),
+              },
+              {
+                path: 'accounting-entries',
+                data: {
+                  breadcrumb: 'Asientos Contables',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
+                  ).then((m) => m.ReceiptAccountingEntriesComponent),
+              },
+              {
+                path: 'invoices',
+                data: {
+                  breadcrumb: 'Facturas',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioManagement/Components/invoice-list/invoice-list.component'
+                  ).then((m) => m.InvoiceListComponent),
+              },
+              {
+                path: 'invoices/details/:id',
+                data: {
+                  breadcrumb: 'Detalles de la Factura',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/PortfolioManagement/Components/invoice-detail/invoice-detail.component'
+                  ).then((m) => m.InvoiceDetailComponent),
               },
             {
               path: 'accounting-entries',
@@ -1071,7 +1183,7 @@ export const routes: Routes = [
                   import(
                     './Commercial/BusinessMasters/ValuationModels/PEPS/list-kardex-peps/list-kardex-peps.component'
                   ).then((m) => m.ListKardexPepsComponent),
-              }
+              },
             ],
           },
           {
@@ -1104,9 +1216,39 @@ export const routes: Routes = [
                 './Commercial/InvoiceTemplate/components/create-return/create-return.component'
               ).then((m) => m.CreateReturnComponent),
           },
+          {
+            path:'non-commercial-template',
+            data:{
+              Breadcrumb:'Plantilla de Evento no Comercial'
+            },
+            loadComponent:()=>
+              import(
+                './Commercial/NonCommercialTemplate/components/create-non-commercial/create-non-commercial.component'
+              ).then((m) =>m.CreateNonCommercialComponent)
+          }
         ],
       },
     ],
+  },
+  {
+    path: 'help-center-view',
+    data: {
+      breadcrumb: 'Centro de Ayuda',
+    },
+    loadComponent: () =>
+      import('./PublicSite/help-center/help-center-view.component').then(
+        (m) => m.HelpCenterViewComponent
+      ),
+  },
+  {
+    path: 'help-center-view/:moduleId',
+    data: {
+      breadcrumb: 'Centro de Ayuda',
+    },
+    loadComponent: () =>
+      import('./PublicSite/help-center/help-center-view.component').then(
+        (m) => m.HelpCenterViewComponent
+      ),
   },
   {
     path: 'style-guide',

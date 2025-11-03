@@ -68,9 +68,9 @@ export class ThirdTemplateComponent implements OnInit {
   ];
 
   constructor(
-    private thirdService: ThirdService,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods
+    private readonly thirdService: ThirdService,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
   }

@@ -33,6 +33,7 @@ import { ThirdServiceConfigurationService } from '../../Services/third-configura
 import { ThirdType } from '../../models/ThirdType';
 import { TypeId } from '../../models/TypeId';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+import { ThirdValidationMessagesService } from '../../Services/third-validation-messages.service';
 
 // Interfaces para manejo de errores de importación
 interface ImportError {
@@ -86,13 +87,17 @@ export class ThirdListComponent implements OnInit {
   loading = false;
   loadingPdfRut = false;
   showDetailView = false;
-  globalFilterValue = '';
+  searchValue = '';
+
+  bulkStateToggle = true; // Default to active
   
   // Pagination
   totalRecords = 0;
   rows = 10;
   first = 0;
-  
+  sortField = 'names';
+  sortOrder: 'asc' | 'desc' = 'asc';
+
   // Modal states
   showTemplateModal = false;
   showImportModal = false;
@@ -120,12 +125,13 @@ export class ThirdListComponent implements OnInit {
   private readonly EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
 
   constructor(
-    private thirdService: ThirdService,
-    private thirdConfigurationService: ThirdServiceConfigurationService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private router: Router,
-    private localStorageMethods: LocalStorageMethods
+    private readonly thirdService: ThirdService,
+    private readonly thirdConfigurationService: ThirdServiceConfigurationService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly router: Router,
+    private readonly localStorageMethods: LocalStorageMethods,
+    public readonly thirdValidationMessagesService: ThirdValidationMessagesService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
   }
@@ -137,18 +143,26 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Carga la lista de terceros
+   * Carga la lista de terceros con paginación desde el backend
    */
   loadThirds(): void {
     this.loading = true;
-    this.thirdService.getThirdList(this.entData).subscribe({
-      next: (data: Third[]) => {
-        this.thirds = data || [];
-        this.totalRecords = this.thirds.length;
+    const pageNumber = Math.floor(this.first / this.rows);
+
+    this.thirdService.getThirdParties(
+      this.entData,
+      pageNumber,
+      this.rows,
+      this.sortField,
+      this.sortOrder,
+      this.searchValue || undefined
+    ).subscribe({
+      next: (response) => {
+        this.thirds = response.content || [];
+        this.totalRecords = response.page?.totalElements || response.totalElements || 0;
         this.loading = false;
       },
       error: (error: any) => {
-        console.error('Error loading thirds:', error);
         this.thirds = [];
         this.totalRecords = 0;
         this.loading = false;
@@ -173,7 +187,6 @@ export class ThirdListComponent implements OnInit {
         this.thirdTypes = response;
       },
       error: (error: any) => {
-        console.error('Error loading third types:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -192,7 +205,6 @@ export class ThirdListComponent implements OnInit {
         this.typeIds = response;
       },
       error: (error: any) => {
-        console.error('Error loading ID types:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -203,12 +215,34 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Aplica filtro global a la tabla
+   * Maneja el cambio en el término de búsqueda
    */
-  applyGlobalFilter(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.globalFilterValue = target.value;
-    this.dt.filterGlobal(target.value, 'contains');
+  onSearch(): void {
+    this.first = 0; // Reset to first page when searching
+    this.loadThirds();
+  }
+
+  /**
+   * Maneja el cambio de página
+   */
+  onPageChange(event: any): void {
+    this.first = event.first;
+    this.rows = event.rows;
+    this.loadThirds();
+  }
+
+  /**
+   * Maneja el cambio de ordenamiento
+   */
+  onSort(event: any): void {
+    // Evitar llamadas recursivas si el ordenamiento no cambió
+    if (this.sortField === event.field && this.sortOrder === (event.order === 1 ? 'asc' : 'desc')) {
+      return;
+    }
+
+    this.sortField = event.field;
+    this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    this.loadThirds();
   }
 
 
@@ -238,19 +272,30 @@ export class ThirdListComponent implements OnInit {
    */
   changeThirdState(third: Third): void {
     const previousState = third.state;
-    const action = previousState ? 'desactivado' : 'activado';
-    
-    this.thirdService.changeThirdPartieState(third.thId).subscribe({
-      next: () => {
-        third.state = !previousState;
+
+    this.thirdService.changeThirdPartieState(third.thId, this.entData).subscribe({
+      next: (response: any) => {
+        if (response && typeof response === 'object' && 'state' in response) {
+          third.state = response.state;
+        } else {
+          // El backend no devuelve el tercero, obtener el estado actualizado
+          this.thirdService.getThirdPartie(third.thId, this.entData).subscribe({
+            next: (fetchedThird: any) => {
+              third.state = fetchedThird.state;
+            },
+            error: (fetchError) => {
+              third.state = !previousState;
+            }
+          });
+        }
+
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: `Tercero ${action} correctamente`
+          detail: `Estado del Tercero cambiado correctamente`
         });
       },
       error: (error) => {
-        console.error('Error changing third state:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -280,6 +325,7 @@ export class ThirdListComponent implements OnInit {
         this.thirdService.deleteThird(third.thId, this.entData).subscribe({
           next: () => {
             this.thirds = this.thirds.filter(t => t.thId !== third.thId);
+            this.totalRecords--;
             this.messageService.add({
               severity: 'success',
               summary: 'Eliminado',
@@ -287,6 +333,51 @@ export class ThirdListComponent implements OnInit {
             });
           },
         });
+      }
+    });
+  }
+
+  /**
+   * Cambia el estado de todos los terceros de forma masiva
+   */
+  changeBulkState(): void {
+    const actionLower = this.bulkStateToggle ? 'activar' : 'inactivar';
+
+    this.confirmationService.confirm({
+      message: `¿Desea ${actionLower} todos los terceros? Esta acción no se puede deshacer.`,
+      header: 'Confirmar Cambio de Estado Masivo',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: `Sí, ${actionLower}`,
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: this.bulkStateToggle ? 'p-button-success' : 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
+      accept: () => {
+        this.loading = true;
+        this.thirdService.changeAllThirdsState(this.entData, this.bulkStateToggle).subscribe({
+          next: (response: any) => {
+            this.loadThirds();
+
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Cambio Masivo Exitoso',
+              detail: `${response.message}`
+            });
+          },
+          error: (error) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Error al cambiar el estado masivo de los terceros'
+            });
+          }
+        }).add(() => {
+          this.loading = false;
+        });
+      },
+      reject: () => {
+        this.bulkStateToggle = !this.bulkStateToggle;
       }
     });
   }
@@ -346,10 +437,6 @@ export class ThirdListComponent implements OnInit {
   private importThirdsFromExcel(file: File): void {
     this.loading = true;
     
-    console.log('Iniciando importación de terceros...');
-    console.log('Archivo:', file.name, 'Tamaño:', file.size, 'bytes');
-    console.log('ID Empresa:', this.entData);
-    
     this.thirdService.importFromExcel(this.entData, file).subscribe({
       next: (response) => {
         this.loading = false;
@@ -366,14 +453,7 @@ export class ThirdListComponent implements OnInit {
             detail += `Fallidos: ${failedImports}\n`;
             if (duplicatesSkipped > 0) {
               detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
-            }
-            
-            this.messageService.add({
-              severity: 'info',
-              summary: 'Importación Completada con Errores',
-              detail,
-              life: 8000
-            });
+            }         
             
             // Mostrar modal con detalles de errores
             this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
@@ -415,7 +495,6 @@ export class ThirdListComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error completo:', error);
         this.loading = false;
         
         // Extraer los errores del backend
@@ -640,24 +719,6 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Convierte un número de columna a letra de Excel
-   * @param columnNumber Número de columna (1-based: 1=A, 2=B, ..., 26=Z, 27=AA, etc.)
-   * @returns Letra(s) de columna correspondiente en Excel
-   */
-  getExcelColumnLetter(columnNumber: number): string {
-    let columnLetter = '';
-    let temp = columnNumber;
-    
-    while (temp > 0) {
-      const remainder = (temp - 1) % 26;
-      columnLetter = String.fromCharCode(65 + remainder) + columnLetter;
-      temp = Math.floor((temp - 1) / 26);
-    }
-    
-    return columnLetter;
-  }
-
-  /**
    * Exporta los errores de importación a un archivo Excel
    * Genera un archivo con formato estructurado incluyendo resumen de estadísticas y detalle de errores
    */
@@ -711,7 +772,7 @@ export class ThirdListComponent implements OnInit {
       // Preparar los datos de la tabla
       const tableData = this.importErrors.map(error => [
         error.rowNumber,
-        this.getExcelColumnLetter(error.columnNumber),
+        this.thirdValidationMessagesService.getExcelColumnLetter(error.columnNumber),
         error.columnName,
         error.fieldValue || '(vacío)',
         error.errorMessage
@@ -759,12 +820,11 @@ export class ThirdListComponent implements OnInit {
       // Mostrar notificación de éxito
       this.messageService.add({
         severity: 'success',
-        summary: 'Estamos generando tu archivo',
-        detail: `El archivo se descargará automáticamente en unos segundos.`
+        summary: 'Exportación exitosa',
+        detail: `El archivo se ha exportado correctamente.`
       });
 
     } catch (error) {
-      console.error('Error al exportar errores:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error de Exportación',

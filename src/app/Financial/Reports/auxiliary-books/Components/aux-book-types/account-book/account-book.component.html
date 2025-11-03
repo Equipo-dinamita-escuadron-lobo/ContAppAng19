@@ -27,6 +27,8 @@
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
       />
     </div>
   </div>
@@ -36,9 +38,9 @@
     Criterios para la Generación:
   </h3>
   <div class="p-4 bg-white rounded-lg shadow-sm">
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
       <!-- 1. Nivel -->
-      <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
+      <div class="lg:col-span-2 lg:border-r lg:border-gray-300 lg:pr-4">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
           Nivel <span class="text-[var(--color-secondary)]"> *</span>
         </h4>
@@ -59,7 +61,7 @@
       </div>
 
       <!-- 2. Rango -->
-      <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
+      <div class="lg:col-span-2 lg:border-r lg:border-gray-300 lg:pr-4">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
           <p-checkbox
             [(ngModel)]="isRangeOptionSelected"
@@ -97,7 +99,7 @@
       </div>
 
       <!-- 3. Centro de Costos -->
-      <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
+      <div class="lg:col-span-3 lg:border-r lg:border-gray-300 lg:pr-4">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
           <p-checkbox
             [(ngModel)]="isCostCenterOptionSelected"
@@ -134,21 +136,26 @@
       </div>
 
       <!-- 4. Periodo (sin línea a la derecha) -->
-      <div class="col-span-1">
+      <div class="lg:col-span-3">
         <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
           Periodo <span class="text-[var(--color-secondary)]"> *</span>
         </h4>
         <p-datepicker
-          [(ngModel)]="criteria.endDate"
+          [(ngModel)]="datePeriod"
+          selectionMode="multiple"
+          maxDateCount="2"
           dateFormat="dd/mm/yy"
           placeholder="DD/MM/YYYY - DD/MM/YYYY"
           [showIcon]="true"
+          showClear="true"
           styleClass="w-full text-xs"
+          multipleSeparator="-"
+          [style]="{ width: '100%', minWidth: '310px' }"
         ></p-datepicker>
       </div>
 
       <!-- 5. Botón -->
-      <div class="col-span-1 flex justify-center items-center">
+      <div class="lg:col-span-2 flex justify-center items-center h-full">
         <button
           pButton
           type="button"

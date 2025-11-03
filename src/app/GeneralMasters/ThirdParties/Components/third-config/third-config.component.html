@@ -9,10 +9,10 @@
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <div class="items-center mb-6">
         <h1
-          class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Configuración de Terceros
+          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Configuración</span> de Terceros
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Administra y configura los tipos de terceros y tipos de identificación del sistema.
         </p>
       </div>
@@ -52,7 +52,8 @@
                   <input
                     pInputText
                     type="text"
-                    (input)="typeIdTable.filterGlobal($any($event.target).value, 'contains')"
+                    [(ngModel)]="searchTermTypeIds"
+                    (input)="onSearchTypeIdsChange($any($event.target).value)"
                     placeholder="Buscar tipo de identificación..."
                     class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
                   />
@@ -210,9 +211,9 @@
           </div>
 
           <!-- Tabla de Tipos de Identificación -->
-          <p-table #typeIdTable [value]="typesId" [loading]="loadingTypeIds" [paginator]="true" [rows]="10" 
+          <p-table #typeIdTable [value]="typesId" [loading]="loadingTypeIds" [lazy]="true" (onLazyLoad)="loadTypeIdsLazy($event)"
+            [paginator]="true" [rows]="currentSizeTypeIds" [totalRecords]="totalRecordsTypeIds"
             [rowsPerPageOptions]="[5, 10, 20]"
-            [globalFilterFields]="['typeId', 'typeIdname', 'classification']" 
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
 
@@ -311,7 +312,8 @@
                   <input
                     pInputText
                     type="text"
-                    (input)="thirdTypeTable.filterGlobal($any($event.target).value, 'contains')"
+                    [(ngModel)]="searchTermThirdTypes"
+                    (input)="onSearchThirdTypesChange()"
                     placeholder="Buscar tipo de tercero..."
                     class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
                   />
@@ -406,9 +408,9 @@
           </div>
 
           <!-- Tabla de Tipos de Tercero -->
-          <p-table #thirdTypeTable [value]="thirdTypes" [loading]="loadingThirdTypes" [paginator]="true" [rows]="10" 
+          <p-table #thirdTypeTable [value]="thirdTypes" [loading]="loadingThirdTypes" [lazy]="true" (onLazyLoad)="loadThirdTypesLazy($event)"
+            [paginator]="true" [rows]="currentSizeThirdTypes" [totalRecords]="totalRecordsThirdTypes"
             [rowsPerPageOptions]="[5, 10, 20]"
-            [globalFilterFields]="['thirdTypeName']" 
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
 

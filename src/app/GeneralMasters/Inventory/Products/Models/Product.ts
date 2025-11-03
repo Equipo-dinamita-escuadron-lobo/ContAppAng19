@@ -1,40 +1,45 @@
 import { ProductType } from "../../ProductTypes/Models/ProductType";
 
+export interface Page<T> {
+    content: T[];
+    page: {
+        size: number;
+        number: number;
+        totalElements: number;
+        totalPages: number;
+    };
+}
+
 export interface Product {
-    id: number; // Cambiado de string a number (Long en backend)
+    id: number; 
     code: string;
-    name: string; // Nombre del producto
+    name: string; 
     description: string;
-    quantity: number; // Integer en backend
-    taxPercentage: number; // Integer en backend
-    creationDate: Date;
-    unitOfMeasureId: number; // Long en backend
-    categoryId: number; // Long en backend
+    quantity: number | null;
+    unitOfMeasureId: number; 
+    categoryId: number; 
     enterpriseId: string;
-    cost: number; // double en backend
-    state: string; // Cambiado a string según lo que devuelve el backend
+    cost: number | null; 
+    state: string; 
     reference: string;
-    productTypeId?: number; // Long en backend, opcional en caso de que el backend devuelva el objeto completo
-    productType?: ProductType; // Objeto completo del tipo de producto, opcional
-    presentation?: string; // Campo opcional que puede no estar en el backend
+    productTypeId?: number;
+    productType?: ProductType; 
+    presentation?: string; 
 }
 
 export interface ProductList {
-    id: number; // Cambiado de string a number
+    id: number; 
     code: string;
-    name: string; // Campo calculado que mapea desde itemType
+    name: string; 
     description: string;
-    quantity: number;
-    taxPercentage: number;
-    taxDisplayText?: string; // campo para mostrar código + tarifa
-    creationDate: Date;
+    quantity: number | null;
     unitOfMeasureName: string;
     categoryName: string;
     enterpriseId: string;
-    cost: number;
-    state: boolean; // Convertido a boolean para la interfaz
+    cost: number | null;
+    state: boolean; 
     reference: string;
-    presentation?: string; // Campo opcional
+    presentation?: string; 
     productType: ProductType;
-    productTypeName: string; // Campo calculado para facilitar ordenamiento y filtrado
+    productTypeName: string; 
 }

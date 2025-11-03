@@ -26,7 +26,6 @@ import katex from 'katex';
     EditorModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './help-center-edit.component.html',
   styleUrl: './help-center-edit.component.css'
 })
@@ -38,11 +37,11 @@ export class HelpCenterEditComponent implements OnInit {
   initialFormValue: any = null;
 
   constructor(
-    private fb: FormBuilder,
-    private service: HelpCenterServiceService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private messageService: MessageService
+    private readonly fb: FormBuilder,
+    private readonly service: HelpCenterServiceService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly messageService: MessageService
   ) {
     this.form = this.fb.group({
       id: [null],
@@ -118,9 +117,7 @@ export class HelpCenterEditComponent implements OnInit {
             summary: 'Actualización exitosa',
             detail: 'Centro de ayuda actualizado correctamente.'
           });
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/help-center/list']);
-          }, 1000);
+          this.router.navigate(['/gen-masters/help-center/list']);
         },
         error: (error: any) => {
           let errorMessage = 'No se pudo actualizar el centro de ayuda.';

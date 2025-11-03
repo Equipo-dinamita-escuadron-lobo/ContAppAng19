@@ -5,11 +5,12 @@ export interface EntData {
   name: string;
   nit: string;
   logo: string;
+  inventoryConfigType?: 'PEPS' | 'WEIGHTED_AVERAGE';
 }
 
 
 @Injectable({
-  providedIn: 'root' 
+  providedIn: 'root'
 })
 export class LocalStorageMethods {
   public saveEnterpriseData(data: EntData): void {
@@ -30,10 +31,22 @@ export class LocalStorageMethods {
     if (enterpriseData) {
       const parsedData = JSON.parse(enterpriseData);
       const id = parsedData.id;
-      //return String(id);
-      return 'f1ec3d7b-613e-4f06-ac6e-aabecf3cc31b';
+      return String(id);
     }
-    return 'f1ec3d7b-613e-4f06-ac6e-aabecf3cc31b';
+    return '';
+  }
+
+  public getInventoryConfigType(): 'PEPS' | 'WEIGHTED_AVERAGE' {
+    const enterpriseData = localStorage.getItem('entData');
+    if (enterpriseData) {
+      const parsedData = JSON.parse(enterpriseData);
+      return parsedData.inventoryConfigType || 'WEIGHTED_AVERAGE';
+    }
+    return 'WEIGHTED_AVERAGE';
+  }
+
+  public clearEnterpriseData(): void {
+    localStorage.removeItem('entData');
   }
 
   public clearLocalStorage(): void {
