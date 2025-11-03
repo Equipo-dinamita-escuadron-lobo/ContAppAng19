@@ -64,9 +64,7 @@ export class CreateInvoiceComponent implements OnInit {
 
   invoiceTypes: InvoiceType[] = [
     { label: 'Factura de Compra', value: 'PURCHASE' },
-    { label: 'Factura de Venta', value: 'SALE' },
-    { label: 'Entrada No Comercial', value: 'NON_COMMERCIAL_ENTRY' },
-    { label: 'Salida No Comercial', value: 'NON_COMMERCIAL_EXIT' }
+    { label: 'Factura de Venta', value: 'SALE' }
   ];
 
   constructor(
