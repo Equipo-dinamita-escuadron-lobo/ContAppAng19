@@ -14,8 +14,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast],
   templateUrl: './classes-of-documents-edit.component.html',
-  styleUrl: './classes-of-documents-edit.component.css',
-  providers: [MessageService]
+  styleUrl: './classes-of-documents-edit.component.css'
 })
 export class ClassesOfDocumentsEditComponent {
   form: FormGroup;
@@ -68,9 +67,7 @@ export class ClassesOfDocumentsEditComponent {
     this.service['http'].put(`${this.service.apiURL}update`, payload).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Actualización exitosa', detail: 'Clase de documento actualizada correctamente.' });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         if (err?.status === 409) {

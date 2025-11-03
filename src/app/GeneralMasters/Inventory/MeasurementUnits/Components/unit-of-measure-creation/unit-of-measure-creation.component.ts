@@ -21,7 +21,6 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     ButtonModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './unit-of-measure-creation.component.html',
   styleUrls: ['./unit-of-measure-creation.component.css']
 })
@@ -67,9 +66,7 @@ export class UnitOfMeasureCreationComponent implements OnInit {
             detail: 'La unidad de medida ha sido creada exitosamente.',
             life: 3000
           });
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
-          }, 1500);
+          this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
         },
         error: (error) => {
           const message = error.error?.message || 'Ha ocurrido un error al crear la unidad de medida. Por favor, inténtelo de nuevo.';

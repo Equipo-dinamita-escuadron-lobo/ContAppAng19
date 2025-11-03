@@ -26,7 +26,6 @@ import katex from 'katex';
     EditorModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './help-center-creation.component.html',
   styleUrl: './help-center-creation.component.css'
 })

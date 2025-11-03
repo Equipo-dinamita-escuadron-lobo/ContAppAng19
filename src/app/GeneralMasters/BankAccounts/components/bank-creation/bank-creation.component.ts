@@ -16,8 +16,7 @@ import { BankService } from '../../services/bank.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, MultiSelectModule],
   templateUrl: './bank-creation.component.html',
-  styleUrl: './bank-creation.component.css',
-  providers: [MessageService]
+  styleUrl: './bank-creation.component.css'
 })
 export class BankCreationComponent implements OnInit {
   form: FormGroup;
@@ -79,9 +78,7 @@ export class BankCreationComponent implements OnInit {
           summary: 'Registro exitoso',
           detail: 'Banco creado correctamente.'
         });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         this.messageService.add({
