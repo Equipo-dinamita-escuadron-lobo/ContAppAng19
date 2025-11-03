@@ -7,86 +7,138 @@ import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { TagModule } from 'primeng/tag'; // Importar TagModule si se usa p-tag
 import { AccountingEntriesService } from '../../Service/accounting-entries.service';
+import { SourceDocumentView } from '../../Model/SourceDocumentView';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { DropdownModule } from 'primeng/dropdown';
+import { forkJoin } from 'rxjs';
+import { PortfolioWriteOffService } from '../../../PortfolioWriteOffs/Services/portfolio-write-off.service';
+import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 
-// Extiende la interfaz para incluir opcionalmente los detalles y el estado de carga
-interface ReceiptViewWithDetails extends ReceiptView {
-  accountingEntry?: AccountingEntryView | null;
-  isDetailLoading?: boolean;
-}
 
 @Component({
   selector: 'app-accounting-entries',
-  imports: [CommonModule, TableModule, ButtonModule, RippleModule, TagModule], // Añadir TagModule
+  imports: [CommonModule, TableModule, ButtonModule, RippleModule, TagModule, ReactiveFormsModule, DropdownModule], // Añadir TagModule
   templateUrl: './accounting-entries.component.html',
   styleUrls: ['./accounting-entries.component.css'],
   standalone: true
 })
 export class AccountingEntriesComponent implements OnInit {
   
-  receipts: ReceiptViewWithDetails[] = [];
+  allDocuments: SourceDocumentView[] = [];
+  filteredDocuments: SourceDocumentView[] = [];
+  
   isLoading = false;
   expandedRows: { [key: string]: boolean } = {};
 
-  constructor(private accountingEntriesService: AccountingEntriesService, private cashReceiptService: CashReceiptService) { }
+  filterForm!: FormGroup;
+  documentTypeOptions: any[];
 
-  ngOnInit(): void {
-    this.loadInitialReceipts();
+  constructor(
+    private fb: FormBuilder,
+    private accountingEntriesService: AccountingEntriesService, 
+    private cashReceiptService: CashReceiptService,
+    private localStorageMethods: LocalStorageMethods,
+    private portfolioWriteOffService: PortfolioWriteOffService // Inyectar servicio de castigos
+  ) {
+    this.documentTypeOptions = [
+      { label: 'Todos', value: null },
+      { label: 'Recibos de Caja', value: 'RECEIPT' },
+      { label: 'Castigos de Cartera', value: 'PORTFOLIO_WRITEOFF' }
+    ];
   }
 
-  loadInitialReceipts(): void {
+  ngOnInit(): void {
+    this.initializeForm();
+    this.loadAllDocuments();
+  }
+
+  initializeForm(): void {
+    this.filterForm = this.fb.group({
+      documentType: [null]
+    });
+  }
+
+  loadAllDocuments(): void {
     this.isLoading = true;
-    this.cashReceiptService.getAllReceipts().subscribe({
-      next: (receiptViews) => {
-        this.receipts = receiptViews;
+    
+    // Hacemos llamadas en paralelo para obtener recibos y castigos
+    forkJoin({
+      receipts: this.cashReceiptService.getAllReceipts(),
+      writeOffs: this.portfolioWriteOffService.getWriteOffsByEnterprise(this.localStorageMethods.getIdEnterprise())
+    }).subscribe({
+      next: ({ receipts, writeOffs }) => {
+        // Mapeamos los recibos a nuestra interfaz unificada
+        const receiptDocuments: SourceDocumentView[] = receipts.map(r => ({
+          id: r.id,
+          code: r.receiptCode,
+          date: r.issueDate,
+          description: `Recibo de caja para ${r.clientName}`,
+          totalAmount: r.totalAmount,
+          type: 'RECEIPT',
+          typeName: 'Recibo de Caja'
+        }));
+
+        // Mapeamos los castigos a nuestra interfaz unificada
+         const writeOffDocuments: SourceDocumentView[] = writeOffs.map(w => ({
+           id: w.id,
+           code: w.code,
+           date: w.writeOffDate,
+           description: `Castigo de cartera para ${w.thirdName}`,
+           totalAmount: w.totalAmount,
+           type: 'PORTFOLIO_WRITEOFF',
+           typeName: 'Castigo de Cartera'
+         }));
+
+        // Combinamos y ordenamos por fecha
+        this.allDocuments = [...receiptDocuments , ...writeOffDocuments].sort((a, b) => b.date.getTime() - a.date.getTime());
+        this.filteredDocuments = this.allDocuments;
         this.isLoading = false;
+        console.log('Documentos cargados:', this.allDocuments);
       },
       error: (err) => {
-        console.error('Error al cargar la lista de recibos:', err);
+        console.error('Error al cargar los documentos:', err);
         this.isLoading = false;
       }
     });
   }
 
+  applyFilters(): void {
+    const filters = this.filterForm.value;
+    if (filters.documentType) {
+      this.filteredDocuments = this.allDocuments.filter(d => d.type === filters.documentType);
+    } else {
+      this.filteredDocuments = [...this.allDocuments];
+    }
+  }
+
+  clearFilters(): void {
+    this.filterForm.reset();
+    this.filteredDocuments = [...this.allDocuments];
+  }
+
   onRowExpand(event: any): void {
-    const receipt: ReceiptViewWithDetails = event.data;
+    const document: SourceDocumentView = event.data;
     
-    // Si ya tiene los datos, no los volvemos a cargar
-    if (receipt.accountingEntry) {
+    if (document.accountingEntry) {
       return;
     }
 
-    receipt.isDetailLoading = true;
-    this.accountingEntriesService.getAccountingEntryViewByReceiptId(receipt.id).subscribe({
+    document.isDetailLoading = true;
+    // Llamamos al servicio con el ID y el TIPO del documento
+    this.accountingEntriesService.getAccountingEntryViewBySource(document.id, document.type).subscribe({
       next: (accountingEntryView) => {
-        receipt.accountingEntry = accountingEntryView;
-        receipt.isDetailLoading = false;
+        document.accountingEntry = accountingEntryView;
+        document.isDetailLoading = false;
       },
       error: (err) => {
-        console.error(`Error al cargar asientos para el recibo ${receipt.receiptCode}:`, err);
-        // Opcional: manejar el error, por ejemplo, asignando un valor que indique el fallo
-        receipt.accountingEntry = null; 
-        receipt.isDetailLoading = false;
+        console.error(`Error al cargar asientos para el documento ${document.code}:`, err);
+        document.accountingEntry = null; 
+        document.isDetailLoading = false;
       }
     });
   }
 
   onRowCollapse(event: any): void {
-    // Lógica adicional si se necesita al colapsar una fila (generalmente no es necesario)
-    const receipt = event.data;
-    // console.log('Collapsed:', receipt.receiptCode);
-  }
-
-  // Si usas p-tag en la tabla de detalles, necesitarás una función como esta
-  getStatusSeverity(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'paid':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'cancelled':
-        return 'danger';
-      default:
-        return 'info';
-    }
+    // No se necesita lógica aquí por ahora
   }
 }

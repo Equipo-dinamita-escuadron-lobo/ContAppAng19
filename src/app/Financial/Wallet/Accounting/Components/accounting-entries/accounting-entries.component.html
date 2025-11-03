@@ -10,9 +10,32 @@
         </div>
     </div>
 
+    <!-- La sección de filtros se mantiene igual, ya es funcional -->
+    <form [formGroup]="filterForm" (ngSubmit)="applyFilters()" class="card mb-6 p-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-6 items-end">
+            <div class="flex flex-col gap-2">
+                <label for="documentType" class="font-semibold text-primary">Tipo de Comprobante</label>
+                <p-dropdown id="documentType" 
+                            formControlName="documentType" 
+                            [options]="documentTypeOptions" 
+                            optionLabel="label"
+                            optionValue="value" 
+                            placeholder="Seleccione un tipo" 
+                            [showClear]="true" 
+                            [styleClass]="'w-full'">
+                </p-dropdown>
+            </div>
+        </div>
+        <div class="flex justify-start gap-3 mt-6">
+            <p-button type="submit" label="Filtrar"></p-button>
+            <p-button type="button" label="Limpiar" styleClass="p-button-secondary" (onClick)="clearFilters()">
+            </p-button>
+        </div>
+    </form>
+
     <div class="card">
         <p-table 
-            [value]="receipts" 
+            [value]="filteredDocuments" 
             dataKey="id" 
             [paginator]="true" 
             [rows]="6" 
@@ -24,10 +47,10 @@
             (onRowExpand)="onRowExpand($event)"
             (onRowCollapse)="onRowCollapse($event)">
             
+            <!-- El header ahora corresponde a las columnas de la fila expandida (los detalles) -->
             <ng-template pTemplate="header">
                 <tr>
-                    <th style="width: 5rem"></th>
-                    <!-- "Secuencia" ha sido removida -->
+                    <th style="width: 5rem"></th> <!-- Para el botón de expandir -->
                     <th>Fecha elaboración</th>
                     <th>Cuenta Contable</th>
                     <th>Nombre del tercero</th>
@@ -37,38 +60,44 @@
                 </tr>
             </ng-template>
             
-            <ng-template pTemplate="body" let-receipt let-expanded="expanded">
+            <!-- CAMBIO PRINCIPAL: Volvemos al diseño de fila de resumen -->
+            <ng-template pTemplate="body" let-document let-expanded="expanded">
                 <tr class="font-semibold bg-gray-100">
                     <td>
-                        <button type="button" pButton pRipple [pRowToggler]="receipt" 
+                        <button type="button" pButton pRipple [pRowToggler]="document" 
                             class="p-button-text p-button-rounded p-button-plain"
                             [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
                         </button>
                     </td>
-                    <!-- Colspan ajustado de 5 a 4 -->
+                    <!-- Usamos colspan para agrupar la información del comprobante en una sola área -->
                     <td colspan="4">
-                        <span>Comprobante: {{ receipt.receiptCode }}</span>
+                        <div>
+                            <!-- Mostramos el código del comprobante -->
+                            <span class="font-bold">Comprobante: {{ document.code }}</span>
+                            <!-- Abajo, de forma sutil, mostramos el tipo de documento -->
+                            <p class="text-sm font-normal text-gray-600 m-0 p-0">{{ document.typeName }}</p>
+                        </div>
                     </td>
-                    <td class="text-right">{{ receipt.totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
-                    <td class="text-right">{{ receipt.totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                    <!-- Mostramos el total del documento en las columnas de débito y crédito, como en tu diseño original -->
+                    <td class="text-right">{{ document.totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                    <td class="text-right">{{ document.totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                 </tr>
             </ng-template>
 
-            <ng-template pTemplate="expandedrow" let-receipt>
+            <!-- La fila expandida se mantiene casi igual, ya que su lógica es correcta -->
+            <ng-template pTemplate="expandedrow" let-document>
                 <!-- Estado de Carga -->
-                <tr *ngIf="receipt.isDetailLoading">
-                    <!-- Colspan ajustado de 8 a 7 -->
+                <tr *ngIf="document.isDetailLoading">
                     <td colspan="7" class="text-center p-3 border-b border-gray-200">
                         <i class="pi pi-spin pi-spinner mr-2"></i> Cargando movimientos...
                     </td>
                 </tr>
                 
                 <!-- Movimientos del Asiento Contable -->
-                <ng-container *ngIf="receipt.accountingEntry">
-                    <tr *ngFor="let movement of receipt.accountingEntry.movements">
-                        <td></td> <!-- Celda vacía -->
-                        <!-- Celda de "Secuencia" removida -->
-                        <td>{{ receipt.issueDate | date:'dd/MM/yyyy' }}</td>
+                <ng-container *ngIf="document.accountingEntry?.movements?.length">
+                    <tr *ngFor="let movement of document.accountingEntry.movements">
+                        <td></td> <!-- Celda vacía para alinear con el botón de expandir -->
+                        <td>{{ document.accountingEntry.date | date:'dd/MM/yyyy' }}</td>
                         <td>{{ movement.accountCode }} - {{ movement.accountName }}</td>
                         <td>{{ movement.thirdPartyName }}</td>
                         <td>{{ movement.description }}</td>
@@ -77,9 +106,8 @@
                     </tr>
                 </ng-container>
 
-                <!-- Mensaje si no hay asiento contable -->
-                <tr *ngIf="!receipt.isDetailLoading && !receipt.accountingEntry">
-                     <!-- Colspan ajustado de 8 a 7 -->
+                <!-- Mensaje si no hay asiento contable o movimientos -->
+                <tr *ngIf="!document.isDetailLoading && !document.accountingEntry?.movements?.length">
                      <td colspan="7" class="text-center p-3 text-gray-500 border-b border-gray-200">
                         No se encontraron movimientos contables para este comprobante.
                     </td>
@@ -88,10 +116,10 @@
 
             <ng-template pTemplate="empty">
                 <tr>
-                    <!-- Colspan ajustado de 8 a 7 -->
                     <td colspan="7" class="text-center py-8">
                         <i class="pi pi-inbox text-2xl text-gray-400 mb-2"></i>
                         <p class="font-semibold">No se encontraron comprobantes.</p>
+                        <p class="text-sm text-gray-500" *ngIf="filterForm.dirty">Intente ajustar los filtros.</p>
                     </td>
                 </tr>
             </ng-template>
