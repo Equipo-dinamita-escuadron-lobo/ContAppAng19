@@ -2089,13 +2089,6 @@ export class AccountListComponent implements OnInit {
               detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
             }
 
-            this.messageService.add({
-              severity: 'info',
-              summary: 'Importación Completada con Errores',
-              detail,
-              life: 8000
-            });
-
             // Mostrar modal con detalles de errores
             this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
 
