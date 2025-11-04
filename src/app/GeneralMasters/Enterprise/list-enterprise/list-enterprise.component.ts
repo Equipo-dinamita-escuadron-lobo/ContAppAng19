@@ -78,13 +78,31 @@ export class ListEnterpriseComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    const token = localStorage.getItem('token'); // o como lo guardas
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('Roles de realm:', payload.realm_access.roles);
+      console.log('Roles de cliente:', payload.resource_access);
+    }
+
     this.getEnterprises();
     this.getArchivedEnterprises();
   }
 
   /* ==================== FETCH ==================== */
+  // getEnterprises() {
+  //   this.enterpriseService.getEnterprisesActive().subscribe({
+  //     next: (data: EnterpriseList[]) => {
+  //       console.log('Enterprises fetched:', data);
+  //       this.enterprises = data;
+  //       this.filteredEnterprises = [...this.enterprises];
+  //     },
+  //     error: (err) => console.error('Error fetching enterprises:', err),
+  //   });
+  // }
+
   getEnterprises() {
-    this.enterpriseService.getEnterprisesActive().subscribe({
+    this.enterpriseService.getEnterprisesActive('Profesor').subscribe({
       next: (data: EnterpriseList[]) => {
         console.log('Enterprises fetched:', data);
         this.enterprises = data;

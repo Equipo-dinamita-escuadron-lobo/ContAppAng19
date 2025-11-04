@@ -17,9 +17,16 @@ export class EnterpriseService {
   constructor(private http: HttpClient) {}
 
   /** ==================== GET EMPRESAS ==================== */
-  getEnterprisesActive(): Observable<EnterpriseList[]> {
-    // Devuelve empresas activas (endpoint principal)
-    return this.http.get<EnterpriseList[]>(this.apiUrl);
+  // getEnterprisesActive(): Observable<EnterpriseList[]> {
+  //   // Devuelve empresas activas (endpoint principal)
+  //   return this.http.get<EnterpriseList[]>(this.apiUrl);
+  // }
+
+  getEnterprisesActive(
+    role: string = 'Profesor'
+  ): Observable<EnterpriseList[]> {
+    const headers = { 'X-User-Role': role };
+    return this.http.get<EnterpriseList[]>(this.apiUrl, { headers });
   }
 
   getEnterprisesInactive(): Observable<EnterpriseList[]> {
@@ -76,7 +83,10 @@ export class EnterpriseService {
   }
 
   /** ==================== COMPARTIR EMPRESA ==================== */
-  shareEnterprise(payload: { enterpriseId: number; emails: string[] }): Observable<void> {
+  shareEnterprise(payload: {
+    enterpriseId: number;
+    emails: string[];
+  }): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}share`, payload);
   }
 
@@ -84,4 +94,8 @@ export class EnterpriseService {
   // getDepartaments(): Observable<DepartmentList[]> {
   //   return this.http.get<DepartmentList[]>(this.apiUrl);
   // }
+
+  uploadEnterprisePdf(formData: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}create-from-pdf`, formData);
+  }
 }
