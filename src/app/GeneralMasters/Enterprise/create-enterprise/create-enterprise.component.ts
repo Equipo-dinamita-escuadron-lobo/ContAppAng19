@@ -22,7 +22,6 @@ import { EnterpriseList } from '../models/EnterpriseList';
 import { SubjectService } from '../../Subjects/services/subjects.service';
 import { Subject } from '../../Subjects/models/subjects';
 
-
 @Component({
   selector: 'app-create-enterprise',
   standalone: true,
@@ -88,7 +87,6 @@ export class CreateEnterpriseComponent implements OnInit {
   ];
 
   subjectsList: Subject[] = [];
-
 
   constructor(
     private fb: FormBuilder,
@@ -220,12 +218,14 @@ export class CreateEnterpriseComponent implements OnInit {
           department: f.department.id || f.department,
           country: f.country.id || f.country,
         },
-        subjects: [
-          {
-            name: f.subject.name,
-            code: f.subject.code,
-          },
-        ],
+        subjects: f.subject
+          ? [
+              {
+                name: f.subject.name,
+                code: f.subject.code,
+              },
+            ]
+          : undefined,
         semester: f.semester,
       };
 
@@ -294,5 +294,4 @@ export class CreateEnterpriseComponent implements OnInit {
       },
     });
   }
-
 }
