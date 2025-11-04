@@ -87,6 +87,7 @@ export class ThirdListComponent implements OnInit {
   loading = false;
   loadingPdfRut = false;
   loadingExport = false;
+  loadingTemplate = false;
   showDetailView = false;
   searchValue = '';
 
@@ -614,6 +615,13 @@ export class ThirdListComponent implements OnInit {
    */
   onExportInProgress(inProgress: boolean): void {
     this.loadingExport = inProgress;
+  }
+
+  /**
+   * Maneja el cambio de estado de progreso de plantilla
+   */
+  onTemplateInProgress(inProgress: boolean): void {
+    this.loadingTemplate = inProgress;
   }
   
   /**

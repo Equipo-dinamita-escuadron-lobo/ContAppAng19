@@ -36,7 +36,7 @@
             (click)="openExportModal()">
           </p-button>
 
-          <p-button label="Plantilla" icon="pi pi-download" [style]="{'white-space': 'nowrap'}"
+          <p-button label="Plantilla" icon="pi pi-download" [loading]="loadingTemplate" [style]="{'white-space': 'nowrap'}"
             (click)="openTemplateModal()">
           </p-button>
 
@@ -208,7 +208,7 @@
 
 <!-- Componente de importación de terceros -->
 <app-third-template [visible]="showTemplateModal" [inputData]="{ title: 'Plantilla de Importación de Terceros' }"
-  (close)="closeTemplateModal()">
+  (close)="closeTemplateModal()" (templateInProgress)="onTemplateInProgress($event)">
 </app-third-template>
 
 <!-- Componente de exportación de terceros -->
