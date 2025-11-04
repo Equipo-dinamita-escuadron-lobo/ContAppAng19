@@ -250,10 +250,24 @@ body {
   font-family: var(--font-family-sans) !important;
   font-weight: 600 !important;
   font-size: 14px !important;
+  flex-shrink: 0;
 }
 
 .p-button:hover {
   background-color: var(--color-button-primary-hover) !important;
+}
+
+/* Estado presionado (mientras se hace clic) */
+.p-button:enabled:active {
+  background-color: var(--color-button-primary-pressed) !important;
+  transform: scale(0.98); /* Efecto de "hundimiento" */
+}
+
+/* Estilo personalizado para un botón "seleccionado" */
+.p-button.p-button-selected {
+  background-color: var(--color-light) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-color: var(--color-dark) !important;
 }
 
 .p-button:enabled .p-button-icon {

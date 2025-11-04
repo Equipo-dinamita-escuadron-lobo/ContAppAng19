@@ -594,8 +594,8 @@ export class ThirdConfigComponent implements OnInit {
         }
         
         this.messageService.add({
-          severity: 'error',
-          summary: 'No se puede eliminar',
+          severity: 'info',
+          summary: 'Información',
           detail: errorMessage
         });
       }
@@ -823,8 +823,8 @@ export class ThirdConfigComponent implements OnInit {
         }
         
         this.messageService.add({
-          severity: 'error',
-          summary: 'No se puede eliminar',
+          severity: 'info',
+          summary: 'Información',
           detail: errorMessage
         });
       }

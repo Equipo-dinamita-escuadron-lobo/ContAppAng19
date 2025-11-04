@@ -1017,8 +1017,8 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
-                  ).then((m) => m.ReceiptAccountingEntriesComponent),
+                    './Financial/Wallet/Accounting/Components/accounting-entries/accounting-entries.component'
+                  ).then((m) => m.AccountingEntriesComponent),
               },
               {
                 path: 'invoices',
@@ -1047,8 +1047,8 @@ export const routes: Routes = [
             },
               loadComponent: () =>
                 import(
-                  './Financial/Wallet/CashReceipts/Components/receipt-accounting-entries/receipt-accounting-entries.component'
-                ).then((m) => m.ReceiptAccountingEntriesComponent),
+                  './Financial/Wallet/Accounting/Components/accounting-entries/accounting-entries.component'
+                ).then((m) => m.AccountingEntriesComponent),
             },
 
             ],

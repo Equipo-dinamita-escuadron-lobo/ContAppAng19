@@ -9,7 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { CommonModule } from '@angular/common';
-import { Facture2 } from '../../models/Facture';
+import { Facture2, SkeletonFactureType } from '../../models/Facture';
 import { Product2, ProductList2 } from '../../models/Product2';
 import { SkeletonNonCommercialService } from '../../service/skeleton-non-commercial.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
@@ -252,18 +252,26 @@ export class CreateNonCommercialComponent implements OnInit {
         taxPercentage: []
       }));
 
+      const inventoryConfigType = this.localStorageMethods.getInventoryConfigType();
+
+   
+    const factureType: SkeletonFactureType = formValue.eventType === 'entry' ? 'NON_COMMERCIAL_ENTRY' : 'NON_COMMERCIAL_EXIT';
+
+
       const factureData: Facture2 = {
         factId: 0,
         entId: this.entData?.id || '',
         thId: formValue.thId,
         factCode: formValue.factCode,
-        factProducts: products,
+        products: products,
         totalValue: formValue.totalValue.toString(),
         totalPay: '0',
         pendingValue: formValue.totalValue.toString(),
         expirationDate: new Date().toISOString().split('T')[0],
         accountingAccount: formValue.accountingAccount,
-        tagTitle: formValue.tagTitle
+        tagTitle: formValue.tagTitle,
+        factureType: factureType,
+        inventoryConfigType: inventoryConfigType
       };
 
       const serviceCall = formValue.eventType === 'entry'

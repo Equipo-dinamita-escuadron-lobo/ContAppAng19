@@ -86,6 +86,8 @@ export class ThirdListComponent implements OnInit {
   // UI State
   loading = false;
   loadingPdfRut = false;
+  loadingExport = false;
+  loadingTemplate = false;
   showDetailView = false;
   searchValue = '';
 
@@ -606,6 +608,20 @@ export class ThirdListComponent implements OnInit {
 
   closeExportModal(): void {
     this.showExportModal = false;
+  }
+
+  /**
+   * Maneja el cambio de estado de progreso de exportación
+   */
+  onExportInProgress(inProgress: boolean): void {
+    this.loadingExport = inProgress;
+  }
+
+  /**
+   * Maneja el cambio de estado de progreso de plantilla
+   */
+  onTemplateInProgress(inProgress: boolean): void {
+    this.loadingTemplate = inProgress;
   }
   
   /**
