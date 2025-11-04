@@ -5,6 +5,35 @@
 <p-button label="Button default" />
 <p-button label="Cancelar" severity="secondary" />
 
+<h2 class="font-family-titillium font-bold text-2xl/30 mt-8 mb-4">Botones con Iconos y Variantes</h2>
+
+<!-- Botones Primarios -->
+<h3 class="font-family-titillium font-semibold text-lg/22 mt-6 mb-3">Botón Primario</h3>
+<div class="flex flex-wrap items-center gap-4 p-4 border border-gray-200 rounded-lg">
+  <p-button label="Guardar" icon="pi pi-check" />
+  <p-button label="Guardar" icon="pi pi-check" iconPos="right" />
+  <p-button icon="pi pi-check" aria-label="Guardar" />
+  <p-button label="Guardar" icon="pi pi-check" [disabled]="true" />
+</div>
+
+<!-- Botones Secundarios -->
+<h3 class="font-family-titillium font-semibold text-lg/22 mt-6 mb-3">Botón Secundario</h3>
+<div class="flex flex-wrap items-center gap-4 p-4 border border-gray-200 rounded-lg">
+  <p-button label="Editar" icon="pi pi-pencil" severity="secondary" />
+  <p-button label="Editar" icon="pi pi-pencil" iconPos="right" severity="secondary" />
+  <p-button icon="pi pi-pencil" severity="secondary" aria-label="Editar" />
+  <p-button label="Editar" icon="pi pi-pencil" severity="secondary" [disabled]="true" />
+</div>
+
+<!-- Botones de Información -->
+<h3 class="font-family-titillium font-semibold text-lg/22 mt-6 mb-3">Botón de Información</h3>
+<div class="flex flex-wrap items-center gap-4 p-4 border border-gray-200 rounded-lg">
+  <p-button label="Buscar" icon="pi pi-search" severity="info" />
+  <p-button label="Buscar" icon="pi pi-search" iconPos="right" severity="info" />
+  <p-button icon="pi pi-search" severity="info" aria-label="Buscar" />
+  <p-button label="Buscar" icon="pi pi-search" severity="info" [disabled]="true" />
+</div>
+
 <h1 class="font-family-titillium font-bold text-3xl/41">Titillium Web Bold 32px</h1>
 <h1 class="font-family-titillium font-bold text-[32px]/41">Titillium Web Bold 32px</h1>
 <h2 class="font-family-titillium font-bold text-2xl/30">Titillium Web Bold 24px</h2>
