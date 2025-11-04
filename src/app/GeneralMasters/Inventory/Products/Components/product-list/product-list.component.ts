@@ -467,6 +467,21 @@ export class ProductListComponent implements OnInit {
     const file = event.files?.[0];
     if (!file) return;
 
+    // Validar que sea un archivo Excel válido
+    if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' && 
+        file.type !== 'application/vnd.ms-excel') {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo inválido',
+        detail: 'Por favor, selecciona un archivo EXCEL válido'
+      });
+      // Limpiar la selección del file upload
+      if (event.originalEvent?.target) {
+        event.originalEvent.target.value = '';
+      }
+      return;
+    }
+
     const entId = this.localstorageMethods.getIdEnterprise();
     this.isImporting = true;
 
