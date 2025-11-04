@@ -32,7 +32,7 @@
           </p-button>
           <input #fileInput type="file" accept=".xlsx" (change)="onFileSelect($event)" style="display: none;">
 
-          <p-button label="Exportar" icon="pi pi-download" [style]="{'white-space': 'nowrap'}"
+          <p-button label="Exportar" icon="pi pi-download" [loading]="loadingExport" [style]="{'white-space': 'nowrap'}"
             (click)="openExportModal()">
           </p-button>
 
@@ -212,7 +212,7 @@
 </app-third-template>
 
 <!-- Componente de exportación de terceros -->
-<app-third-export [visible]="showExportModal" (close)="closeExportModal()">
+<app-third-export [visible]="showExportModal" (close)="closeExportModal()" (exportInProgress)="onExportInProgress($event)">
 </app-third-export>
 
 
