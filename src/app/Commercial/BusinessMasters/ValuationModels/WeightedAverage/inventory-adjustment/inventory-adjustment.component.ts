@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -33,7 +33,7 @@ import { ProductResponse } from '../models/ProductResponse';
   templateUrl: './inventory-adjustment.component.html',
   styleUrl: './inventory-adjustment.component.css'
 })
-export class InventoryAdjustmentComponent implements OnInit {
+export class InventoryAdjustmentComponent implements OnInit, OnChanges {
   @Input() visible: boolean = false;
   @Input() productData: ProductResponse | null = null;
   @Input() lastKardexRecord: KardexRow | null = null;
@@ -65,6 +65,14 @@ export class InventoryAdjustmentComponent implements OnInit {
   ngOnInit() {
     this.initializeForm();
     this.setDateLimits();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    // Cuando cambia el lastKardexRecord, actualizar los límites de fecha y la vista previa
+    if (changes['lastKardexRecord'] && !changes['lastKardexRecord'].firstChange) {
+      this.setDateLimits();
+      this.updatePreview();
+    }
   }
 
   private setDateLimits() {

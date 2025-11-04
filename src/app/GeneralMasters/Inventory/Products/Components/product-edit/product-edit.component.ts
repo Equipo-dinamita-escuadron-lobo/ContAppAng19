@@ -188,7 +188,7 @@ export class ProductEditComponent implements OnInit {
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: '¡Actualizado!',
+          summary: 'Actualización Exitosa',
           detail: 'El producto ha sido actualizado con éxito.'
         });
         this.router.navigate(['/gen-masters/inventory/products/list']);

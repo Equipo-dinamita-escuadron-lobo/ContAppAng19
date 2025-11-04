@@ -41,7 +41,7 @@
             <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
                 <div class="flex flex-wrap gap-3">
                     <p-button label="Crear" icon="pi pi-plus" type="submit" (click)="showFormAddNewClass()"></p-button>
-                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" [chooseIcon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" accept=".xlsx" [auto]="true"
+                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" [chooseIcon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" [auto]="true"
                         (onSelect)="onFileSelect($event)" class="p-button-primeng" [disabled]="isImporting">
                     </p-fileUpload>
                     <p-button
