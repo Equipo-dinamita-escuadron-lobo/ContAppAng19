@@ -1,5 +1,7 @@
 <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
 
+  <p-toast></p-toast>
+
   <!-- Titulo y descripción -->
   <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-10 ">
     <div class="items-center mb-6">
@@ -17,22 +19,32 @@
     <!-- Contenedor de cajas de filtros -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       <div class="flex flex-col">
-        <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">Fecha inicial</label>
+        <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">Fecha inicial *</label>
         <p-datePicker 
           id="fechaInicio"
           [(ngModel)]="filtro.fechaInicio"
           dateFormat="dd/mm/yy"
-          showIcon="true">
+          showIcon="true"
+          [required]="true"
+          [maxDate]="filtro.fechaFin">
         </p-datePicker>
+        @if (!filtro.fechaInicio && filtro.fechaFin) {
+          <small style="color: var(--color-error-35);">Debe ingresar la fecha inicial</small>
+        }
       </div>
       <div class="flex flex-col">
-        <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">Fecha final</label>
+        <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">Fecha final *</label>
         <p-datePicker 
           id="fechaFin"
           [(ngModel)]="filtro.fechaFin"
           dateFormat="dd/mm/yy"
-          showIcon="true">
+          showIcon="true"
+          [required]="true"
+          [minDate]="filtro.fechaInicio">
         </p-datePicker>
+        @if (filtro.fechaInicio && !filtro.fechaFin) {
+          <small style="color: var(--color-error-35);">Debe ingresar la fecha final</small>
+        }
       </div>
       <div class="flex flex-col">
         <label for="rol" class="mb-1 text-sm font-medium text-gray-700">Rol</label>
@@ -40,7 +52,9 @@
           id="rol"
           [options]="roles"
           [(ngModel)]="filtro.rol"
-          placeholder="Seleccione un rol">
+          placeholder="Seleccione un rol"
+          optionLabel="label"
+          optionValue="value">
         </p-dropdown>
       </div>
       <div class="flex flex-col mr-5">
@@ -49,7 +63,8 @@
           id="usuario"
           type="text"
           pInputText
-          [(ngModel)]="filtro.usuario">
+          [(ngModel)]="filtro.usuario"
+          placeholder="Buscar por nombre">
       </div>
     </div>
 
@@ -60,7 +75,7 @@
         <p-button 
           label="Aplicar filtros" 
           icon="pi pi-filter" 
-          severity="info"
+          [loading]="loading"
           (onClick)="applyFilters()">
         </p-button>
       </div>
@@ -69,11 +84,13 @@
       <div class="flex gap-2">
         <p-button 
           label="Exportar PDF" 
-          icon="pi pi-file-pdf">
+          icon="pi pi-file-pdf"
+          (onClick)="exportPdf()">
         </p-button>
         <p-button 
           label="Exportar Excel" 
-          icon="pi pi-file-excel">
+          icon="pi pi-file-excel"
+          (onClick)="exportExcel()">
         </p-button>
       </div>
     </div>
@@ -81,10 +98,13 @@
 
   <!-- Tabla de sesiones -->
   <p-table 
-    [value]="usuariosFiltrados"
+    [value]="sessions"
     [paginator]="true" 
-    [rows]="10" 
+    [rows]="pageSize" 
+    [totalRecords]="totalRecords"
     [rowsPerPageOptions]="[5,10,20]"  
+    [loading]="loading"
+    (onLazyLoad)="onPageChange($event)"
     styleClass="p-datatable-striped font-family-sans" 
     [tableStyle]="{'min-width': '50rem'}" 
     responsiveLayout="scroll">
@@ -106,19 +126,19 @@
       </tr>
     </ng-template>
 
-    <ng-template pTemplate="body" let-row>
+    <ng-template pTemplate="body" let-session>
       <tr class="text-neutral-20">
-        <td class="py-3">{{ row.usuario }}</td>
-        <td class="py-3">{{ row.rol }}</td>
-        <td class="py-3">{{ row.entrada }}</td>
-        <td class="py-3">{{ row.salida }}</td>
+        <td class="py-3">{{ session.userName }}</td>
+        <td class="py-3">{{ session.userRole }}</td>
+        <td class="py-3">{{ formatDateTime(session.loginTime) }}</td>
+        <td class="py-3">{{ formatDateTime(session.logoutTime) }}</td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
         <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
-          No se encontraron registros de sesiones.
+          {{ hasSearched ? 'No se encontraron registros de sesiones.' : 'Use los filtros y presione "Aplicar filtros".' }}
         </td>
       </tr>
     </ng-template>
