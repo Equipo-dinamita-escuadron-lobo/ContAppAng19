@@ -86,6 +86,8 @@ export class ThirdListComponent implements OnInit {
   // UI State
   loading = false;
   loadingPdfRut = false;
+  loadingExport = false;
+  loadingTemplate = false;
   showDetailView = false;
   searchValue = '';
 
@@ -453,14 +455,7 @@ export class ThirdListComponent implements OnInit {
             detail += `Fallidos: ${failedImports}\n`;
             if (duplicatesSkipped > 0) {
               detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
-            }
-            
-            this.messageService.add({
-              severity: 'info',
-              summary: 'Importación Completada con Errores',
-              detail,
-              life: 8000
-            });
+            }         
             
             // Mostrar modal con detalles de errores
             this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
@@ -613,6 +608,20 @@ export class ThirdListComponent implements OnInit {
 
   closeExportModal(): void {
     this.showExportModal = false;
+  }
+
+  /**
+   * Maneja el cambio de estado de progreso de exportación
+   */
+  onExportInProgress(inProgress: boolean): void {
+    this.loadingExport = inProgress;
+  }
+
+  /**
+   * Maneja el cambio de estado de progreso de plantilla
+   */
+  onTemplateInProgress(inProgress: boolean): void {
+    this.loadingTemplate = inProgress;
   }
   
   /**

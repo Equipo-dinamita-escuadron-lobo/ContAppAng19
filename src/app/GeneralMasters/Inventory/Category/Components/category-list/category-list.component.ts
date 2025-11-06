@@ -22,6 +22,7 @@ import { CategoryValidationMessagesService } from '../../Services/category-valid
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
+import { TaxService } from '../../../../Taxes/services/tax.service';
 
 @Component({
   selector: 'app-category-list',
@@ -51,11 +52,13 @@ export class CategoryListComponent implements OnInit {
   entData: string | null = null;
   categories: Category[] = [];
   accounts: any[] = [];
+  taxes: any[] = [];
   loading: boolean = false;
 
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  first: number = 0;
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   searchTerm: string = '';
@@ -66,6 +69,7 @@ export class CategoryListComponent implements OnInit {
     private readonly confirmationService: ConfirmationService,
     private readonly messageService: MessageService,
     private readonly chartAccountService: ChartAccountService,
+    private readonly taxService: TaxService,
     public readonly categoryValidationMessagesService: CategoryValidationMessagesService
   ) { }
 
@@ -74,6 +78,7 @@ export class CategoryListComponent implements OnInit {
     if (this.entData) {
       this.loadCategoriesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
       this.getCuentas();
+      this.getTaxes();
     }
   }
 
@@ -85,6 +90,7 @@ export class CategoryListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.first = event.first;
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
     
@@ -96,7 +102,7 @@ export class CategoryListComponent implements OnInit {
     this.categoryService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.categories = page.content || [];
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || 0;
       },
       error: (error: any) => {
         this.messageService.add({
@@ -115,12 +121,13 @@ export class CategoryListComponent implements OnInit {
     this.categoryService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.categories = page.content || [];
-        this.totalRecords = page?.totalElements || 0;
+        this.totalRecords = page.page?.totalElements || 0;
       }
     });
   }
 
   onSearchChange(): void {
+    this.first = 0;
     this.currentPage = 0;
     this.loadCategoriesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
   }
@@ -134,6 +141,19 @@ export class CategoryListComponent implements OnInit {
       error: (error: any) => {
         console.error('Error al obtener las cuentas:', error);
         this.accounts = [];
+      }
+    });
+  }
+
+  getTaxes(): void {
+    const enterpriseId = this.getEnterpriseId();
+    this.taxService.findAll(enterpriseId).subscribe({
+      next: (page: any) => {
+        this.taxes = page.content || [];
+      },
+      error: (error: any) => {
+        console.error('Error al obtener los impuestos:', error);
+        this.taxes = [];
       }
     });
   }
@@ -194,6 +214,23 @@ export class CategoryListComponent implements OnInit {
     const description = account.description || 'Sin descripción';
     
     return code ? `${code} - ${description}` : description;
+  }
+
+  getTaxNames(taxIds: number[] | undefined): string {
+    if (!taxIds || taxIds.length === 0) {
+      return '';
+    }
+    
+    if (this.taxes.length === 0) {
+      return taxIds.join(', '); // Mostrar IDs si no se cargaron los nombres
+    }
+    
+    const taxNames = taxIds.map(id => {
+      const tax = this.taxes.find(t => t.id === id);
+      return tax ? `${tax.code} (${tax.interest}%)` : `ID ${id}`;
+    });
+    
+    return taxNames.join(', ');
   }
 
   redirectToCreate(): void {

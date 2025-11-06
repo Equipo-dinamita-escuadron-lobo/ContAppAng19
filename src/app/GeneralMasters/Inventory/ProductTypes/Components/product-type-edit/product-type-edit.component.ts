@@ -26,7 +26,6 @@ import { ProductTypeValidationMessagesService } from '../../Services/product-typ
     ReactiveFormsModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './product-type-edit.component.html',
 })
 export class ProductTypeEditComponent implements OnInit {
@@ -112,9 +111,7 @@ export class ProductTypeEditComponent implements OnInit {
             detail: 'Tipo de producto actualizado correctamente'
           });
           
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/inventory/product-types/list']);
-          }, 1500);
+          this.router.navigate(['/gen-masters/inventory/product-types/list']);
         },
         error: (error) => {
           const message = error.error?.message || 'Ha ocurrido un error al actualizar el tipo de producto. Por favor, inténtelo de nuevo.';

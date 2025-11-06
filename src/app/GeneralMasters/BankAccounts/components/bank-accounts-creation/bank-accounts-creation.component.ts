@@ -18,8 +18,7 @@ import { BankAccountsService } from '../../services/bank-accounts.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
   templateUrl: './bank-accounts-creation.component.html',
-  styleUrl: './bank-accounts-creation.component.css',
-  providers: [MessageService]
+  styleUrl: './bank-accounts-creation.component.css'
 })
 export class BankAccountsCreationComponent implements OnInit {
   form: FormGroup;
@@ -135,9 +134,7 @@ export class BankAccountsCreationComponent implements OnInit {
           summary: 'Registro exitoso',
           detail: 'Cuenta bancaria creada correctamente.'
         });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (error) => {
         this.messageService.add({

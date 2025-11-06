@@ -5,7 +5,6 @@
   margin: 0 auto;
 }
 
-/* Custom styles for PrimeNG components */
 ::ng-deep .p-select {
   width: 100%;
 }
@@ -41,8 +40,6 @@
   font-weight: 600;
   margin-bottom: 1rem;
 }
-
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .grid {
     grid-template-columns: 1fr;

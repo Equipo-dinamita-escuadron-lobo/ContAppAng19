@@ -4,7 +4,7 @@
     <!-- CABECERA -->
     <div class="mb-12">
         <h1
-            class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            class="font-['Titillium_Web'] font-bold text-3xl text-primary border-b-4 border-secondary inline-block pb-1">
             Crear Recibo de Caja
         </h1>
         <p class="mt-2 text-base text-gray-600">
@@ -17,7 +17,7 @@
 
             <!-- Tipo de Recibo de Caja -->
             <div class="flex flex-col gap-2">
-                <label for="receiptType" class="font-semibold text-[var(--color-primary)]">
+                <label for="receiptType" class="font-semibold text-primary">
                     Tipo de Recibo de Caja <span class="text-red-500">*</span>
                 </label>
                 <div class="w-full md:w-2/3">
@@ -33,7 +33,7 @@
 
             <!-- Método de Pago -->
             <div class="flex flex-col gap-2">
-                <label for="paymentMethod" class="font-semibold text-[var(--color-primary)]">
+                <label for="paymentMethod" class="font-semibold text-primary">
                     Método de Pago <span class="text-red-500">*</span>
                 </label>
                 <div class="w-full md:w-2/3">
@@ -50,7 +50,7 @@
 
             <!-- Cliente -->
             <div class="flex flex-col gap-2">
-                <label for="client" class="font-semibold text-[var(--color-primary)]">
+                <label for="client" class="font-semibold text-primary">
                     Cliente <span class="text-red-500">*</span>
                 </label>
                 <div class="w-full md:w-2/3">
@@ -73,7 +73,7 @@
 
             <!-- Fecha de Elaboración -->
             <div class="flex flex-col gap-2">
-                <label for="issueDate" class="font-semibold text-[var(--color-primary)]">
+                <label for="issueDate" class="font-semibold text-primary">
                     Fecha de Elaboración <span class="text-red-500">*</span>
                 </label>
                 <div class="w-full md:w-2/3">
@@ -89,7 +89,7 @@
 
             <!-- Realizar un (Abono o Ingreso directo) -->
             <div class="flex flex-col gap-2">
-                <label for="receiptTypeOption" class="font-semibold text-[var(--color-primary)]">
+                <label for="receiptTypeOption" class="font-semibold text-primary">
                     Realizar un <span class="text-red-500">*</span>
                 </label>
                 <div class="w-full md:w-2/3">
@@ -110,7 +110,7 @@
             @if (cashReceiptForm.get('receiptTypeOption')?.value === 'direct_income') {
             <!-- Cuenta Auxiliar -->
             <div class="flex flex-col gap-2">
-                <label for="auxiliaryAccount" class="font-semibold text-[var(--color-primary)]">
+                <label for="auxiliaryAccount" class="font-semibold text-primary">
                     Cuenta Auxiliar <span class="text-red-500">*</span>
                 </label>
                 <div class="w-full md:w-2/3">
@@ -130,7 +130,7 @@
 
             <!-- Valor del Ingreso -->
             <div class="flex flex-col gap-2">
-                <label for="directIncomeAmount" class="font-semibold text-[var(--color-primary)]">
+                <label for="directIncomeAmount" class="font-semibold text-primary">
                     Valor del Ingreso ($) <span class="text-red-500">*</span>
                 </label>
                 <div class="w-full md:w-2/3">
@@ -147,7 +147,7 @@
 
             @if (showCostCenterField == true) {
             <div class="flex flex-col gap-2">
-                <label for="costCenter" class="font-semibold text-[var(--color-primary)]">
+                <label for="costCenter" class="font-semibold text-primary">
                     Centro de Costo <span class="text-red-500">*</span>
                 </label>
                 <div class="w-full md:w-2/3">
@@ -168,7 +168,7 @@
         <!-- Sección: Abono a Deuda -->
         @if (cashReceiptForm.get('receiptTypeOption')?.value === 'debt_payment') {
         <div class="mb-12">
-            <h3 class="text-xl font-semibold text-[var(--color-primary)] mb-4">
+            <h3 class="text-xl font-semibold text-primary mb-4">
                 Facturas a Pagar
             </h3>
 
@@ -248,7 +248,7 @@
 
         <!-- Observaciones -->
         <div class="flex flex-col gap-2 mb-12">
-            <label for="observations" class="font-semibold text-[var(--color-primary)]">Observaciones</label>
+            <label for="observations" class="font-semibold text-primary">Observaciones</label>
             <div class="w-full md:w-2/3">
                 <textarea id="observations" formControlName="observations" pInputTextarea rows="3"
                     placeholder="Ingrese cualquier observación" class="input-base w-full"></textarea>
@@ -257,10 +257,10 @@
 
         <!-- Valor Total -->
         <div class="flex justify-end mb-12">
-            <p class="text-xl font-bold text-[var(--color-primary)]">
+            <p class="text-xl font-bold text-primary">
                 Valor total recibido:
-                <span class="text-[var(--color-accessibility)]">
-                    $ {{ totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}
+                <span class="text-accessibility">
+                    {{ totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}
                 </span>
             </p>
         </div>

@@ -31,6 +31,7 @@ export class KardexService {
       .set('productId', productId)
       .set('page', page)
       .set('size', size)
+      .set('lang', 'es');
       if (sort) params = params.set('sort', sort);
       if (startDate) {
         const formattedStartDate = this.formatDate(startDate);
@@ -48,14 +49,16 @@ export class KardexService {
    * Crea un ajuste de compra en el kardex
    */
   purchaseAdjustment(request: KardexPurchaseRequest): Observable<ResponseDto<any>> {
-    return this.http.post<ResponseDto<any>>(`${this.apiUrl}purchase-adjustment`, request);
+    const params = new HttpParams().set('lang', 'es');
+    return this.http.post<ResponseDto<any>>(`${this.apiUrl}purchase-adjustment`, request, { params });
   }
 
   /**
    * Crea un ajuste de venta en el kardex
    */
   saleAdjustment(request: KardexSaleRequest): Observable<ResponseDto<any>> {
-    return this.http.post<ResponseDto<any>>(`${this.apiUrl}sale-adjustment`, request);
+    const params = new HttpParams().set('lang', 'es');
+    return this.http.post<ResponseDto<any>>(`${this.apiUrl}sale-adjustment`, request, { params });
   }
 
   /**
@@ -65,7 +68,8 @@ export class KardexService {
     let params = new HttpParams()
       .set('productId', productId)
       .set('page', 0)
-      .set('size', 1000000);
+      .set('size', 1000000)
+      .set('lang', 'es');
 
     if (startDate) {
       const formattedStartDate = this.formatDate(startDate);
@@ -77,6 +81,18 @@ export class KardexService {
     }
 
     return this.http.get<ResponseDto<any>>(`${this.apiUrl}kardex-by-product`, { params });
+  }
+
+  /**
+   * Obtiene el último registro de kardex para un producto específico
+   * Este método obtiene el registro más reciente real, no el último de una página
+   */
+  getLatestKardexByProductId(productId: number): Observable<ResponseDto<any>> {
+    const params = new HttpParams()
+      .set('productId', productId)
+      .set('lang', 'es');
+
+    return this.http.get<ResponseDto<any>>(`${this.apiUrl}latest-kardex-by-product`, { params });
   }
 
 }

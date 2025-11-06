@@ -14,6 +14,7 @@ import { debounceTime, Subject } from 'rxjs';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { MenuItem } from 'primeng/api';
 import { EditorModule } from 'primeng/editor';
+import { PublicFooterComponent } from '../public-footer/public-footer.component';
 
 interface Module {
   id: number;
@@ -32,7 +33,8 @@ interface Module {
     InputIconModule,
     FormsModule,
     TabMenuModule,
-    EditorModule
+    EditorModule,
+    PublicFooterComponent
   ],
   templateUrl: './help-center-view.component.html',
   styleUrl: './help-center-view.component.css'

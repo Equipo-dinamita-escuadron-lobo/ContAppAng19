@@ -2069,6 +2069,28 @@ export class AccountListComponent implements OnInit {
     const file = event.files?.[0];
     if (!file) return;
 
+    // Validar tipo de archivo manualmente
+    const allowedMimeTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel' // .xls
+    ];
+
+    if (!allowedMimeTypes.includes(file.type)) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo inválido',
+        detail: 'Por favor, selecciona un archivo EXCEL válido'
+      });
+
+      // Limpiar la selección del archivo
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+
+      return;
+    }
+
     const entId = this.getIdEnterprise();
     this.isImporting = true;
 
@@ -2088,13 +2110,6 @@ export class AccountListComponent implements OnInit {
             if (duplicatesSkipped > 0) {
               detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
             }
-
-            this.messageService.add({
-              severity: 'info',
-              summary: 'Importación Completada con Errores',
-              detail,
-              life: 8000
-            });
 
             // Mostrar modal con detalles de errores
             this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);

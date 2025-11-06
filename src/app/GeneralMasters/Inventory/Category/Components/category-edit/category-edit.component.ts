@@ -8,6 +8,7 @@ import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
@@ -17,6 +18,8 @@ import { Category } from '../../Models/Category';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
+import { TaxList } from '../../../../Taxes/models/Tax';
+import { TaxService } from '../../../../Taxes/services/tax.service';
 
 @Component({
   selector: 'app-category-edit',
@@ -29,6 +32,7 @@ import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/C
     InputTextModule,
     ButtonModule,
     SelectModule,
+    MultiSelectModule,
     ToastModule
   ],
   templateUrl: './category-edit.component.html',
@@ -52,6 +56,7 @@ export class CategoryEditComponent implements OnInit {
   cost: any[] = [];
   sale: any[] = [];
   return: any[] = [];
+  taxes: TaxList[] = [];
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -59,6 +64,7 @@ export class CategoryEditComponent implements OnInit {
     private readonly formBuilder: FormBuilder,
     private readonly router: Router,
     private readonly chartAccountService: ChartAccountService,
+    private readonly taxService: TaxService,
     private readonly messageService: MessageService,
     public readonly categoryValidationMessagesService: CategoryValidationMessagesService
   ) {
@@ -66,6 +72,7 @@ export class CategoryEditComponent implements OnInit {
     this.editForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
       description: ['', [Validators.required, Validators.maxLength(255)]],
+      taxes: [[], Validators.required],
       inventory: [null, Validators.required],
       cost: [null, Validators.required],
       sale: [null, Validators.required],
@@ -91,6 +98,7 @@ export class CategoryEditComponent implements OnInit {
 
   loadInitialData(): void {
     this.getCuentas();
+    this.getTaxes();
     // Los detalles de la categoría se cargarán después de que las cuentas estén disponibles
   }
 
@@ -112,6 +120,7 @@ export class CategoryEditComponent implements OnInit {
         this.editForm.patchValue({
           name: category.name,
           description: category.description,
+          taxes: category.taxes || [],
           inventory: inventoryAccount || null,
           cost: costAccount || null,
           sale: saleAccount || null,
@@ -142,6 +151,19 @@ export class CategoryEditComponent implements OnInit {
       error: (error: any) => {
         console.error('Error al obtener las cuentas auxiliares en edición:', error);
       }
+    });
+  }
+
+  getTaxes(): void {
+    if (!this.entData) return;
+    this.taxService.getActiveTaxes(this.entData).subscribe({
+      next: (data) => {
+        this.taxes = data.map(tax => ({
+          ...tax,
+          displayText: `${tax.code} (${tax.interest}%)`
+        }));
+      },
+      error: (err) => console.error('Error al obtener los impuestos activos:', err)
     });
   }
 
@@ -219,6 +241,7 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
       id: this.category.id,
       name: formData.name,
       description: formData.description,
+      taxes: formData.taxes && formData.taxes.length > 0 ? formData.taxes : [],
       inventoryId: formData.inventory?.id || null,
       costId: formData.cost?.id || null,
       saleId: formData.sale?.id || null,
@@ -263,6 +286,7 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
     return (
       formData.name !== this.originalCategoryData.name ||
       formData.description !== this.originalCategoryData.description ||
+      JSON.stringify(formData.taxes) !== JSON.stringify(this.originalCategoryData.taxes) ||
       formData.inventory?.id !== this.originalCategoryData.inventoryId ||
       formData.cost?.id !== this.originalCategoryData.costId ||
       formData.sale?.id !== this.originalCategoryData.saleId ||

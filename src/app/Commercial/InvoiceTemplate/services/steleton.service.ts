@@ -25,16 +25,16 @@ export class SteletonService {
     return this.http.post<void>(`${API_URL}factures/skeleton/purchase`, facture);
   }
 
-  createSaleForReceiptSkeleton(facture: Facture2): Observable<void> {
-    return this.http.post<void>(`${API_URL}factures/skeleton/sale-for-receipt`, facture);
+  createSaleSkeleton(facture: Facture2): Observable<void> {
+    return this.http.post<void>(`${API_URL}factures/skeleton/sale`, facture);
   }
 
-  createReturnOnSaleSkeleton(returnRequest: any): Observable<any> {
-    return this.http.post<any>(`${API_URL}factures/skeleton/return-on-sale`, returnRequest);
+  createReturnOnSaleSkeleton(returnRequest: any): Observable<string> {
+    return this.http.post(`${API_URL}factures/skeleton/return-on-sale`, returnRequest, { responseType: 'text' });
   }
 
-  createReturnOnPurchaseSkeleton(returnRequest: any): Observable<any> {
-    return this.http.post<any>(`${API_URL}factures/skeleton/return-on-purchase`, returnRequest);
+  createReturnOnPurchaseSkeleton(returnRequest: any): Observable<string> {
+    return this.http.post(`${API_URL}factures/skeleton/return-on-purchase`, returnRequest, { responseType: 'text' });
   }
 
   getAllFactures(): Observable<any[]> {
@@ -49,8 +49,9 @@ export class SteletonService {
     return this.http.get<number>(`${API_URL}factures/skeleton/${factCode}/products/${productId}/returned-quantity`);
   }
 
-  getAllProductsByEnterpriseId(): Observable<ProductList2[]> {
-    return this.http.get<ProductList2[]>(`${API_URL}products/findAll/${this.enterpriseId}`);
+  getAllProductsByEnterpriseId(): Observable<{ content: ProductList2[], page: any }> {
+    const params = new HttpParams().set('enterpriseId', this.enterpriseId);
+    return this.http.get<{ content: ProductList2[], page: any }>(`${API_URL}products/findActivate`, { params });
   }
 
   private enterpriseIdLocalStorage() {

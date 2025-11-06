@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { EntData, LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Facture2 } from '../../InvoiceTemplate/models/Facture2';
+import { Facture2 } from '../models/Facture';
 import { ProductList2 } from '../models/Product2';
 import { Tag } from '../models/Tag';
 
@@ -30,8 +30,9 @@ export class SkeletonNonCommercialService {
     return this.http.post<void>(`${API_URL}factures/skeleton/non-commercial-exit`,facture);
 
   }
-  getAllProductsByEnterpriseId(): Observable<ProductList2[]> {
-    return this.http.get<ProductList2[]>(`${API_URL}products/findAll/${this.enterpriseId}`);
+  getAllProductsByEnterpriseId(): Observable<{ content: ProductList2[], page: any }> {
+    const params = new HttpParams().set('enterpriseId', this.enterpriseId);
+    return this.http.get<{ content: ProductList2[], page: any }>(`${API_URL}products/findActivate`, { params });
   }
 
   getAllNonCommercialTag():Observable<Tag[]>{

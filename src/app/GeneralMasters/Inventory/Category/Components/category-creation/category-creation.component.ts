@@ -6,6 +6,7 @@ import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
@@ -14,6 +15,8 @@ import { CategoryValidationMessagesService } from '../../Services/category-valid
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
+import { TaxList } from '../../../../Taxes/models/Tax';
+import { TaxService } from '../../../../Taxes/services/tax.service';
 
 @Component({
   selector: 'app-category-creation',
@@ -26,6 +29,7 @@ import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/C
     InputTextModule,
     ButtonModule,
     SelectModule,
+    MultiSelectModule,
     ToastModule
   ],
   templateUrl: './category-creation.component.html',
@@ -43,12 +47,14 @@ export class CategoryCreationComponent implements OnInit {
   cost: any[] = [];
   sale: any[] = [];
   return: any[] = [];
+  taxes: TaxList[] = [];
 
   constructor(
     private readonly formBuilder: FormBuilder,
     private readonly categoryService: CategoryService,
     private readonly router: Router,
     private readonly chartAccountService: ChartAccountService,
+    private readonly taxService: TaxService,
     private readonly messageService: MessageService,
     public readonly categoryValidationMessagesService: CategoryValidationMessagesService
   ) {
@@ -56,6 +62,7 @@ export class CategoryCreationComponent implements OnInit {
     this.categoryForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
       description: ['', [Validators.required, Validators.maxLength(255)]],
+      taxes: [[], Validators.required],
       inventory: [null, Validators.required],
       cost: [null, Validators.required],
       sale: [null, Validators.required],
@@ -80,6 +87,7 @@ export class CategoryCreationComponent implements OnInit {
 
   loadInitialData(): void {
     this.getCuentas();
+    this.getTaxes();
   }
 
   onSubmit(): void {
@@ -101,6 +109,7 @@ export class CategoryCreationComponent implements OnInit {
     const categoryData = {
       name: formData.name,
       description: formData.description,
+      taxes: formData.taxes && formData.taxes.length > 0 ? formData.taxes : [],
       inventoryId: formData.inventory,
       costId: formData.cost,
       saleId: formData.sale,
@@ -155,6 +164,19 @@ export class CategoryCreationComponent implements OnInit {
       error: (error: any) => {
         console.error('Error al obtener las cuentas auxiliares:', error);
       }
+    });
+  }
+
+  getTaxes(): void {
+    if (!this.entData) return;
+    this.taxService.getActiveTaxes(this.entData).subscribe({
+      next: (data) => {
+        this.taxes = data.map(tax => ({
+          ...tax,
+          displayText: `${tax.code} (${tax.interest}%)`
+        }));
+      },
+      error: (err) => console.error('Error al obtener los impuestos activos:', err)
     });
   }
 

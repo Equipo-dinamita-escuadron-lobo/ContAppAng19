@@ -6,7 +6,6 @@ import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { MultiSelectModule } from 'primeng/multiselect';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
@@ -19,8 +18,6 @@ import { ProductService } from '../../Services/product.service';
 import { UnitOfMeasureService } from '../../../MeasurementUnits/Services/unit-of-measure.service';
 import { CategoryService } from '../../../Category/Services/category.service';
 import { ProductTypeService } from '../../../ProductTypes/Services/product-type.service';
-import { TaxList } from '../../../../Taxes/models/Tax';
-import { TaxService } from '../../../../Taxes/services/tax.service';
 import { ValidationMessagesService } from '../../Services/validation-messages.service';
 
 @Component({
@@ -33,7 +30,6 @@ import { ValidationMessagesService } from '../../Services/validation-messages.se
     CardModule,
     InputTextModule,
     SelectModule,
-    MultiSelectModule,
     ButtonModule,
     InputNumberModule,
     CalendarModule,
@@ -47,7 +43,6 @@ export class ProductCreationComponent implements OnInit {
   unitOfMeasures: any[] = [];
   categories: any[] = [];
   productTypes: ProductType[] = [];
-  taxes: TaxList[] = [];
 
   localStorageMethods = new LocalStorageMethods();
   entData: string = '';
@@ -60,7 +55,6 @@ export class ProductCreationComponent implements OnInit {
     private readonly categoryService: CategoryService,
     private readonly productTypeService: ProductTypeService,
     private readonly router: Router,
-    private readonly taxService: TaxService,
     private readonly messageService: MessageService,
     private readonly validationMessagesService: ValidationMessagesService
   ) {
@@ -71,7 +65,6 @@ export class ProductCreationComponent implements OnInit {
       reference: ['', Validators.required],
       presentation: ['', Validators.required], 
       quantity: [0],
-      taxes: [[], Validators.required], 
       cost: [0],
       unitOfMeasureId: [null, Validators.required],
       categoryId: [null, Validators.required],
@@ -106,7 +99,6 @@ export class ProductCreationComponent implements OnInit {
     this.getUnitOfMeasures();
     this.getCategories();
     this.loadProductTypes();
-    this.getTaxes();
   }
 
   loadProductTypes(): void {
@@ -134,20 +126,6 @@ export class ProductCreationComponent implements OnInit {
     });
   }
 
-  getTaxes(): void {
-    if (!this.entData) return;
-    this.taxService.getActiveTaxes(this.entData).subscribe({
-      next: (data) => {
-
-        this.taxes = data.map(tax => ({
-          ...tax,
-          displayText: `${tax.code} (${tax.interest}%)`
-        }));
-      },
-      error: (err) => console.error('Error al obtener los impuestos activos:', err)
-    });
-  }
-
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.productForm.invalid) {
@@ -164,7 +142,6 @@ export class ProductCreationComponent implements OnInit {
       reference: formData.reference,
       presentation: formData.presentation,
       quantity: Number(formData.quantity),
-      taxes: formData.taxes && formData.taxes.length > 0 ? formData.taxes : [],
       cost: Number(formData.cost),
       unitOfMeasureId: formData.unitOfMeasureId, // Ya es ID gracias a optionValue
       categoryId: formData.categoryId, // Ya es ID gracias a optionValue
@@ -183,9 +160,7 @@ export class ProductCreationComponent implements OnInit {
           detail: 'El producto ha sido creado exitosamente.',
           life: 3000
         });
-        setTimeout(() => {
-          this.router.navigate(['/gen-masters/inventory/products/list']); // Redirigir a la lista
-        }, 1500);
+        this.router.navigate(['/gen-masters/inventory/products/list']); // Redirigir a la lista
       },
       error: (err) => {
         console.error('Error al crear el producto:', err);

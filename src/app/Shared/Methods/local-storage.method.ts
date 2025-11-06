@@ -45,6 +45,10 @@ export class LocalStorageMethods {
     return 'WEIGHTED_AVERAGE';
   }
 
+  public clearEnterpriseData(): void {
+    localStorage.removeItem('entData');
+  }
+
   public clearLocalStorage(): void {
     localStorage.clear();
   }

@@ -18,8 +18,7 @@ import { BankAccountsService } from '../../services/bank-accounts.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
   templateUrl: './bank-accounts-edit.component.html',
-  styleUrl: './bank-accounts-edit.component.css',
-  providers: [MessageService]
+  styleUrl: './bank-accounts-edit.component.css'
 })
 export class BankAccountsEditComponent implements OnInit {
   form: FormGroup;
@@ -198,9 +197,7 @@ export class BankAccountsEditComponent implements OnInit {
           summary: 'Actualización exitosa',
           detail: 'Cuenta bancaria actualizada correctamente.'
         });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (error) => {
         this.messageService.add({

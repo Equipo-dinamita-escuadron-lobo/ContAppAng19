@@ -86,11 +86,6 @@ export const navbarData: INavbarData[] = [
         label:'Etiquetas no comerciales'
       },
       {
-        routeLink:'/gen-masters/configuration-valuation-models',
-        icon:'Subtitles',
-        label:'Configuración metodo Valoración'
-      },
-      {
         routeLink: '/gen-masters/help-center/list',
         icon: 'help',
         label: 'Centro de Ayuda',
@@ -198,70 +193,97 @@ export const navbarData: INavbarData[] = [
       },
     ],
   },
-     {
-     routeLink: 'TO DO',
-     icon: 'store',
-     label: 'Comercial',
-     items: [
-       {
-         routeLink: 'business-masters',
-         icon: 'construction',
-         label: 'Maestros Comerciales',
-         items: [
-           {
-             routeLink: 'TO DO',
-             icon: 'decimal_increase',
-             label: 'Modelos de Valoracion',
-             items: [
-               {
-                 routeLink: '/commercial/business-masters/kardex',
-                 icon: '',
-                 label: 'Inventario con Promedio Ponderado',
-               },
-               {
-                routeLink: '/commercial/business-masters/peps',
-                 icon: '',
-                 label: 'Inventario PEPS',
-               },
-             ],
-           },
-           {
-             routeLink: 'TO DO',
-             icon: 'analytics',
-             label: 'Reportes',
-           },
-         ],
-       },
-       {
-         routeLink: 'commercial/sale-invoice',
-         icon: 'order_approve',
-         label: 'Factura de Venta',
-       },
-       {
-         routeLink: 'TO DO',
-         icon: 'receipt_long',
-         label: 'Factura de Compra',
-       },
-       {
-         routeLink: '/commercial/invoice-template',
-         icon: 'description',
-         label: 'Plantilla de Factura',
-       },
-       {
-         routeLink: '/commercial/return-template',
-         icon: 'replay',
-         label: 'Devoluciones',
-       },
-       {
-        routeLink:'/commercial/non-commercial-template',
-        icon:'',
-        label:'Movimiento de Inventario No Comercial'
-       },
-       {
-         routeLink: 'TO DO',
-         icon: 'analytics',
-         label: 'Reportes',
-       },
-     ],
-   },
+  {
+    routeLink: 'TO DO',
+    icon: 'store',
+    label: 'Comercial',
+    items: [
+      {
+        routeLink: 'business-masters',
+        icon: 'construction',
+        label: 'Maestros Comerciales',
+        items: [
+          {
+            routeLink: 'TO DO',
+            icon: 'decimal_increase',
+            label: 'Modelos de Valoracion',
+            items: [
+              {
+                routeLink: '/commercial/business-masters/kardex',
+                icon: '',
+                label: 'Inventario con Promedio Ponderado',
+              },
+              {
+              routeLink: '/commercial/business-masters/peps',
+                icon: '',
+                label: 'Inventario PEPS',
+              },
+            ],
+          },
+          {
+            routeLink: 'TO DO',
+            icon: 'analytics',
+            label: 'Reportes',
+          },
+        ],
+      },
+      {
+        routeLink: 'commercial/sale-invoice',
+        icon: 'order_approve',
+        label: 'Factura de Venta',
+      },
+      {
+        routeLink: 'TO DO',
+        icon: 'receipt_long',
+        label: 'Factura de Compra',
+      },
+      {
+        routeLink: '/commercial/invoice-template',
+        icon: 'description',
+        label: 'Plantilla de Factura',
+      },
+      {
+        routeLink: '/commercial/return-template',
+        icon: 'replay',
+        label: 'Devoluciones',
+      },
+      {
+      routeLink:'/commercial/non-commercial-template',
+      icon:'',
+      label:'Movimiento de Inventario No Comercial'
+      },
+      {
+        routeLink: 'TO DO',
+        icon: 'analytics',
+        label: 'Reportes',
+      },
+    ],
+  },
+  {
+    routeLink: '/audit',
+    icon: 'search',
+    label: 'Auditoría',
+    items: [
+      {
+        routeLink: '/audit/sessions',
+        icon: 'schedule',
+        label: 'Sesión de Auditoría',
+      },
+      {
+        routeLink: '/audit/operations',
+        icon: 'settings',
+        label: 'Operaciones',
+      },
+      {
+        routeLink: '/audit/documents',
+        icon: 'description',
+        label: 'Documentos Contables',
+      },
+      {
+        routeLink: '/audit/consecutives',
+        icon: 'format_list_numbered',
+        label: 'Consecutivos',
+      },
+    ],
+  },
 ];

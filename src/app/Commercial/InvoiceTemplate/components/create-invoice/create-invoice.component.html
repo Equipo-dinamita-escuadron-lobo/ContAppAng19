@@ -1,7 +1,7 @@
 <div class="w-full px-4 sm:px-6 lg:px-8 pt-20">
     <p-toast></p-toast>
     <h1
-     class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
+     class="text-3xl font-bold text-primaryunderline decoration-secondary mt-6 mb-4"
     >
         Crear Factura
     </h1>
@@ -15,7 +15,7 @@
                 <!-- Tipo de factura -->
                 <div class="mb-6">
                     <label for="invoiceType" class="block mb-2 font-semibold">
-                        Tipo de Factura <span class="text-red-500">*</span>
+                        Tipo de Factura <span class="text-error">*</span>
                     </label>
                     <p-select
                         id="invoiceType"
@@ -40,7 +40,7 @@
                 <div class="flex gap-4 mb-4">
                     <div class="w-1/2">
                         <label for="factCode" class="block mb-2 font-semibold">
-                            Código de Factura <span class="text-red-500">*</span>
+                            Código de Factura <span class="text-error">*</span>
                         </label>
                         <p-inputNumber
                             id="factCode"
@@ -61,7 +61,7 @@
 
                     <div class="w-1/2">
                         <label for="thId" class="block mb-2 font-semibold">
-                            ID Tercero <span class="text-red-500">*</span>
+                            ID Tercero <span class="text-error">*</span>
                         </label>
                         <p-inputNumber
                             id="thId"
@@ -84,7 +84,7 @@
                 <div class="flex gap-4 mb-4">
                     <div class="w-1/2">
                         <label for="expirationDate" class="block mb-2 font-semibold">
-                            Fecha de Vencimiento <span class="text-red-500">*</span>
+                            Fecha de Vencimiento <span class="text-error">*</span>
                         </label>
                         <p-datepicker
                             id="expirationDate"
@@ -126,7 +126,7 @@
                 <!-- Sección de Productos -->
                 <div class="mb-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-semibold text-[var(--color-primary)]">Productos</h3>
+                        <h3 class="text-xl font-semibold text-primary">Productos</h3>
                         <p-button
                             type="button"
                             label="Agregar Producto"
@@ -155,7 +155,7 @@
                                     <!-- ID Producto -->
                                     <div>
                                         <label class="block mb-2 font-semibold">
-                                            ID Producto <span class="text-red-500">*</span>
+                                            ID Producto <span class="text-error">*</span>
                                         </label>
                                         <p-autocomplete
                                           formControlName="productId"
@@ -175,7 +175,7 @@
                                     <!-- Descripción -->
                                     <div>
                                         <label class="block mb-2 font-semibold">
-                                            Descripción <span class="text-red-500">*</span>
+                                            Descripción <span class="text-error">*</span>
                                         </label>
                                         <input
                                             pInputText
@@ -187,7 +187,7 @@
                                     <!-- Cantidad -->
                                     <div>
                                         <label class="block mb-2 font-semibold">
-                                            Cantidad <span class="text-red-500">*</span>
+                                            Cantidad <span class="text-error">*</span>
                                         </label>
                                         <p-inputNumber
                                             formControlName="amount"
@@ -200,7 +200,7 @@
                                     <!-- Precio Unitario -->
                                     <div>
                                         <label class="block mb-2 font-semibold">
-                                            Precio Unitario <span class="text-red-500">*</span>
+                                            Precio Unitario <span class="text-error">*</span>
                                         </label>
                                         <p-inputNumber
                                             formControlName="unitPrice"
@@ -218,7 +218,7 @@
                                             Descuento (%)
                                         </label>
                                         <p-inputNumber
-                                            formControlName="descount"
+                                            formControlName="discount"
                                             placeholder="0"
                                             class="w-full"
                                             [min]="0"
@@ -271,7 +271,7 @@
                 </div>
 
                 <!-- Totales -->
-                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <div class="bg-neutral-80 p-4 rounded-lg mb-6">
                     <h3 class="text-lg font-semibold mb-4">Totales</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>

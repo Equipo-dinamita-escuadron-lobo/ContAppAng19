@@ -118,6 +118,30 @@ export class CreateReturnComponent implements OnInit {
     return this.inventoryConfigType === 'PEPS' ? 'PEPS' : 'Promedio Ponderado';
   }
 
+  getFactureTypeName(): string {
+    if (!this.selectedFacture) return '';
+
+    const factureType = this.selectedFacture.factureType?.toUpperCase();
+    if (factureType?.includes('PURCHASE')) {
+      return 'Compra';
+    } else if (factureType?.includes('SALE')) {
+      return 'Venta';
+    }
+    return this.selectedFacture.factureType || '';
+  }
+
+  translateFactureType(factureType: string): string {
+    if (!factureType) return '';
+
+    const type = factureType.toUpperCase();
+    if (type.includes('PURCHASE')) {
+      return 'Compra';
+    } else if (type.includes('SALE')) {
+      return 'Venta';
+    }
+    return factureType;
+  }
+
   getReturnTypeName(): string {
     if (!this.selectedFacture) return '';
 
