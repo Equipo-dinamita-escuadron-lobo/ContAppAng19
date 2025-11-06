@@ -88,7 +88,7 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
     if (!this.productData) return;
 
     this.isLoadingLots = true;
-    this.kardexService.getAvailableQuantity(this.productData.id).subscribe({
+    this.kardexService.getAvailableQuantity(this.productData.productId).subscribe({
       next: (response) => {
         this.availableLots = response.data || [];
         this.isLoadingLots = false;
@@ -363,7 +363,7 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
           unitPrice: formValue.unitPrice,
           factCode: formValue.factCode,
           details: formValue.details,
-          productId: this.productData.id
+          productId: this.productData.productId
         };
 
         // Agregar fecha si está presente
@@ -398,7 +398,7 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
           quantity: formValue.quantity,
           details: formValue.details,
           factCode: formValue.factCode,
-          productId: this.productData.id
+          productId: this.productData.productId
         };
 
         // Agregar fecha si está presente
