@@ -1,3 +1,4 @@
+import { KardexAvailableQuantityResponse } from './../models/KardexAvailableQuantityResponse';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -76,8 +77,8 @@ export class KardexPepsService {
   /**
    * Obtiene los lotes disponibles (con toda la info del backend)
    */
-  getAvailableQuantity(productId: number): Observable<ResponseDto<KardexPurchaseResponse[]>> {
-    return this.http.get<ResponseDto<KardexPurchaseResponse[]>>(
+  getAvailableQuantity(productId: number): Observable<ResponseDto<KardexAvailableQuantityResponse[]>> {
+    return this.http.get<ResponseDto<KardexAvailableQuantityResponse[]>>(
       `${this.apiUrl}kardex-available-quantity/${productId}`
     );
   }
