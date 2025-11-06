@@ -68,7 +68,22 @@ export class ResetPasswordComponent implements OnInit {
       },
       error: (error) => {
         console.error('Reset password error:', error);
-        this.errorMessage = 'Error al restablecer la contraseña. El enlace puede haber expirado.';
+        
+        // Manejar diferentes tipos de errores del backend
+        if (error.status === 400) {
+          if (error.error?.message) {
+            this.errorMessage = error.error.message;
+          } else {
+            this.errorMessage = 'El enlace de recuperación ha expirado o es inválido. Por favor solicita uno nuevo.';
+          }
+        } else if (error.status === 500) {
+          this.errorMessage = 'Error interno del servidor. Por favor intenta más tarde.';
+        } else if (error.error?.message) {
+          this.errorMessage = error.error.message;
+        } else {
+          this.errorMessage = 'Error al restablecer la contraseña. El enlace puede haber expirado.';
+        }
+        
         this.passwordReset = false;
       }
     });

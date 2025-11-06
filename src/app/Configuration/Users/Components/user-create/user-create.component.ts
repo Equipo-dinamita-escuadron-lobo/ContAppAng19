@@ -115,12 +115,25 @@ export class UserCreateComponent implements OnInit {
         error: (error) => {
           console.error('Error al crear el usuario:', error);
           let errorMessage = 'No se pudo crear el usuario.';
+          
+          // Manejar diferentes tipos de errores del backend
           if (error.status === 409) {
-            errorMessage = 'Ya existe un usuario con este correo electrónico.';
+            errorMessage = error.error?.message || 'Ya existe un usuario con este correo electrónico o nombre de usuario.';
+          } else if (error.status === 400) {
+            if (error.error?.message) {
+              errorMessage = error.error.message;
+            } else {
+              errorMessage = 'Los datos proporcionados no son válidos. Por favor verifica la información.';
+            }
+          } else if (error.status === 500) {
+            errorMessage = 'Error interno del servidor. Por favor intenta más tarde.';
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
           }
+          
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: 'Error al Crear Usuario',
             detail: errorMessage,
           });
         },

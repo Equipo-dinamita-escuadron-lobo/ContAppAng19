@@ -100,11 +100,27 @@ export class RegisterComponent {
         }, 3000);
       },
       error: (err) => {
-        const detail = err.error?.message || 'No se pudo completar el registro.';
+        let errorMessage = 'No se pudo completar el registro.';
+        
+        // Manejar diferentes tipos de errores del backend
+        if (err.status === 409) {
+          errorMessage = err.error?.message || 'Ya existe un usuario con este correo electrónico.';
+        } else if (err.status === 400) {
+          if (err.error?.message) {
+            errorMessage = err.error.message;
+          } else {
+            errorMessage = 'Los datos proporcionados no son válidos. Por favor verifica la información.';
+          }
+        } else if (err.status === 500) {
+          errorMessage = 'Error interno del servidor. Por favor intenta más tarde.';
+        } else if (err.error?.message) {
+          errorMessage = err.error.message;
+        }
+
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: detail,
+          summary: 'Error en el Registro',
+          detail: errorMessage,
         });
       },
     });

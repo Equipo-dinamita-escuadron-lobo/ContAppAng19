@@ -62,10 +62,27 @@ export class LoginComponent {
     this.authService.login(login).subscribe({
       // La navegación en caso de éxito ya se maneja dentro del AuthService
       error: (err) => {
+        let errorMessage = 'Error al iniciar sesión. Por favor intenta nuevamente.';
+        
+        // Manejar diferentes tipos de errores del backend
+        if (err.status === 401) {
+          if (err.error?.message) {
+            errorMessage = err.error.message;
+          } else {
+            errorMessage = 'Credenciales inválidas. Por favor verifica tu usuario y contraseña.';
+          }
+        } else if (err.status === 403) {
+          errorMessage = 'Tu cuenta está inactiva. Por favor contacta al administrador.';
+        } else if (err.status === 500) {
+          errorMessage = 'Error interno del servidor. Por favor intenta más tarde.';
+        } else if (err.error?.message) {
+          errorMessage = err.error.message;
+        }
+
         this.messageService.add({
           severity: 'error',
           summary: 'Error de Autenticación',
-          detail: 'El usuario o la contraseña son incorrectos.',
+          detail: errorMessage,
         });
       },
     });
