@@ -159,7 +159,7 @@
       [value]="reportData.lines"
       [loading]="loading"
       styleClass="p-datatable-striped"
-      [tableStyle]="{ 'min-width': '1200px' }"
+      [tableStyle]="{ 'min-width': '1500px' }"
     >
       <ng-template pTemplate="header">
         <tr>
@@ -170,6 +170,9 @@
           <th style="width: 150px" class="text-right">1 a 30 días</th>
           <th style="width: 150px" class="text-right">31 a 60 días</th>
           <th style="width: 150px" class="text-right">61 a 90 días</th>
+          <th style="width: 150px" class="text-right">91 a 180 días</th>
+          <th style="width: 150px" class="text-right">181 a 260 días</th>
+          <th style="width: 150px" class="text-right">Más de 260 días</th>
         </tr>
       </ng-template>
 
@@ -211,6 +214,24 @@
               >{{ formatCurrency(line.days61to90) }}</span
             >
           </td>
+          <td class="text-right">
+            <span
+              [ngClass]="line.days91to180 > 0 ? 'text-purple-600 font-semibold' : 'text-gray-500'"
+              >{{ formatCurrency(line.days91to180) }}</span
+            >
+          </td>
+          <td class="text-right">
+            <span
+              [ngClass]="line.days181to260 > 0 ? 'text-pink-600 font-semibold' : 'text-gray-500'"
+              >{{ formatCurrency(line.days181to260) }}</span
+            >
+          </td>
+          <td class="text-right">
+            <span
+              [ngClass]="line.daysOver260 > 0 ? 'text-red-900 font-bold' : 'text-gray-500'"
+              >{{ formatCurrency(line.daysOver260) }}</span
+            >
+          </td>
         </tr>
       </ng-template>
 
@@ -244,12 +265,27 @@
               formatCurrency(reportData.totals.days61to90)
             }}</span>
           </td>
+          <td class="text-right">
+            <span class="text-lg text-purple-700">{{
+              formatCurrency(reportData.totals.days91to180)
+            }}</span>
+          </td>
+          <td class="text-right">
+            <span class="text-lg text-pink-700">{{
+              formatCurrency(reportData.totals.days181to260)
+            }}</span>
+          </td>
+          <td class="text-right">
+            <span class="text-lg text-red-950">{{
+              formatCurrency(reportData.totals.daysOver260)
+            }}</span>
+          </td>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="text-center py-8">
+          <td colspan="10" class="text-center py-8">
             <div class="flex flex-col items-center gap-4">
               <i class="pi pi-inbox text-4xl text-gray-400"></i>
               <div>
@@ -267,7 +303,7 @@
 
       <ng-template pTemplate="loadingbody">
         <tr>
-          <td colspan="7" class="text-center py-8">
+          <td colspan="10" class="text-center py-8">
             <div class="flex flex-col items-center gap-4">
               <i class="pi pi-spin pi-spinner text-3xl text-blue-500"></i>
               <p class="text-lg text-gray-600">Generando reporte...</p>
@@ -297,7 +333,10 @@
   </p-card>
 
   <!-- Summary Statistics -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4" *ngIf="reportData">
+  <div
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-4"
+    *ngIf="reportData"
+  >
     <p-card>
       <div class="text-center">
         <i class="pi pi-dollar text-3xl text-blue-500 mb-2"></i>
@@ -345,6 +384,36 @@
           {{ formatCurrency(reportData.totals.days61to90) }}
         </h3>
         <p class="text-gray-600">61 a 90 días</p>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="text-center">
+        <i class="pi pi-calendar-times text-3xl text-purple-600 mb-2"></i>
+        <h3 class="text-2xl font-bold text-gray-800">
+          {{ formatCurrency(reportData.totals.days91to180) }}
+        </h3>
+        <p class="text-gray-600">91 a 180 días</p>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="text-center">
+        <i class="pi pi-hourglass text-3xl text-pink-500 mb-2"></i>
+        <h3 class="text-2xl font-bold text-gray-800">
+          {{ formatCurrency(reportData.totals.days181to260) }}
+        </h3>
+        <p class="text-gray-600">181 a 260 días</p>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="text-center">
+        <i class="pi pi-ban text-3xl text-red-900 mb-2"></i>
+        <h3 class="text-2xl font-bold text-gray-800">
+          {{ formatCurrency(reportData.totals.daysOver260) }}
+        </h3>
+        <p class="text-gray-600">Más de 260 días</p>
       </div>
     </p-card>
   </div>

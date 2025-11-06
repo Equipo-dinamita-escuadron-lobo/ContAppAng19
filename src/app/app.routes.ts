@@ -1030,7 +1030,7 @@ export const routes: Routes = [
               {
                 path: 'purchase-bills',
                 data: {
-                  breadcrumb: 'Facturas de Compra',
+                  breadcrumb: 'Programación Ordenes de Pago',
                 },
                 loadComponent: () =>
                   import(
@@ -1169,7 +1169,7 @@ export const routes: Routes = [
         path: 'audit',
         data: {
           breadcrumb: 'Auditoría',
-        }, 
+        },
         children: [
           {
             path: '',

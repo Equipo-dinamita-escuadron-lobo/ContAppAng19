@@ -12,6 +12,8 @@ export interface VendorReportTransaction {
   date: Date;
   dueDate?: Date;
   reference: string;
+  documentNumber?: string; // Número del documento original (factura, nota, etc.)
+  expenseReceiptNumber?: string; // Número del comprobante de egreso (CE-XXXX)
   type: 'Bill' | 'Payment';
   description: string;
   debits: number;

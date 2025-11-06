@@ -97,6 +97,9 @@ export class AgingReportService {
         days1to30: 0,
         days31to60: 50000000,
         days61to90: 0,
+        days91to180: 20000000,
+        days181to260: 10000000,
+        daysOver260: 18000000,
         status: 'ACTIVE',
       },
       {
@@ -107,6 +110,9 @@ export class AgingReportService {
         days1to30: 0,
         days31to60: 0,
         days61to90: 0,
+        days91to180: 0,
+        days181to260: 0,
+        daysOver260: 0,
         status: 'AVAILABLE',
       },
       {
@@ -117,6 +123,9 @@ export class AgingReportService {
         days1to30: 45000000,
         days31to60: 30000000,
         days61to90: 15000000,
+        days91to180: 0,
+        days181to260: 0,
+        daysOver260: 0,
         status: 'ACTIVE',
       },
       {
@@ -127,6 +136,9 @@ export class AgingReportService {
         days1to30: 15000000,
         days31to60: 10000000,
         days61to90: 0,
+        days91to180: 0,
+        days181to260: 0,
+        daysOver260: 0,
         status: 'ACTIVE',
       },
       {
@@ -137,17 +149,47 @@ export class AgingReportService {
         days1to30: 5000000,
         days31to60: 7000000,
         days61to90: 3000000,
+        days91to180: 0,
+        days181to260: 0,
+        daysOver260: 0,
         status: 'ACTIVE',
       },
     ];
 
-    const totals = {
-      totalDue: mockLines.reduce((sum, line) => sum + line.totalDue, 0),
-      current: mockLines.reduce((sum, line) => sum + line.current, 0),
-      days1to30: mockLines.reduce((sum, line) => sum + line.days1to30, 0),
-      days31to60: mockLines.reduce((sum, line) => sum + line.days31to60, 0),
-      days61to90: mockLines.reduce((sum, line) => sum + line.days61to90, 0),
-    };
+    const totals = mockLines.reduce(
+      (
+        acc,
+        {
+          totalDue,
+          current,
+          days1to30,
+          days31to60,
+          days61to90,
+          days91to180,
+          days181to260,
+          daysOver260,
+        }
+      ) => ({
+        totalDue: acc.totalDue + totalDue,
+        current: acc.current + current,
+        days1to30: acc.days1to30 + days1to30,
+        days31to60: acc.days31to60 + days31to60,
+        days61to90: acc.days61to90 + days61to90,
+        days91to180: acc.days91to180 + days91to180,
+        days181to260: acc.days181to260 + days181to260,
+        daysOver260: acc.daysOver260 + daysOver260,
+      }),
+      {
+        totalDue: 0,
+        current: 0,
+        days1to30: 0,
+        days31to60: 0,
+        days61to90: 0,
+        days91to180: 0,
+        days181to260: 0,
+        daysOver260: 0,
+      }
+    );
 
     const mockResponse: AgingReportResponse = {
       reportDate: filters.cutoffDate || new Date(),

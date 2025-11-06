@@ -15,6 +15,9 @@ export interface AgingReportLine {
   days1to30: number;
   days31to60: number;
   days61to90: number;
+  days91to180: number;
+  days181to260: number;
+  daysOver260: number;
   status?: string;
 }
 
@@ -28,6 +31,9 @@ export interface AgingReportResponse {
     days1to30: number;
     days31to60: number;
     days61to90: number;
+    days91to180: number;
+    days181to260: number;
+    daysOver260: number;
   };
 }
 

@@ -130,7 +130,7 @@ export class BillListComponent implements OnInit {
     const filters = this.filterForm.value;
 
     this.filteredBills = this.allBills.filter(bill => {
-      // Filter by Bill ID
+      // Filtrar por número de factura
       if (filters.billId && !bill.billId.toLowerCase().includes(filters.billId.toLowerCase())) {
         return false;
       }
@@ -226,6 +226,14 @@ export class BillListComponent implements OnInit {
           }
         });
       }
+    });
+  }
+
+  onPayBill(bill: PurchaseBillListView): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Funcionalidad en desarrollo',
+      detail: `La programación de pago para la factura ${bill.billId} estará disponible próximamente.`
     });
   }
 

@@ -72,7 +72,7 @@ export class PurchaseBillService {
     // return this.http.get<ExpenseAccount[]>(`${environment.API_URL}chart-accounts/expense-accounts`);
   }
 
-  // Generar siguiente Bill ID
+  // Generar siguiente número de factura
   getNextBillId(): Observable<string> {
     // Mock: generar un ID basado en fecha
     const now = new Date();

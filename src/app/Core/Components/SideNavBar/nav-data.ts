@@ -139,7 +139,7 @@ export const navbarData: INavbarData[] = [
           {
             routeLink: 'financial/treasury/purchase-bills',
             icon: 'description',
-            label: 'Facturas de Compra',
+            label: 'Programación Ordenes de Pago',
           },
             {
               routeLink: 'financial/treasury/expense-receipts',

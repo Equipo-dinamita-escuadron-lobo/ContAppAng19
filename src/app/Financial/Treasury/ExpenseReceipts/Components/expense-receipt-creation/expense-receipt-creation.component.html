@@ -7,7 +7,7 @@
             Efectuar Pago
         </h1>
         <p class="mt-2 text-base text-gray-600">
-            Seleccione el proveedor y la factura a pagar. Esto generará un Comprobante de Egreso (documento contable de pago).
+            Seleccione el proveedor y las facturas a pagar. Esto generará un Comprobante de Egreso (documento contable de pago).
         </p>
     </div>
 
@@ -38,30 +38,100 @@
                 </div>
             </div>
 
-            <!-- Factura Asociada -->
+            <!-- Facturas Asociadas - Selección Múltiple -->
+            <div class="flex flex-col gap-2 md:col-span-2">
+                <label class="font-semibold text-[var(--color-primary)]">
+                    Facturas a Pagar <span class="text-red-500">*</span>
+                </label>
+                
+                @if (!expenseReceiptForm.get('supplier')?.value) {
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                        <p class="text-blue-700">
+                            <i class="pi pi-info-circle mr-2"></i>
+                            Primero seleccione un proveedor para ver sus facturas pendientes
+                        </p>
+                    </div>
+                } @else if (availableInvoices.length === 0) {
+                    <div class="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+                        <p class="text-yellow-700">
+                            <i class="pi pi-exclamation-triangle mr-2"></i>
+                            No hay facturas pendientes de pago para este proveedor
+                        </p>
+                    </div>
+                } @else {
+                    <!-- Tabla de selección de facturas -->
+                    <p-card styleClass="shadow-sm">
+                        <p-table 
+                            [value]="availableInvoices" 
+                            [(selection)]="selectedInvoices"
+                            (selectionChange)="onInvoiceSelectionChange()"
+                            dataKey="id"
+                            styleClass="p-datatable-sm">
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th style="width: 3rem">
+                                        <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                                    </th>
+                                    <th>Bill ID</th>
+                                    <th>Fecha</th>
+                                    <th class="text-right">Total Factura</th>
+                                    <th class="text-right">Pagado</th>
+                                    <th class="text-right">Saldo Pendiente</th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-invoice>
+                                <tr>
+                                    <td>
+                                        <p-tableCheckbox [value]="invoice"></p-tableCheckbox>
+                                    </td>
+                                    <td>
+                                        <span class="font-mono text-sm font-semibold text-blue-600">
+                                            {{ invoice.billId }}
+                                        </span>
+                                    </td>
+                                    <td>{{ invoice.date | date:'dd/MM/yyyy' }}</td>
+                                    <td class="text-right font-mono">
+                                        {{ invoice.total | currency:'COP':'symbol':'1.0-0' }}
+                                    </td>
+                                    <td class="text-right font-mono text-green-600">
+                                        {{ (invoice.paidAmount || 0) | currency:'COP':'symbol':'1.0-0' }}
+                                    </td>
+                                    <td class="text-right font-mono font-bold text-orange-600">
+                                        {{ invoice.pendingBalance | currency:'COP':'symbol':'1.0-0' }}
+                                    </td>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="summary">
+                                <div class="flex justify-between items-center bg-blue-50 p-3 rounded">
+                                    <span class="font-semibold">
+                                        <i class="pi pi-check-circle mr-2 text-green-600"></i>
+                                        {{ selectedInvoices.length }} factura(s) seleccionada(s)
+                                    </span>
+                                    <span class="font-bold text-lg text-blue-700">
+                                        Total a Pagar: {{ calculateSelectedTotal() | currency:'COP':'symbol':'1.0-0' }}
+                                    </span>
+                                </div>
+                            </ng-template>
+                        </p-table>
+                    </p-card>
+                    @if (selectedInvoices.length === 0) {
+                        <small class="text-red-500 mt-1">Debe seleccionar al menos una factura para continuar</small>
+                    }
+                }
+            </div>
+
+            <!-- Monto Total a Pagar (solo lectura, calculado automáticamente) -->
             <div class="flex flex-col gap-2">
-                <label for="invoice" class="font-semibold text-[var(--color-primary)]">
-                    Factura a Pagar <span class="text-red-500">*</span>
+                <label for="totalAmountDisplay" class="font-semibold text-[var(--color-primary)]">
+                    Monto Total a Pagar
                 </label>
                 <div class="w-full md:w-2/3">
-                    <p-dropdown
-                        id="invoice"
-                        formControlName="invoice"
-                        [options]="availableInvoices"
-                        optionLabel="displayText"
-                        optionValue="id"
-                        placeholder="Seleccione una factura"
-                        [disabled]="!expenseReceiptForm.get('supplier')?.value"
-                        (onChange)="onInvoiceSelect($event)"
-                        [styleClass]="'w-full'"
-                        [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('invoice')?.invalid && expenseReceiptForm.get('invoice')?.touched}">
-                    </p-dropdown>
-                    @if (expenseReceiptForm.get('invoice')?.touched && expenseReceiptForm.get('invoice')?.invalid) {
-                        <small class="p-error error-message">Debe seleccionar una factura.</small>
-                    }
-                    @if (!expenseReceiptForm.get('supplier')?.value) {
-                        <small class="text-gray-500">Primero seleccione un proveedor</small>
-                    }
+                    <div class="p-3 bg-green-50 border-2 border-green-300 rounded-lg">
+                        <p class="text-2xl font-bold text-green-700 font-mono">
+                            {{ calculateSelectedTotal() | currency:'COP':'symbol':'1.0-0' }}
+                        </p>
+                        <small class="text-green-600">Suma de los saldos pendientes seleccionados</small>
+                    </div>
                 </div>
             </div>
 
@@ -168,37 +238,6 @@
             }
         </div>
 
-        <!-- Información de la Factura Seleccionada -->
-        @if (selectedInvoiceDetails) {
-            <div class="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <h3 class="text-lg font-semibold text-[var(--color-primary)] mb-4">
-                    Detalles de la Factura Seleccionada
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
-                    <div>
-                        <span class="font-semibold text-gray-700">Fecha:</span>
-                        <p class="text-gray-900">{{ selectedInvoiceDetails.date | date:'dd/MM/yyyy' }}</p>
-                    </div>
-                    <div>
-                        <span class="font-semibold text-gray-700">Número:</span>
-                        <p class="text-gray-900">{{ selectedInvoiceDetails.number }}</p>
-                    </div>
-                    <div>
-                        <span class="font-semibold text-gray-700">Tipo:</span>
-                        <p class="text-gray-900">{{ selectedInvoiceDetails.type }}</p>
-                    </div>
-                    <div>
-                        <span class="font-semibold text-gray-700">Débito:</span>
-                        <p class="text-green-600 font-semibold">{{ selectedInvoiceDetails.debit | currency:'COP':'symbol':'1.0-0' }}</p>
-                    </div>
-                    <div>
-                        <span class="font-semibold text-gray-700">Crédito:</span>
-                        <p class="text-red-600 font-semibold">{{ selectedInvoiceDetails.credit | currency:'COP':'symbol':'1.0-0' }}</p>
-                    </div>
-                </div>
-            </div>
-        }
-
         <!-- OBSERVACIONES -->
         <div class="mb-12">
             <label for="observations" class="block font-semibold text-[var(--color-primary)] mb-2">
@@ -217,30 +256,51 @@
         </div>
 
         <!-- RESUMEN -->
-        <div class="bg-gray-50 p-6 rounded-lg mb-8">
-            <h3 class="text-lg font-semibold text-[var(--color-primary)] mb-4">Resumen del Comprobante</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <span class="font-medium">Proveedor:</span>
-                    <span class="ml-2">{{ expenseReceiptForm.get('supplier')?.value?.name || 'No seleccionado' }}</span>
-                </div>
-                <div>
-                    <span class="font-medium">Tipo de Operación:</span>
-                    <span class="ml-2">
-                        {{ expenseReceiptForm.get('receiptTypeOption')?.value === 'debt_payment' ? 'Pago de facturas' : 'Gasto directo' }}
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg mb-8 border-2 border-blue-200">
+            <h3 class="text-lg font-semibold text-[var(--color-primary)] mb-4 flex items-center">
+                <i class="pi pi-info-circle mr-2"></i>
+                Resumen del Comprobante de Egreso
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col">
+                    <span class="font-medium text-gray-600 mb-1">Proveedor:</span>
+                    <span class="text-lg font-semibold text-gray-900">
+                        {{ expenseReceiptForm.get('supplier')?.value?.name || 'No seleccionado' }}
                     </span>
                 </div>
-                <div>
-                    <span class="font-medium">Monto Total:</span>
-                    <span class="ml-2 font-semibold text-green-600">
-                        {{ totalAmount | currency:'COP':'symbol':'1.0-0':'es-CO' }}
+                <div class="flex flex-col">
+                    <span class="font-medium text-gray-600 mb-1">Fecha de Pago:</span>
+                    <span class="text-lg text-gray-900">
+                        {{ expenseReceiptForm.get('issueDate')?.value | date:'dd/MM/yyyy' }}
                     </span>
                 </div>
-                <div>
-                    <span class="font-medium">Fecha:</span>
-                    <span class="ml-2">{{ expenseReceiptForm.get('issueDate')?.value | date:'dd/MM/yyyy' }}</span>
+                <div class="flex flex-col">
+                    <span class="font-medium text-gray-600 mb-1">Facturas a Pagar:</span>
+                    <span class="text-lg font-semibold text-blue-600">
+                        {{ selectedInvoices.length }} factura(s)
+                    </span>
+                    @if (selectedInvoices.length > 0) {
+                        <small class="text-gray-600 mt-1">
+                            {{ getSelectedBillIds() }}
+                        </small>
+                    }
+                </div>
+                <div class="flex flex-col bg-green-100 p-4 rounded-lg border-2 border-green-300">
+                    <span class="font-medium text-green-700 mb-1">Monto Total a Pagar:</span>
+                    <span class="text-3xl font-bold text-green-700 font-mono">
+                        {{ calculateSelectedTotal() | currency:'COP':'symbol':'1.0-0' }}
+                    </span>
                 </div>
             </div>
+            
+            @if (selectedInvoices.length > 0) {
+                <div class="mt-4 pt-4 border-t border-blue-200">
+                    <span class="font-medium text-gray-700">Método de Pago:</span>
+                    <span class="ml-2 text-gray-900">
+                        {{ getPaymentMethodName() || 'No seleccionado' }}
+                    </span>
+                </div>
+            }
         </div>
 
         <!-- BOTONES DE ACCIÓN -->

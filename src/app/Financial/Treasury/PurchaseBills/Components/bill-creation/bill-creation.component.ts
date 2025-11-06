@@ -109,7 +109,7 @@ export class BillCreationComponent implements OnInit {
   }
 
   loadInitialData(): void {
-    // Cargar siguiente Bill ID
+    // Cargar siguiente número de factura
     this.purchaseBillService.getNextBillId().subscribe(billId => {
       this.billHeaderForm.patchValue({ billId });
     });
