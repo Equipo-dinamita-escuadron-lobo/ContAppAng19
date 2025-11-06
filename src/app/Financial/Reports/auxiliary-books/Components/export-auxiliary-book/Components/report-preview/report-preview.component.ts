@@ -29,9 +29,7 @@ export interface ColumnDefinition {
 })
 export class ReportPreviewComponent {
   // --- ENTRADAS DEL COMPONENTE ---
-  @Input() companyName: string = '';
-  @Input() logoUrl: string =
-    'https://static.rfstat.com/renderforest/images/v2/logo-homepage/logo-5-1.png'; // URL a un logo por defecto
+  @Input() enterpriseData: any = null;
   @Input() reportTitle: string = '';
   @Input() generationDate: Date = new Date();
   @Input() criteria: { key: string; value: string }[] = [];

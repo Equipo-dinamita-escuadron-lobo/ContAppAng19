@@ -30,7 +30,7 @@ export class PortfolioWriteOffService {
    */
   confirmWriteOff(writeOffId: number): Observable<void> {
     const url = `${this.apiUrl}/${writeOffId}/confirm`;
-    return this.http.post<void>(url, {}); // Enviamos un cuerpo vacío
+    return this.http.put<void>(url, {}); // Enviamos un cuerpo vacío
   }
 
   /**
@@ -40,7 +40,7 @@ export class PortfolioWriteOffService {
    */
   voidWriteOff(writeOffId: number): Observable<void> {
     const url = `${this.apiUrl}/${writeOffId}/void`;
-    return this.http.post<void>(url, {}); // Enviamos un cuerpo vacío
+    return this.http.put<void>(url, {}); // Enviamos un cuerpo vacío
   }
 
   /**
@@ -63,7 +63,7 @@ export class PortfolioWriteOffService {
   getWriteOffsByEnterprise(enterpriseId: string): Observable<PortfolioWriteOffView[]> {
     const url = `${this.apiUrl}/by-enterprise/${enterpriseId}`;
     return this.http.get<PortfolioWriteOffResponseDto[]>(url).pipe(
-      map(dtos => dtos.map(dto => this.mapDtoToView(dto)))
+      map(dtos => (dtos || []).map(dto => this.mapDtoToView(dto)))
     );
   }
 

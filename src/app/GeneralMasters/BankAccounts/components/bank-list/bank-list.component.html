@@ -6,10 +6,10 @@
         <!-- Header Section -->
         <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
             <div class="items-center mb-6">
-                <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-                    Bancos
+                <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+                    <span class="border-b-4 border-secondary-light inline-block pb-1">Bancos</span>
                 </h1>
-                <p class="font-family-sans font-normal text-sm mt-2">
+                <p class="font-family-sans font-normal text-sm mt-12">
                     Administración de entidades bancarias y sus configuraciones.
                 </p>
             </div>
@@ -41,27 +41,29 @@
         </div>
 
         <!-- Banks Table -->
-        <p-table 
-            [value]="filteredBanks" 
-            [paginator]="true" 
+        <p-table
+            [value]="banks"
+            [paginator]="true"
             [rows]="pageSize"
             [totalRecords]="totalRecords"
             [loading]="loading"
+            [lazy]="true"
             [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
-            [globalFilterFields]="['codigo', 'nombre', 'moneda']"
+            (onSort)="onSort($event)"
+            (onPage)="onPage($event)"
             styleClass="p-datatable-striped font-family-sans"
             [tableStyle]="{'min-width': '50rem'}">
             
             <ng-template pTemplate="header">
                 <tr>
-                    <th pSortableColumn="codigo" class="font-semibold text-primary border-b-2 border-primary">
+                    <th pSortableColumn="code" class="font-semibold text-primary border-b-2 border-primary">
                         Código
-                        <p-sortIcon field="codigo"></p-sortIcon>
+                        <p-sortIcon field="code"></p-sortIcon>
                     </th>
-                    <th pSortableColumn="nombre" class="font-semibold text-primary border-b-2 border-primary">
+                    <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">
                         Nombre
-                        <p-sortIcon field="nombre"></p-sortIcon>
+                        <p-sortIcon field="name"></p-sortIcon>
                     </th>
                     <th class="font-semibold text-primary border-b-2 border-primary">
                         Moneda
@@ -73,13 +75,13 @@
 
             <ng-template pTemplate="body" let-bank>
                 <tr class="text-neutral-20">
-                    <td class="py-3">{{ bank.codigo }}</td>
-                    <td class="py-3">{{ bank.nombre }}</td>
-                    <td class="py-3">{{ getCurrencyDisplay(bank.moneda) }}</td>
+                    <td class="py-3">{{ bank.code }}</td>
+                    <td class="py-3">{{ bank.name }}</td>
+                    <td class="py-3">{{ bankPresentationService.getCurrenciesDisplay(bank.currencies) }}</td>
                     <td class="py-3 text-center">
                         <p-tag 
-                            [value]="bank.status ? 'Activo' : 'Inactivo'" 
-                            [severity]="bank.status ? 'success' : 'danger'">
+                            [value]="bankPresentationService.formatState(bank.status)" 
+                            [severity]="bankPresentationService.getStateSeverity(bank.status)">
                         </p-tag>
                     </td>
                     <td class="py-3 text-center">
@@ -99,9 +101,9 @@
                                 styleClass="p-button-rounded p-button-text text-secondary">
                             </p-button>
                             <p-toggleSwitch
-                                [ngModel]="bank.status"
+                                [ngModel]="bankPresentationService.isActive(bank.status)"
                                 (onChange)="toggleBankStatus(bank, $event.checked)"
-                                [pTooltip]="bank.status ? 'Activo' : 'Inactivo'"
+                                [pTooltip]="bankPresentationService.formatState(bank.status)"
                                 tooltipPosition="top"
                                 styleClass="p-toggleSwitch-sm"
                                 [style]="{'transform': 'scale(0.8)'}">

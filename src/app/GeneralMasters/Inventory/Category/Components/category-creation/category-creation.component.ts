@@ -2,19 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
-
-// --- Importaciones Standalone y de PrimeNG ---
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 import { CategoryService } from '../../Services/category.service';
+import { CategoryValidationMessagesService } from '../../Services/category-validation-messages.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
+import { TaxList } from '../../../../Taxes/models/Tax';
+import { TaxService } from '../../../../Taxes/services/tax.service';
 
 @Component({
   selector: 'app-category-creation',
@@ -27,6 +29,7 @@ import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/C
     InputTextModule,
     ButtonModule,
     SelectModule,
+    MultiSelectModule,
     ToastModule
   ],
   templateUrl: './category-creation.component.html',
@@ -44,17 +47,22 @@ export class CategoryCreationComponent implements OnInit {
   cost: any[] = [];
   sale: any[] = [];
   return: any[] = [];
+  taxes: TaxList[] = [];
 
   constructor(
-    private formBuilder: FormBuilder,
-    private categoryService: CategoryService,
-    private router: Router,
-    private chartAccountService: ChartAccountService,
+    private readonly formBuilder: FormBuilder,
+    private readonly categoryService: CategoryService,
+    private readonly router: Router,
+    private readonly chartAccountService: ChartAccountService,
+    private readonly taxService: TaxService,
+    private readonly messageService: MessageService,
+    public readonly categoryValidationMessagesService: CategoryValidationMessagesService
   ) {
     // Inicializa el formulario en el constructor para asegurar que esté disponible inmediatamente
     this.categoryForm = this.formBuilder.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
       description: ['', [Validators.required, Validators.maxLength(255)]],
+      taxes: [[], Validators.required],
       inventory: [null, Validators.required],
       cost: [null, Validators.required],
       sale: [null, Validators.required],
@@ -67,7 +75,11 @@ export class CategoryCreationComponent implements OnInit {
     this.entData = this.localStorageMethods.getIdEnterprise();
     if (!this.entData) {
       console.error("No se encontró el ID de la empresa. No se pueden cargar los datos del formulario.");
-      Swal.fire('Error', 'No se pudo identificar la empresa. Vuelva a iniciar sesión.', 'error');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo identificar la empresa. Vuelva a iniciar sesión.'
+      });
     } else {
       this.loadInitialData();
     }
@@ -75,12 +87,17 @@ export class CategoryCreationComponent implements OnInit {
 
   loadInitialData(): void {
     this.getCuentas();
+    this.getTaxes();
   }
 
   onSubmit(): void {
     this.formSubmitAttempt = true;
     if (this.categoryForm.invalid) {
-      Swal.fire('Formulario Inválido', 'Por favor, revise todos los campos requeridos.', 'warning');
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formulario Inválido',
+        detail: 'Por favor, revise todos los campos requeridos.'
+      });
       // Marcar todos los campos como "tocados" para mostrar los errores
       this.categoryForm.markAllAsTouched();
       return;
@@ -92,6 +109,7 @@ export class CategoryCreationComponent implements OnInit {
     const categoryData = {
       name: formData.name,
       description: formData.description,
+      taxes: formData.taxes && formData.taxes.length > 0 ? formData.taxes : [],
       inventoryId: formData.inventory,
       costId: formData.cost,
       saleId: formData.sale,
@@ -100,26 +118,30 @@ export class CategoryCreationComponent implements OnInit {
       state: true 
     };
 
-    console.log('Datos de categoría a enviar:', categoryData);
-
     this.categoryService.createCategory(categoryData).subscribe({
       next: () => {
-        Swal.fire({
-          title: 'Creación exitosa',
-          text: 'Se ha creado la categoría con éxito.',
-          icon: 'success',
-          confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Registro exitoso',
+          detail: 'Se ha creado la categoría con éxito.'
         });
-        this.router.navigate(['/gen-masters/inventory/categories/list']); // Redirigir a la lista
+        this.router.navigate(['/gen-masters/inventory/categories/list']); 
       },
       error: (err: any) => {
         console.error('Error al crear la categoría:', err);
-        Swal.fire({
-          title: 'Error',
-          text: 'Ha ocurrido un error al crear la categoría.',
-          icon: 'error',
-          confirmButtonColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
-        });
+        if (err.error?.message) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Registro Duplicado',
+            detail: err.error.message
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Ha ocurrido un error al crear la categoría.'
+          });
+        }
       }
     });
   }
@@ -130,22 +152,31 @@ export class CategoryCreationComponent implements OnInit {
 
   // Cuentas
   getCuentas(): void {
-    console.log('Cargando cuentas con entData:', this.entData);
     const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
-    console.log('Enterprise ID para cuentas:', enterpriseId);
-    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
+    this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (data: any[]) => {
-        console.log('Cuentas recibidas:', data);
         this.accounts = this.mapAccountToList(data);
         this.cost = this.accounts;
         this.inventory = this.accounts;
         this.sale = this.accounts;
         this.return = this.accounts;
-        console.log('Cuentas mapeadas:', this.accounts);
       },
       error: (error: any) => {
-        console.error('Error al obtener las cuentas:', error);
+        console.error('Error al obtener las cuentas auxiliares:', error);
       }
+    });
+  }
+
+  getTaxes(): void {
+    if (!this.entData) return;
+    this.taxService.getActiveTaxes(this.entData).subscribe({
+      next: (data) => {
+        this.taxes = data.map(tax => ({
+          ...tax,
+          displayText: `${tax.code} (${tax.interest}%)`
+        }));
+      },
+      error: (err) => console.error('Error al obtener los impuestos activos:', err)
     });
   }
 
@@ -159,11 +190,15 @@ export class CategoryCreationComponent implements OnInit {
 
         // Llamamos recursivamente para cada hijo
         if (children && children.length > 0) {
-            children.forEach((child: Account) => traverse(child));
+            for (const child of children) {
+              traverse(child);
+            }
         }
     }
 
-    data.forEach(account => traverse(account));
+    for (const account of data) {
+      traverse(account);
+    }
     return result;
 }
 get filteredAccounts() {

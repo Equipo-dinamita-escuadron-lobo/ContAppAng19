@@ -3,36 +3,36 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
+import { KeyFilterModule } from 'primeng/keyfilter';
 import { ButtonModule } from 'primeng/button';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { BankService } from '../../services/bank.service';
 
 @Component({
   selector: 'app-bank-creation',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, MultiSelectModule],
   templateUrl: './bank-creation.component.html',
-  styleUrl: './bank-creation.component.css',
-  providers: [MessageService]
+  styleUrl: './bank-creation.component.css'
 })
 export class BankCreationComponent implements OnInit {
   form: FormGroup;
   currenciesOptions: { label: string; value: string }[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private messageService: MessageService,
-    private bankService: BankService,
-    private localStorageMethod: LocalStorageMethods
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly messageService: MessageService,
+    private readonly bankService: BankService,
+    private readonly localStorageMethod: LocalStorageMethods
   ) {
     this.form = this.fb.group({
-      codigo: ['', [Validators.required, BankService.validateBankCode]],
-      nombre: ['', [Validators.required, Validators.maxLength(100)]],
-      moneda: ['', [Validators.required]]
+      code: ['', [Validators.required, BankService.validateBankCode]],
+      name: ['', [Validators.required, Validators.maxLength(100)]],
+      currencies: [[], [Validators.required, Validators.minLength(1)]]
     });
   }
 
@@ -66,9 +66,9 @@ export class BankCreationComponent implements OnInit {
 
     const payload = {
       idEnterprise: enterpriseId,
-      codigo: this.form.value.codigo,
-      nombre: this.form.value.nombre,
-      moneda: this.form.value.moneda
+      code: this.form.value.code,
+      name: this.form.value.name,
+      currencies: this.form.value.currencies
     };
 
     this.bankService.create(payload).subscribe({
@@ -78,9 +78,7 @@ export class BankCreationComponent implements OnInit {
           summary: 'Registro exitoso',
           detail: 'Banco creado correctamente.'
         });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         this.messageService.add({

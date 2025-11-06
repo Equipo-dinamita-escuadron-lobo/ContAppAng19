@@ -1,17 +1,34 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
+
+// PrimeNG
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { AuthService } from '../../../../../Core/auth/services/auth.service';
+
+interface AuxiliaryBook {
+  name: string;
+  description: string;
+  longDescription: string;
+  icon: string;
+  route: string;
+}
 
 @Component({
   selector: 'app-auxiliary-books-list',
-  imports: [CommonModule, FormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule, ButtonModule, RippleModule],
   templateUrl: './auxiliary-books-list.component.html',
-  styleUrl: './auxiliary-books-list.component.css',
+  styleUrls: ['./auxiliary-books-list.component.css'],
 })
-export class AuxiliaryBooksListComponent implements OnInit {
-  searchTerm: string = '';
+export class AuxiliaryBooksListComponent {
+  // Propiedad para almacenar la lista de libros auxiliares
   auxiliaryBooks = [
+    // Definición de cada libro auxiliar con sus propiedades
+    // ... (resto de los libros auxiliares)
+    // Ejemplo de un libro auxiliar:
     {
       name: 'Libro de Inventarios y Balances',
       route: '/financial/reports/auxiliary-books/inventory-and-balances',
@@ -29,7 +46,7 @@ export class AuxiliaryBooksListComponent implements OnInit {
       icon: 'wb_sunny',
     },
     {
-      name: 'Libro Mayor y Balances',
+      name: 'Libro Mayor',
       route: '/financial/reports/auxiliary-books/major-and-balances',
       description: 'Resume saldos y movimientos por cuenta',
       longDescription:
@@ -37,7 +54,7 @@ export class AuxiliaryBooksListComponent implements OnInit {
       icon: 'book_5',
     },
     {
-      name: 'Libro por Cuenta',
+      name: 'Libro Auxiliar por Cuenta',
       route: '/financial/reports/auxiliary-books/account-book',
       description: 'Detalla movimientos dentro de cada cuenta',
       longDescription:
@@ -45,7 +62,7 @@ export class AuxiliaryBooksListComponent implements OnInit {
       icon: 'account_balance',
     },
     {
-      name: 'Libro por Tercero',
+      name: 'Libro Auxiliar por Tercero',
       route: '/financial/reports/auxiliary-books/third-party-book',
       description: 'Muestra movimientos contables de un tercero específico',
       longDescription:
@@ -60,26 +77,24 @@ export class AuxiliaryBooksListComponent implements OnInit {
         'Este libro auxiliar resume todos los movimientos contables registrados de manera clara y concisa.',
       icon: 'difference',
     },
-  ];
+  ] as AuxiliaryBook[];
 
-  filteredAuxiliaryBooks: any[] = [];
+  constructor(private router: Router, private authService: AuthService) {}
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
-
-  ngOnInit(): void {
-    this.filteredAuxiliaryBooks = [...this.auxiliaryBooks];
+  // Getter para verificar si el usuario actual tiene el rol de 'Administrador'
+  get isAdmin(): boolean {
+    return this.authService.hasRole('Administrador');
   }
 
-  filterAuxBooks() {
-    const term = this.searchTerm.toLowerCase();
-    this.filteredAuxiliaryBooks = this.auxiliaryBooks.filter(
-      (book) =>
-        book.name.toLowerCase().includes(term) ||
-        book.description.toLowerCase().includes(term)
-    );
+  goTo(route: string): void {
+    this.router.navigate([route]);
   }
 
-  goTo(route: String): void {
-    this.router.navigate([route], { relativeTo: this.route });
+  /**
+   * Navega a la página de historial de libros auxiliares.
+   */
+  goToHistory(): void {
+    // Asegúrate de que la ruta coincida con tu configuración de enrutamiento
+    this.router.navigate(['/financial/reports/auxiliary-books/historial']);
   }
 }

@@ -116,6 +116,7 @@
           placeholder="Seleccionar Tercero"
           [disabled]="!isThirdPartyOptionSelected"
           styleClass="w-full text-xs"
+          optionLabel="fullName"
           [editable]="true"
           (onChange)="onSelectThirdParty()"
         ></p-select>
@@ -156,7 +157,7 @@
       </div>
 
       <!-- 5. Botón -->
-      <div class="col-span-1 flex justify-center items-center">
+      <div class="col-span-1 flex justify-center items-center h-full">
         <button
           pButton
           type="button"

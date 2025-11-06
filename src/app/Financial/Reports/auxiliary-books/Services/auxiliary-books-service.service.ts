@@ -26,8 +26,7 @@ export class AuxiliaryBooksServiceService {
    * @returns Un Observable que emite el archivo como un Blob.
    */
   exportAuxiliaryBook(request: ExportAuxiliaryBookRequest): Observable<Blob> {
-    const format = request.format.toLowerCase();
-    return this.http.post(`${this.apiUrl}/export?format=${format}`, request, {
+    return this.http.post(`${this.apiUrl}/export`, request, {
       responseType: 'blob',
     });
   }

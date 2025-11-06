@@ -9,10 +9,10 @@
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <div class="items-center mb-6">
         <h1
-          class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Terceros
+          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Terceros</span>
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Lista de todos los terceros configurados en su empresa.
         </p>
       </div>
@@ -32,11 +32,11 @@
           </p-button>
           <input #fileInput type="file" accept=".xlsx" (change)="onFileSelect($event)" style="display: none;">
 
-          <p-button label="Exportar" icon="pi pi-download" [style]="{'white-space': 'nowrap'}"
+          <p-button label="Exportar" icon="pi pi-download" [loading]="loadingExport" [style]="{'white-space': 'nowrap'}"
             (click)="openExportModal()">
           </p-button>
 
-          <p-button label="Plantilla" icon="pi pi-download" [style]="{'white-space': 'nowrap'}"
+          <p-button label="Plantilla" icon="pi pi-download" [loading]="loadingTemplate" [style]="{'white-space': 'nowrap'}"
             (click)="openTemplateModal()">
           </p-button>
 
@@ -54,9 +54,9 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input pInputText type="text" placeholder="Buscar por nombre/razón social, identificación..."
+          <input pInputText type="text" placeholder="Buscar tercero (Nombre/Razón Social, Identificación)..."
             class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
-            [(ngModel)]="globalFilterValue" (input)="applyGlobalFilter($event)">
+            [(ngModel)]="searchValue" (input)="onSearch()">
         </p-iconfield>
       </div>
 
@@ -68,10 +68,9 @@
 
     <!-- Data Table -->
     <p-table #dt [value]="thirds" [loading]="loading" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
-      [rowsPerPageOptions]="[5, 10, 20]" [first]="first"
-      [globalFilterFields]="['names', 'lastNames', 'socialReason', 'idNumber', 'email', 'typeId.typeId']"
+      [rowsPerPageOptions]="[5, 10, 20]" [first]="first" [lazy]="true"
       styleClass="p-datatable-gridlines" [responsiveLayout]="'scroll'"
-      (onPage)="onPageChange($event)" (onSort)="onSort($event)">
+      (onLazyLoad)="onPageChange($event)" (onPage)="onPageChange($event)" (onSort)="onSort($event)">
 
       <!-- Table Header -->
       <ng-template pTemplate="header">
@@ -88,7 +87,18 @@
           <th *ngIf="showDetailView">Ciudad</th>
           <th *ngIf="showDetailView">Dirección</th>
           <th *ngIf="showDetailView">Teléfono</th>
-          <th>Estado</th>
+          <th>
+            <div class="flex items-center justify-center gap-4">
+              <span>Estado</span>
+              <p-toggleswitch
+                [(ngModel)]="bulkStateToggle"
+                (onChange)="changeBulkState()"
+                [pTooltip]="bulkStateToggle ? 'Activos' : 'Inactivos'"
+                tooltipPosition="top"
+                [style]="{'transform': 'scale(0.8)'}">
+              </p-toggleswitch>
+            </div>
+          </th>
           <th>Acciones</th>
         </tr>
       </ng-template>
@@ -146,7 +156,7 @@
           <td>
             <div class="flex justify-center gap-2 items-center">
               <!-- Botón Ver (solo vista resumida) -->
-              <p-button *ngIf="!showDetailView" icon="pi pi-eye" pTooltip="Ver detalles" tooltipPosition="top" 
+              <p-button *ngIf="!showDetailView" icon="pi pi-eye" pTooltip="Detalles" tooltipPosition="top" 
                 (click)="openDetailsModal(third)" styleClass="p-button-rounded p-button-text text-primary">
               </p-button>
 
@@ -198,11 +208,11 @@
 
 <!-- Componente de importación de terceros -->
 <app-third-template [visible]="showTemplateModal" [inputData]="{ title: 'Plantilla de Importación de Terceros' }"
-  (close)="closeTemplateModal()">
+  (close)="closeTemplateModal()" (templateInProgress)="onTemplateInProgress($event)">
 </app-third-template>
 
 <!-- Componente de exportación de terceros -->
-<app-third-export [visible]="showExportModal" (close)="closeExportModal()">
+<app-third-export [visible]="showExportModal" (close)="closeExportModal()" (exportInProgress)="onExportInProgress($event)">
 </app-third-export>
 
 
@@ -253,7 +263,7 @@
     <ng-template pTemplate="body" let-error>
       <tr>
         <td class="font-family-sans text-sm">{{ error.rowNumber }}</td>
-        <td class="font-family-sans text-sm">{{ getExcelColumnLetter(error.columnNumber) }}</td>
+        <td class="font-family-sans text-sm">{{ thirdValidationMessagesService.getExcelColumnLetter(error.columnNumber) }}</td>
         <td class="font-family-sans text-sm font-semibold">{{ error.columnName }}</td>
         <td class="font-family-sans text-sm text-neutral-50">{{ error.fieldValue || '(vacío)' }}</td>
         <td class="font-family-sans text-sm text-error">{{ error.errorMessage }}</td>

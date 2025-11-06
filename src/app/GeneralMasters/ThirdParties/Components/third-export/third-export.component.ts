@@ -43,6 +43,9 @@ export class ThirdExportComponent implements OnInit {
   /** Evento emitido al cerrar el modal */
   @Output() close = new EventEmitter<void>();
   
+  /** Evento emitido cuando la exportación está en progreso */
+  @Output() exportInProgress = new EventEmitter<boolean>();
+  
   /** Estado de carga */
   loading: boolean = false;
   
@@ -84,9 +87,9 @@ export class ThirdExportComponent implements OnInit {
    * @param localStorageMethods Servicio para manejar localStorage
    */
   constructor(
-    private thirdService: ThirdService,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods
+    private readonly thirdService: ThirdService,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods
   ) { }
 
   ngOnInit(): void {
@@ -165,7 +168,12 @@ export class ThirdExportComponent implements OnInit {
    * Inicia el proceso de exportación
    */
   startExport(): void {
-    this.loading = true;
+    // Cerrar el modal inmediatamente
+    this.closeModal();
+    
+    // Indicar que la exportación está en progreso
+    this.exportInProgress.emit(true);
+    
     const enterpriseId = this.getIdEnterprise();
     const companyName = this.getCompanyName();
     const selectedFields = this.getSelectedOptionalFields();
@@ -178,7 +186,7 @@ export class ThirdExportComponent implements OnInit {
             summary: 'Error de Exportación',
             detail: 'No se recibió el archivo del servidor'
           });
-          this.loading = false;
+          this.exportInProgress.emit(false);
           return;
         }
 
@@ -186,19 +194,13 @@ export class ThirdExportComponent implements OnInit {
         
         this.messageService.add({
           severity: 'success',
-          summary: 'Estamos generando tu archivo',
-          detail: `El archivo se descargará automáticamente en unos segundos.`
+          summary: 'Exportación exitosa',
+          detail: `El archivo se ha exportado correctamente.`
         });
 
-        this.loading = false;
-
-        // Cerrar el modal después de la exportación exitosa
-        setTimeout(() => {
-          this.closeModal();
-        }, 2000);
+        this.exportInProgress.emit(false);
       },
       error: (err) => {
-        console.error('Error al exportar terceros:', err);
 
         // Intentar leer el mensaje de error si es un blob
         if (err.error instanceof Blob) {
@@ -253,7 +255,7 @@ export class ThirdExportComponent implements OnInit {
           });
         }
 
-        this.loading = false;
+        this.exportInProgress.emit(false);
       }
     });
   }

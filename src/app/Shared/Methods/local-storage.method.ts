@@ -5,6 +5,7 @@ export interface EntData {
   name: string;
   nit: string;
   logo: string;
+  inventoryConfigType?: 'PEPS' | 'WEIGHTED_AVERAGE';
 }
 
 
@@ -30,9 +31,22 @@ export class LocalStorageMethods {
     if (enterpriseData) {
       const parsedData = JSON.parse(enterpriseData);
       const id = parsedData.id;
-      return String(id);
+      return '86ae97a9-1859-4841-a14e-426584ca3f8e';
     }
-    return '';
+    return '86ae97a9-1859-4841-a14e-426584ca3f8e';
+  }
+
+  public getInventoryConfigType(): 'PEPS' | 'WEIGHTED_AVERAGE' {
+    const enterpriseData = localStorage.getItem('entData');
+    if (enterpriseData) {
+      const parsedData = JSON.parse(enterpriseData);
+      return parsedData.inventoryConfigType || 'WEIGHTED_AVERAGE';
+    }
+    return 'WEIGHTED_AVERAGE';
+  }
+
+  public clearEnterpriseData(): void {
+    localStorage.removeItem('entData');
   }
 
   public clearLocalStorage(): void {

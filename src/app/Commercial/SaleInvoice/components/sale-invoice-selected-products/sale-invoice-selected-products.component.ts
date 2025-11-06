@@ -9,12 +9,12 @@ import { CheckboxModule } from 'primeng/checkbox';
 
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { ProductService } from '../../../../GeneralMasters/Inventory/Products/Services/product.service';
-import { Product } from '../../../../GeneralMasters/Inventory/Products/Models/Product';
+import { Page, ProductList } from '../../../../GeneralMasters/Inventory/Products/Models/Product';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
-interface SelectableProduct extends Product {
+interface SelectableProduct extends ProductList {
   selected?: boolean;
 }
 
@@ -51,7 +51,7 @@ export class SaleInvoiceSelectedProductsComponent implements OnInit {
   ) {
     this.entId = this.localStorageMethods.getIdEnterprise();
     console.log('Enterprise ID:', this.entId);
-    const previouslySelectedProducts: Product[] = this.config.data.products || [];
+    const previouslySelectedProducts: ProductList[] = this.config.data.products || [];
 
     previouslySelectedProducts.forEach(p => {
       this.selectedProductsMap.set(p.id, { ...p, selected: true });
@@ -67,10 +67,10 @@ export class SaleInvoiceSelectedProductsComponent implements OnInit {
    */
   loadProducts(): void {
     if (!this.entId) return;
-
-          this.productService.getProductsBasic(this.entId).subscribe({
-      next: (data: Product[]) => {
-        this.allProducts = data.map(product => ({
+          //Lista los productos ACTIVOS
+          this.productService.getActiveProducts(this.entId).subscribe({
+      next: (data: Page<ProductList>) => {
+        this.allProducts = data.content.map(product => ({
           ...product,
           // Un producto está seleccionado si su ID existe en nuestro mapa de selección
           selected: this.selectedProductsMap.has(product.id)

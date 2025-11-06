@@ -31,6 +31,7 @@ import { eThirdGender } from '../../models/eThirdGender';
 import { ThirdFormService } from '../../Services/third-form.service';
 import { ThirdValidationService } from '../../Services/third-validation.service';
 import { GeographyHelperService } from '../../Services/geography-helper.service';
+import { ThirdValidationMessagesService } from '../../Services/third-validation-messages.service';
 
 // Shared Components
 import { FormFieldLabelComponent } from '../shared/form-field-label.component';
@@ -62,7 +63,7 @@ import Swal from 'sweetalert2';
     FormPanelComponent,
     FormFieldErrorComponent
   ],
-  providers: [MessageService, DatePipe],
+  providers: [DatePipe],
   templateUrl: './third-edit.component.html',
   styleUrl: './third-edit.component.css'
 })
@@ -207,18 +208,19 @@ export class ThirdEditComponent implements OnInit {
   entData: string = '';
 
   constructor(
-    private fb: FormBuilder,
-    private thirdService: ThirdService,
-    private thirdConfigurationService: ThirdServiceConfigurationService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private datePipe: DatePipe,
-    private http: HttpClient,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods,
-    private thirdFormService: ThirdFormService,
-    private thirdValidationService: ThirdValidationService,
-    private geographyHelperService: GeographyHelperService
+    private readonly fb: FormBuilder,
+    private readonly thirdService: ThirdService,
+    private readonly thirdConfigurationService: ThirdServiceConfigurationService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly datePipe: DatePipe,
+    private readonly http: HttpClient,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods,
+    private readonly thirdFormService: ThirdFormService,
+    private readonly thirdValidationService: ThirdValidationService,
+    private readonly geographyHelperService: GeographyHelperService,
+    public readonly thirdValidationMessagesService: ThirdValidationMessagesService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
@@ -295,12 +297,12 @@ export class ThirdEditComponent implements OnInit {
       const genderControl = this.createdThirdForm.get('gender');
 
       if (value === ePersonType.natural) {
-        // Persona natural: nombres y apellidos requeridos
+        // Persona natural: nombres y apellidos requeridos, género opcional
         namesControl?.setValidators([Validators.required]);
         lastNamesControl?.setValidators([Validators.required]);
         socialReasonControl?.clearValidators();
-        genderControl?.setValidators([Validators.required]);
-        
+        genderControl?.clearValidators(); // Género ahora opcional
+
         this.button2Checked = true;
         this.button1Checked = false;
         this.PersonaCargadaNatural = true;
@@ -311,7 +313,7 @@ export class ThirdEditComponent implements OnInit {
 
         // Limpiar DV para persona natural
         this.createdThirdForm.get('verificationNumber')?.setValue(null);
-        
+
         // Restaurar validaciones básicas del número de identificación
         const idNumberControl = this.createdThirdForm.get('idNumber');
         idNumberControl?.setValidators([Validators.required, Validators.min(1)]);
@@ -526,13 +528,12 @@ export class ThirdEditComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de tercero con soporte para búsqueda
-   * @param searchTerm Término de búsqueda opcional
+   * Carga los tipos de tercero activos
    */
-  private loadThirdTypes(searchTerm?: string): Promise<void> {
+  private loadThirdTypes(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.loadingThirdTypes = true;
-      this.thirdConfigurationService.getActiveThirdTypes(this.entData, 0, 50, 'thirdTypename', 'asc', searchTerm).subscribe({
+      this.thirdConfigurationService.getActiveThirdTypes(this.entData, 0, 50).subscribe({
         next: (response: any) => {
           this.thirdTypes = Array.isArray(response.content) ? response.content : [];
           this.loadingThirdTypes = false;
@@ -552,13 +553,12 @@ export class ThirdEditComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de identificación con soporte para búsqueda
-   * @param searchTerm Término de búsqueda opcional
+   * Carga los tipos de identificación activos
    */
-  private loadTypeIds(searchTerm?: string): Promise<void> {
+  private loadTypeIds(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.loadingTypeIds = true;
-      this.thirdConfigurationService.getActiveTypeIds(this.entData, 0, 50, 'typeIdname', 'asc', searchTerm).subscribe({
+      this.thirdConfigurationService.getActiveTypeIds(this.entData, 0, 50).subscribe({
         next: (response: any) => {
           this.typeIds = Array.isArray(response.content) ? response.content : [];
           // Aplicar filtro por tipo de persona
@@ -593,33 +593,6 @@ export class ThirdEditComponent implements OnInit {
     }
   }
 
-  /**
-   * Maneja el evento de filtro del dropdown de tipos de identificación
-   * @param event Evento del filtro con el término de búsqueda
-   */
-  onTypeIdFilter(event: any): void {
-    const searchTerm = event.filter || '';
-    this.typeIdSearchTerm = searchTerm;
-    
-    // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
-    if (searchTerm.length >= 2 || searchTerm.length === 0) {
-      this.loadTypeIds(searchTerm);
-    }
-  }
-
-  /**
-   * Maneja el evento de filtro del dropdown de tipos de tercero
-   * @param event Evento del filtro con el término de búsqueda
-   */
-  onThirdTypeFilter(event: any): void {
-    const searchTerm = event.filter || '';
-    this.thirdTypeSearchTerm = searchTerm;
-    
-    // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
-    if (searchTerm.length >= 2 || searchTerm.length === 0) {
-      this.loadThirdTypes(searchTerm);
-    }
-  }
 
   /**
    * Carga los países desde el backend
@@ -741,9 +714,7 @@ export class ThirdEditComponent implements OnInit {
             detail: 'Tercero actualizado correctamente'
           });
           
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/third-parties/list']);
-          }, 2000);
+          this.router.navigate(['/gen-masters/third-parties/list']);
         },
         error: (error: any) => {
           // Extraer el mensaje de error más específico disponible
@@ -821,25 +792,8 @@ export class ThirdEditComponent implements OnInit {
     this.thirdValidationService.updateIdNumberValidations(
       this.createdThirdForm,
       this.thirdFormService.getTypeId(this.createdThirdForm),
-      this.thirdFormService.getPersonType(this.createdThirdForm),
-      this.entData,
-      this.thirdService
+      this.thirdFormService.getPersonType(this.createdThirdForm)
     );
-  }
-
-  /**
-  /**
-   * Verifica si es persona natural
-   */
-  isNaturalPerson(): boolean {
-    return this.thirdFormService.isNaturalPerson(this.createdThirdForm);
-  }
-
-  /**
-   * Verifica si es persona jurídica
-   */
-  isJuridicPerson(): boolean {
-    return this.thirdFormService.isJuridicPerson(this.createdThirdForm);
   }
 
   /**

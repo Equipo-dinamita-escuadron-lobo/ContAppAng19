@@ -1,0 +1,123 @@
+<div class="w-full">
+    <p-toast></p-toast>
+
+    <p class="mb-6 text-lg text-gray-700">
+        Configure el método de valuación de inventario que se aplicará a sus productos.
+    </p>
+
+
+    <div class="mt-6">
+        <form [formGroup]="configurationForm" (ngSubmit)="onSubmit()" class="mt-4">
+            <div class="w-full">
+
+                <!-- Método de Valuación Principal -->
+                <div class="border border-gray-300 rounded-lg p-6 mb-6 bg-white shadow-sm">
+                    <h3 class="text-xl font-semibold text-primary mb-4">
+                        Método de Valuación de Inventario
+                    </h3>
+
+                    <div class="mb-6">
+                        <label class="block mb-2 font-semibold">
+                            Seleccione el Método <span class="text-secondary">*</span>
+                        </label>
+                        <p-select
+                            formControlName="valuationMethod"
+                            [options]="valuationMethods"
+                            optionLabel="label"
+                            optionValue="value"
+                            optionDisabled="disabled"
+                            placeholder="Seleccione el método de valuación"
+                            class="w-full"
+                            (onChange)="onValuationMethodChange($event)">
+                        </p-select>
+
+
+                        @if (configurationForm.get('valuationMethod')?.touched && configurationForm.get('valuationMethod')?.invalid) {
+                            <p-message
+                                severity="error"
+                                text="El método de valuación es requerido"
+                                class="mt-2">
+                            </p-message>
+                        }
+                    </div>
+
+
+                    <!-- Información del Método Seleccionado -->
+                    @if (selectedMethod) {
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <div class="flex items-start">
+                                <i class="pi pi-info-circle text-blue-600 text-2xl mr-3 mt-1"></i>
+                                <div>
+                                    <h4 class="font-semibold text-blue-900 mb-2">
+                                        {{ selectedMethod.label }}
+                                    </h4>
+                                    <p class="text-sm text-blue-800 mb-3">
+                                        {{ selectedMethod.description }}
+                                    </p>
+                                    @if (selectedMethod.advantages) {
+                                        <ul class="list-disc list-inside text-sm text-blue-700 space-y-1">
+                                            @for (advantage of selectedMethod.advantages; track advantage) {
+                                                <li>{{ advantage }}</li>
+                                            }
+                                        </ul>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+
+                <!-- Configuración por Empresa -->
+                <div class="border border-gray-300 rounded-lg p-6 mb-6 bg-white shadow-sm">
+                    <h3 class="text-xl font-semibold text-primary mb-4">
+                        Configuración por Empresa
+                    </h3>
+
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block mb-2 font-semibold">
+                                Empresa <span class="text-secondary">*</span>
+                            </label>
+                            <p-select
+                                formControlName="enterpriseId"
+                                [options]="enterprises"
+                                optionLabel="name"
+                                optionValue="id"
+                                placeholder="Seleccione una empresa"
+                                class="w-full"
+                                [disabled]="isEnterpriseSelected">
+                            </p-select>
+
+
+                            @if (configurationForm.get('enterpriseId')?.touched && configurationForm.get('enterpriseId')?.invalid) {
+                                <p-message
+                                    severity="error"
+                                    text="La empresa es requerida"
+                                    class="mt-2">
+                                </p-message>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex justify-center gap-4 mt-8">
+                    <p-button
+                        type="button"
+                        label="Cancelar"
+                        severity="secondary"
+                        (onClick)="cancelForm()">
+                    </p-button>
+                    <p-button
+                        type="submit"
+                        label="Aplicar Configuración"
+                        icon="pi pi-save"
+                        [disabled]="configurationForm.invalid"
+                        [loading]="isLoading">
+                    </p-button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

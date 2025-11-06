@@ -5,10 +5,10 @@
     <!-- Cabecera -->
     <div class="flex justify-between items-start mb-12">
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Crear Impuesto
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Crear</span> Impuesto
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Complete la información necesaria para crear un nuevo impuesto.
         </p>
       </div>
@@ -22,7 +22,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Código <span class="text-red-500">*</span></label>
+          <label for="code" class="label-required font-semibold text-primary">Código</label>
           <input
             pInputText
             id="code"
@@ -31,11 +31,11 @@
             class="w-full md:w-2/3"
             maxlength="10"
           />
-          <small class="text-red-500" *ngIf="addForm.get('code')?.touched && addForm.get('code')?.invalid">El código es requerido</small>
+          <small class="error-message" *ngIf="addForm.get('code')?.touched && addForm.get('code')?.invalid">El código es requerido</small>
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Descripción <span class="text-red-500">*</span></label>
+          <label for="description" class="label-required font-semibold text-primary">Descripción</label>
           <input
             pInputText
             id="description"
@@ -44,11 +44,11 @@
             class="w-full md:w-2/3"
             maxlength="100"
           />
-          <small class="text-red-500" *ngIf="addForm.get('description')?.touched && addForm.get('description')?.invalid">La descripción es requerida</small>
+          <small class="error-message" *ngIf="addForm.get('description')?.touched && addForm.get('description')?.invalid">La descripción es requerida</small>
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Tarifa (%) <span class="text-red-500">*</span></label>
+          <label for="interest" class="label-required font-semibold text-primary">Tarifa (%)</label>
           <p-inputNumber
             id="interest"
             formControlName="interest"
@@ -61,17 +61,17 @@
             placeholder="0.00%"
             class="w-full md:w-2/3"
           ></p-inputNumber>
-          <small class="text-red-500" *ngIf="addForm.get('interest')?.touched && addForm.get('interest')?.invalid">El porcentaje es requerido y debe ser mayor o igual a 0</small>
+          <small class="error-message" *ngIf="addForm.get('interest')?.touched && addForm.get('interest')?.invalid">El porcentaje es requerido y debe ser mayor o igual a 0</small>
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Cuenta <span class="text-red-500">*</span></label>
+          <label class="font-semibold text-primary">Cuenta Impuesto en Venta</label>
           <p-select
-            id="depositAccount"
-            formControlName="depositAccount"
-            [options]="depositAccounts"
+            id="salesTax"
+            formControlName="salesTax"
+            [options]="salesTaxes"
             optionLabel="description"
-            placeholder="Seleccione una cuenta"
+            placeholder="Seleccione una cuenta (opcional)"
             [filter]="true"
             filterBy="code,description"
             [showClear]="true"
@@ -86,17 +86,16 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          <small class="text-red-500" *ngIf="addForm.get('depositAccount')?.touched && addForm.get('depositAccount')?.invalid">Seleccione una cuenta de depósito</small>
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold text-primary">Cuenta de Devolución <span class="text-red-500">*</span></label>
+          <label class="font-semibold text-primary">Cuenta Impuesto en Compra</label>
           <p-select
-            id="refundAccount"
-            formControlName="refundAccount"
-            [options]="refundAccounts"
+            id="purchaseTax"
+            formControlName="purchaseTax"
+            [options]="purchaseTaxes"
             optionLabel="description"
-            placeholder="Seleccione una cuenta"
+            placeholder="Seleccione una cuenta (opcional)"
             [filter]="true"
             filterBy="code,description"
             [showClear]="true"
@@ -111,20 +110,19 @@
               <div>{{ option.code }} - {{ option.description }}</div>
             </ng-template>
           </p-select>
-          <small class="text-red-500" *ngIf="addForm.get('refundAccount')?.touched && addForm.get('refundAccount')?.invalid">Seleccione una cuenta de devolución</small>
         </div>
 
       </div>
 
       <!-- Error de validación personalizada -->
       <div class="mt-8" *ngIf="getCustomError()">
-        <small class="text-red-500">{{ getCustomError() }}</small>
+        <small class="error-message">{{ getCustomError() }}</small>
       </div>
 
       <!-- Botones de acción -->
       <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button type="button" label="Cancelar" severity="secondary" (onClick)="goBack()"></p-button>
-        <p-button type="submit" label="Crear Impuesto" [disabled]="addForm.invalid"></p-button>
+        <p-button type="submit" label="Guardar" [disabled]="addForm.invalid"></p-button>
       </div>
     </form>
   </div>

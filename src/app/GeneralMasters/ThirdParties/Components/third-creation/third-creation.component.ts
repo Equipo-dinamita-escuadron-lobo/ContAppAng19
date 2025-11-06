@@ -1,8 +1,7 @@
-import { Component, OnInit, ViewChildren, QueryList, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
 
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -32,6 +31,7 @@ import { ePersonType } from '../../models/ePersonType';
 import { ThirdFormService } from '../../Services/third-form.service';
 import { ThirdValidationService } from '../../Services/third-validation.service';
 import { GeographyHelperService } from '../../Services/geography-helper.service';
+import { ThirdValidationMessagesService } from '../../Services/third-validation-messages.service';
 
 // Shared Components
 import { FormFieldLabelComponent } from '../shared/form-field-label.component';
@@ -61,7 +61,7 @@ import { FormFieldErrorComponent } from '../shared/form-field-error.component';
     FormPanelComponent,
     FormFieldErrorComponent
   ],
-  providers: [MessageService, DatePipe, LocalStorageMethods],
+  providers: [DatePipe, LocalStorageMethods],
   templateUrl: './third-creation.component.html',
   styleUrl: './third-creation.component.css'
 })
@@ -153,16 +153,17 @@ export class ThirdCreationComponent implements OnInit {
   ];
 
   constructor(
-    private fb: FormBuilder,
-    private thirdService: ThirdService,
-    private thirdServiceConfigurationService: ThirdServiceConfigurationService,
-    private router: Router,
-    private datePipe: DatePipe,
-    private messageService: MessageService,
-    private localStorageMethods: LocalStorageMethods,
-    private thirdFormService: ThirdFormService,
-    private thirdValidationService: ThirdValidationService,
-    private geographyHelper: GeographyHelperService
+    private readonly fb: FormBuilder,
+    private readonly thirdService: ThirdService,
+    private readonly thirdServiceConfigurationService: ThirdServiceConfigurationService,
+    private readonly router: Router,
+    private readonly datePipe: DatePipe,
+    private readonly messageService: MessageService,
+    private readonly localStorageMethods: LocalStorageMethods,
+    private readonly thirdFormService: ThirdFormService,
+    private readonly thirdValidationService: ThirdValidationService,
+    private readonly geographyHelper: GeographyHelperService,
+    public readonly thirdValidationMessagesService: ThirdValidationMessagesService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
     this.initializeForm();
@@ -184,7 +185,7 @@ export class ThirdCreationComponent implements OnInit {
       state: [true, Validators.required],
       thirdTypes: [[], Validators.required],
       typeId: [null, Validators.required],
-      idNumber: [null, [Validators.required, Validators.min(1)], [this.thirdValidationService.thirdExistsValidator(this.thirdService, this.entData)]],
+      idNumber: [null, [Validators.required, Validators.min(1)]],
       verificationNumber: [null],
       names: [null],
       lastNames: [null],
@@ -248,7 +249,7 @@ export class ThirdCreationComponent implements OnInit {
 
         // Limpiar DV para persona natural
         this.thirdFormService.clearVerificationDigit(this.createdThirdForm);
-        
+
         // Aplicar filtro de persona
         this.onPersonTypeChange();
       } else if (value === ePersonType.juridica) {
@@ -276,11 +277,9 @@ export class ThirdCreationComponent implements OnInit {
         const typeId = this.thirdFormService.getTypeId(this.createdThirdForm);
         const personType = this.thirdFormService.getPersonType(this.createdThirdForm);
         this.thirdValidationService.updateIdNumberValidations(
-          this.createdThirdForm, 
-          typeId, 
-          personType,
-          this.entData,
-          this.thirdService
+          this.createdThirdForm,
+          typeId,
+          personType
         );
 
         // Calcular DV si ya hay número de identificación y el tipo es NIT
@@ -304,7 +303,7 @@ export class ThirdCreationComponent implements OnInit {
     this.createdThirdForm.get('idNumber')?.valueChanges.subscribe(idNumber => {
       const personType = this.thirdFormService.getPersonType(this.createdThirdForm);
       const typeId = this.thirdFormService.getTypeId(this.createdThirdForm);
-      
+
       if (this.thirdFormService.shouldCalculateDV(personType, typeId)) {
         if (idNumber && idNumber > 0) {
           const dv = this.thirdFormService.calculateVerificationDigit(idNumber);
@@ -320,15 +319,13 @@ export class ThirdCreationComponent implements OnInit {
     this.createdThirdForm.get('typeId')?.valueChanges.subscribe(() => {
       const typeId = this.thirdFormService.getTypeId(this.createdThirdForm);
       const personType = this.thirdFormService.getPersonType(this.createdThirdForm);
-      
+
       this.thirdValidationService.updateIdNumberValidations(
         this.createdThirdForm,
         typeId,
-        personType,
-        this.entData,
-        this.thirdService
+        personType
       );
-      
+
       const idNumber = this.createdThirdForm.get('idNumber')?.value;
       if (this.thirdFormService.shouldCalculateDV(personType, typeId) && idNumber && idNumber > 0) {
         const dv = this.thirdFormService.calculateVerificationDigit(idNumber);
@@ -347,9 +344,7 @@ export class ThirdCreationComponent implements OnInit {
     this.thirdValidationService.updateIdNumberValidations(
       this.createdThirdForm,
       this.thirdFormService.getTypeId(this.createdThirdForm),
-      this.thirdFormService.getPersonType(this.createdThirdForm),
-      this.entData,
-      this.thirdService
+      this.thirdFormService.getPersonType(this.createdThirdForm)
     );
   }
 
@@ -413,6 +408,13 @@ export class ThirdCreationComponent implements OnInit {
     if (this.contendPDFRUT) {
       this.infoThird = this.contendPDFRUT.split(';');
       this.prefillFormWithRUTData();
+
+      // Mostrar notificación de éxito del procesamiento del PDF
+      this.messageService.add({
+        severity: 'success',
+        summary: 'PDF procesado correctamente',
+        detail: 'Los datos del RUT se han cargado en el formulario.'
+      });
     }
   }
 
@@ -420,11 +422,11 @@ export class ThirdCreationComponent implements OnInit {
    * Prellena el formulario con datos del RUT
    */
   private prefillFormWithRUTData(): void {
-    if (this.infoThird && this.infoThird.length >= 12) {      
+    if (this.infoThird && this.infoThird.length >= 12) {
       // Determinar el tipo de persona
       const personTypeStr = this.infoThird[0]?.toLowerCase() || '';
       let personType = ePersonType.natural; // Por defecto natural
-      
+
       if (personTypeStr.includes('jurídica') || personTypeStr.includes('juridica')) {
         personType = ePersonType.juridica;
       }
@@ -432,9 +434,9 @@ export class ThirdCreationComponent implements OnInit {
       // Buscar el tipo de identificación que coincida
       const typeIdStr = this.infoThird[1]?.trim() || '';
       let matchedTypeId = null;
-      
+
       if (typeIdStr) {
-        matchedTypeId = this.typeIds.find(t => 
+        matchedTypeId = this.typeIds.find(t =>
           t.typeIdname?.toLowerCase().includes(typeIdStr.toLowerCase()) ||
           t.typeId?.toLowerCase() === typeIdStr.toLowerCase()
         );
@@ -470,12 +472,12 @@ export class ThirdCreationComponent implements OnInit {
       if (departmentCode) {
         // Habilitar el control de ciudad
         this.createdThirdForm.get('city')?.enable();
-        
+
         // Cargar ciudades y luego asignar la ciudad correspondiente
         this.geographyHelper.loadCitiesAsOptions(departmentCode, countryCode).subscribe({
           next: (cities) => {
             this.cities = cities;
-            
+
             // Buscar el código de la ciudad por su nombre
             if (cityName) {
               const cityCode = this.findCityCodeByName(cityName, cities);
@@ -485,7 +487,6 @@ export class ThirdCreationComponent implements OnInit {
             }
           },
           error: (error) => {
-            console.error('Error al cargar ciudades desde RUT:', error);
             this.cities = [];
           }
         });
@@ -503,8 +504,8 @@ export class ThirdCreationComponent implements OnInit {
       .toLowerCase()
       .trim()
       .normalize('NFD') // Descompone caracteres con acentos
-      .replace(/[\u0300-\u036f]/g, '') // Remueve los acentos
-      .replace(/[^a-z0-9\s]/g, ''); // Remueve caracteres especiales excepto espacios
+      .replaceAll(/[\u0300-\u036f]/g, '') // Remueve los acentos
+      .replaceAll(/[^a-z0-9\s]/g, ''); // Remueve caracteres especiales excepto espacios
   }
 
   /**
@@ -514,18 +515,15 @@ export class ThirdCreationComponent implements OnInit {
    */
   private findCountryCodeByName(countryName: string): string | null {
     if (!countryName) return null;
-    
+
     const normalized = this.normalizeString(countryName);
-    const country = this.countries.find(c => 
+    const country = this.countries.find(c =>
       this.normalizeString(c.label) === normalized
     );
-    
+
     if (country) {
-      console.log(`País encontrado: "${countryName}" -> ${country.value}`);
       return country.value;
     }
-    
-    console.warn(`No se encontró el país: "${countryName}"`);
     return null;
   }
 
@@ -536,18 +534,15 @@ export class ThirdCreationComponent implements OnInit {
    */
   private findDepartmentCodeByName(departmentName: string): string | null {
     if (!departmentName) return null;
-    
+
     const normalized = this.normalizeString(departmentName);
-    const department = this.states.find(state => 
+    const department = this.states.find(state =>
       this.normalizeString(state.label) === normalized
     );
-    
+
     if (department) {
-      console.log(`Departamento encontrado: "${departmentName}" -> ${department.value}`);
       return department.value;
     }
-    
-    console.warn(`No se encontró el departamento: "${departmentName}"`);
     return null;
   }
 
@@ -559,28 +554,25 @@ export class ThirdCreationComponent implements OnInit {
    */
   private findCityCodeByName(cityName: string, cities: any[]): string | null {
     if (!cityName) return null;
-    
+
     const normalized = this.normalizeString(cityName);
-    const city = cities.find(c => 
+    const city = cities.find(c =>
       this.normalizeString(c.label) === normalized
     );
-    
+
     if (city) {
-      console.log(`Ciudad encontrada: "${cityName}" -> ${city.value}`);
       return city.value;
     }
-    
-    console.warn(`No se encontró la ciudad: "${cityName}"`);
+
     return null;
   }
 
   /**
-   * Carga los tipos de tercero con soporte para búsqueda
-   * @param searchTerm Término de búsqueda opcional
+   * Carga los tipos de tercero activos
    */
-  private loadThirdTypes(searchTerm?: string): void {
+  private loadThirdTypes(): void {
     this.loadingThirdTypes = true;
-    this.thirdServiceConfigurationService.getActiveThirdTypes(this.entData, 0, 50, 'thirdTypename', 'asc', searchTerm).subscribe({
+    this.thirdServiceConfigurationService.getActiveThirdTypes(this.entData, 0, 50).subscribe({
       next: (response: any) => {
         this.thirdTypes = Array.isArray(response.content) ? response.content : [];
         this.loadingThirdTypes = false;
@@ -597,12 +589,11 @@ export class ThirdCreationComponent implements OnInit {
   }
 
   /**
-   * Carga los tipos de identificación con soporte para búsqueda
-   * @param searchTerm Término de búsqueda opcional
+   * Carga los tipos de identificación activos
    */
-  private loadTypeIds(searchTerm?: string): void {
+  private loadTypeIds(): void {
     this.loadingTypeIds = true;
-    this.thirdServiceConfigurationService.getActiveTypeIds(this.entData, 0, 50, 'typeIdname', 'asc', searchTerm).subscribe({
+    this.thirdServiceConfigurationService.getActiveTypeIds(this.entData, 0, 50).subscribe({
       next: (response: any) => {
         this.typeIds = Array.isArray(response.content) ? response.content : [];
         // Aplicar filtro por tipo de persona
@@ -626,7 +617,7 @@ export class ThirdCreationComponent implements OnInit {
   private applyPersonTypeFilter(): void {
     const personType = this.thirdFormService.getPersonType(this.createdThirdForm);
     if (personType) {
-      this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds, 
+      this.filteredTypeIds = this.thirdFormService.filterTypeIdsByPersonType(this.typeIds,
         personType === ePersonType.natural ? 'NATURAL_PERSON' : 'LEGAL_ENTITY');
     } else {
       // Por defecto mostrar tipos para persona natural
@@ -634,33 +625,6 @@ export class ThirdCreationComponent implements OnInit {
     }
   }
 
-  /**
-   * Maneja el evento de filtro del dropdown de tipos de identificación
-   * @param event Evento del filtro con el término de búsqueda
-   */
-  onTypeIdFilter(event: any): void {
-    const searchTerm = event.filter || '';
-    this.typeIdSearchTerm = searchTerm;
-    
-    // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
-    if (searchTerm.length >= 2 || searchTerm.length === 0) {
-      this.loadTypeIds(searchTerm);
-    }
-  }
-
-  /**
-   * Maneja el evento de filtro del dropdown de tipos de tercero
-   * @param event Evento del filtro con el término de búsqueda
-   */
-  onThirdTypeFilter(event: any): void {
-    const searchTerm = event.filter || '';
-    this.thirdTypeSearchTerm = searchTerm;
-    
-    // Solo buscar si hay al menos 2 caracteres o está vacío (para recargar todos)
-    if (searchTerm.length >= 2 || searchTerm.length === 0) {
-      this.loadThirdTypes(searchTerm);
-    }
-  }
 
   /**
    * Maneja el cambio de tipo de persona para actualizar el filtro de tipos de identificación
@@ -793,14 +757,12 @@ export class ThirdCreationComponent implements OnInit {
           // Limpiar datos del RUT si existen
           this.thirdService.clearInfoThirdRUT();
 
-          setTimeout(() => {
-            this.router.navigate(['/gen-masters/third-parties/list']);
-          }, 2000);
+          this.router.navigate(['/gen-masters/third-parties/list']);
         },
         error: (error: any) => {
           // Extraer el mensaje de error más específico disponible
           const errorMessage = error.error?.message || error.message || 'Error al crear el tercero';
-          
+
           // Determinar el título según el tipo de error
           let errorTitle = 'Error';
           if (error.status === 409) {
@@ -835,20 +797,6 @@ export class ThirdCreationComponent implements OnInit {
   onCancel(): void {
     this.thirdService.clearInfoThirdRUT();
     this.router.navigate(['/gen-masters/third-parties/list']);
-  }
-
-  /**
-   * Verifica si es persona natural
-   */
-  isNaturalPerson(): boolean {
-    return this.thirdFormService.isNaturalPerson(this.createdThirdForm);
-  }
-
-  /**
-   * Verifica si es persona jurídica
-   */
-  isJuridicPerson(): boolean {
-    return this.thirdFormService.isJuridicPerson(this.createdThirdForm);
   }
 
   /**

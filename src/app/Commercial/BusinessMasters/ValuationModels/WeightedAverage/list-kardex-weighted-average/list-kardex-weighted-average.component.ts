@@ -196,21 +196,7 @@ export class ListKardexWeightedAverageComponent {
 
       this.totalRecords = res.data.totalElements;
       this.loading = false;
-
-      // Actualizar el último registro para ajustes de inventario
-      this.updateLastKardexRecord();
     });
-  }
-
-  /**
-   * Actualiza el último registro del kardex para los ajustes de inventario
-   */
-  private updateLastKardexRecord() {
-    if (this.kardexList.length > 0) {
-      this.lastKardexRecord = this.kardexList[this.kardexList.length - 1];
-    } else {
-      this.lastKardexRecord = null;
-    }
   }
 
   /**
@@ -222,10 +208,73 @@ export class ListKardexWeightedAverageComponent {
 
   /**
    * Abre el diálogo de ajuste de inventario
+   * Obtiene el último registro real del backend antes de abrir el modal
    */
   openInventoryAdjustment() {
     if (this.isInventoryAdjustmentEnabled()) {
-      this.showInventoryAdjustment = true;
+      this.loading = true;
+      
+      // Obtener el último registro real del backend
+      this.kardexService.getLatestKardexByProductId(this.productId).subscribe({
+        next: (response) => {
+          if (response.data) {
+            // Procesar el registro obtenido
+            const item = response.data;
+            
+            const balanceTotal = item.totalBalance;
+
+            if (item.type === 'PURCHASE') {
+              item.entryQuantity = item.quantity;
+              item.entryUnitPrice = parseFloat(item.unitPrice);
+              item.entryTotal = item.entryQuantity * item.entryUnitPrice;
+            }
+            if (item.type === 'PURCHASERETURN') {
+              item.entryQuantity = -item.quantity;
+              item.entryUnitPrice = parseFloat(item.unitPrice);
+              item.entryTotal = (item.entryQuantity * item.entryUnitPrice);
+            }
+            if (item.type === 'SALE') {
+              item.exitQuantity = item.quantity;
+              item.exitUnitPrice = parseFloat(item.unitPrice);
+              item.exitTotal = item.exitQuantity * item.exitUnitPrice;
+            }
+            if (item.type === 'SALESRETURN') {
+              item.exitQuantity = -item.quantity;
+              item.exitUnitPrice = parseFloat(item.unitPrice);
+              item.exitTotal = (item.exitQuantity * item.exitUnitPrice);
+            }
+
+            const formattedDate = new Date(item.date).toLocaleDateString('es-CO', {
+              day: '2-digit',
+              month: 'long',
+              year: 'numeric'
+            }).replace(/ de /g, '-');
+
+            this.lastKardexRecord = {
+              ...item,
+              balanceTotal,
+              formattedDate
+            };
+          } else {
+            // No hay registros previos
+            this.lastKardexRecord = null;
+          }
+          
+          this.loading = false;
+          this.showInventoryAdjustment = true;
+        },
+        error: (error) => {
+          console.error('Error al obtener el último registro del kardex:', error);
+          this.loading = false;
+          
+          // Mostrar mensaje de error
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo obtener el último registro del kardex'
+          });
+        }
+      });
     }
   }
 

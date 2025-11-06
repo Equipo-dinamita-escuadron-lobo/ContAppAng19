@@ -3,20 +3,20 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
+import { KeyFilterModule } from 'primeng/keyfilter';
 import { ButtonModule } from 'primeng/button';
 import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { SelectModule } from 'primeng/select';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { BankService } from '../../services/bank.service';
 
 @Component({
   selector: 'app-bank-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, MultiSelectModule],
   templateUrl: './bank-edit.component.html',
-  styleUrl: './bank-edit.component.css',
-  providers: [MessageService]
+  styleUrl: './bank-edit.component.css'
 })
 export class BankEditComponent implements OnInit {
   form: FormGroup;
@@ -26,17 +26,17 @@ export class BankEditComponent implements OnInit {
   originalFormValue: any = null;
 
   constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private route: ActivatedRoute,
-    private messageService: MessageService,
-    private bankService: BankService,
-    private localStorageMethod: LocalStorageMethods
+    private readonly fb: FormBuilder,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
+    private readonly messageService: MessageService,
+    private readonly bankService: BankService,
+    private readonly localStorageMethod: LocalStorageMethods
   ) {
     this.form = this.fb.group({
-      codigo: ['', [Validators.required, BankService.validateBankCode]],
-      nombre: ['', [Validators.required, Validators.maxLength(100)]],
-      moneda: ['', [Validators.required]]
+      code: ['', [Validators.required, BankService.validateBankCode]],
+      name: ['', [Validators.required, Validators.maxLength(100)]],
+      currencies: [[], [Validators.required, Validators.minLength(1)]]
     });
   }
 
@@ -73,9 +73,9 @@ export class BankEditComponent implements OnInit {
     this.bankService.findById(this.bankId, enterpriseId).subscribe({
       next: (bank) => {
         const formData = {
-          codigo: bank.codigo,
-          nombre: bank.nombre,
-          moneda: bank.moneda
+          code: bank.code,
+          name: bank.name,
+          currencies: bank.currencies
         };
         this.form.patchValue(formData);
         this.originalFormValue = { ...formData };
@@ -132,9 +132,9 @@ export class BankEditComponent implements OnInit {
     const payload = {
       id: this.bankId,
       idEnterprise: enterpriseId,
-      codigo: this.form.value.codigo,
-      nombre: this.form.value.nombre,
-      moneda: this.form.value.moneda,
+      code: this.form.value.code,
+      name: this.form.value.name,
+      currencies: this.form.value.currencies,
       status: true
     };
 
@@ -145,9 +145,7 @@ export class BankEditComponent implements OnInit {
           summary: 'Actualización exitosa',
           detail: 'Banco actualizado correctamente.'
         });
-        setTimeout(() => {
-          this.goBack();
-        }, 1000);
+        this.goBack();
       },
       error: (err) => {
         this.messageService.add({

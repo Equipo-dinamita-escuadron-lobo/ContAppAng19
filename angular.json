@@ -28,7 +28,17 @@
               "src/styles.css",
               "node_modules/katex/dist/katex.min.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "file-saver",
+              "canvg",
+              "quill-delta",
+              "html2canvas",
+              "jspdf",
+              "raf",
+              "rgbcolor",
+              "core-js"
+            ]
           },
           "configurations": {
             "production": {

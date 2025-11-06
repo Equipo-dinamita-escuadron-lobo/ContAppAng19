@@ -124,12 +124,12 @@ export class ThirdConfigComponent implements OnInit {
    * Constructor del componente
    */
   constructor(
-    private thirdServiceConfiguration: ThirdServiceConfigurationService,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService,
-    private localStorageMethods: LocalStorageMethods,
-    private fb: FormBuilder,
-    private router: Router
+    private readonly thirdServiceConfiguration: ThirdServiceConfigurationService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly localStorageMethods: LocalStorageMethods,
+    private readonly fb: FormBuilder,
+    private readonly router: Router
   ) {
     this.typeIdForm = this.fb.group({
       code: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10)]],
@@ -293,7 +293,7 @@ export class ThirdConfigComponent implements OnInit {
     
     this.thirdServiceConfiguration.updateTypeId(updatedTypeId).subscribe({
       next: (response: TypeId) => {
-        this.reloadCurrentPageTypeIds();
+        this.typesId[index] = response;
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -594,8 +594,8 @@ export class ThirdConfigComponent implements OnInit {
         }
         
         this.messageService.add({
-          severity: 'error',
-          summary: 'No se puede eliminar',
+          severity: 'info',
+          summary: 'Información',
           detail: errorMessage
         });
       }
@@ -823,8 +823,8 @@ export class ThirdConfigComponent implements OnInit {
         }
         
         this.messageService.add({
-          severity: 'error',
-          summary: 'No se puede eliminar',
+          severity: 'info',
+          summary: 'Información',
           detail: errorMessage
         });
       }

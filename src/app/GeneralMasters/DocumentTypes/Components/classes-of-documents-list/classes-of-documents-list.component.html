@@ -7,16 +7,16 @@
     <!-- Header -->
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <div class="items-center mb-6">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Clases de Documentos
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Clases</span> de Documentos
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">Lista de todas las clases de documentos configuradas en el sistema.</p>
+        <p class="font-family-sans font-normal text-sm mt-12">Lista de todas las clases de documentos configuradas en el sistema.</p>
       </div>
 
       <!-- Botones -->
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
-          <p-button label="Crear Clase" icon="pi pi-plus" (onClick)="createClass()"></p-button>
+          <p-button label="Crear" icon="pi pi-plus" (onClick)="createClass()"></p-button>
           <p-button icon="pi pi-arrow-left" (onClick)="goToTypes()" styleClass="p-button-text p-button-secondary"></p-button>
         </div>
       </div>
@@ -38,9 +38,9 @@
     <p-table #classesTable [value]="list" [lazy]="true" (onLazyLoad)="loadClassesLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '40rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary">Nombre <p-sortIcon field="name"></p-sortIcon></th>
-          <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
-          <th class="font-semibold text-primary border-b-2 border-primary text-center">Acciones</th>
+          <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary" scope="col">Nombre <p-sortIcon field="name"></p-sortIcon></th>
+          <th class="font-semibold text-primary border-b-2 border-primary text-center" scope="col">Estado</th>
+          <th class="font-semibold text-primary border-b-2 border-primary text-center" scope="col">Acciones</th>
         </tr>
       </ng-template>
 
@@ -48,16 +48,16 @@
         <tr class="text-neutral-20">
           <td class="py-3">{{ row.name }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="formatState(row.status)" [severity]="getStateSeverity(row.status)"></p-tag>
+            <p-tag [value]="documentTypesPresentationService.formatState(row.status)" [severity]="documentTypesPresentationService.getStateSeverity(row.status)"></p-tag>
           </td>
           <td class="py-3 text-center">
             <div class="flex justify-center gap-2 items-center">
               <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" (onClick)="editClass(row)" styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
               <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" (onClick)="deleteClass(row)" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
               <p-toggleSwitch
-                [ngModel]="isActive(row.status)"
+                [ngModel]="documentTypesPresentationService.isActive(row.status)"
                 (onChange)="changeClassState(row)"
-                pTooltip="Cambiar Estado"
+                [pTooltip]="documentTypesPresentationService.formatState(row.status)"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
                 [style]="{'transform': 'scale(0.8)'}"

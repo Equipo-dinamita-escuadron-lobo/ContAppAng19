@@ -16,6 +16,7 @@ import { SteletonService } from '../../services/steleton.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ProductResponse } from '../../../BusinessMasters/ValuationModels/WeightedAverage/models/ProductResponse';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { Observable } from 'rxjs';
 
 
 interface AutoCompleteCompleteEvent {
@@ -62,8 +63,8 @@ export class CreateInvoiceComponent implements OnInit {
   selectedProduct: ProductList2 | undefined;
 
   invoiceTypes: InvoiceType[] = [
-    { label: 'Factura de Compra', value: 'purchase' },
-    { label: 'Factura de Venta', value: 'sale' }
+    { label: 'Factura de Compra', value: 'PURCHASE' },
+    { label: 'Factura de Venta', value: 'SALE' }
   ];
 
   constructor(
@@ -86,10 +87,21 @@ export class CreateInvoiceComponent implements OnInit {
       this.calculatePendingValue();
     });
 
-    this.steletonService.getAllProductsByEnterpriseId().subscribe(response => {
-      this.allProducts = response;
+    // Cargar todos los productos
+    this.steletonService.getAllProductsByEnterpriseId().subscribe({
+      next: (response) => {
+        this.allProducts = response.content; // Extraer el array de productos del objeto paginado
+        console.log('Productos cargados:', this.allProducts);
+      },
+      error: (error) => {
+        console.error('Error al cargar productos:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los productos'
+        });
+      }
     });
-
   }
 
   private createInvoiceForm(): FormGroup {
@@ -113,7 +125,7 @@ export class CreateInvoiceComponent implements OnInit {
       productId: [this.productId || '', Validators.required],
       amount: ['', [Validators.required, Validators.min(1)]],
       description: ['', Validators.required],
-      descount: [0, [Validators.min(0), Validators.max(100)]],
+      discount: [0, [Validators.min(0), Validators.max(100)]], // Cambiado de 'descount' a 'discount'
       unitPrice: [0, [Validators.required, Validators.min(0)]], // Siempre requerido
       subtotal: [{ value: 0, disabled: true }],
       taxPercentage: [[]],
@@ -123,7 +135,7 @@ export class CreateInvoiceComponent implements OnInit {
     // Suscribirse a cambios para calcular subtotal
     productForm.get('amount')?.valueChanges.subscribe(() => this.calculateSubtotal(productForm));
     productForm.get('unitPrice')?.valueChanges.subscribe(() => this.calculateSubtotal(productForm));
-    productForm.get('descount')?.valueChanges.subscribe(() => this.calculateSubtotal(productForm));
+    productForm.get('discount')?.valueChanges.subscribe(() => this.calculateSubtotal(productForm));
 
     console.log('Nuevo formulario de producto creado:', productForm.value);
     return productForm;
@@ -166,7 +178,7 @@ export class CreateInvoiceComponent implements OnInit {
   private calculateSubtotal(productForm: FormGroup): void {
     const amount = productForm.get('amount')?.value || 0;
     const unitPrice = productForm.get('unitPrice')?.value || 0;
-    const discount = productForm.get('descount')?.value || 0;
+    const discount = productForm.get('discount')?.value || 0; // Cambiado de 'descount' a 'discount'
 
     const subtotalBeforeDiscount = amount * unitPrice;
     const discountAmount = subtotalBeforeDiscount * (discount / 100);
@@ -211,43 +223,60 @@ export class CreateInvoiceComponent implements OnInit {
         productId: product.productId,
         amount: product.amount,
         description: product.description,
-        descount: product.descount,
+        discount: product.discount,
         unitPrice: product.unitPrice || 0,
         subtotal: product.subtotal,
         taxPercentage: product.taxPercentage || []
       }));
 
       const factureData: Facture2 = {
-        factId: 0, // Se genera en el backend
+        factCode: formValue.factCode,
         entId: this.entData?.id || '',
         thId: formValue.thId,
-        factCode: formValue.factCode,
-        factProducts: products,
+        products: products,
         totalValue: formValue.totalValue.toString(),
         totalPay: formValue.totalPay.toString(),
         pendingValue: formValue.pendingValue.toString(),
         expirationDate: expirationDate,
-        accountingAccount: formValue.accountingAccount
+        accountingAccount: formValue.accountingAccount,
+        factureType: formValue.invoiceType,
+        inventoryConfigType: this.localStorageMethods.getInventoryConfigType()
       };
 
+      console.log('Datos de factura a enviar:', factureData);
+
       // Llamar al servicio correspondiente según el tipo de factura
-      const serviceCall = formValue.invoiceType === 'purchase'
-        ? this.steletonService.createPurchaseSkeleton(factureData)
-        : this.steletonService.createSaleForReceiptSkeleton(factureData);
+      let serviceCall: Observable<void>;
+
+      switch (formValue.invoiceType) {
+        case 'PURCHASE':
+          serviceCall = this.steletonService.createPurchaseSkeleton(factureData);
+          break;
+        case 'SALE':
+          serviceCall = this.steletonService.createSaleSkeleton(factureData);
+          break;
+        default:
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Tipo de factura no válido'
+          });
+          return;
+      }
 
       serviceCall.subscribe({
-        next: (response) => {
+        next: () => {
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
-            detail: `Factura de ${formValue.invoiceType === 'purchase' ? 'compra' : 'venta'} creada exitosamente`,
+            detail: `Factura creada exitosamente`,
             life: 3000
           });
 
           // Limpiar el formulario después de guardar exitosamente
           this.clearForm();
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error al crear factura', error);
           this.messageService.add({
             severity: 'error',

@@ -6,10 +6,10 @@
     <!-- Cabecera -->
     <div class="flex justify-between items-start mb-12">
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-          Crear Tercero
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Crear</span> Tercero
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2">
+        <p class="font-family-sans font-normal text-sm mt-12">
           Ingrese la información requerida para registrar un nuevo tercero.
         </p>
       </div>
@@ -63,7 +63,6 @@
                 [filter]="true"
                 filterBy="thirdTypeName"
                 [loading]="loadingThirdTypes"
-                (onFilter)="onThirdTypeFilter($event)"
                 class="max-w-sm">
               </p-multiSelect>
               <app-form-field-error [form]="createdThirdForm" fieldName="thirdTypes" [submitted]="submitted">
@@ -88,7 +87,6 @@
                 filterBy="typeId"
                 [showClear]="true"
                 [loading]="loadingTypeIds"
-                (onFilter)="onTypeIdFilter($event)"
                 class="max-w-xs">
                 <ng-template pTemplate="selectedItem" let-selectedOption>
                   <div *ngIf="selectedOption">
@@ -125,13 +123,10 @@
                 <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['nitLength']">
                   El NIT debe tener exactamente 9 dígitos
                 </ng-container>
-                <ng-container *ngIf="createdThirdForm.get('idNumber')?.errors?.['thirdExists']">
-                  Ya existe un tercero con este número de identificación
-                </ng-container>
               </small>
             </div>
 
-            <div class="flex flex-col gap-2" *ngIf="isJuridicPerson()">
+            <div class="flex flex-col gap-2" *ngIf="thirdValidationMessagesService.isJuridicPerson(createdThirdForm.get('personType')?.value)">
               <app-form-field-label label="DV"></app-form-field-label>
               <input 
                 pInputText 
@@ -147,7 +142,7 @@
         </app-form-panel>
 
         <!-- Panel: Información Personal (Persona Natural) -->
-        <app-form-panel title="Información Personal" *ngIf="isNaturalPerson()">
+        <app-form-panel title="Información Personal" *ngIf="thirdValidationMessagesService.isNaturalPerson(createdThirdForm.get('personType')?.value)">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="flex flex-col gap-2">
               <app-form-field-label label="Nombres" [required]="true"></app-form-field-label>
@@ -188,7 +183,7 @@
         </app-form-panel>
 
         <!-- Panel: Información de Empresa (Persona Jurídica) -->
-        <app-form-panel title="Información de Empresa" *ngIf="isJuridicPerson()">
+        <app-form-panel title="Información de Empresa" *ngIf="thirdValidationMessagesService.isJuridicPerson(createdThirdForm.get('personType')?.value)">
           <div class="grid grid-cols-1 gap-12">
             <div class="flex flex-col gap-2">
               <app-form-field-label label="Razón Social" [required]="true"></app-form-field-label>
@@ -330,7 +325,7 @@
       <!-- Botones de acción -->
       <div class="flex justify-center gap-4 mt-12 pt-40">
         <p-button type="button" label="Cancelar" severity="secondary" (onClick)="onCancel()"></p-button>
-        <p-button type="submit" label="Crear Tercero" [disabled]="createdThirdForm.invalid"></p-button>
+        <p-button type="submit" label="Guardar" [disabled]="createdThirdForm.invalid"></p-button>
       </div>
     </form>
   </div>

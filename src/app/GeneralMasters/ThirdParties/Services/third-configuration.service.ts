@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 import { ThirdType } from '../models/ThirdType';
 import { TypeId } from '../models/TypeId';
 
@@ -10,29 +10,7 @@ import { TypeId } from '../models/TypeId';
 })
 export class ThirdServiceConfigurationService {
   /** URL base para las operaciones de configuración de terceros */
-  private thirdApiUrl = environment.API_URL + 'thirds/configuration/';
-
-  /**
-   * Método genérico para extraer arrays de respuestas que pueden venir en diferentes formatos
-   * @param response Respuesta del backend
-   * @param possibleKeys Claves posibles donde puede estar el array
-   * @returns Array extraído o array vacío
-   */
-  private extractArrayFromResponse<T>(response: any, possibleKeys: string[] = []): T[] {
-    if (Array.isArray(response)) {
-      return response;
-    }
-    
-    if (response && typeof response === 'object') {
-      for (const key of possibleKeys) {
-        if (Array.isArray(response[key])) {
-          return response[key];
-        }
-      }
-    }
-    
-    return [];
-  }
+  private readonly thirdApiUrl = environment.API_URL + 'thirds/configuration/';
 
   /**
    * Método genérico para crear parámetros HTTP
@@ -51,7 +29,7 @@ export class ThirdServiceConfigurationService {
    * Constructor del servicio
    * @param http Cliente HTTP para realizar peticiones
    */
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   /**
    * Obtiene los tipos de terceros para una empresa específica con paginación y búsqueda
@@ -172,23 +150,17 @@ export class ThirdServiceConfigurationService {
   }
 
   /**
-   * Obtiene los tipos de identificación activos para una empresa específica con paginación y búsqueda
+   * Obtiene los tipos de identificación activos para una empresa específica con paginación inteligente
    * @param entId ID de la empresa
    * @param page Número de página (opcional)
    * @param size Tamaño de página (opcional)
-   * @param sortField Campo de ordenamiento (opcional)
-   * @param sortOrder Orden de clasificación (opcional)
-   * @param search Término de búsqueda (opcional)
-   * @returns Observable con la página de tipos de identificación activos
+   * @returns Observable con la página de tipos de identificación activos ordenados por nombre
    */
-  getActiveTypeIds(entId: String, page?: number, size?: number, sortField?: string, sortOrder?: string, search?: string): Observable<any> {
+  getActiveTypeIds(entId: String, page?: number, size?: number): Observable<any> {
     let params = new HttpParams().set('entId', entId.toString());
     
     if (page !== undefined) params = params.set('numPage', page.toString());
     if (size !== undefined) params = params.set('size', size.toString());
-    if (sortField) params = params.set('sortField', sortField);
-    if (sortOrder) params = params.set('sortOrder', sortOrder);
-    if (search) params = params.set('search', search);
 
     return this.http.get<any>(this.thirdApiUrl + "typeid-active", {params}).pipe(
       catchError((error) => throwError(() => error))
@@ -196,23 +168,17 @@ export class ThirdServiceConfigurationService {
   }
 
   /**
-   * Obtiene los tipos de terceros activos para una empresa específica con paginación y búsqueda
+   * Obtiene los tipos de terceros activos para una empresa específica con paginación inteligente
    * @param entId ID de la empresa
    * @param page Número de página (opcional)
    * @param size Tamaño de página (opcional)
-   * @param sortField Campo de ordenamiento (opcional)
-   * @param sortOrder Orden de clasificación (opcional)
-   * @param search Término de búsqueda (opcional)
-   * @returns Observable con la página de tipos de terceros activos
+   * @returns Observable con la página de tipos de terceros activos ordenados por nombre
    */
-  getActiveThirdTypes(entId: String, page?: number, size?: number, sortField?: string, sortOrder?: string, search?: string): Observable<any> {
+  getActiveThirdTypes(entId: String, page?: number, size?: number): Observable<any> {
     let params = new HttpParams().set('entId', entId.toString());
     
     if (page !== undefined) params = params.set('numPage', page.toString());
     if (size !== undefined) params = params.set('size', size.toString());
-    if (sortField) params = params.set('sortField', sortField);
-    if (sortOrder) params = params.set('sortOrder', sortOrder);
-    if (search) params = params.set('search', search);
 
     return this.http.get<any>(this.thirdApiUrl + "thirdtype-active", {params}).pipe(
       catchError((error) => throwError(() => error))

@@ -1,262 +1,253 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
-import { ToastModule } from 'primeng/toast';
-import { TooltipModule } from 'primeng/tooltip';
-import { MessageService, ConfirmationService } from 'primeng/api';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { TagModule } from 'primeng/tag';
 import { FormsModule } from '@angular/forms';
-import { PaymentMethodsServiceService } from '../../services/payment-methods-service.service';
+import { Router } from '@angular/router';
+import { PaymentMethodsServiceService, PageResponse } from '../../services/payment-methods-service.service';
+import { PaymentMethodsValidationMessagesService } from '../../services/payment-methods-validation-messages.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
-import { PaymentMethod, AccountingAccountOption } from '../../models/PaymentMethods';
-import { PaymentMethodsUtils } from '../../utils/payment-methods.utils';
+import { PaymentMethod } from '../../models/PaymentMethods';
+import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
+
+// PrimeNG Imports
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { InputTextModule } from 'primeng/inputtext';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
+import { TagModule } from 'primeng/tag';
+
+// PrimeNG Services
+import { MessageService, ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-payment-methods-list',
   standalone: true,
   imports: [
     CommonModule,
-    TableModule,
+    FormsModule,
     ButtonModule,
+    TableModule,
+    InputTextModule,
+    ToggleSwitchModule,
+    ToastModule,
+    ConfirmDialogModule,
     IconFieldModule,
     InputIconModule,
-    InputTextModule,
-    ToastModule,
     TooltipModule,
-    ConfirmDialogModule,
-    ToggleSwitchModule,
-    TagModule,
-    FormsModule
+    TagModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './payment-methods-list.component.html',
   styleUrl: './payment-methods-list.component.css'
 })
-export class PaymentMethodsListComponent {
-  list: PaymentMethod[] = [];
-  filtered: PaymentMethod[] = [];
-  totalRecords: number = 0;
-  currentPage: number = 0;
-  currentSize: number = 10;
-  currentSortField: string = 'name';
-  currentSortOrder: string = 'asc';
-  accountingAccountsMap: Map<string, string> = new Map(); // código -> descripción
-  accountingAccountsOptions: AccountingAccountOption[] = []; // Para compatibilidad
+export class PaymentMethodsListComponent implements OnInit {
+  private readonly service = inject(PaymentMethodsServiceService);
+  private readonly chartAccountService = inject(ChartAccountService);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly localStorageMethod = inject(LocalStorageMethods);
+  private readonly router = inject(Router);
+  public readonly paymentMethodsValidationMessagesService = inject(PaymentMethodsValidationMessagesService);
 
-  constructor(
-    private service: PaymentMethodsServiceService,
-    private chartAccountService: ChartAccountService,
-    private router: Router,
-    private messageService: MessageService,
-    private confirmationService: ConfirmationService
-  ) {}
+  private enterpriseId: string = '';
+
+  loading = false;
+  paymentMethods: PaymentMethod[] = [];
+
+  pageSize = 10;
+  totalRecords = 0;
+  currentPage = 0;
+
+  searchTerm = '';
+  sortField: string | undefined;
+  sortOrder: string | undefined;
+
+  accountingAccounts: any[] = [];
+  accountingAccountsMap: Map<string, string> = new Map();
 
   ngOnInit(): void {
-    const enterpriseId = this.getEnterpriseId();
-    if (enterpriseId) {
-      // Primero cargar las cuentas contables para crear el mapa
-      this.loadAccountingAccounts(enterpriseId);
+    this.enterpriseId = this.localStorageMethod.getIdEnterprise();
+    if (this.enterpriseId) {
+      this.loadAccountingAccounts();
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo obtener el identificador de la empresa'
+      });
     }
   }
 
-  private getEnterpriseId(): string {
-    const entData = localStorage.getItem('entData');
-    if (entData) {
-      try { return JSON.parse(entData).id; } catch {}
-    }
-    return '';
-  }
-
-  private loadAccountingAccounts(enterpriseId: string): void {
-    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
+  private loadAccountingAccounts(): void {
+    this.chartAccountService.getListAccounts(this.enterpriseId).subscribe({
       next: (accounts: Account[]) => {
-        // Obtener todas las cuentas auxiliares para crear el mapa
-        const auxiliaryAccounts: Account[] = [];
-        accounts.forEach(account => {
-          PaymentMethodsUtils.collectAuxiliaryAccounts(account, auxiliaryAccounts);
-        });
-
-        // Crear mapa de código -> descripción
-        auxiliaryAccounts.forEach(account => {
-          this.accountingAccountsMap.set(account.code, account.description);
-
-        // También crear opciones para dropdown si es necesario
-        this.accountingAccountsOptions = this.accountingAccountsOptions || [];
-        if (account.id !== undefined) {
-          this.accountingAccountsOptions.push({
-            label: `${account.code} - ${account.description}`,
-            value: account.id,
-            code: account.code
-          });
+        this.accountingAccounts = this.flattenAccounts(accounts);
+        for (const account of this.accountingAccounts) {
+          if (account.code != null) {
+            this.accountingAccountsMap.set(account.code.toString(), `${account.code} - ${account.description}`);
+          }
         }
-        });
-
         // Una vez que tenemos el mapa, cargar los métodos de pago
-        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: 1 });
+        this.loadPaymentMethods();
       },
       error: (error) => {
         console.error('Error al cargar cuentas contables:', error);
         // Aún así cargar los métodos de pago, aunque sin nombres de cuentas
-        this.loadPaymentMethodsLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: 1 });
+        this.loadPaymentMethods();
       }
     });
   }
 
-  loadPaymentMethodsLazy(event: any): void {
-    const enterpriseId = this.getEnterpriseId();
-    if (!enterpriseId) return;
+  /**
+   * Aplana la estructura jerárquica de cuentas
+   */
+  private flattenAccounts(accounts: any[]): any[] {
+    const result: any[] = [];
 
-    // Calcular página y tamaño desde los controles de PrimeNG
-    this.currentPage = Math.floor(event.first / event.rows);
-    this.currentSize = event.rows;
-
-    // Capturar parámetros de sorting
-    this.currentSortField = event.sortField || 'name'; // Campo por defecto
-    this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc'; // 1 = asc, -1 = desc
-
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
-      next: (page) => {
-        const content: PaymentMethod[] = page.content || [];
-        this.list = content.map(pm => ({
-          ...pm,
-          // Usar el campo accountingAccount que ya contiene el formato "código - descripción"
-          accountingAccountDisplay: pm.accountingAccount || 'Sin cuenta asignada'
-        }));
-        this.totalRecords = page?.totalElements || 0;
-      },
-      error: (error) => {
-        console.error('Error al cargar métodos de pago:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar los métodos de pago. Inténtelo nuevamente.',
-          life: 5000
-        });
+    const flatten = (items: any[]) => {
+      for (const item of items) {
+        result.push(item);
+        if (item.children && item.children.length > 0) {
+          flatten(item.children);
+        }
       }
-    });
+    };
+
+    flatten(accounts);
+    return result;
   }
 
-  reloadCurrentPage(): void {
-    const enterpriseId = this.getEnterpriseId();
-    if (!enterpriseId) return;
-
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder).subscribe({
-      next: (page) => {
-        const content: PaymentMethod[] = page.content || [];
-        this.list = content.map(pm => ({
-          ...pm,
-          // Usar el campo accountingAccount que ya contiene el formato "código - descripción"
-          accountingAccountDisplay: pm.accountingAccount || 'Sin cuenta asignada'
-        }));
-        this.totalRecords = page?.totalElements || 0;
-      },
-      error: (error) => {
-        console.error('Error al recargar métodos de pago:', error);
-      }
-    });
+  private loadPaymentMethods(): void {
+    this.loading = true;
+    this.service.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
+      .subscribe({
+        next: (response: PageResponse<PaymentMethod>) => {
+          this.paymentMethods = response.content.map(pm => ({
+            ...pm,
+            accountingAccountDisplay: this.getAccountingAccountDisplay(pm.accountingAccount)
+          }));
+          this.totalRecords = response.page?.totalElements || response.totalElements || 0;
+          this.loading = false;
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: error.title || 'Error',
+            detail: error.message
+          });
+          this.loading = false;
+        }
+      });
   }
 
-  private getAccountingAccountDisplay(accountingAccount: string): string {
-    if (!accountingAccount) return '';
-
-    const description = this.accountingAccountsMap.get(accountingAccount);
-    return description ? `${accountingAccount} - ${description}` : accountingAccount;
+  onSearch(): void {
+    this.currentPage = 0; // Reset to first page when searching
+    this.loadPaymentMethods();
   }
 
-  filterGlobal(event: Event, table: any) {
-    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  onSort(event: any): void {
+    const newSortField = event.field;
+    const newSortOrder = event.order === 1 ? 'asc' : 'desc';
+
+    // Only reload if sort parameters actually changed
+    if (this.sortField !== newSortField || this.sortOrder !== newSortOrder) {
+      this.sortField = newSortField || undefined;
+      this.sortOrder = newSortOrder || undefined;
+      this.currentPage = 0; // Reset to first page when sorting
+      this.loadPaymentMethods();
+    }
   }
 
-  createPaymentMethod() {
+  onPage(event: any): void {
+    const newPage = Math.floor(event.first / event.rows);
+    const newRows = event.rows;
+
+    if (this.currentPage !== newPage || this.pageSize !== newRows) {
+      this.currentPage = newPage;
+      this.pageSize = newRows;
+      this.loadPaymentMethods();
+    }
+  }
+
+  navigateToCreate(): void {
     this.router.navigate(['/gen-masters/payment-methods/create']);
   }
 
-  editPaymentMethod(row: PaymentMethod) {
-    if (!row?.id) return;
-    this.router.navigate(['/gen-masters/payment-methods/edit', row.id]);
+  navigateToEdit(paymentMethod: PaymentMethod): void {
+    if (!paymentMethod.id) return;
+    this.router.navigate(['/gen-masters/payment-methods/edit', paymentMethod.id]);
   }
 
-  deletePaymentMethod(row: PaymentMethod) {
-    if (!row?.id) return;
+  confirmDelete(paymentMethod: PaymentMethod): void {
+    if (!paymentMethod.id) return;
 
     this.confirmationService.confirm({
-      header: 'Confirmar Eliminación',
-      message: `¿Desea eliminar el método de pago "${row.name}"? Esta acción no se puede deshacer.`,
+      message: `¿Desea eliminar el método de pago "${paymentMethod.name}"?`,
+      header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
-      rejectButtonStyleClass: 'p-button-secondary',
-      defaultFocus: 'reject',
-      closeOnEscape: true,
-      accept: () => this.confirmDeletePaymentMethod(row)
-    });
-  }
-
-  changePaymentMethodState(paymentMethod: PaymentMethod) {
-    const enterpriseId = this.getEnterpriseId();
-    if (!paymentMethod?.id || !enterpriseId) return;
-
-    const newStatus = !paymentMethod.status;
-
-    this.service.changeState(paymentMethod.id, enterpriseId, newStatus).subscribe({
-      next: () => {
-        paymentMethod.status = newStatus;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Estado del método de pago "${paymentMethod.name}" cambiado correctamente`
-        });
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cambiar el estado del método de pago.'
-        });
+      accept: () => {
+        this.deletePaymentMethod(paymentMethod);
       }
     });
   }
 
-  getStateSeverity(status: boolean): string {
-    return status ? 'success' : 'danger';
+  private deletePaymentMethod(paymentMethod: PaymentMethod): void {
+    if (!paymentMethod.id) return;
+
+    this.service.delete(paymentMethod.id, this.enterpriseId)
+      .subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Método de pago eliminado correctamente'
+          });
+          this.loadPaymentMethods();
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: error.title || 'Error',
+            detail: error.message
+          });
+        }
+      });
   }
 
-  formatState(status: boolean): string {
-    return status ? 'Activo' : 'Inactivo';
+  togglePaymentMethodStatus(paymentMethod: PaymentMethod, newStatus: boolean): void {
+    if (!paymentMethod.id) return;
+
+    this.service.changeState(paymentMethod.id, this.enterpriseId, newStatus)
+      .subscribe({
+        next: () => {
+          paymentMethod.status = newStatus;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Estado del método de pago '${paymentMethod.name}' cambiado correctamente`
+          });
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: error.title || 'Error',
+            detail: error.message
+          });
+          paymentMethod.status = !newStatus;
+        }
+      });
   }
 
-  isActive(status: boolean): boolean {
-    return status === true;
-  }
-
-  private confirmDeletePaymentMethod(row: PaymentMethod): void {
-    const enterpriseId = this.getEnterpriseId();
-    if (!row?.id || !enterpriseId) return;
-
-    this.service.delete(row.id, enterpriseId).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Eliminado',
-          detail: 'Método de pago eliminado correctamente.'
-        });
-        this.reloadCurrentPage();
-      },
-      error: (err) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo eliminar el método de pago.'
-        });
-      }
-    });
+  getAccountingAccountDisplay(accountingAccount: string): string {
+    return this.accountingAccountsMap.get(accountingAccount) || accountingAccount || 'Sin cuenta asignada';
   }
 }

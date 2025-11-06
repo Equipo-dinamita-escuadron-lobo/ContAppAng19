@@ -1,12 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { Router } from '@angular/router';
-import Swal from 'sweetalert2';
-
-// --- AHORA: Importaciones Standalone y de PrimeNG ---
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -15,17 +10,14 @@ import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { InputIcon } from "primeng/inputicon";
 import { IconField } from "primeng/iconfield";
-import { ReactiveFormsModule } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
-// --- Servicios y Modelos ---
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { UnitOfMeasure } from '../../Models/UnitOfMeasure';
 import { UnitOfMeasureService } from '../../Services/unit-of-measure.service';
-import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-unit-of-measure-list',
@@ -56,39 +48,52 @@ export class UnitOfMeasureListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
 
-
+  totalRecords: number = 0;
+  currentPage: number = 0;
+  currentSize: number = 10;
+  first: number = 0;
+  currentSortField: string = 'name';
+  currentSortOrder: string = 'asc';
+  searchTerm: string = '';
 
   constructor(
-    private unitOfMeasureService: UnitOfMeasureService,
-    private router: Router,
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private readonly unitOfMeasureService: UnitOfMeasureService,
+    private readonly router: Router,
+    private readonly confirmationService: ConfirmationService,
+    private readonly messageService: MessageService
   ) {}
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.getIdEnterprise();
-    console.log('Enterprise ID:', this.entData);
     if (this.entData) {
-      this.getUnitOfMeasures();
-    } else {
-      console.error('No se pudo obtener el ID de la empresa');
+      this.loadUnitsLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
     }
   }
 
-  getUnitOfMeasures(): void {
-    console.log('Llamando al servicio con enterpriseId:', this.entData);
-    this.unitOfMeasureService.getUnitOfMeasures(this.entData).subscribe({
-      next: (data: UnitOfMeasure[]) => {
-        console.log('Datos recibidos:', data);
-        // Asegurar que todas las unidades tengan un estado boolean definido
-        this.unitOfMeasures = data.map(unit => ({
-          ...unit,
-          state: unit.state ?? true // Garantizar valor boolean por defecto
-        }));
+  private getEnterpriseId(): string {
+    return this.entData || '';
+  }
+
+  loadUnitsLazy(event: any): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.first = event.first;
+    this.currentPage = Math.floor(event.first / event.rows);
+    this.currentSize = event.rows;
+    
+    // Manejar ordenamiento si está presente
+    if (event.sortField) {
+      this.currentSortField = event.sortField;
+      this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
+    }
+    
+    this.unitOfMeasureService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
+        this.unitOfMeasures = page.content || [];
+        this.totalRecords = page.page?.totalElements || 0;
       },
       error: (error: any) => {
-        console.error('Error al obtener las unidades de medida:', error);
-        console.error('URL llamada:', `${environment.API_URL}unit-measures/findAll/${this.entData}`);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -96,6 +101,26 @@ export class UnitOfMeasureListComponent implements OnInit {
         });
       }
     });
+  }
+
+  reloadCurrentPage(): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.unitOfMeasureService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
+      next: (page: any) => {
+        this.unitOfMeasures = page.content || [];
+        this.totalRecords = page.page?.totalElements || 0;
+      }
+    });
+  }
+
+  onSearchChange(): void {
+    // Resetear a la primera página cuando se busca
+    this.first = 0;
+    this.currentPage = 0;
+    // Recargar datos con el nuevo término de búsqueda
+    this.loadUnitsLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
   }
 
 
@@ -110,54 +135,38 @@ export class UnitOfMeasureListComponent implements OnInit {
     this.router.navigate(['/gen-masters/inventory/measurement-units/create']);
   }
 
-  // Método para eliminar unidad
-  deleteUnit(unitId: number): void {
-    Swal.fire({
-      title: '¿Estás seguro?',
-      text: '¿Estás seguro de que deseas eliminar esta unidad de medida?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.unitOfMeasureService.deleteUnitOfMeasureId(unitId.toString()).subscribe(
-          () => {
-            this.getUnitOfMeasures();
-            Swal.fire({
-              title: '¡Eliminado!',
-              text: 'La unidad de medida ha sido eliminada con éxito.',
-              icon: 'success',
-              confirmButtonText: 'Aceptar'
-            });
-          },
-          error => {
-            console.error('Error al eliminar la unidad de medida:', error);
-            Swal.fire({
-              title: 'Error',
-              text: 'No se pudo eliminar la unidad de medida. Puede estar siendo utilizada.',
-              icon: 'error',
-              confirmButtonText: 'Aceptar'
-            });
-          }
-        );
-      }
-    });
+  // Método para volver al menú de inventory
+  goBack(): void {
+    this.router.navigate(['/gen-masters/inventory']);
   }
 
-  goBack(): void {
-    this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+  // Método para eliminar unidad
+  deleteUnit(unitId: number): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
+
+    this.confirmationService.confirm({
+      header: 'Confirmar Eliminación',
+      message: `¿Desea eliminar la unidad de medida "${this.unitOfMeasures.find(u => u.id === unitId)?.name || 'seleccionada'}"?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      rejectButtonStyleClass: 'p-button-secondary',
+      defaultFocus: 'reject',
+      closeOnEscape: true,
+      accept: () => this.confirmDeleteUnit(this.unitOfMeasures.find(u => u.id === unitId)!, enterpriseId)
+    });
   }
 
   // Método para cambiar el estado de la unidad de medida
   changeUnitState(unit: UnitOfMeasure): void {
+    const enterpriseId = this.getEnterpriseId();
+    if (!enterpriseId) return;
 
     const newState = unit.state;
     const previousState = !newState;
     
-    this.unitOfMeasureService.unitOfMeasureChangeState(unit.id.toString()).subscribe({
+    this.unitOfMeasureService.unitOfMeasureChangeState(unit.id.toString(), enterpriseId).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
@@ -168,7 +177,6 @@ export class UnitOfMeasureListComponent implements OnInit {
       error: (error: any) => {
         // Revertir el cambio si hay error
         unit.state = previousState;
-        console.error('Error al cambiar el estado de la unidad de medida:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
@@ -178,17 +186,24 @@ export class UnitOfMeasureListComponent implements OnInit {
     });
   }
 
-  // Métodos para manejar el estado
-  getStateSeverity(state: boolean): 'success' | 'danger' {
-    return state ? 'success' : 'danger';
-  }
-
-  formatState(state: boolean): string {
-    return state ? 'Activo' : 'Inactivo';
-  }
-
-  isActive(state: boolean): boolean {
-    return state;
+  private confirmDeleteUnit(unit: UnitOfMeasure, enterpriseId: string): void {
+    this.unitOfMeasureService.deleteUnitOfMeasureId(unit.id.toString(), enterpriseId).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Eliminado',
+          detail: 'Unidad de medida eliminada correctamente.'
+        });
+        this.reloadCurrentPage();
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Información',
+          detail: `No se puede eliminar la unidad "${unit.name}" porque está siendo utilizada por uno o más productos.`
+        });
+      }
+    });
   }
 
 }

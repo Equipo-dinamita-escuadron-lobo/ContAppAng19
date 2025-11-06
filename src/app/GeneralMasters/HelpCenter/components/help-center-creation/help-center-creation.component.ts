@@ -26,7 +26,6 @@ import katex from 'katex';
     EditorModule,
     ToastModule
   ],
-  providers: [MessageService],
   templateUrl: './help-center-creation.component.html',
   styleUrl: './help-center-creation.component.css'
 })
@@ -35,10 +34,10 @@ export class HelpCenterCreationComponent implements OnInit {
   form: FormGroup;
 
   constructor(
-    private fb: FormBuilder,
-    private service: HelpCenterServiceService,
-    private router: Router,
-    private messageService: MessageService
+    private readonly fb: FormBuilder,
+    private readonly service: HelpCenterServiceService,
+    private readonly router: Router,
+    private readonly messageService: MessageService
   ) {
     this.form = this.fb.group({
       moduleId: [null as number | null, Validators.required],
