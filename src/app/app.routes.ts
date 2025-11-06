@@ -1132,6 +1132,16 @@ export const routes: Routes = [
                         './Financial/Treasury/Reports/VendorReports/Components/vendor-report/vendor-report.component'
                       ).then((m) => m.VendorReportComponent),
                   },
+                  {
+                    path: 'aging-report',
+                    data: {
+                      breadcrumb: 'Vencimiento por edades',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Treasury/Reports/AgingReport/Components/aging-report/aging-report.component'
+                      ).then((m) => m.AgingReportComponent),
+                  },
                 ],
               },
             ],

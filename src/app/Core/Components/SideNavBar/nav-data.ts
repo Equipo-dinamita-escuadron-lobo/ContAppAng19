@@ -156,6 +156,11 @@ export const navbarData: INavbarData[] = [
               icon: 'analytics',
               label: 'Reportes de Proveedores',
             },
+            {
+              routeLink: 'financial/treasury/reports/aging-report',
+              icon: 'schedule',
+              label: 'Vencimiento por edades',
+            },
         ],
       },
       {
