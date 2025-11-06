@@ -18,6 +18,17 @@
 
     <!-- Filters Card -->
     <p-card header="Filtros de Búsqueda" class="mb-4">
+        <!-- Info banner cuando se selecciona Contabilizada -->
+        <div *ngIf="showCutoffDateSelector" class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+            <div class="flex items-center gap-2">
+                <i class="pi pi-info-circle text-blue-600"></i>
+                <div class="text-sm">
+                    <p class="font-semibold text-blue-800">Filtro de Fecha de Corte Activo</p>
+                    <p class="text-blue-700">Seleccione un rango de fechas predefinido o personalizado para filtrar las facturas contabilizadas.</p>
+                </div>
+            </div>
+        </div>
+
         <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             <!-- Número de factura Filter -->
             <div class="flex flex-col gap-2">
@@ -52,26 +63,50 @@
                 </p-dropdown>
             </div>
 
+            <!-- Fecha de Corte Filter (solo para Contabilizada) -->
+            <div class="flex flex-col gap-2" *ngIf="showCutoffDateSelector">
+                <label for="cutoffDateRange" class="font-semibold text-[var(--color-primary)]">
+                    📅 Fecha de Corte
+                </label>
+                <p-dropdown
+                    id="cutoffDateRange"
+                    formControlName="cutoffDateRange"
+                    [options]="cutoffDateOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Seleccione un rango"
+                    [showClear]="true">
+                </p-dropdown>
+            </div>
+
             <!-- Date From Filter -->
             <div class="flex flex-col gap-2">
-                <label for="dateFrom" class="font-semibold text-[var(--color-primary)]">Desde</label>
+                <label for="dateFrom" class="font-semibold text-[var(--color-primary)]">
+                    Desde
+                    <span *ngIf="showCutoffDateSelector" class="text-xs text-gray-500">(Auto)</span>
+                </label>
                 <p-calendar
                     id="dateFrom"
                     formControlName="dateFrom"
                     dateFormat="dd/mm/yy"
                     [showIcon]="true"
+                    [disabled]="showCutoffDateSelector && filterForm.get('cutoffDateRange')?.value && filterForm.get('cutoffDateRange')?.value !== 'CUSTOM'"
                     placeholder="Fecha desde">
                 </p-calendar>
             </div>
 
             <!-- Date To Filter -->
             <div class="flex flex-col gap-2">
-                <label for="dateTo" class="font-semibold text-[var(--color-primary)]">Hasta</label>
+                <label for="dateTo" class="font-semibold text-[var(--color-primary)]">
+                    Hasta
+                    <span *ngIf="showCutoffDateSelector" class="text-xs text-gray-500">(Auto)</span>
+                </label>
                 <p-calendar
                     id="dateTo"
                     formControlName="dateTo"
                     dateFormat="dd/mm/yy"
                     [showIcon]="true"
+                    [disabled]="showCutoffDateSelector && filterForm.get('cutoffDateRange')?.value && filterForm.get('cutoffDateRange')?.value !== 'CUSTOM'"
                     placeholder="Fecha hasta">
                 </p-calendar>
             </div>
@@ -277,7 +312,7 @@
         </p-table>
     </p-card>
 
-    <!-- Summary Statistics (Optional) -->
+    <!-- Summary Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <p-card>
             <div class="text-center">
@@ -297,13 +332,16 @@
             </div>
         </p-card>
 
-        <p-card>
+        <p-card [ngClass]="{'border-2 border-green-400': showCutoffDateSelector}">
             <div class="text-center">
                 <i class="pi pi-check-circle text-3xl text-green-500 mb-2"></i>
                 <h3 class="text-2xl font-bold text-gray-800">
                     {{ getPostedCount() }}
                 </h3>
                 <p class="text-gray-600">Contabilizadas</p>
+                <span *ngIf="showCutoffDateSelector" class="text-xs text-green-600 font-semibold">
+                    🎯 Filtro activo
+                </span>
             </div>
         </p-card>
 
@@ -317,6 +355,32 @@
             </div>
         </p-card>
     </div>
+
+    <!-- Estadísticas adicionales de filtrado por fecha de corte -->
+    <p-card *ngIf="showCutoffDateSelector && filterForm.get('cutoffDateRange')?.value && filterForm.get('cutoffDateRange')?.value !== ''"
+            class="mb-4 border-l-4 border-green-500">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center">
+                <i class="pi pi-filter text-2xl text-green-600 mb-2"></i>
+                <h4 class="text-lg font-bold text-gray-800">{{ filteredBills.length }}</h4>
+                <p class="text-sm text-gray-600">Facturas en Rango</p>
+            </div>
+            <div class="text-center">
+                <i class="pi pi-calendar text-2xl text-blue-600 mb-2"></i>
+                <h4 class="text-lg font-bold text-gray-800">
+                    {{ filterForm.get('cutoffDateRange')?.value ? getCutoffDateLabel() : '-' }}
+                </h4>
+                <p class="text-sm text-gray-600">Período Seleccionado</p>
+            </div>
+            <div class="text-center">
+                <i class="pi pi-dollar text-2xl text-purple-600 mb-2"></i>
+                <h4 class="text-lg font-bold text-gray-800">
+                    {{ getTotalFilteredAmount() }}
+                </h4>
+                <p class="text-sm text-gray-600">Total del Período</p>
+            </div>
+        </div>
+    </p-card>
 
     <!-- Toast Messages -->
     <p-toast></p-toast>
