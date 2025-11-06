@@ -4,5 +4,6 @@ export interface KardexPurchaseRequest {
     unitPrice: string;
     factCode:number;
     productId: number;
+    date?: string; // Fecha opcional en formato ISO 8601
   }
   

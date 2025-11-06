@@ -3,4 +3,5 @@ export interface KardexSaleRequest {
   productId: number;
   factCode: number;
   details: string;
+   date?: string; // Fecha opcional en formato ISO 8601
 }

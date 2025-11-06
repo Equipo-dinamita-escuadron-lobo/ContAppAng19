@@ -80,13 +80,13 @@
                   </div>
                   <div class="flex gap-4 items-center">
                     <span class="text-gray-700">
-                      <span class="font-medium">{{ lot.quantity }}</span> unid.
+                      <span class="font-medium">{{ lot.availableQuantity}}</span> unid.
                     </span>
                     <span class="text-gray-400">×</span>
                     <span class="text-gray-700">{{ lot.unitPrice | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                     <span class="text-gray-400">=</span>
                     <span class="font-medium text-blue-600 min-w-[100px] text-right">
-                      {{ (lot.quantity * lot.unitPrice) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                      {{ (lot.availableQuantity * lot.unitPrice) | currency:'COP':'symbol-narrow':'1.0-0' }}
                     </span>
                   </div>
                 </div>
@@ -174,6 +174,39 @@
             </div>
           </div>
 
+     <!-- Fecha (opcional) -->
+      <div class="flex flex-col gap-2">
+        <label for="date" class="font-semibold text-[var(--color-primary)]">
+          Fecha (Opcional)
+        </label>
+        <div class="w-full">
+          <p-datePicker
+            #datepicker
+            id="date"
+            formControlName="date"
+            [showIcon]="true"
+            iconDisplay="input"
+            dateFormat="dd/mm/yy"
+            placeholder="dd/mm/aaaa"
+            [styleClass]="'w-full'"
+            [minDate]="minDate"
+            [maxDate]="maxDate"
+            (onSelect)="onDateSelect($event)"
+            (onClear)="onDateClear()"
+            [showClear]="true"
+            appendTo="body">
+          </p-datePicker>
+          <small class="text-xs text-gray-500">
+            @if (hasAvailableLots() && minDate) {
+              Fecha entre {{ minDate | date:'dd/MM/yyyy' }} y {{ maxDate | date:'dd/MM/yyyy' }}
+            } @else {
+              Si no se especifica, se usará la fecha actual
+            }
+          </small>
+        </div>
+      </div>
+
+
           <!-- Precio Unitario -->
           @if (adjustmentForm.get('adjustmentType')?.value === 'purchase') {
             <div class="flex flex-col gap-2">
@@ -258,7 +291,7 @@
                     <div class="flex justify-between items-center bg-white p-2 rounded border text-sm"
                         [ngClass]="$index === previewResult.resultingLots.length - 1 ? 'border-green-500 bg-green-50' : ''">
                       <div class="flex-1">
-                        <span class="font-medium text-gray-700">Lote #{{ lot.factCode }}</span>
+                        <span class="font-medium text-gray-700">Factura #{{ lot.factCode }}</span>
                         @if ($index === previewResult.resultingLots.length - 1) {
                           <span class="text-xs text-green-600 ml-2 font-semibold">(NUEVO)</span>
                         }
