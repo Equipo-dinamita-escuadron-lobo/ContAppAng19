@@ -11,8 +11,7 @@ import { environment } from '../../../environments/environment';
 export class AuditSessionServiceService {
 
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${environment.API_URL}/api/audit/sessions`;
-  //private readonly apiUrl = 'http://localhost:8080/api/audit/sessions';
+  private readonly apiUrl = `${environment.API_URL}audit/sessions`;
 
   getSessions(filters: SessionAuditFilters): Observable<SessionsPage> {
     let params = new HttpParams() 
