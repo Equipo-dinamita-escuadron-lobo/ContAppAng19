@@ -45,12 +45,17 @@
             (click)="redirectTo('/gen-masters/inventory/products/create')">
           </p-button>
           <!-- Botón "Importar" para importar productos desde Excel -->
-          <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" [chooseIcon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" accept=".xlsx" [auto]="true"
-            (onSelect)="onFileSelect($event)" class="p-button-secondary" [disabled]="isImporting">
+          <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" [chooseIcon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" [auto]="true"
+            (onSelect)="onFileSelect($event)" class="p-button-primeng" [disabled]="isImporting">
           </p-fileUpload>          
           <!-- Botón "Exportar" para exportar productos a Excel -->
-          <p-button label="Exportar" icon="pi pi-download" severity="success"
-            (click)="showExportConfirmDialog()">            
+          <p-button
+            label="Exportar"
+            [icon]="isExporting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"
+            severity="success"
+            (click)="showExportConfirmDialog()"
+            [outlined]="true"
+            [disabled]="isExporting">
           </p-button>
           <!-- Botón "Plantilla" para descargar plantilla de productos -->
           <p-button label="Plantilla" icon="pi pi-download" severity="primary"

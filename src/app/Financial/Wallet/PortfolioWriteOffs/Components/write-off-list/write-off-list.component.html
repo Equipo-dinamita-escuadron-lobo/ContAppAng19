@@ -2,7 +2,7 @@
     <!-- Encabezado -->
     <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
         <div>
-            <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            <h1 class="font-['Titillium_Web'] font-bold text-3xl text-primary border-b-4 border-secondary inline-block pb-1">
                 Castigos de Cartera
             </h1>
             <p class="font-normal text-sm mt-2 text-black">
@@ -19,7 +19,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 items-end">
             <!-- Filtro Cliente (Placeholder) -->
             <div class="flex flex-col gap-2">
-                <label for="client" class="font-semibold text-[var(--color-primary)]">Cliente</label>
+                <label for="client" class="font-semibold text-primary">Cliente</label>
                 <p-autoComplete id="client" formControlName="client" 
                     [suggestions]="clientSuggestions" (completeMethod)="searchClient($event)" 
                     field="name" [dropdown]="true" [forceSelection]="true" 
@@ -29,19 +29,19 @@
 
             <!-- Filtro Fecha Inicio -->
             <div class="flex flex-col gap-2">
-                <label for="startDate" class="font-semibold text-[var(--color-primary)]">Fecha Desde</label>
+                <label for="startDate" class="font-semibold text-primary">Fecha Desde</label>
                 <p-calendar id="startDate" formControlName="startDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
             </div>
 
             <!-- Filtro Fecha Fin -->
             <div class="flex flex-col gap-2">
-                <label for="endDate" class="font-semibold text-[var(--color-primary)]">Fecha Hasta</label>
+                <label for="endDate" class="font-semibold text-primary">Fecha Hasta</label>
                 <p-calendar id="endDate" formControlName="endDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
             </div>
 
             <!-- Filtro Estado -->
             <div class="flex flex-col gap-2">
-                <label for="status" class="font-semibold text-[var(--color-primary)]">Estado</label>
+                <label for="status" class="font-semibold text-primary">Estado</label>
                 <p-dropdown id="status" formControlName="status" [options]="statusOptions" optionLabel="label" optionValue="value" placeholder="Todos los estados" [showClear]="true" [styleClass]="'w-full'"></p-dropdown>
             </div>
         </div>
@@ -66,7 +66,7 @@
             <tr>
                 <td>{{ writeOff.code }}</td>
                 <td>{{ writeOff.writeOffDate | date:'dd/MM/yyyy' }}</td>
-                <td>{{ writeOff.totalAmount | currency:'COP':'symbol':'1.0-0' }}</td>
+                <td>{{ writeOff.totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                 <td>{{ writeOff.thirdName || 'N/A' }}</td>
                 <td>
                     <p-tag [value]="getStatusLabel(writeOff.status)" [severity]="getStatusSeverity(writeOff.status)"></p-tag>

@@ -14,12 +14,12 @@ export class InvoicePortfolioService {
 
   constructor(private http: HttpClient, private localStorageMethods: LocalStorageMethods) { }
 
-  /* Obtiene todas las facturas pendientes (ajusta el endpoint si es diferente)
+  //Obtiene todas las facturas pendientes (ajusta el endpoint si es diferente)
   getPendingInvoices(): Observable<Invoice[]> {
-    return this.http.get<Invoice[]>(`${this.apiUrl}/pending`);
-  }*/
+    return this.http.get<Invoice[]>(`${this.apiUrl}/invoices/pending/by-enterprise/${this.localStorageMethods.getIdEnterprise()}`);
+  }
 
-  /* Obtiene una factura por su ID (necesitarás este endpoint en el backend)*/
+  // Obtiene una factura por su ID (necesitarás este endpoint en el backend)
   getInvoiceById(id: number): Observable<Invoice> {
     return this.http.get<Invoice>(`${this.apiUrl}/invoices/${id}`);
   }

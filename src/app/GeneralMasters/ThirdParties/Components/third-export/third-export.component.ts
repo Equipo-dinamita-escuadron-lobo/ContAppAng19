@@ -43,6 +43,9 @@ export class ThirdExportComponent implements OnInit {
   /** Evento emitido al cerrar el modal */
   @Output() close = new EventEmitter<void>();
   
+  /** Evento emitido cuando la exportación está en progreso */
+  @Output() exportInProgress = new EventEmitter<boolean>();
+  
   /** Estado de carga */
   loading: boolean = false;
   
@@ -165,7 +168,12 @@ export class ThirdExportComponent implements OnInit {
    * Inicia el proceso de exportación
    */
   startExport(): void {
-    this.loading = true;
+    // Cerrar el modal inmediatamente
+    this.closeModal();
+    
+    // Indicar que la exportación está en progreso
+    this.exportInProgress.emit(true);
+    
     const enterpriseId = this.getIdEnterprise();
     const companyName = this.getCompanyName();
     const selectedFields = this.getSelectedOptionalFields();
@@ -178,7 +186,7 @@ export class ThirdExportComponent implements OnInit {
             summary: 'Error de Exportación',
             detail: 'No se recibió el archivo del servidor'
           });
-          this.loading = false;
+          this.exportInProgress.emit(false);
           return;
         }
 
@@ -190,12 +198,7 @@ export class ThirdExportComponent implements OnInit {
           detail: `El archivo se ha exportado correctamente.`
         });
 
-        this.loading = false;
-
-        // Cerrar el modal después de la exportación exitosa
-        setTimeout(() => {
-          this.closeModal();
-        }, 2000);
+        this.exportInProgress.emit(false);
       },
       error: (err) => {
 
@@ -252,7 +255,7 @@ export class ThirdExportComponent implements OnInit {
           });
         }
 
-        this.loading = false;
+        this.exportInProgress.emit(false);
       }
     });
   }

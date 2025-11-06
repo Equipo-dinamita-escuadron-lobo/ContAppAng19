@@ -141,9 +141,9 @@ export class WriteOffCreationComponent {
     
     this.portfolioWriteOffService.createWriteOff(request).subscribe({
       next: (response) => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Borrador de castigo #${response.id} creado correctamente.` });
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Borrador de castigo ${response.code} creado correctamente.` });
         setTimeout(() => {
-          this.router.navigate(['/financial/wallet/write-offs', response.id]); // Navegar al detalle
+          this.router.navigate(['/financial/wallet/write-offs/details/', response.id]); // Navegar al detalle
         }, 1500);
       },
       error: (err) => {

@@ -29,12 +29,12 @@ export class SteletonService {
     return this.http.post<void>(`${API_URL}factures/skeleton/sale`, facture);
   }
 
-  createReturnOnSaleSkeleton(returnRequest: any): Observable<any> {
-    return this.http.post<any>(`${API_URL}factures/skeleton/return-on-sale`, returnRequest);
+  createReturnOnSaleSkeleton(returnRequest: any): Observable<string> {
+    return this.http.post(`${API_URL}factures/skeleton/return-on-sale`, returnRequest, { responseType: 'text' });
   }
 
-  createReturnOnPurchaseSkeleton(returnRequest: any): Observable<any> {
-    return this.http.post<any>(`${API_URL}factures/skeleton/return-on-purchase`, returnRequest);
+  createReturnOnPurchaseSkeleton(returnRequest: any): Observable<string> {
+    return this.http.post(`${API_URL}factures/skeleton/return-on-purchase`, returnRequest, { responseType: 'text' });
   }
 
   getAllFactures(): Observable<any[]> {
