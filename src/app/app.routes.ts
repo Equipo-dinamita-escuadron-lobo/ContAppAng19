@@ -5,6 +5,10 @@ import { ForgotPasswordComponent } from './Core/auth/forgot-password/forgot-pass
 import { RegisterComponent } from './Core/auth/register/register.component';
 import { ResetPasswordComponent } from './Core/auth/reset-password/reset-password.component';
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
+import { EditEnterpriseComponent } from './GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component';
+import { CreateEnterpriseComponent } from './GeneralMasters/Enterprise/create-enterprise/create-enterprise.component';
+import { ListSubjectsComponent } from './GeneralMasters/Subjects/list-subjects/list-subjects.component';
+import { ArchiveEnterpriseComponent } from './GeneralMasters/Enterprise/archive-enterprise/archive-enterprise.component';
 import { hasRoleChildGuard, hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
 import { ViewEnterpriseComponent } from './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component';
@@ -41,6 +45,14 @@ export const routes: Routes = [
     component: ListEnterpriseComponent,
   },
   {
+    path: 'enterprise/archive',
+    canActivate: [isAuthenticatedGuard],
+    data: {
+      breadcrumb: 'enterprise-archive',
+    },
+    component: ArchiveEnterpriseComponent,
+  },
+  {
     path: 'enterprise/create',
     data: {
       breadcrumb: 'enterprise-create',
@@ -59,6 +71,16 @@ export const routes: Routes = [
       import(
         './GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component'
       ).then((m) => m.EditEnterpriseComponent),
+  },
+  {
+    path: 'subjects/list',
+    data: {
+      breadcrumb: 'subjects-list',
+    },
+    loadComponent: () =>
+      import(
+        './GeneralMasters/Subjects/list-subjects/list-subjects.component'
+      ).then((m) => m.ListSubjectsComponent),
   },
   {
     path: '',
@@ -169,57 +191,6 @@ export const routes: Routes = [
                   import(
                     './Configuration/Permissions/Components/permission-edit/permission-edit.component'
                   ).then((m) => m.PermissionEditComponent),
-              },
-            ],
-          },
-          {
-            path: 'audit',
-            data: {
-              breadcrumb: 'Auditoría',
-            },
-            children: [
-              {
-                path: '',
-                pathMatch: 'full',
-                data: {
-                  breadcrumb: null,
-                },
-                loadComponent: () =>
-                  import(
-                    './Configuration/Audit/Components/audit-hub/audit-hub.component'
-                  ).then((m) => m.AuditHubComponent),
-              },
-              {
-                path: 'sessions',
-                data: { breadcrumb: 'Sesiones' },
-                loadComponent: () =>
-                  import(
-                    './Configuration/Audit/Components/audit-session/audit-session.component'
-                  ).then((m) => m.AuditSessionComponent),
-              },
-              {
-                path: 'operations',
-                data: { breadcrumb: 'Operaciones' },
-                loadComponent: () =>
-                  import(
-                    './Configuration/Audit/Components/audit-operations/audit-operations.component'
-                  ).then((m) => m.AuditOperationsComponent),
-              },
-              {
-                path: 'documents',
-                data: { breadcrumb: 'Documentos Contables' },
-                loadComponent: () =>
-                  import(
-                    './Configuration/Audit/Components/audit-accounting-documents/audit-accounting-documents.component'
-                  ).then((m) => m.AuditAccountingDocumentsComponent),
-              },
-              {
-                path: 'consecutives',
-                data: { breadcrumb: 'Consecutivos' },
-                loadComponent: () =>
-                  import(
-                    './Configuration/Audit/Components/audit-consecutive/audit-consecutive.component'
-                  ).then((m) => m.AuditConsecutiveComponent),
               },
             ],
           },
@@ -1121,7 +1092,7 @@ export const routes: Routes = [
               {
                 path: 'purchase-bills',
                 data: {
-                  breadcrumb: 'Facturas de Compra',
+                  breadcrumb: 'Programación Ordenes de Pago',
                 },
                 loadComponent: () =>
                   import(
@@ -1163,6 +1134,16 @@ export const routes: Routes = [
                       import(
                         './Financial/Treasury/Reports/VendorReports/Components/vendor-report/vendor-report.component'
                       ).then((m) => m.VendorReportComponent),
+                  },
+                  {
+                    path: 'aging-report',
+                    data: {
+                      breadcrumb: 'Vencimiento por edades',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Treasury/Reports/AgingReport/Components/aging-report/aging-report.component'
+                      ).then((m) => m.AgingReportComponent),
                   },
                 ],
               },
@@ -1244,6 +1225,57 @@ export const routes: Routes = [
                 './Commercial/NonCommercialTemplate/components/create-non-commercial/create-non-commercial.component'
               ).then((m) => m.CreateNonCommercialComponent)
           }
+        ],
+      },
+      {
+        path: 'audit',
+        data: {
+          breadcrumb: 'Auditoría',
+        },
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            data: {
+              breadcrumb: null,
+            },
+            loadComponent: () =>
+              import(
+                './Audit/Components/audit-hub/audit-hub.component'
+              ).then((m) => m.AuditHubComponent),
+          },
+          {
+            path: 'sessions',
+            data: { breadcrumb: 'Sesiones' },
+            loadComponent: () =>
+              import(
+                './Audit/Components/audit-session/audit-session.component'
+              ).then((m) => m.AuditSessionComponent),
+          },
+          {
+            path: 'operations',
+            data: { breadcrumb: 'Operaciones' },
+            loadComponent: () =>
+              import(
+                './Audit/Components/audit-operations/audit-operations.component'
+              ).then((m) => m.AuditOperationsComponent),
+          },
+          {
+            path: 'documents',
+            data: { breadcrumb: 'Documentos Contables' },
+            loadComponent: () =>
+              import(
+                './Audit/Components/audit-accounting-documents/audit-accounting-documents.component'
+              ).then((m) => m.AuditAccountingDocumentsComponent),
+          },
+          {
+            path: 'consecutives',
+            data: { breadcrumb: 'Consecutivos' },
+            loadComponent: () =>
+              import(
+                './Audit/Components/audit-consecutive/audit-consecutive.component'
+              ).then((m) => m.AuditConsecutiveComponent),
+          },
         ],
       },
     ],

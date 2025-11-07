@@ -145,7 +145,7 @@ export class ListKardexPepsComponent {
 
   onProductSelect(event: any) {
     this.selectedProduct = event.value;
-    this.productId = event.value.id;
+    this.productId = event.value.productId;
     console.log('Producto seleccionado:', this.selectedProduct);
     
     if (this.startDate && this.endDate) {

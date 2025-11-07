@@ -187,7 +187,7 @@ export class PaymentMethodsListComponent implements OnInit {
     if (!paymentMethod.id) return;
 
     this.confirmationService.confirm({
-      message: `¿Desea eliminar "${paymentMethod.name}"?`,
+      message: `¿Desea eliminar el método de pago "${paymentMethod.name}"?`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',

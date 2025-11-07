@@ -83,4 +83,16 @@ export class KardexService {
     return this.http.get<ResponseDto<any>>(`${this.apiUrl}kardex-by-product`, { params });
   }
 
+  /**
+   * Obtiene el último registro de kardex para un producto específico
+   * Este método obtiene el registro más reciente real, no el último de una página
+   */
+  getLatestKardexByProductId(productId: number): Observable<ResponseDto<any>> {
+    const params = new HttpParams()
+      .set('productId', productId)
+      .set('lang', 'es');
+
+    return this.http.get<ResponseDto<any>>(`${this.apiUrl}latest-kardex-by-product`, { params });
+  }
+
 }

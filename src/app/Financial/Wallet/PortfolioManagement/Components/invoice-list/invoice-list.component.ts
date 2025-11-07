@@ -40,8 +40,9 @@ export class InvoiceListComponent implements OnInit {
 
   loadInvoices(): void {
     this.isLoading = true;
-    this.invoicePortfolioService.getInvoicesByEnterpriseId().subscribe({
+    this.invoicePortfolioService.getPendingInvoices().subscribe({
       next: (data) => {
+        console.log('Facturas cargadas:', data);
         this.invoices = data;
         this.isLoading = false;
       },

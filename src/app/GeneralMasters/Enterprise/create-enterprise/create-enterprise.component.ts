@@ -1,6 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -12,6 +17,10 @@ import { MessageService } from 'primeng/api';
 import { HeaderComponent } from '../../../Core/Components/Header/header.component';
 import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
+import { Enterprise } from '../models/enterprise';
+import { EnterpriseList } from '../models/EnterpriseList';
+import { SubjectService } from '../../Subjects/services/subjects.service';
+import { Subject } from '../../Subjects/models/subjects';
 
 @Component({
   selector: 'app-create-enterprise',
@@ -25,11 +34,11 @@ import { EnterpriseDetails } from '../models/EnterpriseDetails';
     MultiSelectModule,
     CheckboxModule,
     ToastModule,
-    HeaderComponent
+    HeaderComponent,
   ],
   providers: [MessageService],
   templateUrl: './create-enterprise.component.html',
-  styleUrl: './create-enterprise.component.css'
+  styleUrls: ['./create-enterprise.component.css'],
 })
 export class CreateEnterpriseComponent implements OnInit {
   enterpriseForm!: FormGroup;
@@ -41,92 +50,113 @@ export class CreateEnterpriseComponent implements OnInit {
   enterpriseTypes = [
     { id: 1, name: 'Privada' },
     { id: 2, name: 'Oficial' },
-    { id: 3, name: 'Mixta' }
+    { id: 3, name: 'Mixta' },
   ];
 
   taxLiabilities = [
     { id: 1, name: 'IVA' },
     { id: 2, name: 'ICA' },
     { id: 3, name: 'Retención en la fuente' },
-    { id: 4, name: 'Retención de IVA' }
+    { id: 4, name: 'Retención de IVA' },
   ];
 
   taxPayerTypes = [
     { id: 1, name: 'Responsable de IVA' },
     { id: 2, name: 'No responsable de IVA' },
-    { id: 3, name: 'Gran contribuyente' }
+    { id: 3, name: 'Gran contribuyente' },
   ];
 
   countries = [
     { id: 1, name: 'Colombia' },
     { id: 2, name: 'Estados Unidos' },
-    { id: 3, name: 'España' }
+    { id: 3, name: 'España' },
   ];
 
   departments = [
     { id: 1, name: 'Cauca' },
     { id: 2, name: 'Valle del Cauca' },
     { id: 3, name: 'Antioquia' },
-    { id: 4, name: 'Cundinamarca' }
+    { id: 4, name: 'Cundinamarca' },
   ];
+
+  city = [
+    { id: 1, name: 'Popayán', departmentId: 1 },
+    { id: 2, name: 'Cali', departmentId: 2 },
+    { id: 3, name: 'Medellín', departmentId: 3 },
+    { id: 4, name: 'Bogotá', departmentId: 4 },
+  ];
+
+  subjectsList: Subject[] = [];
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private enterpriseService: EnterpriseService,
+    private subjectService: SubjectService,
     private messageService: MessageService
   ) {}
 
+  // Inicialización del componente
   ngOnInit(): void {
     this.initForm();
+    this.loadSubjects();
   }
 
+  // Inicialización del formulario reactivo
   initForm(): void {
     this.enterpriseForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       enterpriseType: [null, Validators.required],
       taxLiabilities: [[], Validators.required],
-      legalName: ['', [Validators.required, Validators.minLength(5)]], // Solo para persona jurídica
-      ownerName: ['', [Validators.minLength(2)]], // Solo para persona natural
-      lastNames: ['', [Validators.minLength(2)]], // Solo para persona natural
+      legalName: ['', [Validators.required, Validators.minLength(5)]],
+      ownerName: ['', [Validators.minLength(2)]],
+      lastNames: ['', [Validators.minLength(2)]],
       nit: ['', [Validators.required, Validators.pattern(/^\d{9,10}$/)]],
       dv: ['', [Validators.required, Validators.pattern(/^\d{1}$/)]],
       taxPayerType: [null, Validators.required],
-      mainActivity: ['', [Validators.required, Validators.pattern(/^\d{4}$/)]],
-      secondaryActivity: ['', [Validators.pattern(/^\d{4}$/)]],
+      mainActivity: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+      secondaryActivity: ['', [Validators.pattern(/^\d{6}$/)]],
       country: [null],
       department: [null, Validators.required],
+      city: [null, Validators.required],
+      // subject: [null, Validators.required],
+      semester: [null, Validators.required],
       address: ['', [Validators.required, Validators.minLength(10)]],
       phone: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
       email: ['', [Validators.required, Validators.email]],
-      hasBranches: [false]
+      hasBranches: [false],
     });
 
     this.updateFormValidations();
   }
 
+  // Actualiza las validaciones del formulario según el tipo de persona
   updateFormValidations(): void {
     if (this.personType === 'juridica') {
-      this.enterpriseForm.get('legalName')?.setValidators([Validators.required, Validators.minLength(5)]);
+      this.enterpriseForm
+        .get('legalName')
+        ?.setValidators([Validators.required, Validators.minLength(5)]);
       this.enterpriseForm.get('ownerName')?.clearValidators();
       this.enterpriseForm.get('lastNames')?.clearValidators();
     } else {
       this.enterpriseForm.get('legalName')?.clearValidators();
-      this.enterpriseForm.get('ownerName')?.setValidators([Validators.required, Validators.minLength(2)]);
-      this.enterpriseForm.get('lastNames')?.setValidators([Validators.required, Validators.minLength(2)]);
+      this.enterpriseForm
+        .get('ownerName')
+        ?.setValidators([Validators.required, Validators.minLength(2)]);
+      this.enterpriseForm
+        .get('lastNames')
+        ?.setValidators([Validators.required, Validators.minLength(2)]);
     }
 
-    // Actualizar validaciones
     this.enterpriseForm.get('legalName')?.updateValueAndValidity();
     this.enterpriseForm.get('ownerName')?.updateValueAndValidity();
     this.enterpriseForm.get('lastNames')?.updateValueAndValidity();
   }
 
+  // Manejo del cambio de tipo de persona
   onPersonTypeChange(type: 'juridica' | 'natural'): void {
     this.personType = type;
     this.updateFormValidations();
-    
-    // Limpiar campos cuando cambie el tipo
     if (type === 'juridica') {
       this.enterpriseForm.get('ownerName')?.setValue('');
       this.enterpriseForm.get('lastNames')?.setValue('');
@@ -135,72 +165,133 @@ export class CreateEnterpriseComponent implements OnInit {
     }
   }
 
+  // Manejo de la selección de archivo
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
       this.selectedFile = file;
-      console.log('Archivo seleccionado:', file.name);
     } else {
-      console.error('Por favor selecciona un archivo de imagen válido');
       this.selectedFile = null;
     }
   }
 
+  // Envío del formulario
   onSubmit(): void {
     if (this.enterpriseForm.valid && this.selectedFile) {
       this.loading = true;
-      const formData = this.enterpriseForm.value;
-      
-      const enterpriseData: EnterpriseDetails = {
-        name: formData.name,
-        nit: formData.nit,
-        phone: formData.phone,
-        branch: formData.hasBranches ? 'Sí' : 'No',
-        email: formData.email,
-        logo: this.selectedFile.name, // Nombre del archivo
-        taxLiabilities: formData.taxLiabilities,
-        taxPayerType: formData.taxPayerType,
-        enterpriseType: formData.enterpriseType,
-        personType: this.personType,
+      const f = this.enterpriseForm.value;
+
+      // Transformación para la API
+      const enterpriseDetailsApi = {
+        name: f.name,
+        nit: f.nit,
+        dv: f.dv,
+        phone: '+57 ' + f.phone,
+        branch: f.hasBranches ? 'Comercio al por mayor' : 'Comercio minorista',
+        email: f.email,
+        logo: 'https://cdn.tusitio.com/logos/' + this.selectedFile.name,
+        mainActivity: parseInt(f.mainActivity),
+        secondaryActivity: f.secondaryActivity
+          ? parseInt(f.secondaryActivity)
+          : undefined,
+        taxLiabilities: f.taxLiabilities.map((t: any) => t.id || t),
+        state: 'ACTIVE',
+        taxPayerType: f.taxPayerType.id || f.taxPayerType,
+        enterpriseType: f.enterpriseType.id || f.enterpriseType,
+        personType:
+          this.personType === 'juridica'
+            ? {
+                type: 'JURIDICA',
+                name: null,
+                surname: null,
+                bussinessName: f.legalName,
+              }
+            : {
+                type: 'NATURAL',
+                name: f.ownerName,
+                surname: f.lastNames,
+                bussinessName: null,
+              },
         location: {
-          country: formData.country,
-          department: formData.department,
-          address: formData.address
+          address: f.address,
+          city: f.city.id || f.city,
+          department: f.department.id || f.department,
+          country: f.country.id || f.country,
         },
-        dv: formData.dv,
-        mainActivity: parseInt(formData.mainActivity),
-        secondaryActivity: formData.secondaryActivity ? parseInt(formData.secondaryActivity) : undefined,
-        // Campos específicos según tipo de persona
-        legalName: this.personType === 'juridica' ? formData.legalName : undefined,
-        ownerName: this.personType === 'natural' ? formData.ownerName : undefined,
-        lastNames: this.personType === 'natural' ? formData.lastNames : undefined
+        subjects: f.subject
+          ? [
+              {
+                name: f.subject.name,
+                code: f.subject.code,
+              },
+            ]
+          : undefined,
+        semester: f.semester,
       };
 
-      console.log('Datos de empresa a crear:', enterpriseData);
-      
-      this.enterpriseService.createEnterprise(enterpriseData).subscribe({
-        next: (response) => {
-          console.log('Empresa creada exitosamente:', response);
+      console.log('🧾 JSON enviado al backend (enterpriseDetailsApi):');
+      console.log(JSON.stringify(enterpriseDetailsApi, null, 2));
+
+      this.enterpriseService.createEnterprise(enterpriseDetailsApi).subscribe({
+        next: () => {
           this.loading = false;
           this.router.navigate(['/enterprise/list']);
         },
-        error: (error) => {
-          console.error('Error al crear empresa:', error);
+        error: (err) => {
+          console.error('Error al crear empresa:', err);
           this.loading = false;
-        }
+        },
       });
     } else {
-      // Mostrar notificación de error
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Faltan campos por llenar'
+        detail: 'Faltan campos por llenar',
       });
-      console.log('Formulario inválido o archivo no seleccionado:', this.enterpriseForm.errors);
     }
   }
 
+  // Navegación de regreso a la lista de empresas
   goBack(): void {
     this.router.navigate(['/enterprise/list']);
+  }
+
+  // validateNumberInput(event: KeyboardEvent): void {
+  //   const input = event.target as HTMLInputElement;
+  //   const key = event.key;
+
+  //   // Solo permite números y evita más de 10 dígitos
+  //   if (!/^[0-9]$/.test(key) || input.value.length >= 10) {
+  //     event.preventDefault();
+  //   }
+  // }
+
+  validateNumberInput(event: KeyboardEvent, maxLength: number): void {
+    const input = event.target as HTMLInputElement;
+    const key = event.key;
+
+    // Solo permite números del 0 al 9
+    const isNumber = /^[0-9]$/.test(key);
+
+    if (!isNumber || input.value.length >= maxLength) {
+      event.preventDefault();
+    }
+  }
+
+  /* ==================== CARGAR MATERIAS ==================== */
+  loadSubjects(): void {
+    this.subjectService.getAllSubjects().subscribe({
+      next: (data) => {
+        this.subjectsList = data;
+      },
+      error: (err) => {
+        console.error('Error al cargar materias:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las materias desde el servidor.',
+        });
+      },
+    });
   }
 }

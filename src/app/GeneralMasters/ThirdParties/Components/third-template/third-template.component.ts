@@ -39,6 +39,9 @@ export class ThirdTemplateComponent implements OnInit {
   
   /** Evento emitido al cerrar el modal */
   @Output() close = new EventEmitter<void>();
+  
+  /** Evento emitido cuando la descarga de plantilla está en progreso */
+  @Output() templateInProgress = new EventEmitter<boolean>();
 
   /** ID de la empresa */
   private entData: string = '';
@@ -88,15 +91,15 @@ export class ThirdTemplateComponent implements OnInit {
   }
 
   /**
-   * Descarga la plantilla Excel desde el backend
+   * Descarga la plantilla Excel
    * La plantilla incluye validaciones de datos según la configuración de la empresa
    */
   downloadExcel(): void {
-    if (this.downloading) {
-      return;
-    }
-
-    this.downloading = true;
+    // Cerrar el modal inmediatamente
+    this.closePopUp();
+    
+    // Indicar que la descarga está en progreso
+    this.templateInProgress.emit(true);
     
     this.thirdService.downloadThirdTemplate(this.entData).subscribe({
       next: (blob: Blob) => {
@@ -112,7 +115,8 @@ export class ThirdTemplateComponent implements OnInit {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         
-        this.downloading = false;
+        // Indicar que la descarga terminó
+        this.templateInProgress.emit(false);
         
         // Mostrar mensaje de éxito
         this.messageService.add({
@@ -123,7 +127,9 @@ export class ThirdTemplateComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al descargar la plantilla:', error);
-        this.downloading = false;
+        
+        // Indicar que la descarga terminó (con error)
+        this.templateInProgress.emit(false);
         
         this.messageService.add({
           severity: 'error',

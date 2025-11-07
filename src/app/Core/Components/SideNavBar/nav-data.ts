@@ -139,18 +139,23 @@ export const navbarData: INavbarData[] = [
           {
             routeLink: 'financial/treasury/purchase-bills',
             icon: 'description',
-            label: 'Facturas de Compra',
+            label: 'Programación Ordenes de Pago',
           },
-          {
-            routeLink: 'financial/treasury/expense-receipts',
-            icon: 'receipt_long',
-            label: 'Comprobantes de Egreso',
-          },
-          {
-            routeLink: 'financial/treasury/reports/vendors',
-            icon: 'analytics',
-            label: 'Reportes de Proveedores',
-          },
+            {
+              routeLink: 'financial/treasury/expense-receipts',
+              icon: 'receipt_long',
+              label: 'Comprobantes de Egreso',
+            },
+            {
+              routeLink: 'financial/treasury/reports/vendors',
+              icon: 'analytics',
+              label: 'Reportes de Proveedores',
+            },
+            {
+              routeLink: 'financial/treasury/reports/aging-report',
+              icon: 'schedule',
+              label: 'Vencimiento por edades',
+            },
         ],
       },
       {
@@ -217,7 +222,7 @@ export const navbarData: INavbarData[] = [
                 label: 'Inventario con Promedio Ponderado',
               },
               {
-                routeLink: '/commercial/business-masters/peps',
+              routeLink: '/commercial/business-masters/peps',
                 icon: '',
                 label: 'Inventario PEPS',
               },
@@ -251,14 +256,41 @@ export const navbarData: INavbarData[] = [
         label: 'Devoluciones',
       },
       {
-        routeLink: '/commercial/non-commercial-template',
-        icon: '',
-        label: 'Movimiento de Inventario No Comercial'
+      routeLink:'/commercial/non-commercial-template',
+      icon:'',
+      label:'Movimiento de Inventario No Comercial'
       },
       {
         routeLink: 'TO DO',
         icon: 'analytics',
         label: 'Reportes',
+      },
+    ],
+  },
+  {
+    routeLink: '/audit',
+    icon: 'search',
+    label: 'Auditoría',
+    items: [
+      {
+        routeLink: '/audit/sessions',
+        icon: 'schedule',
+        label: 'Sesión de Auditoría',
+      },
+      {
+        routeLink: '/audit/operations',
+        icon: 'settings',
+        label: 'Operaciones',
+      },
+      {
+        routeLink: '/audit/documents',
+        icon: 'description',
+        label: 'Documentos Contables',
+      },
+      {
+        routeLink: '/audit/consecutives',
+        icon: 'format_list_numbered',
+        label: 'Consecutivos',
       },
     ],
   },

@@ -27,6 +27,12 @@ interface StatusOption {
   value: string;
 }
 
+interface CutoffDateOption {
+  label: string;
+  value: string;
+  days?: number; // Para calcular rangos predefinidos
+}
+
 @Component({
   selector: 'app-bill-list',
   standalone: true,
@@ -69,6 +75,21 @@ export class BillListComponent implements OnInit {
     { label: 'Cancelada', value: 'CANCELLED' }
   ];
 
+  // Opciones de Fecha de Corte (solo para facturas contabilizadas)
+  cutoffDateOptions: CutoffDateOption[] = [
+    { label: 'Todos', value: '' },
+    { label: 'Últimos 7 días', value: 'LAST_7_DAYS', days: 7 },
+    { label: 'Últimos 15 días', value: 'LAST_15_DAYS', days: 15 },
+    { label: 'Último mes (30 días)', value: 'LAST_MONTH', days: 30 },
+    { label: 'Últimos 3 meses', value: 'LAST_3_MONTHS', days: 90 },
+    { label: 'Últimos 6 meses', value: 'LAST_6_MONTHS', days: 180 },
+    { label: 'Último año', value: 'LAST_YEAR', days: 365 },
+    { label: 'Rango personalizado', value: 'CUSTOM' }
+  ];
+
+  // Control de visibilidad del selector de fecha de corte
+  showCutoffDateSelector: boolean = false;
+
   // Loading state
   loading: boolean = false;
 
@@ -93,12 +114,47 @@ export class BillListComponent implements OnInit {
       dateFrom: [null],
       dateTo: [null],
       status: [''],
+      cutoffDateRange: [''], // Fecha de corte para facturas contabilizadas
       minAmount: [null],
       maxAmount: [null]
     });
   }
 
   setupFilterSubscriptions(): void {
+    // Suscribirse a cambios en el estado para mostrar/ocultar fecha de corte
+    this.filterForm.get('status')?.valueChanges.subscribe((status) => {
+      this.showCutoffDateSelector = status === 'POSTED';
+
+      // Si no es contabilizada, limpiar el campo de fecha de corte
+      if (!this.showCutoffDateSelector) {
+        this.filterForm.patchValue({
+          cutoffDateRange: '',
+          dateFrom: null,
+          dateTo: null
+        }, { emitEvent: false });
+      }
+    });
+
+    // Suscribirse a cambios en fecha de corte para calcular rangos
+    this.filterForm.get('cutoffDateRange')?.valueChanges.subscribe((range) => {
+      if (range && range !== 'CUSTOM') {
+        this.applyCutoffDateRange(range);
+      } else if (range === 'CUSTOM') {
+        // Limpiar las fechas para que el usuario pueda seleccionar manualmente
+        this.filterForm.patchValue({
+          dateFrom: null,
+          dateTo: null
+        }, { emitEvent: false });
+      } else if (range === '') {
+        // Si selecciona "Todos", limpiar las fechas
+        this.filterForm.patchValue({
+          dateFrom: null,
+          dateTo: null
+        }, { emitEvent: false });
+      }
+    });
+
+    // Aplicar filtros cuando cambien los valores
     this.filterForm.valueChanges.subscribe(() => {
       this.applyFilters();
     });
@@ -130,7 +186,7 @@ export class BillListComponent implements OnInit {
     const filters = this.filterForm.value;
 
     this.filteredBills = this.allBills.filter(bill => {
-      // Filter by Bill ID
+      // Filtrar por número de factura
       if (filters.billId && !bill.billId.toLowerCase().includes(filters.billId.toLowerCase())) {
         return false;
       }
@@ -165,8 +221,30 @@ export class BillListComponent implements OnInit {
     });
   }
 
+  applyCutoffDateRange(rangeValue: string): void {
+    const option = this.cutoffDateOptions.find(opt => opt.value === rangeValue);
+
+    if (option && option.days) {
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // Fin del día de hoy
+
+      const startDate = new Date();
+      startDate.setDate(today.getDate() - option.days);
+      startDate.setHours(0, 0, 0, 0); // Inicio del día
+
+      this.filterForm.patchValue({
+        dateFrom: startDate,
+        dateTo: today
+      }, { emitEvent: false }); // No emitir evento para evitar loop infinito
+
+      // Aplicar filtros manualmente
+      this.applyFilters();
+    }
+  }
+
   clearFilters(): void {
     this.filterForm.reset();
+    this.showCutoffDateSelector = false;
     this.filteredBills = [...this.allBills];
   }
 
@@ -229,6 +307,14 @@ export class BillListComponent implements OnInit {
     });
   }
 
+  onPayBill(bill: PurchaseBillListView): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Funcionalidad en desarrollo',
+      detail: `La programación de pago para la factura ${bill.billId} estará disponible próximamente.`
+    });
+  }
+
   // Utility methods
   getStatusSeverity(status: string): 'success' | 'info' | 'warning' | 'danger' {
     const severityMap: { [key: string]: 'success' | 'info' | 'warning' | 'danger' } = {
@@ -277,5 +363,16 @@ export class BillListComponent implements OnInit {
 
   getPaidCount(): number {
     return this.allBills.filter(bill => bill.status === 'PAID').length;
+  }
+
+  getCutoffDateLabel(): string {
+    const rangeValue = this.filterForm.get('cutoffDateRange')?.value;
+    const option = this.cutoffDateOptions.find(opt => opt.value === rangeValue);
+    return option ? option.label : 'Rango personalizado';
+  }
+
+  getTotalFilteredAmount(): string {
+    const total = this.filteredBills.reduce((sum, bill) => sum + bill.total, 0);
+    return this.formatCurrency(total);
   }
 }

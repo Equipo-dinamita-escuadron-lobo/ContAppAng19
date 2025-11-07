@@ -7,8 +7,10 @@ export interface PurchaseBill {
   subtotal: number;
   taxes?: number;
   total: number;
+  paidAmount?: number; // Total amount already paid
+  pendingBalance?: number; // Remaining balance to pay
   notes?: string;
-  status: 'DRAFT' | 'POSTED' | 'PAID' | 'CANCELLED';
+  status: 'DRAFT' | 'POSTED' | 'PAID' | 'PARTIALLY_PAID' | 'CANCELLED';
   lineItems: PurchaseBillLineItem[];
   enterpriseId: string;
   createdAt?: Date;
@@ -90,6 +92,8 @@ export interface PurchaseBillListView {
   dateOpened: Date;
   supplierName: string;
   total: number;
+  paidAmount?: number; // Total amount already paid
+  pendingBalance?: number; // Remaining balance to pay
   status: string;
   statusDisplay: string; // Para mostrar en español
 }
