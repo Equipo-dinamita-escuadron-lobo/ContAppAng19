@@ -1,0 +1,69 @@
+<!-- Contenido completo del archivo -->
+<div class="w-full h-full p-4 md:p-10 font-sans">
+    <!-- Encabezado -->
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
+        <div>
+            <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+                Cartera Detallada por Cliente
+            </h1>
+            <p class="font-normal text-sm mt-2 text-black">
+                Consulte el resumen de la cartera de todos los clientes con saldos pendientes.
+            </p>
+        </div>
+    </div>
+
+    <!-- Tabla de resultados con componentes de PrimeNG -->
+    <p-table #dt 
+             [value]="clientPortfolio" 
+             [paginator]="true" 
+             [rows]="5" 
+             [rowsPerPageOptions]="[5, 10, 25, 50]" 
+             [globalFilterFields]="['clientName', 'clientIdentification']"
+             [tableStyle]="{'min-width': '50rem'}" 
+             styleClass="p-datatable-striped"
+             [loading]="isLoading">
+
+        <ng-template pTemplate="caption">
+            <div class="flex flex-wrap justify-between items-center gap-4 p-4 bg-gray-50 rounded-t-lg">
+                <span class="p-input-icon-left w-full sm:w-auto">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" [(ngModel)]="globalFilterValue" 
+                           (input)="dt.filterGlobal($any($event.target).value, 'contains')" 
+                           placeholder="Buscar por identificación o nombre..." 
+                           class="w-full" />
+                </span>
+                <p-button type="button" label="Limpiar filtros" styleClass="p-button-secondary" (onClick)="clear(dt)"></p-button>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+            <tr>
+                <th style="width:15%">Identificación</th>
+                <th style="width:25%">Nombre</th>
+                <th style="width:15%" class="text-right">Deuda por cobrar</th>
+                <th style="width:15%" class="text-right">Valor vencido</th>
+                <th style="width:15%" class="text-right">Valor por vencer</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-client>
+            <tr (click)="viewClientDetail(client.clientId)" class="cursor-pointer hover:bg-gray-100">
+                <td>{{ client.clientIdentification }}</td>
+                <td>{{ client.clientName }}</td>
+                <td class="text-right">{{ client.totalDebt | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-right">{{ client.overdueAmount | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-right">{{ client.dueToAmount | currency:'$':'symbol':'1.0-0' }}</td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="empty">
+            <tr>
+                <td colspan="6" class="text-center py-8">
+                    <i class="pi pi-inbox text-4xl text-gray-400 mb-3"></i>
+                    <p class="font-semibold text-lg">No se encontraron datos de cartera</p>
+                    <p class="text-sm text-gray-500">Actualmente no hay clientes con saldos pendientes para mostrar.</p>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>

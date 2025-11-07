@@ -12,6 +12,7 @@ import { AccountingEntryResponse, ReceiptCreateRequest, ReceiptResponse, VoidRec
 import { AccountingEntryView, AccountingMovementView, ReceiptView } from '../Model/view';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
+import { ReceiptSummaryView } from '../../Reports/Model/Response/PortfolioView';
 
 @Injectable({
   providedIn: 'root'
@@ -23,12 +24,12 @@ export class CashReceiptService {
   private paymentMethodsCache: PaymentMethod[] = [];
 
   private mockClientsDB: Client[] = [
-    { id: 1, name: 'Julian Ruano Majin' },
-    { id: 2, name: 'Maria Lopez' },
-    { id: 3, name: 'Pedro Gomez' },
-    { id: 4, name: 'Ana Fernandez' },
-    { id: 5, name: 'Julian Piamba' },
-    { id: 6, name: 'Juliana Campo' }
+    { id: 1, name: 'Julian Ruano Majin', identification: '1102345678' },
+    { id: 2, name: 'Maria Lopez', identification: '2202345678' },
+    { id: 3, name: 'Pedro Gomez', identification: '3302345678' },
+    { id: 4, name: 'Ana Fernandez', identification: '4402345678' },
+    { id: 5, name: 'Julian Piamba', identification: '5502345678' },
+    { id: 6, name: 'Juliana Campo', identification: '6602345678' }
   ];
 
   constructor(
@@ -305,5 +306,10 @@ export class CashReceiptService {
 
     return entry;
   }
+
+  getReceiptsByInvoice(invoiceId: number): Observable<ReceiptSummaryView[]> {
+  const url = `${environment.API_URL}accountCatalogue/portfolio/receipts/by-invoice/${invoiceId}`;
+  return this.http.get<ReceiptSummaryView[]>(url);
+}
 
 }

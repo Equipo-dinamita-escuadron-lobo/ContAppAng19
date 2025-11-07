@@ -21,6 +21,7 @@ export class LocalStorageMethods {
     const enterpriseData = localStorage.getItem('entData');
     if (enterpriseData) {
       const parsedData = JSON.parse(enterpriseData);
+      parsedData.id = 'e3ac139e-46c7-4805-8696-dd3140009849';
       return parsedData;
     }
     return null;
@@ -31,9 +32,9 @@ export class LocalStorageMethods {
     if (enterpriseData) {
       const parsedData = JSON.parse(enterpriseData);
       const id = parsedData.id;
-      return '86ae97a9-1859-4841-a14e-426584ca3f8e';
+      return 'e3ac139e-46c7-4805-8696-dd3140009849';
     }
-    return '86ae97a9-1859-4841-a14e-426584ca3f8e';
+    return 'e3ac139e-46c7-4805-8696-dd3140009849';
   }
 
   public getInventoryConfigType(): 'PEPS' | 'WEIGHTED_AVERAGE' {
