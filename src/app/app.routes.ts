@@ -989,16 +989,56 @@ export const routes: Routes = [
                     './Financial/Wallet/PortfolioManagement/Components/invoice-detail/invoice-detail.component'
                   ).then((m) => m.InvoiceDetailComponent),
               },
-            {
-              path: 'accounting-entries',
-              data: {
-                breadcrumb: 'Asientos Contables',
-            },
-              loadComponent: () =>
-                import(
-                  './Financial/Wallet/Accounting/Components/accounting-entries/accounting-entries.component'
-                ).then((m) => m.AccountingEntriesComponent),
-            },
+              {
+                path: 'accounting-entries',
+                data: {
+                  breadcrumb: 'Asientos Contables',
+                },
+                loadComponent: () =>
+                  import(
+                    './Financial/Wallet/Accounting/Components/accounting-entries/accounting-entries.component'
+                  ).then((m) => m.AccountingEntriesComponent),
+              },
+
+              {
+                path: 'reports',
+                data: {
+                  breadcrumb: 'Reportes', // Breadcrumb padre para los reportes
+                },
+                children: [
+                  {
+                    path: 'client-portfolio',
+                    data: {
+                      breadcrumb: 'Cartera por Cliente',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Wallet/Reports/Components/client-portfolio-list/client-portfolio-list.component'
+                      ).then((m) => m.ClientPortfolioListComponent),
+                  },
+                  {
+                    path: 'client-invoices/:id', // el ':id' es el parámetro del cliente
+                    data: {
+                      breadcrumb: 'Facturas del Cliente',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Wallet/Reports/Components/client-invoice-list/client-invoice-list.component'
+                      ).then((m) => m.ClientInvoiceListComponent),
+                  },
+                  {
+                    path: 'client-invoice-receipts/:id', // el ':id' es el parámetro del cliente
+                    data: {
+                      breadcrumb: 'Comprobantes de Factura del Cliente',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Wallet/Reports/Components/invoice-receipts-modal/invoice-receipts-modal.component'
+                      ).then((m) => m.InvoiceReceiptsModalComponent),
+                  }
+                  
+                ],
+              }
 
             ],
           },
@@ -1176,14 +1216,14 @@ export const routes: Routes = [
               ).then((m) => m.CreateReturnComponent),
           },
           {
-            path:'non-commercial-template',
-            data:{
-              Breadcrumb:'Plantilla de Evento no Comercial'
+            path: 'non-commercial-template',
+            data: {
+              Breadcrumb: 'Plantilla de Evento no Comercial'
             },
-            loadComponent:()=>
+            loadComponent: () =>
               import(
                 './Commercial/NonCommercialTemplate/components/create-non-commercial/create-non-commercial.component'
-              ).then((m) =>m.CreateNonCommercialComponent)
+              ).then((m) => m.CreateNonCommercialComponent)
           }
         ],
       },

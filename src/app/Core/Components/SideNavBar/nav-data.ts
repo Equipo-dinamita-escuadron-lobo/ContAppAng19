@@ -83,7 +83,7 @@ export const navbarData: INavbarData[] = [
       {
         routeLink: '/gen-masters/no-commercial-tags/list',
         icon: 'label',
-        label:'Etiquetas no comerciales'
+        label: 'Etiquetas no comerciales'
       },
       {
         routeLink: '/gen-masters/help-center/list',
@@ -187,6 +187,14 @@ export const navbarData: INavbarData[] = [
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',
+            items: [
+              {
+                routeLink: '/financial/wallet/reports/client-portfolio',
+                icon: 'assessment', 
+                label: 'Cartera por Cliente',
+              }
+            ],
+
           },
 
         ],
