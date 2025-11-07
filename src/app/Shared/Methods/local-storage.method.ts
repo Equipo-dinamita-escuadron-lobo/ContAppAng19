@@ -21,7 +21,6 @@ export class LocalStorageMethods {
     const enterpriseData = localStorage.getItem('entData');
     if (enterpriseData) {
       const parsedData = JSON.parse(enterpriseData);
-      parsedData.id = 'e3ac139e-46c7-4805-8696-dd3140009849';
       return parsedData;
     }
     return null;
