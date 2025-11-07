@@ -1052,7 +1052,7 @@ export const routes: Routes = [
               {
                 path: 'purchase-bills',
                 data: {
-                  breadcrumb: 'Facturas de Compra',
+                  breadcrumb: 'Programación Ordenes de Pago',
                 },
                 loadComponent: () =>
                   import(
@@ -1094,6 +1094,16 @@ export const routes: Routes = [
                       import(
                         './Financial/Treasury/Reports/VendorReports/Components/vendor-report/vendor-report.component'
                       ).then((m) => m.VendorReportComponent),
+                  },
+                  {
+                    path: 'aging-report',
+                    data: {
+                      breadcrumb: 'Vencimiento por edades',
+                    },
+                    loadComponent: () =>
+                      import(
+                        './Financial/Treasury/Reports/AgingReport/Components/aging-report/aging-report.component'
+                      ).then((m) => m.AgingReportComponent),
                   },
                 ],
               },
@@ -1181,7 +1191,7 @@ export const routes: Routes = [
         path: 'audit',
         data: {
           breadcrumb: 'Auditoría',
-        }, 
+        },
         children: [
           {
             path: '',

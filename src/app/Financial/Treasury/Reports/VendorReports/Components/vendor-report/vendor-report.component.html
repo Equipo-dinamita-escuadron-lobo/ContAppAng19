@@ -142,6 +142,8 @@
                         <th>Fecha</th>
                         <th>Fecha Venc.</th>
                         <th>Referencia</th>
+                        <th>N° Documento</th>
+                        <th>N° Comp. Egreso</th>
                         <th>Tipo</th>
                         <th>Descripción</th>
                         <th class="text-right">Débitos</th>
@@ -160,6 +162,16 @@
                         <td>
                             <span *ngIf="transaction.reference" class="text-blue-600 underline">{{ transaction.reference }}</span>
                             <span *ngIf="!transaction.reference" class="text-gray-400">-</span>
+                        </td>
+                        <td>
+                            <span *ngIf="transaction.documentNumber" class="font-mono text-sm">{{ transaction.documentNumber }}</span>
+                            <span *ngIf="!transaction.documentNumber" class="text-gray-400">-</span>
+                        </td>
+                        <td>
+                            <span *ngIf="transaction.expenseReceiptNumber" class="font-mono text-sm font-semibold text-green-600">
+                                {{ transaction.expenseReceiptNumber }}
+                            </span>
+                            <span *ngIf="!transaction.expenseReceiptNumber" class="text-gray-400">-</span>
                         </td>
                         <td>
                             <p-tag
@@ -192,7 +204,7 @@
 
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="8" class="text-center py-8">
+                        <td colspan="10" class="text-center py-8">
                             <div class="flex flex-col items-center justify-center">
                                 <i class="pi pi-info-circle text-4xl text-gray-400 mb-4"></i>
                                 <p class="text-gray-600 text-lg">No hay transacciones en el período seleccionado</p>

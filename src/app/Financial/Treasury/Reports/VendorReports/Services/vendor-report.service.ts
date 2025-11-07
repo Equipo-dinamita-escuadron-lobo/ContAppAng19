@@ -9,52 +9,97 @@ export class VendorReportService {
 
   constructor() { }
 
-  // Mock data para la lista de proveedores
+  // Mock data para la lista de proveedores - Datos expandidos
   private mockVendorSummaries: VendorReportSummary[] = [
     {
       id: 1,
       name: 'Proveedor ABC S.A.S',
-      totalDebits: 1190000,
-      totalCredits: 1150000,
-      currentBalance: 40000,
-      lastTransactionDate: new Date('2025-09-13'),
-      transactionCount: 4
+      totalDebits: 12500000,
+      totalCredits: 15000000,
+      currentBalance: 2500000,
+      lastTransactionDate: new Date('2025-11-05'),
+      transactionCount: 12
     },
     {
       id: 2,
-      name: 'Distribuidora XYZ Ltda',
-      totalDebits: 2850000,
-      totalCredits: 2850000,
-      currentBalance: 0,
-      lastTransactionDate: new Date('2025-09-12'),
-      transactionCount: 6
-    },
-    {
-      id: 3,
-      name: 'Servicios Técnicos DEF',
-      totalDebits: 750000,
-      totalCredits: 500000,
-      currentBalance: 250000,
-      lastTransactionDate: new Date('2025-09-11'),
-      transactionCount: 3
-    },
-    {
-      id: 4,
-      name: 'Materiales GHI S.A.',
-      totalDebits: 3200000,
-      totalCredits: 3000000,
-      currentBalance: 200000,
-      lastTransactionDate: new Date('2025-09-10'),
+      name: 'Suministros XYZ Ltda',
+      totalDebits: 8200000,
+      totalCredits: 8500000,
+      currentBalance: 300000,
+      lastTransactionDate: new Date('2025-11-01'),
       transactionCount: 8
     },
     {
-      id: 5,
-      name: 'Suministros JKL',
-      totalDebits: 450000,
-      totalCredits: 450000,
+      id: 3,
+      name: 'Distribuciones DEF',
+      totalDebits: 15800000,
+      totalCredits: 16000000,
+      currentBalance: 200000,
+      lastTransactionDate: new Date('2025-10-28'),
+      transactionCount: 15
+    },
+    {
+      id: 4,
+      name: 'Servicios GHI',
+      totalDebits: 6500000,
+      totalCredits: 6500000,
       currentBalance: 0,
-      lastTransactionDate: new Date('2025-09-09'),
-      transactionCount: 2
+      lastTransactionDate: new Date('2025-10-20'),
+      transactionCount: 6
+    },
+    {
+      id: 5,
+      name: 'Materiales JKL',
+      totalDebits: 9800000,
+      totalCredits: 11000000,
+      currentBalance: 1200000,
+      lastTransactionDate: new Date('2025-10-15'),
+      transactionCount: 10
+    },
+    {
+      id: 6,
+      name: 'Equipos MNO',
+      totalDebits: 18700000,
+      totalCredits: 20000000,
+      currentBalance: 1300000,
+      lastTransactionDate: new Date('2025-10-05'),
+      transactionCount: 14
+    },
+    {
+      id: 7,
+      name: 'Tecnología PQR Ltda',
+      totalDebits: 5400000,
+      totalCredits: 5400000,
+      currentBalance: 0,
+      lastTransactionDate: new Date('2025-09-25'),
+      transactionCount: 5
+    },
+    {
+      id: 8,
+      name: 'Servicios Integrales STU',
+      totalDebits: 7600000,
+      totalCredits: 8200000,
+      currentBalance: 600000,
+      lastTransactionDate: new Date('2025-09-15'),
+      transactionCount: 9
+    },
+    {
+      id: 9,
+      name: 'Papelería VWX S.A.',
+      totalDebits: 3200000,
+      totalCredits: 3500000,
+      currentBalance: 300000,
+      lastTransactionDate: new Date('2025-08-30'),
+      transactionCount: 7
+    },
+    {
+      id: 10,
+      name: 'Construcciones YZ Ltda',
+      totalDebits: 22000000,
+      totalCredits: 24000000,
+      currentBalance: 2000000,
+      lastTransactionDate: new Date('2025-08-15'),
+      transactionCount: 18
     }
   ];
 
