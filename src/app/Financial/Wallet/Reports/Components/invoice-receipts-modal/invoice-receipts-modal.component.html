@@ -19,6 +19,8 @@
                         <th>Código del Recibo</th>
                         <th>Fecha del Recibo</th>
                         <th class="text-right">Monto Aplicado</th>
+                        <!-- Nueva columna para acciones -->
+                        <th class="text-center">Acciones</th>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-receipt>
@@ -26,11 +28,21 @@
                         <td>{{ receipt.receiptCode }}</td>
                         <td>{{ receipt.issueDate | date:'dd/MM/yyyy' }}</td>
                         <td class="text-right">{{ receipt.amountPaid | currency:'$':'symbol':'1.0-0' }}</td>
+                        <!-- Botón de redirección -->
+                        <td class="text-center">
+                            <p-button 
+                                icon="pi pi-eye" 
+                                styleClass="p-button-rounded p-button-text" 
+                                pTooltip="Ver detalle del recibo"
+                                (onClick)="viewReceiptDetails(receipt.id)">
+                            </p-button>
+                        </td>
                     </tr>
                 </ng-template>
                 <ng-template pTemplate="empty">
                     <tr>
-                        <td colspan="3" class="text-center py-6">
+                        <!-- Se actualiza el colspan a 4 -->
+                        <td colspan="4" class="text-center py-6">
                             <p class="font-semibold">No se han registrado pagos para esta factura.</p>
                         </td>
                     </tr>

@@ -14,12 +14,12 @@ import { CardModule } from 'primeng/card';
 @Component({
   selector: 'app-client-invoice-list',
   standalone: true,
-  imports: [  CommonModule,RouterModule,InvoiceReceiptsModalComponent,ButtonModule,TableModule, CardModule, TagModule,CurrencyPipe,DatePipe],
+  imports: [CommonModule, RouterModule, InvoiceReceiptsModalComponent, ButtonModule, TableModule, CardModule, TagModule, CurrencyPipe, DatePipe],
   templateUrl: './client-invoice-list.component.html',
   styleUrls: ['./client-invoice-list.component.css']
 })
 export class ClientInvoiceListComponent implements OnInit {
-  
+
   public invoices: InvoiceDetailView[] = [];
   public isLoading = true;
   public clientName = '...'; // Placeholder para el nombre del cliente
@@ -28,7 +28,7 @@ export class ClientInvoiceListComponent implements OnInit {
   public totalPending = 0;
   public totalOverdue = 0;
   public totalDueTo = 0;
-  
+
   // Para controlar el modal
   public selectedInvoiceId: number | null = null;
   private clientId: number | null = null;
@@ -52,7 +52,7 @@ export class ClientInvoiceListComponent implements OnInit {
   loadClientName(clientId: number): void {
     // Usamos el mock de clientes para obtener el nombre.
     this.cashReceiptService.getClientById(clientId).subscribe((client: Client | undefined) => {
-      if(client) {
+      if (client) {
         this.clientName = client.name;
       }
     });
@@ -68,32 +68,23 @@ export class ClientInvoiceListComponent implements OnInit {
   }
 
   calculateTotals(): void {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
     this.totalPending = this.invoices.reduce((sum, inv) => sum + inv.pendingValue, 0);
-    
+    // Ahora podemos usar el nuevo campo para un cálculo más directo
     this.totalOverdue = this.invoices
-      .filter(inv => new Date(inv.expirationDate) < today)
+      .filter(inv => inv.daysInArrears > 0)
       .reduce((sum, inv) => sum + inv.pendingValue, 0);
-      
     this.totalDueTo = this.totalPending - this.totalOverdue;
   }
 
-  isOverdue(expirationDate: string | Date): boolean {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return new Date(expirationDate) < today;
-  }
 
   viewReceipts(invoiceId: number): void {
     this.selectedInvoiceId = invoiceId;
   }
-  
+
   closeReceiptsModal(): void {
     this.selectedInvoiceId = null;
   }
-  
+
   goBack(): void {
     this.location.back(); // Navega a la página anterior
   }

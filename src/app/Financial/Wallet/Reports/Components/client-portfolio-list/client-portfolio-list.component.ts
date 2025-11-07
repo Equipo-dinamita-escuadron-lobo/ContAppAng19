@@ -12,11 +12,13 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { InputIcon } from 'primeng/inputicon';
+import { IconField } from 'primeng/iconfield';
 
 @Component({
   selector: 'app-client-portfolio-list',
   standalone: true,
-  imports: [ CommonModule,FormsModule,TableModule,ButtonModule,InputTextModule,TagModule],
+  imports: [ CommonModule,FormsModule,TableModule,ButtonModule,InputTextModule,TagModule, InputIcon,IconField],
   templateUrl: './client-portfolio-list.component.html',
   styleUrls: ['./client-portfolio-list.component.css']
 })

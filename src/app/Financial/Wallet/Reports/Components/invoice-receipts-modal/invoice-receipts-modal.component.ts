@@ -6,6 +6,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-invoice-receipts-modal',
@@ -23,7 +24,7 @@ export class InvoiceReceiptsModalComponent implements OnInit {
   public isLoading = true;
   public isDialogVisible = true; // Para controlar la visibilidad del p-dialog
 
-  constructor(private cashReceiptService: CashReceiptService) { }
+  constructor(private cashReceiptService: CashReceiptService, private router: Router) { }
 
   ngOnInit(): void {
     if (this.invoiceId) {
@@ -33,6 +34,14 @@ export class InvoiceReceiptsModalComponent implements OnInit {
         this.isLoading = false;
       });
     }
+  }
+
+   viewReceiptDetails(receiptId: number): void {
+    // Es una buena práctica cerrar el modal antes de navegar
+    this.close(); 
+    
+    // Navega a la URL de detalles del recibo
+    this.router.navigate(['/financial/wallet/receipts/details', receiptId]);
   }
 
   // Emite el evento para que el componente padre se encargue de cerrar
