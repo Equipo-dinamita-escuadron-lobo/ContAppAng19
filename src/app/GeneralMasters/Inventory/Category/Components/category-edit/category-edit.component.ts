@@ -271,6 +271,8 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
             summary: 'Información',
             detail: err?.error?.message || 'La categoría no se puede editar porque contiene productos con movimientos contables'
           });
+          // Redirigir inmediatamente a la lista de categorías
+          this.router.navigate(['/gen-masters/inventory/categories/list']);
         } else {
           if (err.error?.message) {
             this.messageService.add({

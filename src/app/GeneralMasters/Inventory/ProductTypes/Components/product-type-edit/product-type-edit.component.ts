@@ -120,8 +120,10 @@ export class ProductTypeEditComponent implements OnInit {
             this.messageService.add({
               severity: 'info',
               summary: 'Información',
-              detail: error?.error?.message || 'El tipo de producto no se puede editar porque contiene productos con movimientos contableszz'
+              detail: error?.error?.message || 'El tipo de producto no se puede editar porque contiene productos con movimientos contables'
             });
+            // Redirigir inmediatamente a la lista de tipos de producto
+            this.router.navigate(['/gen-masters/inventory/product-types/list']);
           } else {
             const message = error.error?.message || 'Ha ocurrido un error al actualizar el tipo de producto. Por favor, inténtelo de nuevo.';
             let summary = 'Error';

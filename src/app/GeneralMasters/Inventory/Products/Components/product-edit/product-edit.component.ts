@@ -204,6 +204,8 @@ export class ProductEditComponent implements OnInit {
             summary: 'Información',
             detail: err?.error?.message || 'No se puede editar el producto porque tiene movimientos contables'
           });
+          // Redirigir inmediatamente a la lista de productos
+          this.router.navigate(['/gen-masters/inventory/products/list']);
         } else {
           const errorMessage = err?.error?.message || 'Ha ocurrido un problema al actualizar el producto.';
           this.messageService.add({

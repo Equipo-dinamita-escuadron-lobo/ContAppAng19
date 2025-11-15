@@ -128,6 +128,8 @@ export class UnitOfMeasureEditComponent implements OnInit {
               summary: 'Información',
               detail: error?.error?.message || 'La unidad de medida no se puede editar porque contiene productos con movimientos contables'
             });
+            // Redirigir inmediatamente a la lista de unidades de medida
+            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
           } else {
             const message = error.error?.message || 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.';
             let summary = 'Error';
