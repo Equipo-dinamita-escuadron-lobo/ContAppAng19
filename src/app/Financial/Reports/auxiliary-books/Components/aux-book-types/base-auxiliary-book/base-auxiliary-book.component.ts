@@ -20,6 +20,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   @ViewChild('thirdPartySelect') thirdPartySelect!: Select;
 
   auxiliaryBookInfo: any;
+  auxiliaryBookGenerated: any;
 
   isOptionLevelSelect: boolean = false;
   isLevelSelected: boolean = false;
@@ -304,8 +305,13 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     this.organizeRequest();
 
     this.auxiliaryBookService.registerAuxiliaryBook(this.request).subscribe({
-      next: (response: auxBookResponse) => {
-        this.dataTable = response.data;
+      /**
+       * ✅ CORREGIDO: El servicio ahora devuelve un array directamente.
+       * Se actualiza el tipo de `response` a `any[]` y se asigna directamente a `dataTable`.
+       */
+      next: (data: any) => {
+        this.dataTable = data.accountingData;
+        this.auxiliaryBookGenerated = data.auxiliaryBook;
         this.calculateTotals();
         this.isReportGenerated = true;
 
@@ -401,7 +407,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     let data = {
       reportTitle: this.auxiliaryBookInfo.name,
       auxBookType: this.auxiliaryBookInfo.type,
-      criteria: this.criteria,
+      auxiliaryBook: this.auxiliaryBookGenerated,
       dataTable: this.dataTable,
       headerConfig: (this as any).headerConfig || [],
       enterpriseData: this.enterpriseData,
