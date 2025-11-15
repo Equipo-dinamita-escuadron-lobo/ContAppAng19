@@ -44,6 +44,7 @@ export class ExportAuxiliaryBookComponent implements OnInit {
   // --- DATOS RECIBIDOS PARA LA PREVISUALIZACIÓN ---
   previewData: any[] = [];
   headerConfig: ColumnDefinition[][] = [];
+  auxiliaryBook: any;
   reportTitle: string = 'Reporte Auxiliar';
   generationDate: Date = new Date();
   criteriaForPreview: { key: string; value: string }[] = [];
@@ -125,13 +126,17 @@ export class ExportAuxiliaryBookComponent implements OnInit {
       this.previewData = this.config.data.dataTable || [];
       this.enterpriseData = this.config.data.enterpriseData || null;
       this.generationDate = this.config.data.generationDate || new Date();
-      this.totals = this.config.data.totals || {}; // ✅ NUEVO: Recibimos los totales.
+      this.totals = this.config.data.totals || {};
+      this.auxiliaryBook = this.config.data.auxiliaryBook; // ✅ CORREGIDO: Asigna el objeto del libro auxiliar.
       this.reportTitle = this.config.data.reportTitle;
 
       // ✅ CORREGIDO: Procesa y traduce los criterios antes de asignarlos.
-      if (this.config.data.criteria) {
+      if (
+        this.config.data.auxiliaryBook &&
+        this.config.data.auxiliaryBook.criteria
+      ) {
         this.criteriaForPreview = this.translateAndFormatCriteria(
-          this.config.data.criteria,
+          this.config.data.auxiliaryBook.criteria,
           this.config.data.thirdPartyInfo
         );
       }
@@ -147,8 +152,6 @@ export class ExportAuxiliaryBookComponent implements OnInit {
   }
 
   exportReport() {
-    console.log('Entrando al hpta export');
-
     const infoTemplate: InfoReportTemplate = {
       id: this.selectedTemplate?.id || 0,
       name: this.reportTitle,
@@ -162,11 +165,12 @@ export class ExportAuxiliaryBookComponent implements OnInit {
       mainColor: this.styles.color,
     };
 
+    console.log(this.auxiliaryBook);
+
     const request: ExportAuxiliaryBookRequest = {
       format: this.formatSelected.toUpperCase() as 'PDF' | 'EXCEL',
       entName: this.enterpriseData?.name || 'Empresa',
-      criteriaUsed: this.config.data.criteria,
-      auxBookType: this.config.data.auxBookType,
+      auxiliaryBook: this.config.data.auxiliaryBook,
       auxBookData: this.previewData,
       infoReportTemplate: infoTemplate,
     };
