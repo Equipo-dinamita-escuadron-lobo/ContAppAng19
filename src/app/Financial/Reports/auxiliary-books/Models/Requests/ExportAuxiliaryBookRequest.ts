@@ -37,8 +37,7 @@ export interface InfoReportTemplate {
 export interface ExportAuxiliaryBookRequest {
   format: 'EXCEL' | 'PDF';
   entName: string;
-  criteriaUsed: CriteriaUsed;
-  auxBookType: string; // Ejemplo: 'INVENTORY_AND_BALANCES'
+  auxiliaryBook: any;
   auxBookData: any[]; // Cambiado a 'any[]' para mayor flexibilidad
   infoReportTemplate: InfoReportTemplate;
 }

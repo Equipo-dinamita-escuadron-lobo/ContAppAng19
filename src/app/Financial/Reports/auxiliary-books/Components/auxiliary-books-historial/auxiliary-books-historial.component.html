@@ -21,12 +21,12 @@
     <div class="flex justify-between items-start mb-3">
       <div class="flex items-center gap-3">
         <span
-          class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
+          class="material-symbols-outlined text-primary not-only-of-type:text-3xl md:text-4xl"
         >
           history
         </span>
         <h1
-          class="text-xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary underline-offset-4"
         >
           Historial de Libros Auxiliares
         </h1>
@@ -86,21 +86,26 @@
     (onPage)="onPageChange($event)"
     (onSort)="onSort($event)"
     [lazy]="true"
+    [loading]="isLoading"
   >
     <!-- Table Header -->
     <ng-template pTemplate="header">
       <tr>
-        <th pSortableColumn="bookName">
-          Libro Generado <p-sortIcon field="bookName"></p-sortIcon>
+        <th pSortableColumn="auxiliaryBook.type">
+          Libro Generado <p-sortIcon field="auxiliaryBook.type"></p-sortIcon>
         </th>
-        <th pSortableColumn="generationDate">
-          Fecha de Generación <p-sortIcon field="generationDate"></p-sortIcon>
+
+        <th pSortableColumn="auxiliaryBook.createdAt">
+          Fecha de Generación
+          <p-sortIcon field="auxiliaryBook.createdAt"></p-sortIcon>
         </th>
-        <th pSortableColumn="user">
-          Usuario <p-sortIcon field="user"></p-sortIcon>
+
+        <th pSortableColumn="auxiliaryBook.userId">
+          Usuario <p-sortIcon field="auxiliaryBook.userId"></p-sortIcon>
         </th>
-        <th pSortableColumn="status">
-          Estado <p-sortIcon field="status"></p-sortIcon>
+
+        <th pSortableColumn="state">
+          Estado <p-sortIcon field="state"></p-sortIcon>
         </th>
         <th>Acciones</th>
       </tr>
@@ -110,8 +115,13 @@
     <ng-template pTemplate="body" let-item>
       <tr>
         <td>{{ item.bookName }}</td>
-        <td>{{ item.generationDate | date : "dd/MM/yyyy hh:mm a" }}</td>
+
+        <td>
+          {{ item.generationDate | date : "dd/MM/yyyy hh:mm a" }}
+        </td>
+
         <td>{{ item.user }}</td>
+
         <td>
           <p-tag
             [value]="item.status"
