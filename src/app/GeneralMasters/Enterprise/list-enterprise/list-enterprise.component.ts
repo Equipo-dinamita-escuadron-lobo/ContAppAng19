@@ -102,15 +102,20 @@ export class ListEnterpriseComponent {
     }
   }
 
-  saveSelectedEnterprise(enterprise: any) {
+  saveSelectedEnterprise(enterprise: EnterpriseList) {
+    console.log('Guardando empresa seleccionada:', enterprise);
+    console.log(' Configuración de inventario:', enterprise.inventoryConfigurationType);
+    
     this.entData = {
-      id: enterprise.id,
+      id: String(enterprise.id),
       name: enterprise.name,
       nit: enterprise.nit,
-      logo: enterprise.logo,
-      inventoryConfigType: enterprise.inventoryConfigType || 'WEIGHTED_AVERAGE'
+      logo: enterprise.logo || '',
+      inventoryConfigType: (enterprise.inventoryConfigurationType as 'PEPS' | 'WEIGHTED_AVERAGE') || 'WEIGHTED_AVERAGE'
     };
+    
     this.LocalStorageMethods.saveEnterpriseData(this.entData);
+    console.log('Empresa guardada en localStorage:', this.entData);
   }
 
   onCreateEnterprise(): void {
@@ -154,7 +159,7 @@ export class ListEnterpriseComponent {
         next: (response) => {
           console.log('Empresa creada desde PDF:', response);
           this.closePdfModal();
-          this.getEnterpriseActive(); // Recargar la lista
+          this.getEnterpriseActive(); 
         },
         error: (error) => {
           console.error('Error al crear empresa desde PDF:', error);

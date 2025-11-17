@@ -197,6 +197,7 @@ export class EditEnterpriseComponent implements OnInit {
         dv: formData.dv,
         mainActivity: parseInt(formData.mainActivity),
         secondaryActivity: formData.secondaryActivity ? parseInt(formData.secondaryActivity) : undefined,
+        inventoryConfigurationType: this.enterpriseData?.inventoryConfigurationType || 'WEIGHTED_AVERAGE', // Mantener el valor actual o usar default
         legalName: this.personType === 'juridica' ? formData.legalName : undefined,
         ownerName: this.personType === 'natural' ? formData.ownerName : undefined,
         lastNames: this.personType === 'natural' ? formData.lastNames : undefined

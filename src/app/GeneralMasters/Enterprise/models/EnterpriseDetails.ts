@@ -26,4 +26,5 @@ export interface EnterpriseDetails{
     // Campos específicos para persona natural
     ownerName?: string;
     lastNames?: string;
+    inventoryConfigurationType:string;
 }

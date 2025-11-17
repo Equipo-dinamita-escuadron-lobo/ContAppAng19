@@ -170,6 +170,7 @@ export class CreateEnterpriseComponent implements OnInit {
         dv: formData.dv,
         mainActivity: parseInt(formData.mainActivity),
         secondaryActivity: formData.secondaryActivity ? parseInt(formData.secondaryActivity) : undefined,
+        inventoryConfigurationType: 'WEIGHTED_AVERAGE', // Valor por defecto para nuevas empresas
         // Campos específicos según tipo de persona
         legalName: this.personType === 'juridica' ? formData.legalName : undefined,
         ownerName: this.personType === 'natural' ? formData.ownerName : undefined,
