@@ -271,6 +271,23 @@ export class ThirdService {
   }
 
   /**
+   * Obtiene una lista de terceros filtrados por tipo con paginación inteligente
+   * @param entId ID de la empresa
+   * @param thirdTypeName Nombre del tipo de tercero (case insensitive)
+   * @returns Observable con la respuesta paginada de terceros filtrados por tipo
+   */
+  getThirdsByType(entId: string, thirdTypeName: string): Observable<PageResponse<Third>> {
+    let params = new HttpParams()
+      .set('entId', entId)
+      .set('thirdTypeName', thirdTypeName)
+    return this.http.get<PageResponse<Third>>(this.thirdApiUrl + 'by-type', { params }).pipe(
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Cambia el estado de todos los terceros de una empresa de forma masiva
    * @param entId ID de la empresa
    * @param newState Nuevo estado para todos los terceros

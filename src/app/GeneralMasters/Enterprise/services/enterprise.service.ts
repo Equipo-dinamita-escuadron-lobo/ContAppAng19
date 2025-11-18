@@ -1,70 +1,64 @@
+import { Department } from './../../ThirdParties/models/Department';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { Enterprise } from '../models/enterprise';
-import { environment } from '../../../../environments/environment';
+import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 import { EnterpriseList } from '../models/EnterpriseList';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
 import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
 
-let API_URL = environment.API_URL + 'enterprises/';
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class EnterpriseService {
-  private apiUrl = API_URL;
+  private apiUrl = environment.API_URL + 'enterprises/';
+  private localStorageMethods = new LocalStorageMethods();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  //METODOS PARA OBTENER INFORTMACION DE LA EMPRESA SELECCIONADA
-  /** Métodos de almacenamiento local */
-  localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
+  /** ==================== GET EMPRESAS ==================== */
+  // getEnterprisesActive(): Observable<EnterpriseList[]> {
+  //   // Devuelve empresas activas (endpoint principal)
+  //   return this.http.get<EnterpriseList[]>(this.apiUrl);
+  // }
 
-  getEnterprisesActive(): Observable<EnterpriseList[]> {
-    return this.http.get<EnterpriseList[]>(this.apiUrl);
+  getEnterprisesActive(
+    role: string = 'Profesor'
+  ): Observable<EnterpriseList[]> {
+    const headers = { 'X-User-Role': role };
+    return this.http.get<EnterpriseList[]>(this.apiUrl, { headers });
   }
 
   getEnterprisesInactive(): Observable<EnterpriseList[]> {
-    return this.http.get<EnterpriseList[]>(this.apiUrl + 'inactive');
+    // Endpoint para empresas inactivas
+    return this.http.get<EnterpriseList[]>(`${this.apiUrl}inactive`);
   }
 
-  /**
-   * Obtiene la empresa seleccionada del almacenamiento local
-   * @returns ID de la empresa seleccionada
-   */
+  getEnterpriseById(id: string): Observable<EnterpriseDetails> {
+    // Obtener empresa completa por ID
+    return this.http.get<EnterpriseDetails>(`${this.apiUrl}enterprise/${id}`);
+  }
+
   getSelectedEnterprise() {
     return this.localStorageMethods.loadEnterpriseData();
   }
 
-  /**
-   * Obtiene una empresa por su ID
-   * @param id Identificador de la empresa
-   * @returns Observable con los detalles de la empresa
-   */
-  getEnterpriseById(id: string): Observable<EnterpriseDetails> {
-    const url = `${this.apiUrl}enterprise/${id}`;
-    return this.http.get<EnterpriseDetails>(url);
-  }
-
-  /**
-   * Crea una nueva empresa
-   * @param enterprise Datos de la empresa a crear
-   * @returns Observable con la empresa creada
-   */
-  createEnterprise(enterprise: EnterpriseDetails): Observable<EnterpriseDetails> {
+  /** ==================== CRUD ==================== */
+  createEnterprise(
+    enterprise: EnterpriseDetails
+  ): Observable<EnterpriseDetails> {
     return this.http.post<EnterpriseDetails>(this.apiUrl, enterprise);
   }
 
-  /**
-   * Actualiza una empresa existente
-   * @param id ID de la empresa
-   * @param enterprise Datos actualizados de la empresa
-   * @returns Observable con la empresa actualizada
-   */
-  updateEnterprise(id: string, enterprise: EnterpriseDetails): Observable<EnterpriseDetails> {
-    const url = `${this.apiUrl}${id}`;
-    return this.http.put<EnterpriseDetails>(url, enterprise);
+  // Actualiza todos los datos de la empresa
+  updateEnterprise(
+    id: string,
+    enterprise: EnterpriseDetails
+  ): Observable<EnterpriseDetails> {
+    return this.http.put<EnterpriseDetails>(
+      `${this.apiUrl}update/${id}`,
+      enterprise
+    );
   }
 
   /**
@@ -86,5 +80,43 @@ export class EnterpriseService {
   deleteEnterprise(id: string): Observable<void> {
     const url = `${this.apiUrl}${id}`;
     return this.http.delete<void>(url);
+
+  }
+  archiveEnterprise(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}enterprise/${id}`);
+  }
+
+  unarchiveEnterprise(id: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}enterprise/activate/${id}`, null);
+  }
+
+  deleteEnterpriseHard(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}enterprise/hard/${id}`);
+  }
+
+  /** ==================== UTILIDADES ==================== */
+  duplicateEnterprise(id: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}duplicate/${id}`, {});
+  }
+
+  backupEnterprise(id: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}backup/${id}`, {});
+  }
+
+  /** ==================== COMPARTIR EMPRESA ==================== */
+  shareEnterprise(payload: {
+    enterpriseId: number;
+    emails: string[];
+  }): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}share`, payload);
+  }
+
+  /** ==================== Departamentos ==================== */
+  // getDepartaments(): Observable<DepartmentList[]> {
+  //   return this.http.get<DepartmentList[]>(this.apiUrl);
+  // }
+
+  uploadEnterprisePdf(formData: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}create-from-pdf`, formData);
   }
 }

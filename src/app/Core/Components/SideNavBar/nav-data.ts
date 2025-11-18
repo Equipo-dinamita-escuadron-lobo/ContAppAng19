@@ -83,7 +83,7 @@ export const navbarData: INavbarData[] = [
       {
         routeLink: '/gen-masters/no-commercial-tags/list',
         icon: 'label',
-        label:'Etiquetas no comerciales'
+        label: 'Etiquetas no comerciales'
       },
       {
         routeLink: '/gen-masters/help-center/list',
@@ -139,7 +139,7 @@ export const navbarData: INavbarData[] = [
           {
             routeLink: 'financial/treasury/purchase-bills',
             icon: 'description',
-            label: 'Facturas de Compra',
+            label: 'Programación Ordenes de Pago',
           },
             {
               routeLink: 'financial/treasury/expense-receipts',
@@ -150,6 +150,11 @@ export const navbarData: INavbarData[] = [
               routeLink: 'financial/treasury/reports/vendors',
               icon: 'analytics',
               label: 'Reportes de Proveedores',
+            },
+            {
+              routeLink: 'financial/treasury/reports/aging-report',
+              icon: 'schedule',
+              label: 'Vencimiento por edades',
             },
         ],
       },
@@ -182,6 +187,14 @@ export const navbarData: INavbarData[] = [
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',
+            items: [
+              {
+                routeLink: '/financial/wallet/reports/client-portfolio',
+                icon: 'assessment', 
+                label: 'Cartera por Cliente',
+              }
+            ],
+
           },
 
         ],
