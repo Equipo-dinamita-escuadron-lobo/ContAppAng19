@@ -717,9 +717,22 @@ export class ThirdEditComponent implements OnInit {
           this.router.navigate(['/gen-masters/third-parties/list']);
         },
         error: (error: any) => {
+          // Verificar si el error específico de tercero en uso
+          const errorCode = error?.error?.code || error?.code || '';
+          if (errorCode === 'THIRD_IN_USE') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'No se puede editar el tercero porque tiene movimientos contables'
+            });
+            // Redirigir inmediatamente a la lista de terceros
+            this.router.navigate(['/gen-masters/third-parties/list']);
+            return;
+          }
+
           // Extraer el mensaje de error más específico disponible
           const errorMessage = error.error?.message || error.message || 'Error al actualizar el tercero';
-          
+
           // Determinar el título según el tipo de error
           let errorTitle = 'Error';
           if (error.status === 409) {
