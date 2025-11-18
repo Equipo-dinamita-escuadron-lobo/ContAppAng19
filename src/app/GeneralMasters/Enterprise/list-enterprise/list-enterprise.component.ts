@@ -16,6 +16,7 @@ import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseList } from '../models/EnterpriseList';
 import { HeaderComponent } from '../../../Core/Components/Header/header.component';
 import { MessageService } from 'primeng/api';
+import { ValuationMethodConfigComponent } from '../../ConfigurationValuationModels/components/configuration-valuation-models/configuration-valuation-models.component';
 
 import {
   LocalStorageMethods,
@@ -38,6 +39,7 @@ import {
     InputIconModule,
     InputTextModule,
     DropdownModule,
+    ValuationMethodConfigComponent,
   ],
   templateUrl: './list-enterprise.component.html',
   styleUrls: ['./list-enterprise.component.css'],
@@ -51,6 +53,7 @@ export class ListEnterpriseComponent implements OnInit {
   searchTerm: string = '';
 
   showPdfModal: boolean = false;
+  showInventoryConfigModal: boolean = false;
   selectedPdfFile: File | null = null;
 
   showInactivateModal: boolean = false;
@@ -141,6 +144,8 @@ export class ListEnterpriseComponent implements OnInit {
     }
   }
 
+  
+    
   /* ==================== MENÚ DE TRES PUNTOS ==================== */
   openMenu(enterprise: EnterpriseList, menu: any, event: Event) {
     this.selectedEnterpriseForMenu = enterprise;
@@ -184,10 +189,12 @@ export class ListEnterpriseComponent implements OnInit {
       id: String(enterprise.id),
       name: enterprise.name,
       nit: enterprise.nit,
-      logo: enterprise.logo ?? '',
+      logo: enterprise.logo || '',
+      inventoryConfigType: (enterprise.inventoryConfigurationType as 'PEPS' | 'WEIGHTED_AVERAGE') || 'WEIGHTED_AVERAGE'
     };
-
+    
     this.LocalStorageMethods.saveEnterpriseData(this.entData);
+    console.log('Empresa guardada en localStorage:', this.entData);
   }
 
   onCreateEnterprise(): void {
@@ -212,6 +219,15 @@ export class ListEnterpriseComponent implements OnInit {
   closePdfModal(): void {
     this.showPdfModal = false;
     this.selectedPdfFile = null;
+  }
+
+  /* ==================== CONFIGURACIÓN DE INVENTARIO ==================== */
+  showValuationConfigModal(): void {
+    this.showInventoryConfigModal = true;
+  }
+
+  closeValuationModal(): void {
+    this.showInventoryConfigModal = false;
   }
 
   onPdfFileSelected(event: any): void {
@@ -264,6 +280,7 @@ export class ListEnterpriseComponent implements OnInit {
           logo: data.logo,
           mainActivity: data.mainActivity,
           secondaryActivity: data.secondaryActivity,
+          inventoryConfigurationType: data.inventoryConfigurationType,// crear en el formulario para seleccionar el tipo de inventario
           taxLiabilities: data.taxLiabilities.map((t: any) => t.id || t), // Extraer IDs
           // state: data.state,
           taxPayerType: data.taxPayerType.id || data.taxPayerType, // Extraer ID
