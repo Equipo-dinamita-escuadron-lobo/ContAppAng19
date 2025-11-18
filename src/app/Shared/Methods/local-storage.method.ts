@@ -74,7 +74,7 @@ export class LocalStorageMethods {
     };
 
     this.saveEnterpriseData(updatedData);
-    console.log(`✅ Configuración de inventario actualizada a: ${newConfigType}`);
+    console.log(`Configuración de inventario actualizada a: ${newConfigType}`);
     return true;
   }
 

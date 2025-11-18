@@ -108,8 +108,8 @@ export class ValuationMethodConfigComponent implements OnInit {
       this.isEnterpriseSelected = true;
       this.currentInventoryConfigType = this.currentEnterprise.inventoryConfigType || 'WEIGHTED_AVERAGE';
 
-      console.log('📦 Empresa cargada:', this.currentEnterprise);
-      console.log('⚙️ Configuración actual:', this.currentInventoryConfigType);
+      console.log('Empresa cargada:', this.currentEnterprise);
+      console.log('Configuración actual:', this.currentInventoryConfigType);
 
       // Deshabilitar el método actual
       this.valuationMethods = this.valuationMethods.map(method => ({
@@ -138,7 +138,7 @@ export class ValuationMethodConfigComponent implements OnInit {
           this.enterprises.map(e => [e.id, e])
         );
         
-        console.log('🏢 Empresas cargadas:', this.enterprises);
+        console.log('Empresas cargadas:', this.enterprises);
       },
       error: (error) => {
         console.error('Error al cargar empresas:', error);
@@ -156,7 +156,7 @@ export class ValuationMethodConfigComponent implements OnInit {
   onValuationMethodChange(event: any): void {
     const methodValue = event.value;
     this.selectedMethod = this.valuationMethods.find(method => method.value === methodValue) || null;
-    console.log('🔄 Método seleccionado:', methodValue);
+    console.log('Método seleccionado:', methodValue);
   }
 
   onEnterpriseChange(event: any): void {
@@ -164,8 +164,8 @@ export class ValuationMethodConfigComponent implements OnInit {
     const enterprise = this.enterprisesMap.get(enterpriseId);
     
     if (enterprise && enterprise.inventoryConfigurationType) {
-      console.log('🏢 Empresa seleccionada:', enterprise);
-      console.log('📦 Método de inventario de la empresa:', enterprise.inventoryConfigurationType);
+      console.log('Empresa seleccionada:', enterprise);
+      console.log('Método de inventario de la empresa:', enterprise.inventoryConfigurationType);
       
       // Actualizar el inventoryConfigType actual
       this.currentInventoryConfigType = enterprise.inventoryConfigurationType as 'PEPS' | 'WEIGHTED_AVERAGE';
@@ -186,8 +186,8 @@ export class ValuationMethodConfigComponent implements OnInit {
         method => method.value === enterprise.inventoryConfigurationType
       ) || null;
       
-      console.log('✅ Método actual:', this.currentInventoryConfigType);
-      console.log('🔒 Métodos actualizados:', this.valuationMethods);
+      console.log('Método actual:', this.currentInventoryConfigType);
+      console.log('Métodos actualizados:', this.valuationMethods);
     }
   }
 
@@ -203,12 +203,12 @@ export class ValuationMethodConfigComponent implements OnInit {
         effectiveDate: new Date()
       };
 
-      console.log('📋 Configuración a aplicar:', config);
+      console.log('Configuración a aplicar:', config);
 
-      // PASO 1: Llamar al servicio para procesar el batch (convertir registros PEPS <-> WEIGHTED_AVERAGE)
+      
       this.valuationMethodConfigService.applyValuationMethodConfig(config).subscribe({
         next: (response) => {
-          console.log('✅ Respuesta del procesamiento batch:', response);
+          console.log('Respuesta del procesamiento batch:', response);
 
           // Verificar si el procesamiento fue exitoso
           if (!response.success) {
@@ -222,15 +222,15 @@ export class ValuationMethodConfigComponent implements OnInit {
             return;
           }
 
-          // PASO 2: Si el batch fue exitoso, actualizar el inventoryConfigType en el backend de empresas
+      
           this.enterpriseService.updateInventoryConfigType(
             formValue.enterpriseId,
             formValue.valuationMethod
           ).subscribe({
             next: () => {
-              console.log('✅ InventoryConfigType actualizado en empresa');
+              console.log('InventoryConfigType actualizado en empresa');
 
-              // PASO 3: Actualizar el inventoryConfigType en localStorage
+              
               const updateSuccess = this.localStorageMethods.updateInventoryConfigType(
                 formValue.valuationMethod
               );
@@ -242,7 +242,7 @@ export class ValuationMethodConfigComponent implements OnInit {
                 // Recargar los datos actualizados
                 this.currentEnterprise = this.localStorageMethods.loadEnterpriseData();
                 
-                console.log('💾 localStorage actualizado:', this.currentEnterprise);
+                console.log('localStorage actualizado:', this.currentEnterprise);
               }
 
               this.messageService.add({
@@ -266,7 +266,7 @@ export class ValuationMethodConfigComponent implements OnInit {
               }, 1500);
             },
             error: (enterpriseError) => {
-              console.error('❌ Error al actualizar inventoryConfigType en empresa:', enterpriseError);
+              console.error('Error al actualizar inventoryConfigType en empresa:', enterpriseError);
 
               this.messageService.add({
                 severity: 'error',
@@ -280,7 +280,7 @@ export class ValuationMethodConfigComponent implements OnInit {
           });
         },
         error: (error) => {
-          console.error('❌ Error al procesar batch:', error);
+          console.error('Error al procesar batch:', error);
 
           this.messageService.add({
             severity: 'error',
