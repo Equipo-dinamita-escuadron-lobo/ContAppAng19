@@ -1036,7 +1036,7 @@ export const routes: Routes = [
                         './Financial/Wallet/Reports/Components/invoice-receipts-modal/invoice-receipts-modal.component'
                       ).then((m) => m.InvoiceReceiptsModalComponent),
                   }
-                  
+
                 ],
               }
 
@@ -1278,6 +1278,22 @@ export const routes: Routes = [
           },
         ],
       },
+      {
+          // {
+          //   path: 'sync-products',
+          //   data: { breadcrumb: ''
+          //   },
+          //   loadComponent: () =>
+          //     import('./Core/sync/sync-products.component').then((m) => m.SyncProductsComponent),
+          // }
+          path: 'sync-products',
+          data: { breadcrumb: 'Sincronizar Productos' },
+          loadComponent: () =>
+            import('./Core/sync/sync-products.component').then(
+              (m) => m.SyncProductsComponent
+            ),
+
+      }
     ],
   },
   {
