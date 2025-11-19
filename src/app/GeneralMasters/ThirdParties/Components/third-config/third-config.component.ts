@@ -480,11 +480,9 @@ export class ThirdConfigComponent implements OnInit {
           });
         },
         error: (error: any) => {
-          console.error('Error al actualizar el tipo de identificación:', error);
 
           // Verificar si es error específico de tipo de identificación en uso
           const errorCode = error?.error?.code || error?.code || '';
-          console.log('Error code:', errorCode);
 
           if (errorCode === 'THIRD_IN_USE') {
             this.messageService.add({
@@ -497,7 +495,6 @@ export class ThirdConfigComponent implements OnInit {
 
           // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
           const errorMessage = error?.error?.message || error?.message || '';
-          console.log('Error message:', errorMessage);
 
           if (errorMessage.includes('No se puede editar el tipo de identificación') && errorMessage.includes('movimientos contables')) {
             this.messageService.add({
@@ -756,11 +753,9 @@ export class ThirdConfigComponent implements OnInit {
           });
         },
         error: (error: any) => {
-          console.error('Error al actualizar el tipo de tercero:', error);
-
+          
           // Verificar si es error específico de tipo de tercero en uso
-          const errorCode = error?.error?.code || error?.code || '';
-          console.log('Error code:', errorCode);
+          const errorCode = error?.error?.code || error?.code || '';          
 
           if (errorCode === 'THIRD_IN_USE') {
             this.messageService.add({
@@ -773,7 +768,6 @@ export class ThirdConfigComponent implements OnInit {
 
           // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
           const errorMessage = error?.error?.message || error?.message || '';
-          console.log('Error message:', errorMessage);
 
           if (errorMessage.includes('No se puede editar el tipo de tercero') && errorMessage.includes('movimientos contables')) {
             this.messageService.add({
