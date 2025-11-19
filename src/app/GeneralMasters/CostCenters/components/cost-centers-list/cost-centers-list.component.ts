@@ -159,7 +159,6 @@ export class CostCentersListComponent implements OnDestroy {
         this.isInitialLoad = false;
       },
       error: (err) => {
-        console.error('No se pudo cargar Centros de Costo:', err);
         this.listCenters = [];
         this.allCenters = [];
         this.listCentersAux = [];
@@ -294,6 +293,28 @@ export class CostCentersListComponent implements OnDestroy {
         this.messageService.add({ severity: 'success', summary: 'Actualización exitosa', detail: 'Centro de costo actualizado correctamente.' });
       },
       error: (err) => {
+        // Verificar si es error específico de centro de costo en uso
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'COST_CENTER_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede editar el centro de costo porque tiene movimientos contables'
+          });
+          return;
+        }
+
+        // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+        const errorMessage = err?.error?.message || err?.message || '';
+        if (errorMessage.includes('No se puede editar el centro de costo') && errorMessage.includes('movimientos contables')) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: errorMessage
+          });
+          return;
+        }
+
         if (err?.status === 409) {
           this.showDuplicateToast(err, 'actualizar');
         } else {
@@ -339,6 +360,30 @@ export class CostCentersListComponent implements OnDestroy {
         this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Centro de costo eliminado.' });
       },
       error: (err) => {
+        // Verificar si es error específico de centro de costo en uso
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'COST_CENTER_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede eliminar el centro de costo porque tiene movimientos contables',
+            life: 6000
+          });
+          return;
+        }
+
+        // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+        const errorMessage = err?.error?.message || err?.message || '';
+        if (errorMessage.includes('No se puede eliminar el centro de costo') && errorMessage.includes('movimientos contables')) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: errorMessage,
+            life: 6000
+          });
+          return;
+        }
+
         // Capturar específicamente el error 400 de cuenta con hijos
         if (err?.status === 400 && err?.error?.code === 'COST_CENTER_HAS_CHILDREN') {
           const body = err.error || {};

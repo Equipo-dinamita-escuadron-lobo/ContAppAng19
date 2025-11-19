@@ -3,4 +3,5 @@ export interface EnterpriseList{
     name: string;
     nit: string;
     logo: string | null;
+    inventoryConfigurationType:string;
 }

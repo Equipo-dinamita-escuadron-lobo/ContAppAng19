@@ -36,6 +36,9 @@
       <p-button label="Ver Materias" icon="pi pi-book" (click)="onListSubjects()"
         class="bg-green-600 text-white rounded-full">
       </p-button>
+      <p-button label="Método de Inventario" icon="pi pi-cog" (click)="showValuationConfigModal()"
+        class="bg-purple-600 text-white rounded-full">
+      </p-button>
       <p-button label="PDF RUT" icon="pi pi-file-pdf" (click)="showPdfRutModal()"
         class="bg-blue-600 text-white rounded-full">
       </p-button>
@@ -153,6 +156,23 @@
       </p-button>
     </div>
   </ng-template>
+</p-dialog>
+
+<!-- Modal de Configuración -->
+<p-dialog
+  header="Configuración de Método de Inventario"
+  [(visible)]="showInventoryConfigModal"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width: '90vw', maxWidth: '1200px', height: '90vh'}"
+  [contentStyle]="{padding: '1.5rem', overflow: 'auto'}">
+
+  <div class="h-full">
+    <app-valuation-method-config (closeModal)="closeValuationModal()"></app-valuation-method-config>
+  </div>
+
 </p-dialog>
 
 <!-- Modal Confirmar "Inactivar" -->
