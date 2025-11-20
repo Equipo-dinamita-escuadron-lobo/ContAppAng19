@@ -196,6 +196,11 @@ export const navbarData: INavbarData[] = [
             ],
 
           },
+          {
+            routeLink: '/financial/wallet/reports/aging-portfolio',
+            icon: 'timeline', // Un ícono que sugiere "edades" o "línea de tiempo"
+            label: 'Vencimiento por Edades',
+          },
 
         ],
       },
