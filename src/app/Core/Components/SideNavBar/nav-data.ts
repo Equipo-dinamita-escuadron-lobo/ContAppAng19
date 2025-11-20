@@ -141,21 +141,21 @@ export const navbarData: INavbarData[] = [
             icon: 'description',
             label: 'Programación Ordenes de Pago',
           },
-            {
-              routeLink: 'financial/treasury/expense-receipts',
-              icon: 'receipt_long',
-              label: 'Comprobantes de Egreso',
-            },
-            {
-              routeLink: 'financial/treasury/reports/vendors',
-              icon: 'analytics',
-              label: 'Reportes de Proveedores',
-            },
-            {
-              routeLink: 'financial/treasury/reports/aging-report',
-              icon: 'schedule',
-              label: 'Vencimiento por edades',
-            },
+          {
+            routeLink: 'financial/treasury/expense-receipts',
+            icon: 'receipt_long',
+            label: 'Comprobantes de Egreso',
+          },
+          {
+            routeLink: 'financial/treasury/reports/vendors',
+            icon: 'analytics',
+            label: 'Reportes de Proveedores',
+          },
+          {
+            routeLink: 'financial/treasury/reports/aging-report',
+            icon: 'schedule',
+            label: 'Vencimiento por edades',
+          },
         ],
       },
       {
@@ -190,13 +190,17 @@ export const navbarData: INavbarData[] = [
             items: [
               {
                 routeLink: '/financial/wallet/reports/client-portfolio',
-                icon: 'assessment', 
+                icon: 'assessment',
                 label: 'Cartera por Cliente',
-              }
+              },
+              {
+                routeLink: '/financial/wallet/reports/aging-portfolio',
+                icon: 'timeline', // Un ícono que sugiere "edades" o "línea de tiempo"
+                label: 'Vencimiento por Edades',
+              },
             ],
 
           },
-
         ],
       },
     ],
@@ -222,7 +226,7 @@ export const navbarData: INavbarData[] = [
                 label: 'Inventario con Promedio Ponderado',
               },
               {
-              routeLink: '/commercial/business-masters/peps',
+                routeLink: '/commercial/business-masters/peps',
                 icon: '',
                 label: 'Inventario PEPS',
               },
@@ -256,9 +260,9 @@ export const navbarData: INavbarData[] = [
         label: 'Devoluciones',
       },
       {
-      routeLink:'/commercial/non-commercial-template',
-      icon:'',
-      label:'Movimiento de Inventario No Comercial'
+        routeLink: '/commercial/non-commercial-template',
+        icon: '',
+        label: 'Movimiento de Inventario No Comercial'
       },
       {
         routeLink: 'TO DO',

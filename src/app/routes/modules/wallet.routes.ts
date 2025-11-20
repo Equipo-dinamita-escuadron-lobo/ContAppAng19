@@ -118,6 +118,16 @@ export const WALLET_ROUTES: Routes = [
           ),
       },
       {
+        path: 'aging-portfolio',
+        data: {
+          breadcrumb: 'Reporte de Vencimientos',
+        },
+        loadComponent: () =>
+          import(
+            '../../Financial/Wallet/Reports/Components/aging-porfolio-report/aging-porfolio-report.component'
+          ).then((m) => m.AgingPorfolioReportComponent),
+      },
+      {
         path: 'client-invoices/:id',
         data: {
           breadcrumb: 'Facturas del Cliente',

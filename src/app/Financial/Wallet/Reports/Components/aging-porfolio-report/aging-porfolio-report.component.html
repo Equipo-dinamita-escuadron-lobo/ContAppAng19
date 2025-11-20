@@ -1,0 +1,86 @@
+<!-- Contenido completo del archivo -->
+<div class="w-full h-full p-4 md:p-10 font-sans">
+    <!-- Encabezado -->
+    <div class="mb-10">
+        <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            Vencimiento por edades
+        </h1>
+        <p class="font-normal text-sm mt-2 text-black">
+            Genere un reporte detallado de la antigüedad de la cartera para un cliente específico.
+        </p>
+    </div>
+
+    <!-- Sección de filtros -->
+    <form [formGroup]="filterForm" class="mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6 items-end">
+            <!-- Filtro Cliente -->
+            <div class="flex flex-col gap-2">
+                <label for="client" class="font-semibold text-[var(--color-primary)] label-required">Cliente</label>
+                <p-autoComplete id="client" formControlName="client" 
+                    [suggestions]="clientSuggestions" (completeMethod)="searchClient($event)" 
+                    field="name" [dropdown]="true" [forceSelection]="true" 
+                    placeholder="Busque por nombre de cliente" [showClear]="true" [styleClass]="'w-full'">
+                </p-autoComplete>
+            </div>
+
+            <!-- Filtro Fecha de Corte -->
+            <div class="flex flex-col gap-2">
+                <label for="cutoffDate" class="font-semibold text-[var(--color-primary)] label-required" 
+                       pTooltip="La fecha de corte define la antigüedad de las deudas. Las facturas vencidas antes de esta fecha se clasificarán en los rangos de días."
+                       tooltipPosition="top">
+                    Fecha de corte <i class="pi pi-info-circle ml-1"></i>
+                </label>
+                <p-calendar id="cutoffDate" formControlName="cutoffDate" dateFormat="dd/mm/yy" [showIcon]="true" placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
+            </div>
+            
+            <!-- Filtro Incluir Documentos -->
+            <div class="flex flex-col gap-2">
+                <label for="includeDocuments" class="font-semibold text-[var(--color-primary)]">Incluir documentos</label>
+                <p-inputSwitch id="includeDocuments" formControlName="includeDocuments"></p-inputSwitch>
+            </div>
+        </div>
+
+        <div class="flex justify-center gap-3 mt-10">
+            <p-button type="button" label="Generar reporte" icon="pi pi-chart-bar" (onClick)="generateReport()" [disabled]="filterForm.invalid"></p-button>
+            <p-button type="button" label="Limpiar filtros" styleClass="p-button-secondary" (onClick)="clearFilters()"></p-button>
+        </div>
+    </form>
+
+    <!-- Tabla de resultados -->
+    <p-treeTable [value]="reportData" [loading]="isLoading" [tableStyle]="{'min-width': '60rem'}">
+        <ng-template pTemplate="header">
+            <tr>
+                <th class="w-2/5">Cliente / Cuenta</th>
+                <th class="text-right">Total Adeudado</th>
+                <th class="text-right">Corriente</th>
+                <th class="text-right">1 a 30 días</th>
+                <th class="text-right">31 a 60 días</th>
+                <th class="text-right">61 a 90 días</th>
+                <th class="text-right">+90 días</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+            <tr [ttRow]="rowNode" [class.font-bold]="!rowData.accountCode" [class.bg-blue-100]="!rowData.accountCode">
+                <td>
+                    <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+                    {{ rowData.accountCode ? (rowData.accountCode + ' - ' + rowData.accountName) : rowData.accountName }}
+                </td>
+                <td class="text-right">{{ rowData.totalAdeudado | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-right">{{ rowData.corriente | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-right">{{ rowData.dias1a30 | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-right">{{ rowData.dias31a60 | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-right">{{ rowData.dias61a90 | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-right">{{ rowData.masDe90dias | currency:'$':'symbol':'1.0-0' }}</td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="empty">
+            <tr>
+                <td colspan="7" class="text-center py-8">
+                    <i class="pi pi-file-excel text-4xl text-gray-400 mb-3"></i>
+                    <p class="font-semibold text-lg">Aún no se ha generado ningún reporte</p>
+                    <p class="text-sm text-gray-500">Por favor, seleccione un cliente, una fecha de corte y haga clic en "Generar reporte".</p>
+                </td>
+            </tr>
+        </ng-template>
+    </p-treeTable>
+</div>
