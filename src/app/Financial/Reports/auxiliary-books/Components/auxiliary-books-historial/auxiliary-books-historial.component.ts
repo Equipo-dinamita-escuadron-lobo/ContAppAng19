@@ -21,9 +21,10 @@ import { DialogModule } from 'primeng/dialog';
 import { AuxiliaryBooksServiceService } from '../../Services/auxiliary-books-service.service';
 // Components
 import { AuxiliaryBooksSchedulingComponent } from '../auxiliary-books-scheduling/auxiliary-books-scheduling.component';
+import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 
 interface AuxiliaryBookHistory {
-  id: number;
+  id: number; // CAMBIADO: De vuelta a 'number' para evitar el error de tipos
   bookName: string;
   generationDate: Date;
   user: string;
@@ -47,7 +48,7 @@ interface AuxiliaryBookHistory {
     TooltipModule,
     RippleModule,
     DialogModule,
-    AuxiliaryBooksSchedulingComponent, // Asegúrate de que esta línea esté presente
+    AuxiliaryBooksSchedulingComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './auxiliary-books-historial.component.html',
@@ -57,6 +58,7 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
   @ViewChild('dt') dt!: Table;
 
   history: AuxiliaryBookHistory[] = [];
+  isLoading = false; // Estado de carga
 
   // Control del modal de programación
   displaySchedulingModal = false;
@@ -66,23 +68,32 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
   totalRecords = 0;
   rows = 10;
   first = 0;
-  sortField = 'generationDate';
+  sortField = 'auxiliaryBook.createdAt';
   sortOrder: 'asc' | 'desc' = 'desc';
   searchValue = '';
 
+  // --- ¡PENDIENTE! ---
+  // Debes obtener el ID de la empresa actual.
+  // Probablemente de un servicio de autenticación o de contexto.
+  private enterpriseId: string = 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d';
+  // -------------------
+
   constructor(
     private auxiliaryBookService: AuxiliaryBooksServiceService,
+    protected enterpriseService: EnterpriseService,
     private router: Router,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
-    // Se llama a loadHistory() para cargar los datos iniciales.
     this.loadHistory();
+    //this.enterpriseId = this.enterpriseService.getSelectedEnterprise()?.id || 'YOUR_ENTERPRISE_ID_HERE';
   }
 
   loadHistory(event?: any): void {
+    this.isLoading = true;
+
     // Si el evento existe (paginación, orden), actualizamos los valores
     if (event) {
       this.first = event.first;
@@ -94,36 +105,57 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
       }
     }
 
-    // Simulación de llamada a servicio
-    // Reemplazar con: this.auxiliaryBookService.getHistory(...)
-    setTimeout(() => {
-      const mockData: AuxiliaryBookHistory[] = [
-        {
-          id: 1,
-          bookName: 'Libro Diario',
-          generationDate: new Date(),
-          user: 'admin@contapp.com',
-          status: 'Completado',
-        },
-        {
-          id: 2,
-          bookName: 'Libro Mayor',
-          generationDate: new Date(Date.now() - 3600000),
-          user: 'auditor@contapp.com',
-          status: 'Generando',
-        },
-        {
-          id: 3,
-          bookName: 'Libro de Inventarios y Balances',
-          generationDate: new Date(Date.now() - 86400000),
-          user: 'admin@contapp.com',
-          status: 'Error',
-        },
-      ];
+    const pageable = {
+      page: this.first / this.rows,
+      size: this.rows,
+      sort: `${this.sortField},${this.sortOrder}`,
+    };
 
-      this.history = mockData;
-      this.totalRecords = mockData.length;
-    }, 1000);
+    // --- Llamada real al servicio ---
+    this.auxiliaryBookService
+      .getHistoryByEnterprise(this.enterpriseId, pageable)
+      .subscribe({
+        next: (response) => {
+          if (response && response.data && response.data.content) {
+            const pageData = response.data;
+
+            // APLICAR ESTE CAMBIO
+            this.history = pageData.content.map((item: any) => ({
+              id: Number(item.id), // 'id' está en el nivel superior
+
+              // Accede a los datos dentro de 'auxiliaryBook' y 'state'
+              bookName: item.auxiliaryBook.type,
+              generationDate: new Date(item.auxiliaryBook.createdAt),
+              user: item.auxiliaryBook.userId,
+              status: item.state,
+            }));
+
+            // Esto debería funcionar si 'totalElements' está en 'response.data'
+            this.totalRecords = pageData.totalElements;
+          } else {
+            // Manejar respuesta inesperada
+            this.history = [];
+            this.totalRecords = 0;
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Atención',
+              detail: 'La respuesta del servidor no tuvo el formato esperado.',
+            });
+          }
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Error al cargar el historial:', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo cargar el historial. Intente de nuevo.',
+          });
+          this.history = [];
+          this.totalRecords = 0;
+          this.isLoading = false;
+        },
+      });
   }
 
   applyGlobalFilter(event: Event): void {
@@ -153,26 +185,6 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
       default:
         return 'warning';
     }
-  }
-
-  confirmDelete(item: AuxiliaryBookHistory): void {
-    this.confirmationService.confirm({
-      message: `¿Estás seguro de que deseas eliminar el registro del libro "${item.bookName}"?`,
-      header: 'Confirmar Eliminación',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, eliminar',
-      rejectLabel: 'Cancelar',
-      accept: () => {
-        // Lógica para eliminar el registro
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Eliminado',
-          detail: 'El registro ha sido eliminado.',
-        });
-        // Volver a cargar la tabla
-        this.loadHistory();
-      },
-    });
   }
 
   /**

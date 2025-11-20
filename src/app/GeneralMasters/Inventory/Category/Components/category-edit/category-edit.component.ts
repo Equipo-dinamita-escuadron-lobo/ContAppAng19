@@ -262,18 +262,31 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
       },
       error: (err: any) => {
         console.error('Error al actualizar la categoría:', err);
-        if (err.error?.message) {
+
+        // Verificar si el error específico de categoría en uso
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'CATEGORY_IN_USE') {
           this.messageService.add({
-            severity: 'error',
-            summary: 'Registro Duplicado',
-            detail: err.error.message
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'La categoría no se puede editar porque contiene productos con movimientos contables'
           });
+          // Redirigir inmediatamente a la lista de categorías
+          this.router.navigate(['/gen-masters/inventory/categories/list']);
         } else {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Ha ocurrido un error al actualizar la categoría.'
-          });
+          if (err.error?.message) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Registro Duplicado',
+              detail: err.error.message
+            });
+          } else {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Ha ocurrido un error al actualizar la categoría.'
+            });
+          }
         }
       }
     });

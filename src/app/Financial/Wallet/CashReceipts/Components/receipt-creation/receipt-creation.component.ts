@@ -102,7 +102,7 @@ export class ReceiptCreationComponent {
       // Campos condicionales para "Ingreso Directo"
       auxiliaryAccount: [null],
       directIncomeAmount: [null],
-      costCenter: [null]
+      centerCost: [null]
     });
   }
 
@@ -303,7 +303,7 @@ export class ReceiptCreationComponent {
     const selectedAccount = this.auxiliaryAccounts.find(acc => acc.codeAccount === accountCode);
 
     console.log('Cuenta Auxiliar seleccionada:', selectedAccount);
-    if (selectedAccount && selectedAccount.costCenter) {
+    if (selectedAccount?.costCenter) {
       this.showCostCenterField = true;
       this.cashReceiptForm.get('centerCost')?.setValidators(Validators.required);
       this.loadCostCenters();
@@ -431,6 +431,7 @@ export class ReceiptCreationComponent {
       requestData.ledgerAccountId = formValue.auxiliaryAccount;
 
       if (this.showCostCenterField) {
+        console.log('Asignando centro de costo:', formValue.centerCost);
         requestData.centerCostId = formValue.centerCost;
         console.log('Centro de costo seleccionado:', formValue.centerCost);
       }
