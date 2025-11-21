@@ -175,8 +175,6 @@ export class ExportAuxiliaryBookComponent implements OnInit {
       infoReportTemplate: infoTemplate,
     };
 
-    console.log('Export Request:', request); // Para depuración
-
     this.auxiliaryBookService.exportAuxiliaryBook(request).subscribe({
       next: (blob) => {
         const url = globalThis.URL.createObjectURL(blob);
@@ -213,11 +211,6 @@ export class ExportAuxiliaryBookComponent implements OnInit {
     this.ref.close(null);
   }
 
-  // --- MÉTODOS DE AYUDA ---
-
-  /**
-   * ✅ NUEVO: Traduce y formatea el objeto de criterios para mostrarlo en la UI.
-   */
   private translateAndFormatCriteria(
     criteria: any,
     thirdPartyInfo: any
