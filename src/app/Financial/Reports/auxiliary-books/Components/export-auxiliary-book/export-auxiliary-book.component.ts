@@ -175,8 +175,6 @@ export class ExportAuxiliaryBookComponent implements OnInit {
       infoReportTemplate: infoTemplate,
     };
 
-    console.log('Export Request:', request); // Para depuración
-
     this.auxiliaryBookService.exportAuxiliaryBook(request).subscribe({
       next: (blob) => {
         const url = globalThis.URL.createObjectURL(blob);

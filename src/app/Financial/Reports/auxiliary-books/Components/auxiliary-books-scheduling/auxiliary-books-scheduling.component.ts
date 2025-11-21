@@ -4,7 +4,7 @@ import {
   Input,
   Output,
   EventEmitter,
-  Optional,
+  Optional, // Importamos Optional para evitar el error de inyección
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -17,9 +17,11 @@ import {
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { FieldsetModule } from 'primeng/fieldset';
+import { TagModule } from 'primeng/tag';
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 
 export interface AuxiliaryBookHistory {
@@ -38,15 +40,16 @@ export interface AuxiliaryBookHistory {
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
-    CalendarModule,
+    DatePickerModule,
     ToastModule,
+    FieldsetModule,
+    TagModule,
   ],
   providers: [MessageService],
   templateUrl: './auxiliary-books-scheduling.component.html',
   styleUrl: './auxiliary-books-scheduling.component.css',
 })
 export class AuxiliaryBooksSchedulingComponent implements OnInit {
-  // Inputs y Outputs para compatibilidad con uso directo en HTML
   @Input() historyItem: AuxiliaryBookHistory | null = null;
   @Output() closeModal = new EventEmitter<any>();
 
@@ -56,15 +59,15 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    public dynamicDialogConfig: DynamicDialogConfig,
-    public dynamicDialogRef: DynamicDialogRef
+    @Optional() public dynamicDialogConfig: DynamicDialogConfig,
+    @Optional() public dynamicDialogRef: DynamicDialogRef
   ) {
     this.minDate = new Date();
   }
 
   // Getter unificado para leer datos del Dialog o del Input
   get bookInfo() {
-    return this.dynamicDialogConfig.data || this.historyItem;
+    return this.dynamicDialogConfig?.data || this.historyItem;
   }
 
   ngOnInit(): void {
@@ -102,10 +105,10 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
 
   close(data?: any) {
     if (this.dynamicDialogRef) {
-      // Cerrar como modal de PrimeNG
+      // Cerrar como modal de PrimeNG (Si se abrió desde código TS)
       this.dynamicDialogRef.close(data);
     } else {
-      // Emitir evento si es componente embebido
+      // Emitir evento si es componente embebido (Tu caso actual en el HTML)
       this.closeModal.emit(data);
     }
   }

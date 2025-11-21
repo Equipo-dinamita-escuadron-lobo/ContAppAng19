@@ -1,20 +1,3 @@
-<!-- Toast y Dialog de confirmación -->
-<p-toast></p-toast>
-<p-confirmDialog></p-confirmDialog>
-
-<!-- Modal de Programación -->
-<p-dialog
-  header="Programar Envío de Reporte"
-  [(visible)]="displaySchedulingModal"
-  [modal]="true"
-  [style]="{ width: '450px' }"
->
-  <app-auxiliary-books-scheduling
-    [historyItem]="selectedHistoryItem"
-    (closeModal)="displaySchedulingModal = false"
-  ></app-auxiliary-books-scheduling>
-</p-dialog>
-
 <div class="h-full w-full rounded-2xl p-4 md:p-6">
   <!-- Header Section -->
   <div class="mb-6 flex flex-col">
@@ -155,7 +138,7 @@
               class="p-button-rounded p-button-info p-button-text"
               pTooltip="Programar"
               tooltipPosition="top"
-              (click)="showSchedulingModal(item)"
+              (click)="showSchedulingDialog(item)"
             ></button>
           </div>
         </td>

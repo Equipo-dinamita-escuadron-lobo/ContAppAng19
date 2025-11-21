@@ -22,6 +22,7 @@ import { AuxiliaryBooksServiceService } from '../../Services/auxiliary-books-ser
 // Components
 import { AuxiliaryBooksSchedulingComponent } from '../auxiliary-books-scheduling/auxiliary-books-scheduling.component';
 import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-auxiliary-books-historial',
@@ -40,20 +41,18 @@ import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/serv
     TooltipModule,
     RippleModule,
     DialogModule,
-    AuxiliaryBooksSchedulingComponent,
   ],
-  providers: [MessageService, ConfirmationService],
+  providers: [MessageService, ConfirmationService, DialogService],
   templateUrl: './auxiliary-books-historial.component.html',
   styleUrls: ['./auxiliary-books-historial.component.css'],
 })
 export class AuxiliaryBooksHistorialComponent implements OnInit {
   @ViewChild('dt') dt!: Table;
+  refDialog: DynamicDialogRef | undefined;
 
   history: any[] = [];
   isLoading = false; // Estado de carga
 
-  // Control del modal de programación
-  displaySchedulingModal = false;
   selectedHistoryItem: any | null = null;
 
   // Paginación
@@ -74,7 +73,8 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
     private auxiliaryBookService: AuxiliaryBooksServiceService,
     protected enterpriseService: EnterpriseService,
     private router: Router,
-    private messageService: MessageService
+    private messageService: MessageService,
+    protected dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -178,24 +178,24 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
   }
 
   /**
-   * Muestra el modal para programar un reporte.
-   * @param item El registro del historial a programar.
-   */
-  showSchedulingModal(item: any): void {
-    this.selectedHistoryItem = item;
-    this.displaySchedulingModal = true;
-  }
-
-  /**
    * Navega a la página de detalles de un registro del historial.
    * @param item El registro del historial a visualizar.
    */
   showDetails(item: any): void {
-    console.log(item);
-
     this.router.navigate([
       '/financial/reports/auxiliary-books/historial/details', // Esta ruta ahora es correcta
       item.publicId,
     ]);
+  }
+
+  showSchedulingDialog(item: any) {
+    this.selectedHistoryItem = item;
+
+    this.refDialog = this.dialogService.open(
+      AuxiliaryBooksSchedulingComponent,
+      {
+        data: this.selectedHistoryItem,
+      }
+    );
   }
 }
