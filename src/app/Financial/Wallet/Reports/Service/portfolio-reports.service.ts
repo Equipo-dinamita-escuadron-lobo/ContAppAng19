@@ -23,16 +23,20 @@ export class PortfolioReportsService {
    * @param cutoffDate La fecha de corte para calcular la antigüedad de la deuda.
    * @returns Un Observable con los datos jerárquicos del reporte.
    */
-  getPortfolioAgingReport(clientId: number, cutoffDate: Date): Observable<PortfolioAgingAccount[]> {
+  getPortfolioAgingReport(clientId: number, cutoffDate: Date, includeDocuments: boolean): Observable<PortfolioAgingAccount[]> {
     const enterpriseId = this.localStorageMethods.getIdEnterprise();
     const url = `${this.portfolioApiUrl}/aging-report/by-client/${clientId}`;
 
     // Formatear la fecha a YYYY-MM-DD, que es lo que espera el backend.
     const formattedCutoffDate = cutoffDate.toISOString().split('T')[0];
 
-    const params = new HttpParams()
+    let  params = new HttpParams()
       .set('cutoffDate', formattedCutoffDate)
       .set('enterpriseId', enterpriseId);
+
+    if (includeDocuments) {
+      params = params.append('includeDocuments', 'true');
+    }
 
     return this.http.get<PortfolioAgingAccount[]>(url, { params });
   }

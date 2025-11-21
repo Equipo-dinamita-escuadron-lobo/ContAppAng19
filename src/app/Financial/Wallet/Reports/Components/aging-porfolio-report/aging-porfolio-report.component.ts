@@ -15,7 +15,7 @@ import { PortfolioReportsService } from '../../Service/portfolio-reports.service
 
 @Component({
   selector: 'app-aging-porfolio-report',
-  imports: [CommonModule,ReactiveFormsModule,TreeTableModule,ButtonModule,AutoCompleteModule,CalendarModule,InputSwitchModule,TooltipModule,CurrencyPipe],
+  imports: [CommonModule, ReactiveFormsModule, TreeTableModule, ButtonModule, AutoCompleteModule, CalendarModule, InputSwitchModule, TooltipModule, CurrencyPipe],
   templateUrl: './aging-porfolio-report.component.html',
   styleUrl: './aging-porfolio-report.component.css'
 })
@@ -64,8 +64,9 @@ export class AgingPorfolioReportComponent implements OnInit {
 
     const selectedClient: Client = this.filterForm.value.client;
     const cutoffDate: Date = this.filterForm.value.cutoffDate;
+    const includeDocuments: boolean = this.filterForm.value.includeDocuments;
 
-    this.portfolioReportsService.getPortfolioAgingReport(selectedClient.id, cutoffDate)
+    this.portfolioReportsService.getPortfolioAgingReport(selectedClient.id, cutoffDate, includeDocuments)
       .subscribe({
         next: (data: PortfolioAgingAccount[]) => {
           // p-treeTable requiere un formato de datos específico (TreeNode).
@@ -80,7 +81,7 @@ export class AgingPorfolioReportComponent implements OnInit {
         }
       });
   }
-  
+
   /**
    * Limpia los filtros y resetea la tabla.
    */
@@ -91,7 +92,7 @@ export class AgingPorfolioReportComponent implements OnInit {
     });
     this.reportData = [];
   }
-  
+
   /**
    * Función recursiva para transformar los datos del API al formato TreeNode
    * que p-treeTable necesita.
@@ -99,8 +100,8 @@ export class AgingPorfolioReportComponent implements OnInit {
   private mapToTreeNode(accounts: PortfolioAgingAccount[], clientName?: string): TreeNode[] {
     // Si es el nivel superior, añadimos una fila para el cliente
     const initialNodes = clientName ? [{
-      data: { 
-        accountName: clientName, 
+      data: {
+        accountName: clientName,
         totalAdeudado: accounts.reduce((sum, acc) => sum + acc.totalAdeudado, 0),
         corriente: accounts.reduce((sum, acc) => sum + acc.corriente, 0),
         dias1a30: accounts.reduce((sum, acc) => sum + acc.dias1a30, 0),
@@ -114,21 +115,39 @@ export class AgingPorfolioReportComponent implements OnInit {
 
     return initialNodes;
   }
-  
-  private mapChildren(accounts: PortfolioAgingAccount[]): TreeNode[] {
-      return accounts.map(account => ({
-          data: {
-              accountCode: account.accountCode,
-              accountName: account.accountName,
-              totalAdeudado: account.totalAdeudado,
-              corriente: account.corriente,
-              dias1a30: account.dias1a30,
-              dias31a60: account.dias31a60,
-              dias61a90: account.dias61a90,
-              masDe90dias: account.masDe90dias
-          },
-          children: account.children ? this.mapChildren(account.children) : [],
-          expanded: true // Expandir todos los nodos por defecto
+
+private mapChildren(accounts: PortfolioAgingAccount[]): TreeNode[] {
+  return accounts.map(account => {
+    const childrenNodes: TreeNode[] = account.children ? this.mapChildren(account.children) : [];
+
+    if (account.documents && account.documents.length > 0) {
+      const documentNodes: TreeNode[] = account.documents.map(doc => ({
+        data: {
+          isDocument: true,
+          factCode: doc.factCode,
+          expirationDate: doc.expirationDate,
+          daysInArrears: doc.daysInArrears,
+          totalAdeudado: doc.pendingValue,
+        },
+        leaf: true
       }));
-  }
+      childrenNodes.unshift(...documentNodes);
+    }
+
+    return {
+      data: {
+        accountCode: account.accountCode,
+        accountName: account.accountName,
+        totalAdeudado: account.totalAdeudado,
+        corriente: account.corriente,
+        dias1a30: account.dias1a30,
+        dias31a60: account.dias31a60,
+        dias61a90: account.dias61a90,
+        masDe90dias: account.masDe90dias
+      },
+      children: childrenNodes,
+      expanded: true
+    };
+  });
+}
 }
