@@ -1,78 +1,204 @@
-<p-toast></p-toast>
-<div class="card">
-  <form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()">
-    <div class="p-fluid grid formgrid">
-      <!-- Nombre del Libro -->
-      <div class="field col-12">
-        <label for="bookName">Reporte a Programar</label>
-        <input
-          pInputText
-          id="bookName"
-          type="text"
-          [value]="historyItem?.bookName"
-          disabled
-        />
-      </div>
-
-      <!-- Fecha y Hora de Programación -->
-      <div class="field col-12">
-        <label for="scheduleDate">Fecha y Hora de Envío</label>
-        <p-calendar
-          formControlName="scheduleDate"
-          [showTime]="true"
-          [showSeconds]="false"
-          hourFormat="12"
-          [minDate]="minDate"
-          dateFormat="dd/mm/yy"
-          inputId="scheduleDate"
-          styleClass="w-full"
-        ></p-calendar>
-      </div>
-
-      <!-- Tipo de Envío -->
-      <div class="field col-12">
-        <label for="sendType">Tipo de Envío</label>
-        <p-selectButton
-          [options]="sendOptions"
-          formControlName="sendType"
-          optionLabel="label"
-          optionValue="value"
-        ></p-selectButton>
-      </div>
-
-      <!-- Campo de Correo (condicional) -->
-      <div
-        *ngIf="scheduleForm.get('sendType')?.value === 'email'"
-        class="field col-12"
-      >
-        <label for="email">Correo Electrónico</label>
-        <input
-          pInputText
-          id="email"
-          type="email"
-          formControlName="email"
-          placeholder="ejemplo@correo.com"
-        />
-      </div>
+<div class="p-fluid p-4 md:p-6">
+  <div class="flex flex-col font-sans select-none">
+    <!-- HEADER -->
+    <div class="bg-[#e8f0fe] px-10 py-8 border-b border-slate-200">
+      <h2 class="text-2xl font-semibold text-slate-800">
+        Programar Envío/Descarga de Libro Auxiliar
+      </h2>
+      <p class="text-slate-500 text-sm mt-1">
+        Libro Auxiliar:
+        {{ bookInfo?.bookName || "Movimientos de Caja - Enero 2024" }}
+      </p>
     </div>
 
-    <!-- Botones de Acción -->
-    <div class="flex justify-end gap-2 mt-5">
-      <button
-        pButton
-        pRipple
-        type="button"
-        label="Cancelar"
-        class="p-button-text"
-        (click)="closeModal.emit()"
-      ></button>
-      <button
-        pButton
-        pRipple
-        type="submit"
-        label="Programar"
-        [disabled]="scheduleForm.invalid"
-      ></button>
-    </div>
-  </form>
+    <!-- BODY -->
+    <form
+      [formGroup]="scheduleForm"
+      (ngSubmit)="onSubmit()"
+      class="p-10 bg-white space-y-10"
+    >
+      <div class="grid grid-cols-2 gap-14">
+        <!-- TIPO DE PROGRAMACIÓN -->
+        <div class="flex flex-col gap-4">
+          <label class="text-sm font-semibold text-slate-600">
+            Tipo de Programación
+          </label>
+
+          <!-- DESCARGA -->
+          <div
+            (click)="setSendType('download')"
+            class="flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-all"
+            [ngClass]="{
+              'bg-blue-50 border-blue-400 shadow-sm':
+                scheduleForm.get('sendType')?.value === 'download',
+              'bg-white border-slate-200 hover:bg-slate-50':
+                scheduleForm.get('sendType')?.value !== 'download'
+            }"
+          >
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center text-white"
+              [ngClass]="
+                scheduleForm.get('sendType')?.value === 'download'
+                  ? 'bg-green-500'
+                  : 'bg-green-200 text-green-700'
+              "
+            >
+              <i class="pi pi-download text-lg"></i>
+            </div>
+
+            <span class="text-sm text-slate-700">Descarga</span>
+
+            <div class="ml-auto">
+              <div
+                class="w-4 h-4 rounded-full border flex items-center justify-center"
+                [ngClass]="{
+                  'border-blue-500':
+                    scheduleForm.get('sendType')?.value === 'download',
+                  'border-slate-400':
+                    scheduleForm.get('sendType')?.value !== 'download'
+                }"
+              >
+                <div
+                  class="w-2 h-2 rounded-full"
+                  [ngClass]="
+                    scheduleForm.get('sendType')?.value === 'download'
+                      ? 'bg-blue-500'
+                      : ''
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- EMAIL -->
+          <div
+            (click)="setSendType('email')"
+            class="flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-all"
+            [ngClass]="{
+              'bg-blue-50 border-blue-400 shadow-sm':
+                scheduleForm.get('sendType')?.value === 'email',
+              'bg-white border-slate-200 hover:bg-slate-50':
+                scheduleForm.get('sendType')?.value !== 'email'
+            }"
+          >
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center text-white"
+              [ngClass]="
+                scheduleForm.get('sendType')?.value === 'email'
+                  ? 'bg-purple-500'
+                  : 'bg-purple-200 text-purple-700'
+              "
+            >
+              <i class="pi pi-envelope text-lg"></i>
+            </div>
+
+            <span class="text-sm text-slate-700"
+              >Envío por Correo Electrónico</span
+            >
+
+            <div class="ml-auto">
+              <div
+                class="w-4 h-4 rounded-full border flex items-center justify-center"
+                [ngClass]="{
+                  'border-blue-500':
+                    scheduleForm.get('sendType')?.value === 'email',
+                  'border-slate-400':
+                    scheduleForm.get('sendType')?.value !== 'email'
+                }"
+              >
+                <div
+                  class="w-2 h-2 rounded-full"
+                  [ngClass]="
+                    scheduleForm.get('sendType')?.value === 'email'
+                      ? 'bg-blue-500'
+                      : ''
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FECHA / HORA Y DESTINATARIOS -->
+        <div class="flex flex-col gap-8">
+          <!-- FECHA Y HORA -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-slate-600"
+              >Fecha y Hora</label
+            >
+
+            <p-calendar
+              formControlName="scheduleDate"
+              [showTime]="true"
+              [showSeconds]="false"
+              hourFormat="12"
+              [minDate]="minDate"
+              dateFormat="dd/mm/yy"
+              styleClass="w-full"
+              [showIcon]="true"
+              placeholder="Fecha"
+            ></p-calendar>
+          </div>
+
+          <!-- DESTINATARIOS -->
+          @if (scheduleForm.get('sendType')?.value === 'email') {
+          <div class="flex flex-col gap-2 animate-fade-in">
+            <label class="text-sm font-semibold text-slate-600"
+              >Destinatarios</label
+            >
+
+            <div class="relative">
+              <i
+                class="pi pi-at absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              ></i>
+
+              <input
+                pInputText
+                formControlName="email"
+                type="email"
+                placeholder="Correo electrónico"
+                class="w-full pl-12 pr-12 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-300"
+              />
+
+              <button
+                type="button"
+                class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 flex items-center justify-center"
+              >
+                <i class="pi pi-plus text-xs"></i>
+              </button>
+            </div>
+
+            @if (scheduleForm.get('email')?.invalid &&
+            scheduleForm.get('email')?.touched) {
+            <small class="text-red-500 text-xs"
+              >Por favor introduce un correo válido.</small
+            >
+            }
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="border-t pt-6 flex items-center justify-end gap-4">
+        <button
+          type="button"
+          pButton
+          class="px-8 py-2 rounded-lg bg-white border border-slate-300 text-slate-600 hover:bg-slate-100"
+          (click)="close()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          pButton
+          [disabled]="scheduleForm.invalid"
+          class="px-8 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+        >
+          Programar
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

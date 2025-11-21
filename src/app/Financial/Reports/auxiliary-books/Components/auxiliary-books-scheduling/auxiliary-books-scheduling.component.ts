@@ -1,11 +1,10 @@
 import {
   Component,
+  OnInit,
   Input,
   Output,
   EventEmitter,
-  OnInit,
-  OnChanges,
-  SimpleChanges,
+  Optional,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -15,16 +14,15 @@ import {
   Validators,
 } from '@angular/forms';
 
-// PrimeNG
+// PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 
-// Interfaces
-interface AuxiliaryBookHistory {
+export interface AuxiliaryBookHistory {
   id: number;
   bookName: string;
   generationDate: Date;
@@ -41,66 +39,92 @@ interface AuxiliaryBookHistory {
     ButtonModule,
     InputTextModule,
     CalendarModule,
-    SelectButtonModule,
     ToastModule,
   ],
   providers: [MessageService],
   templateUrl: './auxiliary-books-scheduling.component.html',
-  styleUrls: ['./auxiliary-books-scheduling.component.css'],
+  styleUrl: './auxiliary-books-scheduling.component.css',
 })
-export class AuxiliaryBooksSchedulingComponent implements OnInit, OnChanges {
+export class AuxiliaryBooksSchedulingComponent implements OnInit {
+  // Inputs y Outputs para compatibilidad con uso directo en HTML
   @Input() historyItem: AuxiliaryBookHistory | null = null;
-  @Output() closeModal = new EventEmitter<void>();
+  @Output() closeModal = new EventEmitter<any>();
 
   scheduleForm!: FormGroup;
-  sendOptions: any[];
   minDate: Date;
 
-  constructor(private fb: FormBuilder, private messageService: MessageService) {
+  constructor(
+    private fb: FormBuilder,
+    private messageService: MessageService,
+    public dynamicDialogConfig: DynamicDialogConfig,
+    public dynamicDialogRef: DynamicDialogRef
+  ) {
     this.minDate = new Date();
-    this.sendOptions = [
-      { label: 'Correo', value: 'email' },
-      { label: 'Descarga', value: 'download' },
-    ];
+  }
+
+  // Getter unificado para leer datos del Dialog o del Input
+  get bookInfo() {
+    return this.dynamicDialogConfig.data || this.historyItem;
   }
 
   ngOnInit(): void {
     this.scheduleForm = this.fb.group({
       scheduleDate: [new Date(), Validators.required],
       sendType: ['email', Validators.required],
-      email: ['', [Validators.email]],
+      email: ['', [Validators.required, Validators.email]],
     });
 
-    // Actualizar validadores basados en el tipo de envío
+    // Suscripción para lógica condicional de validadores
     this.scheduleForm.get('sendType')?.valueChanges.subscribe((type) => {
-      const emailControl = this.scheduleForm.get('email');
-      if (type === 'email') {
-        emailControl?.setValidators([Validators.required, Validators.email]);
-      } else {
-        emailControl?.clearValidators();
-      }
-      emailControl?.updateValueAndValidity();
+      this.updateValidators(type);
     });
+
+    // Inicialización de estado
+    this.updateValidators(this.scheduleForm.get('sendType')?.value);
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['historyItem'] && this.historyItem) {
-      // Podrías pre-rellenar el email si lo tuvieras disponible
+  setSendType(type: 'email' | 'download') {
+    this.scheduleForm.get('sendType')?.setValue(type);
+  }
+
+  private updateValidators(type: string) {
+    const emailControl = this.scheduleForm.get('email');
+    if (type === 'email') {
+      emailControl?.setValidators([Validators.required, Validators.email]);
+      emailControl?.enable();
+    } else {
+      emailControl?.clearValidators();
+      emailControl?.disable();
+      emailControl?.setValue('');
+    }
+    emailControl?.updateValueAndValidity();
+  }
+
+  close(data?: any) {
+    if (this.dynamicDialogRef) {
+      // Cerrar como modal de PrimeNG
+      this.dynamicDialogRef.close(data);
+    } else {
+      // Emitir evento si es componente embebido
+      this.closeModal.emit(data);
     }
   }
 
   onSubmit(): void {
     if (this.scheduleForm.valid) {
-      console.log(
-        'Formulario de programación enviado:',
-        this.scheduleForm.value
-      );
       this.messageService.add({
         severity: 'success',
-        summary: 'Programado',
-        detail: 'El reporte ha sido programado con éxito.',
+        summary: 'Éxito',
+        detail: 'La programación se ha guardado correctamente.',
+        life: 2000,
       });
-      setTimeout(() => this.closeModal.emit(), 1500);
+
+      // Pequeño delay para que el usuario vea el Toast antes de cerrar
+      setTimeout(() => {
+        this.close(this.scheduleForm.value);
+      }, 1000);
+    } else {
+      this.scheduleForm.markAllAsTouched();
     }
   }
 }

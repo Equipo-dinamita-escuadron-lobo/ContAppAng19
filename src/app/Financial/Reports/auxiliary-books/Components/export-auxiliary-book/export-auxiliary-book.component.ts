@@ -213,11 +213,6 @@ export class ExportAuxiliaryBookComponent implements OnInit {
     this.ref.close(null);
   }
 
-  // --- MÉTODOS DE AYUDA ---
-
-  /**
-   * ✅ NUEVO: Traduce y formatea el objeto de criterios para mostrarlo en la UI.
-   */
   private translateAndFormatCriteria(
     criteria: any,
     thirdPartyInfo: any
