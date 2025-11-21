@@ -9,7 +9,6 @@ import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Serv
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
 import { Select } from 'primeng/select';
-import { auxBookResponse } from '../../../Models/Responses/BookResponse';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ExportAuxiliaryBookComponent } from '../../export-auxiliary-book/export-auxiliary-book.component';
 

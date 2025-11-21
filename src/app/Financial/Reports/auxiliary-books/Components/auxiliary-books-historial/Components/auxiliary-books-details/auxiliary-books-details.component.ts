@@ -6,23 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { TimelineModule } from 'primeng/timeline';
-
-// Interfaces
-interface AuxiliaryBookHistory {
-  id: number;
-  bookName: string;
-  generationDate: Date;
-  user: string;
-  status: 'Generando' | 'Completado' | 'Error';
-}
-
-interface LogEvent {
-  status: string;
-  date: Date;
-  icon: string;
-  color: string;
-  description: string;
-}
+import { AuxiliaryBooksServiceService } from '../../../../Services/auxiliary-books-service.service';
 
 @Component({
   selector: 'app-auxiliary-books-details',
@@ -32,60 +16,48 @@ interface LogEvent {
   styleUrls: ['./auxiliary-books-details.component.css'],
 })
 export class AuxiliaryBooksDetailsComponent implements OnInit {
-  bookDetails: AuxiliaryBookHistory | null = null;
-  logs: LogEvent[] = [];
+  bookDetails: any = null;
+  logs: any[] = [];
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private auxiliaryBookService: AuxiliaryBooksServiceService
+  ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
+    const id = this.route.snapshot.paramMap.get('publicId');
+
     if (id) {
-      this.loadBookDetails(+id);
+      this.loadBookDetails(id);
     }
   }
 
-  loadBookDetails(id: number): void {
-    // Simulación de llamada a un servicio para obtener los detalles
-    const mockData: AuxiliaryBookHistory = {
-      id: id,
-      bookName: 'Libro Diario',
-      generationDate: new Date(),
-      user: 'admin@contapp.com',
-      status: 'Completado',
-    };
-    this.bookDetails = mockData;
-
-    // Simulación de logs
-    this.logs = [
-      {
-        status: 'Solicitud Recibida',
-        date: new Date(Date.now() - 5 * 60000),
-        icon: 'pi pi-inbox',
-        color: '#9C27B0',
-        description: 'Se recibió la solicitud para generar el reporte.',
-      },
-      {
-        status: 'Generando Reporte',
-        date: new Date(Date.now() - 4 * 60000),
-        icon: 'pi pi-cog',
-        color: '#673AB7',
-        description: 'El sistema comenzó a procesar los datos para el reporte.',
-      },
-      {
-        status: 'Reporte Completado',
-        date: new Date(),
-        icon: 'pi pi-check',
-        color: '#4CAF50',
-        description:
-          'El reporte se generó exitosamente y está listo para descargar.',
-      },
-    ];
+  loadBookDetails(publicId: string): void {
+    this.bookDetails = this.auxiliaryBookService
+      .getLogsByPublicId(publicId)
+      .subscribe({
+        next: (response) => {
+          this.bookDetails = response.data[0].auxiliaryBook;
+          this.logs = response.data;
+          console.log('Imprimiendo deatlles de libro: ', this.bookDetails);
+          console.log('Imprimiendo logs: ', this.logs);
+        },
+        error: (err) => {
+          console.error('Error al cargar los detalles del libro auxiliar', err);
+        },
+      });
   }
 
-  getStatusSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    if (status === 'Completado') return 'success';
-    if (status === 'Generando') return 'info';
-    if (status === 'Error') return 'danger';
+  getLastLogStatus(): any {
+    if (this.logs && this.logs.length > 0) {
+      return this.logs[this.logs.length - 1].etypeEvent;
+    }
+  }
+
+  getStatusSeverity(status: any): 'success' | 'warning' | 'danger' | 'info' {
+    if (status.includes('SUCCESS')) return 'success';
+    if (status.includes('GENERATING')) return 'info';
+    if (status.includes('ERROR')) return 'danger';
     return 'warning';
   }
 }
