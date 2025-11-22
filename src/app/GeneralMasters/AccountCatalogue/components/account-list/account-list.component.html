@@ -686,6 +686,49 @@
         (close)="closeTemplateModal()">
     </app-account-template>
 
+    <!-- Modal de Progreso de Importación -->
+    <p-dialog 
+      header="Importando Catálogo de Cuentas" 
+      [modal]="true" 
+      [(visible)]="showImportProgressDialog"
+      [closable]="true"
+      [draggable]="false"
+      [resizable]="false"
+      (onHide)="onImportDialogClose()"
+      [style]="{ width: '35rem', 'font-family': 'var(--font-family-sans)' }">
+      
+      <div class="flex flex-col font-family-sans">
+        <!-- Icono y mensaje principal -->
+        <div class="flex items-center gap-8 text-primary">
+          <i class="pi pi-spin pi-spinner text-2xl"></i>
+          <span class="font-semibold">Procesando importación...</span>
+        </div>
+
+        <!-- Fase actual y barra de progreso -->
+        <div class="mb-16 mt-16">
+          <!-- Fase actual -->
+          <div class="text-sm mb-8">
+            {{ importPhase }}
+          </div>
+
+          <!-- Barra de progreso -->
+          <div class="w-full">
+            <p-progressBar 
+              [value]="importProgress" 
+              [showValue]="true"
+              styleClass="h-6">
+            </p-progressBar>
+          </div>
+        </div>
+
+          <!-- Información adicional -->
+          <div class="text-xs mb-16">
+            <p>Este proceso puede tomar varios minutos dependiendo del tamaño del archivo.</p>
+            <p class="mt-2 font-semibold text-primary">Puedes cerrar esta ventana, se te notificará cuando termine.</p>
+          </div>
+      </div>
+    </p-dialog>
+
     <!-- Modal de Errores de Importación -->
     <p-dialog header="Errores de Importación" [modal]="true" [(visible)]="showErrorModal"
       [style]="{ width: '90rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"

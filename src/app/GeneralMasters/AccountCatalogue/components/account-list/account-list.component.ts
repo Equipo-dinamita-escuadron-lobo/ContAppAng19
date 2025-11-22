@@ -30,6 +30,7 @@ import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { ProgressBarModule } from 'primeng/progressbar';
 
 // Interfaces para manejo de errores de importación
 interface ImportError {
@@ -53,7 +54,7 @@ interface ImportError {
     IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
     RadioButtonModule,
     ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule,
-    TooltipModule, TableModule, PaginatorModule
+    TooltipModule, TableModule, PaginatorModule, ProgressBarModule
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.css',
@@ -93,6 +94,14 @@ export class AccountListComponent implements OnInit {
 
   isImporting: boolean = false;
   isExporting: boolean = false;
+
+  // Propiedades para manejo asíncrono de importación
+  showImportProgressDialog: boolean = false;
+  importJobId: string | null = null;
+  importProgress: number = 0;
+  importStatus: string = '';
+  importPhase: string = '';
+  private importPollingInterval: any = null;
 
   showCrossingCheckboxEdit: boolean = false;
   showCostCenterCheckboxEdit: boolean = false;
@@ -2068,7 +2077,7 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-   * Maneja la selección de archivo para importar cuentas.
+   * Maneja la selección de archivo para importar cuentas de manera asíncrona.
    * @param event Evento del selector de archivos.
    */
   onFileSelect(event: any): void {
@@ -2100,127 +2109,215 @@ export class AccountListComponent implements OnInit {
     const entId = this.getIdEnterprise();
     this.isImporting = true;
 
-    this._accountService.importAccounts(entId, file).subscribe({
+    // Iniciar importación asíncrona
+    this._accountService.importAccountsAsync(entId, file).subscribe({
       next: (response) => {
-        this.isImporting = false; 
-        const importResult = response.body;
+        // Guardar el jobId y mostrar diálogo de progreso
+        this.importJobId = response.jobId;
+        this.importProgress = 0;
+        this.importStatus = 'PROCESSING';
+        this.importPhase = 'Iniciando importación...';
+        this.showImportProgressDialog = true;
+        
+        // Iniciar polling cada 5 segundos
+        this.startImportPolling();
 
-        if (importResult) {
-          const { status, totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = importResult;
-
-          // Si hay errores, mostrar modal de errores Y notificación de resumen
-          if (errors && errors.length > 0) {
-            let detail = `Total procesados: ${totalRecords || 0}\n`;
-            detail += `Exitosos: ${successfulImports || 0}\n`;
-            detail += `Fallidos: ${failedImports}\n`;
-            if (duplicatesSkipped > 0) {
-              detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
-            }
-
-            // Mostrar modal con detalles de errores
-            this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
-
-            // Recargar lista si hubo importaciones exitosas
-            if (successfulImports > 0) {
-              this.getAccounts();
-            }
-            return;
-          }
-
-          // Si no hay errores, mostrar resumen de importación exitosa
-          let severity: 'success' | 'info' | 'warn' | 'error' = 'success';
-          let summary = 'Importación Exitosa';
-
-          if (status === 'FAILED') {
-            severity = 'error';
-            summary = 'Error en Importación';
-          }
-
-          // Construir mensaje detallado
-          let detail = `Total procesados: ${totalRecords || 0}\n`;
-          detail += `Exitosos: ${successfulImports || 0}\n`;
-          if (duplicatesSkipped > 0) {
-            detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
-          }
-
-          this.messageService.add({
-            severity,
-            summary,
-            detail,
-            life: 8000
-          });
-
-          // Recargar lista si hubo importaciones exitosas
-          if (successfulImports > 0) {
-            this.getAccounts();
-          }
-        }
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Importación iniciada',
+          detail: 'La importación se está procesando. Por favor espera...'
+        });
       },
       error: (error) => {
         this.isImporting = false;
-        // Extraer los errores del backend
-        if (error.error && typeof error.error === 'object') {
-          const errorResponse = error.error;
-          const errors = errorResponse.errors || [];
+        console.error('Error iniciando importación:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al Iniciar Importación',
+          detail: error.error?.message || 'No se pudo iniciar la importación'
+        });
 
-          if (errors && errors.length > 0) {
-            // Mostrar modal de errores
-            this.showImportErrorsModal(
-              errors,
-              errorResponse.fileName || file.name,
-              errorResponse.totalRecords,
-              errorResponse.failedImports,
-              errorResponse.successfulImports,
-              errorResponse.duplicatesSkipped
-            );
-          } else {
-            // Error general sin detalles específicos
-            const errorMessage = errorResponse.message || 'Error desconocido durante la importación';
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error de Importación',
-              detail: errorMessage
-            });
-          }
-        } else if (error.error instanceof Blob) {
-          // Manejar errores que vienen como Blob
-          const reader = new FileReader();
-          reader.onload = () => {
-            try {
-              const errorData = JSON.parse(reader.result as string);
-              const errorMessage = errorData.message || 'No se pudo importar las cuentas.';
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error de Importación',
-                detail: errorMessage
-              });
-            } catch (e) {
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error de Importación',
-                detail: 'Ocurrió un error inesperado.'
-              });
-            }
-          };
-          reader.onerror = () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error de Importación',
-              detail: 'No se pudo leer el mensaje de error.'
-            });
-          };
-          reader.readAsText(error.error);
-        } else {
-          // Error que no es Blob
-          const errorMessage = error.error?.message || error.message || 'Error desconocido al importar cuentas';
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error de Importación',
-            detail: errorMessage
-          });
+        // Limpiar la selección del archivo
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = '';
         }
       }
     });
+  }
+
+  /**
+   * Inicia el polling para verificar el estado de la importación cada 5 segundos.
+   */
+  private startImportPolling(): void {
+    // Limpiar cualquier polling anterior
+    if (this.importPollingInterval) {
+      clearInterval(this.importPollingInterval);
+    }
+
+    // Consultar inmediatamente y luego cada 5 segundos
+    this.checkImportStatus();
+    this.importPollingInterval = setInterval(() => {
+      this.checkImportStatus();
+    }, 5000);
+  }
+
+  /**
+   * Verifica el estado actual de la importación.
+   */
+  private checkImportStatus(): void {
+    if (!this.importJobId) return;
+
+    this._accountService.getImportStatus(this.importJobId).subscribe({
+      next: (status) => {
+        this.importProgress = status.progress || 0;
+        this.importStatus = status.status;
+        
+        // Actualizar mensaje de fase
+        this.importPhase = this.getImportPhaseMessage(status);
+
+        // Si la importación terminó (éxito, con errores o falla)
+        if (status.status === 'COMPLETED' || status.status === 'COMPLETED_WITH_ERRORS' || status.status === 'FAILED') {
+          this.stopImportPolling();
+          this.handleImportCompletion(status);
+        }
+      },
+      error: (error) => {
+        console.error('Error consultando estado de importación:', error);
+        this.stopImportPolling();
+        this.showImportProgressDialog = false;
+        this.isImporting = false;
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo consultar el estado de la importación'
+        });
+      }
+    });
+  }
+
+  /**
+   * Detiene el polling de importación.
+   */
+  private stopImportPolling(): void {
+    if (this.importPollingInterval) {
+      clearInterval(this.importPollingInterval);
+      this.importPollingInterval = null;
+    }
+  }
+
+  /**
+   * Obtiene el mensaje de fase actual según el estado.
+   */
+  private getImportPhaseMessage(status: any): string {
+    if (status.progress === 100) {
+      return 'Finalizando importación...';
+    }
+    
+    if (status.progress >= 80) {
+      return 'Guardando cuentas en la base de datos...';
+    }
+    
+    if (status.progress >= 60) {
+      return 'Validando jerarquía de cuentas...';
+    }
+    
+    if (status.progress >= 40) {
+      return 'Detectando duplicados...';
+    }
+    
+    if (status.progress >= 20) {
+      return 'Validando datos de cuentas...';
+    }
+    
+    return 'Analizando archivo Excel...';
+  }
+
+  /**
+   * Maneja la finalización de la importación.
+   */
+  private handleImportCompletion(status: any): void {
+    // Cerrar modal si está abierto
+    this.showImportProgressDialog = false;
+    this.isImporting = false;
+    this.importJobId = null;
+
+    // Limpiar la selección del archivo
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+
+    const { totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = status;
+
+    // Si hay errores, mostrar modal de errores
+    if (errors && errors.length > 0) {
+      this.showImportErrorsModal(
+        errors, 
+        status.fileName || 'importacion.xlsx', 
+        totalRecords, 
+        failedImports, 
+        successfulImports, 
+        duplicatesSkipped
+      );
+
+      // Recargar lista si hubo importaciones exitosas
+      if (successfulImports > 0) {
+        this.getAccounts();
+      }
+
+      // Mostrar notificación según el resultado
+      if (status.status === 'COMPLETED_WITH_ERRORS') {
+        let detailMessage = `Total procesados: ${totalRecords || 0}\n`;
+        detailMessage += `Exitosos: ${successfulImports}\n`;
+        detailMessage += `Fallidos: ${failedImports}`;
+        if (duplicatesSkipped > 0) {
+          detailMessage += `\nDuplicados omitidos: ${duplicatesSkipped}`;
+        }
+        
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Importación Completada con Errores',
+          detail: detailMessage,
+          life: 8000
+        });
+      } else if (status.status === 'FAILED') {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Importación Fallida',
+          detail: status.errorMessage || 'La importación no pudo completarse',
+          life: 8000
+        });
+      }
+      return;
+    }
+
+    // Importación exitosa sin errores
+    if (status.status === 'COMPLETED') {
+      let detailMessage = `Total procesados: ${totalRecords || 0}\n`;
+      detailMessage += `Exitosos: ${successfulImports || 0}`;
+      if (duplicatesSkipped > 0) {
+        detailMessage += `\nDuplicados omitidos: ${duplicatesSkipped}`;
+      }
+      
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Importación Exitosa',
+        detail: detailMessage,
+        life: 8000
+      });
+      this.getAccounts();
+    }
+  }
+
+  /**
+   * Maneja el cierre del diálogo de progreso.
+   * El polling continúa en segundo plano.
+   */
+  onImportDialogClose(): void {
+    // Solo cerrar el modal, el polling continúa en segundo plano
+    this.showImportProgressDialog = false;
   }
 
 }
