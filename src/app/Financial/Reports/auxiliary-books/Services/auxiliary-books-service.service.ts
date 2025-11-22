@@ -69,10 +69,11 @@ export class AuxiliaryBooksServiceService {
    * @param auxiliaryBookId El ID (público) del libro auxiliar.
    * @returns Un Observable de ResponseDTO que contiene una lista de logs.
    */
-  getLogsById(auxiliaryBookId: string): Observable<any> {
-    // Actualizado de 'ResponseDTO<AuxiliaryBookLog[]>' a 'any'
-
-    const params = new HttpParams().set('auxiliaryBookId', auxiliaryBookId);
+  getLogsByPublicId(auxiliaryBookPublicId: string): Observable<any> {
+    const params = new HttpParams().set(
+      'auxiliaryBookId',
+      auxiliaryBookPublicId
+    );
 
     return this.http.get<any>( // Actualizado
       `${this.apiUrl}/logs`,

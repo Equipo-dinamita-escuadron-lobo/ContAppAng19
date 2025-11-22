@@ -26,9 +26,9 @@ export const routes: Routes = [
       {
         path: 'home',
         loadComponent: () =>
-          import('./GeneralMasters/Enterprise/view-enterprise/view-enterprise.component').then(
-            (m) => m.ViewEnterpriseComponent
-          ),
+          import(
+            './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component'
+          ).then((m) => m.ViewEnterpriseComponent),
       },
 
       // Configuración
@@ -37,7 +37,9 @@ export const routes: Routes = [
         data: { breadcrumb: 'Configuración' },
         canActivate: [hasRoleChildGuard],
         loadChildren: () =>
-          import('./routes/configuration.routes').then((m) => m.CONFIGURATION_ROUTES),
+          import('./routes/configuration.routes').then(
+            (m) => m.CONFIGURATION_ROUTES
+          ),
       },
 
       // Maestros Generales
@@ -47,7 +49,9 @@ export const routes: Routes = [
           breadcrumb: 'Maestros Generales',
         },
         loadChildren: () =>
-          import('./routes/general-masters.routes').then((m) => m.GENERAL_MASTERS_ROUTES),
+          import('./routes/general-masters.routes').then(
+            (m) => m.GENERAL_MASTERS_ROUTES
+          ),
       },
 
       // Módulo Financiero

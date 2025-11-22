@@ -197,6 +197,7 @@ export class CreateEnterpriseComponent implements OnInit {
         taxLiabilities: f.taxLiabilities.map((t: any) => t.id || t),
         state: 'ACTIVE',
         taxPayerType: f.taxPayerType.id || f.taxPayerType,
+        inventoryConfigurationType: 'WEIGHTED_AVERAGE', // Valor por defecto para nuevas empresas
         enterpriseType: f.enterpriseType.id || f.enterpriseType,
         personType:
           this.personType === 'juridica'
