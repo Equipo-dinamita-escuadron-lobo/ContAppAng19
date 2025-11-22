@@ -1,3 +1,5 @@
+import { InvoiceDetail } from "../InvoiceDetail";
+
 export interface PortfolioAgingAccount {
   accountCode: string;
   accountName: string;
@@ -8,4 +10,5 @@ export interface PortfolioAgingAccount {
   dias61a90: number;
   masDe90dias: number;
   children: PortfolioAgingAccount[];
+  documents: InvoiceDetail[];
 }
