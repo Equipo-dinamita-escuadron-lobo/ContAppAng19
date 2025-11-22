@@ -10,8 +10,6 @@ export const routes: Routes = [
 
   ...ENTERPRISE_ROUTES,
 
-  ...ENTERPRISE_ROUTES,
-
   // Plantilla principal con rutas protegidas
   {
     path: '',
