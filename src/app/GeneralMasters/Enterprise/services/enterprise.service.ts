@@ -61,6 +61,27 @@ export class EnterpriseService {
     );
   }
 
+  /**
+   * Actualiza el tipo de configuración de inventario de una empresa
+   * @param id ID de la empresa
+   * @param inventoryConfigType Nuevo tipo de configuración de inventario
+   * @returns Observable vacío
+   */
+  updateInventoryConfigType(id: string, inventoryConfigType: 'PEPS' | 'WEIGHTED_AVERAGE'): Observable<void> {
+    const url = `${this.apiUrl}inventory-config/${id}`;
+    return this.http.patch<void>(url, { inventoryConfigType });
+  }
+
+  /**
+   * Elimina una empresa
+   * @param id ID de la empresa a eliminar
+   * @returns Observable vacío
+   */
+  deleteEnterprise(id: string): Observable<void> {
+    const url = `${this.apiUrl}${id}`;
+    return this.http.delete<void>(url);
+
+  }
   archiveEnterprise(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}enterprise/${id}`);
   }

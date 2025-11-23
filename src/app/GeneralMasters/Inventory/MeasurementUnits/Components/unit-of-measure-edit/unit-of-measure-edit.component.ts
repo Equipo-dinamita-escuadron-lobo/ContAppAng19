@@ -120,16 +120,28 @@ export class UnitOfMeasureEditComponent implements OnInit {
           this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
         },
         error: (error) => {
-          const message = error.error?.message || 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.';
-          let summary = 'Error';
-          if (message.includes('Ya existe')) {
-            summary = 'Registro Duplicado';
+          // Verificar si el error específico de unidad de medida en uso
+          const errorCode = error?.error?.code || error?.code || '';
+          if (errorCode === 'UNITOFMEASURE_IN_USE') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'La unidad de medida no se puede editar porque contiene productos con movimientos contables'
+            });
+            // Redirigir inmediatamente a la lista de unidades de medida
+            this.router.navigate(['/gen-masters/inventory/measurement-units/list']);
+          } else {
+            const message = error.error?.message || 'Ha ocurrido un error al actualizar la unidad de medida. Por favor, inténtelo de nuevo.';
+            let summary = 'Error';
+            if (message.includes('Ya existe')) {
+              summary = 'Registro Duplicado';
+            }
+            this.messageService.add({
+              severity: 'error',
+              summary: summary,
+              detail: message
+            });
           }
-          this.messageService.add({
-            severity: 'error',
-            summary: summary,
-            detail: message
-          });
         }
       });
     } else {

@@ -192,6 +192,35 @@ export class EditEnterpriseComponent implements OnInit {
    *  Enviar actualización parcial (PATCH)
    *  ==================================== */
   onSubmit(): void {
+    if (this.enterpriseForm.valid) {
+      this.loading = true;
+      const formData = this.enterpriseForm.value;
+      
+      const enterpriseData: EnterpriseDetails = {
+        id: this.enterpriseId,
+        name: formData.name,
+        nit: formData.nit,
+        phone: formData.phone,
+        branch: formData.hasBranches ? 'Sí' : 'No',
+        email: formData.email,
+        logo: this.selectedFile ? this.selectedFile.name : (this.enterpriseData?.logo || ''),
+        taxLiabilities: formData.taxLiabilities,
+        taxPayerType: formData.taxPayerType,
+        enterpriseType: formData.enterpriseType,
+        personType: this.personType,
+        location: {
+          country: formData.country,
+          department: formData.department,
+          address: formData.address
+        },
+        dv: formData.dv,
+        mainActivity: parseInt(formData.mainActivity),
+        secondaryActivity: formData.secondaryActivity ? parseInt(formData.secondaryActivity) : undefined,
+        inventoryConfigurationType: this.enterpriseData?.inventoryConfigurationType || 'WEIGHTED_AVERAGE', // Mantener el valor actual o usar default
+        legalName: this.personType === 'juridica' ? formData.legalName : undefined,
+        ownerName: this.personType === 'natural' ? formData.ownerName : undefined,
+        lastNames: this.personType === 'natural' ? formData.lastNames : undefined
+      };
     if (this.enterpriseForm.invalid) {
       this.messageService.add({
         severity: 'warn',
@@ -262,8 +291,8 @@ export class EditEnterpriseComponent implements OnInit {
           });
         },
       });
+    }
   }
-
   goBack(): void {
     this.router.navigate(['/enterprise/list']);
   }

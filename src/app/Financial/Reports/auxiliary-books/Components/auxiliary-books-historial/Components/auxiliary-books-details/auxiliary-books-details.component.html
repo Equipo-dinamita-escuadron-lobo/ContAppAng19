@@ -2,15 +2,13 @@
 <div class="h-full w-full rounded-2xl p-4 md:p-6">
   <!-- Header -->
   <div class="mb-6 flex items-center gap-3">
-    <span
-      class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
-    >
+    <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
       receipt_long
     </span>
     <h1
-      class="text-xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+      class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary underline-offset-4"
     >
-      Detalles del Reporte: {{ bookDetails?.bookName }}
+      Detalles del Reporte: {{ bookDetails?.type }}
     </h1>
   </div>
 
@@ -19,22 +17,22 @@
     <div *ngIf="bookDetails" class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <strong>ID de Registro:</strong>
-        <p>{{ bookDetails.id }}</p>
+        <p>{{ bookDetails.publicId }}</p>
       </div>
       <div>
         <strong>Fecha de Generación:</strong>
-        <p>{{ bookDetails.generationDate | date : "dd/MM/yyyy hh:mm a" }}</p>
+        <p>{{ bookDetails.createdAt | date : "dd/MM/yyyy hh:mm a" }}</p>
       </div>
       <div>
         <strong>Usuario:</strong>
-        <p>{{ bookDetails.user }}</p>
+        <p>{{ bookDetails.userId }}</p>
       </div>
       <div>
         <strong>Estado Actual:</strong>
         <p>
           <p-tag
-            [value]="bookDetails.status"
-            [severity]="getStatusSeverity(bookDetails.status)"
+            [value]="getLastLogStatus()"
+            [severity]="getStatusSeverity(getLastLogStatus())"
           ></p-tag>
         </p>
       </div>
@@ -59,10 +57,10 @@
       </ng-template>
       <ng-template pTemplate="content" let-event>
         <p-card
-          [header]="event.status"
-          [subheader]="(event.date | date : 'dd/MM/yyyy hh:mm:ss a') ?? ''"
+          [header]="event.etypeEvent"
+          [subheader]="(event.createdAt | date : 'dd/MM/yyyy hh:mm:ss a') ?? ''"
         >
-          <p>{{ event.description }}</p>
+          <p>{{ event.message }}</p>
         </p-card>
       </ng-template>
     </p-timeline>

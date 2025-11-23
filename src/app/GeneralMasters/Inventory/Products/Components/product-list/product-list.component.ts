@@ -234,11 +234,22 @@ export class ProductListComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Error al eliminar el producto: ', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Ha ocurrido un error al intentar eliminar el producto.'
-        });
+
+        // Verificar si el error específico de producto en uso usando el código de error
+        const errorCode = error?.error?.code || error?.code || '';
+        if (errorCode === 'PRODUCT_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: error?.error?.message || 'No se puede eliminar el producto porque tiene movimientos contables'
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Ha ocurrido un error al intentar eliminar el producto.'
+          });
+        }
       }
     });
   }

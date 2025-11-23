@@ -22,14 +22,7 @@ import { AuxiliaryBooksServiceService } from '../../Services/auxiliary-books-ser
 // Components
 import { AuxiliaryBooksSchedulingComponent } from '../auxiliary-books-scheduling/auxiliary-books-scheduling.component';
 import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
-
-interface AuxiliaryBookHistory {
-  id: number; // CAMBIADO: De vuelta a 'number' para evitar el error de tipos
-  bookName: string;
-  generationDate: Date;
-  user: string;
-  status: 'Generando' | 'Completado' | 'Error';
-}
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-auxiliary-books-historial',
@@ -48,21 +41,19 @@ interface AuxiliaryBookHistory {
     TooltipModule,
     RippleModule,
     DialogModule,
-    AuxiliaryBooksSchedulingComponent,
   ],
-  providers: [MessageService, ConfirmationService],
+  providers: [MessageService, ConfirmationService, DialogService],
   templateUrl: './auxiliary-books-historial.component.html',
   styleUrls: ['./auxiliary-books-historial.component.css'],
 })
 export class AuxiliaryBooksHistorialComponent implements OnInit {
   @ViewChild('dt') dt!: Table;
+  refDialog: DynamicDialogRef | undefined;
 
-  history: AuxiliaryBookHistory[] = [];
+  history: any[] = [];
   isLoading = false; // Estado de carga
 
-  // Control del modal de programación
-  displaySchedulingModal = false;
-  selectedHistoryItem: AuxiliaryBookHistory | null = null;
+  selectedHistoryItem: any | null = null;
 
   // Paginación
   totalRecords = 0;
@@ -83,7 +74,7 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
     protected enterpriseService: EnterpriseService,
     private router: Router,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    protected dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
@@ -121,9 +112,8 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
 
             // APLICAR ESTE CAMBIO
             this.history = pageData.content.map((item: any) => ({
-              id: Number(item.id), // 'id' está en el nivel superior
-
-              // Accede a los datos dentro de 'auxiliaryBook' y 'state'
+              id: Number(item.id),
+              publicId: item.auxiliaryBook.publicId,
               bookName: item.auxiliaryBook.type,
               generationDate: new Date(item.auxiliaryBook.createdAt),
               user: item.auxiliaryBook.userId,
@@ -188,22 +178,24 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
   }
 
   /**
-   * Muestra el modal para programar un reporte.
-   * @param item El registro del historial a programar.
-   */
-  showSchedulingModal(item: AuxiliaryBookHistory): void {
-    this.selectedHistoryItem = item;
-    this.displaySchedulingModal = true;
-  }
-
-  /**
    * Navega a la página de detalles de un registro del historial.
    * @param item El registro del historial a visualizar.
    */
-  showDetails(item: AuxiliaryBookHistory): void {
+  showDetails(item: any): void {
     this.router.navigate([
       '/financial/reports/auxiliary-books/historial/details', // Esta ruta ahora es correcta
-      item.id,
+      item.publicId,
     ]);
+  }
+
+  showSchedulingDialog(item: any) {
+    this.selectedHistoryItem = item;
+
+    this.refDialog = this.dialogService.open(
+      AuxiliaryBooksSchedulingComponent,
+      {
+        data: this.selectedHistoryItem,
+      }
+    );
   }
 }

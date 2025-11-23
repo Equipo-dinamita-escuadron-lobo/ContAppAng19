@@ -50,6 +50,9 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
   previewResult: any = null;
   showPreview: boolean = false;
 
+  // Control de envío de formulario
+  isSubmitting: boolean = false;
+
   // Fechas límite para el calendario
   minDate: Date | null = null;
   maxDate: Date = new Date(); // Fecha actual como máximo
@@ -176,7 +179,8 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
   }
 
   onSubmit() {
-    if (this.adjustmentForm.valid && this.productData) {
+    if (this.adjustmentForm.valid && this.productData && !this.isSubmitting) {
+      this.isSubmitting = true;
       const formValue = this.adjustmentForm.value;
 
       if (formValue.adjustmentType === 'purchase') {
@@ -202,6 +206,7 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
             });
             this.resetForm();
             this.adjustmentCompleted.emit();
+            this.isSubmitting = false;
           },
           error: (error) => {
             const errorMessage = error?.error?.message || 'Error al registrar el ajuste de compra';
@@ -211,6 +216,7 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
               detail: errorMessage,
               life: 5000
             });
+            this.isSubmitting = false;
           }
         });
       } else {
@@ -235,6 +241,7 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
             });
             this.resetForm();
             this.adjustmentCompleted.emit();
+            this.isSubmitting = false;
           },
           error: (error) => {
             const errorMessage = error?.error?.message || 'Error al registrar el ajuste de venta';
@@ -244,6 +251,7 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
               detail: errorMessage,
               life: 7000
             });
+            this.isSubmitting = false;
           }
         });
       }
@@ -254,6 +262,7 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
     this.adjustmentForm.reset();
     this.showPreview = false;
     this.previewResult = null;
+    this.isSubmitting = false;
   }
 
   onDialogHide() {
@@ -280,9 +289,9 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
     const adjustmentType = this.adjustmentForm.get('adjustmentType')?.value;
 
     if (adjustmentType === 'sale') {
-      return this.adjustmentForm.valid && this.canSubmitSale();
+      return this.adjustmentForm.valid && this.canSubmitSale() && !this.isSubmitting;
     }
 
-    return this.adjustmentForm.valid;
+    return this.adjustmentForm.valid && !this.isSubmitting;
   }
 }
