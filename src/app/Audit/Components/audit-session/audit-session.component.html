@@ -19,28 +19,37 @@
     <!-- Contenedor de cajas de filtros -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       <div class="flex flex-col">
-        <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">Fecha inicial *</label>
+        <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">
+          Fecha inicial
+          <span [class.text-red-500]="!filtro.fechaInicio">*</span>
+        </label>
         <p-datePicker 
           id="fechaInicio"
           [(ngModel)]="filtro.fechaInicio"
           dateFormat="dd/mm/yy"
+          [dataType]="'date'"
           showIcon="true"
           [required]="true"
-          [maxDate]="filtro.fechaFin">
+          [maxDate]="filtro.fechaFin ?? today">
         </p-datePicker>
         @if (!filtro.fechaInicio && filtro.fechaFin) {
           <small style="color: var(--color-error-35);">Debe ingresar la fecha inicial</small>
         }
       </div>
       <div class="flex flex-col">
-        <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">Fecha final *</label>
+        <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">
+          Fecha final 
+          <span [class.text-red-500]="!filtro.fechaFin">*</span>
+        </label>
         <p-datePicker 
           id="fechaFin"
           [(ngModel)]="filtro.fechaFin"
           dateFormat="dd/mm/yy"
+          [dataType]="'date'"
           showIcon="true"
           [required]="true"
-          [minDate]="filtro.fechaInicio">
+          [minDate]="filtro.fechaInicio"
+          [maxDate]="today">
         </p-datePicker>
         @if (filtro.fechaInicio && !filtro.fechaFin) {
           <small style="color: var(--color-error-35);">Debe ingresar la fecha final</small>
@@ -51,7 +60,7 @@
         <p-dropdown 
           id="rol"
           [options]="roles"
-          [(ngModel)]="filtro.rol"
+          [(ngModel)]="filtro.userRole"
           placeholder="Seleccione un rol"
           optionLabel="label"
           optionValue="value">
@@ -63,8 +72,14 @@
           id="usuario"
           type="text"
           pInputText
-          [(ngModel)]="filtro.usuario"
-          placeholder="Buscar por nombre">
+          [(ngModel)]="filtro.userName"
+          placeholder="Buscar por nombre"
+          (input)="onUserInput($event)">
+          @if (filtro.userName && filtro.userName.length > 0 && filtro.userName.length < 3) {
+            <small style="color: var(--color-error-35);">
+              Debe escribir mínimo 3 caracteres
+            </small>
+          }
       </div>
     </div>
 
@@ -99,28 +114,32 @@
   <!-- Tabla de sesiones -->
   <p-table 
     [value]="sessions"
-    [paginator]="true" 
-    [rows]="pageSize" 
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
     [totalRecords]="totalRecords"
-    [rowsPerPageOptions]="[5,10,20]"  
+    [rowsPerPageOptions]="[5,10,20]"
     [loading]="loading"
-    (onLazyLoad)="onPageChange($event)"
-    styleClass="p-datatable-striped font-family-sans" 
-    [tableStyle]="{'min-width': '50rem'}" 
+    (onLazyLoad)="onLazyLoad($event)"
+    [sortField]="sortField"
+    [sortOrder]="sortOrder"
+    styleClass="p-datatable-striped font-family-sans"
+    [tableStyle]="{'min-width': '50rem'}"
     responsiveLayout="scroll">
 
     <ng-template pTemplate="header">
       <tr>
-        <th pSortableColumn="usuario" class="font-semibold text-primary border-b-2 border-primary">
+        <th class="font-semibold text-primary border-b-2 border-primary">
           Usuario
         </th>
-        <th pSortableColumn="rol" class="font-semibold text-primary border-b-2 border-primary">
+        <th class="font-semibold text-primary border-b-2 border-primary">
           Rol 
         </th>
-        <th pSortableColumn="entrada" class="font-semibold text-primary border-b-2 border-primary">
-          Fecha y hora de entrada 
+        <th pSortableColumn="actionAt" class="font-semibold text-primary border-b-2 border-primary">
+          Fecha y hora de entrada
+          <p-sortIcon field="actionAt"></p-sortIcon> 
         </th>
-        <th pSortableColumn="salida" class="font-semibold text-primary border-b-2 border-primary">
+        <th class="font-semibold text-primary border-b-2 border-primary">
           Fecha y hora de salida 
         </th>
       </tr>
