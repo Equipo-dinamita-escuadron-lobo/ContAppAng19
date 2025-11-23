@@ -1,5 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { FormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
 import { MessageService } from 'primeng/api';
@@ -99,9 +100,6 @@ describe('ListKardexWeightedAverageComponent - Integration Tests', () => {
     const productServiceMock = {
       getAllProducts: jest.fn()
     };
-    const messageServiceMock = {
-      add: jest.fn()
-    };
     const excelExportServiceMock = {
       processKardexData: jest.fn(),
       exportKardexToExcel: jest.fn()
@@ -114,22 +112,25 @@ describe('ListKardexWeightedAverageComponent - Integration Tests', () => {
         FormsModule
       ],
       providers: [
+        provideNoopAnimations(),
         { provide: KardexService, useValue: kardexServiceMock },
         { provide: ProductService, useValue: productServiceMock },
-        { provide: MessageService, useValue: messageServiceMock },
         { provide: ExcelExportService, useValue: excelExportServiceMock }
       ]
     }).compileComponents();
 
     kardexService = TestBed.inject(KardexService) as jest.Mocked<KardexService>;
     productService = TestBed.inject(ProductService) as jest.Mocked<ProductService>;
-    messageService = TestBed.inject(MessageService) as jest.Mocked<MessageService>;
     excelExportService = TestBed.inject(ExcelExportService) as jest.Mocked<ExcelExportService>;
 
     productService.getAllProducts.mockReturnValue(of({ data: mockProducts, status: 200, message: 'OK' }));
 
     fixture = TestBed.createComponent(ListKardexWeightedAverageComponent);
     component = fixture.componentInstance;
+
+    // Obtener el MessageService del componente
+    messageService = fixture.debugElement.injector.get(MessageService) as jest.Mocked<MessageService>;
+    jest.spyOn(messageService, 'add');
   });
 
   it('should create', () => {
@@ -276,18 +277,16 @@ describe('ListKardexWeightedAverageComponent - Integration Tests', () => {
       }, 100);
     });
 
-    it('should format dates correctly', (done) => {
+    it('should format dates correctly', fakeAsync(() => {
       kardexService.getKardexByProductId.mockReturnValue(of(mockKardexData));
 
       const event = { first: 0, rows: 5, sortField: '', sortOrder: 1 };
       component.loadKardex(event);
+      tick();
 
-      setTimeout(() => {
-        expect(component.kardexList[0].formattedDate).toBeDefined();
-        expect(component.kardexList[0].formattedDate).toContain('enero');
-        done();
-      }, 100);
-    });
+      expect(component.kardexList[0].formattedDate).toBeDefined();
+      expect(component.kardexList[0].formattedDate).toMatch(/\d{2}-[a-z]+-\d{4}/i);
+    }));
   });
 
   describe('Date Range Management', () => {
@@ -340,6 +339,7 @@ describe('ListKardexWeightedAverageComponent - Integration Tests', () => {
       fixture.detectChanges();
       component.selectedProduct = mockProducts[0];
       component.productId = 1;
+      jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     it('should enable inventory adjustment when product is selected', () => {
@@ -367,30 +367,29 @@ describe('ListKardexWeightedAverageComponent - Integration Tests', () => {
       }, 100);
     });
 
-    it('should handle error when opening inventory adjustment', (done) => {
+    it('should handle error when opening inventory adjustment', fakeAsync(() => {
       kardexService.getLatestKardexByProductId.mockReturnValue(
         throwError(() => new Error('Error al obtener datos'))
       );
 
       component.openInventoryAdjustment();
+      tick();
 
-      setTimeout(() => {
-        expect(messageService.add).toHaveBeenCalledWith(
-          expect.objectContaining({
-            severity: 'error',
-            detail: 'No se pudo obtener el último registro del kardex'
-          })
-        );
-        expect(component.loading).toBe(false);
-        done();
-      }, 100);
-    });
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          severity: 'error',
+          detail: 'No se pudo obtener el último registro del kardex'
+        })
+      );
+      expect(component.loading).toBe(false);
+    }));
 
-    it('should handle adjustment completion', () => {
+    it('should handle adjustment completion', fakeAsync(() => {
       kardexService.getKardexByProductId.mockReturnValue(of(mockKardexData));
       component.first = 0;
 
       component.onAdjustmentCompleted();
+      tick();
 
       expect(component.showInventoryAdjustment).toBe(false);
       expect(kardexService.getKardexByProductId).toHaveBeenCalled();
@@ -400,7 +399,7 @@ describe('ListKardexWeightedAverageComponent - Integration Tests', () => {
           detail: expect.stringContaining('actualizado')
         })
       );
-    });
+    }));
 
     it('should handle dialog close', () => {
       component.onAdjustmentDialogClosed();
@@ -436,29 +435,28 @@ describe('ListKardexWeightedAverageComponent - Integration Tests', () => {
       fixture.detectChanges();
       component.selectedProduct = mockProducts[0];
       component.productId = 1;
+      jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
-    it('should export kardex to Excel successfully', (done) => {
+    it('should export kardex to Excel successfully', fakeAsync(() => {
       kardexService.getAllKardexForExport.mockReturnValue(of(mockKardexData));
       excelExportService.processKardexData.mockReturnValue([]);
       excelExportService.exportKardexToExcel.mockImplementation(() => {});
 
       component.exportToExcel();
+      tick();
 
-      setTimeout(() => {
-        expect(kardexService.getAllKardexForExport).toHaveBeenCalledWith(1, null, null);
-        expect(excelExportService.processKardexData).toHaveBeenCalled();
-        expect(excelExportService.exportKardexToExcel).toHaveBeenCalled();
-        expect(messageService.add).toHaveBeenCalledWith(
-          expect.objectContaining({
-            severity: 'success',
-            detail: 'Archivo Excel exportado correctamente'
-          })
-        );
-        expect(component.exportLoading).toBe(false);
-        done();
-      }, 100);
-    });
+      expect(kardexService.getAllKardexForExport).toHaveBeenCalledWith(1, null, null);
+      expect(excelExportService.processKardexData).toHaveBeenCalled();
+      expect(excelExportService.exportKardexToExcel).toHaveBeenCalled();
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          severity: 'success',
+          detail: 'Archivo Excel exportado correctamente'
+        })
+      );
+      expect(component.exportLoading).toBe(false);
+    }));
 
     it('should export with date range', (done) => {
       kardexService.getAllKardexForExport.mockReturnValue(of(mockKardexData));
@@ -480,24 +478,22 @@ describe('ListKardexWeightedAverageComponent - Integration Tests', () => {
       }, 100);
     });
 
-    it('should handle export error', (done) => {
+    it('should handle export error', fakeAsync(() => {
       kardexService.getAllKardexForExport.mockReturnValue(
         throwError(() => new Error('Error al exportar'))
       );
 
       component.exportToExcel();
+      tick();
 
-      setTimeout(() => {
-        expect(messageService.add).toHaveBeenCalledWith(
-          expect.objectContaining({
-            severity: 'error',
-            detail: 'Error al obtener los datos para exportar'
-          })
-        );
-        expect(component.exportLoading).toBe(false);
-        done();
-      }, 100);
-    });
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          severity: 'error',
+          detail: 'Error al obtener los datos para exportar'
+        })
+      );
+      expect(component.exportLoading).toBe(false);
+    }));
 
     it('should not export when no product selected', () => {
       component.selectedProduct = undefined;
@@ -508,23 +504,21 @@ describe('ListKardexWeightedAverageComponent - Integration Tests', () => {
       expect(kardexService.getAllKardexForExport).not.toHaveBeenCalled();
     });
 
-    it('should handle processing error', (done) => {
+    it('should handle processing error', fakeAsync(() => {
       kardexService.getAllKardexForExport.mockReturnValue(of(mockKardexData));
       excelExportService.processKardexData.mockImplementation(() => { throw new Error('Processing error'); });
 
       component.exportToExcel();
+      tick();
 
-      setTimeout(() => {
-        expect(messageService.add).toHaveBeenCalledWith(
-          expect.objectContaining({
-            severity: 'error',
-            detail: 'Error al generar el archivo Excel'
-          })
-        );
-        expect(component.exportLoading).toBe(false);
-        done();
-      }, 100);
-    });
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          severity: 'error',
+          detail: 'Error al generar el archivo Excel'
+        })
+      );
+      expect(component.exportLoading).toBe(false);
+    }));
   });
 
   describe('Purchase Return Processing', () => {

@@ -59,11 +59,11 @@ describe('InventoryAdjustmentComponent - Integration Tests', () => {
 
     fixture = TestBed.createComponent(InventoryAdjustmentComponent);
     component = fixture.componentInstance;
-    
+
     // Obtener el MessageService del componente (no del TestBed)
     messageService = fixture.debugElement.injector.get(MessageService) as jest.Mocked<MessageService>;
     jest.spyOn(messageService, 'add');
-    
+
     component.productData = mockProductData;
     component.lastKardexRecord = mockLastKardexRecord;
     fixture.detectChanges();
