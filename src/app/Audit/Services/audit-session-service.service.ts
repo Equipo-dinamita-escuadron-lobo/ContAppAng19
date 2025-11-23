@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SessionsPage } from '../Models/sessions/SessionsPage';
 import { SessionAuditFilters } from '../Models/sessions/SessionAuditFilters';
 import { environment } from '../../../environments/environment';
+import { PageResponse } from '../Models/common/PageResponse';
+import { SessionAudit } from '../Models/sessions/SessionAudit';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,7 @@ export class AuditSessionServiceService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.API_URL}audit/sessions`;
 
-  getSessions(filters: SessionAuditFilters): Observable<SessionsPage> {
+  getSessions(filters: SessionAuditFilters): Observable<PageResponse<SessionAudit>> {
     let params = new HttpParams() 
       .set('dateFrom', filters.dateFrom)
       .set('dateTo', filters.dateTo);
@@ -42,7 +43,7 @@ export class AuditSessionServiceService {
       params = params.set('sortDirection', filters.sortDirection);
     }
 
-    return this.http.get<SessionsPage>(this.apiUrl, { params });
+    return this.http.get<PageResponse<SessionAudit>>(this.apiUrl, { params });
   }
 
 
