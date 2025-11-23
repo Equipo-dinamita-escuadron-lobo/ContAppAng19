@@ -17,39 +17,85 @@
     <!-- Contenedor de cajas de filtros -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-14">
       <div class="flex flex-col">
-        <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">Fecha inicial</label>
-        <p-datePicker 
+        <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">
+          Fecha inicial 
+          @if (!filtro.fechaInicio) {
+            <span class="text-red-500">*</span>
+          }
+        </label>
+        <p-datePicker  
           id="fechaInicio"
           [(ngModel)]="filtro.fechaInicio"
           dateFormat="dd/mm/yy"
-          showIcon="true">
+          [dataType]="'date'"
+          showIcon="true"
+          [required]="true"
+          [maxDate]="filtro.fechaFin ?? today">
         </p-datePicker>
+        @if (!filtro.fechaInicio && filtro.fechaFin) {
+          <small style="color: var(--color-error-35);">Debe ingresar la fecha inicial</small>
+        }
       </div>
       <div class="flex flex-col">
-        <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">Fecha final</label>
+        <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">
+          Fecha final 
+          @if (!filtro.fechaFin) {
+            <span class="text-red-500">*</span>
+          }
+        </label>
         <p-datePicker 
           id="fechaFin"
           [(ngModel)]="filtro.fechaFin"
           dateFormat="dd/mm/yy"
-          showIcon="true">
+          [dataType]="'date'"
+          showIcon="true"
+          [required]="true"
+          [minDate]="filtro.fechaInicio"
+          [maxDate]="today">
         </p-datePicker>
+        @if (filtro.fechaInicio && !filtro.fechaFin) {
+          <small style="color: var(--color-error-35);">Debe ingresar la fecha final</small>
+        }
       </div>
-      <div class="flex flex-col">
-        <label for="table" class="mb-1 text-sm font-medium text-gray-700">Tabla</label>
-        <p-dropdown
-          id="table"
-          [options]="tablas"
-          [(ngModel)]="filtro.tabla"
-          placeholder="Seleccione una tabla">
-        </p-dropdown>
+      <div class="flex flex-col mr-5">
+        <label for="modulo" class="mb-1 text-sm font-medium text-gray-700">Módulo</label>
+        <input
+          id="modulo"
+          type="text"
+          pInputText
+          [(ngModel)]="filtro.moduleName"
+          placeholder="Buscar por módulo"
+          (input)="onInputChange($event, 'moduleName')">
+          @if (filtro.moduleName && filtro.moduleName.length > 0 && filtro.moduleName.length < 3) {
+            <small style="color: var(--color-error-35);">
+              Debe escribir mínimo 3 caracteres
+            </small>
+          }
+      </div>
+      <div class="flex flex-col mr-5">
+        <label for="tabla" class="mb-1 text-sm font-medium text-gray-700">Tabla</label>
+        <input
+          id="tabla"
+          type="text"
+          pInputText
+          [(ngModel)]="filtro.affectedTable"
+          placeholder="Buscar por tabla"
+          (input)="onInputChange($event, 'affectedTable')">
+          @if (filtro.affectedTable && filtro.affectedTable.length > 0 && filtro.affectedTable.length < 3) {
+            <small style="color: var(--color-error-35);">
+              Debe escribir mínimo 3 caracteres
+            </small>
+          }
       </div>
       <div class="flex flex-col">
         <label for="rol" class="mb-1 text-sm font-medium text-gray-700">Rol</label>
         <p-dropdown 
           id="rol"
           [options]="roles"
-          [(ngModel)]="filtro.rol"
-          placeholder="Seleccione un rol">
+          [(ngModel)]="filtro.userRole"
+          placeholder="Seleccione un rol"
+          optionLabel="label"
+          optionValue="value">
         </p-dropdown>
       </div>
       <div class="flex flex-col mr-5">
@@ -58,25 +104,25 @@
           id="usuario"
           type="text"
           pInputText
-          [(ngModel)]="filtro.usuario">
+          [(ngModel)]="filtro.userName"
+          placeholder="Buscar por nombre"
+          (input)="onInputChange($event, 'userName')">
+          @if (filtro.userName && filtro.userName.length > 0 && filtro.userName.length < 3) {
+            <small style="color: var(--color-error-35);">
+              Debe escribir mínimo 3 caracteres
+            </small>
+          }
       </div>
       <div class="flex flex-col">
         <label for="operation" class="mb-1 text-sm font-medium text-gray-700">Operación</label>
         <p-dropdown
           id="operation"
-          [options]="operations"
-          [(ngModel)]="filtro.operation"
-          placeholder="Seleccione una operación">
+          [options]="operationsOptions"
+          [(ngModel)]="filtro.operationType"
+          placeholder="Seleccione una operación"
+          optionLabel="label"
+          optionValue="value">
         </p-dropdown>
-      </div>
-      <div class="flex flex-col mr-5">
-        <label for="companyCode" class="mb-1 text-sm font-medium text-gray-700">Código de empresa</label>
-        <input
-          id="companyCode"
-          type="text"
-          pInputText
-          [(ngModel)]="filtro.companyCode"
-          placeholder="NIT">
       </div>
     </div>
 
@@ -87,7 +133,7 @@
         <p-button 
           label="Aplicar filtros" 
           icon="pi pi-filter" 
-          severity="info"
+          [loading]="loading"
           (onClick)="applyFilters()">
         </p-button>
       </div>
@@ -103,60 +149,67 @@
   </div>
 
   <p-table 
-    [value]="operationsFilters"
-    [paginator]="true" 
-    [rows]="10" 
-    [rowsPerPageOptions]="[5,10,20]"  
+    [value]="operations"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="totalRecords"
+    [rowsPerPageOptions]="[5,10,20]"
+    [loading]="loading" 
+    (onLazyLoad)="onLazyLoad($event)"
+    [sortField]="sortField"
+    [sortOrder]="sortOrder"
     styleClass="p-datatable-striped font-family-sans" 
     [tableStyle]="{'min-width': '50rem'}" 
     responsiveLayout="scroll">
 
     <ng-template pTemplate="header">
       <tr>
-        <th pSortableColumn="usuario" class="font-semibold text-primary border-b-2 border-primary">
+        <th class="font-semibold text-primary border-b-2 border-primary">
           Usuario
         </th>
-        <th pSortableColumn="rol" class="font-semibold text-primary border-b-2 border-primary">
+        <th class="font-semibold text-primary border-b-2 border-primary">
           Rol 
         </th>
-        <th pSortableColumn="fecha" class="font-semibold text-primary border-b-2 border-primary">
+        <th pSortableColumn="operationAt" class="font-semibold text-primary border-b-2 border-primary">
           Fecha y hora
+          <p-sortIcon field="operationAt"></p-sortIcon> 
         </th>
-        <th pSortableColumn="empresa" class="font-semibold text-primary border-b-2 border-primary">
-          NIT empresa
+        <th class="font-semibold text-primary border-b-2 border-primary">
+          Módulo
         </th>
-        <th pSortableColumn="tabla" class="font-semibold text-primary border-b-2 border-primary">
+        <th class="font-semibold text-primary border-b-2 border-primary">
           Tabla 
         </th>
-        <th pSortableColumn="codigo" class="font-semibold text-primary border-b-2 border-primary">
+        <th class="font-semibold text-primary border-b-2 border-primary">
           Código
         </th>
-        <th pSortableColumn="operacion" class="font-semibold text-primary border-b-2 border-primary">
+        <th class="font-semibold text-primary border-b-2 border-primary">
           Operación
         </th>
-        <th pSortableColumn="datos" class="font-semibold text-primary border-b-2 border-primary">
+        <th class="font-semibold text-primary border-b-2 border-primary">
           Datos
-        </th>
+        </th> 
       </tr>
     </ng-template>
 
-    <ng-template pTemplate="body" let-row>
+    <ng-template pTemplate="body" let-operation>
       <tr class="text-neutral-20">
-        <td class="py-3">{{ row.usuario }}</td>
-        <td class="py-3">{{ row.rol }}</td>
-        <td class="py-3">{{ row.fecha }}</td>
-        <td class="py-3">{{ row.empresa }}</td>
-        <td class="py-3">{{ row.tabla }}</td>
-        <td class="py-3">{{ row.codigo }}</td>
-        <td class="py-3">{{ row.operacion }}</td>
-        <td class="py-3">{{ row.datos }}</td>
+        <td class="py-3">{{ operation.userName }}</td>
+        <td class="py-3">{{ operation.userRole }}</td>
+        <td class="py-3">{{ formatDateTime(operation.operationAt) }}</td>
+        <td class="py-3">{{ operation.moduleName }}</td>
+        <td class="py-3">{{ operation.affectedTable }}</td>
+        <td class="py-3">{{ operation.registerId }}</td>
+        <td class="py-3">{{ operationTypeLabels[operation.operationType] }}</td>
+        <td class="py-3" [innerHTML]="formatData(operation)"></td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
-          No se encontraron registros de operaciones.
+        <td colspan="8" class="text-center py-6 font-family-sans text-neutral-50">
+          {{ hasSearched ? 'No se encontraron registros de operaciones.' : 'Use los filtros y presione "Aplicar filtros".' }}
         </td>
       </tr>
     </ng-template>
