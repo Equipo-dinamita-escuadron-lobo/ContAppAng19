@@ -202,11 +202,15 @@
           <td>{{ accountInfo.account?.accountCode }}</td>
           <td>{{ accountInfo.account?.accountDescription }}</td>
           <td>{{ accountInfo.description }}</td>
-          <!-- ✅ CORREGIDO: Añadida la clase tabular-nums -->
           <td class="p-2">
             <div
               class="money-cell"
-              [innerHTML]="formatMoneyAligned(accountInfo.value)"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.value,
+                  accountInfo.account.nature
+                )
+              "
             ></div>
           </td>
         </tr>
