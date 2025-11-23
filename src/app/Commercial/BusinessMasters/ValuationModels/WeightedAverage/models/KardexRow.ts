@@ -1,8 +1,10 @@
 export interface KardexRow {
+  kardexId?: number;
   date: string;
   details: string;
   quantity: number;
   unitPrice: number;
+  type?: string;
 
   entryQuantity?: number;
   entryUnitPrice?: number;
@@ -15,4 +17,5 @@ export interface KardexRow {
   balanceQuantity: number;
   balanceUnitPrice: number;
   totalBalance: number;
+  formattedDate?: string;
 }

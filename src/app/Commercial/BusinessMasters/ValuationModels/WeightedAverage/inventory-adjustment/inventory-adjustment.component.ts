@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { DatePickerModule } from 'primeng/datepicker';
@@ -24,7 +24,7 @@ import { ProductResponse } from '../models/ProductResponse';
     ButtonModule,
     InputTextModule,
     InputNumberModule,
-    DropdownModule,
+    SelectModule,
     DialogModule,
     ToastModule,
     DatePickerModule

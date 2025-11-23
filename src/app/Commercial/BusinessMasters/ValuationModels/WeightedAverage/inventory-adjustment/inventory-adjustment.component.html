@@ -74,7 +74,7 @@
               Tipo de Ajuste <span style="color: var(--color-error);">*</span>
             </label>
             <div class="w-full">
-              <p-dropdown
+              <p-select
                 id="adjustmentType"
                 formControlName="adjustmentType"
                 [options]="adjustmentTypes"
@@ -83,7 +83,7 @@
                 placeholder="Seleccione el tipo de ajuste"
                 [styleClass]="'w-full'"
                 [ngClass]="{'ng-invalid ng-dirty': adjustmentForm.get('adjustmentType')?.invalid && adjustmentForm.get('adjustmentType')?.touched}">
-              </p-dropdown>
+              </p-select>
               @if (adjustmentForm.get('adjustmentType')?.touched && adjustmentForm.get('adjustmentType')?.invalid) {
                 <small class="p-error error-message">El tipo de ajuste es requerido.</small>
               }
