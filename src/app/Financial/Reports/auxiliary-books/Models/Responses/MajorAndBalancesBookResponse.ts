@@ -1,6 +1,7 @@
+import { Account } from '../Account';
+
 export interface MajorAndBalancesResponse {
-  account: string;
-  description: string;
+  account: Account;
   balance: number;
   debit: number;
   credit: number;
