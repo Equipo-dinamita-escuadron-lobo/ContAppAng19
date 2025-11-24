@@ -95,13 +95,14 @@ export class AccountListComponent implements OnInit {
   isImporting: boolean = false;
   isExporting: boolean = false;
 
-  // Propiedades para manejo asíncrono de importación
-  showImportProgressDialog: boolean = false;
-  importJobId: string | null = null;
-  importProgress: number = 0;
-  importStatus: string = '';
-  importPhase: string = '';
-  private importPollingInterval: any = null;
+  // Propiedades para manejo asíncrono (importación/exportación)
+  showProgressDialog: boolean = false;
+  progressJobId: string | null = null;
+  progressValue: number = 0;
+  progressStatus: string = '';
+  progressPhase: string = '';
+  progressOperationType: 'import' | 'export' = 'import';
+  private progressPollingInterval: any = null;
 
   showCrossingCheckboxEdit: boolean = false;
   showCostCenterCheckboxEdit: boolean = false;
@@ -567,9 +568,6 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-   * Exporta cuentas a un archivo Excel.
-   */
-  /**
   * Ordena las cuentas recursivamente por código.
   */
   sortAccountsRecursively(accounts: Account[]): Account[] {
@@ -988,8 +986,7 @@ export class AccountListComponent implements OnInit {
         this.searchResults = results;
         this.isLoading = false;
       },
-      error: (error) => {
-        console.error('Error en búsqueda general:', error);
+      error: () => {
         this.searchResults = [];
         this.isLoading = false;
       }
@@ -1771,91 +1768,68 @@ export class AccountListComponent implements OnInit {
     const entId = entData?.id || this.getIdEnterprise();
     const companyName = entData?.name || '';
 
-    this.isExporting = true; // Activar estado de carga
+    this.isExporting = true;
+    this.progressOperationType = 'export';
 
-    this._accountService.exportAccounts(entId, companyName, status).subscribe({
+    // Iniciar exportación asíncrona
+    this._accountService.exportAccountsAsync(entId, companyName, status).subscribe({
       next: (response) => {
-        this.isExporting = false; // Desactivar estado de carga
-        if (!response.body) {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error de Exportación',
-            detail: 'No se recibió el archivo del servidor'
-          });
-          return;
-        }
+        // Guardar el jobId y mostrar diálogo de progreso
+        this.progressJobId = response.jobId;
+        this.progressValue = 0;
+        this.progressStatus = 'PROCESSING';
+        this.progressPhase = 'Iniciando exportación...';
+        this.showProgressDialog = true;
+        
+        // Iniciar polling cada 5 segundos
+        this.startProgressPolling();
 
-        this.downloadFile(response);
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Exportación Exitosa',
-          detail: `Se ha exportado el catálogo de cuentas correctamente`
-        });
+        // NO mostrar notificación aquí - solo al completar exitosamente
       },
       error: (error) => {
-        this.isExporting = false; // Desactivar estado de carga en caso de error
+        this.isExporting = false;
+        
+        // Manejar error del backend (por ejemplo, no hay cuentas disponibles)
         if (error.error instanceof Blob) {
+          // Si el error viene como Blob, leerlo
           const reader = new FileReader();
           reader.onload = () => {
             try {
               const errorData = JSON.parse(reader.result as string);
-              const errorMessage = errorData.message || 'No se pudo exportar las cuentas.';
-
-              // Verificar si es un mensaje informativo sobre cuentas no disponibles
+              const errorMessage = errorData.message || 'No se pudo iniciar la exportación';
               const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
 
-              if (isNoAccountsMessage) {
-                // Mostrar como información en lugar de error
-                this.messageService.add({
-                  severity: 'info',
-                  summary: 'Información',
-                  detail: this.getNoAccountsMessage(status)
-                });
-              } else {
-                // Mostrar como error para otros casos
-                this.messageService.add({
-                  severity: 'error',
-                  summary: 'Error de Exportación',
-                  detail: errorMessage
-                });
-              }
+              this.messageService.add({
+                severity: isNoAccountsMessage ? 'info' : 'error',
+                summary: isNoAccountsMessage ? 'Información' : 'Error al Iniciar Exportación',
+                detail: isNoAccountsMessage ? this.getNoAccountsMessage(status) : errorMessage
+              });
             } catch (e) {
               this.messageService.add({
                 severity: 'error',
-                summary: 'Error de Exportación',
-                detail: 'Ocurrió un error inesperado.'
+                summary: 'Error al Iniciar Exportación',
+                detail: 'No se pudo iniciar la exportación'
               });
             }
           };
           reader.onerror = () => {
             this.messageService.add({
               severity: 'error',
-              summary: 'Error de Exportación',
-              detail: 'No se pudo leer el mensaje de error.'
+              summary: 'Error al Iniciar Exportación',
+              detail: 'No se pudo procesar el error del servidor'
             });
           };
           reader.readAsText(error.error);
         } else {
-          const errorMessage = error.error?.message || error.message || 'Error desconocido al exportar cuentas';
-
-          // Verificar si es un mensaje informativo sobre cuentas no disponibles
+          // Error directo (JSON)
+          const errorMessage = error.error?.message || error.message || 'No se pudo iniciar la exportación';
           const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
 
-          if (isNoAccountsMessage) {
-            // Mostrar como información en lugar de error
-            this.messageService.add({
-              severity: 'info',
-              summary: 'Información',
-              detail: this.getNoAccountsMessage(status)
-            });
-          } else {
-            // Mostrar como error para otros casos
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error de Exportación',
-              detail: errorMessage
-            });
-          }
+          this.messageService.add({
+            severity: isNoAccountsMessage ? 'info' : 'error',
+            summary: isNoAccountsMessage ? 'Información' : 'Error al Iniciar Exportación',
+            detail: isNoAccountsMessage ? this.getNoAccountsMessage(status) : errorMessage
+          });
         }
       }
     });
@@ -2051,7 +2025,6 @@ export class AccountListComponent implements OnInit {
       });
 
     } catch (error) {
-      console.error('Error al exportar errores:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error en Exportación',
@@ -2108,29 +2081,29 @@ export class AccountListComponent implements OnInit {
 
     const entId = this.getIdEnterprise();
     this.isImporting = true;
+    this.progressOperationType = 'import';
 
     // Iniciar importación asíncrona
     this._accountService.importAccountsAsync(entId, file).subscribe({
       next: (response) => {
         // Guardar el jobId y mostrar diálogo de progreso
-        this.importJobId = response.jobId;
-        this.importProgress = 0;
-        this.importStatus = 'PROCESSING';
-        this.importPhase = 'Iniciando importación...';
-        this.showImportProgressDialog = true;
+        this.progressJobId = response.jobId;
+        this.progressValue = 0;
+        this.progressStatus = 'PROCESSING';
+        this.progressPhase = 'Iniciando importación...';
+        this.showProgressDialog = true;
         
         // Iniciar polling cada 5 segundos
-        this.startImportPolling();
+        this.startProgressPolling();
 
         this.messageService.add({
           severity: 'info',
           summary: 'Importación iniciada',
-          detail: 'La importación se está procesando. Por favor espera...'
+          detail: 'La importación se está procesando.'
         });
       },
       error: (error) => {
         this.isImporting = false;
-        console.error('Error iniciando importación:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Error al Iniciar Importación',
@@ -2147,68 +2120,88 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-   * Inicia el polling para verificar el estado de la importación cada 5 segundos.
+   * Inicia el polling para verificar el estado de la operación asíncrona cada 5 segundos.
    */
-  private startImportPolling(): void {
+  private startProgressPolling(): void {
     // Limpiar cualquier polling anterior
-    if (this.importPollingInterval) {
-      clearInterval(this.importPollingInterval);
+    if (this.progressPollingInterval) {
+      clearInterval(this.progressPollingInterval);
     }
 
     // Consultar inmediatamente y luego cada 5 segundos
-    this.checkImportStatus();
-    this.importPollingInterval = setInterval(() => {
-      this.checkImportStatus();
+    this.checkProgressStatus();
+    this.progressPollingInterval = setInterval(() => {
+      this.checkProgressStatus();
     }, 5000);
   }
 
   /**
-   * Verifica el estado actual de la importación.
+   * Verifica el estado actual de la operación (importación o exportación).
    */
-  private checkImportStatus(): void {
-    if (!this.importJobId) return;
+  private checkProgressStatus(): void {
+    if (!this.progressJobId) return;
 
-    this._accountService.getImportStatus(this.importJobId).subscribe({
+    const statusObservable = this.progressOperationType === 'import'
+      ? this._accountService.getImportStatus(this.progressJobId)
+      : this._accountService.getExportStatus(this.progressJobId);
+
+    statusObservable.subscribe({
       next: (status) => {
-        this.importProgress = status.progress || 0;
-        this.importStatus = status.status;
+        this.progressValue = status.progress || 0;
+        this.progressStatus = status.status;
         
         // Actualizar mensaje de fase
-        this.importPhase = this.getImportPhaseMessage(status);
+        this.progressPhase = this.getProgressPhaseMessage(status);
 
-        // Si la importación terminó (éxito, con errores o falla)
+        // Si la operación terminó (éxito, con errores o falla)
         if (status.status === 'COMPLETED' || status.status === 'COMPLETED_WITH_ERRORS' || status.status === 'FAILED') {
-          this.stopImportPolling();
-          this.handleImportCompletion(status);
+          this.stopProgressPolling();
+          this.handleProgressCompletion(status);
         }
       },
       error: (error) => {
-        console.error('Error consultando estado de importación:', error);
-        this.stopImportPolling();
-        this.showImportProgressDialog = false;
-        this.isImporting = false;
+        const operationName = this.progressOperationType === 'import' ? 'importación' : 'exportación';
+        this.stopProgressPolling();
+        this.showProgressDialog = false;
+        
+        if (this.progressOperationType === 'import') {
+          this.isImporting = false;
+        } else {
+          this.isExporting = false;
+        }
         
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo consultar el estado de la importación'
+          detail: `No se pudo consultar el estado de la ${operationName}`
         });
       }
     });
   }
 
   /**
-   * Detiene el polling de importación.
+   * Detiene el polling de la operación asíncrona.
    */
-  private stopImportPolling(): void {
-    if (this.importPollingInterval) {
-      clearInterval(this.importPollingInterval);
-      this.importPollingInterval = null;
+  private stopProgressPolling(): void {
+    if (this.progressPollingInterval) {
+      clearInterval(this.progressPollingInterval);
+      this.progressPollingInterval = null;
     }
   }
 
   /**
-   * Obtiene el mensaje de fase actual según el estado.
+   * Obtiene el mensaje de fase actual según el estado y tipo de operación.
+   */
+  private getProgressPhaseMessage(status: any): string {
+    if (this.progressOperationType === 'import') {
+      return this.getImportPhaseMessage(status);
+    } else {
+      return this.getExportPhaseMessage(status);
+    }
+  }
+
+  /**
+   * Obtiene el mensaje de fase actual para importación.
    */
   private getImportPhaseMessage(status: any): string {
     if (status.progress === 100) {
@@ -2235,13 +2228,43 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
+   * Obtiene el mensaje de fase actual para exportación.
+   */
+  private getExportPhaseMessage(status: any): string {
+    if (status.progress === 100) {
+      return 'Finalizando exportación...';
+    }
+    
+    if (status.progress >= 66) {
+      return 'Almacenando archivo...';
+    }
+    
+    if (status.progress >= 33) {
+      return 'Generando archivo Excel...';
+    }
+    
+    return 'Obteniendo datos de cuentas...';
+  }
+
+  /**
+   * Maneja la finalización de la operación (importación o exportación).
+   */
+  private handleProgressCompletion(status: any): void {
+    if (this.progressOperationType === 'import') {
+      this.handleImportCompletion(status);
+    } else {
+      this.handleExportCompletion(status);
+    }
+  }
+
+  /**
    * Maneja la finalización de la importación.
    */
   private handleImportCompletion(status: any): void {
     // Cerrar modal si está abierto
-    this.showImportProgressDialog = false;
+    this.showProgressDialog = false;
     this.isImporting = false;
-    this.importJobId = null;
+    this.progressJobId = null;
 
     // Limpiar la selección del archivo
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -2312,12 +2335,79 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
+   * Maneja la finalización de la exportación.
+   */
+  private handleExportCompletion(status: any): void {
+    
+    
+    // Guardar el jobId antes de limpiarlo
+    const jobId = this.progressJobId;
+    
+    // Cerrar modal si está abierto
+    this.showProgressDialog = false;
+    this.isExporting = false;
+    this.progressJobId = null;
+
+    if (status.status === 'FAILED') {
+      const errorMessage = status.errorMessage || 'La exportación no pudo completarse';
+      const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
+
+      this.messageService.add({
+        severity: isNoAccountsMessage ? 'info' : 'error',
+        summary: isNoAccountsMessage ? 'Información' : 'Exportación Fallida',
+        detail: errorMessage,
+        life: 8000
+      });
+      return;
+    }
+
+    // Exportación exitosa - descargar archivo
+    if (status.status === 'COMPLETED' && jobId) {
+      
+      this._accountService.downloadExportFile(jobId).subscribe({
+        next: (response) => {
+          if (!response.body) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: 'No se recibió el archivo del servidor'
+            });
+            return;
+          }
+
+          this.downloadFile(response);
+          
+          let detailMessage = `Total de registros: ${status.totalRecords || 0}`;
+          
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Exportación Exitosa',
+            detail: detailMessage,
+            life: 8000
+          });
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Descarga',
+            detail: 'No se pudo descargar el archivo exportado'
+          });
+        }
+      });
+    }
+  }
+
+  /**
    * Maneja el cierre del diálogo de progreso.
    * El polling continúa en segundo plano.
    */
-  onImportDialogClose(): void {
+  /**
+   * Maneja el cierre del modal de progreso.
+   * El polling continúa en segundo plano.
+   */
+  onProgressDialogClose(): void {
     // Solo cerrar el modal, el polling continúa en segundo plano
-    this.showImportProgressDialog = false;
+    this.showProgressDialog = false;
   }
 
 }
