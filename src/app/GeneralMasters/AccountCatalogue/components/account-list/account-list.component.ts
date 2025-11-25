@@ -2299,12 +2299,6 @@ export class AccountListComponent implements OnInit {
           detailMessage += `\nDuplicados omitidos: ${duplicatesSkipped}`;
         }
         
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Importación Completada con Errores',
-          detail: detailMessage,
-          life: 8000
-        });
       } else if (status.status === 'FAILED') {
         this.messageService.add({
           severity: 'error',
