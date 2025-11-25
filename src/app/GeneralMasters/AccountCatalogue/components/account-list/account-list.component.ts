@@ -2274,7 +2274,7 @@ export class AccountListComponent implements OnInit {
 
     const { totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = status;
 
-    // Si hay errores, mostrar modal de errores
+  
     if (errors && errors.length > 0) {
       this.showImportErrorsModal(
         errors, 
@@ -2290,23 +2290,18 @@ export class AccountListComponent implements OnInit {
         this.getAccounts();
       }
 
-      // Mostrar notificación según el resultado
-      if (status.status === 'COMPLETED_WITH_ERRORS') {
-        let detailMessage = `Total procesados: ${totalRecords || 0}\n`;
-        detailMessage += `Exitosos: ${successfulImports}\n`;
-        detailMessage += `Fallidos: ${failedImports}`;
-        if (duplicatesSkipped > 0) {
-          detailMessage += `\nDuplicados omitidos: ${duplicatesSkipped}`;
-        }
-        
-      } else if (status.status === 'FAILED') {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Importación Fallida',
-          detail: status.errorMessage || 'La importación no pudo completarse',
-          life: 8000
-        });
-      }
+      // No mostrar notificación cuando hay errores - el modal es suficiente
+      return;
+    }
+
+    // Solo mostrar error general si el estado es FAILED sin errores detallados
+    if (status.status === 'FAILED') {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Importación Fallida',
+        detail: status.errorMessage || 'La importación no pudo completarse',
+        life: 8000
+      });
       return;
     }
 
@@ -2391,10 +2386,6 @@ export class AccountListComponent implements OnInit {
     }
   }
 
-  /**
-   * Maneja el cierre del diálogo de progreso.
-   * El polling continúa en segundo plano.
-   */
   /**
    * Maneja el cierre del modal de progreso.
    * El polling continúa en segundo plano.
