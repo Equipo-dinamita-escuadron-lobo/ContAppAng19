@@ -225,42 +225,6 @@ export class ProductService {
     );
   }
 
-  exportProducts(entId: string, companyName?: string, status?: boolean): Observable<HttpResponse<Blob>> {
-    const params = new URLSearchParams();
-    params.set('entId', entId);
-
-    if (status !== undefined && status !== null) {
-      params.set('status', status.toString());
-    }
-
-    if (companyName && companyName.trim()) {
-      params.set('companyName', companyName.trim());
-    }
-
-    const url = `${API_URL}products/export/excel?${params.toString()}`;
-
-    return this.http.get(url, {
-      responseType: 'blob',
-      observe: 'response'
-    }).pipe(
-      catchError((error: HttpErrorResponse) => {
-        return throwError(() => error);
-      })
-    );
-  }
-
-  importProducts(entId: string, file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('entId', entId);
-    formData.append('excelFile', file);
-
-    return this.http.post(`${API_URL}products/import/excel`, formData).pipe(
-      catchError((error: HttpErrorResponse) => {
-        return throwError(() => error);
-      })
-    );
-  }
-
   /**
    * Inicia una importación asíncrona de productos desde un archivo Excel.
    * @param entId - El ID de la entidad.

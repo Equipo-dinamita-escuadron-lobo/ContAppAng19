@@ -44,10 +44,16 @@
           <p-button label="Crear" icon="pi pi-plus"
             (click)="redirectTo('/gen-masters/inventory/products/create')">
           </p-button>
+          
           <!-- Botón "Importar" para importar productos desde Excel -->
-          <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" [chooseIcon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" [auto]="true"
-            (onSelect)="onFileSelect($event)" class="p-button-primeng" [disabled]="isImporting">
-          </p-fileUpload>          
+          <p-button 
+            label="Importar" 
+            [icon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" 
+            [disabled]="isImporting"
+            (click)="fileInput.click()">
+          </p-button>
+          <input #fileInput type="file" accept=".xlsx" (change)="onFileSelect($event)" style="display: none;">
+          
           <!-- Botón "Exportar" para exportar productos a Excel -->
           <p-button
             label="Exportar"
@@ -386,6 +392,3 @@
   </div>
 </ng-template>
 </p-dialog>
-
-<!-- Toast para mensajes -->
-<p-toast></p-toast>

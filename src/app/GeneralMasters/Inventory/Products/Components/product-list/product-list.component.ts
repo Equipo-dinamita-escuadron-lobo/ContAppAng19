@@ -23,7 +23,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { CurrencyFormatPipe } from '../../Pipes/currency-format.pipe';
 import { ProductsTemplateComponent } from '../products-template/products-template.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { FileUploadModule } from 'primeng/fileupload';
 import { ProgressBarModule } from 'primeng/progressbar';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
@@ -61,7 +60,6 @@ interface ImportError {
     CurrencyFormatPipe,
     ProductsTemplateComponent,
     RadioButtonModule,
-    FileUploadModule,
     ProgressBarModule
 ],
   providers: [MessageService, ConfirmationService],
@@ -464,7 +462,7 @@ export class ProductListComponent implements OnInit {
    * @param event Evento del selector de archivos.
    */
   onFileSelect(event: any): void {
-    const file = event.files?.[0];
+    const file = event.target.files[0];
     if (!file) return;
 
     // Validar tipo de archivo manualmente
@@ -481,11 +479,7 @@ export class ProductListComponent implements OnInit {
       });
       
       // Limpiar la selección del file upload
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-      if (fileInput) {
-        fileInput.value = '';
-      }
-      
+      event.target.value = '';
       return;
     }
 
@@ -511,6 +505,9 @@ export class ProductListComponent implements OnInit {
           summary: 'Importación iniciada',
           detail: 'La importación se está procesando.'
         });
+
+        // Limpiar el input después de iniciar correctamente
+        event.target.value = '';
       },
       error: (error) => {
         this.isImporting = false;
@@ -521,10 +518,7 @@ export class ProductListComponent implements OnInit {
         });
 
         // Limpiar la selección del file upload
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-        if (fileInput) {
-          fileInput.value = '';
-        }
+        event.target.value = '';
       }
     });
   }
