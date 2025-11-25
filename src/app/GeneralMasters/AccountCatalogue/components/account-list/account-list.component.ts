@@ -1300,7 +1300,7 @@ export class AccountListComponent implements OnInit {
         const errorTitle = this.getErrorTitle(errorCode);
 
         // Determinar la severidad basada en el código de error
-        const severity = errorCode === 'ACCOUNT_ASSOCIATED_WITH_ACCOUNTING_MOVEMENTS' ? 'info' : 'error';
+        const severity = (errorCode === 'ACCOUNT_ASSOCIATED_WITH_ACCOUNTING_MOVEMENTS' || errorCode === 'ACCOUNT_IN_USE') ? 'info' : 'error';
 
         this.messageService.add({
           severity: severity,
@@ -1334,6 +1334,7 @@ export class AccountListComponent implements OnInit {
         return 'Operación No Permitida';
 
       case 'ACCOUNT_ASSOCIATED_WITH_ACCOUNTING_MOVEMENTS':
+      case 'ACCOUNT_IN_USE':
         return 'Información';
 
       default:
