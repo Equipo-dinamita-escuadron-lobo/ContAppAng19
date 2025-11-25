@@ -178,20 +178,47 @@ export class ClassesOfDocumentsListComponent implements OnInit {
           },
           error: (error) => {
             console.error('Error al eliminar clase de documento:', error);
-            
-            // Verificar si es el error específico de clase en uso
-            // Verificamos múltiples formas posibles en que puede venir el error
-            const isClassInUseError = 
+
+            const errorCode = error?.error?.code || error?.code || '';
+            const errorMessage = error?.error?.message || '';
+
+            if (errorCode === 'DOCUMENT_CLASS_IN_USE') {
+              // Si el mensaje incluye "movimientos contables", es un error de edición (no debería ocurrir en eliminación)
+              // Para eliminación, mostramos el mensaje genérico
+              const isEditError = errorMessage.includes('movimientos contables');
+
+              if (isEditError) {
+                // Este caso no debería ocurrir en eliminación, pero por si acaso
+                this.messageService.add({
+                  severity: 'info',
+                  summary: 'Información',
+                  detail: errorMessage,
+                  life: 6000
+                });
+              } else {
+                // Error de eliminación: clase asociada a tipos
+                this.messageService.add({
+                  severity: 'info',
+                  summary: 'No se puede eliminar',
+                  detail: `No se puede eliminar la clase "${row.name}" porque está siendo utilizada por uno o más tipos de documentos.`,
+                  life: 6000
+                });
+              }
+              return;
+            }
+
+            // Verificar si es el error específico de clase en uso (compatibilidad hacia atrás)
+            const isClassInUseError =
               error?.error?.errorCode === 'DOCUMENT_CLASS_IN_USE' ||
               error?.error?.message?.includes('está siendo utilizada') ||
               error?.error?.message?.includes('DOCUMENT_CLASS_IN_USE') ||
               (error?.status === 400 && error?.error?.message?.includes('tipo de documento'));
-            
+
             if (isClassInUseError) {
               this.messageService.add({
                 severity: 'info',
                 summary: 'No se puede eliminar',
-                detail: `No se puede eliminar la clase "${row.name}" porque está siendo utilizada por uno o más tipos de documentos activos.`,
+                detail: `No se puede eliminar la clase "${row.name}" porque está siendo utilizada por uno o más tipos de documentos.`,
                 life: 6000
               });
             } else if (error?.error?.message) {

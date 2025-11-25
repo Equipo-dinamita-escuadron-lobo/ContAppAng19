@@ -208,9 +208,13 @@ export class ProductEditComponent implements OnInit {
           this.router.navigate(['/gen-masters/inventory/products/list']);
         } else {
           const errorMessage = err?.error?.message || 'Ha ocurrido un problema al actualizar el producto.';
+          let summary = 'Error';
+          if (errorMessage.includes('Ya existe') || errorMessage.includes('duplicado') || errorMessage.includes('Duplicate')) {
+            summary = 'Registro Duplicado';
+          }
           this.messageService.add({
             severity: 'error',
-            summary: 'Error',
+            summary: summary,
             detail: errorMessage
           });
         }
