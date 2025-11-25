@@ -284,6 +284,46 @@
   (close)="closeTemplateModal()">
 </app-products-template>
 
+<!-- Modal de Progreso Asíncrono (Importación/Exportación) -->
+<p-dialog
+  [header]="progressOperationType === 'import' ? 'Importando Productos' : 'Exportando Productos'"
+  [modal]="true"
+  [(visible)]="showProgressDialog"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '35rem', 'font-family': 'var(--font-family-sans)' }"
+  (onHide)="onProgressDialogClose()">
+
+  <div class="flex flex-col font-family-sans">
+    <div class="flex items-center gap-8 text-primary">
+      <i class="pi pi-spin pi-spinner text-2xl"></i>
+      <span class="font-semibold">
+        {{ progressOperationType === 'import' ? 'Procesando importación...' : 'Procesando exportación...' }}
+      </span>
+    </div>
+
+    <div class="mb-16 mt-16">
+      <div class="text-sm mb-8">
+        {{ progressPhase }}
+      </div>
+
+      <div class="w-full">
+        <p-progressBar
+          [value]="progressValue"
+          [showValue]="true"
+          styleClass="h-6">
+        </p-progressBar>
+      </div>
+    </div>
+
+    <div class="text-xs mb-16">
+      <p>Este proceso puede tomar varios minutos dependiendo del tamaño.</p>
+      <p class="mt-2 font-semibold text-primary">Puedes cerrar esta ventana, se te notificará cuando termine.</p>
+    </div>
+  </div>
+</p-dialog>
+
 <!-- Modal de Errores de Importación -->
 <p-dialog header="Errores de Importación" [modal]="true" [(visible)]="showErrorModal"
   [style]="{ width: '90rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"

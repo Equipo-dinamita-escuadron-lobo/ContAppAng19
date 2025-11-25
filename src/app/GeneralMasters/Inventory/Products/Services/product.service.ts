@@ -260,4 +260,95 @@ export class ProductService {
       })
     );
   }
+
+  /**
+   * Inicia una importación asíncrona de productos desde un archivo Excel.
+   * @param entId - El ID de la entidad.
+   * @param file - El archivo Excel a importar.
+   * @returns Un observable con el jobId para hacer seguimiento de la importación.
+   */
+  importProductsAsync(entId: string, file: File): Observable<{ jobId: string; message: string; status: string }> {
+    const formData = new FormData();
+    formData.append('entId', entId);
+    formData.append('excelFile', file);
+
+    return this.http.post<{ jobId: string; message: string; status: string }>(
+      `${API_URL}products/import/excel`,
+      formData
+    ).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene el estado de una importación asíncrona.
+   * @param jobId - El ID del trabajo de importación.
+   * @returns Un observable con el estado de la importación.
+   */
+  getImportStatus(jobId: string): Observable<any> {
+    return this.http.get(`${API_URL}products/import/status/${jobId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Inicia una exportación asíncrona de productos.
+   * @param entId - El ID de la entidad.
+   * @param companyName - Nombre opcional de la empresa para el archivo.
+   * @param status - Estado del filtro (true=activos, false=inactivos, undefined=todos).
+   * @returns Un observable con el jobId para hacer seguimiento de la exportación.
+   */
+  exportProductsAsync(entId: string, companyName?: string, status?: boolean): Observable<{ jobId: string; message: string; status: string }> {
+    const params = new URLSearchParams();
+    params.set('entId', entId);
+
+    if (status !== undefined && status !== null) {
+      params.set('status', status.toString());
+    }
+
+    if (companyName && companyName.trim()) {
+      params.set('companyName', companyName.trim());
+    }
+
+    const url = `${API_URL}products/export/excel?${params.toString()}`;
+
+    return this.http.get<{ jobId: string; message: string; status: string }>(url).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene el estado de una exportación asíncrona.
+   * @param jobId - El ID del trabajo de exportación.
+   * @returns Un observable con el estado de la exportación.
+   */
+  getExportStatus(jobId: string): Observable<any> {
+    return this.http.get(`${API_URL}products/export/status/${jobId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Descarga el archivo generado de una exportación completada.
+   * @param jobId - El ID del trabajo de exportación.
+   * @returns Un observable con la respuesta HTTP que contiene el blob del archivo.
+   */
+  downloadExportFile(jobId: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${API_URL}products/export/download/${jobId}`, {
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
 }
