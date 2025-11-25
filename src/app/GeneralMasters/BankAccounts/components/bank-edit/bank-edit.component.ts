@@ -148,6 +148,31 @@ export class BankEditComponent implements OnInit {
         this.goBack();
       },
       error: (err) => {
+        // Verificar si es error específico de banco en uso
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'BANK_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede editar el banco porque tiene cuentas con movimientos contables'
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
+
+        // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+        const errorMessage = err?.error?.message || err?.message || '';
+        if (errorMessage.includes('No se puede editar el banco') && errorMessage.includes('movimientos contables')) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: errorMessage
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
+
+        // Para otros errores, mostrar mensaje genérico
         this.messageService.add({
           severity: 'error',
           summary: err.title || 'Error',
