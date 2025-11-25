@@ -185,7 +185,7 @@ export class PaymentMethodsEditComponent implements OnInit {
             const n = (nameMatch[1] || nameMatch[0])?.toString().replace(/^[^']*'|'/g,'');
             this.messageService.add({
               severity: 'error',
-              summary: 'Nombre ya existente',
+              summary: 'Registro Duplicado',
               detail: `El método de pago "${n}" ya existe.`
             });
             return;
