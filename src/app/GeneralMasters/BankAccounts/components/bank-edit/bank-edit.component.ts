@@ -14,7 +14,7 @@ import { BankService } from '../../services/bank.service';
 @Component({
   selector: 'app-bank-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, MultiSelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, MultiSelectModule],
   templateUrl: './bank-edit.component.html',
   styleUrl: './bank-edit.component.css'
 })
