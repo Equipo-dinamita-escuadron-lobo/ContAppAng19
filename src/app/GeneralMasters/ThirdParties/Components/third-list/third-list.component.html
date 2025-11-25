@@ -28,11 +28,20 @@
           </p-button>
           <input #pdfRutInput type="file" accept=".pdf" (change)="onPdfRutSelect($event)" style="display: none;">
           
-          <p-button label="Importar" icon="pi pi-upload" [style]="{'white-space': 'nowrap'}" (click)="fileInput.click()">
+          <p-button 
+            label="Importar" 
+            [icon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" 
+            [disabled]="isImporting"
+            [style]="{'white-space': 'nowrap'}" 
+            (click)="fileInput.click()">
           </p-button>
           <input #fileInput type="file" accept=".xlsx" (change)="onFileSelect($event)" style="display: none;">
 
-          <p-button label="Exportar" icon="pi pi-download" [loading]="loadingExport" [style]="{'white-space': 'nowrap'}"
+          <p-button 
+            label="Exportar" 
+            [icon]="isExporting ? 'pi pi-spin pi-spinner' : 'pi pi-download'" 
+            [disabled]="isExporting"
+            [style]="{'white-space': 'nowrap'}"
             (click)="openExportModal()">
           </p-button>
 
@@ -212,13 +221,61 @@
 </app-third-template>
 
 <!-- Componente de exportación de terceros -->
-<app-third-export [visible]="showExportModal" (close)="closeExportModal()" (exportInProgress)="onExportInProgress($event)">
+<app-third-export 
+  [visible]="showExportModal" 
+  (close)="closeExportModal()" 
+  (startExportWithParams)="onStartExportWithParams($event)">
 </app-third-export>
 
 
 <!-- Componente de detalles de terceros -->
 <app-third-details [visible]="showDetailsModal" [inputData]="detailsModalData" (close)="closeDetailsModal()">
 </app-third-details>
+
+<!-- Modal de Progreso (Importación/Exportación) -->
+<p-dialog 
+  [header]="progressOperationType === 'import' ? 'Importando Terceros' : 'Exportando Terceros'" 
+  [modal]="true" 
+  [(visible)]="showProgressDialog"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onProgressDialogClose()"
+  [style]="{ width: '35rem', 'font-family': 'var(--font-family-sans)' }">
+  
+  <div class="flex flex-col font-family-sans">
+    <!-- Icono y mensaje principal -->
+    <div class="flex items-center gap-8 text-primary">
+      <i class="pi pi-spin pi-spinner text-2xl"></i>
+      <span class="font-semibold">
+        {{ progressOperationType === 'import' ? 'Procesando importación...' : 'Procesando exportación...' }}
+      </span>
+    </div>
+
+    <!-- Fase actual y barra de progreso -->
+    <div class="mb-16 mt-16">
+      <!-- Fase actual -->
+      <div class="text-sm mb-8">
+        {{ progressPhase }}
+      </div>
+
+      <!-- Barra de progreso -->
+      <div class="w-full">
+        <p-progressBar 
+          [value]="progressValue" 
+          [showValue]="true"
+          styleClass="h-6">
+        </p-progressBar>
+      </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="text-xs mb-16">
+      <p>Este proceso puede tomar varios minutos dependiendo del tamaño.</p>
+      <p class="mt-2 font-semibold text-primary">Puedes cerrar esta ventana, se te notificará cuando termine.</p>
+    </div>
+  </div>
+</p-dialog>
 
 <!-- Modal de Errores de Importación -->
 <p-dialog header="Errores de Importación" [modal]="true" [(visible)]="showErrorModal"

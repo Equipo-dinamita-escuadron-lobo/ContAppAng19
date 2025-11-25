@@ -1081,3 +1081,26 @@ body {
 .p-inputnumber-horizontal .p-inputnumber-button-group {
   gap: 0.125rem !important;
 }
+
+/* ================================
+   ESTILOS PARA P-PROGRESSBAR
+   ================================ */
+
+/* Barra de progreso personalizada */
+.p-progressbar {
+  background-color: var(--color-neutral-90) !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+.p-progressbar .p-progressbar-value {
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-light) 100%) !important;
+  border-radius: 0.5rem !important;
+}
+
+.p-progressbar .p-progressbar-label {
+  color: var(--color-primary-100) !important;
+  font-family: var(--font-family-sans) !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+}
