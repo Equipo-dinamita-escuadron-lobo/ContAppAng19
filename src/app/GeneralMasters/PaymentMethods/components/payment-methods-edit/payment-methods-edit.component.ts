@@ -154,6 +154,30 @@ export class PaymentMethodsEditComponent implements OnInit {
         this.goBack();
       },
       error: (err) => {
+        // Verificar si es error específico de método de pago en uso
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'PAYMENT_METHOD_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede editar el método de pago porque tiene movimientos contables'
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
+
+        // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+        const errorMessage = err?.error?.message || err?.message || '';
+        if (errorMessage.includes('No se puede editar el método de pago') && errorMessage.includes('movimientos contables')) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: errorMessage
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
+
         if (err?.status === 409) {
           const msg: string = err?.error?.message || err?.error?.detail || '';
           const nameMatch = msg.match(/nombre\s+'([^']+)'/i) || msg.match(/nombre\s*[:=]\s*([A-Za-zÀ-ÿ0-9\s]+)/i);
