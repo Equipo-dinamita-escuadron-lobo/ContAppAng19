@@ -106,6 +106,16 @@ export class DocumentTypesEditComponent implements OnInit {
         this.goBack();
       },
       error: (err) => {
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'DOCUMENT_TYPE_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede editar el tipo de documento porque tiene movimientos contables'
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
         if (err?.status === 409) {
           const msg: string = err?.error?.message || err?.error?.detail || '';
           const prefixMatch = msg.match(/prefijo\s+'([^']+)'/i) || msg.match(/prefijo\s*[:=]\s*([A-Za-z0-9]+)/i);
