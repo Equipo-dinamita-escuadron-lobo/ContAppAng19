@@ -5,6 +5,7 @@ import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -18,6 +19,7 @@ export class HeaderComponent implements OnInit {
   companyName = 'Nombre de la empresa';
   userName = 'Nombre completo del usuario';
   userRole = 'Rol del usuario';
+  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view`;
 
   // 👇 inicializa vacío; lo llenamos en ngOnInit
   userMenuItems: MenuItem[] = [];
@@ -54,5 +56,9 @@ export class HeaderComponent implements OnInit {
   }
   logout(): void {
     this.auth.logout().subscribe();
+  }
+
+  openHelpCenter(): void {
+    window.open(this.helpCenterUrl, '_blank');
   }
 }
