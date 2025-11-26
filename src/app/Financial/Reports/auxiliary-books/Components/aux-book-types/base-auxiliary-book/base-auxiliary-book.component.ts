@@ -9,7 +9,6 @@ import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Serv
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { MessageService } from 'primeng/api';
 import { Select } from 'primeng/select';
-import { auxBookResponse } from '../../../Models/Responses/BookResponse';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ExportAuxiliaryBookComponent } from '../../export-auxiliary-book/export-auxiliary-book.component';
 
@@ -305,10 +304,6 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     this.organizeRequest();
 
     this.auxiliaryBookService.registerAuxiliaryBook(this.request).subscribe({
-      /**
-       * ✅ CORREGIDO: El servicio ahora devuelve un array directamente.
-       * Se actualiza el tipo de `response` a `any[]` y se asigna directamente a `dataTable`.
-       */
       next: (data: any) => {
         this.dataTable = data.accountingData;
         this.auxiliaryBookGenerated = data.auxiliaryBook;
@@ -360,6 +355,9 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
           this.errors.push(
             'El rango de fechas no es válido. La fecha inicial debe ser anterior a la fecha final.'
           );
+        } else {
+          this.criteria.startDate = this.datePeriod[0];
+          this.criteria.endDate = this.datePeriod[1];
         }
       } else {
         this.errors.push(
@@ -403,7 +401,6 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   }
 
   showExportDialog() {
-    // ✅ CORREGIDO: Se añaden los totales al objeto de datos del diálogo.
     let data = {
       reportTitle: this.auxiliaryBookInfo.name,
       auxBookType: this.auxiliaryBookInfo.type,
@@ -422,7 +419,14 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     });
   }
 
-  formatMoneyAligned(value: number | null | undefined): string {
+  /**
+   * @param value El valor numérico.
+   * @param nature (Opcional) 'DEBITO' o 'CREDITO'. Si se envía, aplica la regla de color rojo.
+   */
+  formatMoneyAligned(
+    value: number | null | undefined,
+    nature?: string
+  ): string {
     if (value == null || Number.isNaN(value)) {
       return '';
     }
@@ -442,24 +446,38 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
     const decimal = parts.find((p) => p.type === 'decimal')?.value ?? ',';
     const fraction = parts.find((p) => p.type === 'fraction')?.value ?? '00';
-    const symbol =
-      new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
-        .formatToParts(Math.abs(value))
-        .find((p) => p.type === 'currency')?.value ?? '$';
+
+    // Símbolo de moneda
+    const symbol = '$';
 
     const isNegative = value < 0;
     const sign = isNegative ? '-' : '';
 
-    // Clase condicional si el valor es negativo
-    const colorClass = isNegative ? 'negative' : '';
+    // --- LÓGICA NUEVA DE COLOR ---
+    let cssClasses = '';
+
+    if (nature) {
+      const normalizedNature = nature.trim().toUpperCase();
+
+      // Regla: Rojo si es Débito negativo O Crédito positivo
+      const isRed =
+        (normalizedNature === 'DEBITO' && value < 0) ||
+        (normalizedNature === 'CREDITO' && value > 0);
+
+      // Usamos clase de Tailwind 'text-red-600' o tu clase custom 'negative'
+      if (isRed) {
+        cssClasses = 'text-red-600 font-bold';
+      }
+    } else {
+      // Fallback: Si no envían naturaleza, mantenemos tu lógica original (solo negativos en rojo)
+      if (isNegative) {
+        cssClasses = 'negative';
+      }
+    }
+    // -----------------------------
 
     return `
-    <span class="money font-mono ${colorClass}">
+    <span class="money font-mono ${cssClasses}">
       <span class="symbol">${symbol}</span>
       <span class="integer">${sign}${integer}</span>
       <span class="decimal">${decimal}${fraction}</span>

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -12,6 +12,14 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { DropdownModule } from 'primeng/dropdown';
 import { DatePickerModule } from 'primeng/datepicker';
+import { AuditOperationServiceService } from '../../Services/audit-operation-service.service';
+import { MessageService } from 'primeng/api';
+import { UserRole } from '../../Models/enums/UserRole';
+import { OperationType } from '../../Models/enums/OperationType';
+import { Option } from '../../Models/common/Option';
+import { OperationAudit } from '../../Models/operations/OperationAudit';
+import { OperationAuditFilters } from '../../Models/operations/OperationAuditFilters';
+import { PageResponse } from '../../Models/common/PageResponse';
 
 @Component({
   standalone: true,
@@ -36,62 +44,322 @@ import { DatePickerModule } from 'primeng/datepicker';
 })
 export class AuditOperationsComponent {
 
-  filtro = {
+  private readonly operationService = inject(AuditOperationServiceService);
+  private readonly messageService = inject(MessageService);
+  private firstLoad = true;
+
+  filtro: {
+    fechaInicio: Date | null;
+    fechaFin: Date | null;
+    moduleName: string;
+    affectedTable: string;
+    userName: string;
+    userRole: UserRole | null;
+    operationType: OperationType | null;
+    registerId: string;
+  } = {
     fechaInicio: null,
     fechaFin: null,
-    rol: null,
-    usuario: '',
-    tabla: null,
-    operation: null,
-    companyCode: ''
+    moduleName: '',
+    affectedTable: '',
+    userName: '',
+    userRole: null,
+    operationType: null,
+    registerId: ''
+  };
+  
+  roles : Option<UserRole>[] = [
+    { label: 'Todos', value: null },
+    { label: 'Administrador', value: UserRole.ADMINISTRADOR },
+    { label: 'Profesor', value: UserRole.PROFESOR },
+    { label: 'Estudiante', value: UserRole.ESTUDIANTE }
+  ];
+
+  operationsOptions: Option<OperationType>[] = [
+    { label: 'Todos', value: null },
+    { label: 'Creación', value: OperationType.CREATE },
+    { label: 'Modificación', value: OperationType.UPDATE },
+    { label: 'Eliminación', value: OperationType.DELETE },
+    { label: 'Inactivación', value: OperationType.INACTIVATE }
+  ];
+
+  operationTypeLabels: Record<string, string> = {
+    [OperationType.CREATE]: 'Creación',
+    [OperationType.UPDATE]: 'Modificación',
+    [OperationType.DELETE]: 'Eliminación',
+    [OperationType.INACTIVATE]: 'Inactivación'
   };
 
-  operations = [
-    { label: 'Todos', value: null },
-    { label: 'creación', value: 'creación' },
-    { label: 'modificación', value: 'modificación' },
-    { label: 'eliminación', value: 'eliminación' },
-    { label: 'anulación', value: 'anulación' }
-  ];
+  operations: OperationAudit[] = [];
 
-  tablas = [
-    { label: 'Todos', value: null },
-    { label: 'usuarios', value: 'usuarios' },
-    { label: 'empresa', value: 'empresa' },
-    { label: 'terceros', value: 'terceros' },
-    { label: 'productos', value: 'productos' },
-    { label: 'tipo producto', value: 'tipo producto' }
-  ];
+  totalRecords = 0;
+  currentPage = 0;
+  pageSize = 20;
 
-  roles = [
-    { label: 'Todos', value: null },
-    { label: 'Administrador', value: 'admin' },
-    { label: 'Docente', value: 'docente' },
-    { label: 'Estudiante', value: 'estudiante' }
-  ];
+  loading = false;
+  hasSearched = false;
+  sortField: string = '';
+  sortOrder: number = 0;
 
-  operaciones = [
-    { usuario: 'jdoe', rol: 'Docente', fecha: '09/16/2025 08:15 AM', empresa: '900123456', tabla: 'usuarios', codigo: 'USR001', operacion: 'creación', datos: 'USR001 - Juan Pérez' },
-    { usuario: 'mlopez', rol: 'Docente', fecha: '09/16/2025 09:20 AM', empresa: '900123456', tabla: 'productos', codigo: 'PRD001', operacion: 'modificación', datos: 'PRD001 - Laptop Dell' },
-    { usuario: 'agarcia', rol: 'Estudiante', fecha: '09/16/2025 10:05 AM', empresa: '900987654', tabla: 'terceros', codigo: 'TER001', operacion: 'creación', datos: 'TER001 - Carlos Gómez' },
-    { usuario: 'bfernandez', rol: 'Estudiante', fecha: '09/16/2025 11:45 AM', empresa: '900654321', tabla: 'empresa', codigo: 'EMP001', operacion: 'eliminación', datos: 'EMP001 - Compañía XYZ' },
-    { usuario: 'lrodriguez', rol: 'Estudiante', fecha: '09/16/2025 12:10 PM', empresa: '900555222', tabla: 'productos', codigo: 'PRD002', operacion: 'anulación', datos: 'PRD002 - Teclado Logitech' },
-    { usuario: 'mcastro', rol: 'Estudiante', fecha: '09/16/2025 01:30 PM', empresa: '900222111', tabla: 'usuarios', codigo: 'USR002', operacion: 'modificación', datos: 'USR002 - Ana Torres' },
-    { usuario: 'jsanchez', rol: 'Estudiante', fecha: '09/16/2025 02:05 PM', empresa: '900777333', tabla: 'tipo producto', codigo: 'TPO001', operacion: 'creación', datos: 'TPO001 - Electrónicos' },
-    { usuario: 'arodriguez', rol: 'Estudiante', fecha: '09/16/2025 02:50 PM', empresa: '900888444', tabla: 'productos', codigo: 'PRD003', operacion: 'creación', datos: 'PRD003 - Silla Gamer' },
-    { usuario: 'dmartinez', rol: 'Estudiante', fecha: '09/16/2025 03:40 PM', empresa: '900321123', tabla: 'terceros', codigo: 'TER002', operacion: 'modificación', datos: 'TER002 - María Ruiz' },
-    { usuario: 'hgutierrez', rol: 'Estudiante', fecha: '09/16/2025 04:25 PM', empresa: '900456789', tabla: 'usuarios', codigo: 'USR003', operacion: 'eliminación', datos: 'USR003 - Pedro López' },
-    { usuario: 'cvalencia', rol: 'Estudiante', fecha: '09/16/2025 05:15 PM', empresa: '900147258', tabla: 'empresa', codigo: 'EMP002', operacion: 'creación', datos: 'EMP002 - Servicios ABC' },
-    { usuario: 'jperez', rol: 'Estudiante', fecha: '09/16/2025 06:10 PM', empresa: '900963852', tabla: 'productos', codigo: 'PRD004', operacion: 'modificación', datos: 'PRD004 - Monitor Samsung' },
-    { usuario: 'fcardenas', rol: 'Estudiante', fecha: '09/16/2025 07:25 PM', empresa: '900159357', tabla: 'tipo producto', codigo: 'TPO002', operacion: 'eliminación', datos: 'TPO002 - Hogar' },
-    { usuario: 'mramirez', rol: 'Estudiante', fecha: '09/16/2025 08:05 PM', empresa: '900753159', tabla: 'terceros', codigo: 'TER003', operacion: 'creación', datos: 'TER003 - Luis Herrera' },
-    { usuario: 'rquintero', rol: 'Estudiante', fecha: '09/16/2025 09:00 PM', empresa: '900852456', tabla: 'productos', codigo: 'PRD005', operacion: 'anulación', datos: 'PRD005 - Mouse Razer' },
-  ];
+  today = new Date();
 
-  operationsFilters: any[] = [];
 
-  applyFilters() {
-    // por ahora solo cargamos toda la lista estática
-    this.operationsFilters = [...this.operaciones];
+  applyFilters(page: number = 0): void {
+    if (!this.isValidFilters()) {
+      return;
+    }
+    this.loading = true;
+    this.hasSearched = true;
+    this.currentPage = page;
+
+    const fechaInicio = this.filtro.fechaInicio!;
+    const fechaFin = this.filtro.fechaFin!;
+
+    const filters: OperationAuditFilters = {
+      dateFrom: this.formatDateToISO(fechaInicio),
+      dateTo: this.formatDateToISO(fechaFin, true),
+      page: this.currentPage,
+      size: this.pageSize,
+      sortField: this.sortField,
+      sortDirection: this.sortOrder === 1 ? 'ASC' : 'DESC'
+    }
+    if (this.filtro.moduleName && this.filtro.moduleName.trim()) {
+      filters.moduleName = this.filtro.moduleName.replace(/\s+/g, ' ').trim();
+    }
+    if (this.filtro.affectedTable && this.filtro.affectedTable.trim()) {
+      filters.affectedTable = this.filtro.affectedTable.replace(/\s+/g, ' ').trim();
+    }
+    if (this.filtro.userName && this.filtro.userName.trim()) {
+      filters.userName = this.filtro.userName.replace(/\s+/g, ' ').trim();
+    }
+    if (this.filtro.userRole) {
+      filters.userRole = this.filtro.userRole;
+    }
+    if (this.filtro.operationType) {
+      filters.operationType = this.filtro.operationType;
+    }
+    if (this.filtro.registerId && this.filtro.registerId.trim()) {
+      filters.registerId = this.filtro.registerId.replace(/\s+/g, ' ').trim();
+    }
+
+    this.operationService.getOperations(filters).subscribe({
+      next: (response: PageResponse<OperationAudit>) => {
+        this.operations = response.data;
+        this.totalRecords = response.totalElements;
+        this.loading = false;
+        if (response.data.length === 0) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Sin resultados',
+            detail: 'No se encontraron operaciones con los filtros aplicados'
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener operaciones de auditoría:', error);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las operaciones de auditoría'
+        });
+      }
+    })
+  }
+
+  onLazyLoad(event: any) {
+    if (this.firstLoad) {
+      this.firstLoad = false;
+      return; 
+    }
+    this.pageSize = event.rows;
+    this.currentPage = event.first / event.rows;
+
+    if (event.sortField) {
+      this.sortField = event.sortField;
+      this.sortOrder = event.sortOrder;
+    }
+
+    this.applyFilters(this.currentPage);
+  }
+
+  onInputChange(event: any, field: 'userName' | 'moduleName' | 'affectedTable') {
+    const value = event.target.value;
+    this.filtro[field] = this.sanitizeInput(value);
+  }
+
+  private sanitizeInput(value: string): string {
+    if (!value) return '';
+    let sanitized = value.replace(/[%_]/g, '');
+    sanitized = sanitized.replace(/\s+/g, ' ').trim();
+    return sanitized;
+  }
+
+  private isValidFilters(): boolean { 
+    // Fechas vacias
+    if (!this.filtro.fechaInicio || !this.filtro.fechaFin) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Atención',
+        detail: 'Debe seleccionar un rango de fechas'
+      });
+      return false;
+    }
+    // Rango maximo 1 año
+    const diff = this.filtro.fechaFin.getTime() - this.filtro.fechaInicio.getTime();
+    const days = diff / (1000 * 60 * 60 * 24);
+    if (days > 365) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Rango muy grande',
+        detail: 'El rango máximo permitido es de 1 año'
+      });
+      return false;
+    }
+    // Fechas futuras
+    const now = new Date();
+    if (this.filtro.fechaInicio > now || this.filtro.fechaFin > now) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Fecha inválida',
+        detail: 'No se pueden seleccionar fechas futuras'
+      });
+      return false;
+    }
+    // Validar usuario
+    if (!this.validateTextField(this.filtro.userName, "Usuario", 3, 50)) {
+      return false;
+    }
+
+    // Validar modulo
+    if (!this.validateTextField(this.filtro.moduleName, "Nombre de módulo", 3, 50)) {
+      return false;
+    }
+
+    // Validar tabla
+    if (!this.validateTextField(this.filtro.affectedTable, "Nombre de tabla", 3, 50)) {
+      return false;
+    }
+    return true;
+  }
+
+  private validateTextField(
+    value: string | null | undefined,
+    fieldLabel: string,
+    min: number,
+    max: number
+  ): boolean {
+    if (!value || !value.trim()) {
+      return true;
+    }
+
+    const trimmed = value.trim();
+
+    if (trimmed.length < min) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: `${fieldLabel} muy corto`,
+        detail: `Debe ingresar mínimo ${min} caracteres`
+      });
+      return false;
+    }
+
+    if (trimmed.length > max) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: `${fieldLabel} muy largo`,
+        detail: `No puede exceder ${max} caracteres`
+      });
+      return false;
+    }
+
+    return true;
+  }
+
+  private formatDateToISO(date: Date, endOfDay = false): string {
+    if (!date) return '';
+
+    const d = new Date(date);
+
+    const now = new Date();
+    const isToday =
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate();
+
+    if (endOfDay) {
+      if (isToday) {
+        d.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      } else {
+        d.setHours(23, 59, 59, 999);
+      }
+    } else {
+      d.setHours(0, 0, 0, 0);
+    }
+
+    return d.toISOString();
+  }
+
+  formatDateTime(dateString: string | null): string {
+    if (!dateString) return '';
+
+    const date = new Date(dateString);
+
+    return date.toLocaleString(navigator.language, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  formatData(operation: OperationAudit): string {
+    const data = operation.dataObject;
+    if (!data) return '';
+
+    switch (operation.operationType) {
+      case OperationType.UPDATE:
+        return this.formatUpdate(data);
+
+      case OperationType.CREATE:
+        return this.formatEntity("Datos creados", data.entity);
+
+      case OperationType.DELETE:
+        return this.formatEntity("Datos eliminados", data.entity);
+
+      case OperationType.INACTIVATE:
+        return this.formatEntity("Registro inactivado", data.entity); 
+
+      default:
+        return JSON.stringify(data);
+    }
+  }
+
+  private formatUpdate(data: any): string {
+    if (!data.changes || Object.keys(data.changes).length === 0) {
+      return "Sin cambios";
+    }
+
+    const changes = Object.entries(data.changes)
+      .map(([key, value]: any) =>
+        `• ${key}: ${value.before} → ${value.after}`
+      )
+      .join('<br>');
+
+    return `Cambios:<br>${changes}`;
+  }
+
+  private formatEntity(title: string, entity: any): string {
+    if (!entity || Object.keys(entity).length === 0) {
+      return `${title}: (sin datos)`;
+    }
+
+    const entries = Object.entries(entity)
+      .map(([key, value]) => `• ${key}: ${value}`)
+      .join('<br>');
+
+    return `${title}:<br>${entries}`;
   }
 }

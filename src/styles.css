@@ -659,24 +659,27 @@ body {
    ESTILOS PARA LA P-DATATABLE
    ================================ */
 
-.p-datatable {
+.p-datatable, .p-treetable {
   font-family: var(--font-family-sans);
   font-size: 0.875rem; /* text-sm */
 }
 
-.p-datatable .p-datatable-thead > tr:first-child > th:first-child {
-  border-top-left-radius: 10px;
+.p-datatable .p-datatable-thead > tr:first-child > th:first-child,
+.p-treetable .p-treetable-thead > tr:first-child > th:first-child {
+  border-top-left-radius: 10px !important;
 }
-.p-datatable .p-datatable-thead > tr:first-child > th:last-child {
-  border-top-right-radius: 10px;
+.p-datatable .p-datatable-thead > tr:first-child > th:last-child,
+.p-treetable .p-treetable-thead > tr:first-child > th:last-child {
+  border-top-right-radius: 10px !important;
 }
 
-.p-datatable thead > tr > th {
-  background-color: var(--color-primary);
-  color: white;
-  font-weight: 600;
-  padding: 0.75rem 1rem;
-  text-align: left;
+.p-datatable thead > tr > th,
+.p-treetable thead > tr > th {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  font-weight: 600 ;
+  padding: 0.75rem 1rem ;
+  text-align: left  ;
 }
 
 .p-paginator .p-paginator-pages .p-paginator-page {
@@ -1077,4 +1080,27 @@ body {
 /* Reducir el espacio entre los botones y el input */
 .p-inputnumber-horizontal .p-inputnumber-button-group {
   gap: 0.125rem !important;
+}
+
+/* ================================
+   ESTILOS PARA P-PROGRESSBAR
+   ================================ */
+
+/* Barra de progreso personalizada */
+.p-progressbar {
+  background-color: var(--color-neutral-90) !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+.p-progressbar .p-progressbar-value {
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-light) 100%) !important;
+  border-radius: 0.5rem !important;
+}
+
+.p-progressbar .p-progressbar-label {
+  color: var(--color-primary-100) !important;
+  font-family: var(--font-family-sans) !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
 }
