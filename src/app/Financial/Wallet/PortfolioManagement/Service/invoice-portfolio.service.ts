@@ -5,6 +5,7 @@ import { Observable, of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ClientPortfolioSummary, InvoiceDetailView } from '../../Reports/Model/Response/PortfolioView';
+import { InvoiceSummaryResponseDto } from '../../PortfolioWriteOffs/Models';
 
 @Injectable({
   providedIn: 'root'
@@ -38,27 +39,31 @@ export class InvoicePortfolioService {
   }
 
   getClientPortfolioSummary(clientIds: number[]): Observable<ClientPortfolioSummary[]> {
-     const url = `${this.portfolioApiUrl}/clients-summary`;
+    const url = `${this.portfolioApiUrl}/clients-summary`;
 
-    // Si no hay IDs, devolvemos un array vacío para no hacer una llamada innecesaria.
     if (!clientIds || clientIds.length === 0) {
       return of([]);
     }
 
-    // CAMBIO CLAVE: Usamos HttpParams para construir la URL con los parámetros
-    // ej: /clients-summary?clientIds=1&clientIds=2&clientIds=3
-    // Spring Boot lo interpretará correctamente como una List<Long>.
     let params = new HttpParams();
     clientIds.forEach(id => {
       params = params.append('clientIds', id.toString());
     });
 
-    // CAMBIO CLAVE: Usamos el método GET en lugar de POST.
     return this.http.get<ClientPortfolioSummary[]>(url, { params });
-}
+  }
 
-getInvoicesByClient(clientId: number): Observable<InvoiceDetailView[]> {
-  const url = `${this.portfolioApiUrl}/invoices/by-client/${clientId}`;
-  return this.http.get<InvoiceDetailView[]>(url);
-}
+  getInvoicesByClient(clientId: number): Observable<InvoiceDetailView[]> {
+    const url = `${this.portfolioApiUrl}/invoices/by-client/${clientId}`;
+    return this.http.get<InvoiceDetailView[]>(url);
+  }
+
+  getExpiringInvoices(enterpriseId: string, days: number = 5): Observable<InvoiceSummaryResponseDto[]> {
+    let params = new HttpParams()
+      .set('enterpriseId', enterpriseId)
+      .set('days', days.toString());
+
+    return this.http.get<InvoiceSummaryResponseDto[]>(`${this.apiUrl}/expiring`, { params });
+  }
+
 }

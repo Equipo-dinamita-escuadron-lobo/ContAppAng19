@@ -2,29 +2,17 @@
   <!-- Sección blanca con información -->
   <div class="bg-white flex-1 flex items-center justify-between px-6 py-4">
     <!-- Información del aplicativo y empresa -->
-    <div
-      class="ml-4 sm:ml-8 md:ml-16 lg:ml-20 xl:ml-40 flex items-center gap-3"
-    >
+    <div class="ml-4 sm:ml-8 md:ml-16 lg:ml-20 xl:ml-40 flex items-center gap-3">
       <div class="flex flex-col justify-center">
-        <h1
-          class="text-lg sm:text-xl md:text-2xl font-bold leading-tight"
-          style="color: var(--color-primary)"
-        >
+        <h1 class="text-lg sm:text-xl md:text-2xl font-bold leading-tight" style="color: var(--color-primary)">
           {{ applicationName }}
-          <button
-            class="cursor-pointer transition-colors hover:opacity-70"
-            style="color: var(--color-primary)"
-            (click)="openHelpCenter()"
-            title="Centro de ayuda"
-            >
+          <button class="cursor-pointer transition-colors hover:opacity-70" style="color: var(--color-primary)"
+            (click)="openHelpCenter()" title="Centro de ayuda">
             <i class="pi pi-question-circle text-3xl" style="font-size: 1.25rem !important;"></i>
           </button>
         </h1>
 
-        <p
-          class="text-xs sm:text-sm text-gray-500 leading-tight mt-1"
-          style="color: var(--color-light)"
-        >
+        <p class="text-xs sm:text-sm text-gray-500 leading-tight mt-1" style="color: var(--color-light)">
           {{ companyName }}
         </p>
       </div>
@@ -33,43 +21,81 @@
     <!-- Menú de usuario -->
     <div class="flex items-center space-x-2 sm:space-x-4">
 
-      <span
-        class="material-symbols-outlined mr-20 border-2 rounded-2xl hide-sm"
-        style="color: var(--color-primary)"
-      >
+      <!-- 👇 INICIO DEL CAMBIO: Envolvemos en ng-container con la condición -->
+      <ng-container *ngIf="showNotifications">
+
+        <!-- SECCIÓN CAMPANITA -->
+        <div class="relative mr-4 cursor-pointer flex items-center justify-center transition-transform hover:scale-105"
+          (click)="op.toggle($event)" title="Ver notificaciones">
+          <i class="pi pi-bell text-2xl" style="color: var(--color-primary); font-size: 1.5rem;"></i>
+
+          <!-- Badge Rojo -->
+          <span *ngIf="alertsCount > 0"
+            class="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white">
+            {{ alertsCount }}
+          </span>
+        </div>
+
+        <!-- COMPONENTE OVERLAY PANEL -->
+        <p-overlayPanel #op [style]="{width: '350px'}">
+          <ng-template pTemplate>
+            <div class="flex flex-col gap-2">
+              <h4 class="font-bold text-gray-700 border-b pb-2 mb-1">Notificaciones</h4>
+
+              <!-- CASO: SI HAY ALERTAS -->
+              <div *ngIf="alertsCount > 0"
+                class="p-3 bg-red-50 hover:bg-red-100 rounded cursor-pointer transition-colors border-l-4 border-red-500"
+                (click)="navigateToAlertsDetail(); op.hide()">
+
+                <div class="flex justify-between items-start">
+                  <span class="font-semibold text-red-700 text-sm">Facturas próximas a vencer</span>
+                  <i class="pi pi-exclamation-circle text-red-500"></i>
+                </div>
+
+                <p class="text-xs text-gray-600 mt-1">
+                  Tienes <strong>{{ alertsCount }}</strong> facturas pendientes que requieren atención urgente.
+                </p>
+
+                <!-- Fecha y hora de la notificación -->
+                <div class="text-right mt-2">
+                  <small class="text-gray-400 text-xs">
+                    {{ lastCheckDate | date:'medium' }}
+                  </small>
+                </div>
+              </div>
+
+              <!-- CASO: NO HAY ALERTAS -->
+              <div *ngIf="alertsCount === 0" class="p-4 text-center text-gray-500">
+                <i class="pi pi-check-circle text-2xl text-green-500 mb-2"></i>
+                <p class="text-sm">No tienes notificaciones nuevas.</p>
+              </div>
+            </div>
+          </ng-template>
+        </p-overlayPanel>
+
+      </ng-container>
+      <!-- 👆 FIN DEL CAMBIO -->
+
+
+      <span class="material-symbols-outlined mr-20 border-2 rounded-2xl hide-sm" style="color: var(--color-primary)">
         person
       </span>
 
       <div class="text-left mr-4 sm:mr-8 md:mr-12 lg:mr-16 xl:mr-20">
-        <p
-          class="text-xs sm:text-sm font-medium leading-tight"
-          style="color: var(--color-primary)"
-        >
+        <p class="text-xs sm:text-sm font-medium leading-tight" style="color: var(--color-primary)">
           {{ userName }}
         </p>
-        <p
-          class="text-xs leading-tight mt-1"
-          style="color: var(--color-primary)"
-        >
+        <p class="text-xs leading-tight mt-1" style="color: var(--color-primary)">
           {{ userRole }}
         </p>
       </div>
 
       <div class="flex items-center">
-        <button
-          class="ml-1 sm:ml-2 custom-dropdown-button mr-10"
-          (click)="userMenu.toggle($event)"
-        >
+        <button class="ml-1 sm:ml-2 custom-dropdown-button mr-10" (click)="userMenu.toggle($event)">
           <span class="material-symbols-outlined"> arrow_drop_down </span>
         </button>
 
-        <p-menu
-          #userMenu
-          [model]="userMenuItems"
-          [popup]="true"
-          appendTo="body"
-          styleClass="mt-2"
-        />
+        <p-menu #userMenu [model]="userMenuItems" [popup]="true" appendTo="body" styleClass="mt-2" />
       </div>
     </div>
   </div>
