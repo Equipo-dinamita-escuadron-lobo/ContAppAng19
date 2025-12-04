@@ -135,8 +135,7 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
       adjustmentType: ['', Validators.required],
       quantity: [null, [Validators.required, Validators.min(1)]],
       unitPrice: [null],
-      factCode: [null, [Validators.required, Validators.min(1)]], 
-      details: ['', Validators.required],
+      details: [''], // Campo opcional
       date: [null] // Campo opcional
     });
 
@@ -202,9 +201,8 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
     const adjustmentType = this.adjustmentForm.get('adjustmentType')?.value;
     const quantity = this.adjustmentForm.get('quantity')?.value;
     const unitPrice = this.adjustmentForm.get('unitPrice')?.value;
-    const factCode = this.adjustmentForm.get('factCode')?.value;
 
-    if (adjustmentType === 'purchase' && quantity && unitPrice && factCode) {
+    if (adjustmentType === 'purchase' && quantity && unitPrice) {
       // PEPS: Se agrega un nuevo lote
       const currentQuantity = this.getTotalBalanceQuantity();
       const currentTotal = this.getTotalBalanceValue();
@@ -215,14 +213,12 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
 
       const resultingLots = [
         ...this.availableLots.map(lot => ({
-          factCode: lot.factCode,
           quantity: lot.availableQuantity,
           unitPrice: lot.unitPrice,
           total: lot.availableQuantity * lot.unitPrice,
           date: lot.date
         })),
         {
-          factCode: factCode,
           quantity: quantity,
           unitPrice: unitPrice,
           total: newLotTotal,
@@ -361,7 +357,6 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
         const request: KardexPurchaseRequest = {
           quantity: formValue.quantity,
           unitPrice: formValue.unitPrice,
-          factCode: formValue.factCode,
           details: formValue.details,
           productId: this.productData.productId
         };
@@ -397,7 +392,6 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
         const request: KardexSaleRequest = {
           quantity: formValue.quantity,
           details: formValue.details,
-          factCode: formValue.factCode,
           productId: this.productData.productId
         };
 
@@ -447,7 +441,6 @@ export class InventoryAdjustmentComponent implements OnInit, OnChanges {
         adjustmentType: '',
         quantity: null,
         unitPrice: null,
-        factCode: null,
         details: '',
         date: null
       });
