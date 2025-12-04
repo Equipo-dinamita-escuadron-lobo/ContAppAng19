@@ -69,7 +69,7 @@ export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
 
   protected loadConfig(): void {
     this.auxiliaryBookInfo = {
-      name: 'Libro Mayor y Balances',
+      name: 'Libro Mayor',
       description:
         'Muestra los movimientos y saldos por cuenta contable, facilitando la consulta de información acumulada para análisis financieros y elaboración de estados contables.',
       icon: 'book_5',
@@ -85,15 +85,12 @@ export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
   }
 
   protected organizeRequest(): void {
-    //TO DO: Change the value of start date to enterprise creation date when the enterprise had this attribute
-    //this.criteria.startDate = this.enterpriseData.creationDate;
-
-    this.criteria.startDate = this.datePipe.transform(
-      new Date('01/01/2025'),
+    const formattedStartDate = this.datePipe.transform(
+      this.criteria.startDate,
       'yyyy-MM-dd'
     );
 
-    this.criteria.endDate = this.datePipe.transform(
+    const formattedEndDate = this.datePipe.transform(
       this.criteria.endDate,
       'yyyy-MM-dd'
     );
@@ -103,10 +100,16 @@ export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
       //Meanwhile we used this entId because the mock has this id bf4d475f-5d02-4551-b7f0-49a5c426ac0d
       //entId: this.enterpriseData.id,
       entId: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
-      criteria: this.criteria,
-      type: AuxiliaryBookType.DIARY,
+      criteria: {
+        ...this.criteria,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      },
+      type: AuxiliaryBookType.MAJOR_AND_BALANCES,
       //TO DO: Change the value of userId when the method to get the user ID is implemented
       userId: 123,
     };
+
+    console.log(this.request);
   }
 }

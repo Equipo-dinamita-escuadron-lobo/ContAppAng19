@@ -9,6 +9,7 @@ export interface CreateWriteOffRequestDto {
     debitAuxiliaryAccountId: number;
     thirdId: number;
     enterpriseId: string;
+    costCenterId?: number;
     details: WriteOffDetailRequestDto[];
 }
 

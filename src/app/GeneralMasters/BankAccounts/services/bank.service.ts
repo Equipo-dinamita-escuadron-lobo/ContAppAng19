@@ -215,8 +215,12 @@ export class BankService {
         errorMessage = error.message;
       }
 
-      // Definir título según código de estado
-      if (error.status === 409) {
+      // Definir título según código de error o estado
+      const errorCode = error.error?.code || '';
+
+      if (errorCode === 'BANK_HAS_ASSOCIATED_ACCOUNTS' || errorCode === 'BANK_IN_USE') {
+        errorTitle = 'Información';
+      } else if (error.status === 409) {
         errorTitle = 'Registro Duplicado';
       } else if (error.status === 404) {
         errorTitle = 'No Encontrado';

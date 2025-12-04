@@ -92,6 +92,16 @@ export const WALLET_ROUTES: Routes = [
       ),
   },
   {
+    path: 'invoices/expiring',
+    data: {
+      breadcrumb: 'Facturas por Vencer',
+    },
+    loadComponent: () =>
+      import('../../Financial/Wallet/PortfolioManagement/Components/expiring-invoices/expiring-invoices.component').then(
+        (m) => m.ExpiringInvoicesComponent
+      ),
+  },
+  {
     path: 'invoices/details/:id',
     data: {
       breadcrumb: 'Detalles de la Factura',

@@ -257,6 +257,16 @@ export class DocumentTypesListComponent implements OnInit {
         this.reloadCurrentPage();
       },
       error: (err) => {
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'DOCUMENT_TYPE_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede eliminar el tipo de documento porque tiene movimientos contables',
+            life: 6000
+          });
+          return;
+        }
         this.messageService.add({
           severity: 'error',
           summary: 'Error',

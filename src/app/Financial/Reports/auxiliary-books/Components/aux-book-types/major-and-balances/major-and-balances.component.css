@@ -1,0 +1,4 @@
+.money-cell {
+  display: flex;
+  justify-content: flex-end; /* Alinea los números a la derecha */
+}

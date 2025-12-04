@@ -177,8 +177,35 @@ export class BankListComponent implements OnInit {
           this.loadBanks();
         },
         error: (error) => {
+          // Verificar si es error específico de banco en uso o cuentas asociadas
+          const errorCode = error?.error?.code || error?.code || '';
+          if (errorCode === 'BANK_IN_USE' || errorCode === 'BANK_HAS_ASSOCIATED_ACCOUNTS') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'No se puede eliminar el banco porque tiene cuentas bancarias asociadas',
+              life: 6000
+            });
+            return;
+          }
+
+          // Verificar si el mensaje de error contiene la cadena específica de cuentas asociadas
+          const errorMessage = error?.error?.message || error?.message || '';
+          if (errorMessage.includes('No se puede eliminar el banco') && errorMessage.includes('cuentas bancarias')) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: errorMessage,
+              life: 6000
+            });
+            return;
+          }
+
+          // Para otros errores, mostrar mensaje genérico
+          // Si el título es "Información", usar severity 'info', sino 'error'
+          const severity = (error.title === 'Información') ? 'info' : 'error';
           this.messageService.add({
-            severity: 'error',
+            severity: severity,
             summary: error.title || 'Error',
             detail: error.message
           });
