@@ -1,7 +1,6 @@
-import { SessionAudit } from "./SessionAudit";
 
-export interface SessionsPage {
-  sessions: SessionAudit[];
+export interface PageResponse<T> {
+  data: T[];
   totalElements: number;
   totalPages: number;
   currentPage: number;
@@ -9,3 +8,4 @@ export interface SessionsPage {
   hasNext: boolean;
   hasPrevious: boolean;
 }
+

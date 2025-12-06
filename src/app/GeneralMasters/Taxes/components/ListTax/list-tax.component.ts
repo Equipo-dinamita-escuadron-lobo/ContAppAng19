@@ -239,11 +239,36 @@ export class ListTaxComponent implements OnInit {
             this.reloadCurrentPage(); // Recargar la página actual
           },
           error: (error) => {
-            const errorMessage = error?.error?.message || 'No se pudo eliminar el impuesto';
+            // Verificar si es error específico de impuesto en uso
+            const errorCode = error?.error?.code || error?.code || '';
+            if (errorCode === 'TAX_IN_USE') {
+              this.messageService.add({
+                severity: 'info',
+                summary: 'Información',
+                detail: error?.error?.message || 'No se puede eliminar el impuesto porque tiene movimientos contables',
+                life: 6000
+              });
+              return;
+            }
+
+            // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+            const errorMessage = error?.error?.message || error?.message || '';
+            if (errorMessage.includes('No se puede eliminar el impuesto') && errorMessage.includes('movimientos contables')) {
+              this.messageService.add({
+                severity: 'info',
+                summary: 'Información',
+                detail: errorMessage,
+                life: 6000
+              });
+              return;
+            }
+
+            // Para otros errores, mostrar mensaje genérico
+            const finalErrorMessage = error?.error?.message || 'No se pudo eliminar el impuesto';
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: errorMessage
+              detail: finalErrorMessage
             });
           }
         });

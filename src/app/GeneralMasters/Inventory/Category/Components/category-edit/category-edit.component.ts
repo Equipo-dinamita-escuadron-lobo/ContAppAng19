@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
 
 // --- Importaciones Standalone y de PrimeNG ---
 import { CardModule } from 'primeng/card';
@@ -97,9 +98,29 @@ export class CategoryEditComponent implements OnInit {
   }
 
   loadInitialData(): void {
-    this.getCuentas();
-    this.getTaxes();
-    // Los detalles de la categoría se cargarán después de que las cuentas estén disponibles
+    const enterpriseId = this.entData?.id || this.localStorageMethods.getIdEnterprise();
+
+    // Cargar cuentas y taxes en paralelo, luego cargar detalles de categoría
+    forkJoin([
+      this.chartAccountService.getListAuxiliaryAccounts(enterpriseId),
+      this.taxService.getActiveTaxes(this.entData)
+    ]).subscribe(([accountsResult, taxesResult]) => {
+      // Procesar cuentas
+      this.accounts = this.mapAccountToList(accountsResult);
+      this.cost = this.accounts;
+      this.inventory = this.accounts;
+      this.sale = this.accounts;
+      this.return = this.accounts;
+
+      // Procesar taxes
+      this.taxes = taxesResult.map(tax => ({
+        ...tax,
+        displayText: `${tax.code} (${tax.interest}%)`
+      }));
+
+      // Ahora cargar los detalles de la categoría
+      this.getCategoryDetails();
+    });
   }
 
   getCategoryDetails(): void {
@@ -110,22 +131,30 @@ export class CategoryEditComponent implements OnInit {
         this.category = category;
         // Guardar los datos originales para comparación
         this.originalCategoryData = { ...category };
-        
+
         // Buscar las cuentas correspondientes por ID
         const inventoryAccount = this.accounts.find(acc => acc.id === category.inventoryId || acc.id === Number(category.inventoryId));
         const costAccount = this.accounts.find(acc => acc.id === category.costId || acc.id === Number(category.costId));
         const saleAccount = this.accounts.find(acc => acc.id === category.saleId || acc.id === Number(category.saleId));
         const returnAccount = this.accounts.find(acc => acc.id === category.returnId || acc.id === Number(category.returnId));
 
-        this.editForm.patchValue({
-          name: category.name,
-          description: category.description,
-          taxes: category.taxes || [],
-          inventory: inventoryAccount || null,
-          cost: costAccount || null,
-          sale: saleAccount || null,
-          return: returnAccount || null
-        });
+        // Buscar los taxes correspondientes por ID
+        const selectedTaxes = Array.isArray(category.taxes)
+          ? category.taxes.map(taxId => this.taxes.find(tax => tax.id === taxId || tax.id === Number(taxId))).filter(tax => tax != null)
+          : [];
+
+        // Pequeño delay para asegurar que el DOM esté listo
+        setTimeout(() => {
+          this.editForm.patchValue({
+            name: category.name,
+            description: category.description,
+            taxes: category.taxes || [], // Usar directamente los IDs, PrimeNG hará el matching
+            inventory: inventoryAccount || null,
+            cost: costAccount || null,
+            sale: saleAccount || null,
+            return: returnAccount || null
+          });
+        }, 100);
       },
       error: (error: any) => {
         console.error('Error obteniendo detalles de la categoría: ', error);
@@ -236,12 +265,12 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
       return;
     }
     
-    // Mapear los IDs correctamente desde los objetos de cuentas seleccionados
+    // Los taxes ya vienen como IDs del form control
     const categoryData = {
       id: this.category.id,
       name: formData.name,
       description: formData.description,
-      taxes: formData.taxes && formData.taxes.length > 0 ? formData.taxes : [],
+      taxes: Array.isArray(formData.taxes) ? formData.taxes : [],
       inventoryId: formData.inventory?.id || null,
       costId: formData.cost?.id || null,
       saleId: formData.sale?.id || null,
@@ -295,11 +324,19 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
   // Método para verificar si hubo cambios en el formulario
   private hasFormChanges(formData: any): boolean {
     if (!this.originalCategoryData) return false;
-    
+
+    // Comparar taxes (ya vienen como arrays de IDs)
+    const formTaxIds = Array.isArray(formData.taxes)
+      ? formData.taxes.slice().sort()
+      : [];
+    const originalTaxIds = Array.isArray(this.originalCategoryData.taxes)
+      ? this.originalCategoryData.taxes.slice().sort()
+      : [];
+
     return (
       formData.name !== this.originalCategoryData.name ||
       formData.description !== this.originalCategoryData.description ||
-      JSON.stringify(formData.taxes) !== JSON.stringify(this.originalCategoryData.taxes) ||
+      JSON.stringify(formTaxIds) !== JSON.stringify(originalTaxIds) ||
       formData.inventory?.id !== this.originalCategoryData.inventoryId ||
       formData.cost?.id !== this.originalCategoryData.costId ||
       formData.sale?.id !== this.originalCategoryData.saleId ||
@@ -309,9 +346,20 @@ return item.code.toLowerCase().includes(term) || item.description.toLowerCase().
 
   // Método público para verificar si hubo cambios (usado en el template)
   hasChanges(): boolean {
-    if (!this.originalCategoryData) return false;
+    // No permitir cambios si los datos originales no han cargado aún
+    if (!this.originalCategoryData || !this.category || !this.accounts || !this.taxes) {
+      console.log('hasChanges: Datos no cargados aún', {
+        originalCategoryData: !!this.originalCategoryData,
+        category: !!this.category,
+        accounts: !!this.accounts,
+        taxes: !!this.taxes
+      });
+      return false;
+    }
+
     const formData = this.editForm.value;
-    return this.hasFormChanges(formData);
+    const hasChanges = this.hasFormChanges(formData);
+    return hasChanges;
   }
 
   goBack(): void {

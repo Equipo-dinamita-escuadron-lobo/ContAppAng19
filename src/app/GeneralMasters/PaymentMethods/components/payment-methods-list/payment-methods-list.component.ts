@@ -214,6 +214,31 @@ export class PaymentMethodsListComponent implements OnInit {
           this.loadPaymentMethods();
         },
         error: (error) => {
+          // Verificar si es error específico de método de pago en uso
+          const errorCode = error?.error?.code || error?.code || '';
+          if (errorCode === 'PAYMENT_METHOD_IN_USE') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'No se puede eliminar el método de pago porque tiene movimientos contables',
+              life: 6000
+            });
+            return;
+          }
+
+          // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+          const errorMessage = error?.error?.message || error?.message || '';
+          if (errorMessage.includes('No se puede eliminar el método de pago') && errorMessage.includes('movimientos contables')) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: errorMessage,
+              life: 6000
+            });
+            return;
+          }
+
+          // Para otros errores, mostrar mensaje genérico
           this.messageService.add({
             severity: 'error',
             summary: error.title || 'Error',

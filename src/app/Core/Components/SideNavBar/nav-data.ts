@@ -184,6 +184,11 @@ export const navbarData: INavbarData[] = [
             label: 'Facturas pendientes',
           },
           {
+            routeLink: '/financial/wallet/invoices/expiring',
+            icon: 'schedule',
+            label: 'Facturas por Vencer',
+          },
+          {
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',

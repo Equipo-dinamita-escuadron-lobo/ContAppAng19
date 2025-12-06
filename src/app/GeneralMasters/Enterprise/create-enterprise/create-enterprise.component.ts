@@ -86,6 +86,11 @@ export class CreateEnterpriseComponent implements OnInit {
     { id: 4, name: 'Bogotá', departmentId: 4 },
   ];
 
+  inventoryMethods = [
+    { value: 'PEPS', label: 'PEPS (Primero en Entrar, Primero en Salir)' },
+    { value: 'WEIGHTED_AVERAGE', label: 'Promedio Ponderado' },
+  ];
+
   subjectsList: Subject[] = [];
 
   constructor(
@@ -125,6 +130,7 @@ export class CreateEnterpriseComponent implements OnInit {
       phone: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
       email: ['', [Validators.required, Validators.email]],
       hasBranches: [false],
+      inventoryConfigurationType: [null, Validators.required],
     });
 
     this.updateFormValidations();
@@ -197,7 +203,7 @@ export class CreateEnterpriseComponent implements OnInit {
         taxLiabilities: f.taxLiabilities.map((t: any) => t.id || t),
         state: 'ACTIVE',
         taxPayerType: f.taxPayerType.id || f.taxPayerType,
-        inventoryConfigurationType: 'WEIGHTED_AVERAGE', // Valor por defecto para nuevas empresas
+        inventoryConfigurationType: f.inventoryConfigurationType.value || f.inventoryConfigurationType,
         enterpriseType: f.enterpriseType.id || f.enterpriseType,
         personType:
           this.personType === 'juridica'

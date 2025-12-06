@@ -736,7 +736,7 @@ export class ThirdEditComponent implements OnInit {
           // Determinar el título según el tipo de error
           let errorTitle = 'Error';
           if (error.status === 409) {
-            errorTitle = 'Tercero Duplicado';
+            errorTitle = 'Registro Duplicado';
           } else if (error.status === 400) {
             errorTitle = 'Datos Inválidos';
           } else if (error.status === 404) {
