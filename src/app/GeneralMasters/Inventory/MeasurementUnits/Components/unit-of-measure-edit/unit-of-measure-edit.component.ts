@@ -146,7 +146,7 @@ export class UnitOfMeasureEditComponent implements OnInit {
       });
     } else {
       this.messageService.add({
-        severity: 'warn',
+        severity: 'info',
         summary: 'Formulario incompleto',
         detail: 'Por favor, complete todos los campos requeridos.'
       });
