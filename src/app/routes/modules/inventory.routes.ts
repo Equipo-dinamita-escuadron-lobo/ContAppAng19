@@ -15,6 +15,11 @@ export const INVENTORY_ROUTES: Routes = [
     data: { breadcrumb: 'Productos' },
     children: [
       {
+        path: '',
+        redirectTo: 'list',
+        pathMatch: 'full',
+      },
+      {
         path: 'list',
         data: { breadcrumb: null },
         loadComponent: () =>
@@ -46,6 +51,11 @@ export const INVENTORY_ROUTES: Routes = [
     path: 'product-types',
     data: { breadcrumb: 'Tipos de Productos' },
     children: [
+      {
+        path: '',
+        redirectTo: 'list',
+        pathMatch: 'full',
+      },
       {
         path: 'list',
         data: { breadcrumb: null },
@@ -79,6 +89,11 @@ export const INVENTORY_ROUTES: Routes = [
     data: { breadcrumb: 'Categorías' },
     children: [
       {
+        path: '',
+        redirectTo: 'list',
+        pathMatch: 'full',
+      },
+      {
         path: 'list',
         data: { breadcrumb: null },
         loadComponent: () =>
@@ -110,6 +125,11 @@ export const INVENTORY_ROUTES: Routes = [
     path: 'measurement-units',
     data: { breadcrumb: 'Unidades de Medida' },
     children: [
+      {
+        path: '',
+        redirectTo: 'list',
+        pathMatch: 'full',
+      },
       {
         path: 'list',
         data: { breadcrumb: null },
