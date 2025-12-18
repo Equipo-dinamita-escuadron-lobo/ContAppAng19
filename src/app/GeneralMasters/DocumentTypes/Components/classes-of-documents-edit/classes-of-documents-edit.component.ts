@@ -5,14 +5,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { ButtonModule } from 'primeng/button';
-import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
 
 @Component({
   selector: 'app-classes-of-documents-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule],
   templateUrl: './classes-of-documents-edit.component.html',
   styleUrl: './classes-of-documents-edit.component.css'
 })

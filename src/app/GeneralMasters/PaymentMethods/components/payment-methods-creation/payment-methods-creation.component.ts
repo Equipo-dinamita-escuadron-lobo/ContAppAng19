@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
-import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { PaymentMethodsServiceService } from '../../services/payment-methods-service.service';
@@ -16,7 +15,7 @@ import { AccountingAccountOption } from '../../models/PaymentMethods';
 @Component({
   selector: 'app-payment-methods-creation',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, SelectModule],
   templateUrl: './payment-methods-creation.component.html',
   styleUrl: './payment-methods-creation.component.css'
 })
