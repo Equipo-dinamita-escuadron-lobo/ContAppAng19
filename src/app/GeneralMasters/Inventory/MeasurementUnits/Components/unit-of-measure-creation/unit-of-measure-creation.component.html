@@ -40,7 +40,7 @@
         <!-- Abreviatura -->
         <div class="flex flex-col gap-2">
           <label for="abbreviation" class="font-semibold text-primary label-required">Abreviatura</label>
-          <input pInputText id="abbreviation" formControlName="abbreviation" placeholder="Ej: Kg" class="w-full md:w-2/3" />
+          <input pInputText id="abbreviation" formControlName="abbreviation" placeholder="Ej: Kg" class="w-full md:w-1/4" />
           @if (unitOfMeasureForm.get('abbreviation')?.invalid && (unitOfMeasureForm.get('abbreviation')?.touched || formSubmitAttempt)) {
           <small class="error-message">La abreviatura es requerida.</small>
           }
