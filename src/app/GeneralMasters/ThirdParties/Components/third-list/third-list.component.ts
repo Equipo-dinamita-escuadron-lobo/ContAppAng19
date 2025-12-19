@@ -92,7 +92,7 @@ export class ThirdListComponent implements OnInit {
   showDetailView = false;
   searchValue = '';
 
-  bulkStateToggle = true; // Default to active
+  bulkStateToggle = false;
   
   isImporting = false;
   isExporting = false;
@@ -155,6 +155,10 @@ export class ThirdListComponent implements OnInit {
     this.loadThirds();
     this.getThirdTypes();
     this.getTypesID();
+    const savedBulkState = localStorage.getItem('thirdBulkStateToggle');
+    if (savedBulkState !== null) {
+      this.bulkStateToggle = JSON.parse(savedBulkState);
+    }
   }
 
   /**
@@ -390,6 +394,7 @@ export class ThirdListComponent implements OnInit {
         this.thirdService.changeAllThirdsState(this.entData, this.bulkStateToggle).subscribe({
           next: (response: any) => {
             this.loadThirds();
+            localStorage.setItem('thirdBulkStateToggle', JSON.stringify(this.bulkStateToggle));
 
             this.messageService.add({
               severity: 'success',
