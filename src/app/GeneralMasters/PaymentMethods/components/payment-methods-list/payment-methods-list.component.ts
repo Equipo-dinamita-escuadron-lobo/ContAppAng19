@@ -22,6 +22,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { PopoverModule } from 'primeng/popover';
 import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // PrimeNG Services
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -42,7 +43,8 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     InputIconModule,
     TooltipModule,
     TagModule,
-    PopoverModule
+    PopoverModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './payment-methods-list.component.html',
@@ -95,6 +97,7 @@ export class PaymentMethodsListComponent implements OnInit {
   }
 
   private loadAccountingAccounts(): void {
+    this.loading = true;
     this.chartAccountService.getListAccounts(this.enterpriseId).subscribe({
       next: (accounts: Account[]) => {
         this.accountingAccounts = this.flattenAccounts(accounts);
@@ -134,7 +137,6 @@ export class PaymentMethodsListComponent implements OnInit {
   }
 
   private loadPaymentMethods(): void {
-    this.loading = true;
     this.service.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
       .subscribe({
         next: (response: PageResponse<PaymentMethod>) => {
