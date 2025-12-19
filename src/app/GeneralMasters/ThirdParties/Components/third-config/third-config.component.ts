@@ -19,6 +19,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // Models and Services
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
@@ -46,7 +47,8 @@ import { TypeId } from '../../models/TypeId';
     IconFieldModule,
     InputIconModule,
     ToggleSwitchModule,
-    RadioButtonModule
+    RadioButtonModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService, LocalStorageMethods],
   templateUrl: './third-config.component.html',

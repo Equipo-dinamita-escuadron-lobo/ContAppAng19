@@ -211,7 +211,7 @@
           </div>
 
           <!-- Tabla de Tipos de Identificación -->
-          <p-table #typeIdTable [value]="typesId" [loading]="loadingTypeIds" [lazy]="true" (onLazyLoad)="loadTypeIdsLazy($event)"
+          <p-table #typeIdTable [value]="typesId" [lazy]="true" (onLazyLoad)="loadTypeIdsLazy($event)"
             [paginator]="true" [rows]="currentSizeTypeIds" [totalRecords]="totalRecordsTypeIds"
             [rowsPerPageOptions]="[5, 10, 20]"
             styleClass="p-datatable-striped font-family-sans"
@@ -279,22 +279,7 @@
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="5" class="text-center py-6 font-family-sans text-neutral-50">
-                  No se encontraron tipos de identificación.
-                </td>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="loadingbody">
-              <tr>
-                <td colspan="5" class="text-center py-8">
-                  <div class="flex flex-col items-center gap-3">
-                    <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
-                    <p class="text-gray-500">Cargando tipos de identificación...</p>
-                  </div>
-                </td>
-              </tr>
+              <app-table-empty-message [loading]="loadingTypeIds" [colspan]="5"></app-table-empty-message>
             </ng-template>
           </p-table>
         </p-tabpanel>
@@ -408,7 +393,7 @@
           </div>
 
           <!-- Tabla de Tipos de Tercero -->
-          <p-table #thirdTypeTable [value]="thirdTypes" [loading]="loadingThirdTypes" [lazy]="true" (onLazyLoad)="loadThirdTypesLazy($event)"
+          <p-table #thirdTypeTable [value]="thirdTypes" [lazy]="true" (onLazyLoad)="loadThirdTypesLazy($event)"
             [paginator]="true" [rows]="currentSizeThirdTypes" [totalRecords]="totalRecordsThirdTypes"
             [rowsPerPageOptions]="[5, 10, 20]"
             styleClass="p-datatable-striped font-family-sans"
@@ -466,22 +451,7 @@
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="3" class="text-center py-6 font-family-sans text-neutral-50">
-                  No se encontraron tipos de tercero.
-                </td>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="loadingbody">
-              <tr>
-                <td colspan="3" class="text-center py-8">
-                  <div class="flex flex-col items-center gap-3">
-                    <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
-                    <p class="text-gray-500">Cargando tipos de tercero...</p>
-                  </div>
-                </td>
-              </tr>
+              <app-table-empty-message [loading]="loadingThirdTypes" [colspan]="3"></app-table-empty-message>
             </ng-template>
           </p-table>
         </p-tabpanel>
