@@ -28,10 +28,32 @@
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <!-- Título con el estilo de marca (borde inferior) -->
       <div class="items-center mb-6">
-        <h1
-          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Productos</span>
-        </h1>
+        <div class="flex items-center">
+          <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+            <span class="border-b-4 border-secondary-light inline-block pb-1">Productos</span>
+          </h1>
+          <span class="ml-10 text-primary cursor-pointer"
+                (click)="op.toggle($event)">
+            <i class="pi pi-question-circle text-3xl" style="font-size: 1.25rem !important;"></i>
+          </span>
+          <p-popover #op>
+            <div class="p-4" style="max-width: 400px;">
+              <h3 class="font-bold text-lg mb-3 text-primary">Gestión de Productos</h3>
+              <p class="text-sm mb-3 text-primary">
+                Administra el catálogo completo de productos y servicios que ofrece tu empresa. Configura códigos, 
+                referencias, precios y características específicas de cada ítem para un control 
+                detallado de tu portafolio comercial.
+              </p>
+              <a
+                [href]="helpCenterUrl"
+                target="_blank"
+                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                Abrir centro de ayuda para más información.
+                <i class="pi pi-external-link text-xs"></i>
+              </a>
+            </div>
+          </p-popover>
+        </div>
         <p class="font-family-sans font-normal text-sm mt-12">
           Administra y organiza todos tus productos y servicios.
         </p>

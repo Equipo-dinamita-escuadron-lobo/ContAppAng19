@@ -24,6 +24,8 @@ import { CurrencyFormatPipe } from '../../Pipes/currency-format.pipe';
 import { ProductsTemplateComponent } from '../products-template/products-template.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { PopoverModule } from 'primeng/popover';
+import { environment } from '../../../../../../environments/environment';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -60,7 +62,8 @@ interface ImportError {
     CurrencyFormatPipe,
     ProductsTemplateComponent,
     RadioButtonModule,
-    ProgressBarModule
+    ProgressBarModule,
+    PopoverModule
 ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
@@ -125,6 +128,9 @@ export class ProductListComponent implements OnInit {
     { label: 'Activos', value: 'active' },
     { label: 'Inactivos', value: 'inactive' }
   ];
+  
+  // URL del centro de ayuda
+  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
 
