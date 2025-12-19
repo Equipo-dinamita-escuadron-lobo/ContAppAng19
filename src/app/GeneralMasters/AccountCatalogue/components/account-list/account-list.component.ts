@@ -31,6 +31,8 @@ import { PaginatorModule } from 'primeng/paginator';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { PopoverModule } from 'primeng/popover';
+import { environment } from '../../../../../environments/environment';
 
 // Interfaces para manejo de errores de importación
 interface ImportError {
@@ -54,7 +56,7 @@ interface ImportError {
     IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
     RadioButtonModule,
     ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule,
-    TooltipModule, TableModule, PaginatorModule, ProgressBarModule
+    TooltipModule, TableModule, PaginatorModule, ProgressBarModule, PopoverModule
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.css',
@@ -148,6 +150,7 @@ export class AccountListComponent implements OnInit {
   placeClasificationType: string = '';
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: unknown | null = null;
+  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
 
   // Propiedades para el modal de errores de importación
   importErrors: ImportError[] = [];
