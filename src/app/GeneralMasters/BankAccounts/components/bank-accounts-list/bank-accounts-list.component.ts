@@ -6,6 +6,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { BankAccountsService, BankAccount } from '../../services/bank-accounts.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { BankAccountsPresentationService } from '../../services/bank-accounts-presentation.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -41,7 +42,8 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     InputIconModule,
     TooltipModule,
     TagModule,
-    PopoverModule
+    PopoverModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './bank-accounts-list.component.html',

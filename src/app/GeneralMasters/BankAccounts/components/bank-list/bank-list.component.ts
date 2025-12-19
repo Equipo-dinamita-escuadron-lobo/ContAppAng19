@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { BankService, Bank } from '../../services/bank.service';
 import { BankPresentationService } from '../../services/bank-presentation.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -36,7 +37,8 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     IconFieldModule,
     InputIconModule,
     TooltipModule,
-    TagModule
+    TagModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './bank-list.component.html',
