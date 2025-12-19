@@ -99,19 +99,7 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="7" class="text-center py-8 font-family-sans">
-            <ng-container *ngIf="loading; else noData">
-              <div class="flex flex-col items-center gap-3">
-                <i class="pi pi-spin pi-spinner text-primary"></i>
-                <p class="text-primary font-semibold">Cargando...</p>
-              </div>
-            </ng-container>
-            <ng-template #noData>
-              <span class="text-neutral-50">No se encontraron impuestos.</span>
-            </ng-template>
-          </td>
-        </tr>
+        <app-table-empty-message [loading]="loading" [colspan]="7"></app-table-empty-message>
       </ng-template>
     </p-table>
 

@@ -20,6 +20,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { PopoverModule } from 'primeng/popover';
 import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 @Component({
   selector: 'app-list-tax',
@@ -36,7 +37,8 @@ import { HelpCenterService } from '../../../../Shared/services/help-center.servi
     InputIconModule,
     ToggleSwitchModule,
     TagModule,
-    PopoverModule
+    PopoverModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './list-tax.component.html',
