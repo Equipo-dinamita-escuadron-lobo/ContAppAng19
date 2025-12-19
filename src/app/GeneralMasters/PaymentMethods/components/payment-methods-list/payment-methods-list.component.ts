@@ -21,7 +21,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { PopoverModule } from 'primeng/popover';
-import { environment } from '../../../../../environments/environment';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 
 // PrimeNG Services
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -49,14 +49,6 @@ import { MessageService, ConfirmationService } from 'primeng/api';
   styleUrl: './payment-methods-list.component.css'
 })
 export class PaymentMethodsListComponent implements OnInit {
-  private readonly service = inject(PaymentMethodsServiceService);
-  private readonly chartAccountService = inject(ChartAccountService);
-  private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly localStorageMethod = inject(LocalStorageMethods);
-  private readonly router = inject(Router);
-  public readonly paymentMethodsValidationMessagesService = inject(PaymentMethodsValidationMessagesService);
-
   private enterpriseId: string = '';
 
   loading = false;
@@ -74,7 +66,20 @@ export class PaymentMethodsListComponent implements OnInit {
   accountingAccountsMap: Map<string, string> = new Map();
   
   // URL del centro de ayuda
-  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
+  helpCenterUrl: string;
+
+  constructor(
+    private readonly service: PaymentMethodsServiceService,
+    private readonly chartAccountService: ChartAccountService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly localStorageMethod: LocalStorageMethods,
+    private readonly router: Router,
+    public readonly paymentMethodsValidationMessagesService: PaymentMethodsValidationMessagesService,
+    private readonly helpCenterService: HelpCenterService
+  ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();

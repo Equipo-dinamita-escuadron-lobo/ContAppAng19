@@ -21,7 +21,7 @@ import { PaginatorModule } from 'primeng/paginator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { PopoverModule } from 'primeng/popover';
-import { environment } from '../../../../../environments/environment';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 
 // Componentes internos
 import { ThirdTemplateComponent } from '../third-template/third-template.component';
@@ -140,7 +140,7 @@ export class ThirdListComponent implements OnInit {
   entData: string = '';
   
   // URL del centro de ayuda
-  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
+  helpCenterUrl: string;
 
   // Constantes
   private readonly EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
@@ -152,9 +152,11 @@ export class ThirdListComponent implements OnInit {
     private readonly confirmationService: ConfirmationService,
     private readonly router: Router,
     private readonly localStorageMethods: LocalStorageMethods,
-    public readonly thirdValidationMessagesService: ThirdValidationMessagesService
+    public readonly thirdValidationMessagesService: ThirdValidationMessagesService,
+    private readonly helpCenterService: HelpCenterService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
   }
 
   ngOnInit(): void {

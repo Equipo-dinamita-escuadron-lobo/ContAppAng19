@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core'; // 👈 agrega OnInit
+import { Component, OnInit } from '@angular/core'; // agrega OnInit
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
@@ -6,9 +6,9 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { MenuItem } from 'primeng/api';
 import { NavigationEnd, Router, Event } from '@angular/router';
 import { AuthService } from '../../auth/services/auth.service';
-import { environment } from '../../../../environments/environment';
 import { InvoicePortfolioService } from '../../../Financial/Wallet/PortfolioManagement/Service/invoice-portfolio.service';
 import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
+import { HelpCenterService } from '../../../Shared/services/help-center.service';
 import { filter, Subscription } from 'rxjs';
 
 @Component({
@@ -23,9 +23,9 @@ export class HeaderComponent implements OnInit {
   companyName = 'Nombre de la empresa';
   userName = 'Nombre completo del usuario';
   userRole = 'Rol del usuario';
-  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view`;
+  helpCenterUrl: string;
 
-  // 👇 inicializa vacío; lo llenamos en ngOnInit
+  // inicializa vacío; lo llenamos en ngOnInit
   userMenuItems: MenuItem[] = [];
 
   //Variables para notificaciones
@@ -38,7 +38,10 @@ export class HeaderComponent implements OnInit {
     private router: Router, 
     private auth: AuthService, 
     private invoiceService: InvoicePortfolioService, 
-    private localStorageMethods: LocalStorageMethods) {
+    private localStorageMethods: LocalStorageMethods,
+    private helpCenterService: HelpCenterService
+  ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('');
       this.routerSubscription = this.router.events.pipe(
       filter((event: Event): event is NavigationEnd => event instanceof NavigationEnd)
     ).subscribe(() => {
@@ -58,7 +61,7 @@ export class HeaderComponent implements OnInit {
       {
         label: 'Configuración',
         icon: 'pi pi-cog',
-        visible: this.auth.hasRole('Administrador'), // ✅ ya puedes usar this.auth
+        visible: this.auth.hasRole('Administrador'), //  ya puedes usar this.auth
         command: () => this.openSettings(),
       },
       { separator: true },

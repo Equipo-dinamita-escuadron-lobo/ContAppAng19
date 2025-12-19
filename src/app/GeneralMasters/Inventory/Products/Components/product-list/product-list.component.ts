@@ -25,7 +25,7 @@ import { ProductsTemplateComponent } from '../products-template/products-templat
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { PopoverModule } from 'primeng/popover';
-import { environment } from '../../../../../../environments/environment';
+import { HelpCenterService } from '../../../../../Shared/services/help-center.service';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -130,7 +130,7 @@ export class ProductListComponent implements OnInit {
   ];
   
   // URL del centro de ayuda
-  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
+  helpCenterUrl: string;
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
 
@@ -139,8 +139,11 @@ export class ProductListComponent implements OnInit {
     private readonly router: Router,
     private readonly localstorageMethods: LocalStorageMethods,
     private readonly messageService: MessageService,
-    private readonly confirmationService: ConfirmationService
-  ) { }
+    private readonly confirmationService: ConfirmationService,
+    private readonly helpCenterService: HelpCenterService
+  ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();

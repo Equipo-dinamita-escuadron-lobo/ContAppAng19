@@ -32,7 +32,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { PopoverModule } from 'primeng/popover';
-import { environment } from '../../../../../environments/environment';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 
 // Interfaces para manejo de errores de importación
 interface ImportError {
@@ -150,7 +150,7 @@ export class AccountListComponent implements OnInit {
   placeClasificationType: string = '';
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: unknown | null = null;
-  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
+  helpCenterUrl: string;
 
   // Propiedades para el modal de errores de importación
   importErrors: ImportError[] = [];
@@ -179,8 +179,10 @@ export class AccountListComponent implements OnInit {
     private readonly _accountService: ChartAccountService,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
-    public readonly accountCataloguePresentationService: AccountCataloguePresentationService
+    public readonly accountCataloguePresentationService: AccountCataloguePresentationService,
+    private readonly helpCenterService: HelpCenterService
   ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
 
     this.accountForm = this.fb.group({})
     this.formTransactional = this.fb.group({

@@ -19,7 +19,7 @@ import { TaxValidationMessagesService } from '../../services/tax-validation-mess
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { PopoverModule } from 'primeng/popover';
-import { environment } from '../../../../../environments/environment';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 
 @Component({
   selector: 'app-list-tax',
@@ -43,13 +43,6 @@ import { environment } from '../../../../../environments/environment';
   styleUrl: './list-tax.component.css'
 })
 export class ListTaxComponent implements OnInit {
-  private readonly router = inject(Router);
-  private readonly taxService = inject(TaxService);
-  private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly chartAccountService = inject(ChartAccountService);
-  public readonly taxValidationMessagesService = inject(TaxValidationMessagesService);
-
   taxes: TaxList[] = [];
   totalRecords: number = 0;
   currentPage: number = 0;
@@ -61,7 +54,19 @@ export class ListTaxComponent implements OnInit {
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
   accounts: any[] = [];
-  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
+  helpCenterUrl: string;
+
+  constructor(
+    private readonly router: Router,
+    private readonly taxService: TaxService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly chartAccountService: ChartAccountService,
+    public readonly taxValidationMessagesService: TaxValidationMessagesService,
+    private readonly helpCenterService: HelpCenterService
+  ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
