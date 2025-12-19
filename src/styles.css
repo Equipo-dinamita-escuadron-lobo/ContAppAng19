@@ -1056,6 +1056,26 @@ body {
 }
 
 /* ================================
+   ESTILOS PARA P-INPUTTEXT
+   ================================ */
+
+/* Input text - borde normal */
+.p-inputtext {
+  border-color: #d1d5db !important; /* gray-300 */
+}
+
+/* Input text - borde en focus */
+.p-inputtext:enabled:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--color-primary) !important;
+}
+
+/* Input text - borde en hover */
+.p-inputtext:enabled:hover {
+  border-color: var(--color-primary) !important;
+}
+
+/* ================================
    ESTILOS PARA P-INPUTNUMBER
    ================================ */
 
@@ -1080,6 +1100,22 @@ body {
 /* Reducir el espacio entre los botones y el input */
 .p-inputnumber-horizontal .p-inputnumber-button-group {
   gap: 0.125rem !important;
+}
+
+/* Input number - borde normal */
+.p-inputnumber .p-inputnumber-input {
+  border-color: #d1d5db !important; /* gray-300 */
+}
+
+/* Input number - borde en focus */
+.p-inputnumber .p-inputnumber-input:enabled:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--color-primary) !important;
+}
+
+/* Input number - borde en hover */
+.p-inputnumber .p-inputnumber-input:enabled:hover {
+  border-color: var(--color-primary) !important;
 }
 
 /* ================================
