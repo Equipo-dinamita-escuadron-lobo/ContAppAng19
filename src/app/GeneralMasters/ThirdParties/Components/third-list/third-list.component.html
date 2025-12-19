@@ -98,7 +98,7 @@
 
 
     <!-- Data Table -->
-    <p-table #dt [value]="thirds" [loading]="loading" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
+    <p-table #dt [value]="thirds" [paginator]="true" [rows]="rows" [totalRecords]="totalRecords"
       [rowsPerPageOptions]="[5, 10, 20]" [first]="first" [lazy]="true"
       styleClass="p-datatable-gridlines" [responsiveLayout]="'scroll'"
       (onLazyLoad)="onPageChange($event)" (onPage)="onPageChange($event)" (onSort)="onSort($event)">
@@ -214,24 +214,9 @@
         </tr>
       </ng-template>
 
-      <!-- Empty State -->
+      <!-- Empty State & Loading -->
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <td [attr.colspan]="showDetailView ? 14 : 8" class="text-center py-6 font-family-sans text-neutral-50">No se
-            encontraron terceros.</td>
-        </tr>
-      </ng-template>
-
-      <!-- Loading State -->
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <td [attr.colspan]="showDetailView ? 14 : 8" class="text-center py-8">
-            <div class="flex flex-col items-center gap-3">
-              <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
-              <p class="text-gray-500">Cargando terceros...</p>
-            </div>
-          </td>
-        </tr>
+        <app-table-empty-message [loading]="loading" [colspan]="showDetailView ? 14 : 8"></app-table-empty-message>
       </ng-template>
     </p-table>
   </div>

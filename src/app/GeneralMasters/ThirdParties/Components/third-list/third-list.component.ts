@@ -22,6 +22,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { PopoverModule } from 'primeng/popover';
 import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // Componentes internos
 import { ThirdTemplateComponent } from '../third-template/third-template.component';
@@ -71,6 +72,7 @@ interface ImportError {
     ToggleSwitchModule,
     ProgressBarModule,
     PopoverModule,
+    TableEmptyMessageComponent,
     ThirdTemplateComponent,
     ThirdExportComponent,
     ThirdDetailsComponent
