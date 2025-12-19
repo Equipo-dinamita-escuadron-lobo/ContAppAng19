@@ -13,11 +13,13 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { FormsModule } from '@angular/forms';
+import { PopoverModule } from 'primeng/popover';
 import { DocumentTypesServiceService } from '../../services/document-types-service.service';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
 import { DocumentType, DocumentTypeList } from '../../models/DocumentTypes';
 import { DocumentClass } from '../../models/ClassesOfDocuments';
 import { DocumentTypesPresentationService } from '../../services/document-types-presentation.service';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 
 @Component({
   selector: 'app-document-types-list',
@@ -34,7 +36,8 @@ import { DocumentTypesPresentationService } from '../../services/document-types-
     ConfirmDialogModule,
     ToggleSwitchModule,
     TagModule,
-    FormsModule
+    FormsModule,
+    PopoverModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './document-types-list.component.html',
@@ -51,6 +54,7 @@ export class DocumentTypesListComponent implements OnInit {
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   searchTerm: string = '';
+  helpCenterUrl: string;
 
   constructor(
     private readonly service: DocumentTypesServiceService,
@@ -58,8 +62,11 @@ export class DocumentTypesListComponent implements OnInit {
     private readonly router: Router,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
-    public readonly documentTypesPresentationService: DocumentTypesPresentationService
-  ) {}
+    public readonly documentTypesPresentationService: DocumentTypesPresentationService,
+    private readonly helpCenterService: HelpCenterService
+  ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.loadModuleNames(); // Cargar nombres de módulos para mapeo

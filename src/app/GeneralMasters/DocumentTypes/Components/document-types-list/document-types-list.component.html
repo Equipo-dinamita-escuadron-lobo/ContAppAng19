@@ -7,9 +7,32 @@
     <!-- Header -->
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <div class="items-center mb-6">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Tipos</span> de Documentos
-        </h1>
+        <div class="flex items-center">
+          <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+            <span class="border-b-4 border-secondary-light inline-block pb-1">Tipos</span> de Documentos
+          </h1>
+          <span class="ml-10 text-primary cursor-pointer"
+                (click)="op.toggle($event)">
+            <i class="pi pi-question-circle text-3xl" style="font-size: 1.25rem !important;"></i>
+          </span>
+          <p-popover #op>
+            <div class="p-4" style="max-width: 400px;">
+              <h3 class="font-bold text-lg mb-3 text-primary">Tipos de Documentos</h3>
+              <p class="text-sm mb-3 text-primary">
+                Define y organiza los diferentes tipos de documentos utilizados en las operaciones contables y 
+                comerciales de tu empresa. Cada tipo de documento tiene un prefijo único y está asociado a una 
+                clase específica que determina su comportamiento en el sistema y el módulo donde se utilizará.
+              </p>
+              <a
+                [href]="helpCenterUrl"
+                target="_blank"
+                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                Abrir centro de ayuda para más información.
+                <i class="pi pi-external-link text-xs"></i>
+              </a>
+            </div>
+          </p-popover>
+        </div>
         <p class="font-family-sans font-normal text-sm mt-12">Lista de todos los tipos de documentos configurados en el sistema.</p>
       </div>
 
