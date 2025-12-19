@@ -58,7 +58,7 @@
     </div>
 
     <!-- Tabla -->
-    <p-table #taxesTable [value]="taxes" [lazy]="true" (onLazyLoad)="loadTaxesLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [loading]="loading" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+    <p-table #taxesTable [value]="taxes" [lazy]="true" (onLazyLoad)="loadTaxesLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="code" class="font-semibold text-primary border-b-2 border-primary">Código <p-sortIcon field="code"></p-sortIcon></th>
@@ -100,15 +100,16 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="text-center py-6 font-family-sans text-neutral-50">No se encontraron impuestos.</td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <td colspan="7" class="text-center py-6 font-family-sans text-neutral-50">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p class="mt-2 text-primary">Cargando impuestos...</p>
+          <td colspan="7" class="text-center py-8 font-family-sans">
+            <ng-container *ngIf="loading; else noData">
+              <div class="flex flex-col items-center gap-3">
+                <i class="pi pi-spin pi-spinner text-primary"></i>
+                <p class="text-primary font-semibold">Cargando...</p>
+              </div>
+            </ng-container>
+            <ng-template #noData>
+              <span class="text-neutral-50">No se encontraron impuestos.</span>
+            </ng-template>
           </td>
         </tr>
       </ng-template>
