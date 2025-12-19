@@ -20,6 +20,8 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
+import { PopoverModule } from 'primeng/popover';
+import { environment } from '../../../../../environments/environment';
 
 // PrimeNG Services
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -39,7 +41,8 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     IconFieldModule,
     InputIconModule,
     TooltipModule,
-    TagModule
+    TagModule,
+    PopoverModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './payment-methods-list.component.html',
@@ -69,6 +72,9 @@ export class PaymentMethodsListComponent implements OnInit {
 
   accountingAccounts: any[] = [];
   accountingAccountsMap: Map<string, string> = new Map();
+  
+  // URL del centro de ayuda
+  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
