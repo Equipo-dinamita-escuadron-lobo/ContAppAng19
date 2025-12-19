@@ -42,7 +42,7 @@
 
         <div class="flex flex-col gap-2">
           <label class="font-semibold text-primary label-required">Tipo de Cuenta</label>
-          <p-select [options]="accountTypesOptions" formControlName="accountType" placeholder="Seleccione tipo" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
+          <p-select [options]="accountTypesOptions" formControlName="accountType" placeholder="Seleccione tipo" [filter]="true" [showClear]="true" class="w-full md:w-1/2"></p-select>
           <small style="color: var(--color-error);" *ngIf="form.get('accountType')?.touched && form.get('accountType')?.invalid">Seleccione un tipo de cuenta</small>
         </div>
 
