@@ -8,9 +8,32 @@
     <!-- Header -->
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <div class="items-center mb-6">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Impuestos</span>
-        </h1>
+        <div class="flex items-center">
+          <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+            <span class="border-b-4 border-secondary-light inline-block pb-1">Impuestos</span>
+          </h1>
+          <span class="ml-10 text-primary cursor-pointer"
+                (click)="op.toggle($event)">
+            <i class="pi pi-question-circle text-3xl" style="font-size: 1.25rem !important;"></i>
+          </span>
+          <p-popover #op>
+            <div class="p-4" style="max-width: 400px;">
+              <h3 class="font-bold text-lg mb-3 text-primary">Gestión de Impuestos</h3>
+              <p class="text-sm mb-3 text-primary">
+                Administra los diferentes tipos de impuestos aplicables en las operaciones comerciales de tu empresa. 
+                Configura las tarifas, códigos y cuentas contables asociadas para cada impuesto, permitiendo su 
+                aplicación automática en compras y ventas según la normativa tributaria vigente.
+              </p>
+              <a
+                [href]="helpCenterUrl"
+                target="_blank"
+                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                Abrir centro de ayuda para más información.
+                <i class="pi pi-external-link text-xs"></i>
+              </a>
+            </div>
+          </p-popover>
+        </div>
         <p class="font-family-sans font-normal text-sm mt-12">Administra y configura todos los impuestos del sistema.</p>
       </div>
 
@@ -35,7 +58,7 @@
     </div>
 
     <!-- Tabla -->
-    <p-table #taxesTable [value]="taxes" [lazy]="true" (onLazyLoad)="loadTaxesLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [loading]="loading" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+    <p-table #taxesTable [value]="taxes" [lazy]="true" (onLazyLoad)="loadTaxesLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="code" class="font-semibold text-primary border-b-2 border-primary">Código <p-sortIcon field="code"></p-sortIcon></th>
@@ -76,18 +99,7 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="7" class="text-center py-6 font-family-sans text-neutral-50">No se encontraron impuestos.</td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <td colspan="7" class="text-center py-6 font-family-sans text-neutral-50">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p class="mt-2 text-primary">Cargando impuestos...</p>
-          </td>
-        </tr>
+        <app-table-empty-message [loading]="loading" [colspan]="7"></app-table-empty-message>
       </ng-template>
     </p-table>
 

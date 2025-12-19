@@ -16,6 +16,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
 import { DocumentClass } from '../../models/ClassesOfDocuments';
 import { DocumentTypesPresentationService } from '../../services/document-types-presentation.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 @Component({
   selector: 'app-classes-of-documents-list',
@@ -32,7 +33,8 @@ import { DocumentTypesPresentationService } from '../../services/document-types-
     TooltipModule,
     ConfirmDialogModule,
     ToggleSwitchModule,
-    TagModule
+    TagModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './classes-of-documents-list.component.html',
@@ -44,6 +46,7 @@ export class ClassesOfDocumentsListComponent implements OnInit {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  loading: boolean = false;
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   searchTerm: string = '';
@@ -94,6 +97,7 @@ export class ClassesOfDocumentsListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.loading = true;
     // Calcular página y tamaño desde los controles de PrimeNG
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
@@ -109,6 +113,7 @@ export class ClassesOfDocumentsListComponent implements OnInit {
         this.list = page?.content || [];
         // El backend retorna la estructura: { content: [], page: { totalElements, totalPages, ... } }
         this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
+        this.loading = false;
       },
       error: (error) => {
         console.error('Error al cargar clases de documentos:', error);
@@ -118,6 +123,7 @@ export class ClassesOfDocumentsListComponent implements OnInit {
           detail: 'No se pudieron cargar las clases de documentos. Inténtelo nuevamente.',
           life: 5000
         });
+        this.loading = false;
       }
     });
   }
@@ -126,14 +132,17 @@ export class ClassesOfDocumentsListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.loading = true;
     this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.list = page?.content || [];
         // El backend retorna la estructura: { content: [], page: { totalElements, totalPages, ... } }
         this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
+        this.loading = false;
       },
       error: (error) => {
         console.error('Error al recargar clases de documentos:', error);
+        this.loading = false;
       }
     });
   }

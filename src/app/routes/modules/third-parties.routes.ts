@@ -19,7 +19,7 @@ export const THIRD_PARTIES_ROUTES: Routes = [
   {
     path: 'create',
     data: {
-      breadcrumb: null,
+      breadcrumb: 'Crear Tercero',
     },
     loadComponent: () =>
       import('../../GeneralMasters/ThirdParties/Components/third-creation/third-creation.component').then(
@@ -29,7 +29,7 @@ export const THIRD_PARTIES_ROUTES: Routes = [
   {
     path: 'edit/:id',
     data: {
-      breadcrumb: null,
+      breadcrumb: 'Editar Tercero',
     },
     loadComponent: () =>
       import('../../GeneralMasters/ThirdParties/Components/third-edit/third-edit.component').then(

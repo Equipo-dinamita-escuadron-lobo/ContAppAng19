@@ -20,6 +20,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // Componentes internos
 import { ThirdTemplateComponent } from '../third-template/third-template.component';
@@ -68,6 +71,8 @@ interface ImportError {
     PaginatorModule,
     ToggleSwitchModule,
     ProgressBarModule,
+    PopoverModule,
+    TableEmptyMessageComponent,
     ThirdTemplateComponent,
     ThirdExportComponent,
     ThirdDetailsComponent
@@ -92,7 +97,7 @@ export class ThirdListComponent implements OnInit {
   showDetailView = false;
   searchValue = '';
 
-  bulkStateToggle = true; // Default to active
+  bulkStateToggle = false;
   
   isImporting = false;
   isExporting = false;
@@ -135,6 +140,9 @@ export class ThirdListComponent implements OnInit {
   
   // Company data
   entData: string = '';
+  
+  // URL del centro de ayuda
+  helpCenterUrl: string;
 
   // Constantes
   private readonly EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
@@ -146,15 +154,21 @@ export class ThirdListComponent implements OnInit {
     private readonly confirmationService: ConfirmationService,
     private readonly router: Router,
     private readonly localStorageMethods: LocalStorageMethods,
-    public readonly thirdValidationMessagesService: ThirdValidationMessagesService
+    public readonly thirdValidationMessagesService: ThirdValidationMessagesService,
+    private readonly helpCenterService: HelpCenterService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
   }
 
   ngOnInit(): void {
     this.loadThirds();
     this.getThirdTypes();
     this.getTypesID();
+    const savedBulkState = localStorage.getItem('thirdBulkStateToggle');
+    if (savedBulkState !== null) {
+      this.bulkStateToggle = JSON.parse(savedBulkState);
+    }
   }
 
   /**
@@ -390,6 +404,7 @@ export class ThirdListComponent implements OnInit {
         this.thirdService.changeAllThirdsState(this.entData, this.bulkStateToggle).subscribe({
           next: (response: any) => {
             this.loadThirds();
+            localStorage.setItem('thirdBulkStateToggle', JSON.stringify(this.bulkStateToggle));
 
             this.messageService.add({
               severity: 'success',

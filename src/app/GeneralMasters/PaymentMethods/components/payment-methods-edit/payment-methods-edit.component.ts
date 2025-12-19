@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
-import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
@@ -16,7 +15,7 @@ import { AccountingAccountOption, PaymentMethod } from '../../models/PaymentMeth
 @Component({
   selector: 'app-payment-methods-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule, TooltipModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, SelectModule, TooltipModule],
   templateUrl: './payment-methods-edit.component.html',
   styleUrl: './payment-methods-edit.component.css'
 })

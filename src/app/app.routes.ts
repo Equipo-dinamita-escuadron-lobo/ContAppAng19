@@ -19,12 +19,15 @@ export const routes: Routes = [
       ),
     canActivate: [isAuthenticatedChildGuard],
     data: {
-      breadcrumb: 'Home',
+      breadcrumb: null,
     },
     children: [
       // Home
       {
         path: 'home',
+        data: {
+          breadcrumb: null,
+        },
         loadComponent: () =>
           import(
             './GeneralMasters/Enterprise/view-enterprise/view-enterprise.component'

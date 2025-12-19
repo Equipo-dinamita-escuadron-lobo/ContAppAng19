@@ -24,6 +24,9 @@ import { CurrencyFormatPipe } from '../../Pipes/currency-format.pipe';
 import { ProductsTemplateComponent } from '../products-template/products-template.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../../Shared/Components/table-empty-message/table-empty-message.component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -60,7 +63,9 @@ interface ImportError {
     CurrencyFormatPipe,
     ProductsTemplateComponent,
     RadioButtonModule,
-    ProgressBarModule
+    ProgressBarModule,
+    PopoverModule,
+    TableEmptyMessageComponent
 ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
@@ -92,6 +97,7 @@ export class ProductListComponent implements OnInit {
   selectedProduct: ProductList | null = null;
   showDetailView = false;
   showTemplateModal = false;
+  loading = false;
 
   // Estado de exportación
   isExporting = false;
@@ -125,6 +131,9 @@ export class ProductListComponent implements OnInit {
     { label: 'Activos', value: 'active' },
     { label: 'Inactivos', value: 'inactive' }
   ];
+  
+  // URL del centro de ayuda
+  helpCenterUrl: string;
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
 
@@ -133,8 +142,11 @@ export class ProductListComponent implements OnInit {
     private readonly router: Router,
     private readonly localstorageMethods: LocalStorageMethods,
     private readonly messageService: MessageService,
-    private readonly confirmationService: ConfirmationService
-  ) { }
+    private readonly confirmationService: ConfirmationService,
+    private readonly helpCenterService: HelpCenterService
+  ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
@@ -143,6 +155,7 @@ export class ProductListComponent implements OnInit {
 
   getProducts(): void {
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
+    this.loading = true;
     this.productService.getProducts(
       enterpriseId,
       this.currentPage,
@@ -154,9 +167,11 @@ export class ProductListComponent implements OnInit {
       next: (data: Page<ProductList>) => {
         this.productsPage = data;
         this.products = data.content;
+        this.loading = false;
       },
       error: (error) => {
         console.error('Error al obtener los productos:', error);
+        this.loading = false;
       }
     });
   }

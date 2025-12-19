@@ -18,6 +18,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { UnitOfMeasure } from '../../Models/UnitOfMeasure';
 import { UnitOfMeasureService } from '../../Services/unit-of-measure.service';
+import { TableEmptyMessageComponent } from '../../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 @Component({
   selector: 'app-unit-of-measure-list',
@@ -37,7 +38,8 @@ import { UnitOfMeasureService } from '../../Services/unit-of-measure.service';
     ReactiveFormsModule,
     TooltipModule,
     ToggleSwitchModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    TableEmptyMessageComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './unit-of-measure-list.component.html',
@@ -47,6 +49,7 @@ export class UnitOfMeasureListComponent implements OnInit {
   unitOfMeasures: UnitOfMeasure[] = [];
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
+  loading: boolean = false;
 
   totalRecords: number = 0;
   currentPage: number = 0;
@@ -78,6 +81,7 @@ export class UnitOfMeasureListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.loading = true;
     this.first = event.first;
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
@@ -92,6 +96,7 @@ export class UnitOfMeasureListComponent implements OnInit {
       next: (page: any) => {
         this.unitOfMeasures = page.content || [];
         this.totalRecords = page.page?.totalElements || 0;
+        this.loading = false;
       },
       error: (error: any) => {
         this.messageService.add({
@@ -99,6 +104,7 @@ export class UnitOfMeasureListComponent implements OnInit {
           summary: 'Error',
           detail: 'No se pudieron cargar las unidades de medida.'
         });
+        this.loading = false;
       }
     });
   }
@@ -107,10 +113,15 @@ export class UnitOfMeasureListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.loading = true;
     this.unitOfMeasureService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.unitOfMeasures = page.content || [];
         this.totalRecords = page.page?.totalElements || 0;
+        this.loading = false;
+      },
+      error: (error: any) => {
+        this.loading = false;
       }
     });
   }

@@ -23,6 +23,7 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
 import { TaxService } from '../../../../Taxes/services/tax.service';
+import { TableEmptyMessageComponent } from '../../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 @Component({
   selector: 'app-category-list',
@@ -41,7 +42,8 @@ import { TaxService } from '../../../../Taxes/services/tax.service';
     InputIcon,
     IconField,
     ToggleSwitchModule,
-    TagModule
+    TagModule,
+    TableEmptyMessageComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './category-list.component.html',
@@ -90,6 +92,7 @@ export class CategoryListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.loading = true;
     this.first = event.first;
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
@@ -103,6 +106,7 @@ export class CategoryListComponent implements OnInit {
       next: (page: any) => {
         this.categories = page.content || [];
         this.totalRecords = page.page?.totalElements || 0;
+        this.loading = false;
       },
       error: (error: any) => {
         this.messageService.add({
@@ -110,6 +114,7 @@ export class CategoryListComponent implements OnInit {
           summary: 'Error',
           detail: 'No se pudieron cargar las categorías.'
         });
+        this.loading = false;
       }
     });
   }
@@ -118,10 +123,15 @@ export class CategoryListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.loading = true;
     this.categoryService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.categories = page.content || [];
         this.totalRecords = page.page?.totalElements || 0;
+        this.loading = false;
+      },
+      error: (error: any) => {
+        this.loading = false;
       }
     });
   }

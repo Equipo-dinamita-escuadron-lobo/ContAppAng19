@@ -141,26 +141,7 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <td
-            colspan="5"
-            class="text-center py-6 font-family-sans text-neutral-50"
-          >
-            No se encontraron unidades de medida.
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <td
-            colspan="5"
-            class="text-center py-6 font-family-sans text-neutral-50"
-          >
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p class="mt-2 text-primary">Cargando unidades de medida...</p>
-          </td>
-        </tr>
+        <app-table-empty-message [loading]="loading" [colspan]="5"></app-table-empty-message>
       </ng-template>
     </p-table>
   </div>

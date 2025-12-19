@@ -31,6 +31,8 @@ import { PaginatorModule } from 'primeng/paginator';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 
 // Interfaces para manejo de errores de importación
 interface ImportError {
@@ -54,7 +56,7 @@ interface ImportError {
     IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
     RadioButtonModule,
     ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule,
-    TooltipModule, TableModule, PaginatorModule, ProgressBarModule
+    TooltipModule, TableModule, PaginatorModule, ProgressBarModule, PopoverModule
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.css',
@@ -148,6 +150,7 @@ export class AccountListComponent implements OnInit {
   placeClasificationType: string = '';
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: unknown | null = null;
+  helpCenterUrl: string;
 
   // Propiedades para el modal de errores de importación
   importErrors: ImportError[] = [];
@@ -176,8 +179,10 @@ export class AccountListComponent implements OnInit {
     private readonly _accountService: ChartAccountService,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
-    public readonly accountCataloguePresentationService: AccountCataloguePresentationService
+    public readonly accountCataloguePresentationService: AccountCataloguePresentationService,
+    private readonly helpCenterService: HelpCenterService
   ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
 
     this.accountForm = this.fb.group({})
     this.formTransactional = this.fb.group({

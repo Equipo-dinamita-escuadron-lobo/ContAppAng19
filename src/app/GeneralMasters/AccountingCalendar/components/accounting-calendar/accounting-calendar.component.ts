@@ -13,7 +13,9 @@ import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { PanelModule } from 'primeng/panel';
+import { PopoverModule } from 'primeng/popover';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -42,6 +44,7 @@ import { MonthCalendarComponent } from '../month-calendar/month-calendar.compone
     ToastModule,
     ConfirmDialogModule,
     PanelModule,
+    PopoverModule,
     MonthCalendarComponent
   ],
   providers: [MessageService, ConfirmationService, CalendarStateService],
@@ -57,6 +60,7 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly helpCenterService = inject(HelpCenterService);
   
   // Estado local derivado del servicio de estado
   selectedYear: number = new Date().getFullYear();
@@ -70,6 +74,9 @@ export class AccountingCalendarComponent implements OnInit, OnDestroy {
   
   // Subject para gestionar la cancelación de suscripciones
   private destroy$ = new Subject<void>();
+  
+  // Help Center
+  helpCenterUrl: string = this.helpCenterService.getHelpCenterUrl('configuracion');
   
     ngOnInit(): void {
     // Inicializar años disponibles

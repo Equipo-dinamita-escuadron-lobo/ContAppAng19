@@ -377,11 +377,11 @@ body {
 
 .select-option {
   @apply py-2 px-4 bg-white text-gray-800 cursor-pointer transition-all duration-150 rounded-md;
+}
 
-  &:hover {
-    background-color: var(--color-primary);
-    @apply text-white;
-  }
+.select-option:hover {
+  background-color: var(--color-primary);
+  @apply text-white;
 }
 
 ::ng-deep .ng-dropdown-panel {
@@ -485,6 +485,119 @@ body {
 .p-dropdown-panel .p-dropdown-empty-message {
   padding: 10px 12px;
   color: #9ca3af;
+}
+
+/* ================================
+   ESTILOS PARA P-SELECT
+   ================================ */
+
+/* Borde del select en estado normal */
+.p-select {
+  border-color: #d1d5db !important;
+}
+
+/* Borde del select en hover */
+.p-select:not(.p-disabled):hover {
+  border-color: var(--color-primary) !important;
+}
+
+/* Borde del select en focus */
+.p-select:not(.p-disabled).p-focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--color-primary) !important;
+}
+
+/* Panel desplegable del select */
+.p-select-overlay {
+  background-color: var(--color-primary-100) !important;
+  border-color: #d1d5db !important;
+}
+
+/* Opciones individuales */
+.p-select-option {
+  color: var(--color-neutral-10) !important;
+}
+
+/* Opción en hover */
+.p-select-option:not(.p-disabled):not(.p-select-option-selected):hover {
+  background-color: var(--color-primary-90) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Opción seleccionada */
+.p-select-option.p-select-option-selected {
+  background-color: var(--color-primary) !important;
+  color: var(--color-primary-100) !important;
+}
+
+/* Icono del select */
+.p-select .p-select-dropdown-icon {
+  color: var(--color-neutral-40) !important;
+}
+
+/* ================================
+   ESTILOS PARA P-MULTISELECT
+   ================================ */
+
+/* Borde del multiselect en estado normal */
+.p-multiselect {
+  border-color: #d1d5db !important;
+}
+
+/* Borde del multiselect en hover */
+.p-multiselect:not(.p-disabled):hover {
+  border-color: var(--color-primary) !important;
+}
+
+/* Borde del multiselect en focus */
+.p-multiselect:not(.p-disabled).p-focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--color-primary) !important;
+}
+
+/* Panel desplegable del multiselect */
+.p-multiselect-overlay {
+  background-color: var(--color-primary-100) !important;
+  border-color: #d1d5db !important;
+}
+
+/* Opciones individuales */
+.p-multiselect-option {
+  color: var(--color-neutral-10) !important;
+}
+
+/* Opción en hover */
+.p-multiselect-option:not(.p-disabled):not(.p-multiselect-option-selected):hover {
+  background-color: var(--color-primary-90) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Opción seleccionada */
+.p-multiselect-option.p-multiselect-option-selected {
+  background-color: var(--color-primary) !important;
+  color: var(--color-primary-100) !important;
+}
+
+/* Checkbox dentro del multiselect cuando está checked */
+.p-multiselect-option .p-checkbox.p-checkbox-checked .p-checkbox-box {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Icono del multiselect */
+.p-multiselect .p-multiselect-dropdown-icon {
+  color: var(--color-neutral-40) !important;
+}
+
+/* Chips/tokens de elementos seleccionados */
+.p-multiselect .p-multiselect-chip {
+  background-color: var(--color-primary) !important;
+  color: var(--color-primary-100) !important;
+}
+
+/* Icono de eliminar en los chips */
+.p-multiselect .p-multiselect-chip .p-multiselect-chip-icon {
+  color: var(--color-primary-100) !important;
 }
 
 /* ================================
@@ -862,6 +975,51 @@ body {
 }
 
 /* ================================
+   ESTILOS PARA P-RADIOBUTTON
+   ================================ */
+
+/* Caja del radio button */
+.p-radiobutton .p-radiobutton-box {
+  border-color: var(--color-neutral-60) !important;
+  background-color: var(--color-primary-100) !important;
+}
+
+/* Caja del radio button en hover */
+.p-radiobutton:not(.p-disabled):hover .p-radiobutton-box {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-95) !important;
+}
+
+/* Caja del radio button cuando está checked */
+.p-radiobutton.p-radiobutton-checked .p-radiobutton-box {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Caja del radio button cuando está checked en hover */
+.p-radiobutton.p-radiobutton-checked:not(.p-disabled):hover .p-radiobutton-box {
+  background-color: var(--color-light) !important;
+  border-color: var(--color-light) !important;
+}
+
+/* Ícono del radio button (punto interno) */
+.p-radiobutton .p-radiobutton-box .p-radiobutton-icon {
+  background-color: var(--color-primary-100) !important;
+}
+
+/* Radio button en estado focus */
+.p-radiobutton:not(.p-disabled) .p-radiobutton-box.p-focus {
+  outline-color: var(--color-primary-90) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Radio button deshabilitado */
+.p-radiobutton.p-disabled .p-radiobutton-box {
+  background-color: var(--color-neutral-95) !important;
+  border-color: var(--color-neutral-80) !important;
+}
+
+/* ================================
    ESTILOS PARA P-CONFIRMDIALOG
    ================================ */
 
@@ -1056,6 +1214,26 @@ body {
 }
 
 /* ================================
+   ESTILOS PARA P-INPUTTEXT
+   ================================ */
+
+/* Input text - borde normal */
+.p-inputtext {
+  border-color: #d1d5db !important; /* gray-300 */
+}
+
+/* Input text - borde en focus */
+.p-inputtext:enabled:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--color-primary) !important;
+}
+
+/* Input text - borde en hover */
+.p-inputtext:enabled:hover {
+  border-color: var(--color-primary) !important;
+}
+
+/* ================================
    ESTILOS PARA P-INPUTNUMBER
    ================================ */
 
@@ -1080,6 +1258,22 @@ body {
 /* Reducir el espacio entre los botones y el input */
 .p-inputnumber-horizontal .p-inputnumber-button-group {
   gap: 0.125rem !important;
+}
+
+/* Input number - borde normal */
+.p-inputnumber .p-inputnumber-input {
+  border-color: #d1d5db !important; /* gray-300 */
+}
+
+/* Input number - borde en focus */
+.p-inputnumber .p-inputnumber-input:enabled:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--color-primary) !important;
+}
+
+/* Input number - borde en hover */
+.p-inputnumber .p-inputnumber-input:enabled:hover {
+  border-color: var(--color-primary) !important;
 }
 
 /* ================================

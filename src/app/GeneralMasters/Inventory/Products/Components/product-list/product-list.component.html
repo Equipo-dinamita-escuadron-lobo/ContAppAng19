@@ -28,10 +28,32 @@
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <!-- Título con el estilo de marca (borde inferior) -->
       <div class="items-center mb-6">
-        <h1
-          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Productos</span>
-        </h1>
+        <div class="flex items-center">
+          <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+            <span class="border-b-4 border-secondary-light inline-block pb-1">Productos</span>
+          </h1>
+          <span class="ml-10 text-primary cursor-pointer"
+                (click)="op.toggle($event)">
+            <i class="pi pi-question-circle text-3xl" style="font-size: 1.25rem !important;"></i>
+          </span>
+          <p-popover #op>
+            <div class="p-4" style="max-width: 400px;">
+              <h3 class="font-bold text-lg mb-3 text-primary">Gestión de Productos</h3>
+              <p class="text-sm mb-3 text-primary">
+                Administra el catálogo completo de productos y servicios que ofrece tu empresa. Configura códigos, 
+                referencias, precios y características específicas de cada ítem para un control 
+                detallado de tu portafolio comercial.
+              </p>
+              <a
+                [href]="helpCenterUrl"
+                target="_blank"
+                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                Abrir centro de ayuda para más información.
+                <i class="pi pi-external-link text-xs"></i>
+              </a>
+            </div>
+          </p-popover>
+        </div>
         <p class="font-family-sans font-normal text-sm mt-12">
           Administra y organiza todos tus productos y servicios.
         </p>
@@ -101,7 +123,7 @@
 
     <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage.page.totalElements"
       [lazy]="true" (onPage)="onPageChange($event)" (onSort)="onSort($event)"
-      [rowsPerPageOptions]="[5, 10, 20]" [loading]="false" [first]="first"
+      [rowsPerPageOptions]="[5, 10, 20]" [first]="first"
       styleClass="p-datatable-striped font-family-sans" [tableStyle]="{ 'min-width': '50rem' }"
       [responsiveLayout]="'scroll'">
       <ng-template pTemplate="header">
@@ -188,22 +210,7 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
-            No se encontraron productos.
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p class="mt-2 text-primary">Cargando productos...</p>
-          </td>
-        </tr>
+        <app-table-empty-message [loading]="loading" [colspan]="showDetailView ? 12 : 8"></app-table-empty-message>
       </ng-template>
     </p-table>
   </div>

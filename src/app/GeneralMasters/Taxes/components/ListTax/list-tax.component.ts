@@ -18,6 +18,9 @@ import { TaxService } from '../../services/tax.service';
 import { TaxValidationMessagesService } from '../../services/tax-validation-messages.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 @Component({
   selector: 'app-list-tax',
@@ -33,20 +36,15 @@ import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue
     IconFieldModule,
     InputIconModule,
     ToggleSwitchModule,
-    TagModule
+    TagModule,
+    PopoverModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './list-tax.component.html',
   styleUrl: './list-tax.component.css'
 })
 export class ListTaxComponent implements OnInit {
-  private readonly router = inject(Router);
-  private readonly taxService = inject(TaxService);
-  private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly chartAccountService = inject(ChartAccountService);
-  public readonly taxValidationMessagesService = inject(TaxValidationMessagesService);
-
   taxes: TaxList[] = [];
   totalRecords: number = 0;
   currentPage: number = 0;
@@ -58,6 +56,19 @@ export class ListTaxComponent implements OnInit {
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
   accounts: any[] = [];
+  helpCenterUrl: string;
+
+  constructor(
+    private readonly router: Router,
+    private readonly taxService: TaxService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly chartAccountService: ChartAccountService,
+    public readonly taxValidationMessagesService: TaxValidationMessagesService,
+    private readonly helpCenterService: HelpCenterService
+  ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
