@@ -18,6 +18,8 @@ import { TaxService } from '../../services/tax.service';
 import { TaxValidationMessagesService } from '../../services/tax-validation-messages.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
+import { PopoverModule } from 'primeng/popover';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-list-tax',
@@ -33,7 +35,8 @@ import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue
     IconFieldModule,
     InputIconModule,
     ToggleSwitchModule,
-    TagModule
+    TagModule,
+    PopoverModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './list-tax.component.html',
@@ -58,6 +61,7 @@ export class ListTaxComponent implements OnInit {
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
   accounts: any[] = [];
+  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
