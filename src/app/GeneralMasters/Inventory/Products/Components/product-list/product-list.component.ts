@@ -26,6 +26,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { PopoverModule } from 'primeng/popover';
 import { HelpCenterService } from '../../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../../Shared/Components/table-empty-message/table-empty-message.component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -63,7 +64,8 @@ interface ImportError {
     ProductsTemplateComponent,
     RadioButtonModule,
     ProgressBarModule,
-    PopoverModule
+    PopoverModule,
+    TableEmptyMessageComponent
 ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
@@ -95,6 +97,7 @@ export class ProductListComponent implements OnInit {
   selectedProduct: ProductList | null = null;
   showDetailView = false;
   showTemplateModal = false;
+  loading = false;
 
   // Estado de exportación
   isExporting = false;
@@ -152,6 +155,7 @@ export class ProductListComponent implements OnInit {
 
   getProducts(): void {
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
+    this.loading = true;
     this.productService.getProducts(
       enterpriseId,
       this.currentPage,
@@ -163,9 +167,11 @@ export class ProductListComponent implements OnInit {
       next: (data: Page<ProductList>) => {
         this.productsPage = data;
         this.products = data.content;
+        this.loading = false;
       },
       error: (error) => {
         console.error('Error al obtener los productos:', error);
+        this.loading = false;
       }
     });
   }
