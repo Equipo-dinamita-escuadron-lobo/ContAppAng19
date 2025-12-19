@@ -20,6 +20,7 @@ import { DocumentType, DocumentTypeList } from '../../models/DocumentTypes';
 import { DocumentClass } from '../../models/ClassesOfDocuments';
 import { DocumentTypesPresentationService } from '../../services/document-types-presentation.service';
 import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 @Component({
   selector: 'app-document-types-list',
@@ -37,7 +38,8 @@ import { HelpCenterService } from '../../../../Shared/services/help-center.servi
     ToggleSwitchModule,
     TagModule,
     FormsModule,
-    PopoverModule
+    PopoverModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './document-types-list.component.html',
@@ -51,6 +53,7 @@ export class DocumentTypesListComponent implements OnInit {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  loading: boolean = false;
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   searchTerm: string = '';
@@ -104,6 +107,7 @@ export class DocumentTypesListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
     
+    this.loading = true;
     // Cargar todas las clases para mapeo de nombres (usar un size alto pero controlado)
     this.classesService.findAll(enterpriseId, 0, 500).subscribe({
       next: (page: any) => {
@@ -148,6 +152,7 @@ export class DocumentTypesListComponent implements OnInit {
           moduleName: this.getModuleName(dt.moduleId)
         }));
         this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
+        this.loading = false;
       },
       error: (error) => {
         console.error('Error al cargar tipos de documentos:', error);
@@ -157,6 +162,7 @@ export class DocumentTypesListComponent implements OnInit {
           detail: 'No se pudieron cargar los tipos de documentos. Inténtelo nuevamente.',
           life: 5000
         });
+        this.loading = false;
       }
     });
   }
@@ -165,6 +171,7 @@ export class DocumentTypesListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.loading = true;
     this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         const content: DocumentType[] = page.content || [];
@@ -174,6 +181,11 @@ export class DocumentTypesListComponent implements OnInit {
           moduleName: this.getModuleName(dt.moduleId)
         }));
         this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al recargar tipos de documentos:', error);
+        this.loading = false;
       }
     });
   }
