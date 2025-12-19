@@ -20,6 +20,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { PopoverModule } from 'primeng/popover';
+import { environment } from '../../../../../environments/environment';
 
 // Componentes internos
 import { ThirdTemplateComponent } from '../third-template/third-template.component';
@@ -68,6 +70,7 @@ interface ImportError {
     PaginatorModule,
     ToggleSwitchModule,
     ProgressBarModule,
+    PopoverModule,
     ThirdTemplateComponent,
     ThirdExportComponent,
     ThirdDetailsComponent
@@ -135,6 +138,9 @@ export class ThirdListComponent implements OnInit {
   
   // Company data
   entData: string = '';
+  
+  // URL del centro de ayuda
+  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/configuracion`;
 
   // Constantes
   private readonly EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
