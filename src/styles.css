@@ -536,6 +536,71 @@ body {
 }
 
 /* ================================
+   ESTILOS PARA P-MULTISELECT
+   ================================ */
+
+/* Borde del multiselect en estado normal */
+.p-multiselect {
+  border-color: #d1d5db !important;
+}
+
+/* Borde del multiselect en hover */
+.p-multiselect:not(.p-disabled):hover {
+  border-color: var(--color-primary) !important;
+}
+
+/* Borde del multiselect en focus */
+.p-multiselect:not(.p-disabled).p-focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--color-primary) !important;
+}
+
+/* Panel desplegable del multiselect */
+.p-multiselect-overlay {
+  background-color: var(--color-primary-100) !important;
+  border-color: #d1d5db !important;
+}
+
+/* Opciones individuales */
+.p-multiselect-option {
+  color: var(--color-neutral-10) !important;
+}
+
+/* Opción en hover */
+.p-multiselect-option:not(.p-disabled):not(.p-multiselect-option-selected):hover {
+  background-color: var(--color-primary-90) !important;
+  color: var(--color-primary) !important;
+}
+
+/* Opción seleccionada */
+.p-multiselect-option.p-multiselect-option-selected {
+  background-color: var(--color-primary) !important;
+  color: var(--color-primary-100) !important;
+}
+
+/* Checkbox dentro del multiselect cuando está checked */
+.p-multiselect-option .p-checkbox.p-checkbox-checked .p-checkbox-box {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Icono del multiselect */
+.p-multiselect .p-multiselect-dropdown-icon {
+  color: var(--color-neutral-40) !important;
+}
+
+/* Chips/tokens de elementos seleccionados */
+.p-multiselect .p-multiselect-chip {
+  background-color: var(--color-primary) !important;
+  color: var(--color-primary-100) !important;
+}
+
+/* Icono de eliminar en los chips */
+.p-multiselect .p-multiselect-chip .p-multiselect-chip-icon {
+  color: var(--color-primary-100) !important;
+}
+
+/* ================================
    TOAST DE ÉXITO
    ================================ */
 
