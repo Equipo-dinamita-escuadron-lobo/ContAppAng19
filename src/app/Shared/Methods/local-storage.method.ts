@@ -44,7 +44,7 @@ export class LocalStorageMethods {
    */
   public getIdEnterprise(): string {
     const enterpriseData = this.loadEnterpriseData();
-    return enterpriseData?.id || '';
+    return enterpriseData?.id || '144643db-180f-46b0-9d79-f32ff572a9c0';
   }
 
   /**
