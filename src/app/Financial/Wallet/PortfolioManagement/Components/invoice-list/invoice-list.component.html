@@ -1,7 +1,7 @@
 <div class="p-6">
     <!-- 1. Encabezado de la página -->
     <div class="mb-10">
-        <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+        <h1 class="font-['Titillium_Web'] font-bold text-3xl text-primary border-b-4 border-secondary inline-block pb-1">
             Cartera de Facturas Pendientes
         </h1>
         <p class="font-normal text-sm mt-2 text-gray-600">
@@ -32,7 +32,7 @@
             [loading]="isLoading" 
             [rows]="10" 
             [paginator]="true"
-            [globalFilterFields]="['factCode', 'thirdId', 'pendingValue']"
+            [globalFilterFields]="['factCode', 'clientName', 'pendingValue']"
             currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} facturas"
             [showCurrentPageReport]="true"
             styleClass="p-datatable-striped w-full"
@@ -53,7 +53,7 @@
             <ng-template pTemplate="body" let-invoice>
                 <tr>
                     <td>{{ invoice.factCode }}</td>
-                    <td>{{ invoice.thirdId }}</td>
+                    <td>{{ invoice.clientName }}</td>
                     <td>{{ invoice.expirationDate | date:'dd/MM/yyyy' }}</td>
                     <td class="text-right font-semibold">{{ invoice.pendingValue | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                     <td class="text-center">

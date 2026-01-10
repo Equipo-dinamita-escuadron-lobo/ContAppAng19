@@ -5,7 +5,6 @@ import { Observable, of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ClientPortfolioSummary, InvoiceDetailView } from '../../Reports/Model/Response/PortfolioView';
-import { InvoiceSummaryResponseDto } from '../../PortfolioWriteOffs/Models';
 
 @Injectable({
   providedIn: 'root'
@@ -58,12 +57,12 @@ export class InvoicePortfolioService {
     return this.http.get<InvoiceDetailView[]>(url);
   }
 
-  getExpiringInvoices(enterpriseId: string, days: number = 5): Observable<InvoiceSummaryResponseDto[]> {
+  getExpiringInvoices(enterpriseId: string, days: number = 5): Observable<Invoice[]> {
     let params = new HttpParams()
       .set('enterpriseId', enterpriseId)
       .set('days', days.toString());
 
-    return this.http.get<InvoiceSummaryResponseDto[]>(`${this.apiUrl}/expiring`, { params });
+    return this.http.get<Invoice[]>(`${this.apiUrl}/expiring`, { params });
   }
 
 }

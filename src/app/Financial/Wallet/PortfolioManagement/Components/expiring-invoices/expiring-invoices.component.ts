@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, map, of, switchMap } from 'rxjs'; 
 
 // PrimeNG Imports
 import { TableModule } from 'primeng/table';
@@ -12,7 +13,8 @@ import { MessageService } from 'primeng/api';
 
 import { InvoicePortfolioService } from '../../Service/invoice-portfolio.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
-import { InvoiceSummaryResponseDto } from '../../../PortfolioWriteOffs/Models';
+import { CashReceiptService } from '../../../CashReceipts/Service/cash-receipt.service';
+import { Invoice } from '../../../CashReceipts/Model';
 
 @Component({
   selector: 'app-expiring-invoices',
@@ -32,19 +34,20 @@ import { InvoiceSummaryResponseDto } from '../../../PortfolioWriteOffs/Models';
 })
 export class ExpiringInvoicesComponent implements OnInit {
 
-  invoices: InvoiceSummaryResponseDto[] = [];
+  invoices: Invoice[] = [];
   loading: boolean = true;
   
   // Variables para el Modal de Reprogramación
   displayModal: boolean = false;
-  selectedInvoice: InvoiceSummaryResponseDto | null = null;
+  selectedInvoice: Invoice | null = null;
   newDueDate: Date | undefined;
   minDate: Date = new Date(); // Para no permitir fechas pasadas
 
   constructor(
     private invoiceService: InvoicePortfolioService,
     private localStorageMethods: LocalStorageMethods,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private cashReceiptService: CashReceiptService 
   ) {}
 
   ngOnInit(): void {
@@ -55,22 +58,50 @@ export class ExpiringInvoicesComponent implements OnInit {
     this.loading = true;
     const entId = this.localStorageMethods.getIdEnterprise();
     
-    if(!entId) return; // Manejo de error si no hay empresa
+    if (!entId) {
+      this.loading = false;
+      return; 
+    }
 
-    this.invoiceService.getExpiringInvoices(entId).subscribe({
-      next: (data) => {
-        this.invoices = data;
+    // 2. Aplicar el patrón de enriquecimiento
+    this.invoiceService.getExpiringInvoices(entId).pipe(
+      switchMap(invoicesFromApi => {
+        // Si no hay facturas, devolvemos un array vacío
+        if (!invoicesFromApi || invoicesFromApi.length === 0) {
+          return of([]);
+        }
+
+        // Creamos un array de observables, cada uno es una llamada para obtener un cliente
+        const clientRequests = invoicesFromApi.map(invoice =>
+          this.cashReceiptService.getClientById(invoice.thirdId)
+        );
+
+        // forkJoin ejecuta todas las llamadas en paralelo y espera a que terminen
+        return forkJoin(clientRequests).pipe(
+          map(clients => 
+            // Mapeamos el resultado para combinar la factura original con el nombre del cliente
+            invoicesFromApi.map((invoice, index) => ({
+              ...invoice,
+              clientName: clients[index]?.name || `ID: ${invoice.thirdId}` // Asignamos el nombre del cliente
+            }))
+          )
+        );
+      })
+    ).subscribe({
+      next: (enrichedInvoices) => {
+        this.invoices = enrichedInvoices;
         this.loading = false;
       },
       error: (err) => {
-        console.error(err);
+        console.error('Error al cargar y enriquecer las facturas próximas a vencer', err);
+        this.messageService.add({severity:'error', summary:'Error', detail:'No se pudo cargar la información completa de las facturas'});
         this.loading = false;
       }
     });
   }
 
   // Abrir Modal
-  openReschedule(invoice: InvoiceSummaryResponseDto) {
+  openReschedule(invoice: Invoice) {
     this.selectedInvoice = invoice;
     this.newDueDate = undefined; // Resetear fecha
     this.displayModal = true;
