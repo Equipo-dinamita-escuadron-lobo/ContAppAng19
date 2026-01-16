@@ -1,10 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Invoice } from '../../CashReceipts/Model';
-import { Observable, of } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ClientPortfolioSummary, InvoiceDetailView } from '../../Reports/Model/Response/PortfolioView';
+import { ApiResponse } from '../../../../Core/Model/apiResponseModel';
 
 @Injectable({
   providedIn: 'root'
@@ -18,23 +19,68 @@ export class InvoicePortfolioService {
 
   //Obtiene todas las facturas pendientes (ajusta el endpoint si es diferente)
   getPendingInvoices(): Observable<Invoice[]> {
-    return this.http.get<Invoice[]>(`${this.apiUrl}/invoices/pending/by-enterprise/${this.localStorageMethods.getIdEnterprise()}`);
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    const url = `${this.apiUrl}/invoices/pending/by-enterprise/${enterpriseId}`;
+    return this.http.get<ApiResponse<Invoice[]>>(url).pipe(
+      map(response => {
+        if (response.code === 'NO_CONTENT') {
+          return [];
+        }
+        if (response.success && response.data) {
+          return response.data;
+        } else {
+          throw new Error(response.message || 'Error al obtener facturas pendientes.');
+        }
+      })
+    );
   }
 
   // Obtiene una factura por su ID (necesitarás este endpoint en el backend)
   getInvoiceById(id: number): Observable<Invoice> {
-    return this.http.get<Invoice>(`${this.apiUrl}/invoices/${id}`);
+    const url = `${this.apiUrl}/invoices/${id}`;
+    return this.http.get<ApiResponse<Invoice>>(url).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          return response.data;
+        } else {
+          throw new Error(response.message || `No se encontró la factura con ID ${id}.`);
+        }
+      })
+    );
   }
 
   //Obtener facturas por id de la empresa
   getInvoicesByEnterpriseId(): Observable<Invoice[]> {
-    return this.http.get<Invoice[]>(`${this.apiUrl}/invoices/by-enterprise/${this.localStorageMethods.getIdEnterprise()}`);
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    const url = `${this.apiUrl}/invoices/by-enterprise/${enterpriseId}`;
+    return this.http.get<ApiResponse<Invoice[]>>(url).pipe(
+      map(response => {
+        if (response.code === 'NO_CONTENT') {
+          return [];
+        }
+        if (response.success && response.data) {
+          return response.data;
+        } else {
+          throw new Error(response.message || 'Error al obtener las facturas de la empresa.');
+        }
+      })
+    );
   }
 
   // Actualiza la fecha de vencimiento
   updateDueDate(invoiceId: number, newDueDate: string): Observable<void> {
     const body = { newDueDate };
-    return this.http.patch<void>(`${this.apiUrl}/${invoiceId}/due-date`, body);
+    const url = `${this.apiUrl}/${invoiceId}/due-date`;
+
+    return this.http.patch<ApiResponse<void>>(url, body).pipe(
+      map(response => {
+        if (response.success) {
+          return;
+        } else {
+          throw new Error(response.message || 'Error al actualizar la fecha de vencimiento.');
+        }
+      })
+    );
   }
 
   getClientPortfolioSummary(clientIds: number[]): Observable<ClientPortfolioSummary[]> {
@@ -62,7 +108,19 @@ export class InvoicePortfolioService {
       .set('enterpriseId', enterpriseId)
       .set('days', days.toString());
 
-    return this.http.get<Invoice[]>(`${this.apiUrl}/expiring`, { params });
+    const url = `${this.apiUrl}/expiring`;
+    return this.http.get<ApiResponse<Invoice[]>>(url, { params }).pipe(
+      map(response => {
+        if (response.code === 'NO_CONTENT') {
+          return [];
+        }
+        if (response.success && response.data) {
+          return response.data;
+        } else {
+          throw new Error(response.message || 'Error al obtener las facturas por vencer.');
+        }
+      })
+    );
   }
 
 }
