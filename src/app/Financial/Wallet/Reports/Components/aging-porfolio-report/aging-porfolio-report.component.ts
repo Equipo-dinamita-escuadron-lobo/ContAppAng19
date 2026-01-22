@@ -34,7 +34,7 @@ export class AgingPorfolioReportComponent implements OnInit {
 
   ngOnInit(): void {
     this.filterForm = this.fb.group({
-      client: [null, Validators.required],
+      client: [null],
       cutoffDate: [new Date(), Validators.required],
       includeDocuments: [false] // Placeholder para la funcionalidad futura
     });
@@ -62,16 +62,18 @@ export class AgingPorfolioReportComponent implements OnInit {
     this.isLoading = true;
     this.reportData = []; // Limpiar datos anteriores
 
-    const selectedClient: Client = this.filterForm.value.client;
+    const selectedClient: Client | null = this.filterForm.value.client;
     const cutoffDate: Date = this.filterForm.value.cutoffDate;
     const includeDocuments: boolean = this.filterForm.value.includeDocuments;
 
-    this.portfolioReportsService.getPortfolioAgingReport(selectedClient.id, cutoffDate, includeDocuments)
+    const clientId = selectedClient ? selectedClient.id : null;
+
+    this.portfolioReportsService.getPortfolioAgingReport(clientId, cutoffDate, includeDocuments)
       .subscribe({
         next: (data: PortfolioAgingAccount[]) => {
           // p-treeTable requiere un formato de datos específico (TreeNode).
           // Necesitamos transformar la respuesta del API.
-          this.reportData = this.mapToTreeNode(data, selectedClient.name);
+          this.reportData = this.mapToTreeNode(data, selectedClient ? selectedClient.name : undefined);
           this.isLoading = false;
         },
         error: (err) => {
