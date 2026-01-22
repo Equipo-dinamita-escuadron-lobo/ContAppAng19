@@ -14,7 +14,7 @@ import { BankService } from '../../services/bank.service';
 @Component({
   selector: 'app-bank-creation',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, MultiSelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, MultiSelectModule],
   templateUrl: './bank-creation.component.html',
   styleUrl: './bank-creation.component.css'
 })

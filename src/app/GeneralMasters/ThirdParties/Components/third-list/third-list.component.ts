@@ -19,10 +19,14 @@ import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { PaginatorModule } from 'primeng/paginator';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // Componentes internos
 import { ThirdTemplateComponent } from '../third-template/third-template.component';
-import { ThirdExportComponent } from '../third-export/third-export.component';
+import { ThirdExportComponent, ExportParams } from '../third-export/third-export.component';
 import { ThirdDetailsComponent } from '../third-details/third-details.component';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
@@ -66,6 +70,9 @@ interface ImportError {
     TooltipModule,
     PaginatorModule,
     ToggleSwitchModule,
+    ProgressBarModule,
+    PopoverModule,
+    TableEmptyMessageComponent,
     ThirdTemplateComponent,
     ThirdExportComponent,
     ThirdDetailsComponent
@@ -86,12 +93,23 @@ export class ThirdListComponent implements OnInit {
   // UI State
   loading = false;
   loadingPdfRut = false;
-  loadingExport = false;
   loadingTemplate = false;
   showDetailView = false;
   searchValue = '';
 
-  bulkStateToggle = true; // Default to active
+  bulkStateToggle = false;
+  
+  isImporting = false;
+  isExporting = false;
+
+  // Propiedades para manejo asíncrono (importación/exportación)
+  showProgressDialog = false;
+  progressJobId: string | null = null;
+  progressValue = 0;
+  progressStatus = '';
+  progressPhase = '';
+  progressOperationType: 'import' | 'export' = 'import';
+  private progressPollingInterval: any = null;
   
   // Pagination
   totalRecords = 0;
@@ -122,6 +140,9 @@ export class ThirdListComponent implements OnInit {
   
   // Company data
   entData: string = '';
+  
+  // URL del centro de ayuda
+  helpCenterUrl: string;
 
   // Constantes
   private readonly EMPTY_PDF_CONTENT = ';;0;;;;;;;;;0';
@@ -133,15 +154,21 @@ export class ThirdListComponent implements OnInit {
     private readonly confirmationService: ConfirmationService,
     private readonly router: Router,
     private readonly localStorageMethods: LocalStorageMethods,
-    public readonly thirdValidationMessagesService: ThirdValidationMessagesService
+    public readonly thirdValidationMessagesService: ThirdValidationMessagesService,
+    private readonly helpCenterService: HelpCenterService
   ) {
     this.entData = this.localStorageMethods.getIdEnterprise();
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
   }
 
   ngOnInit(): void {
     this.loadThirds();
     this.getThirdTypes();
     this.getTypesID();
+    const savedBulkState = localStorage.getItem('thirdBulkStateToggle');
+    if (savedBulkState !== null) {
+      this.bulkStateToggle = JSON.parse(savedBulkState);
+    }
   }
 
   /**
@@ -377,6 +404,7 @@ export class ThirdListComponent implements OnInit {
         this.thirdService.changeAllThirdsState(this.entData, this.bulkStateToggle).subscribe({
           next: (response: any) => {
             this.loadThirds();
+            localStorage.setItem('thirdBulkStateToggle', JSON.stringify(this.bulkStateToggle));
 
             this.messageService.add({
               severity: 'success',
@@ -430,153 +458,65 @@ export class ThirdListComponent implements OnInit {
   }
 
   /**
-   * Maneja la selección de archivos para importación
+   * Maneja la selección de archivos para importación asíncrona
    */
   onFileSelect(event: any): void {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+    // Validar tipo de archivo manualmente
+    const allowedMimeTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel' // .xls
+    ];
+
+    if (!allowedMimeTypes.includes(file.type)) {
       this.messageService.add({
         severity: 'error',
         summary: 'Archivo inválido',
         detail: 'Por favor, selecciona un archivo EXCEL válido'
       });
+      // Reset input
+      event.target.value = '';
       return;
     }
 
-    this.importThirdsFromExcel(file);
-    // Reset the input so the same file can be selected again
+    this.isImporting = true;
+    this.progressOperationType = 'import';
+
+    // Iniciar importación asíncrona
+    this.thirdService.importThirdsAsync(this.entData, file).subscribe({
+      next: (response) => {
+        // Guardar el jobId y mostrar diálogo de progreso
+        this.progressJobId = response.jobId;
+        this.progressValue = 0;
+        this.progressStatus = 'PROCESSING';
+        this.progressPhase = 'Iniciando importación...';
+        this.showProgressDialog = true;
+        
+        // Iniciar polling cada 5 segundos
+        this.startProgressPolling();
+
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Importación iniciada',
+          detail: 'La importación se está procesando.'
+        });
+      },
+      error: (error) => {
+        this.isImporting = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al Iniciar Importación',
+          detail: error.error?.message || 'No se pudo iniciar la importación'
+        });
+      }
+    });
+
+    // Reset input
     event.target.value = '';
   }
 
-  /**
-   * Importa terceros desde un archivo Excel usando el endpoint del backend
-   */
-  private importThirdsFromExcel(file: File): void {
-    this.loading = true;
-    
-    this.thirdService.importFromExcel(this.entData, file).subscribe({
-      next: (response) => {
-        this.loading = false;
-        const importResult = response.body;
-        
-        if (importResult) {
-          const { status, totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = importResult;
-          
-          // Si hay errores, mostrar modal de errores Y notificación de resumen
-          if (errors && errors.length > 0) {
-           
-            let detail = `Total procesados: ${totalRecords || 0}\n`;
-            detail += `Exitosos: ${successfulImports || 0}\n`;
-            detail += `Fallidos: ${failedImports}\n`;
-            if (duplicatesSkipped > 0) {
-              detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
-            }         
-            
-            // Mostrar modal con detalles de errores
-            this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
-            
-            // Recargar lista si hubo importaciones exitosas
-            if (successfulImports > 0) {
-              this.loadThirds();
-            }
-            return;
-          }
-          
-          // Si no hay errores, mostrar resumen de importación exitosa
-          let severity: 'success' | 'info' | 'warn' | 'error' = 'success';
-          let summary = 'Importación Exitosa';
-          
-          if (status === 'FAILED') {
-            severity = 'error';
-            summary = 'Error en Importación';
-          }
-          
-          // Construir mensaje detallado
-          let detail = `Total procesados: ${totalRecords || 0}\n`;
-          detail += `Exitosos: ${successfulImports || 0}\n`;
-          if (duplicatesSkipped > 0) {
-            detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
-          }
-          
-          this.messageService.add({
-            severity,
-            summary,
-            detail,
-            life: 8000
-          });
-          
-          // Recargar lista si hubo importaciones exitosas
-          if (successfulImports > 0) {
-            this.loadThirds();
-          }
-        }
-      },
-      error: (error) => {
-        this.loading = false;
-        
-        // Extraer los errores del backend
-        if (error.error && typeof error.error === 'object') {
-          const errorResponse = error.error;
-          const errors = errorResponse.errors || [];
-          
-          if (errors && errors.length > 0) {
-            // Mostrar modal de errores
-            this.showImportErrorsModal(
-              errors, 
-              errorResponse.fileName || file.name,
-              errorResponse.totalRecords,
-              errorResponse.failedImports,
-              errorResponse.successfulImports,
-              errorResponse.duplicatesSkipped
-            );
-            return;
-          }
-        }
-        
-        // Si no hay errores estructurados, intentar extraer mensaje genérico
-        let errorMessage = 'Error al procesar el archivo de importación';
-        
-        if (error.error) {
-          if (error.error instanceof Blob) {
-            const reader = new FileReader();
-            reader.onload = () => {
-              try {
-                const errorObj = JSON.parse(reader.result as string);
-                this.handleGenericError(errorObj);
-              } catch (e) {
-                this.showErrorNotification(reader.result as string || errorMessage, '');
-              }
-            };
-            reader.onerror = () => {
-              this.showErrorNotification('Error al leer la respuesta del servidor', '');
-            };
-            reader.readAsText(error.error);
-          } else if (typeof error.error === 'object' && error.error !== null) {
-            this.handleGenericError(error.error);
-          } else if (typeof error.error === 'string') {
-            this.showErrorNotification(error.error, '');
-          } else {
-            this.showErrorNotification(errorMessage, `Código de error: ${error.status || 'desconocido'}`);
-          }
-        } else if (error.message) {
-          this.showErrorNotification(error.message, '');
-        } else {
-          this.showErrorNotification(errorMessage, `Código de error: ${error.status || 'desconocido'}`);
-        }
-      }
-    });
-  }
-  
-  /**
-   * Maneja errores genéricos del servidor
-   */
-  private handleGenericError(errorObj: any): void {
-    const errorMessage = errorObj.message || errorObj.error || errorObj.detail || 'Error al procesar el archivo';
-    const errorDetails = errorObj.details || '';
-    this.showErrorNotification(errorMessage, errorDetails);
-  }
 
   /**
    * Muestra el modal de errores de importación
@@ -611,6 +551,92 @@ export class ThirdListComponent implements OnInit {
     this.router.navigate(['/gen-masters/third-parties/configuration']);
   }
 
+  /**
+   * Maneja el evento cuando se inician parámetros de exportación desde el modal
+   * @param params Parámetros de exportación (filtro de estado y campos opcionales)
+   */
+  onStartExportWithParams(params: ExportParams): void {
+    this.exportThirds(params.statusFilter, params.optionalFields);
+  }
+
+  /**
+   * Exporta terceros a formato Excel de forma asíncrona
+   * @param status Estado del filtro (true=activos, false=inactivos, null=todos)
+   * @param optionalFields Campos opcionales a incluir en la exportación
+   */
+  exportThirds(status?: boolean | null, optionalFields?: string[]): void {
+    const entData = this.localStorageMethods.loadEnterpriseData();
+    const entId = entData?.id || this.entData;
+    const companyName = entData?.name || '';
+
+    this.isExporting = true;
+    this.progressOperationType = 'export';
+
+    // Iniciar exportación asíncrona con campos opcionales
+    this.thirdService.exportThirdsAsync(entId, companyName, status, optionalFields).subscribe({
+      next: (response) => {
+        // Guardar el jobId y mostrar diálogo de progreso
+        this.progressJobId = response.jobId;
+        this.progressValue = 0;
+        this.progressStatus = 'PROCESSING';
+        this.progressPhase = 'Iniciando exportación...';
+        this.showProgressDialog = true;
+        
+        // Iniciar polling cada 5 segundos
+        this.startProgressPolling();
+      },
+      error: (error) => {
+        this.isExporting = false;
+        
+        // Manejar error del backend
+        let errorMessage = 'No se pudo iniciar la exportación';
+        
+        // Intentar extraer el mensaje del error
+        if (error.error instanceof Blob) {
+          // Si el error viene como Blob, leerlo
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const errorData = JSON.parse(reader.result as string);
+              errorMessage = errorData.message || errorMessage;
+              const isNoDataMessage = this.isNoThirdsAvailableMessage(errorMessage);
+
+              this.messageService.add({
+                severity: isNoDataMessage ? 'info' : 'error',
+                summary: isNoDataMessage ? 'Información' : 'Error al Iniciar Exportación',
+                detail: errorMessage
+              });
+            } catch (e) {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error al Iniciar Exportación',
+                detail: errorMessage
+              });
+            }
+          };
+          reader.onerror = () => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error al Iniciar Exportación',
+              detail: errorMessage
+            });
+          };
+          reader.readAsText(error.error);
+        } else {
+          // Error directo (JSON)
+          errorMessage = error.error?.message || error.message || errorMessage;
+          const isNoDataMessage = this.isNoThirdsAvailableMessage(errorMessage);
+
+          this.messageService.add({
+            severity: isNoDataMessage ? 'info' : 'error',
+            summary: isNoDataMessage ? 'Información' : 'Error al Iniciar Exportación',
+            detail: errorMessage
+          });
+        }
+      }
+    });
+  }
+
   openTemplateModal(): void {
     this.showTemplateModal = true;
   }
@@ -625,13 +651,6 @@ export class ThirdListComponent implements OnInit {
 
   closeExportModal(): void {
     this.showExportModal = false;
-  }
-
-  /**
-   * Maneja el cambio de estado de progreso de exportación
-   */
-  onExportInProgress(inProgress: boolean): void {
-    this.loadingExport = inProgress;
   }
 
   /**
@@ -749,6 +768,322 @@ export class ThirdListComponent implements OnInit {
         input.value = '';
       }
     });
+  }
+
+  /**
+   * Inicia el polling para verificar el estado de la operación asíncrona cada 5 segundos.
+   */
+  private startProgressPolling(): void {
+    // Limpiar cualquier polling anterior
+    if (this.progressPollingInterval) {
+      clearInterval(this.progressPollingInterval);
+    }
+
+    // Consultar inmediatamente y luego cada 5 segundos
+    this.checkProgressStatus();
+    this.progressPollingInterval = setInterval(() => {
+      this.checkProgressStatus();
+    }, 5000);
+  }
+
+  /**
+   * Verifica el estado actual de la operación (importación o exportación).
+   */
+  private checkProgressStatus(): void {
+    if (!this.progressJobId) return;
+
+    const statusObservable = this.progressOperationType === 'import'
+      ? this.thirdService.getImportStatus(this.progressJobId)
+      : this.thirdService.getExportStatus(this.progressJobId);
+
+    statusObservable.subscribe({
+      next: (status) => {
+        this.progressValue = status.progress || 0;
+        this.progressStatus = status.status;
+        
+        // Actualizar mensaje de fase
+        this.progressPhase = this.getProgressPhaseMessage(status);
+
+        // Si la operación terminó (éxito, con errores o falla)
+        if (status.status === 'COMPLETED' || status.status === 'COMPLETED_WITH_ERRORS' || status.status === 'FAILED') {
+          this.stopProgressPolling();
+          this.handleProgressCompletion(status);
+        }
+      },
+      error: (error) => {
+        const operationName = this.progressOperationType === 'import' ? 'importación' : 'exportación';
+        this.stopProgressPolling();
+        this.showProgressDialog = false;
+        
+        if (this.progressOperationType === 'import') {
+          this.isImporting = false;
+        } else {
+          this.isExporting = false;
+        }
+        
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: `No se pudo consultar el estado de la ${operationName}`
+        });
+      }
+    });
+  }
+
+  /**
+   * Detiene el polling de la operación asíncrona.
+   */
+  private stopProgressPolling(): void {
+    if (this.progressPollingInterval) {
+      clearInterval(this.progressPollingInterval);
+      this.progressPollingInterval = null;
+    }
+  }
+
+  /**
+   * Obtiene el mensaje de fase actual según el estado y tipo de operación.
+   */
+  private getProgressPhaseMessage(status: any): string {
+    if (this.progressOperationType === 'import') {
+      return this.getImportPhaseMessage(status);
+    } else {
+      return this.getExportPhaseMessage(status);
+    }
+  }
+
+  /**
+   * Obtiene el mensaje de fase actual para importación.
+   */
+  private getImportPhaseMessage(status: any): string {
+    if (status.progress === 100) {
+      return 'Finalizando importación...';
+    }
+    
+    if (status.progress >= 80) {
+      return 'Guardando terceros en la base de datos...';
+    }
+    
+    if (status.progress >= 60) {
+      return 'Validando relaciones y referencias...';
+    }
+    
+    if (status.progress >= 40) {
+      return 'Detectando duplicados...';
+    }
+    
+    if (status.progress >= 20) {
+      return 'Validando datos de terceros...';
+    }
+    
+    return 'Analizando archivo Excel...';
+  }
+
+  /**
+   * Obtiene el mensaje de fase actual para exportación.
+   */
+  private getExportPhaseMessage(status: any): string {
+    if (status.progress === 100) {
+      return 'Finalizando exportación...';
+    }
+    
+    if (status.progress >= 66) {
+      return 'Almacenando archivo...';
+    }
+    
+    if (status.progress >= 33) {
+      return 'Generando archivo Excel...';
+    }
+    
+    return 'Obteniendo datos de terceros...';
+  }
+
+  /**
+   * Maneja la finalización de la operación (importación o exportación).
+   */
+  private handleProgressCompletion(status: any): void {
+    if (this.progressOperationType === 'import') {
+      this.handleImportCompletion(status);
+    } else {
+      this.handleExportCompletion(status);
+    }
+  }
+
+  /**
+   * Maneja la finalización de la importación.
+   */
+  private handleImportCompletion(status: any): void {
+    // Cerrar modal si está abierto
+    this.showProgressDialog = false;
+    this.isImporting = false;
+    this.progressJobId = null;
+
+    const { totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = status;
+
+    // Si hay errores, mostrar modal de errores (sin notificación adicional)
+    if (errors && errors.length > 0) {
+      this.showImportErrorsModal(
+        errors, 
+        status.fileName || 'importacion.xlsx', 
+        totalRecords, 
+        failedImports, 
+        successfulImports, 
+        duplicatesSkipped
+      );
+
+      // Recargar lista si hubo importaciones exitosas
+      if (successfulImports > 0) {
+        this.loadThirds();
+      }
+
+      // No mostrar notificación cuando hay errores - el modal es suficiente
+      return;
+    }
+
+    // Solo mostrar error general si el estado es FAILED sin errores detallados
+    if (status.status === 'FAILED') {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Importación Fallida',
+        detail: status.errorMessage || 'La importación no pudo completarse',
+        life: 8000
+      });
+      return;
+    }
+
+    // Importación exitosa sin errores
+    if (status.status === 'COMPLETED') {
+      let detailMessage = `Total procesados: ${totalRecords || 0}\n`;
+      detailMessage += `Exitosos: ${successfulImports || 0}`;
+      if (duplicatesSkipped > 0) {
+        detailMessage += `\nDuplicados omitidos: ${duplicatesSkipped}`;
+      }
+      
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Importación Exitosa',
+        detail: detailMessage,
+        life: 8000
+      });
+      this.loadThirds();
+    }
+  }
+
+  /**
+   * Maneja la finalización de la exportación.
+   */
+  private handleExportCompletion(status: any): void {
+    // Guardar el jobId antes de limpiarlo
+    const jobId = this.progressJobId;
+    
+    // Cerrar modal si está abierto
+    this.showProgressDialog = false;
+    this.isExporting = false;
+    this.progressJobId = null;
+
+    if (status.status === 'FAILED') {
+      const errorMessage = status.errorMessage || 'La exportación no pudo completarse';
+      
+      // Verificar si es un mensaje informativo (sin datos)
+      const isNoDataMessage = this.isNoThirdsAvailableMessage(errorMessage);
+
+      this.messageService.add({
+        severity: isNoDataMessage ? 'info' : 'error',
+        summary: isNoDataMessage ? 'Información' : 'Exportación Fallida',
+        detail: errorMessage,
+        life: 8000
+      });
+      return;
+    }
+
+    // Exportación exitosa - descargar archivo
+    if (status.status === 'COMPLETED' && jobId) {
+      this.thirdService.downloadExportFile(jobId).subscribe({
+        next: (response) => {
+          if (!response.body) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: 'No se recibió el archivo del servidor'
+            });
+            return;
+          }
+
+          this.downloadFile(response);
+          
+          let detailMessage = `Total de registros: ${status.totalRecords || 0}`;
+          
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Exportación Exitosa',
+            detail: detailMessage,
+            life: 8000
+          });
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Descarga',
+            detail: 'No se pudo descargar el archivo exportado'
+          });
+        }
+      });
+    }
+  }
+
+  /**
+   * Verifica si el mensaje indica que no hay terceros disponibles para exportar.
+   * @param message Mensaje de error
+   * @returns true si es un mensaje informativo de sin datos
+   */
+  private isNoThirdsAvailableMessage(message: string): boolean {
+    const noThirdsPatterns = [
+      'no hay terceros',
+      'no hay terceros activos',
+      'no hay terceros inactivos',
+      'no hay terceros para exportar',
+      'no existen terceros',
+      'no se encontraron terceros',
+      'no hay registros',
+      'empty',
+      'sin terceros'
+    ];
+
+    const lowerMessage = message.toLowerCase();
+    return noThirdsPatterns.some(pattern => lowerMessage.includes(pattern));
+  }
+
+  /**
+   * Procesa la respuesta HTTP para descargar el archivo.
+   */
+  private downloadFile(response: any): void {
+    const blob = response.body;
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'terceros.xlsx';
+
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Maneja el cierre del modal de progreso.
+   * El polling continúa en segundo plano.
+   */
+  onProgressDialogClose(): void {
+    // Solo cerrar el modal, el polling continúa en segundo plano
+    this.showProgressDialog = false;
   }
 
   /**

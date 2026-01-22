@@ -1,6 +1,5 @@
 <div class="flex w-full h-full font-titillium">
     <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
-        <p-toast></p-toast>
         <p-confirmDialog></p-confirmDialog>
 
         <!-- Header Section -->
@@ -46,7 +45,6 @@
             [paginator]="true"
             [rows]="pageSize"
             [totalRecords]="totalRecords"
-            [loading]="loading"
             [lazy]="true"
             [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
@@ -114,11 +112,7 @@
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
-                <tr>
-                    <td colspan="5" class="text-center py-6 font-family-sans text-neutral-50">
-                        No se encontraron bancos.
-                    </td>
-                </tr>
+                <app-table-empty-message [loading]="loading" [colspan]="5"></app-table-empty-message>
             </ng-template>
         </p-table>
     </div>

@@ -34,7 +34,7 @@
     </div>
 
     <!-- Tabla -->
-        <p-table #helpCentersTable [value]="list" [lazy]="true" (onLazyLoad)="loadHelpCentersLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+    <p-table #helpCentersTable [value]="list" [lazy]="true" (onLazyLoad)="loadHelpCentersLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
       <ng-template pTemplate="header">
         <tr>
           <th class="font-semibold text-primary border-b-2 border-primary" style="width: 122px;" scope="col">ID Módulo</th>
@@ -73,9 +73,7 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="6" class="text-center py-6 font-family-sans text-neutral-50">No se encontraron centros de ayuda.</td>
-        </tr>
+        <app-table-empty-message [loading]="loading" [colspan]="6"></app-table-empty-message>
       </ng-template>
     </p-table>
 

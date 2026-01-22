@@ -1,7 +1,7 @@
 <!-- Toast para notificaciones -->
 <p-toast></p-toast>
 <p-dialog
-  header="Plantilla de Importación de Productos"
+  [header]="inputData.title"
   [(visible)]="visible"
   [modal]="true"
   [closable]="true"

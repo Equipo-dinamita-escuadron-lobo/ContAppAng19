@@ -68,9 +68,7 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="3" class="text-center py-6 font-family-sans text-neutral-50">No se encontraron clases.</td>
-        </tr>
+        <app-table-empty-message [loading]="loading" [colspan]="3"></app-table-empty-message>
       </ng-template>
     </p-table>
 

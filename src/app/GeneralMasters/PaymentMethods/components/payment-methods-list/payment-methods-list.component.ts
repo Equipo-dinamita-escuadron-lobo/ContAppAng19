@@ -20,6 +20,9 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // PrimeNG Services
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -39,21 +42,15 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     IconFieldModule,
     InputIconModule,
     TooltipModule,
-    TagModule
+    TagModule,
+    PopoverModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './payment-methods-list.component.html',
   styleUrl: './payment-methods-list.component.css'
 })
 export class PaymentMethodsListComponent implements OnInit {
-  private readonly service = inject(PaymentMethodsServiceService);
-  private readonly chartAccountService = inject(ChartAccountService);
-  private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly localStorageMethod = inject(LocalStorageMethods);
-  private readonly router = inject(Router);
-  public readonly paymentMethodsValidationMessagesService = inject(PaymentMethodsValidationMessagesService);
-
   private enterpriseId: string = '';
 
   loading = false;
@@ -69,6 +66,22 @@ export class PaymentMethodsListComponent implements OnInit {
 
   accountingAccounts: any[] = [];
   accountingAccountsMap: Map<string, string> = new Map();
+  
+  // URL del centro de ayuda
+  helpCenterUrl: string;
+
+  constructor(
+    private readonly service: PaymentMethodsServiceService,
+    private readonly chartAccountService: ChartAccountService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly localStorageMethod: LocalStorageMethods,
+    private readonly router: Router,
+    public readonly paymentMethodsValidationMessagesService: PaymentMethodsValidationMessagesService,
+    private readonly helpCenterService: HelpCenterService
+  ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
@@ -84,6 +97,7 @@ export class PaymentMethodsListComponent implements OnInit {
   }
 
   private loadAccountingAccounts(): void {
+    this.loading = true;
     this.chartAccountService.getListAccounts(this.enterpriseId).subscribe({
       next: (accounts: Account[]) => {
         this.accountingAccounts = this.flattenAccounts(accounts);
@@ -123,7 +137,6 @@ export class PaymentMethodsListComponent implements OnInit {
   }
 
   private loadPaymentMethods(): void {
-    this.loading = true;
     this.service.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
       .subscribe({
         next: (response: PageResponse<PaymentMethod>) => {
@@ -214,6 +227,31 @@ export class PaymentMethodsListComponent implements OnInit {
           this.loadPaymentMethods();
         },
         error: (error) => {
+          // Verificar si es error específico de método de pago en uso
+          const errorCode = error?.error?.code || error?.code || '';
+          if (errorCode === 'PAYMENT_METHOD_IN_USE') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'No se puede eliminar el método de pago porque tiene movimientos contables',
+              life: 6000
+            });
+            return;
+          }
+
+          // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+          const errorMessage = error?.error?.message || error?.message || '';
+          if (errorMessage.includes('No se puede eliminar el método de pago') && errorMessage.includes('movimientos contables')) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: errorMessage,
+              life: 6000
+            });
+            return;
+          }
+
+          // Para otros errores, mostrar mensaje genérico
           this.messageService.add({
             severity: 'error',
             summary: error.title || 'Error',

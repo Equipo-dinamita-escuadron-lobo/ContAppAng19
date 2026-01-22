@@ -6,9 +6,32 @@
         <!-- Header Section -->
         <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
             <div class="items-center mb-6">
-                <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
-                    <span class="border-b-4 border-secondary-light inline-block pb-1">Cuentas</span> Bancarias
-                </h1>
+                <div class="flex items-center">
+                    <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+                        <span class="border-b-4 border-secondary-light inline-block pb-1">Cuentas</span> Bancarias
+                    </h1>
+                    <span class="ml-10 text-primary cursor-pointer"
+                          (click)="op.toggle($event)">
+                        <i class="pi pi-question-circle text-3xl" style="font-size: 1.25rem !important;"></i>
+                    </span>
+                    <p-popover #op>
+                        <div class="p-4" style="max-width: 400px;">
+                            <h3 class="font-bold text-lg mb-3 text-primary">Cuentas Bancarias</h3>
+                            <p class="text-sm mb-3 text-primary">
+                                Gestiona las cuentas bancarias de tu empresa vinculándolas con sus respectivas cuentas 
+                                contables. Registra información como número de cuenta, banco asociado y tipo de cuenta lo que permite 
+                                un control preciso de los movimientos financieros y conciliaciones bancarias.
+                            </p>
+                            <a
+                                [href]="helpCenterUrl"
+                                target="_blank"
+                                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                                Abrir centro de ayuda para más información.
+                                <i class="pi pi-external-link text-xs"></i>
+                            </a>
+                        </div>
+                    </p-popover>
+                </div>
                 <p class="font-family-sans font-normal text-sm mt-12">
                     Administración de cuentas bancarias y sus configuraciones.
                 </p>
@@ -53,7 +76,6 @@
             [paginator]="true"
             [rows]="pageSize"
             [totalRecords]="totalRecords"
-            [loading]="loading"
             [lazy]="true"
             [rowsPerPageOptions]="[5, 10, 20]"
             responsiveLayout="scroll"
@@ -128,11 +150,7 @@
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
-                <tr>
-                    <td colspan="6" class="text-center py-6 font-family-sans text-neutral-50">
-                        No se encontraron cuentas bancarias.
-                    </td>
-                </tr>
+                <app-table-empty-message [loading]="loading" [colspan]="6"></app-table-empty-message>
             </ng-template>
         </p-table>
     </div>

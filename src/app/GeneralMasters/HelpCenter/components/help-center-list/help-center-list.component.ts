@@ -17,6 +17,7 @@ import { HelpCenterServiceService } from '../../services/help-center.service';
 import { DocumentTypesServiceService } from '../../../DocumentTypes/services/document-types-service.service';
 import { HelpCenter, HelpCenterList } from '../../models/HelpCenter';
 import { HelpCenterPresentationService } from '../../services/help-center-presentation.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 @Component({
   selector: 'app-help-center-list',
@@ -33,7 +34,8 @@ import { HelpCenterPresentationService } from '../../services/help-center-presen
     ConfirmDialogModule,
     ToggleSwitchModule,
     TagModule,
-    FormsModule
+    FormsModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './help-center-list.component.html',
@@ -45,6 +47,7 @@ export class HelpCenterListComponent implements OnInit {
   totalRecords: number = 0;
   currentPage: number = 0;
   currentSize: number = 10;
+  loading: boolean = false;
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   searchTerm: string = '';
@@ -63,6 +66,7 @@ export class HelpCenterListComponent implements OnInit {
   }
 
   private loadModuleNames(): void {
+    this.loading = true;
     this.modulesService.getAllModules().subscribe({
       next: (modules) => {
         for (const m of modules) {
@@ -99,6 +103,7 @@ export class HelpCenterListComponent implements OnInit {
           moduleName: hc.moduleName || this.getModuleName(hc.moduleId)
         }));
         this.totalRecords = page?.page?.totalElements || 0;
+        this.loading = false;
       },
       error: (error: any) => {
         console.error('Error al cargar centros de ayuda:', error);
@@ -108,11 +113,13 @@ export class HelpCenterListComponent implements OnInit {
           detail: 'No se pudieron cargar los centros de ayuda. Inténtelo nuevamente.',
           life: 5000
         });
+        this.loading = false;
       }
     });
   }
 
   reloadCurrentPage(): void {
+    this.loading = true;
     this.service.findAll(this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         const content: HelpCenter[] = page.content || [];
@@ -121,6 +128,11 @@ export class HelpCenterListComponent implements OnInit {
           moduleName: hc.moduleName || this.getModuleName(hc.moduleId)
         }));
         this.totalRecords = page?.page?.totalElements || 0;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al recargar centros de ayuda:', error);
+        this.loading = false;
       }
     });
   }

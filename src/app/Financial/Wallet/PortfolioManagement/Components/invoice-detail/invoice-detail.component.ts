@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { map, switchMap } from 'rxjs';
 
 // PrimeNG Modules
 import { ButtonModule } from 'primeng/button';
@@ -12,6 +13,7 @@ import { MessageService } from 'primeng/api';
 
 import { Invoice } from '../../../CashReceipts/Model';
 import { InvoicePortfolioService } from '../../Service/invoice-portfolio.service';
+import { CashReceiptService } from '../../../CashReceipts/Service/cash-receipt.service';
 
 @Component({
   selector: 'app-invoice-detail',
@@ -42,7 +44,8 @@ export class InvoiceDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private invoicePortfolioService: InvoicePortfolioService,
     private fb: FormBuilder,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private cashReceiptService: CashReceiptService,
   ) {
     this.dueDateForm = this.fb.group({
       newDueDate: [null, Validators.required],
@@ -54,19 +57,36 @@ export class InvoiceDetailComponent implements OnInit {
     this.loadInvoice();
   }
 
-  loadInvoice(): void {
+   loadInvoice(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (id) {
       this.isLoading = true;
-      this.invoicePortfolioService.getInvoiceById(id).subscribe({
-        next: (data) => {
-          this.invoice = data;
-          const currentDueDate = new Date(data.expirationDate + 'T00:00:00');
+      
+      // 1. Empezamos la cadena con el servicio que obtiene la factura por ID
+      this.invoicePortfolioService.getInvoiceById(id).pipe(
+        // 2. Usamos switchMap para encadenar la siguiente llamada asíncrona
+        switchMap(invoiceFromApi => {
+          // 3. Llamamos al servicio para obtener los datos del cliente con el 'thirdId'
+          return this.cashReceiptService.getClientById(invoiceFromApi.thirdId).pipe(
+            // 4. Usamos map para combinar los resultados de ambas llamadas
+            map(client => {
+              // 5. Poblamos la propiedad 'clientName' en el objeto de la factura
+              invoiceFromApi.clientName = client?.name || `ID: ${invoiceFromApi.thirdId}`;
+              // 6. Devolvemos el objeto 'invoiceFromApi' ya modificado (enriquecido)
+              return invoiceFromApi;
+            })
+          );
+        })
+      ).subscribe({
+        // 7. El 'data' que llega aquí es el objeto 'Invoice' ya con el 'clientName'
+        next: (enrichedInvoice) => {
+          this.invoice = enrichedInvoice;
+          const currentDueDate = new Date(enrichedInvoice.expirationDate + 'T00:00:00');
           this.dueDateForm.patchValue({ newDueDate: currentDueDate });
           this.isLoading = false;
         },
         error: (err) => {
-          console.error('Error al cargar la factura', err);
+          console.error('Error al cargar la información completa de la factura', err);
           this.isLoading = false;
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar la factura.' });
         },

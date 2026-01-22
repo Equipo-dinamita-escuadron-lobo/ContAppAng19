@@ -19,6 +19,8 @@ import { PaginatorModule } from 'primeng/paginator';
 import { SliderModule } from 'primeng/slider';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 
 @Component({
   selector: 'app-cost-centers-list',
@@ -39,7 +41,8 @@ import { RadioButtonModule } from 'primeng/radiobutton';
     TooltipModule,
     PaginatorModule,
     SliderModule,
-    RadioButtonModule
+    RadioButtonModule,
+    PopoverModule
   ],
   templateUrl: './cost-centers-list.component.html',
   styleUrl: './cost-centers-list.component.css',
@@ -86,17 +89,22 @@ export class CostCentersListComponent implements OnDestroy {
   private initialName: string = '';
   private initialCodeSegment: string = '';
 
+  // Help Center
+  helpCenterUrl: string;
+
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: CostCenterService,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
-    private readonly localStorageMethods: LocalStorageMethods
+    private readonly localStorageMethods: LocalStorageMethods,
+    private readonly helpCenterService: HelpCenterService
   ) {
     this.form = this.fb.group({
       codeSegment: [''],
       name: ['', [Validators.required]]
     });
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
   }
 
   ngOnInit(): void {

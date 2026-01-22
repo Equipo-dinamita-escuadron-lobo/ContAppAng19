@@ -64,7 +64,7 @@ export class AccountingEntriesComponent implements OnInit {
     // Hacemos llamadas en paralelo para obtener recibos y castigos
     forkJoin({
       receipts: this.cashReceiptService.getAllReceipts(),
-      writeOffs: this.portfolioWriteOffService.getWriteOffsByEnterprise(this.localStorageMethods.getIdEnterprise())
+      writeOffs: this.portfolioWriteOffService.getWriteOffsConfirmedOrVoidedByEnterprise(this.localStorageMethods.getIdEnterprise())
     }).subscribe({
       next: ({ receipts, writeOffs }) => {
         // Mapeamos los recibos a nuestra interfaz unificada

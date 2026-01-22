@@ -6,6 +6,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { BankAccountsService, BankAccount } from '../../services/bank-accounts.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { BankAccountsPresentationService } from '../../services/bank-accounts-presentation.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -18,6 +19,8 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 
 // PrimeNG Services
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -38,21 +41,15 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     IconFieldModule,
     InputIconModule,
     TooltipModule,
-    TagModule
+    TagModule,
+    PopoverModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './bank-accounts-list.component.html',
   styleUrl: './bank-accounts-list.component.css'
 })
 export class BankAccountsListComponent implements OnInit {
-  private readonly bankAccountsService = inject(BankAccountsService);
-  private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly router = inject(Router);
-  private readonly localStorageMethod = inject(LocalStorageMethods);
-  private readonly chartAccountService = inject(ChartAccountService);
-  public readonly bankAccountsPresentationService = inject(BankAccountsPresentationService);
-  
   private enterpriseId: string = '';
 
   loading = false;
@@ -68,6 +65,20 @@ export class BankAccountsListComponent implements OnInit {
   searchTerm = '';
   sortField: string | undefined;
   sortOrder: string | undefined;
+  helpCenterUrl: string;
+
+  constructor(
+    private readonly bankAccountsService: BankAccountsService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly router: Router,
+    private readonly localStorageMethod: LocalStorageMethods,
+    private readonly chartAccountService: ChartAccountService,
+    public readonly bankAccountsPresentationService: BankAccountsPresentationService,
+    private readonly helpCenterService: HelpCenterService
+  ) {
+    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
@@ -235,6 +246,31 @@ export class BankAccountsListComponent implements OnInit {
           this.loadBankAccounts();
         },
         error: (error) => {
+          // Verificar si es error específico de cuenta bancaria en uso
+          const errorCode = error?.error?.code || error?.code || '';
+          if (errorCode === 'BANK_ACCOUNT_IN_USE') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'No se puede eliminar la cuenta bancaria porque tiene movimientos contables',
+              life: 6000
+            });
+            return;
+          }
+
+          // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+          const errorMessage = error?.error?.message || error?.message || '';
+          if (errorMessage.includes('No se puede eliminar la cuenta bancaria') && errorMessage.includes('movimientos contables')) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: errorMessage,
+              life: 6000
+            });
+            return;
+          }
+
+          // Para otros errores, mostrar mensaje genérico
           this.messageService.add({
             severity: 'error',
             summary: error.title || 'Error',

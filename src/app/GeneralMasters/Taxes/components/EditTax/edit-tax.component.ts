@@ -224,7 +224,31 @@ export class EditTaxComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al actualizar el impuesto:', error);
-          const errorMessage = error?.error?.message || 'No se pudo actualizar el impuesto';
+
+          // Verificar si es error específico de impuesto en uso
+          const errorCode = error?.error?.code || error?.code || '';
+          if (errorCode === 'TAX_IN_USE') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'No se puede editar el impuesto porque tiene movimientos contables'
+            });
+            this.goBack(); // Navegar de vuelta a la lista
+            return;
+          }
+
+          // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+          const errorMessage = error?.error?.message || error?.message || '';
+          if (errorMessage.includes('No se puede editar el impuesto') && errorMessage.includes('movimientos contables')) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: errorMessage
+            });
+            this.goBack(); // Navegar de vuelta a la lista
+            return;
+          }
+
           const isDuplicateError = errorMessage.toLowerCase().includes('ya existe') ||
                                    errorMessage.toLowerCase().includes('duplicado');
           this.messageService.add({

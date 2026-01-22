@@ -15,6 +15,7 @@ import { InputIcon } from 'primeng/inputicon';
 import { IconField } from 'primeng/iconfield';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TableEmptyMessageComponent } from '../../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 import { ProductType } from '../../Models/ProductType';
 import { ProductTypeService } from '../../Services/product-type.service';
@@ -37,7 +38,8 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
     InputIcon,
     IconField,
     TagModule,
-    ToggleSwitchModule
+    ToggleSwitchModule,
+    TableEmptyMessageComponent
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './product-type-list.component.html',
@@ -78,6 +80,7 @@ export class ProductTypeListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.loading = true;
     // Actualizar first y calcular página
     this.first = event.first;
     this.currentPage = Math.floor(event.first / event.rows);
@@ -93,6 +96,7 @@ export class ProductTypeListComponent implements OnInit {
       next: (page: any) => {
         this.productTypes = page.content || [];
         this.totalRecords = page.page?.totalElements || 0;
+        this.loading = false;
       },
       error: (error: any) => {
         this.messageService.add({
@@ -100,6 +104,7 @@ export class ProductTypeListComponent implements OnInit {
           summary: 'Error',
           detail: 'No se pudieron cargar los tipos de producto.'
         });
+        this.loading = false;
       }
     });
   }
@@ -108,10 +113,15 @@ export class ProductTypeListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
+    this.loading = true;
     this.productTypeService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
       next: (page: any) => {
         this.productTypes = page.content || [];
         this.totalRecords = page.page?.totalElements || 0;
+        this.loading = false;
+      },
+      error: (error: any) => {
+        this.loading = false;
       }
     });
   }

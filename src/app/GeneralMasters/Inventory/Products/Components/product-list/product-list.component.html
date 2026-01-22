@@ -28,10 +28,32 @@
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <!-- Título con el estilo de marca (borde inferior) -->
       <div class="items-center mb-6">
-        <h1
-          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Productos</span>
-        </h1>
+        <div class="flex items-center">
+          <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+            <span class="border-b-4 border-secondary-light inline-block pb-1">Productos</span>
+          </h1>
+          <span class="ml-10 text-primary cursor-pointer"
+                (click)="op.toggle($event)">
+            <i class="pi pi-question-circle text-3xl" style="font-size: 1.25rem !important;"></i>
+          </span>
+          <p-popover #op>
+            <div class="p-4" style="max-width: 400px;">
+              <h3 class="font-bold text-lg mb-3 text-primary">Gestión de Productos</h3>
+              <p class="text-sm mb-3 text-primary">
+                Administra el catálogo completo de productos y servicios que ofrece tu empresa. Configura códigos, 
+                referencias, precios y características específicas de cada ítem para un control 
+                detallado de tu portafolio comercial.
+              </p>
+              <a
+                [href]="helpCenterUrl"
+                target="_blank"
+                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                Abrir centro de ayuda para más información.
+                <i class="pi pi-external-link text-xs"></i>
+              </a>
+            </div>
+          </p-popover>
+        </div>
         <p class="font-family-sans font-normal text-sm mt-12">
           Administra y organiza todos tus productos y servicios.
         </p>
@@ -44,10 +66,16 @@
           <p-button label="Crear" icon="pi pi-plus"
             (click)="redirectTo('/gen-masters/inventory/products/create')">
           </p-button>
+          
           <!-- Botón "Importar" para importar productos desde Excel -->
-          <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" [chooseIcon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" [auto]="true"
-            (onSelect)="onFileSelect($event)" class="p-button-primeng" [disabled]="isImporting">
-          </p-fileUpload>          
+          <p-button 
+            label="Importar" 
+            [icon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" 
+            [disabled]="isImporting"
+            (click)="fileInput.click()">
+          </p-button>
+          <input #fileInput type="file" accept=".xlsx" (change)="onFileSelect($event)" style="display: none;">
+          
           <!-- Botón "Exportar" para exportar productos a Excel -->
           <p-button
             label="Exportar"
@@ -95,7 +123,7 @@
 
     <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage.page.totalElements"
       [lazy]="true" (onPage)="onPageChange($event)" (onSort)="onSort($event)"
-      [rowsPerPageOptions]="[5, 10, 20]" [loading]="false" [first]="first"
+      [rowsPerPageOptions]="[5, 10, 20]" [first]="first"
       styleClass="p-datatable-striped font-family-sans" [tableStyle]="{ 'min-width': '50rem' }"
       [responsiveLayout]="'scroll'">
       <ng-template pTemplate="header">
@@ -182,22 +210,7 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
-            No se encontraron productos.
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p class="mt-2 text-primary">Cargando productos...</p>
-          </td>
-        </tr>
+        <app-table-empty-message [loading]="loading" [colspan]="showDetailView ? 12 : 8"></app-table-empty-message>
       </ng-template>
     </p-table>
   </div>
@@ -284,6 +297,46 @@
   (close)="closeTemplateModal()">
 </app-products-template>
 
+<!-- Modal de Progreso Asíncrono (Importación/Exportación) -->
+<p-dialog
+  [header]="progressOperationType === 'import' ? 'Importando Productos' : 'Exportando Productos'"
+  [modal]="true"
+  [(visible)]="showProgressDialog"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '35rem', 'font-family': 'var(--font-family-sans)' }"
+  (onHide)="onProgressDialogClose()">
+
+  <div class="flex flex-col font-family-sans">
+    <div class="flex items-center gap-8 text-primary">
+      <i class="pi pi-spin pi-spinner text-2xl"></i>
+      <span class="font-semibold">
+        {{ progressOperationType === 'import' ? 'Procesando importación...' : 'Procesando exportación...' }}
+      </span>
+    </div>
+
+    <div class="mb-16 mt-16">
+      <div class="text-sm mb-8">
+        {{ progressPhase }}
+      </div>
+
+      <div class="w-full">
+        <p-progressBar
+          [value]="progressValue"
+          [showValue]="true"
+          styleClass="h-6">
+        </p-progressBar>
+      </div>
+    </div>
+
+    <div class="text-xs mb-16">
+      <p>Este proceso puede tomar varios minutos dependiendo del tamaño.</p>
+      <p class="mt-2 font-semibold text-primary">Puedes cerrar esta ventana, se te notificará cuando termine.</p>
+    </div>
+  </div>
+</p-dialog>
+
 <!-- Modal de Errores de Importación -->
 <p-dialog header="Errores de Importación" [modal]="true" [(visible)]="showErrorModal"
   [style]="{ width: '90rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"
@@ -346,6 +399,3 @@
   </div>
 </ng-template>
 </p-dialog>
-
-<!-- Toast para mensajes -->
-<p-toast></p-toast>

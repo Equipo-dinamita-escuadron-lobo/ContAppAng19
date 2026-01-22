@@ -25,7 +25,7 @@ export class ProductsTemplateComponent implements OnInit {
   @Input() visible: boolean = false;
 
   @Input() inputData: any = {
-    title: 'Plantilla de Importación de Productos'
+    title: 'Plantilla de Importación'
   };
 
   /** Evento emitido al cerrar el modal */

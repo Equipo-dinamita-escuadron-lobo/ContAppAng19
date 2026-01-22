@@ -28,9 +28,33 @@
 
         <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
             <div class="items-center mb-6">
-                <h1
-                    class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
-                    <span class="border-b-4 border-secondary-light inline-block pb-1">Catálogo</span> de cuentas</h1>
+                <div class="flex items-center">
+                    <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+                        <span class="border-b-4 border-secondary-light inline-block pb-1">Catálogo</span> de cuentas
+                    </h1>
+                    <span class="ml-10 text-primary cursor-pointer"
+                          (click)="op.toggle($event)">
+                        <i class="pi pi-question-circle text-3xl" style="font-size: 1.25rem !important;"></i>
+                    </span>
+                    <p-popover #op>
+                        <div class="p-4" style="max-width: 400px;">
+                            <h3 class="font-bold text-lg mb-3 text-primary">Catálogo de Cuentas PUC</h3>
+                            <p class="text-sm mb-3 text-primary">
+                                El Plan Único de Cuentas (PUC) es una herramienta contable que organiza y clasifica 
+                                sistemáticamente las cuentas según su naturaleza y función. Permite estructurar la 
+                                información financiera de manera jerárquica mediante clases, grupos, cuentas y 
+                                subcuentas para un registro contable preciso y estandarizado.
+                            </p>
+                            <a
+                                [href]="helpCenterUrl"
+                                target="_blank"
+                                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                                Abrir centro de ayuda para más información.
+                                <i class="pi pi-external-link text-xs"></i>
+                            </a>
+                        </div>
+                    </p-popover>
+                </div>
                 <p class="font-family-sans font-normal text-sm mt-12">Guía detallada del manejo financiero y
                     transacciones
                     económicas.</p>
@@ -67,7 +91,7 @@
             <div class="w-full sm:w-[30rem]">
                 <p-iconfield iconPosition="left">
                     <p-inputicon>
-                        <i class="pi pi-search text-gray-500" [class.pi-spin]="isLoading"></i>
+                        <i class="pi pi-search text-gray-500"></i>
                     </p-inputicon>
                     <input
                         pInputText
@@ -685,6 +709,52 @@
         [visible]="showTemplateModal"
         (close)="closeTemplateModal()">
     </app-account-template>
+
+    <!-- Modal de Progreso de Importación -->
+    <!-- Modal de Progreso (Importación/Exportación) -->
+    <p-dialog 
+      [header]="progressOperationType === 'import' ? 'Importando Catálogo de Cuentas' : 'Exportando Catálogo de Cuentas'" 
+      [modal]="true" 
+      [(visible)]="showProgressDialog"
+      [closable]="true"
+      [draggable]="false"
+      [resizable]="false"
+      (onHide)="onProgressDialogClose()"
+      [style]="{ width: '35rem', 'font-family': 'var(--font-family-sans)' }">
+      
+      <div class="flex flex-col font-family-sans">
+        <!-- Icono y mensaje principal -->
+        <div class="flex items-center gap-8 text-primary">
+          <i class="pi pi-spin pi-spinner text-2xl"></i>
+          <span class="font-semibold">
+            {{ progressOperationType === 'import' ? 'Procesando importación...' : 'Procesando exportación...' }}
+          </span>
+        </div>
+
+        <!-- Fase actual y barra de progreso -->
+        <div class="mb-16 mt-16">
+          <!-- Fase actual -->
+          <div class="text-sm mb-8">
+            {{ progressPhase }}
+          </div>
+
+          <!-- Barra de progreso -->
+          <div class="w-full">
+            <p-progressBar 
+              [value]="progressValue" 
+              [showValue]="true"
+              styleClass="h-6">
+            </p-progressBar>
+          </div>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="text-xs mb-16">
+          <p>Este proceso puede tomar varios minutos dependiendo del tamaño.</p>
+          <p class="mt-2 font-semibold text-primary">Puedes cerrar esta ventana, se te notificará cuando termine.</p>
+        </div>
+      </div>
+    </p-dialog>
 
     <!-- Modal de Errores de Importación -->
     <p-dialog header="Errores de Importación" [modal]="true" [(visible)]="showErrorModal"
