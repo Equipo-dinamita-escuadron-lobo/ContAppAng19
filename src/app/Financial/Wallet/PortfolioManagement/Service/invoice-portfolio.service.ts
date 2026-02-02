@@ -83,7 +83,7 @@ export class InvoicePortfolioService {
     );
   }
 
-  getClientPortfolioSummary(clientIds: number[]): Observable<ClientPortfolioSummary[]> {
+   getClientPortfolioSummary(clientIds: number[]): Observable<ClientPortfolioSummary[]> {
     const url = `${this.portfolioApiUrl}/clients-summary`;
 
     if (!clientIds || clientIds.length === 0) {
@@ -95,12 +95,37 @@ export class InvoicePortfolioService {
       params = params.append('clientIds', id.toString());
     });
 
-    return this.http.get<ClientPortfolioSummary[]>(url, { params });
+    // Actualizado para usar ApiResponse y manejar NO_CONTENT
+    return this.http.get<ApiResponse<ClientPortfolioSummary[]>>(url, { params }).pipe(
+      map(response => {
+        if (response.code === 'NO_CONTENT' || !response.data) {
+          return [];
+        }
+        if (response.success) {
+          return response.data;
+        } else {
+          throw new Error(response.message || 'Error al obtener el resumen de cartera.');
+        }
+      })
+    );
   }
 
-  getInvoicesByClient(clientId: number): Observable<InvoiceDetailView[]> {
+ getInvoicesByClient(clientId: number): Observable<InvoiceDetailView[]> {
     const url = `${this.portfolioApiUrl}/invoices/by-client/${clientId}`;
-    return this.http.get<InvoiceDetailView[]>(url);
+    
+    // Actualizado para usar ApiResponse y manejar NO_CONTENT
+    return this.http.get<ApiResponse<InvoiceDetailView[]>>(url).pipe(
+      map(response => {
+        if (response.code === 'NO_CONTENT' || !response.data) {
+          return [];
+        }
+        if (response.success) {
+          return response.data;
+        } else {
+          throw new Error(response.message || 'Error al obtener las facturas del cliente.');
+        }
+      })
+    );
   }
 
   getExpiringInvoices(enterpriseId: string, days: number = 5): Observable<Invoice[]> {
