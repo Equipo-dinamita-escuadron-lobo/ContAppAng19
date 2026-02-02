@@ -16,7 +16,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6 items-end">
             <!-- Filtro Cliente -->
             <div class="flex flex-col gap-2">
-                <label for="client" class="font-semibold text-[var(--color-primary)] label-required">Cliente</label>
+                <label for="client" class="font-semibold text-primary">Cliente</label>
                 <p-autoComplete id="client" formControlName="client" [suggestions]="clientSuggestions"
                     (completeMethod)="searchClient($event)" field="name" [dropdown]="true" [forceSelection]="true"
                     placeholder="Busque por nombre de cliente" [showClear]="true" [styleClass]="'w-full'">
@@ -25,7 +25,8 @@
 
             <!-- Filtro Fecha de Corte -->
             <div class="flex flex-col gap-2">
-                <label for="cutoffDate" class="font-semibold text-[var(--color-primary)] label-required"
+                <label for="cutoffDate" class="font-semibold text-primary
+                label-required"
                     pTooltip="La fecha de corte define la antigüedad de las deudas. Las facturas vencidas antes de esta fecha se clasificarán en los rangos de días."
                     tooltipPosition="top">
                     Fecha de corte <i class="pi pi-info-circle ml-1"></i>
