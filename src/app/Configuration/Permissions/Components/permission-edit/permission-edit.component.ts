@@ -103,7 +103,7 @@ export class PermissionEditComponent implements OnInit {
           this.roleOptions = [{ label: role.role, value: role.role }];
           this.editForm.patchValue(
             { roleName: role.role },
-            { emitEvent: false }
+            { emitEvent: false },
           );
 
           this.initialFormValues = {
@@ -125,7 +125,7 @@ export class PermissionEditComponent implements OnInit {
 
             Object.keys(grouped).forEach((m) => {
               grouped[m].sort((a, b) =>
-                a.label.localeCompare(b.label, 'es', { sensitivity: 'base' })
+                a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }),
               );
             });
 
@@ -135,7 +135,7 @@ export class PermissionEditComponent implements OnInit {
               .forEach((m) => this.permissionsByModule.set(m, grouped[m]));
 
             this.moduleOptions = Array.from(
-              this.permissionsByModule.keys()
+              this.permissionsByModule.keys(),
             ).map((m) => ({ label: m, value: m }));
 
             this.editForm.get('module')?.enable({ emitEvent: false });
@@ -158,11 +158,28 @@ export class PermissionEditComponent implements OnInit {
   }
 
   private readonly MODULES = [
-    'Unidad de Medida',
-    'Empresa',
-    'Tipo de Producto',
-    'Categoria',
-    'Producto',
+    'Unidades de Medida',
+    'Empresas',
+    'Tipos de Productos',
+    'Categorias',
+    'Productos',
+    'Terceros',
+    'Inventario PEPS',
+    'Catalogo de Cuentas',
+    'Bancos',
+    'Cuentas Bancarias',
+    'Recibos de Caja Cartera',
+    'Centros de Costo',
+    'Clases de Documentos',
+    'Tipos de Documentos',
+    'Centro de Ayuda',
+    'Metodos de Pago',
+    'Impuestos',
+    'Castigos de Cartera',
+    'Tipos de Identificacion',
+    'Etiquetas no Comerciales',
+    'Tipos de Terceros',
+    'Calendario Contable',
   ];
 
   private findModuleForPermission(permissionName: string): string {
@@ -268,7 +285,7 @@ export class PermissionEditComponent implements OnInit {
       if (items.length) result.push({ module, items });
     }
     result.sort((a, b) =>
-      a.module.localeCompare(b.module, 'es', { sensitivity: 'base' })
+      a.module.localeCompare(b.module, 'es', { sensitivity: 'base' }),
     );
     return result;
   }
