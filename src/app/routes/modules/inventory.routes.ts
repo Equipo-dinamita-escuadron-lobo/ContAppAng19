@@ -7,7 +7,7 @@ export const INVENTORY_ROUTES: Routes = [
     data: { breadcrumb: null },
     loadComponent: () =>
       import('../../GeneralMasters/Inventory/Components/MenuCards/inventory-menu.component').then(
-        (m) => m.InventoryMenuComponent
+        (m) => m.InventoryMenuComponent,
       ),
   },
   {
@@ -24,7 +24,7 @@ export const INVENTORY_ROUTES: Routes = [
         data: { breadcrumb: null },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/Products/Components/product-list/product-list.component').then(
-            (m) => m.ProductListComponent
+            (m) => m.ProductListComponent,
           ),
       },
       {
@@ -32,18 +32,16 @@ export const INVENTORY_ROUTES: Routes = [
         data: { breadcrumb: 'Crear Producto' },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/Products/Components/product-creation/product-creation.component').then(
-            (m) => m.ProductCreationComponent
+            (m) => m.ProductCreationComponent,
           ),
-        canActivate: [hasPermissionGuard(['Create_Product'])],
       },
       {
         path: 'edit/:id',
         data: { breadcrumb: 'Editar Producto' },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/Products/Components/product-edit/product-edit.component').then(
-            (m) => m.ProductEditComponent
+            (m) => m.ProductEditComponent,
           ),
-        canActivate: [hasPermissionGuard(['Edit_Product'])],
       },
     ],
   },
@@ -61,7 +59,7 @@ export const INVENTORY_ROUTES: Routes = [
         data: { breadcrumb: null },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/ProductTypes/Components/product-type-list/product-type-list.component').then(
-            (m) => m.ProductTypeListComponent
+            (m) => m.ProductTypeListComponent,
           ),
       },
       {
@@ -69,18 +67,16 @@ export const INVENTORY_ROUTES: Routes = [
         data: { breadcrumb: 'Crear Tipo de Producto' },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/ProductTypes/Components/product-type-creation/product-type-creation.component').then(
-            (m) => m.ProductTypeCreationComponent
+            (m) => m.ProductTypeCreationComponent,
           ),
-        canActivate: [hasPermissionGuard(['Create_Product_Type'])],
       },
       {
         path: 'edit/:id',
         data: { breadcrumb: 'Editar Tipo de Producto' },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/ProductTypes/Components/product-type-edit/product-type-edit.component').then(
-            (m) => m.ProductTypeEditComponent
+            (m) => m.ProductTypeEditComponent,
           ),
-        canActivate: [hasPermissionGuard(['Edit_Product_Type'])],
       },
     ],
   },
@@ -98,7 +94,7 @@ export const INVENTORY_ROUTES: Routes = [
         data: { breadcrumb: null },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/Category/Components/category-list/category-list.component').then(
-            (m) => m.CategoryListComponent
+            (m) => m.CategoryListComponent,
           ),
       },
       {
@@ -106,18 +102,16 @@ export const INVENTORY_ROUTES: Routes = [
         data: { breadcrumb: 'Crear Categoría' },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/Category/Components/category-creation/category-creation.component').then(
-            (m) => m.CategoryCreationComponent
+            (m) => m.CategoryCreationComponent,
           ),
-        canActivate: [hasPermissionGuard(['Create_Category'])],
       },
       {
         path: 'edit/:id',
         data: { breadcrumb: 'Editar Categoría' },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/Category/Components/category-edit/category-edit.component').then(
-            (m) => m.CategoryEditComponent
+            (m) => m.CategoryEditComponent,
           ),
-        canActivate: [hasPermissionGuard(['Edit_Category'])],
       },
     ],
   },
@@ -135,7 +129,7 @@ export const INVENTORY_ROUTES: Routes = [
         data: { breadcrumb: null },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-list/unit-of-measure-list.component').then(
-            (m) => m.UnitOfMeasureListComponent
+            (m) => m.UnitOfMeasureListComponent,
           ),
       },
       {
@@ -143,18 +137,16 @@ export const INVENTORY_ROUTES: Routes = [
         data: { breadcrumb: 'Crear Unidad de Medida' },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-creation/unit-of-measure-creation.component').then(
-            (m) => m.UnitOfMeasureCreationComponent
+            (m) => m.UnitOfMeasureCreationComponent,
           ),
-        canActivate: [hasPermissionGuard(['Create_Unit_of_Measurement'])],
       },
       {
         path: 'edit/:id',
         data: { breadcrumb: 'Editar Unidad de Medida' },
         loadComponent: () =>
           import('../../GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-edit/unit-of-measure-edit.component').then(
-            (m) => m.UnitOfMeasureEditComponent
+            (m) => m.UnitOfMeasureEditComponent,
           ),
-        canActivate: [hasPermissionGuard(['Edit_Unit_of_Measurement'])],
       },
     ],
   },
