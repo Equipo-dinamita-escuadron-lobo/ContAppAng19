@@ -8,8 +8,8 @@ import { jwtDecode } from 'jwt-decode'; // Importar la librería
 import { Login } from '../models/login';
 import { UserProfile } from '../models/user-profile';
 import { DecodedToken } from '../models/decoded-token';
-import { Permission } from '../models/permission';
 import { RegisterUser } from '../models/register-user';
+import { MessageService } from 'primeng/api';
 
 const keycloakUrl = environment.keycloak_url;
 const keycloakUrlToken = environment.keycloak_url_token;
@@ -26,6 +26,7 @@ export interface PayloadToken {
 export class AuthService {
   router = inject(Router);
   http = inject(HttpClient);
+  messageService = inject(MessageService);
 
   // Mantén el estado del token
   private _currentUser = new BehaviorSubject<UserProfile | null>(null);
@@ -256,5 +257,25 @@ export class AuthService {
     }
 
     return flattened;
+  }
+  requireAnyPermission(required: string[]): boolean {
+    if (this.isAuthenticated()) {
+      const userPerms = this.getCurrentUserPermissions();
+      const ok = required.some((p) => userPerms.includes(p));
+
+      if (ok) return true;
+
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Acceso denegado',
+        detail: 'No tienes permisos para acceder a esta sección',
+        life: 3000,
+      });
+
+      return false;
+    }
+
+    this.router.navigate(['/login']);
+    return false;
   }
 }
