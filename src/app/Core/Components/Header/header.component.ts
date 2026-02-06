@@ -35,23 +35,31 @@ export class HeaderComponent implements OnInit {
   private routerSubscription: Subscription | undefined;
 
   constructor(
-    private router: Router, 
-    private auth: AuthService, 
-    private invoiceService: InvoicePortfolioService, 
+    private router: Router,
+    private auth: AuthService,
+    private invoiceService: InvoicePortfolioService,
     private localStorageMethods: LocalStorageMethods,
     private helpCenterService: HelpCenterService
   ) {
     this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('');
-      this.routerSubscription = this.router.events.pipe(
-      filter((event: Event): event is NavigationEnd => event instanceof NavigationEnd)
-    ).subscribe(() => {
-      this.checkEnterpriseStatus();
-    });
+    this.routerSubscription = this.router.events
+      .pipe(
+        filter(
+          (event: Event): event is NavigationEnd =>
+            event instanceof NavigationEnd
+        )
+      )
+      .subscribe(() => {
+        this.checkEnterpriseStatus();
+      });
   }
 
-
-
   ngOnInit(): void {
+    this.userName =
+      this.auth.returnUserInfo()?.firstName +
+        ' ' +
+        this.auth.returnUserInfo()?.lastName || 'Usuario sin Definir';
+    this.userRole = this.auth.concatRoles() || 'Rol sin Definir';
     this.userMenuItems = [
       {
         label: 'Perfil',
@@ -99,15 +107,22 @@ export class HeaderComponent implements OnInit {
     // 1. VALIDACIÓN POR RUTA (Lo nuevo)
     const currentUrl = this.router.url;
 
-    const blacklistedRoutes = ['/enterprise/list', '/enterprise/create', '/auth/login', '/auth/register'];
+    const blacklistedRoutes = [
+      '/enterprise/list',
+      '/enterprise/create',
+      '/auth/login',
+      '/auth/register',
+    ];
 
-    const isExcluded = blacklistedRoutes.some(route => currentUrl.includes(route));
+    const isExcluded = blacklistedRoutes.some((route) =>
+      currentUrl.includes(route)
+    );
 
     if (isExcluded) {
       this.showNotifications = false;
       this.alertsCount = 0;
-      this.companyName = ''; 
-      return; 
+      this.companyName = '';
+      return;
     }
 
     const currentId = this.localStorageMethods.getIdEnterprise();
@@ -130,12 +145,11 @@ export class HeaderComponent implements OnInit {
         this.alertsCount = invoices.length;
         this.lastCheckDate = new Date();
       },
-      error: (err) => console.error('Error cargando alertas', err)
+      error: (err) => console.error('Error cargando alertas', err),
     });
   }
 
   navigateToAlertsDetail(): void {
     this.router.navigate(['/financial/wallet/invoices/expiring']);
   }
-
 }

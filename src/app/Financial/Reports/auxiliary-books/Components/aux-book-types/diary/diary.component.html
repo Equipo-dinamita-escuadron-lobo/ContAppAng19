@@ -11,7 +11,7 @@
           {{ auxiliaryBookInfo.icon }}
         </span>
         <h1
-          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary underline-offset-4"
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
         >
           {{ auxiliaryBookInfo.name }}
         </h1>
@@ -42,7 +42,7 @@
       <!-- 1. Nivel -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
         <h4 class="text-xs font-bold text-primary mb-2">
-          Nivel <span class="text-secondary"> *</span>
+          Nivel <span class="text-error"> *</span>
         </h4>
         <div class="grid grid-cols-2 gap-2">
           <div class="flex items-center gap-2" *ngFor="let level of levels">
@@ -101,7 +101,7 @@
       <!-- 3. Periodo (sin línea a la derecha) -->
       <div class="col-span-1">
         <h4 class="text-xs font-bold text-primary mb-2">
-          Periodo <span class="text-secondary"> *</span>
+          Periodo <span class="text-error"> *</span>
         </h4>
         <p-datepicker
           [(ngModel)]="datePeriod"
@@ -167,11 +167,17 @@
           <td>{{ row.accountDescription }}</td>
           <td>{{ row.voucherCode }}</td>
           <td>{{ row.voucherName }}</td>
-          <td [ngClass]="{ 'text-secondary': row.debit < 0 }">
-            {{ row.debit | currency : "COP $" : "symbol" : "1.0-0" }}
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="formatMoneyAligned(row.debit, row.account.nature)"
+            ></div>
           </td>
-          <td [ngClass]="{ 'text-secondary': row.credit < 0 }">
-            {{ row.credit | currency : "COP $" : "symbol" : "1.0-0" }}
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="formatMoneyAligned(row.credit, row.account.nature)"
+            ></div>
           </td>
         </tr>
       </ng-template>
@@ -180,21 +186,24 @@
       <ng-template pTemplate="footer">
         <tr class="font-bold bg-gray-100">
           <td colspan="5" class="text-right pr-4">TOTAL:</td>
-          <td>
-            {{
-              dataTable.length > 0
-                ? (totalDebit | currency : "COP $" : "symbol" : "1.0-0")
-                : "-"
-            }}
+          <td class="p-2">
+            <ng-container *ngIf="dataTable.length > 0; else emptyTotal">
+              <div
+                class="money-cell"
+                [innerHTML]="formatMoneyAligned(totalDebit, 'DEBITO')"
+              ></div>
+            </ng-container>
           </td>
-          <td>
-            {{
-              dataTable.length > 0
-                ? (totalCredit | currency : "COP $" : "symbol" : "1.0-0")
-                : "-"
-            }}
+          <td class="p-2">
+            <ng-container *ngIf="dataTable.length > 0; else emptyTotal">
+              <div
+                class="money-cell"
+                [innerHTML]="formatMoneyAligned(totalCredit, 'CREDITO')"
+              ></div>
+            </ng-container>
           </td>
         </tr>
+        <ng-template #emptyTotal>-</ng-template>
       </ng-template>
 
       <!-- Mensaje vacío -->
