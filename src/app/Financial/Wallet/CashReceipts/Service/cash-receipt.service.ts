@@ -339,7 +339,12 @@ export class CashReceiptService {
 
   getReceiptsByInvoice(invoiceId: number): Observable<ReceiptSummaryView[]> {
     const url = `${environment.API_URL}accountCatalogue/portfolio/receipts/by-invoice/${invoiceId}`;
-    return this.http.get<ReceiptSummaryView[]>(url);
+
+    return this.http
+      .get<ApiResponse<ReceiptSummaryView[]>>(url)
+      .pipe(
+        map(response => response.data)
+      );
   }
 
 }
