@@ -17,6 +17,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
 import { DocumentClass } from '../../models/ClassesOfDocuments';
 import { DocumentTypesPresentationService } from '../../services/document-types-presentation.service';
 import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
+import { AuthService } from '../../../../Core/auth/services/auth.service';
 
 @Component({
   selector: 'app-classes-of-documents-list',
@@ -34,11 +35,11 @@ import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-
     ConfirmDialogModule,
     ToggleSwitchModule,
     TagModule,
-    TableEmptyMessageComponent
+    TableEmptyMessageComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './classes-of-documents-list.component.html',
-  styleUrl: './classes-of-documents-list.component.css'
+  styleUrl: './classes-of-documents-list.component.css',
 })
 export class ClassesOfDocumentsListComponent implements OnInit {
   list: DocumentClass[] = [];
@@ -51,44 +52,61 @@ export class ClassesOfDocumentsListComponent implements OnInit {
   currentSortOrder: string = 'asc';
   searchTerm: string = '';
   searchTimeout: any;
+  canToggleState = false;
 
   constructor(
     private readonly service: ClassesOfDocumentsServiceService,
     private readonly router: Router,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
-    public readonly documentTypesPresentationService: DocumentTypesPresentationService
+    public readonly documentTypesPresentationService: DocumentTypesPresentationService,
+    private readonly authService: AuthService,
   ) {}
   ngOnInit(): void {
     // Cargar datos iniciales
     this.loadInitialData();
+    const perms = this.authService.getCurrentUserPermissions();
+    this.canToggleState = perms.includes('DC#CS');
   }
 
   private loadInitialData(): void {
     const enterpriseId = this.getEnterpriseId();
     if (!enterpriseId) return;
 
-    this.service.findAll(enterpriseId, 0, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page: any) => {
-        this.list = page?.content || [];
-        this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
-      },
-      error: (error) => {
-        console.error('Error al cargar datos iniciales:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las clases de documentos. Inténtelo nuevamente.',
-          life: 5000
-        });
-      }
-    });
+    this.service
+      .findAll(
+        enterpriseId,
+        0,
+        this.currentSize,
+        this.currentSortField,
+        this.currentSortOrder,
+        this.searchTerm,
+      )
+      .subscribe({
+        next: (page: any) => {
+          this.list = page?.content || [];
+          this.totalRecords =
+            page?.page?.totalElements || page?.totalElements || 0;
+        },
+        error: (error) => {
+          console.error('Error al cargar datos iniciales:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              'No se pudieron cargar las clases de documentos. Inténtelo nuevamente.',
+            life: 5000,
+          });
+        },
+      });
   }
 
   private getEnterpriseId(): string {
     const entData = localStorage.getItem('entData');
     if (entData) {
-      try { return JSON.parse(entData).id; } catch {}
+      try {
+        return JSON.parse(entData).id;
+      } catch {}
     }
     return '';
   }
@@ -101,31 +119,42 @@ export class ClassesOfDocumentsListComponent implements OnInit {
     // Calcular página y tamaño desde los controles de PrimeNG
     this.currentPage = Math.floor(event.first / event.rows);
     this.currentSize = event.rows;
-    
+
     // Manejar ordenamiento si está presente
     if (event.sortField) {
       this.currentSortField = event.sortField;
       this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
     }
-    
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page: any) => {
-        this.list = page?.content || [];
-        // El backend retorna la estructura: { content: [], page: { totalElements, totalPages, ... } }
-        this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error al cargar clases de documentos:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las clases de documentos. Inténtelo nuevamente.',
-          life: 5000
-        });
-        this.loading = false;
-      }
-    });
+
+    this.service
+      .findAll(
+        enterpriseId,
+        this.currentPage,
+        this.currentSize,
+        this.currentSortField,
+        this.currentSortOrder,
+        this.searchTerm,
+      )
+      .subscribe({
+        next: (page: any) => {
+          this.list = page?.content || [];
+          // El backend retorna la estructura: { content: [], page: { totalElements, totalPages, ... } }
+          this.totalRecords =
+            page?.page?.totalElements || page?.totalElements || 0;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar clases de documentos:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              'No se pudieron cargar las clases de documentos. Inténtelo nuevamente.',
+            life: 5000,
+          });
+          this.loading = false;
+        },
+      });
   }
 
   reloadCurrentPage(): void {
@@ -133,18 +162,28 @@ export class ClassesOfDocumentsListComponent implements OnInit {
     if (!enterpriseId) return;
 
     this.loading = true;
-    this.service.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page: any) => {
-        this.list = page?.content || [];
-        // El backend retorna la estructura: { content: [], page: { totalElements, totalPages, ... } }
-        this.totalRecords = page?.page?.totalElements || page?.totalElements || 0;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error al recargar clases de documentos:', error);
-        this.loading = false;
-      }
-    });
+    this.service
+      .findAll(
+        enterpriseId,
+        this.currentPage,
+        this.currentSize,
+        this.currentSortField,
+        this.currentSortOrder,
+        this.searchTerm,
+      )
+      .subscribe({
+        next: (page: any) => {
+          this.list = page?.content || [];
+          // El backend retorna la estructura: { content: [], page: { totalElements, totalPages, ... } }
+          this.totalRecords =
+            page?.page?.totalElements || page?.totalElements || 0;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error al recargar clases de documentos:', error);
+          this.loading = false;
+        },
+      });
   }
 
   onSearchChange(): void {
@@ -165,6 +204,7 @@ export class ClassesOfDocumentsListComponent implements OnInit {
   deleteClass(row: DocumentClass) {
     const enterpriseId = this.getEnterpriseId();
     if (!row?.id || !enterpriseId) return;
+    if (!this.authService.requireAnyPermission(['DC#D'])) return;
     this.confirmationService.confirm({
       message: `¿Desea eliminar la clase "${row.name}"? Esta acción no se puede deshacer.`,
       header: 'Confirmar Eliminación',
@@ -178,12 +218,12 @@ export class ClassesOfDocumentsListComponent implements OnInit {
       accept: () => {
         this.service.delete(row.id, enterpriseId).subscribe({
           next: () => {
-                    this.messageService.add({
-          severity: 'success',
-          summary: 'Eliminado',
-          detail: 'Clase de documento eliminada correctamente.'
-        });
-        this.reloadCurrentPage();
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Eliminado',
+              detail: 'Clase de documento eliminada correctamente.',
+            });
+            this.reloadCurrentPage();
           },
           error: (error) => {
             console.error('Error al eliminar clase de documento:', error);
@@ -194,7 +234,9 @@ export class ClassesOfDocumentsListComponent implements OnInit {
             if (errorCode === 'DOCUMENT_CLASS_IN_USE') {
               // Si el mensaje incluye "movimientos contables", es un error de edición (no debería ocurrir en eliminación)
               // Para eliminación, mostramos el mensaje genérico
-              const isEditError = errorMessage.includes('movimientos contables');
+              const isEditError = errorMessage.includes(
+                'movimientos contables',
+              );
 
               if (isEditError) {
                 // Este caso no debería ocurrir en eliminación, pero por si acaso
@@ -202,7 +244,7 @@ export class ClassesOfDocumentsListComponent implements OnInit {
                   severity: 'info',
                   summary: 'Información',
                   detail: errorMessage,
-                  life: 6000
+                  life: 6000,
                 });
               } else {
                 // Error de eliminación: clase asociada a tipos
@@ -210,7 +252,7 @@ export class ClassesOfDocumentsListComponent implements OnInit {
                   severity: 'info',
                   summary: 'No se puede eliminar',
                   detail: `No se puede eliminar la clase "${row.name}" porque está siendo utilizada por uno o más tipos de documentos.`,
-                  life: 6000
+                  life: 6000,
                 });
               }
               return;
@@ -221,14 +263,15 @@ export class ClassesOfDocumentsListComponent implements OnInit {
               error?.error?.errorCode === 'DOCUMENT_CLASS_IN_USE' ||
               error?.error?.message?.includes('está siendo utilizada') ||
               error?.error?.message?.includes('DOCUMENT_CLASS_IN_USE') ||
-              (error?.status === 400 && error?.error?.message?.includes('tipo de documento'));
+              (error?.status === 400 &&
+                error?.error?.message?.includes('tipo de documento'));
 
             if (isClassInUseError) {
               this.messageService.add({
                 severity: 'info',
                 summary: 'No se puede eliminar',
                 detail: `No se puede eliminar la clase "${row.name}" porque está siendo utilizada por uno o más tipos de documentos.`,
-                life: 6000
+                life: 6000,
               });
             } else if (error?.error?.message) {
               // Mostrar mensaje específico del backend si está disponible
@@ -236,20 +279,21 @@ export class ClassesOfDocumentsListComponent implements OnInit {
                 severity: 'error',
                 summary: 'Error',
                 detail: error.error.message,
-                life: 5000
+                life: 5000,
               });
             } else {
               // Mensaje genérico para otros errores
               this.messageService.add({
                 severity: 'error',
                 summary: 'Error',
-                detail: 'Ocurrió un error al eliminar la clase de documento. Inténtelo nuevamente.',
-                life: 5000
+                detail:
+                  'Ocurrió un error al eliminar la clase de documento. Inténtelo nuevamente.',
+                life: 5000,
               });
             }
-          }
+          },
         });
-      }
+      },
     });
   }
 
@@ -263,26 +307,33 @@ export class ClassesOfDocumentsListComponent implements OnInit {
     const enterpriseId = this.getEnterpriseId();
     if (!documentClass?.id || !enterpriseId) return;
 
-    const newStatus = !this.documentTypesPresentationService.isActive(documentClass.status);
-    
-    this.service.changeState(documentClass.id, enterpriseId, newStatus).subscribe({
-      next: () => {
-        // Actualizar el estado localmente
-        documentClass.status = newStatus;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Estado de la clase "${documentClass.name}" cambiado correctamente`
-        });
-      },
-      error: (error: any) => {
-        console.error('Error al cambiar el estado de la clase de documento:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cambiar el estado de la clase de documento'
-        });
-      }
-    });
+    const newStatus = !this.documentTypesPresentationService.isActive(
+      documentClass.status,
+    );
+
+    this.service
+      .changeState(documentClass.id, enterpriseId, newStatus)
+      .subscribe({
+        next: () => {
+          // Actualizar el estado localmente
+          documentClass.status = newStatus;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Estado de la clase "${documentClass.name}" cambiado correctamente`,
+          });
+        },
+        error: (error: any) => {
+          console.error(
+            'Error al cambiar el estado de la clase de documento:',
+            error,
+          );
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo cambiar el estado de la clase de documento',
+          });
+        },
+      });
   }
 }

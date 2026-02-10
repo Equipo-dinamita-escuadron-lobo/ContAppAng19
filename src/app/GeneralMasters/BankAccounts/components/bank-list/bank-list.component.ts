@@ -21,6 +21,7 @@ import { TagModule } from 'primeng/tag';
 
 // PrimeNG Services
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { AuthService } from '../../../../Core/auth/services/auth.service';
 
 @Component({
   selector: 'app-bank-list',
@@ -38,11 +39,11 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     InputIconModule,
     TooltipModule,
     TagModule,
-    TableEmptyMessageComponent
+    TableEmptyMessageComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './bank-list.component.html',
-  styleUrl: './bank-list.component.css'
+  styleUrl: './bank-list.component.css',
 })
 export class BankListComponent implements OnInit {
   private readonly bankService = inject(BankService);
@@ -51,6 +52,7 @@ export class BankListComponent implements OnInit {
   private readonly localStorageMethod = inject(LocalStorageMethods);
   private readonly router = inject(Router);
   public readonly bankPresentationService = inject(BankPresentationService);
+  private readonly authService = inject(AuthService);
 
   private enterpriseId: string = '';
 
@@ -64,36 +66,48 @@ export class BankListComponent implements OnInit {
   searchTerm = '';
   sortField: string | undefined;
   sortOrder: string | undefined;
+  canToggleState = false;
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
+    const perms = this.authService.getCurrentUserPermissions();
+    this.canToggleState = perms.includes('B#CS');
     if (this.enterpriseId) {
       this.loadBanks();
     } else {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo obtener el identificador de la empresa'
+        detail: 'No se pudo obtener el identificador de la empresa',
       });
     }
   }
   private loadBanks(): void {
     this.loading = true;
-    this.bankService.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
+    this.bankService
+      .findAll(
+        this.enterpriseId,
+        this.currentPage,
+        this.pageSize,
+        this.sortField,
+        this.sortOrder,
+        this.searchTerm || undefined,
+      )
       .subscribe({
         next: (response) => {
           this.banks = response.content;
-          this.totalRecords = response.page?.totalElements || response.totalElements || 0;
+          this.totalRecords =
+            response.page?.totalElements || response.totalElements || 0;
           this.loading = false;
         },
         error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: error.title || 'Error',
-            detail: error.message
+            detail: error.message,
           });
           this.loading = false;
-        }
+        },
       });
   }
 
@@ -129,28 +143,30 @@ export class BankListComponent implements OnInit {
   toggleBankStatus(bank: Bank, newStatus: boolean): void {
     if (!bank.id) return;
 
-    this.bankService.changeState(bank.id, this.enterpriseId, newStatus)
+    this.bankService
+      .changeState(bank.id, this.enterpriseId, newStatus)
       .subscribe({
         next: () => {
           bank.status = newStatus;
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
-            detail: `Estado del banco '${bank.name}' cambiado correctamente`
+            detail: `Estado del banco '${bank.name}' cambiado correctamente`,
           });
         },
         error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: error.title || 'Error',
-            detail: error.message
+            detail: error.message,
           });
           bank.status = !newStatus;
-        }
+        },
       });
   }
 
   confirmDelete(bank: Bank): void {
+    if (!this.authService.requireAnyPermission(['B#D'])) return;
     this.confirmationService.confirm({
       message: `¿Desea eliminar "${bank.name}"?`,
       header: 'Confirmar eliminación',
@@ -161,58 +177,64 @@ export class BankListComponent implements OnInit {
       rejectLabel: 'Cancelar',
       accept: () => {
         this.deleteBank(bank);
-      }
+      },
     });
   }
 
   private deleteBank(bank: Bank): void {
     if (!bank.id) return;
-
-    this.bankService.delete(bank.id, this.enterpriseId)
-      .subscribe({
-        next: () => {
+    this.bankService.delete(bank.id, this.enterpriseId).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Banco eliminado correctamente',
+        });
+        this.loadBanks();
+      },
+      error: (error) => {
+        // Verificar si es error específico de banco en uso o cuentas asociadas
+        const errorCode = error?.error?.code || error?.code || '';
+        if (
+          errorCode === 'BANK_IN_USE' ||
+          errorCode === 'BANK_HAS_ASSOCIATED_ACCOUNTS'
+        ) {
           this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Banco eliminado correctamente'
+            severity: 'info',
+            summary: 'Información',
+            detail:
+              error?.error?.message ||
+              'No se puede eliminar el banco porque tiene cuentas bancarias asociadas',
+            life: 6000,
           });
-          this.loadBanks();
-        },
-        error: (error) => {
-          // Verificar si es error específico de banco en uso o cuentas asociadas
-          const errorCode = error?.error?.code || error?.code || '';
-          if (errorCode === 'BANK_IN_USE' || errorCode === 'BANK_HAS_ASSOCIATED_ACCOUNTS') {
-            this.messageService.add({
-              severity: 'info',
-              summary: 'Información',
-              detail: error?.error?.message || 'No se puede eliminar el banco porque tiene cuentas bancarias asociadas',
-              life: 6000
-            });
-            return;
-          }
-
-          // Verificar si el mensaje de error contiene la cadena específica de cuentas asociadas
-          const errorMessage = error?.error?.message || error?.message || '';
-          if (errorMessage.includes('No se puede eliminar el banco') && errorMessage.includes('cuentas bancarias')) {
-            this.messageService.add({
-              severity: 'info',
-              summary: 'Información',
-              detail: errorMessage,
-              life: 6000
-            });
-            return;
-          }
-
-          // Para otros errores, mostrar mensaje genérico
-          // Si el título es "Información", usar severity 'info', sino 'error'
-          const severity = (error.title === 'Información') ? 'info' : 'error';
-          this.messageService.add({
-            severity: severity,
-            summary: error.title || 'Error',
-            detail: error.message
-          });
+          return;
         }
-      });
+
+        // Verificar si el mensaje de error contiene la cadena específica de cuentas asociadas
+        const errorMessage = error?.error?.message || error?.message || '';
+        if (
+          errorMessage.includes('No se puede eliminar el banco') &&
+          errorMessage.includes('cuentas bancarias')
+        ) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: errorMessage,
+            life: 6000,
+          });
+          return;
+        }
+
+        // Para otros errores, mostrar mensaje genérico
+        // Si el título es "Información", usar severity 'info', sino 'error'
+        const severity = error.title === 'Información' ? 'info' : 'error';
+        this.messageService.add({
+          severity: severity,
+          summary: error.title || 'Error',
+          detail: error.message,
+        });
+      },
+    });
   }
 
   navigateToCreate(): void {

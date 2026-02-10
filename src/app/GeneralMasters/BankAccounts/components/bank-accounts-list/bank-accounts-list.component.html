@@ -1,157 +1,219 @@
 <div class="flex w-full h-full font-titillium">
-    <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
-        <p-toast></p-toast>
-        <p-confirmDialog></p-confirmDialog>
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
 
-        <!-- Header Section -->
-        <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
-            <div class="items-center mb-6">
-                <div class="flex items-center">
-                    <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
-                        <span class="border-b-4 border-secondary-light inline-block pb-1">Cuentas</span> Bancarias
-                    </h1>
-                    <span class="ml-10 text-primary cursor-pointer"
-                          (click)="op.toggle($event)">
-                        <i class="pi pi-question-circle text-3xl" style="font-size: 1.25rem !important;"></i>
-                    </span>
-                    <p-popover #op>
-                        <div class="p-4" style="max-width: 400px;">
-                            <h3 class="font-bold text-lg mb-3 text-primary">Cuentas Bancarias</h3>
-                            <p class="text-sm mb-3 text-primary">
-                                Gestiona las cuentas bancarias de tu empresa vinculándolas con sus respectivas cuentas 
-                                contables. Registra información como número de cuenta, banco asociado y tipo de cuenta lo que permite 
-                                un control preciso de los movimientos financieros y conciliaciones bancarias.
-                            </p>
-                            <a
-                                [href]="helpCenterUrl"
-                                target="_blank"
-                                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
-                                Abrir centro de ayuda para más información.
-                                <i class="pi pi-external-link text-xs"></i>
-                            </a>
-                        </div>
-                    </p-popover>
-                </div>
-                <p class="font-family-sans font-normal text-sm mt-12">
-                    Administración de cuentas bancarias y sus configuraciones.
-                </p>
+    <!-- Header Section -->
+    <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+      <div class="items-center mb-6">
+        <div class="flex items-center">
+          <h1
+            class="font-family-titillium font-bold text-3xl/41 text-primary inline-block"
+          >
+            <span class="border-b-4 border-secondary-light inline-block pb-1"
+              >Cuentas</span
+            >
+            Bancarias
+          </h1>
+          <span
+            class="ml-10 text-primary cursor-pointer"
+            (click)="op.toggle($event)"
+          >
+            <i
+              class="pi pi-question-circle text-3xl"
+              style="font-size: 1.25rem !important"
+            ></i>
+          </span>
+          <p-popover #op>
+            <div class="p-4" style="max-width: 400px">
+              <h3 class="font-bold text-lg mb-3 text-primary">
+                Cuentas Bancarias
+              </h3>
+              <p class="text-sm mb-3 text-primary">
+                Gestiona las cuentas bancarias de tu empresa vinculándolas con
+                sus respectivas cuentas contables. Registra información como
+                número de cuenta, banco asociado y tipo de cuenta lo que permite
+                un control preciso de los movimientos financieros y
+                conciliaciones bancarias.
+              </p>
+              <a
+                [href]="helpCenterUrl"
+                target="_blank"
+                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+              >
+                Abrir centro de ayuda para más información.
+                <i class="pi pi-external-link text-xs"></i>
+              </a>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
-                <div class="flex flex-wrap gap-3">
-                    <p-button label="Crear" icon="pi pi-plus" (click)="navigateToCreate()"></p-button>
-                    <p-button 
-                        label="Bancos" 
-                        icon="pi pi-list"
-                        severity="primary"
-                        (click)="navigateToBanks()">
-                    </p-button>                    
-                </div>
-            </div>
+          </p-popover>
         </div>
+        <p class="font-family-sans font-normal text-sm mt-12">
+          Administración de cuentas bancarias y sus configuraciones.
+        </p>
+      </div>
 
-        <!-- Search Field -->
-        <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
-            <div class="w-full sm:w-[30rem]">
-                <p-iconfield iconPosition="left">
-                    <p-inputicon>
-                        <i class="pi pi-search text-gray-500"></i>
-                    </p-inputicon>
-                    <input
-                        pInputText
-                        type="text"
-                        [(ngModel)]="searchTerm"
-                        (input)="onSearch()"
-                        placeholder="Buscar número de cuenta..."
-                        class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
-                    />
-                </p-iconfield>
-            </div>
+      <!-- Action Buttons -->
+      <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+        <div class="flex flex-wrap gap-3">
+          <p-button
+            label="Crear"
+            icon="pi pi-plus"
+            (click)="navigateToCreate()"
+          ></p-button>
+          <p-button
+            label="Bancos"
+            icon="pi pi-list"
+            severity="primary"
+            (click)="navigateToBanks()"
+          >
+          </p-button>
         </div>
-
-        <!-- Bank Accounts Table -->
-        <p-table
-            [value]="bankAccounts"
-            [paginator]="true"
-            [rows]="pageSize"
-            [totalRecords]="totalRecords"
-            [lazy]="true"
-            [rowsPerPageOptions]="[5, 10, 20]"
-            responsiveLayout="scroll"
-            (onSort)="onSort($event)"
-            (onPage)="onPage($event)"
-            styleClass="p-datatable-striped font-family-sans"
-            [tableStyle]="{'min-width': '50rem'}">
-            
-            <ng-template pTemplate="header">
-                <tr>
-                    <th pSortableColumn="accountNumber" class="font-semibold text-primary border-b-2 border-primary">
-                        Número de Cuenta
-                        <p-sortIcon field="accountNumber"></p-sortIcon>
-                    </th>
-                    <th class="font-semibold text-primary border-b-2 border-primary">
-                        Banco
-                    </th>
-                    <th class="font-semibold text-primary border-b-2 border-primary">
-                        Tipo de Cuenta
-                    </th>
-                    <th class="font-semibold text-primary border-b-2 border-primary">
-                        Cuenta Contable
-                    </th>
-                    <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
-                    <th class="font-semibold text-primary border-b-2 border-primary text-center">Acciones</th>
-                </tr>
-            </ng-template>
-
-            <ng-template pTemplate="body" let-account>
-                <tr class="text-neutral-20">
-                    <td class="py-3">{{ account.accountNumber }}</td>
-                    <td class="py-3">
-                        <div class="flex flex-col">
-                            <span class="font-medium">{{ account.bank?.code }} - {{ account.bank?.name }}</span>
-                        </div>
-                    </td>
-                    <td class="py-3">{{ bankAccountsPresentationService.getAccountTypeDisplay(account.accountType) }}</td>
-                    <td class="py-3">{{ bankAccountsPresentationService.getAccountingAccountDisplay(account.accountingAccountId, accountingAccountsMap) }}</td>
-                    <td class="py-3 text-center">
-                        <p-tag 
-                            [value]="bankAccountsPresentationService.formatState(account.status)" 
-                            [severity]="bankAccountsPresentationService.getStateSeverity(account.status)">
-                        </p-tag>
-                    </td>
-                    <td class="py-3 text-center">
-                        <div class="flex justify-center gap-2 items-center">
-                            <p-button 
-                                icon="pi pi-pencil" 
-                                pTooltip="Editar" 
-                                tooltipPosition="top"
-                                (click)="navigateToEdit(account)" 
-                                styleClass="p-button-rounded p-button-text text-primary">
-                            </p-button>
-                            <p-button 
-                                icon="pi pi-trash" 
-                                pTooltip="Eliminar" 
-                                tooltipPosition="top"
-                                (click)="confirmDelete(account)" 
-                                styleClass="p-button-rounded p-button-text text-secondary">
-                            </p-button>
-                            <p-toggleSwitch
-                                [ngModel]="bankAccountsPresentationService.isActive(account.status)"
-                                (onChange)="toggleAccountStatus(account, $event.checked)"
-                                [pTooltip]="bankAccountsPresentationService.formatState(account.status)"
-                                tooltipPosition="top"
-                                styleClass="p-toggleSwitch-sm"
-                                [style]="{'transform': 'scale(0.8)'}">
-                            </p-toggleSwitch>
-                        </div>
-                    </td>
-                </tr>
-            </ng-template>
-
-            <ng-template pTemplate="emptymessage">
-                <app-table-empty-message [loading]="loading" [colspan]="6"></app-table-empty-message>
-            </ng-template>
-        </p-table>
+      </div>
     </div>
+
+    <!-- Search Field -->
+    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+      <div class="w-full sm:w-[30rem]">
+        <p-iconfield iconPosition="left">
+          <p-inputicon>
+            <i class="pi pi-search text-gray-500"></i>
+          </p-inputicon>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearch()"
+            placeholder="Buscar número de cuenta..."
+            class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+          />
+        </p-iconfield>
+      </div>
+    </div>
+
+    <!-- Bank Accounts Table -->
+    <p-table
+      [value]="bankAccounts"
+      [paginator]="true"
+      [rows]="pageSize"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      responsiveLayout="scroll"
+      (onSort)="onSort($event)"
+      (onPage)="onPage($event)"
+      styleClass="p-datatable-striped font-family-sans"
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th
+            pSortableColumn="accountNumber"
+            class="font-semibold text-primary border-b-2 border-primary"
+          >
+            Número de Cuenta
+            <p-sortIcon field="accountNumber"></p-sortIcon>
+          </th>
+          <th class="font-semibold text-primary border-b-2 border-primary">
+            Banco
+          </th>
+          <th class="font-semibold text-primary border-b-2 border-primary">
+            Tipo de Cuenta
+          </th>
+          <th class="font-semibold text-primary border-b-2 border-primary">
+            Cuenta Contable
+          </th>
+          <th
+            class="font-semibold text-primary border-b-2 border-primary text-center"
+          >
+            Estado
+          </th>
+          <th
+            class="font-semibold text-primary border-b-2 border-primary text-center"
+          >
+            Acciones
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-account>
+        <tr class="text-neutral-20">
+          <td class="py-3">{{ account.accountNumber }}</td>
+          <td class="py-3">
+            <div class="flex flex-col">
+              <span class="font-medium"
+                >{{ account.bank?.code }} - {{ account.bank?.name }}</span
+              >
+            </div>
+          </td>
+          <td class="py-3">
+            {{
+              bankAccountsPresentationService.getAccountTypeDisplay(
+                account.accountType
+              )
+            }}
+          </td>
+          <td class="py-3">
+            {{
+              bankAccountsPresentationService.getAccountingAccountDisplay(
+                account.accountingAccountId,
+                accountingAccountsMap
+              )
+            }}
+          </td>
+          <td class="py-3 text-center">
+            <p-tag
+              [value]="
+                bankAccountsPresentationService.formatState(account.status)
+              "
+              [severity]="
+                bankAccountsPresentationService.getStateSeverity(account.status)
+              "
+            >
+            </p-tag>
+          </td>
+          <td class="py-3 text-center">
+            <div class="flex justify-center gap-2 items-center">
+              <p-button
+                icon="pi pi-pencil"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="navigateToEdit(account)"
+                styleClass="p-button-rounded p-button-text text-primary"
+              >
+              </p-button>
+              <p-button
+                icon="pi pi-trash"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="confirmDelete(account)"
+                styleClass="p-button-rounded p-button-text text-secondary"
+              >
+              </p-button>
+              <p-toggleSwitch
+                [ngModel]="
+                  bankAccountsPresentationService.isActive(account.status)
+                "
+                (onChange)="toggleAccountStatus(account, $event.checked)"
+                [disabled]="!canToggleState"
+                [pTooltip]="
+                  bankAccountsPresentationService.formatState(account.status)
+                "
+                tooltipPosition="top"
+                styleClass="p-toggleSwitch-sm"
+                [style]="{ transform: 'scale(0.8)' }"
+              >
+              </p-toggleSwitch>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <app-table-empty-message
+          [loading]="loading"
+          [colspan]="6"
+        ></app-table-empty-message>
+      </ng-template>
+    </p-table>
+  </div>
 </div>
