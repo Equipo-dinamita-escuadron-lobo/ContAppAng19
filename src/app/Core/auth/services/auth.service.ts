@@ -50,7 +50,7 @@ export class AuthService {
     }
 
     console.log(
-      'AuthService Init: Valid token found. Attempting to fetch user...',
+      'AuthService Init: Valid token found. Attempting to fetch user...'
     );
     // Si hay token válido, intenta obtener el usuario.
     // fetchAndSetUser ya maneja el estado en memoria y devuelve un observable.
@@ -61,13 +61,13 @@ export class AuthService {
         if (user) {
           this.isAuthenticated.set(true);
           console.log(
-            'AuthService Init: User fetched successfully. isAuthenticated = true.',
+            'AuthService Init: User fetched successfully. isAuthenticated = true.'
           );
         } else {
           // Esto sucede si fetchAndSetUser devolvió of(null) por error
           this.isAuthenticated.set(false);
           console.log(
-            'AuthService Init: Failed to fetch user. isAuthenticated = false.',
+            'AuthService Init: Failed to fetch user. isAuthenticated = false.'
           );
         }
       }),
@@ -79,7 +79,7 @@ export class AuthService {
         this.isAuthenticated.set(false);
         this._currentUser.next(null);
         return of(null); // Asegura que el observable complete correctamente
-      }),
+      })
     );
   }
 
@@ -98,19 +98,19 @@ export class AuthService {
           this.isAuthenticated.set(false);
           // Devuelve un observable que emite null o propaga el error como prefieras
           return of(null);
-        }),
+        })
       );
   }
 
   public register(user: RegisterUser): Observable<any> {
     return this.http.post<any>(`${keycloakUrl}register`, user).pipe(
       tap((createdUser) =>
-        console.log('Usuario registrado exitosamente:', createdUser),
+        console.log('Usuario registrado exitosamente:', createdUser)
       ),
       catchError((error) => {
         console.error('Error en registro:', error);
         throw error;
-      }),
+      })
     );
   }
 
@@ -122,7 +122,7 @@ export class AuthService {
         catchError((error) => {
           console.error('Error enviando email de recuperación:', error);
           throw error;
-        }),
+        })
       );
   }
 
@@ -134,7 +134,7 @@ export class AuthService {
         catchError((error) => {
           console.error('Error reseteando contraseña:', error);
           throw error;
-        }),
+        })
       );
   }
 
@@ -149,10 +149,20 @@ export class AuthService {
         console.error('Failed to fetch user data:', error);
         this._currentUser.next(null); // Limpia el usuario si falla
         return of(null); // Devuelve null en caso de error
-      }),
+      })
     );
   }
+  public concatRoles(): string {
+    const user = this._currentUser.value;
+    if (!user || !user.roles) {
+      return '';
+    }
+    return user.roles.map((r) => r).join(', ');
+  }
 
+  public returnUserInfo(): UserProfile | null {
+    return this._currentUser.value;
+  }
   // Guarda el token en localStorage
   public saveToken(token: string): void {
     localStorage.setItem('token', token);
@@ -217,7 +227,7 @@ export class AuthService {
           this.isAuthenticated.set(false);
           this.router.navigate(['/login']);
           return of(void 0);
-        }),
+        })
       );
   }
 

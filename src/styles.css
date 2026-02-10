@@ -796,16 +796,26 @@ body {
 }
 
 .p-paginator .p-paginator-pages .p-paginator-page {
-  background-color: var(--color-light);
-  color: white;
+  background-color: var(--color-primary-100);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-90);
   margin: 0 2px;
   transition: all 0.2s ease-in-out;
 }
 
 /* Hover en botones de paginación */
-.p-paginator .p-paginator-pages .p-paginator-page:hover {
+.p-paginator .p-paginator-pages .p-paginator-page:not(.p-paginator-page-selected):hover {
   background-color: #e5e7eb;
   color: #111827;
+}
+
+/* Página activa */
+.p-paginator .p-paginator-pages .p-paginator-page.p-paginator-page-selected,
+.p-paginator .p-paginator-pages .p-paginator-page[aria-current="page"] {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-100);
+  font-weight: 600;
 }
 
 /* 📑 Botones de navegación (<< < > >>) */
