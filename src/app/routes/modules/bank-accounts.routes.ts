@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { hasPermissionGuard } from '../../Core/Guards/has-permission.guard';
 
 export const BANK_ACCOUNTS_ROUTES: Routes = [
   {
@@ -11,7 +12,7 @@ export const BANK_ACCOUNTS_ROUTES: Routes = [
     data: { breadcrumb: null },
     loadComponent: () =>
       import('../../GeneralMasters/BankAccounts/components/bank-accounts-list/bank-accounts-list.component').then(
-        (m) => m.BankAccountsListComponent
+        (m) => m.BankAccountsListComponent,
       ),
   },
   {
@@ -19,23 +20,25 @@ export const BANK_ACCOUNTS_ROUTES: Routes = [
     data: { breadcrumb: 'Crear Cuenta Bancaria' },
     loadComponent: () =>
       import('../../GeneralMasters/BankAccounts/components/bank-accounts-creation/bank-accounts-creation.component').then(
-        (m) => m.BankAccountsCreationComponent
+        (m) => m.BankAccountsCreationComponent,
       ),
+    canActivate: [hasPermissionGuard(['BA#C'])],
   },
   {
     path: 'edit/:id',
     data: { breadcrumb: 'Editar Cuenta Bancaria' },
     loadComponent: () =>
       import('../../GeneralMasters/BankAccounts/components/bank-accounts-edit/bank-accounts-edit.component').then(
-        (m) => m.BankAccountsEditComponent
+        (m) => m.BankAccountsEditComponent,
       ),
+    canActivate: [hasPermissionGuard(['BA#U'])],
   },
   {
     path: 'banks',
     data: { breadcrumb: 'Bancos' },
     loadComponent: () =>
       import('../../GeneralMasters/BankAccounts/components/bank-list/bank-list.component').then(
-        (m) => m.BankListComponent
+        (m) => m.BankListComponent,
       ),
   },
   {
@@ -43,15 +46,17 @@ export const BANK_ACCOUNTS_ROUTES: Routes = [
     data: { breadcrumb: 'Crear Banco' },
     loadComponent: () =>
       import('../../GeneralMasters/BankAccounts/components/bank-creation/bank-creation.component').then(
-        (m) => m.BankCreationComponent
+        (m) => m.BankCreationComponent,
       ),
+    canActivate: [hasPermissionGuard(['B#C'])],
   },
   {
     path: 'banks/edit/:id',
     data: { breadcrumb: 'Editar Banco' },
     loadComponent: () =>
       import('../../GeneralMasters/BankAccounts/components/bank-edit/bank-edit.component').then(
-        (m) => m.BankEditComponent
+        (m) => m.BankEditComponent,
       ),
+    canActivate: [hasPermissionGuard(['B#U'])],
   },
 ];

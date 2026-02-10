@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { hasPermissionGuard } from '../../Core/Guards/has-permission.guard';
 
 export const TAXES_ROUTES: Routes = [
   {
@@ -11,7 +12,7 @@ export const TAXES_ROUTES: Routes = [
     data: { breadcrumb: null },
     loadComponent: () =>
       import('../../GeneralMasters/Taxes/components/ListTax/list-tax.component').then(
-        (m) => m.ListTaxComponent
+        (m) => m.ListTaxComponent,
       ),
   },
   {
@@ -19,15 +20,17 @@ export const TAXES_ROUTES: Routes = [
     data: { breadcrumb: 'Crear Impuesto' },
     loadComponent: () =>
       import('../../GeneralMasters/Taxes/components/CreateTax/create-tax.component').then(
-        (m) => m.CreateTaxComponent
+        (m) => m.CreateTaxComponent,
       ),
+    canActivate: [hasPermissionGuard(['T#C'])],
   },
   {
     path: 'edit/:id',
     data: { breadcrumb: 'Editar Impuesto' },
     loadComponent: () =>
       import('../../GeneralMasters/Taxes/components/EditTax/edit-tax.component').then(
-        (m) => m.EditTaxComponent
+        (m) => m.EditTaxComponent,
       ),
+    canActivate: [hasPermissionGuard(['T#U'])],
   },
 ];

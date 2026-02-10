@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { hasPermissionGuard } from '../../Core/Guards/has-permission.guard';
 
 export const HELP_CENTER_ROUTES: Routes = [
   {
@@ -11,7 +12,7 @@ export const HELP_CENTER_ROUTES: Routes = [
     data: { breadcrumb: null },
     loadComponent: () =>
       import('../../GeneralMasters/HelpCenter/components/help-center-list/help-center-list.component').then(
-        (m) => m.HelpCenterListComponent
+        (m) => m.HelpCenterListComponent,
       ),
   },
   {
@@ -19,15 +20,17 @@ export const HELP_CENTER_ROUTES: Routes = [
     data: { breadcrumb: 'Crear Centro de Ayuda' },
     loadComponent: () =>
       import('../../GeneralMasters/HelpCenter/components/help-center-creation/help-center-creation.component').then(
-        (m) => m.HelpCenterCreationComponent
+        (m) => m.HelpCenterCreationComponent,
       ),
+    canActivate: [hasPermissionGuard(['HC#C'])],
   },
   {
     path: 'edit/:id',
     data: { breadcrumb: 'Editar Centro de Ayuda' },
     loadComponent: () =>
       import('../../GeneralMasters/HelpCenter/components/help-center-edit/help-center-edit.component').then(
-        (m) => m.HelpCenterEditComponent
+        (m) => m.HelpCenterEditComponent,
       ),
+    canActivate: [hasPermissionGuard(['HC#U'])],
   },
 ];

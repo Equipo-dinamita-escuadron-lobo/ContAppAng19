@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { hasPermissionGuard } from '../../Core/Guards/has-permission.guard';
 
 export const WALLET_ROUTES: Routes = [
   {
@@ -8,7 +9,7 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/CashReceipts/Components/receipts-list/receipts-list.component').then(
-        (m) => m.ReceiptsListComponent
+        (m) => m.ReceiptsListComponent,
       ),
   },
   {
@@ -18,8 +19,9 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/CashReceipts/Components/receipt-creation/receipt-creation.component').then(
-        (m) => m.ReceiptCreationComponent
+        (m) => m.ReceiptCreationComponent,
       ),
+    canActivate: [hasPermissionGuard(['PR#C'])],
   },
   {
     path: 'receipts/details/:id',
@@ -28,7 +30,7 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/CashReceipts/Components/receipt-details/receipt-details.component').then(
-        (m) => m.ReceiptDetailsComponent
+        (m) => m.ReceiptDetailsComponent,
       ),
   },
   {
@@ -38,7 +40,7 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/CashReceipts/Components/receipt-accounting/receipt-accounting.component').then(
-        (m) => m.ReceiptAccountingComponent
+        (m) => m.ReceiptAccountingComponent,
       ),
   },
   {
@@ -48,7 +50,7 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/PortfolioWriteOffs/Components/write-off-list/write-off-list.component').then(
-        (m) => m.WriteOffListComponent
+        (m) => m.WriteOffListComponent,
       ),
   },
   {
@@ -58,8 +60,9 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/PortfolioWriteOffs/Components/write-off-creation/write-off-creation.component').then(
-        (m) => m.WriteOffCreationComponent
+        (m) => m.WriteOffCreationComponent,
       ),
+    canActivate: [hasPermissionGuard(['PWO#C'])],
   },
   {
     path: 'write-offs/details/:id',
@@ -68,7 +71,7 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/PortfolioWriteOffs/Components/write-off-details/write-off-details.component').then(
-        (m) => m.WriteOffDetailsComponent
+        (m) => m.WriteOffDetailsComponent,
       ),
   },
   {
@@ -78,7 +81,7 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/Accounting/Components/accounting-entries/accounting-entries.component').then(
-        (m) => m.AccountingEntriesComponent
+        (m) => m.AccountingEntriesComponent,
       ),
   },
   {
@@ -88,7 +91,7 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/PortfolioManagement/Components/invoice-list/invoice-list.component').then(
-        (m) => m.InvoiceListComponent
+        (m) => m.InvoiceListComponent,
       ),
   },
   {
@@ -98,7 +101,7 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/PortfolioManagement/Components/expiring-invoices/expiring-invoices.component').then(
-        (m) => m.ExpiringInvoicesComponent
+        (m) => m.ExpiringInvoicesComponent,
       ),
   },
   {
@@ -108,7 +111,7 @@ export const WALLET_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../Financial/Wallet/PortfolioManagement/Components/invoice-detail/invoice-detail.component').then(
-        (m) => m.InvoiceDetailComponent
+        (m) => m.InvoiceDetailComponent,
       ),
   },
   {
@@ -124,7 +127,7 @@ export const WALLET_ROUTES: Routes = [
         },
         loadComponent: () =>
           import('../../Financial/Wallet/Reports/Components/client-portfolio-list/client-portfolio-list.component').then(
-            (m) => m.ClientPortfolioListComponent
+            (m) => m.ClientPortfolioListComponent,
           ),
       },
       {
@@ -133,9 +136,9 @@ export const WALLET_ROUTES: Routes = [
           breadcrumb: 'Reporte de Vencimientos',
         },
         loadComponent: () =>
-          import(
-            '../../Financial/Wallet/Reports/Components/aging-porfolio-report/aging-porfolio-report.component'
-          ).then((m) => m.AgingPorfolioReportComponent),
+          import('../../Financial/Wallet/Reports/Components/aging-porfolio-report/aging-porfolio-report.component').then(
+            (m) => m.AgingPorfolioReportComponent,
+          ),
       },
       {
         path: 'client-invoices/:id',
@@ -144,7 +147,7 @@ export const WALLET_ROUTES: Routes = [
         },
         loadComponent: () =>
           import('../../Financial/Wallet/Reports/Components/client-invoice-list/client-invoice-list.component').then(
-            (m) => m.ClientInvoiceListComponent
+            (m) => m.ClientInvoiceListComponent,
           ),
       },
       {
@@ -154,7 +157,7 @@ export const WALLET_ROUTES: Routes = [
         },
         loadComponent: () =>
           import('../../Financial/Wallet/Reports/Components/invoice-receipts-modal/invoice-receipts-modal.component').then(
-            (m) => m.InvoiceReceiptsModalComponent
+            (m) => m.InvoiceReceiptsModalComponent,
           ),
       },
     ],
