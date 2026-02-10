@@ -1,6 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -21,6 +27,7 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { PopoverModule } from 'primeng/popover';
 import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { AuthService } from '../../../../Core/auth/services/auth.service';
 
 @Component({
   selector: 'app-cost-centers-list',
@@ -42,11 +49,11 @@ import { HelpCenterService } from '../../../../Shared/services/help-center.servi
     PaginatorModule,
     SliderModule,
     RadioButtonModule,
-    PopoverModule
+    PopoverModule,
   ],
   templateUrl: './cost-centers-list.component.html',
   styleUrl: './cost-centers-list.component.css',
-  providers: [MessageService, ConfirmationService]
+  providers: [MessageService, ConfirmationService],
 })
 export class CostCentersListComponent implements OnDestroy {
   filterAccount: string = '';
@@ -81,7 +88,7 @@ export class CostCentersListComponent implements OnDestroy {
   exportStatusOptions = [
     { label: 'Todos', value: null },
     { label: 'Activos', value: 'active' },
-    { label: 'Inactivos', value: 'inactive' }
+    { label: 'Inactivos', value: 'inactive' },
   ];
 
   // Forms
@@ -98,13 +105,15 @@ export class CostCentersListComponent implements OnDestroy {
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
     private readonly localStorageMethods: LocalStorageMethods,
-    private readonly helpCenterService: HelpCenterService
+    private readonly helpCenterService: HelpCenterService,
+    private readonly authService: AuthService,
   ) {
     this.form = this.fb.group({
       codeSegment: [''],
-      name: ['', [Validators.required]]
+      name: ['', [Validators.required]],
     });
-    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+    this.helpCenterUrl =
+      this.helpCenterService.getHelpCenterUrl('configuracion');
   }
 
   ngOnInit(): void {
@@ -131,58 +140,68 @@ export class CostCentersListComponent implements OnDestroy {
     if (this.isLoading) {
       return;
     }
-    
+
     this.isLoading = true;
     // Calcular la página actual basada en el número de familias, no elementos individuales
     const currentPage = Math.floor(this.first / this.rows);
-    
-    this.service.findAll(this.getIdEnterprise(), currentPage, this.rows, this.filterAccount).subscribe({
-      next: (page) => {
-        this.totalRecords = page.totalElements;
-        
-        const list = page.content || [];
-        const nodes = list.map(cc => ({
-          ...cc,
-          code: String(cc.code),
-          children: [],
-          showChildren: false,
-          status: cc.status ?? true // Default a true si no está definido
-        } as CostCenterNode));
-        
-        this.allCenters = this.buildHierarchy(nodes);
-        this.listCenters = this.allCenters;
-        this.listCentersAux = this.allCenters;
 
-        if (expandCode) {
-          this.expandByCode(expandCode);
-        }
-        if (selectCodeAfter) {
-          const found = this.findByCode(selectCodeAfter);
-          if (found) {
-            this.select(found);
+    this.service
+      .findAll(
+        this.getIdEnterprise(),
+        currentPage,
+        this.rows,
+        this.filterAccount,
+      )
+      .subscribe({
+        next: (page) => {
+          this.totalRecords = page.totalElements;
+
+          const list = page.content || [];
+          const nodes = list.map(
+            (cc) =>
+              ({
+                ...cc,
+                code: String(cc.code),
+                children: [],
+                showChildren: false,
+                status: cc.status ?? true, // Default a true si no está definido
+              }) as CostCenterNode,
+          );
+
+          this.allCenters = this.buildHierarchy(nodes);
+          this.listCenters = this.allCenters;
+          this.listCentersAux = this.allCenters;
+
+          if (expandCode) {
+            this.expandByCode(expandCode);
           }
-        }
-        
-        this.isLoading = false;
-        this.isInitialLoad = false;
-      },
-      error: (err) => {
-        this.listCenters = [];
-        this.allCenters = [];
-        this.listCentersAux = [];
-        this.totalRecords = 0;
-        this.isLoading = false;
-      }
-    });
+          if (selectCodeAfter) {
+            const found = this.findByCode(selectCodeAfter);
+            if (found) {
+              this.select(found);
+            }
+          }
+
+          this.isLoading = false;
+          this.isInitialLoad = false;
+        },
+        error: (err) => {
+          this.listCenters = [];
+          this.allCenters = [];
+          this.listCentersAux = [];
+          this.totalRecords = 0;
+          this.isLoading = false;
+        },
+      });
   }
 
   private buildHierarchy(flat: CostCenterNode[]): CostCenterNode[] {
     const byId = new Map<number, CostCenterNode>();
     const roots: CostCenterNode[] = [];
-    flat.forEach(n => {
+    flat.forEach((n) => {
       if (n.id != null) byId.set(n.id, n);
     });
-    flat.forEach(n => {
+    flat.forEach((n) => {
       if (n.parentId && byId.has(n.parentId)) {
         const parent = byId.get(n.parentId)!;
         parent.children = parent.children || [];
@@ -193,8 +212,8 @@ export class CostCentersListComponent implements OnDestroy {
     });
     // ordenar por código
     const sortRecursive = (arr: CostCenterNode[]) => {
-      arr.sort((a,b) => a.code.localeCompare(b.code));
-      arr.forEach(c => c.children && sortRecursive(c.children));
+      arr.sort((a, b) => a.code.localeCompare(b.code));
+      arr.forEach((c) => c.children && sortRecursive(c.children));
     };
     sortRecursive(roots);
     return roots;
@@ -214,7 +233,9 @@ export class CostCentersListComponent implements OnDestroy {
     this.computeSelectedPath();
     const parent = this.getSelectedParent();
     const parentCode = parent ? parent.code : '';
-    const segment = node.code.startsWith(parentCode) ? node.code.slice(parentCode.length) : node.code;
+    const segment = node.code.startsWith(parentCode)
+      ? node.code.slice(parentCode.length)
+      : node.code;
     this.form.patchValue({ name: node.name, codeSegment: segment });
     this.initialName = node.name;
     this.initialCodeSegment = segment;
@@ -222,6 +243,7 @@ export class CostCentersListComponent implements OnDestroy {
   }
 
   showFormAddNewRoot() {
+    if (!this.authService.requireAnyPermission(['CC#C'])) return;
     this.selected = undefined;
     this.showPrincipalForm = false;
     this.showButton = false;
@@ -231,6 +253,7 @@ export class CostCentersListComponent implements OnDestroy {
   }
 
   addNewChild(level: 'subcosto' | 'auxiliar costo') {
+    if (!this.authService.requireAnyPermission(['CC#C'])) return;
     this.addChild = true;
     this.showButton = false;
     this.showPrincipalForm = true;
@@ -246,7 +269,7 @@ export class CostCentersListComponent implements OnDestroy {
   }
 
   /**
-   * Actualiza los datos 
+   * Actualiza los datos
    */
   updatePaginatedData() {
     this.loadTree();
@@ -260,15 +283,13 @@ export class CostCentersListComponent implements OnDestroy {
     if (this.sliderTimeout) {
       clearTimeout(this.sliderTimeout);
     }
-    
+
     // Aplicar debounce de 300ms para evitar múltiples llamadas
     this.sliderTimeout = setTimeout(() => {
       this.first = 0; // Resetear a la primera página
       this.loadTree(); // Cargar con el nuevo tamaño
     }, 300);
   }
-
-
 
   /**
    * Maneja el cambio de página del paginador
@@ -280,6 +301,7 @@ export class CostCentersListComponent implements OnDestroy {
   }
 
   updateSelected() {
+    if (!this.authService.requireAnyPermission(['CC#U'])) return;
     if (!this.selected || this.form.invalid) return;
     const enterprise = this.getIdEnterprise();
     const parent = this.getSelectedParent();
@@ -290,15 +312,19 @@ export class CostCentersListComponent implements OnDestroy {
       idEnterprise: enterprise,
       code: newCode,
       name: this.form.get('name')!.value,
-      parentId: this.selected.parentId ?? undefined
+      parentId: this.selected.parentId ?? undefined,
     } as CostCenter;
     this.service.update(payload).subscribe({
       next: () => {
-      // Mantener desplegada solo la rama del elemento actualizado
-      this.loadTree(newCode, newCode);
-      this.initialName = this.form.get('name')!.value;
-      this.initialCodeSegment = this.form.get('codeSegment')!.value || '';
-        this.messageService.add({ severity: 'success', summary: 'Actualización exitosa', detail: 'Centro de costo actualizado correctamente.' });
+        // Mantener desplegada solo la rama del elemento actualizado
+        this.loadTree(newCode, newCode);
+        this.initialName = this.form.get('name')!.value;
+        this.initialCodeSegment = this.form.get('codeSegment')!.value || '';
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Actualización exitosa',
+          detail: 'Centro de costo actualizado correctamente.',
+        });
       },
       error: (err) => {
         // Verificar si es error específico de centro de costo en uso
@@ -307,18 +333,23 @@ export class CostCentersListComponent implements OnDestroy {
           this.messageService.add({
             severity: 'info',
             summary: 'Información',
-            detail: err?.error?.message || 'No se puede editar el centro de costo porque tiene movimientos contables'
+            detail:
+              err?.error?.message ||
+              'No se puede editar el centro de costo porque tiene movimientos contables',
           });
           return;
         }
 
         // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
         const errorMessage = err?.error?.message || err?.message || '';
-        if (errorMessage.includes('No se puede editar el centro de costo') && errorMessage.includes('movimientos contables')) {
+        if (
+          errorMessage.includes('No se puede editar el centro de costo') &&
+          errorMessage.includes('movimientos contables')
+        ) {
           this.messageService.add({
             severity: 'info',
             summary: 'Información',
-            detail: errorMessage
+            detail: errorMessage,
           });
           return;
         }
@@ -326,14 +357,19 @@ export class CostCentersListComponent implements OnDestroy {
         if (err?.status === 409) {
           this.showDuplicateToast(err, 'actualizar');
         } else {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el centro de costo.' });
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo actualizar el centro de costo.',
+          });
         }
-      }
+      },
     });
   }
 
   confirmDeleteSelected(node: CostCenterNode) {
     if (!node) return;
+    if (!this.authService.requireAnyPermission(['CC#D'])) return;
     const name = node.name;
     this.confirmationService.confirm({
       header: 'Confirmación',
@@ -349,6 +385,7 @@ export class CostCentersListComponent implements OnDestroy {
 
   deleteSelected(node: CostCenterNode) {
     if (!node || node.id == null) return;
+    if (!this.authService.requireAnyPermission(['CC#D'])) return;
     const enterprise = this.getIdEnterprise();
     const parent = this.getSelectedParent(); // Podría necesitar un ajuste si el padre no es el seleccionado global
     const parentCode = parent ? parent.code : '';
@@ -365,7 +402,11 @@ export class CostCentersListComponent implements OnDestroy {
         } else {
           this.loadTree();
         }
-        this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Centro de costo eliminado.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Eliminado',
+          detail: 'Centro de costo eliminado.',
+        });
       },
       error: (err) => {
         // Verificar si es error específico de centro de costo en uso
@@ -374,43 +415,54 @@ export class CostCentersListComponent implements OnDestroy {
           this.messageService.add({
             severity: 'info',
             summary: 'Información',
-            detail: err?.error?.message || 'No se puede eliminar el centro de costo porque tiene movimientos contables',
-            life: 6000
+            detail:
+              err?.error?.message ||
+              'No se puede eliminar el centro de costo porque tiene movimientos contables',
+            life: 6000,
           });
           return;
         }
 
         // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
         const errorMessage = err?.error?.message || err?.message || '';
-        if (errorMessage.includes('No se puede eliminar el centro de costo') && errorMessage.includes('movimientos contables')) {
+        if (
+          errorMessage.includes('No se puede eliminar el centro de costo') &&
+          errorMessage.includes('movimientos contables')
+        ) {
           this.messageService.add({
             severity: 'info',
             summary: 'Información',
             detail: errorMessage,
-            life: 6000
+            life: 6000,
           });
           return;
         }
 
         // Capturar específicamente el error 400 de cuenta con hijos
-        if (err?.status === 400 && err?.error?.code === 'COST_CENTER_HAS_CHILDREN') {
+        if (
+          err?.status === 400 &&
+          err?.error?.code === 'COST_CENTER_HAS_CHILDREN'
+        ) {
           const body = err.error || {};
-          const message: string = body.message || body.detail || 'No se puede eliminar el centro de costo porque tiene subcuentas asociadas.';
+          const message: string =
+            body.message ||
+            body.detail ||
+            'No se puede eliminar el centro de costo porque tiene subcuentas asociadas.';
           this.messageService.add({
             severity: 'info',
             summary: 'No se puede eliminar',
             detail: message,
-            life: 6000
+            life: 6000,
           });
         } else {
           // Para otros errores, mostrar mensaje genérico
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'No se pudo eliminar el centro de costo.'
+            detail: 'No se pudo eliminar el centro de costo.',
           });
         }
-      }
+      },
     });
   }
 
@@ -424,7 +476,7 @@ export class CostCentersListComponent implements OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Faltan datos para cambiar el estado del centro de costo.'
+        detail: 'Faltan datos para cambiar el estado del centro de costo.',
       });
       return;
     }
@@ -443,7 +495,7 @@ export class CostCentersListComponent implements OnDestroy {
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: `Estado del centro de costo "${costCenter.name}" cambiado correctamente`
+          detail: `Estado del centro de costo "${costCenter.name}" cambiado correctamente`,
         });
       },
       error: () => {
@@ -454,9 +506,9 @@ export class CostCentersListComponent implements OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo cambiar el estado del centro de costo.'
+          detail: 'No se pudo cambiar el estado del centro de costo.',
         });
-      }
+      },
     });
   }
 
@@ -465,7 +517,10 @@ export class CostCentersListComponent implements OnDestroy {
    * @param parent Centro de costo padre
    * @param status Nuevo estado a aplicar
    */
-  private updateChildrenStatusRecursively(parent: CostCenterNode, status: boolean): void {
+  private updateChildrenStatusRecursively(
+    parent: CostCenterNode,
+    status: boolean,
+  ): void {
     if (parent.children && parent.children.length > 0) {
       for (const child of parent.children) {
         child.status = status;
@@ -480,11 +535,14 @@ export class CostCentersListComponent implements OnDestroy {
    * @param child Centro de costo hijo
    * @param status Nuevo estado a aplicar (debe ser true para activar padres)
    */
-  private updateParentStatusRecursively(child: CostCenterNode, status: boolean): void {
+  private updateParentStatusRecursively(
+    child: CostCenterNode,
+    status: boolean,
+  ): void {
     if (!child.parentId) {
       return;
     }
-    
+
     // Buscar el padre en la jerarquía
     const parent = this.findNodeById(child.parentId, this.listCenters);
     if (parent && !parent.status) {
@@ -500,7 +558,10 @@ export class CostCentersListComponent implements OnDestroy {
    * @param nodes Lista de nodos donde buscar
    * @returns El nodo encontrado o undefined
    */
-  private findNodeById(id: number, nodes: CostCenterNode[]): CostCenterNode | undefined {
+  private findNodeById(
+    id: number,
+    nodes: CostCenterNode[],
+  ): CostCenterNode | undefined {
     for (const node of nodes) {
       if (node.id === id) {
         return node;
@@ -522,7 +583,7 @@ export class CostCentersListComponent implements OnDestroy {
     this.showPrincipalForm = !!this.selected;
     this.updateCurrentLevel();
   }
-  
+
   private updateCurrentLevel() {
     const len = this.selected ? this.selected.code.length : 0;
     if (len <= 2) this.currentLevel = 'costo';
@@ -568,23 +629,46 @@ export class CostCentersListComponent implements OnDestroy {
     const node = this.selectedPath[index];
     if (!node) return '';
     const prefix = this.getPathParentPrefix(index);
-    return node.code.startsWith(prefix) ? node.code.slice(prefix.length) : node.code;
+    return node.code.startsWith(prefix)
+      ? node.code.slice(prefix.length)
+      : node.code;
   }
 
   private setEditCodeValidators() {
     const control = this.form.get('codeSegment');
     if (!control) return;
     if (this.currentLevel === 'auxiliar costo') {
-      control.setValidators([Validators.required, Validators.maxLength(28), Validators.pattern('^[a-zA-Z0-9]+$')]);
+      control.setValidators([
+        Validators.required,
+        Validators.maxLength(28),
+        Validators.pattern('^[a-zA-Z0-9]+$'),
+      ]);
     } else {
-      control.setValidators([Validators.required, Validators.minLength(2), Validators.maxLength(2), Validators.pattern('^[0-9]{2}$')]);
+      control.setValidators([
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(2),
+        Validators.pattern('^[0-9]{2}$'),
+      ]);
     }
     control.updateValueAndValidity();
   }
 
   onEditCodeKeyDown(event: KeyboardEvent) {
     if (this.currentLevel === 'auxiliar costo') return;
-    const allowed = ['Backspace','Delete','Tab','Escape','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'];
+    const allowed = [
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+    ];
     if (event.ctrlKey || event.altKey || event.metaKey) return;
     if (allowed.includes(event.key)) return;
     if (!/^[0-9]$/.test(event.key)) event.preventDefault();
@@ -609,10 +693,14 @@ export class CostCentersListComponent implements OnDestroy {
   hasChanges(): boolean {
     const currentName = this.form.get('name')!.value || '';
     const currentSegment = this.form.get('codeSegment')!.value || '';
-    return currentName !== this.initialName || currentSegment !== this.initialCodeSegment;
+    return (
+      currentName !== this.initialName ||
+      currentSegment !== this.initialCodeSegment
+    );
   }
 
   onChildSubmitted(ev: { codeSegment: string; name: string }) {
+    if (!this.authService.requireAnyPermission(['CC#C'])) return;
     const enterprise = this.getIdEnterprise();
     const parent = this.selected || null;
     const parentId = parent?.id ?? null;
@@ -621,7 +709,7 @@ export class CostCentersListComponent implements OnDestroy {
       idEnterprise: enterprise,
       code: code,
       name: ev.name,
-      parentId: parentId ?? undefined
+      parentId: parentId ?? undefined,
     };
 
     this.service.create(payload).subscribe({
@@ -631,15 +719,23 @@ export class CostCentersListComponent implements OnDestroy {
         this.isCreatingRoot = false;
         // Recargar: expandir y seleccionar el recién creado; otras ramas cerradas
         this.loadTree(createdCode, createdCode);
-        this.messageService.add({ severity: 'success', summary: 'Registro exitoso', detail: 'Centro de costo creado correctamente.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Registro exitoso',
+          detail: 'Centro de costo creado correctamente.',
+        });
       },
       error: (err) => {
         if (err?.status === 409) {
           this.showDuplicateToast(err, 'crear');
         } else {
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el centro de costo.' });
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo crear el centro de costo.',
+          });
         }
-      }
+      },
     });
   }
 
@@ -656,8 +752,9 @@ export class CostCentersListComponent implements OnDestroy {
       const dupCode = codeMatch[1];
       this.messageService.add({
         severity: 'error',
-        summary: action === 'crear' ? 'Código duplicado' : 'Código ya existente',
-        detail: `El código ${dupCode} ya existe para otro centro de costo.`
+        summary:
+          action === 'crear' ? 'Código duplicado' : 'Código ya existente',
+        detail: `El código ${dupCode} ya existe para otro centro de costo.`,
       });
       return;
     }
@@ -666,17 +763,26 @@ export class CostCentersListComponent implements OnDestroy {
       const dupName = nameMatch[1];
       this.messageService.add({
         severity: 'error',
-        summary: action === 'crear' ? 'Nombre duplicado' : 'Nombre ya existente',
-        detail: `El nombre "${dupName}" ya existe para otro centro de costo.`
+        summary:
+          action === 'crear' ? 'Nombre duplicado' : 'Nombre ya existente',
+        detail: `El nombre "${dupName}" ya existe para otro centro de costo.`,
       });
       return;
     }
 
     // Fallback genérico con el mensaje del backend si existe
     if (message) {
-      this.messageService.add({ severity: 'error', summary: 'Duplicado', detail: message });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Duplicado',
+        detail: message,
+      });
     } else {
-      this.messageService.add({ severity: 'error', summary: 'Duplicado', detail: 'Ya existe un centro de costo con el mismo código o nombre.' });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Duplicado',
+        detail: 'Ya existe un centro de costo con el mismo código o nombre.',
+      });
     }
   }
 
@@ -704,7 +810,19 @@ export class CostCentersListComponent implements OnDestroy {
 
   onCodeKeyDown(event: KeyboardEvent, maxLength: number) {
     if (event.ctrlKey || event.altKey || event.metaKey) return;
-    const allowed = ['Backspace','Delete','Tab','Escape','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'];
+    const allowed = [
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+    ];
     if (allowed.includes(event.key)) return;
     if (!/^[0-9]$/.test(event.key)) event.preventDefault();
     const target = event.target as HTMLInputElement;
@@ -720,15 +838,29 @@ export class CostCentersListComponent implements OnDestroy {
 
   onNameKeyDown(event: KeyboardEvent) {
     if (event.ctrlKey || event.altKey || event.metaKey) return;
-    const allowed = ['Backspace','Delete','Tab','Escape','Enter',' ','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'];
+    const allowed = [
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      ' ',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+    ];
     if (allowed.includes(event.key)) return;
     const pattern = /^[a-zA-ZÀ-ÿ\u00f1\u00d10-9,.()\/\-+&%]$/;
     if (!pattern.test(event.key)) event.preventDefault();
   }
 
   showExportConfirmDialog() {
+    if (!this.authService.requireAnyPermission(['CC#E'])) return;
     this.exportStatusFilter = null; // "Todos" por defecto
-    
+
     this.confirmationService.confirm({
       key: 'exportDialog',
       header: 'Exportar',
@@ -738,13 +870,19 @@ export class CostCentersListComponent implements OnDestroy {
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
-        const status = this.exportStatusFilter === 'active' ? true : this.exportStatusFilter === 'inactive' ? false : undefined;
+        const status =
+          this.exportStatusFilter === 'active'
+            ? true
+            : this.exportStatusFilter === 'inactive'
+              ? false
+              : undefined;
         this.exportCostCenters(status);
-      }
+      },
     });
   }
 
   private exportCostCenters(status?: boolean) {
+    if (!this.authService.requireAnyPermission(['CC#E'])) return;
     const entData = this.localStorageMethods.loadEnterpriseData();
     const enterpriseId = entData?.id || this.getIdEnterprise();
     const companyName = entData?.name || '';
@@ -753,41 +891,59 @@ export class CostCentersListComponent implements OnDestroy {
 
     this.service.exportToExcel(enterpriseId, companyName, status).subscribe({
       next: (response) => {
-        this.isExporting = false; 
+        this.isExporting = false;
         if (!response.body) {
           this.messageService.add({
             severity: 'error',
             summary: 'Error de Exportación',
-            detail: 'No se recibió el archivo del servidor'
+            detail: 'No se recibió el archivo del servidor',
           });
           return;
         }
         this.downloadFile(response);
-        const statusText = status === true ? 'activos' : status === false ? 'inactivos' : 'todos';
+        const statusText =
+          status === true
+            ? 'activos'
+            : status === false
+              ? 'inactivos'
+              : 'todos';
         this.messageService.add({
           severity: 'success',
           summary: 'Exportación Exitosa',
-          detail: `Se han exportado los centros de costo ${statusText} correctamente`
+          detail: `Se han exportado los centros de costo ${statusText} correctamente`,
         });
       },
       error: (err) => {
-        this.isExporting = false; 
+        this.isExporting = false;
         // Cuando la respuesta es un blob, el error también puede ser un blob que necesita ser leído
         const reader = new FileReader();
         reader.onload = () => {
           try {
             const errorData = JSON.parse(reader.result as string);
-            const errorMessage = errorData.message || 'No se pudo exportar los centros de costo.';
-            this.messageService.add({ severity: 'error', summary: 'Error de Exportación', detail: errorMessage });
+            const errorMessage =
+              errorData.message || 'No se pudo exportar los centros de costo.';
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: errorMessage,
+            });
           } catch (e) {
-            this.messageService.add({ severity: 'error', summary: 'Error de Exportación', detail: 'Ocurrió un error inesperado.' });
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error de Exportación',
+              detail: 'Ocurrió un error inesperado.',
+            });
           }
         };
         reader.onerror = () => {
-          this.messageService.add({ severity: 'error', summary: 'Error de Exportación', detail: 'No se pudo leer el mensaje de error.' });
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Exportación',
+            detail: 'No se pudo leer el mensaje de error.',
+          });
         };
         reader.readAsText(err.error);
-      }
+      },
     });
   }
 
@@ -801,7 +957,9 @@ export class CostCentersListComponent implements OnDestroy {
     let filename = 'centros_costo.xlsx'; // Nombre por defecto
 
     if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      const filenameMatch = contentDisposition.match(
+        /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+      );
       if (filenameMatch && filenameMatch[1]) {
         filename = filenameMatch[1].replace(/['"]/g, '');
       }

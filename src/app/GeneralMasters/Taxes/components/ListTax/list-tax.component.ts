@@ -21,6 +21,7 @@ import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue
 import { PopoverModule } from 'primeng/popover';
 import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
+import { AuthService } from '../../../../Core/auth/services/auth.service';
 
 @Component({
   selector: 'app-list-tax',
@@ -38,11 +39,11 @@ import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-
     ToggleSwitchModule,
     TagModule,
     PopoverModule,
-    TableEmptyMessageComponent
+    TableEmptyMessageComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './list-tax.component.html',
-  styleUrl: './list-tax.component.css'
+  styleUrl: './list-tax.component.css',
 })
 export class ListTaxComponent implements OnInit {
   taxes: TaxList[] = [];
@@ -57,6 +58,7 @@ export class ListTaxComponent implements OnInit {
   entData: any | null = null;
   accounts: any[] = [];
   helpCenterUrl: string;
+  canToggleState = false;
 
   constructor(
     private readonly router: Router,
@@ -65,14 +67,18 @@ export class ListTaxComponent implements OnInit {
     private readonly confirmationService: ConfirmationService,
     private readonly chartAccountService: ChartAccountService,
     public readonly taxValidationMessagesService: TaxValidationMessagesService,
-    private readonly helpCenterService: HelpCenterService
+    private readonly helpCenterService: HelpCenterService,
+    private readonly authService: AuthService,
   ) {
-    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+    this.helpCenterUrl =
+      this.helpCenterService.getHelpCenterUrl('configuracion');
   }
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
     this.loadAccountNames();
+    const perms = this.authService.getCurrentUserPermissions();
+    this.canToggleState = perms.includes('T#CS');
   }
 
   /**
@@ -93,11 +99,21 @@ export class ListTaxComponent implements OnInit {
     this.chartAccountService.getListAccounts(enterpriseId).subscribe({
       next: (accounts) => {
         this.accounts = this.flattenAccounts(accounts);
-        this.loadTaxesLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
+        this.loadTaxesLazy({
+          first: this.currentPage * this.currentSize,
+          rows: this.currentSize,
+          sortField: this.currentSortField,
+          sortOrder: this.currentSortOrder === 'asc' ? 1 : -1,
+        });
       },
       error: (error) => {
-        this.loadTaxesLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
-      }
+        this.loadTaxesLazy({
+          first: this.currentPage * this.currentSize,
+          rows: this.currentSize,
+          sortField: this.currentSortField,
+          sortOrder: this.currentSortOrder === 'asc' ? 1 : -1,
+        });
+      },
     });
   }
 
@@ -108,7 +124,7 @@ export class ListTaxComponent implements OnInit {
     const result: any[] = [];
 
     const flatten = (items: any[]) => {
-      items.forEach(item => {
+      items.forEach((item) => {
         result.push(item);
         if (item.children && item.children.length > 0) {
           flatten(item.children);
@@ -139,27 +155,37 @@ export class ListTaxComponent implements OnInit {
       this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
     }
 
-    this.taxService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page) => {
-        const content: any[] = page.content || [];
-        this.taxes = content.map((tax: any) => ({
-          ...tax,
-          id: Number(tax.id),
-          salesTaxName: this.getAccountName(tax.salesTax),
-          purchaseTaxName: this.getAccountName(tax.purchaseTax)
-        }));
-        this.totalRecords = page.page?.totalElements || page.totalElements || 0;
-        this.loading = false;
-      },
-      error: (error) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar los impuestos'
-        });
-        this.loading = false;
-      }
-    });
+    this.taxService
+      .findAll(
+        enterpriseId,
+        this.currentPage,
+        this.currentSize,
+        this.currentSortField,
+        this.currentSortOrder,
+        this.searchTerm,
+      )
+      .subscribe({
+        next: (page) => {
+          const content: any[] = page.content || [];
+          this.taxes = content.map((tax: any) => ({
+            ...tax,
+            id: Number(tax.id),
+            salesTaxName: this.getAccountName(tax.salesTax),
+            purchaseTaxName: this.getAccountName(tax.purchaseTax),
+          }));
+          this.totalRecords =
+            page.page?.totalElements || page.totalElements || 0;
+          this.loading = false;
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudieron cargar los impuestos',
+          });
+          this.loading = false;
+        },
+      });
   }
 
   /**
@@ -170,22 +196,32 @@ export class ListTaxComponent implements OnInit {
     if (!enterpriseId) return;
 
     this.loading = true;
-    this.taxService.findAll(enterpriseId, this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page) => {
-        const content: any[] = page.content || [];
-        this.taxes = content.map((tax: any) => ({
-          ...tax,
-          id: Number(tax.id),
-          salesTaxName: this.getAccountName(tax.salesTax),
-          purchaseTaxName: this.getAccountName(tax.purchaseTax)
-        }));
-        this.totalRecords = page.page?.totalElements || page.totalElements || 0;
-        this.loading = false;
-      },
-      error: (error) => {
-        this.loading = false;
-      }
-    });
+    this.taxService
+      .findAll(
+        enterpriseId,
+        this.currentPage,
+        this.currentSize,
+        this.currentSortField,
+        this.currentSortOrder,
+        this.searchTerm,
+      )
+      .subscribe({
+        next: (page) => {
+          const content: any[] = page.content || [];
+          this.taxes = content.map((tax: any) => ({
+            ...tax,
+            id: Number(tax.id),
+            salesTaxName: this.getAccountName(tax.salesTax),
+            purchaseTaxName: this.getAccountName(tax.purchaseTax),
+          }));
+          this.totalRecords =
+            page.page?.totalElements || page.totalElements || 0;
+          this.loading = false;
+        },
+        error: (error) => {
+          this.loading = false;
+        },
+      });
   }
 
   /**
@@ -195,7 +231,12 @@ export class ListTaxComponent implements OnInit {
     // Resetear a la primera página cuando se busca
     this.currentPage = 0;
     // Recargar datos con el nuevo término de búsqueda
-    this.loadTaxesLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
+    this.loadTaxesLazy({
+      first: 0,
+      rows: this.currentSize,
+      sortField: this.currentSortField,
+      sortOrder: this.currentSortOrder === 'asc' ? 1 : -1,
+    });
   }
 
   /**
@@ -203,11 +244,9 @@ export class ListTaxComponent implements OnInit {
    */
   private getAccountName(code: string): string {
     if (!code) return 'N/A';
-    const account = this.accounts.find(acc => acc.code === code);
+    const account = this.accounts.find((acc) => acc.code === code);
     return account ? `${account.code} - ${account.description}` : code;
   }
-
-
 
   /**
    * Navega al componente de creación de impuestos
@@ -221,7 +260,7 @@ export class ListTaxComponent implements OnInit {
    */
   editTax(tax: TaxList): void {
     this.router.navigate(['/gen-masters/taxes/edit', Number(tax.id)], {
-      state: { taxData: tax }
+      state: { taxData: tax },
     });
   }
 
@@ -229,6 +268,7 @@ export class ListTaxComponent implements OnInit {
    * Confirma y elimina un impuesto
    */
   deleteTax(tax: TaxList): void {
+    if (!this.authService.requireAnyPermission(['T#D'])) return;
     this.confirmationService.confirm({
       message: `¿Está seguro de que desea eliminar el impuesto "${tax.description}"?`,
       header: 'Confirmar Eliminación',
@@ -245,7 +285,7 @@ export class ListTaxComponent implements OnInit {
             this.messageService.add({
               severity: 'success',
               summary: 'Eliminado',
-              detail: 'Impuesto eliminado exitosamente'
+              detail: 'Impuesto eliminado exitosamente',
             });
             this.reloadCurrentPage(); // Recargar la página actual
           },
@@ -256,34 +296,40 @@ export class ListTaxComponent implements OnInit {
               this.messageService.add({
                 severity: 'info',
                 summary: 'Información',
-                detail: error?.error?.message || 'No se puede eliminar el impuesto porque tiene movimientos contables',
-                life: 6000
+                detail:
+                  error?.error?.message ||
+                  'No se puede eliminar el impuesto porque tiene movimientos contables',
+                life: 6000,
               });
               return;
             }
 
             // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
             const errorMessage = error?.error?.message || error?.message || '';
-            if (errorMessage.includes('No se puede eliminar el impuesto') && errorMessage.includes('movimientos contables')) {
+            if (
+              errorMessage.includes('No se puede eliminar el impuesto') &&
+              errorMessage.includes('movimientos contables')
+            ) {
               this.messageService.add({
                 severity: 'info',
                 summary: 'Información',
                 detail: errorMessage,
-                life: 6000
+                life: 6000,
               });
               return;
             }
 
             // Para otros errores, mostrar mensaje genérico
-            const finalErrorMessage = error?.error?.message || 'No se pudo eliminar el impuesto';
+            const finalErrorMessage =
+              error?.error?.message || 'No se pudo eliminar el impuesto';
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: finalErrorMessage
+              detail: finalErrorMessage,
             });
-          }
+          },
         });
-      }
+      },
     });
   }
 
@@ -302,17 +348,18 @@ export class ListTaxComponent implements OnInit {
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: `Impuesto "${tax.code}" cambiado correctamente`
+          detail: `Impuesto "${tax.code}" cambiado correctamente`,
         });
       },
       error: (error) => {
-        const errorMessage = error?.error?.message || 'No se pudo cambiar el estado del impuesto.';
+        const errorMessage =
+          error?.error?.message || 'No se pudo cambiar el estado del impuesto.';
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: errorMessage
+          detail: errorMessage,
         });
-      }
+      },
     });
   }
 

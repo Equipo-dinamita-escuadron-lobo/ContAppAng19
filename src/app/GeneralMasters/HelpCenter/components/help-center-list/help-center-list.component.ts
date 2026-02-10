@@ -18,6 +18,7 @@ import { DocumentTypesServiceService } from '../../../DocumentTypes/services/doc
 import { HelpCenter, HelpCenterList } from '../../models/HelpCenter';
 import { HelpCenterPresentationService } from '../../services/help-center-presentation.service';
 import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
+import { AuthService } from '../../../../Core/auth/services/auth.service';
 
 @Component({
   selector: 'app-help-center-list',
@@ -35,11 +36,11 @@ import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-
     ToggleSwitchModule,
     TagModule,
     FormsModule,
-    TableEmptyMessageComponent
+    TableEmptyMessageComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './help-center-list.component.html',
-  styleUrl: './help-center-list.component.css'
+  styleUrl: './help-center-list.component.css',
 })
 export class HelpCenterListComponent implements OnInit {
   list: HelpCenterList[] = [];
@@ -51,6 +52,7 @@ export class HelpCenterListComponent implements OnInit {
   currentSortField: string = 'name';
   currentSortOrder: string = 'asc';
   searchTerm: string = '';
+  canToggleState = false;
 
   constructor(
     private readonly service: HelpCenterServiceService,
@@ -58,11 +60,14 @@ export class HelpCenterListComponent implements OnInit {
     private readonly router: Router,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
-    public readonly helpCenterPresentationService: HelpCenterPresentationService
+    public readonly helpCenterPresentationService: HelpCenterPresentationService,
+    private readonly authService: AuthService,
   ) {}
 
   ngOnInit(): void {
     this.loadModuleNames();
+    const perms = this.authService.getCurrentUserPermissions();
+    this.canToggleState = perms.includes('HC#CS');
   }
 
   private loadModuleNames(): void {
@@ -72,7 +77,12 @@ export class HelpCenterListComponent implements OnInit {
         for (const m of modules) {
           this.moduleIdToName.set(m.id, m.name);
         }
-                this.loadHelpCentersLazy({ first: this.currentPage * this.currentSize, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 }); // Cargar centros de ayuda después de cargar las clases
+        this.loadHelpCentersLazy({
+          first: this.currentPage * this.currentSize,
+          rows: this.currentSize,
+          sortField: this.currentSortField,
+          sortOrder: this.currentSortOrder === 'asc' ? 1 : -1,
+        }); // Cargar centros de ayuda después de cargar las clases
       },
       error: (error: any) => {
         console.error('Error al cargar nombres de módulos:', error);
@@ -80,9 +90,9 @@ export class HelpCenterListComponent implements OnInit {
           severity: 'error',
           summary: 'Error',
           detail: 'No se pudieron cargar los módulos. Inténtelo nuevamente.',
-          life: 5000
+          life: 5000,
         });
-      }
+      },
     });
   }
 
@@ -95,51 +105,73 @@ export class HelpCenterListComponent implements OnInit {
       this.currentSortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
     }
 
-    this.service.findAll(this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page: any) => {
-        const content: HelpCenter[] = page.content || [];
-        this.list = content.map(hc => ({
-          ...hc,
-          moduleName: hc.moduleName || this.getModuleName(hc.moduleId)
-        }));
-        this.totalRecords = page?.page?.totalElements || 0;
-        this.loading = false;
-      },
-      error: (error: any) => {
-        console.error('Error al cargar centros de ayuda:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar los centros de ayuda. Inténtelo nuevamente.',
-          life: 5000
-        });
-        this.loading = false;
-      }
-    });
+    this.service
+      .findAll(
+        this.currentPage,
+        this.currentSize,
+        this.currentSortField,
+        this.currentSortOrder,
+        this.searchTerm,
+      )
+      .subscribe({
+        next: (page: any) => {
+          const content: HelpCenter[] = page.content || [];
+          this.list = content.map((hc) => ({
+            ...hc,
+            moduleName: hc.moduleName || this.getModuleName(hc.moduleId),
+          }));
+          this.totalRecords = page?.page?.totalElements || 0;
+          this.loading = false;
+        },
+        error: (error: any) => {
+          console.error('Error al cargar centros de ayuda:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              'No se pudieron cargar los centros de ayuda. Inténtelo nuevamente.',
+            life: 5000,
+          });
+          this.loading = false;
+        },
+      });
   }
 
   reloadCurrentPage(): void {
     this.loading = true;
-    this.service.findAll(this.currentPage, this.currentSize, this.currentSortField, this.currentSortOrder, this.searchTerm).subscribe({
-      next: (page: any) => {
-        const content: HelpCenter[] = page.content || [];
-        this.list = content.map(hc => ({
-          ...hc,
-          moduleName: hc.moduleName || this.getModuleName(hc.moduleId)
-        }));
-        this.totalRecords = page?.page?.totalElements || 0;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error al recargar centros de ayuda:', error);
-        this.loading = false;
-      }
-    });
+    this.service
+      .findAll(
+        this.currentPage,
+        this.currentSize,
+        this.currentSortField,
+        this.currentSortOrder,
+        this.searchTerm,
+      )
+      .subscribe({
+        next: (page: any) => {
+          const content: HelpCenter[] = page.content || [];
+          this.list = content.map((hc) => ({
+            ...hc,
+            moduleName: hc.moduleName || this.getModuleName(hc.moduleId),
+          }));
+          this.totalRecords = page?.page?.totalElements || 0;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error al recargar centros de ayuda:', error);
+          this.loading = false;
+        },
+      });
   }
 
   onSearchChange(): void {
     this.currentPage = 0;
-    this.loadHelpCentersLazy({ first: 0, rows: this.currentSize, sortField: this.currentSortField, sortOrder: this.currentSortOrder === 'asc' ? 1 : -1 });
+    this.loadHelpCentersLazy({
+      first: 0,
+      rows: this.currentSize,
+      sortField: this.currentSortField,
+      sortOrder: this.currentSortOrder === 'asc' ? 1 : -1,
+    });
   }
 
   getModuleName(moduleId?: number): string {
@@ -158,7 +190,7 @@ export class HelpCenterListComponent implements OnInit {
 
   deleteHelpCenter(row: HelpCenter) {
     if (!row?.id) return;
-
+    if (!this.authService.requireAnyPermission(['HC#D'])) return;
     this.confirmationService.confirm({
       header: 'Confirmar Eliminación',
       message: `¿Desea eliminar el centro de ayuda "${row.name}"? Esta acción no se puede deshacer.`,
@@ -168,7 +200,7 @@ export class HelpCenterListComponent implements OnInit {
       rejectButtonStyleClass: 'p-button-secondary',
       defaultFocus: 'reject',
       closeOnEscape: true,
-      accept: () => this.confirmDeleteHelpCenter(row)
+      accept: () => this.confirmDeleteHelpCenter(row),
     });
   }
 
@@ -183,16 +215,16 @@ export class HelpCenterListComponent implements OnInit {
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: `Estado del centro de ayuda "${helpCenter.name}" cambiado correctamente`
+          detail: `Estado del centro de ayuda "${helpCenter.name}" cambiado correctamente`,
         });
       },
       error: () => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo cambiar el estado del centro de ayuda.'
+          detail: 'No se pudo cambiar el estado del centro de ayuda.',
         });
-      }
+      },
     });
   }
 
@@ -204,7 +236,7 @@ export class HelpCenterListComponent implements OnInit {
         this.messageService.add({
           severity: 'success',
           summary: 'Eliminado',
-          detail: 'Centro de ayuda eliminado correctamente.'
+          detail: 'Centro de ayuda eliminado correctamente.',
         });
         this.reloadCurrentPage();
       },
@@ -212,9 +244,9 @@ export class HelpCenterListComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo eliminar el centro de ayuda.'
+          detail: 'No se pudo eliminar el centro de ayuda.',
         });
-      }
+      },
     });
   }
 }
