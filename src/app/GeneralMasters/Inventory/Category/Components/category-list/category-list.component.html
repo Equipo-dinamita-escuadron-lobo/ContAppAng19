@@ -1,14 +1,19 @@
 <!-- Contenedor Principal con la fuente Titillium -->
 <div class="flex w-full h-full font-titillium">
   <!-- Tarjeta de Contenido Principal, aplicando el estilo de la guía -->
-  <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
-
+  <div
+    class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10"
+  >
     <!-- 1. CABECERA: Título y Botón de Crear -->
     <div class="flex justify-between items-start mb-40">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Categorías</span>
+        <h1
+          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1"
+        >
+          <span class="border-b-4 border-secondary-light inline-block pb-1"
+            >Categorías</span
+          >
         </h1>
         <p class="font-family-sans font-normal text-sm mt-12">
           Gestione las categorías utilizadas en el sistema.
@@ -16,7 +21,7 @@
       </div>
 
       <!-- Botones de acción -->
-      <div class="flex gap-3">        
+      <div class="flex gap-3">
         <p-button
           label="Crear"
           icon="pi pi-plus"
@@ -155,7 +160,18 @@
             </span>
           </td>
           <td class="py-3 text-center">
-            <p-tag [value]="category.state ? categoryValidationMessagesService.getActiveStateText() : categoryValidationMessagesService.getInactiveStateText()" [severity]="category.state ? categoryValidationMessagesService.getActiveStateSeverity() : categoryValidationMessagesService.getInactiveStateSeverity()">
+            <p-tag
+              [value]="
+                category.state
+                  ? categoryValidationMessagesService.getActiveStateText()
+                  : categoryValidationMessagesService.getInactiveStateText()
+              "
+              [severity]="
+                category.state
+                  ? categoryValidationMessagesService.getActiveStateSeverity()
+                  : categoryValidationMessagesService.getInactiveStateSeverity()
+              "
+            >
             </p-tag>
           </td>
           <td class="py-3 text-center">
@@ -180,10 +196,15 @@
               <p-toggleSwitch
                 [(ngModel)]="category.state"
                 (onChange)="changeCategoryState(category)"
-                [pTooltip]="category.state ? categoryValidationMessagesService.getActiveStateText() : categoryValidationMessagesService.getInactiveStateText()"
+                [disabled]="!canToggleState"
+                [pTooltip]="
+                  category.state
+                    ? categoryValidationMessagesService.getActiveStateText()
+                    : categoryValidationMessagesService.getInactiveStateText()
+                "
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
-                [style]="{'transform': 'scale(0.8)'}"
+                [style]="{ transform: 'scale(0.8)' }"
               ></p-toggleSwitch>
             </div>
           </td>
@@ -191,11 +212,12 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <app-table-empty-message [loading]="loading" [colspan]="9"></app-table-empty-message>
+        <app-table-empty-message
+          [loading]="loading"
+          [colspan]="9"
+        ></app-table-empty-message>
       </ng-template>
-
     </p-table>
-
   </div>
 </div>
 
@@ -204,4 +226,3 @@
 
 <!-- Confirmation dialog -->
 <p-confirmDialog></p-confirmDialog>
-

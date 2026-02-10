@@ -34,6 +34,7 @@ export const INVENTORY_ROUTES: Routes = [
           import('../../GeneralMasters/Inventory/Products/Components/product-creation/product-creation.component').then(
             (m) => m.ProductCreationComponent,
           ),
+        canActivate: [hasPermissionGuard(['P#C'])],
       },
       {
         path: 'edit/:id',
@@ -42,6 +43,7 @@ export const INVENTORY_ROUTES: Routes = [
           import('../../GeneralMasters/Inventory/Products/Components/product-edit/product-edit.component').then(
             (m) => m.ProductEditComponent,
           ),
+        canActivate: [hasPermissionGuard(['P#U'])],
       },
     ],
   },
@@ -69,6 +71,7 @@ export const INVENTORY_ROUTES: Routes = [
           import('../../GeneralMasters/Inventory/ProductTypes/Components/product-type-creation/product-type-creation.component').then(
             (m) => m.ProductTypeCreationComponent,
           ),
+        canActivate: [hasPermissionGuard(['PT#C'])],
       },
       {
         path: 'edit/:id',
@@ -77,6 +80,7 @@ export const INVENTORY_ROUTES: Routes = [
           import('../../GeneralMasters/Inventory/ProductTypes/Components/product-type-edit/product-type-edit.component').then(
             (m) => m.ProductTypeEditComponent,
           ),
+        canActivate: [hasPermissionGuard(['PT#U'])],
       },
     ],
   },
@@ -104,6 +108,7 @@ export const INVENTORY_ROUTES: Routes = [
           import('../../GeneralMasters/Inventory/Category/Components/category-creation/category-creation.component').then(
             (m) => m.CategoryCreationComponent,
           ),
+        canActivate: [hasPermissionGuard(['C#C'])],
       },
       {
         path: 'edit/:id',
@@ -112,6 +117,7 @@ export const INVENTORY_ROUTES: Routes = [
           import('../../GeneralMasters/Inventory/Category/Components/category-edit/category-edit.component').then(
             (m) => m.CategoryEditComponent,
           ),
+        canActivate: [hasPermissionGuard(['C#U'])],
       },
     ],
   },
@@ -139,6 +145,7 @@ export const INVENTORY_ROUTES: Routes = [
           import('../../GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-creation/unit-of-measure-creation.component').then(
             (m) => m.UnitOfMeasureCreationComponent,
           ),
+        canActivate: [hasPermissionGuard(['UM#C'])],
       },
       {
         path: 'edit/:id',
@@ -147,6 +154,7 @@ export const INVENTORY_ROUTES: Routes = [
           import('../../GeneralMasters/Inventory/MeasurementUnits/Components/unit-of-measure-edit/unit-of-measure-edit.component').then(
             (m) => m.UnitOfMeasureEditComponent,
           ),
+        canActivate: [hasPermissionGuard(['UM#U'])],
       },
     ],
   },

@@ -17,8 +17,8 @@ import { Product, ProductList, Page } from '../../Models/Product';
 import { ProductService } from '../../Services/product.service';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { TagModule } from 'primeng/tag';
-import { InputIcon } from "primeng/inputicon";
-import { IconField } from "primeng/iconfield";
+import { InputIcon } from 'primeng/inputicon';
+import { IconField } from 'primeng/iconfield';
 import { TooltipModule } from 'primeng/tooltip';
 import { CurrencyFormatPipe } from '../../Pipes/currency-format.pipe';
 import { ProductsTemplateComponent } from '../products-template/products-template.component';
@@ -29,6 +29,7 @@ import { HelpCenterService } from '../../../../../Shared/services/help-center.se
 import { TableEmptyMessageComponent } from '../../../../../Shared/Components/table-empty-message/table-empty-message.component';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { AuthService } from '../../../../../Core/auth/services/auth.service';
 
 // Interfaces para manejo de errores de importación
 interface ImportError {
@@ -65,8 +66,8 @@ interface ImportError {
     RadioButtonModule,
     ProgressBarModule,
     PopoverModule,
-    TableEmptyMessageComponent
-],
+    TableEmptyMessageComponent,
+  ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css'],
@@ -80,10 +81,10 @@ export class ProductListComponent implements OnInit {
       size: 0,
       number: 0,
       totalElements: 0,
-      totalPages: 0
-    }
+      totalPages: 0,
+    },
   };
-  products: ProductList[] = []; 
+  products: ProductList[] = [];
 
   // Propiedades para paginación y búsqueda
   currentPage = 0;
@@ -129,13 +130,14 @@ export class ProductListComponent implements OnInit {
   exportStatusOptions = [
     { label: 'Todos', value: null },
     { label: 'Activos', value: 'active' },
-    { label: 'Inactivos', value: 'inactive' }
+    { label: 'Inactivos', value: 'inactive' },
   ];
-  
+
   // URL del centro de ayuda
   helpCenterUrl: string;
 
   ref: DynamicDialogRef | undefined; // Para manejar la referencia del modal de detalles
+  canToggleState = false;
 
   constructor(
     private readonly productService: ProductService,
@@ -143,37 +145,43 @@ export class ProductListComponent implements OnInit {
     private readonly localstorageMethods: LocalStorageMethods,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
-    private readonly helpCenterService: HelpCenterService
+    private readonly helpCenterService: HelpCenterService,
+    private readonly authService: AuthService,
   ) {
-    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+    this.helpCenterUrl =
+      this.helpCenterService.getHelpCenterUrl('configuracion');
   }
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
     this.getProducts();
+    const perms = this.authService.getCurrentUserPermissions();
+    this.canToggleState = perms.includes('UM#CS');
   }
 
   getProducts(): void {
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
     this.loading = true;
-    this.productService.getProducts(
-      enterpriseId,
-      this.currentPage,
-      this.pageSize,
-      this.sortField,
-      this.sortOrder,
-      this.searchTerm || undefined
-    ).subscribe({
-      next: (data: Page<ProductList>) => {
-        this.productsPage = data;
-        this.products = data.content;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error al obtener los productos:', error);
-        this.loading = false;
-      }
-    });
+    this.productService
+      .getProducts(
+        enterpriseId,
+        this.currentPage,
+        this.pageSize,
+        this.sortField,
+        this.sortOrder,
+        this.searchTerm || undefined,
+      )
+      .subscribe({
+        next: (data: Page<ProductList>) => {
+          this.productsPage = data;
+          this.products = data.content;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error al obtener los productos:', error);
+          this.loading = false;
+        },
+      });
   }
 
   // Método para manejar cambios de página
@@ -186,8 +194,8 @@ export class ProductListComponent implements OnInit {
 
   // Método para manejar búsqueda
   onSearchChange(): void {
-    this.first = 0; 
-    this.currentPage = 0; 
+    this.first = 0;
+    this.currentPage = 0;
     this.getProducts();
   }
 
@@ -221,15 +229,17 @@ export class ProductListComponent implements OnInit {
   }
 
   redirectToEdit(productId: number): void {
-    this.router.navigate(['/gen-masters/inventory/products/edit/', productId.toString()]);
+    this.router.navigate([
+      '/gen-masters/inventory/products/edit/',
+      productId.toString(),
+    ]);
   }
-
 
   deleteProduct(productId: number): void {
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
     if (!enterpriseId) return;
 
-    const product = this.products.find(p => p.id === productId);
+    const product = this.products.find((p) => p.id === productId);
     if (!product) return;
 
     this.confirmationService.confirm({
@@ -241,19 +251,21 @@ export class ProductListComponent implements OnInit {
       rejectButtonStyleClass: 'p-button-secondary',
       defaultFocus: 'reject',
       closeOnEscape: true,
-      accept: () => this.confirmDeleteProduct(product, enterpriseId)
+      accept: () => this.confirmDeleteProduct(product, enterpriseId),
     });
   }
 
-
-  private confirmDeleteProduct(product: ProductList, enterpriseId: string): void {
+  private confirmDeleteProduct(
+    product: ProductList,
+    enterpriseId: string,
+  ): void {
     this.productService.deleteProduct(product.id, enterpriseId).subscribe({
       next: (data: Product) => {
         this.getProducts();
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: 'El producto se ha eliminado correctamente.'
+          detail: 'El producto se ha eliminado correctamente.',
         });
       },
       error: (error: any) => {
@@ -265,19 +277,20 @@ export class ProductListComponent implements OnInit {
           this.messageService.add({
             severity: 'info',
             summary: 'Información',
-            detail: error?.error?.message || 'No se puede eliminar el producto porque tiene movimientos contables'
+            detail:
+              error?.error?.message ||
+              'No se puede eliminar el producto porque tiene movimientos contables',
           });
         } else {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Ha ocurrido un error al intentar eliminar el producto.'
+            detail: 'Ha ocurrido un error al intentar eliminar el producto.',
           });
         }
-      }
+      },
     });
   }
-
 
   openDetailsModal(product: ProductList): void {
     this.selectedProduct = product;
@@ -285,6 +298,7 @@ export class ProductListComponent implements OnInit {
   }
 
   openTemplateModal(): void {
+    if (!this.authService.requireAnyPermission(['P#ET'])) return;
     this.showTemplateModal = true;
   }
 
@@ -295,14 +309,14 @@ export class ProductListComponent implements OnInit {
   changeProductState(product: ProductList): void {
     const newState = product.state;
     const previousState = !newState; // El estado anterior es el opuesto al actual
-    
+
     const enterpriseId = this.localstorageMethods.getIdEnterprise();
     this.productService.changeProductState(product.id, enterpriseId).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
-          detail: `Estado del producto "${product.name}" cambiado correctamente`
+          detail: `Estado del producto "${product.name}" cambiado correctamente`,
         });
       },
       error: (error: any) => {
@@ -311,9 +325,9 @@ export class ProductListComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudo cambiar el estado del producto'
+          detail: 'No se pudo cambiar el estado del producto',
         });
-      }
+      },
     });
   }
 
@@ -321,8 +335,9 @@ export class ProductListComponent implements OnInit {
    * Muestra el modal de confirmación para exportar productos
    */
   showExportConfirmDialog() {
+    if (!this.authService.requireAnyPermission(['P#E'])) return;
     this.exportStatusFilter = null; // "Todos" por defecto
-    
+
     this.confirmationService.confirm({
       key: 'exportDialog',
       header: 'Exportar',
@@ -332,9 +347,14 @@ export class ProductListComponent implements OnInit {
       acceptButtonStyleClass: 'p-button-success',
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
-        const status = this.exportStatusFilter === 'active' ? true : this.exportStatusFilter === 'inactive' ? false : undefined;
+        const status =
+          this.exportStatusFilter === 'active'
+            ? true
+            : this.exportStatusFilter === 'inactive'
+              ? false
+              : undefined;
         this.exportProducts(status);
-      }
+      },
     });
   }
 
@@ -350,68 +370,81 @@ export class ProductListComponent implements OnInit {
     this.progressOperationType = 'export';
 
     // Iniciar exportación asíncrona
-    this.productService.exportProductsAsync(entId, companyName, status).subscribe({
-      next: (response) => {
-        // Guardar el jobId y mostrar diálogo de progreso
-        this.progressJobId = response.jobId;
-        this.progressValue = 0;
-        this.progressStatus = 'PROCESSING';
-        this.progressPhase = 'Iniciando exportación...';
-        this.showProgressDialog = true;
-        
-        // Iniciar polling cada 5 segundos
-        this.startProgressPolling();
-      },
-      error: (error) => {
-        this.isExporting = false;
-        
-        // Manejar error del backend
-        let errorMessage = 'No se pudo iniciar la exportación';
-        
-        // Intentar extraer el mensaje del error
-        if (error.error instanceof Blob) {
-          // Si el error viene como Blob, leerlo
-          const reader = new FileReader();
-          reader.onload = () => {
-            try {
-              const errorData = JSON.parse(reader.result as string);
-              errorMessage = errorData.message || errorMessage;
-              const isNoDataMessage = this.isNoProductsAvailableMessage(errorMessage);
+    this.productService
+      .exportProductsAsync(entId, companyName, status)
+      .subscribe({
+        next: (response) => {
+          // Guardar el jobId y mostrar diálogo de progreso
+          this.progressJobId = response.jobId;
+          this.progressValue = 0;
+          this.progressStatus = 'PROCESSING';
+          this.progressPhase = 'Iniciando exportación...';
+          this.showProgressDialog = true;
 
-              this.messageService.add({
-                severity: isNoDataMessage ? 'info' : 'error',
-                summary: isNoDataMessage ? 'Información' : 'Error al Iniciar Exportación',
-                detail: isNoDataMessage ? this.getNoProductsMessage(status) : errorMessage
-              });
-            } catch (e) {
+          // Iniciar polling cada 5 segundos
+          this.startProgressPolling();
+        },
+        error: (error) => {
+          this.isExporting = false;
+
+          // Manejar error del backend
+          let errorMessage = 'No se pudo iniciar la exportación';
+
+          // Intentar extraer el mensaje del error
+          if (error.error instanceof Blob) {
+            // Si el error viene como Blob, leerlo
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const errorData = JSON.parse(reader.result as string);
+                errorMessage = errorData.message || errorMessage;
+                const isNoDataMessage =
+                  this.isNoProductsAvailableMessage(errorMessage);
+
+                this.messageService.add({
+                  severity: isNoDataMessage ? 'info' : 'error',
+                  summary: isNoDataMessage
+                    ? 'Información'
+                    : 'Error al Iniciar Exportación',
+                  detail: isNoDataMessage
+                    ? this.getNoProductsMessage(status)
+                    : errorMessage,
+                });
+              } catch (e) {
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error al Iniciar Exportación',
+                  detail: errorMessage,
+                });
+              }
+            };
+            reader.onerror = () => {
               this.messageService.add({
                 severity: 'error',
                 summary: 'Error al Iniciar Exportación',
-                detail: errorMessage
+                detail: errorMessage,
               });
-            }
-          };
-          reader.onerror = () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error al Iniciar Exportación',
-              detail: errorMessage
-            });
-          };
-          reader.readAsText(error.error);
-        } else {
-          // Error directo (JSON)
-          errorMessage = error.error?.message || error.message || errorMessage;
-          const isNoDataMessage = this.isNoProductsAvailableMessage(errorMessage);
+            };
+            reader.readAsText(error.error);
+          } else {
+            // Error directo (JSON)
+            errorMessage =
+              error.error?.message || error.message || errorMessage;
+            const isNoDataMessage =
+              this.isNoProductsAvailableMessage(errorMessage);
 
-          this.messageService.add({
-            severity: isNoDataMessage ? 'info' : 'error',
-            summary: isNoDataMessage ? 'Información' : 'Error al Iniciar Exportación',
-            detail: isNoDataMessage ? this.getNoProductsMessage(status) : errorMessage
-          });
-        }
-      }
-    });
+            this.messageService.add({
+              severity: isNoDataMessage ? 'info' : 'error',
+              summary: isNoDataMessage
+                ? 'Información'
+                : 'Error al Iniciar Exportación',
+              detail: isNoDataMessage
+                ? this.getNoProductsMessage(status)
+                : errorMessage,
+            });
+          }
+        },
+      });
   }
 
   /**
@@ -424,11 +457,11 @@ export class ProductListComponent implements OnInit {
       'no se encontraron productos',
       'no hay registros',
       'empty',
-      'sin productos'
+      'sin productos',
     ];
 
-    return noProductsPatterns.some(pattern =>
-      message.toLowerCase().includes(pattern.toLowerCase())
+    return noProductsPatterns.some((pattern) =>
+      message.toLowerCase().includes(pattern.toLowerCase()),
     );
   }
 
@@ -456,7 +489,9 @@ export class ProductListComponent implements OnInit {
     let filename = 'productos.xlsx';
 
     if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      const filenameMatch = contentDisposition.match(
+        /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+      );
       if (filenameMatch && filenameMatch[1]) {
         filename = filenameMatch[1].replace(/['"]/g, '');
       }
@@ -477,22 +512,26 @@ export class ProductListComponent implements OnInit {
    * @param event Evento del selector de archivos.
    */
   onFileSelect(event: any): void {
+    if (!this.authService.requireAnyPermission(['P#I'])) {
+      event.target.value = '';
+      return;
+    }
     const file = event.target.files[0];
     if (!file) return;
 
     // Validar tipo de archivo manualmente
     const allowedMimeTypes = [
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-      'application/vnd.ms-excel' // .xls
+      'application/vnd.ms-excel', // .xls
     ];
 
     if (!allowedMimeTypes.includes(file.type)) {
       this.messageService.add({
         severity: 'error',
         summary: 'Archivo inválido',
-        detail: 'Por favor, selecciona un archivo EXCEL válido'
+        detail: 'Por favor, selecciona un archivo EXCEL válido',
       });
-      
+
       // Limpiar la selección del file upload
       event.target.value = '';
       return;
@@ -511,14 +550,14 @@ export class ProductListComponent implements OnInit {
         this.progressStatus = 'PROCESSING';
         this.progressPhase = 'Iniciando importación...';
         this.showProgressDialog = true;
-        
+
         // Iniciar polling cada 5 segundos
         this.startProgressPolling();
 
         this.messageService.add({
           severity: 'info',
           summary: 'Importación iniciada',
-          detail: 'La importación se está procesando.'
+          detail: 'La importación se está procesando.',
         });
 
         // Limpiar el input después de iniciar correctamente
@@ -529,19 +568,26 @@ export class ProductListComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error al Iniciar Importación',
-          detail: error.error?.message || 'No se pudo iniciar la importación'
+          detail: error.error?.message || 'No se pudo iniciar la importación',
         });
 
         // Limpiar la selección del file upload
         event.target.value = '';
-      }
+      },
     });
   }
 
   /**
    * Muestra el modal con los detalles de errores de importación.
    */
-  private showImportErrorsModal(errors: ImportError[], fileName: string, totalRecords?: number, failedImports?: number, successfulImports?: number, duplicatesSkipped?: number): void {
+  private showImportErrorsModal(
+    errors: ImportError[],
+    fileName: string,
+    totalRecords?: number,
+    failedImports?: number,
+    successfulImports?: number,
+    duplicatesSkipped?: number,
+  ): void {
     this.importErrors = errors;
     this.totalErrors = errors.length;
     this.totalRecordsImported = totalRecords || 0;
@@ -586,41 +632,49 @@ export class ProductListComponent implements OnInit {
   private checkProgressStatus(): void {
     if (!this.progressJobId) return;
 
-    const statusObservable = this.progressOperationType === 'import'
-      ? this.productService.getImportStatus(this.progressJobId)
-      : this.productService.getExportStatus(this.progressJobId);
+    const statusObservable =
+      this.progressOperationType === 'import'
+        ? this.productService.getImportStatus(this.progressJobId)
+        : this.productService.getExportStatus(this.progressJobId);
 
     statusObservable.subscribe({
       next: (status) => {
         this.progressValue = status.progress || 0;
         this.progressStatus = status.status;
-        
+
         // Actualizar mensaje de fase
         this.progressPhase = this.getProgressPhaseMessage(status);
 
         // Si la operación terminó (éxito, con errores o falla)
-        if (status.status === 'COMPLETED' || status.status === 'COMPLETED_WITH_ERRORS' || status.status === 'FAILED') {
+        if (
+          status.status === 'COMPLETED' ||
+          status.status === 'COMPLETED_WITH_ERRORS' ||
+          status.status === 'FAILED'
+        ) {
           this.stopProgressPolling();
           this.handleProgressCompletion(status);
         }
       },
       error: (error) => {
-        const operationName = this.progressOperationType === 'import' ? 'importación' : 'exportación';
+        const operationName =
+          this.progressOperationType === 'import'
+            ? 'importación'
+            : 'exportación';
         this.stopProgressPolling();
         this.showProgressDialog = false;
-        
+
         if (this.progressOperationType === 'import') {
           this.isImporting = false;
         } else {
           this.isExporting = false;
         }
-        
+
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `No se pudo consultar el estado de la ${operationName}`
+          detail: `No se pudo consultar el estado de la ${operationName}`,
         });
-      }
+      },
     });
   }
 
@@ -652,23 +706,23 @@ export class ProductListComponent implements OnInit {
     if (status.progress === 100) {
       return 'Finalizando importación...';
     }
-    
+
     if (status.progress >= 80) {
       return 'Guardando productos en la base de datos...';
     }
-    
+
     if (status.progress >= 60) {
       return 'Validando relaciones y referencias...';
     }
-    
+
     if (status.progress >= 40) {
       return 'Detectando duplicados...';
     }
-    
+
     if (status.progress >= 20) {
       return 'Validando datos de productos...';
     }
-    
+
     return 'Analizando archivo Excel...';
   }
 
@@ -679,15 +733,15 @@ export class ProductListComponent implements OnInit {
     if (status.progress === 100) {
       return 'Finalizando exportación...';
     }
-    
+
     if (status.progress >= 66) {
       return 'Almacenando archivo...';
     }
-    
+
     if (status.progress >= 33) {
       return 'Generando archivo Excel...';
     }
-    
+
     return 'Obteniendo datos de productos...';
   }
 
@@ -712,22 +766,30 @@ export class ProductListComponent implements OnInit {
     this.progressJobId = null;
 
     // Limpiar la selección del archivo
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
 
-    const { totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = status;
+    const {
+      totalRecords,
+      successfulImports,
+      failedImports,
+      duplicatesSkipped,
+      errors,
+    } = status;
 
     // Si hay errores, mostrar modal de errores (sin notificación adicional)
     if (errors && errors.length > 0) {
       this.showImportErrorsModal(
-        errors, 
-        status.fileName || 'importacion.xlsx', 
-        totalRecords, 
-        failedImports, 
-        successfulImports, 
-        duplicatesSkipped
+        errors,
+        status.fileName || 'importacion.xlsx',
+        totalRecords,
+        failedImports,
+        successfulImports,
+        duplicatesSkipped,
       );
 
       // Recargar lista si hubo importaciones exitosas
@@ -745,7 +807,7 @@ export class ProductListComponent implements OnInit {
         severity: 'error',
         summary: 'Importación Fallida',
         detail: status.errorMessage || 'La importación no pudo completarse',
-        life: 8000
+        life: 8000,
       });
       return;
     }
@@ -757,12 +819,12 @@ export class ProductListComponent implements OnInit {
       if (duplicatesSkipped > 0) {
         detailMessage += `\nDuplicados omitidos: ${duplicatesSkipped}`;
       }
-      
+
       this.messageService.add({
         severity: 'success',
         summary: 'Importación Exitosa',
         detail: detailMessage,
-        life: 8000
+        life: 8000,
       });
       this.getProducts();
     }
@@ -774,15 +836,16 @@ export class ProductListComponent implements OnInit {
   private handleExportCompletion(status: any): void {
     // Guardar el jobId antes de limpiarlo
     const jobId = this.progressJobId;
-    
+
     // Cerrar modal si está abierto
     this.showProgressDialog = false;
     this.isExporting = false;
     this.progressJobId = null;
 
     if (status.status === 'FAILED') {
-      const errorMessage = status.errorMessage || 'La exportación no pudo completarse';
-      
+      const errorMessage =
+        status.errorMessage || 'La exportación no pudo completarse';
+
       // Verificar si es un mensaje informativo (sin datos)
       const isNoDataMessage = this.isNoProductsAvailableMessage(errorMessage);
 
@@ -790,7 +853,7 @@ export class ProductListComponent implements OnInit {
         severity: isNoDataMessage ? 'info' : 'error',
         summary: isNoDataMessage ? 'Información' : 'Exportación Fallida',
         detail: errorMessage,
-        life: 8000
+        life: 8000,
       });
       return;
     }
@@ -803,29 +866,29 @@ export class ProductListComponent implements OnInit {
             this.messageService.add({
               severity: 'error',
               summary: 'Error de Exportación',
-              detail: 'No se recibió el archivo del servidor'
+              detail: 'No se recibió el archivo del servidor',
             });
             return;
           }
 
           this.downloadFile(response);
-          
+
           let detailMessage = `Total de registros: ${status.totalRecords || 0}`;
-          
+
           this.messageService.add({
             severity: 'success',
             summary: 'Exportación Exitosa',
             detail: detailMessage,
-            life: 8000
+            life: 8000,
           });
         },
         error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error de Descarga',
-            detail: 'No se pudo descargar el archivo exportado'
+            detail: 'No se pudo descargar el archivo exportado',
           });
-        }
+        },
       });
     }
   }
@@ -849,7 +912,7 @@ export class ProductListComponent implements OnInit {
         this.messageService.add({
           severity: 'warn',
           summary: 'Sin Errores',
-          detail: 'No hay errores para exportar'
+          detail: 'No hay errores para exportar',
         });
         return;
       }
@@ -862,11 +925,14 @@ export class ProductListComponent implements OnInit {
       const headerInfo = [
         ['ERRORES DE IMPORTACIÓN DE PRODUCTOS'],
         [''],
-        ['Fecha de exportación:', new Date().toLocaleDateString('es-CO', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric'
-        })],
+        [
+          'Fecha de exportación:',
+          new Date().toLocaleDateString('es-CO', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+          }),
+        ],
         ['Hora:', new Date().toLocaleTimeString('es-CO')],
         [''],
         ['RESUMEN DE IMPORTACIÓN'],
@@ -875,27 +941,25 @@ export class ProductListComponent implements OnInit {
         ['Fallidos:', this.failedImportsCount],
         ['Duplicados omitidos:', this.duplicatesSkipped],
         [''],
-        ['DETALLE DE ERRORES']
+        ['DETALLE DE ERRORES'],
       ];
 
       // Agregar la información del encabezado
       XLSX.utils.sheet_add_aoa(ws, headerInfo, { origin: 'A1' });
 
       // Encabezados de la tabla
-      const tableHeaders = [
-        ['Fila', 'Columna', 'Campo', 'Valor', 'Error']
-      ];
+      const tableHeaders = [['Fila', 'Columna', 'Campo', 'Valor', 'Error']];
 
       // Agregar encabezados de la tabla
       XLSX.utils.sheet_add_aoa(ws, tableHeaders, { origin: 'A14' });
 
       // Preparar los datos de la tabla
-      const tableData = this.importErrors.map(error => [
+      const tableData = this.importErrors.map((error) => [
         error.rowNumber,
         this.getExcelColumnLetter(error.columnNumber),
         error.columnName,
         error.fieldValue || '(vacío)',
-        error.errorMessage
+        error.errorMessage,
       ]);
 
       // Agregar los datos de la tabla
@@ -907,11 +971,11 @@ export class ProductListComponent implements OnInit {
 
       // Configurar anchos de columnas
       ws['!cols'] = [
-        { wch: 8 },  // A - Fila
+        { wch: 8 }, // A - Fila
         { wch: 10 }, // B - Columna
         { wch: 25 }, // C - Campo
         { wch: 25 }, // D - Valor
-        { wch: 60 }  // E - Error
+        { wch: 60 }, // E - Error
       ];
 
       // Combinar celdas para el título
@@ -941,15 +1005,14 @@ export class ProductListComponent implements OnInit {
       this.messageService.add({
         severity: 'success',
         summary: 'Exportación exitosa',
-        detail: 'El archivo se ha exportado correctamente.'
+        detail: 'El archivo se ha exportado correctamente.',
       });
-
     } catch (error) {
       console.error('Error al exportar errores:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error en Exportación',
-        detail: 'Ocurrió un error al exportar los errores.'
+        detail: 'Ocurrió un error al exportar los errores.',
       });
     }
   }
@@ -969,5 +1032,8 @@ export class ProductListComponent implements OnInit {
 
     return columnLetter;
   }
-
+  onImportClick(fileInput: HTMLInputElement): void {
+    if (!this.authService.requireAnyPermission(['P#I'])) return;
+    fileInput.click();
+  }
 }

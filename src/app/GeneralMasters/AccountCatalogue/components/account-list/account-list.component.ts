@@ -1,6 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { ReactiveFormsModule, FormsModule, FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormsModule,
+  FormGroup,
+  FormBuilder,
+  FormControl,
+  Validators,
+} from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { Account } from '../../models/ChartAccount';
@@ -33,6 +40,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { PopoverModule } from 'primeng/popover';
 import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { AuthService } from '../../../../Core/auth/services/auth.service';
 
 // Interfaces para manejo de errores de importación
 interface ImportError {
@@ -49,25 +57,39 @@ interface ImportError {
   selector: 'app-account-list',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, FormsModule,
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
     AccountFormComponent,
     AccountTemplateComponent,
-    ButtonModule, FileUploadModule, DropdownModule, DialogModule,
-    IconFieldModule, InputIconModule, InputTextModule, CheckboxModule,
+    ButtonModule,
+    FileUploadModule,
+    DropdownModule,
+    DialogModule,
+    IconFieldModule,
+    InputIconModule,
+    InputTextModule,
+    CheckboxModule,
     RadioButtonModule,
-    ToggleSwitchModule, TagModule, ToastModule, ConfirmDialogModule,
-    TooltipModule, TableModule, PaginatorModule, ProgressBarModule, PopoverModule
+    ToggleSwitchModule,
+    TagModule,
+    ToastModule,
+    ConfirmDialogModule,
+    TooltipModule,
+    TableModule,
+    PaginatorModule,
+    ProgressBarModule,
+    PopoverModule,
   ],
   templateUrl: './account-list.component.html',
   styleUrl: './account-list.component.css',
-  providers: [MessageService, ConfirmationService]
+  providers: [MessageService, ConfirmationService],
 })
 export class AccountListComponent implements OnInit {
-
   accountForm: FormGroup;
 
   formTransactional: FormGroup;
- 
+
   accountSelected?: Account;
   toggle: boolean = false;
 
@@ -109,16 +131,23 @@ export class AccountListComponent implements OnInit {
   showCrossingCheckboxEdit: boolean = false;
   showCostCenterCheckboxEdit: boolean = false;
 
-  inputsLocked: boolean = false;    
+  inputsLocked: boolean = false;
 
-  private _currentLevelAccount: 'Grupo' | 'Cuenta' | 'Subcuenta' | 'Auxiliar' | 'Clase' = 'Clase';
+  private _currentLevelAccount:
+    | 'Grupo'
+    | 'Cuenta'
+    | 'Subcuenta'
+    | 'Auxiliar'
+    | 'Clase' = 'Clase';
   addChild: boolean = false;
 
   get currentLevelAccount(): string {
     return this._currentLevelAccount;
   }
 
-  set currentLevelAccount(value: 'Grupo' | 'Cuenta' | 'Subcuenta' | 'Auxiliar' | 'Clase') {
+  set currentLevelAccount(
+    value: 'Grupo' | 'Cuenta' | 'Subcuenta' | 'Auxiliar' | 'Clase',
+  ) {
     this._currentLevelAccount = value;
   }
 
@@ -133,10 +162,9 @@ export class AccountListComponent implements OnInit {
     group: true,
     account: true,
     subAccount: true,
-    auxiliary: true
+    auxiliary: true,
   };
 
- 
   listFinancialState: FinancialStateType[] = [];
   listAccounts: Account[] = [];
   listAccountsAux: Account[] = [];
@@ -170,44 +198,46 @@ export class AccountListComponent implements OnInit {
   exportStatusOptions = [
     { label: 'Todos', value: undefined },
     { label: 'Activos', value: true },
-    { label: 'Inactivos', value: false }
+    { label: 'Inactivos', value: false },
   ];
 
- 
   constructor(
     private readonly fb: FormBuilder,
     private readonly _accountService: ChartAccountService,
     private readonly messageService: MessageService,
     private readonly confirmationService: ConfirmationService,
     public readonly accountCataloguePresentationService: AccountCataloguePresentationService,
-    private readonly helpCenterService: HelpCenterService
+    private readonly helpCenterService: HelpCenterService,
+    private readonly authService: AuthService,
   ) {
-    this.helpCenterUrl = this.helpCenterService.getHelpCenterUrl('configuracion');
+    this.helpCenterUrl =
+      this.helpCenterService.getHelpCenterUrl('configuracion');
 
-    this.accountForm = this.fb.group({})
+    this.accountForm = this.fb.group({});
     this.formTransactional = this.fb.group({
       selectedNatureType: [''],
       selectedFinancialStateType: [''],
       selectedClasificationType: [''],
       crossing: [false],
-      costCenter: [false]
+      costCenter: [false],
     });
   }
 
   /**
-  * Muestra el formulario para agregar una nueva clase de cuenta.
-  * Establece el estado de visibilidad y oculta otros formularios y opciones.
-  */
+   * Muestra el formulario para agregar una nueva clase de cuenta.
+   * Establece el estado de visibilidad y oculta otros formularios y opciones.
+   */
   showFormAddNewClass() {
+    if (!this.authService.requireAnyPermission(['AC#C'])) return;
     this.showAddNewClass = true;
     this.noAddNewChild();
     this.noShowPrincipalAndTransactionalForm();
   }
 
   /**
-  * Oculta el formulario para agregar una nueva clase de cuenta.
-  * Dependiendo de si se ha seleccionado una cuenta, muestra u oculta otros formularios.
-  */
+   * Oculta el formulario para agregar una nueva clase de cuenta.
+   * Dependiendo de si se ha seleccionado una cuenta, muestra u oculta otros formularios.
+   */
   noShowFormAddNewClass() {
     this.showAddNewClass = false;
     if (this.selectedAccount) {
@@ -218,10 +248,11 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-  * Permite mostrar el formulario para agregar una nueva subcuenta.
-  * Oculta los botones y formularios relacionados con la cuenta seleccionada.
-  */
+   * Permite mostrar el formulario para agregar una nueva subcuenta.
+   * Oculta los botones y formularios relacionados con la cuenta seleccionada.
+   */
   addNewChild() {
+    if (!this.authService.requireAnyPermission(['AC#C'])) return;
     this.addChild = true;
     this.showButton = false;
     this.showButtonDelete = false;
@@ -233,9 +264,9 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-  * Impide mostrar el formulario para agregar una nueva subcuenta.
-  * Restaura la visibilidad de los botones y formularios relacionados con la cuenta seleccionada.
-  */
+   * Impide mostrar el formulario para agregar una nueva subcuenta.
+   * Restaura la visibilidad de los botones y formularios relacionados con la cuenta seleccionada.
+   */
   noAddNewChild() {
     this.addChild = false;
     this.showButton = true;
@@ -245,9 +276,9 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-  * Permite mostrar el formulario principal y el formulario transaccional.
-  * También habilita los botones relacionados con las acciones de la cuenta.
-  */
+   * Permite mostrar el formulario principal y el formulario transaccional.
+   * También habilita los botones relacionados con las acciones de la cuenta.
+   */
   showPrincipalAndTransactionalForm() {
     this.showPrincipalForm = true;
     this.showFormTransactional = true;
@@ -256,9 +287,9 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-  * Impide mostrar el formulario principal y el formulario transaccional.
-  * También oculta los botones relacionados con las acciones de la cuenta.
-  */
+   * Impide mostrar el formulario principal y el formulario transaccional.
+   * También oculta los botones relacionados con las acciones de la cuenta.
+   */
   noShowPrincipalAndTransactionalForm() {
     this.showPrincipalForm = false;
     this.showFormTransactional = false;
@@ -270,6 +301,7 @@ export class AccountListComponent implements OnInit {
    * Abre el modal de plantilla de catálogo de cuentas.
    */
   openTemplateModal(): void {
+    if (!this.authService.requireAnyPermission(['AC#ET'])) return;
     this.showTemplateModal = true;
   }
 
@@ -278,14 +310,13 @@ export class AccountListComponent implements OnInit {
    */
   closeTemplateModal(): void {
     this.showTemplateModal = false;
-  } 
-  
+  }
+
   /**
    * Inicializa el componente obteniendo datos desde los servicios.
    */
   ngOnInit(): void {
     this.getAccounts();
-
 
     this.entData = this.localStorageMethods.loadEnterpriseData();
     this.getNatureType();
@@ -297,20 +328,18 @@ export class AccountListComponent implements OnInit {
     });
   }
 
-
-
   /**
-  * Alterna la visibilidad de las subcuentas de una cuenta específica.
-  * @param account La cuenta para la cual se desea alternar la visibilidad de las subcuentas.
-  */
+   * Alterna la visibilidad de las subcuentas de una cuenta específica.
+   * @param account La cuenta para la cual se desea alternar la visibilidad de las subcuentas.
+   */
   toggleSubAccounts(account: Account) {
     account.showSubAccounts = !account.showSubAccounts;
   }
 
   /**
-  * Selecciona una cuenta y actualiza el formulario con sus datos.
-  * @param account La cuenta que se desea seleccionar.
-  */
+   * Selecciona una cuenta y actualiza el formulario con sus datos.
+   * @param account La cuenta que se desea seleccionar.
+   */
   selectAccount(account: Account) {
     this.noShowFormAddNewClass();
     this.noAddNewChild();
@@ -365,7 +394,7 @@ export class AccountListComponent implements OnInit {
       financialStatus: account.financialStatus,
       classification: account.classification,
       crossing: account.crossing,
-      costCenter: account.costCenter
+      costCenter: account.costCenter,
     };
   }
 
@@ -384,8 +413,20 @@ export class AccountListComponent implements OnInit {
     this.parentId = '';
 
     if (code.length >= 1) {
-      this.accountForm.addControl('className', new FormControl({ value: this.className, disabled: this.inputAccess.class }, [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')]));
-      this.accountForm.addControl('classCode', new FormControl({ value: code.slice(0, 1), disabled: this.inputAccess.class }, [Validators.maxLength(1), Validators.minLength(1)]));
+      this.accountForm.addControl(
+        'className',
+        new FormControl(
+          { value: this.className, disabled: this.inputAccess.class },
+          [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')],
+        ),
+      );
+      this.accountForm.addControl(
+        'classCode',
+        new FormControl(
+          { value: code.slice(0, 1), disabled: this.inputAccess.class },
+          [Validators.maxLength(1), Validators.minLength(1)],
+        ),
+      );
       this.currentLevelAccount = 'Grupo';
       this.num = 1;
       this.code = 'classCode';
@@ -393,9 +434,27 @@ export class AccountListComponent implements OnInit {
     }
 
     if (code.length >= 2) {
-      this.accountForm.addControl('groupName', new FormControl({ value: this.groupName, disabled: this.inputAccess.group }, [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')]));
-      this.accountForm.addControl('groupCode', new FormControl({ value: code.slice(0, 1), disabled: this.inputAccess.group }));
-      this.accountForm.addControl('codeGroup', new FormControl({ value: code.slice(1, 2), disabled: this.inputAccess.group }, [Validators.maxLength(1), Validators.minLength(1)]));
+      this.accountForm.addControl(
+        'groupName',
+        new FormControl(
+          { value: this.groupName, disabled: this.inputAccess.group },
+          [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')],
+        ),
+      );
+      this.accountForm.addControl(
+        'groupCode',
+        new FormControl({
+          value: code.slice(0, 1),
+          disabled: this.inputAccess.group,
+        }),
+      );
+      this.accountForm.addControl(
+        'codeGroup',
+        new FormControl(
+          { value: code.slice(1, 2), disabled: this.inputAccess.group },
+          [Validators.maxLength(1), Validators.minLength(1)],
+        ),
+      );
       this.currentLevelAccount = 'Cuenta';
       this.num = 2;
       this.code = 'codeGroup';
@@ -404,9 +463,24 @@ export class AccountListComponent implements OnInit {
     }
 
     if (code.length >= 4) {
-      this.accountForm.addControl('accountName', new FormControl({ value: this.accountName, disabled: this.inputAccess.account }, [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')]));
-      this.accountForm.addControl('accountCode', new FormControl(code.slice(0, 2)));
-      this.accountForm.addControl('codeAccount', new FormControl({ value: code.slice(2, 4), disabled: this.inputAccess.account }, [Validators.maxLength(2), Validators.minLength(2)]));
+      this.accountForm.addControl(
+        'accountName',
+        new FormControl(
+          { value: this.accountName, disabled: this.inputAccess.account },
+          [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')],
+        ),
+      );
+      this.accountForm.addControl(
+        'accountCode',
+        new FormControl(code.slice(0, 2)),
+      );
+      this.accountForm.addControl(
+        'codeAccount',
+        new FormControl(
+          { value: code.slice(2, 4), disabled: this.inputAccess.account },
+          [Validators.maxLength(2), Validators.minLength(2)],
+        ),
+      );
       this.currentLevelAccount = 'Subcuenta';
       this.num = 4;
       this.code = 'codeAccount';
@@ -415,9 +489,24 @@ export class AccountListComponent implements OnInit {
     }
 
     if (code.length >= 6) {
-      this.accountForm.addControl('subAccountName', new FormControl({ value: this.subAccountName, disabled: this.inputAccess.subAccount }, [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')]));
-      this.accountForm.addControl('subAccountCode', new FormControl(code.slice(0, 4)));
-      this.accountForm.addControl('codeSubAccount', new FormControl({ value: code.slice(4, 6), disabled: this.inputAccess.subAccount }, [Validators.maxLength(2), Validators.minLength(2)]));
+      this.accountForm.addControl(
+        'subAccountName',
+        new FormControl(
+          { value: this.subAccountName, disabled: this.inputAccess.subAccount },
+          [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')],
+        ),
+      );
+      this.accountForm.addControl(
+        'subAccountCode',
+        new FormControl(code.slice(0, 4)),
+      );
+      this.accountForm.addControl(
+        'codeSubAccount',
+        new FormControl(
+          { value: code.slice(4, 6), disabled: this.inputAccess.subAccount },
+          [Validators.maxLength(2), Validators.minLength(2)],
+        ),
+      );
       this.currentLevelAccount = 'Auxiliar';
       this.num = 6;
       this.code = 'codeSubAccount';
@@ -426,9 +515,24 @@ export class AccountListComponent implements OnInit {
     }
 
     if (code.length >= 8) {
-      this.accountForm.addControl('auxiliaryName', new FormControl({ value: this.auxiliaryName, disabled: this.inputAccess.auxiliary }, [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')]));
-      this.accountForm.addControl('auxiliaryCode', new FormControl(code.slice(0, 6)));
-      this.accountForm.addControl('codeAuxiliary', new FormControl({ value: code.slice(6, 8), disabled: this.inputAccess.auxiliary }, [Validators.maxLength(2), Validators.minLength(2)]));
+      this.accountForm.addControl(
+        'auxiliaryName',
+        new FormControl(
+          { value: this.auxiliaryName, disabled: this.inputAccess.auxiliary },
+          [Validators.pattern('^[a-zA-ZÀ-ÿ\u00f1\u00d1,. ]+$')],
+        ),
+      );
+      this.accountForm.addControl(
+        'auxiliaryCode',
+        new FormControl(code.slice(0, 6)),
+      );
+      this.accountForm.addControl(
+        'codeAuxiliary',
+        new FormControl(
+          { value: code.slice(6, 8), disabled: this.inputAccess.auxiliary },
+          [Validators.maxLength(2), Validators.minLength(2)],
+        ),
+      );
       this.num = 8;
       this.code = 'codeAuxiliary';
       this.name = 'auxiliaryName';
@@ -442,14 +546,13 @@ export class AccountListComponent implements OnInit {
     this.formTransactional.valueChanges.subscribe(() => {
       this.showUpdateButton = this.shouldShowUpdateButton();
     });
-
   }
 
   /**
-  * Determina si se debe mostrar el botón de "Actualizar" basado en los cambios reales en los formularios
-  * comparados con los valores originales. También controla si los inputs deben estar bloqueados.
-  * @returns Si el botón de "Actualizar" debe mostrarse.
-  */
+   * Determina si se debe mostrar el botón de "Actualizar" basado en los cambios reales en los formularios
+   * comparados con los valores originales. También controla si los inputs deben estar bloqueados.
+   * @returns Si el botón de "Actualizar" debe mostrarse.
+   */
   shouldShowUpdateButton(): boolean {
     if (!this.originalAccountValues || !this.accountSelected) {
       this.inputsLocked = true;
@@ -464,9 +567,9 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-  * Verifica si hay cambios reales comparando los valores actuales con los valores originales.
-  * @returns Si hay cambios reales en los formularios.
-  */
+   * Verifica si hay cambios reales comparando los valores actuales con los valores originales.
+   * @returns Si hay cambios reales en los formularios.
+   */
   private hasRealChanges(): boolean {
     if (!this.originalAccountValues) {
       return false;
@@ -476,60 +579,79 @@ export class AccountListComponent implements OnInit {
     const currentTransactionalValues = this.formTransactional.value;
 
     // Comparar código y descripción
-    if (currentAccountValues.code !== this.originalAccountValues.code ||
-        currentAccountValues.description !== this.originalAccountValues.description) {
+    if (
+      currentAccountValues.code !== this.originalAccountValues.code ||
+      currentAccountValues.description !==
+        this.originalAccountValues.description
+    ) {
       return true;
     }
 
     // Comparar valores transaccionales
-    const natureChanged = this.compareNatureValues(currentTransactionalValues.selectedNatureType);
-    const financialStatusChanged = this.compareFinancialStatusValues(currentTransactionalValues.selectedFinancialStateType);
-    const classificationChanged = this.compareClassificationValues(currentTransactionalValues.selectedClasificationType);
-    const crossingChanged = currentTransactionalValues.crossing !== this.originalAccountValues.crossing;
-    const costCenterChanged = currentTransactionalValues.costCenter !== this.originalAccountValues.costCenter;
+    const natureChanged = this.compareNatureValues(
+      currentTransactionalValues.selectedNatureType,
+    );
+    const financialStatusChanged = this.compareFinancialStatusValues(
+      currentTransactionalValues.selectedFinancialStateType,
+    );
+    const classificationChanged = this.compareClassificationValues(
+      currentTransactionalValues.selectedClasificationType,
+    );
+    const crossingChanged =
+      currentTransactionalValues.crossing !==
+      this.originalAccountValues.crossing;
+    const costCenterChanged =
+      currentTransactionalValues.costCenter !==
+      this.originalAccountValues.costCenter;
 
-    return natureChanged || financialStatusChanged || classificationChanged || crossingChanged || costCenterChanged;
+    return (
+      natureChanged ||
+      financialStatusChanged ||
+      classificationChanged ||
+      crossingChanged ||
+      costCenterChanged
+    );
   }
 
   /**
-  * Obtiene los valores actuales del formulario de cuenta.
-  * @returns Los valores actuales del código y descripción.
-  */
-  private getCurrentAccountValues(): { code: string, description: string } {
+   * Obtiene los valores actuales del formulario de cuenta.
+   * @returns Los valores actuales del código y descripción.
+   */
+  private getCurrentAccountValues(): { code: string; description: string } {
     const codeValue = this.accountForm.get(this.code)?.value || '';
     const descriptionValue = this.accountForm.get(this.name)?.value || '';
 
     return {
       code: codeValue,
-      description: descriptionValue
+      description: descriptionValue,
     };
   }
 
   /**
-  * Compara el valor de naturaleza actual con el original.
-  * @param currentValue Valor actual del selector de naturaleza.
-  * @returns Si el valor cambió.
-  */
+   * Compara el valor de naturaleza actual con el original.
+   * @param currentValue Valor actual del selector de naturaleza.
+   * @returns Si el valor cambió.
+   */
   private compareNatureValues(currentValue: any): boolean {
     const currentName = currentValue?.name || null;
     return currentName !== this.originalAccountValues.nature;
   }
 
   /**
-  * Compara el valor de estado financiero actual con el original.
-  * @param currentValue Valor actual del selector de estado financiero.
-  * @returns Si el valor cambió.
-  */
+   * Compara el valor de estado financiero actual con el original.
+   * @param currentValue Valor actual del selector de estado financiero.
+   * @returns Si el valor cambió.
+   */
   private compareFinancialStatusValues(currentValue: any): boolean {
     const currentName = currentValue?.name || null;
     return currentName !== this.originalAccountValues.financialStatus;
   }
 
   /**
-  * Compara el valor de clasificación actual con el original.
-  * @param currentValue Valor actual del selector de clasificación.
-  * @returns Si el valor cambió.
-  */
+   * Compara el valor de clasificación actual con el original.
+   * @param currentValue Valor actual del selector de clasificación.
+   * @returns Si el valor cambió.
+   */
   private compareClassificationValues(currentValue: any): boolean {
     const currentName = currentValue?.name || null;
     return currentName !== this.originalAccountValues.classification;
@@ -547,11 +669,26 @@ export class AccountListComponent implements OnInit {
     this.subAccountName = '';
     this.auxiliaryName = '';
 
-    this.className = this.findAccountByCode(this.listAccounts, code.slice(0, 1));
-    this.groupName = this.findAccountByCode(this.listAccounts, code.slice(0, 2));
-    this.accountName = this.findAccountByCode(this.listAccounts, code.slice(0, 4));
-    this.subAccountName = this.findAccountByCode(this.listAccounts, code.slice(0, 6));
-    this.auxiliaryName = this.findAccountByCode(this.listAccounts, code.slice(0, 8));
+    this.className = this.findAccountByCode(
+      this.listAccounts,
+      code.slice(0, 1),
+    );
+    this.groupName = this.findAccountByCode(
+      this.listAccounts,
+      code.slice(0, 2),
+    );
+    this.accountName = this.findAccountByCode(
+      this.listAccounts,
+      code.slice(0, 4),
+    );
+    this.subAccountName = this.findAccountByCode(
+      this.listAccounts,
+      code.slice(0, 6),
+    );
+    this.auxiliaryName = this.findAccountByCode(
+      this.listAccounts,
+      code.slice(0, 8),
+    );
 
     switch (code.length) {
       case 1:
@@ -573,8 +710,8 @@ export class AccountListComponent implements OnInit {
   }
 
   /**
-  * Ordena las cuentas recursivamente por código.
-  */
+   * Ordena las cuentas recursivamente por código.
+   */
   sortAccountsRecursively(accounts: Account[]): Account[] {
     // Ordenamos la lista actual numéricamente
     accounts.sort((a, b) => Number.parseInt(a.code) - Number.parseInt(b.code));
@@ -604,14 +741,15 @@ export class AccountListComponent implements OnInit {
       // Solo asignar valor por defecto si no tiene un estado financiero definido
       if (!account.financialStatus || account.financialStatus.trim() === '') {
         const code = account.code[0];
-        if (code === "1" || code === "2" || code === "3") {
-          account.financialStatus = "Estado de situacion financiero";
+        if (code === '1' || code === '2' || code === '3') {
+          account.financialStatus = 'Estado de situacion financiero';
         }
-        if (code === "4" || code === "5" || code === "6") {
-          account.financialStatus = "Estado de resultados";
+        if (code === '4' || code === '5' || code === '6') {
+          account.financialStatus = 'Estado de resultados';
         }
       }
-      if (account.children) { // Verificamos que children no sea undefined
+      if (account.children) {
+        // Verificamos que children no sea undefined
         account.children = this.changeFinancialStateType(account.children);
       }
     }
@@ -634,17 +772,22 @@ export class AccountListComponent implements OnInit {
       if (!account.nature || account.nature.trim() === '') {
         const code = account.code[0];
         const codeAccount = account.code.slice(0, 4);
-        if (code === "1" || code === "5" || code === "6") {
-          account.nature = "Debito";
+        if (code === '1' || code === '5' || code === '6') {
+          account.nature = 'Debito';
         }
-        if (code === "2" || code === "3" || code === "4") {
-          account.nature = "Credito";
+        if (code === '2' || code === '3' || code === '4') {
+          account.nature = 'Credito';
         }
-        if (codeAccount === "1592" || codeAccount === "1399" || codeAccount === "1499") {
-          account.nature = "Credito";
+        if (
+          codeAccount === '1592' ||
+          codeAccount === '1399' ||
+          codeAccount === '1499'
+        ) {
+          account.nature = 'Credito';
         }
       }
-      if (account.children) { // Verificamos que children no sea undefined
+      if (account.children) {
+        // Verificamos que children no sea undefined
         account.children = this.changeNatureType(account.children);
       }
     }
@@ -659,11 +802,17 @@ export class AccountListComponent implements OnInit {
    * @returns Un arreglo de datos filtrado, donde solo se incluyen las filas con códigos de longitud específica.
    */
   filterByCodeLength(data: any[][]): any[][] {
-    return data.filter(row => {
+    return data.filter((row) => {
       const code = row[0]; // Toma el valor de la primera columna (código)
       const codeStr = String(code); // Convertir a cadena en caso de que sea un número
       const codeLength = codeStr.length; // Obtener la longitud del código
-      return (codeLength === 1 || codeLength === 2 || codeLength === 4 || codeLength === 6 || codeLength === 8);
+      return (
+        codeLength === 1 ||
+        codeLength === 2 ||
+        codeLength === 4 ||
+        codeLength === 6 ||
+        codeLength === 8
+      );
     });
   }
 
@@ -702,14 +851,14 @@ export class AccountListComponent implements OnInit {
       group: true,
       account: true,
       subAccount: true,
-      auxiliary: true
+      auxiliary: true,
     };
     this.inputAccess = {
       class: code != 1,
       group: code != 2,
       account: code != 4,
       subAccount: code != 6,
-      auxiliary: code != 8
+      auxiliary: code != 8,
     };
   }
 
@@ -740,7 +889,9 @@ export class AccountListComponent implements OnInit {
    * @param event - El evento de selección que contiene el nombre del tipo de estado financiero seleccionado.
    */
   onSelectionFinancialStateType(event: any) {
-    this.formTransactional.get('selectedFinancialStateType')?.setValue(event.name);
+    this.formTransactional
+      .get('selectedFinancialStateType')
+      ?.setValue(event.name);
     this.placeFinancialStateType = '';
     // Actualizar la visibilidad de los checkboxes cuando cambie el estado financiero
     this.updateCheckboxVisibilityEditDynamic(event.name);
@@ -762,7 +913,9 @@ export class AccountListComponent implements OnInit {
    * @param event - El evento de selección que contiene el nombre del tipo de clasificación seleccionado.
    */
   onSelectionClasificationType(event: any) {
-    this.formTransactional.get('selectedClasificationType')?.setValue(event.name);
+    this.formTransactional
+      .get('selectedClasificationType')
+      ?.setValue(event.name);
     this.placeClasificationType = '';
   }
 
@@ -787,7 +940,6 @@ export class AccountListComponent implements OnInit {
     this.formTransactional.get('selectedClasificationType')?.setValue('');
   }
 
-
   /**
    * Establece la información de la cuenta seleccionada en el selector y actualiza los valores del formulario.
    * @param selectedAccount - La cuenta seleccionada de la lista que contiene la información a establecer en el formulario.
@@ -801,14 +953,13 @@ export class AccountListComponent implements OnInit {
     if (this.accountSelected) {
       // Determinar si es una cuenta auxiliar (8 dígitos)
       const isAuxiliaryAccount = this.accountSelected.code.length === 8;
-      
+
       this.showCrossingCheckboxEdit = isAuxiliaryAccount;
-      
+
       // El checkbox de centro de costo se muestra solo si es auxiliar y el estado financiero es "Estado de Resultados"
       const financialStatus = this.accountSelected.financialStatus;
-      this.showCostCenterCheckboxEdit = isAuxiliaryAccount && financialStatus === 'Estado de Resultados';
-      
-      
+      this.showCostCenterCheckboxEdit =
+        isAuxiliaryAccount && financialStatus === 'Estado de Resultados';
     } else {
       this.showCrossingCheckboxEdit = false;
       this.showCostCenterCheckboxEdit = false;
@@ -822,10 +973,11 @@ export class AccountListComponent implements OnInit {
     if (this.accountSelected) {
       // Determinar si es una cuenta auxiliar (8 dígitos)
       const isAuxiliaryAccount = this.accountSelected.code.length === 8;
-      
+
       // El checkbox de centro de costo se muestra solo si es auxiliar y el estado financiero es "Estado de Resultados"
-      this.showCostCenterCheckboxEdit = isAuxiliaryAccount && newFinancialStatus === 'Estado de Resultados';
-      
+      this.showCostCenterCheckboxEdit =
+        isAuxiliaryAccount && newFinancialStatus === 'Estado de Resultados';
+
       // Si no se debe mostrar el checkbox de centro de costo, resetear su valor
       if (!this.showCostCenterCheckboxEdit) {
         this.formTransactional.patchValue({ costCenter: false });
@@ -840,38 +992,46 @@ export class AccountListComponent implements OnInit {
   accountHasInformation(selectedAccount: Account) {
     // Normalizamos los valores que vienen de la cuenta seleccionada UNA SOLA VEZ
     const normalizedNature = this.normalizeString(selectedAccount.nature);
-    const normalizedFinancialStatus = this.normalizeString(selectedAccount.financialStatus);
-    const normalizedClassification = this.normalizeString(selectedAccount.classification);
+    const normalizedFinancialStatus = this.normalizeString(
+      selectedAccount.financialStatus,
+    );
+    const normalizedClassification = this.normalizeString(
+      selectedAccount.classification,
+    );
 
     // 1. Buscamos los objetos correspondientes usando la comparación normalizada
     const natureObject = this.listNature.find(
-      n => this.normalizeString(n.name) === normalizedNature
+      (n) => this.normalizeString(n.name) === normalizedNature,
     );
 
     const financialStateObject = this.listFinancialState.find(
-      f => this.normalizeString(f.name) === normalizedFinancialStatus
+      (f) => this.normalizeString(f.name) === normalizedFinancialStatus,
     );
 
     const clasificationObject = this.listClasification.find(
-      c => this.normalizeString(c.name) === normalizedClassification
+      (c) => this.normalizeString(c.name) === normalizedClassification,
     );
 
     // 2. Resetea el formulario a un estado "limpio" con los objetos encontrados.
     const crossingValue = selectedAccount.crossing === true;
     const costCenterValue = selectedAccount.costCenter === true;
-    
+
     this.formTransactional.reset({
       selectedNatureType: natureObject || null,
       selectedFinancialStateType: financialStateObject || null,
       selectedClasificationType: clasificationObject || null,
       crossing: crossingValue,
-      costCenter: costCenterValue
+      costCenter: costCenterValue,
     });
 
     // 3. Ajustamos los placeholders visualmente.
     this.placeNatureType = natureObject ? '' : 'Seleccione una opción';
-    this.placeFinancialStateType = financialStateObject ? '' : 'Seleccione una opción';
-    this.placeClasificationType = clasificationObject ? '' : 'Seleccione una opción';
+    this.placeFinancialStateType = financialStateObject
+      ? ''
+      : 'Seleccione una opción';
+    this.placeClasificationType = clasificationObject
+      ? ''
+      : 'Seleccione una opción';
   }
 
   /**
@@ -885,12 +1045,9 @@ export class AccountListComponent implements OnInit {
     }
     return str
       .toLowerCase() // 1. Convertir a minúsculas
-      .normalize("NFD") // 2. Descomponer caracteres (ej. 'é' se convierte en 'e' + '´')
-      .replaceAll(/[\u0300-\u036f]/g, ""); // 3. Eliminar los diacríticos (acentos)
+      .normalize('NFD') // 2. Descomponer caracteres (ej. 'é' se convierte en 'e' + '´')
+      .replaceAll(/[\u0300-\u036f]/g, ''); // 3. Eliminar los diacríticos (acentos)
   }
-
-
-
 
   /**
    * Oculta el formulario y restaura el estado en el que estaba antes.
@@ -923,8 +1080,8 @@ export class AccountListComponent implements OnInit {
           classification: $event.classification,
           parent: this.accountSelected.id,
           crossing: $event.crossing,
-          costCenter: $event.costCenter
-        }
+          costCenter: $event.costCenter,
+        };
         this.saveNewAccountType(account);
       }
     }
@@ -950,7 +1107,7 @@ export class AccountListComponent implements OnInit {
     return new Promise<void>((resolve, reject) => {
       this._accountService.getListAccounts(this.getIdEnterprise()).subscribe({
         next: (accounts) => {
-          this.listAccounts = accounts.filter(account => account !== null);
+          this.listAccounts = accounts.filter((account) => account !== null);
           this.listAccounts = this.changeNatureType(this.listAccounts);
           this.listAccounts = this.changeFinancialStateType(this.listAccounts);
           this.listAccounts = this.sortAccountsRecursively(this.listAccounts);
@@ -958,7 +1115,7 @@ export class AccountListComponent implements OnInit {
         },
         error: (error) => {
           reject(error);
-        }
+        },
       });
     });
   }
@@ -978,24 +1135,22 @@ export class AccountListComponent implements OnInit {
     this.performGeneralSearch(this.searchTerm.trim());
   }
 
-
   /**
    * Realiza búsqueda general por código o descripción.
    */
   private performGeneralSearch(searchValue: string): void {
-    this._accountService.searchAccounts(
-      this.getIdEnterprise(),
-      searchValue
-    ).subscribe({
-      next: (results: Account[]) => {
-        this.searchResults = results;
-        this.isLoading = false;
-      },
-      error: () => {
-        this.searchResults = [];
-        this.isLoading = false;
-      }
-    });
+    this._accountService
+      .searchAccounts(this.getIdEnterprise(), searchValue)
+      .subscribe({
+        next: (results: Account[]) => {
+          this.searchResults = results;
+          this.isLoading = false;
+        },
+        error: () => {
+          this.searchResults = [];
+          this.isLoading = false;
+        },
+      });
   }
 
   /**
@@ -1027,7 +1182,7 @@ export class AccountListComponent implements OnInit {
   /**
    * Verifica si una cuenta existe usando el cache local de cuentas cargadas.
    * Si no está en cache, hace la búsqueda pero de forma silenciosa.
-   * 
+   *
    * @param account El objeto cuenta que contiene el código a buscar.
    * @returns Una promesa que se resuelve con un valor booleano que indica si la cuenta existe o no.
    */
@@ -1041,9 +1196,12 @@ export class AccountListComponent implements OnInit {
 
       // Si no está en cache, hacer búsqueda silenciosa
       const cuenta = await firstValueFrom(
-        this._accountService.getAccountByCode(account.code, this.getIdEnterprise())
+        this._accountService.getAccountByCode(
+          account.code,
+          this.getIdEnterprise(),
+        ),
       );
-      
+
       return !!cuenta;
     } catch (error) {
       // Cualquier error se considera como cuenta no existente
@@ -1053,7 +1211,7 @@ export class AccountListComponent implements OnInit {
 
   /**
    * Busca una cuenta en el cache local (listAccounts) de forma recursiva.
-   * 
+   *
    * @param code Código de la cuenta a buscar.
    * @returns La cuenta si existe en cache, null si no existe.
    */
@@ -1082,30 +1240,31 @@ export class AccountListComponent implements OnInit {
     try {
       this._accountService.createAccount(account).subscribe(
         (response) => {
-          this.getAccounts()
-            .then(() => {
-              this.expandAccounts(response);
-              this.selectAccount(response);
-              this.noShowFormAddNewClass();
-              this.noAddNewChild();
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Registro exitoso',
-                detail: 'La cuenta se ha creado correctamente'
-              });
+          this.getAccounts().then(() => {
+            this.expandAccounts(response);
+            this.selectAccount(response);
+            this.noShowFormAddNewClass();
+            this.noAddNewChild();
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Registro exitoso',
+              detail: 'La cuenta se ha creado correctamente',
             });
+          });
         },
         (error) => {
-          const errorMessage = error?.error?.message || 'Ha ocurrido un error al crear la cuenta!.';
+          const errorMessage =
+            error?.error?.message ||
+            'Ha ocurrido un error al crear la cuenta!.';
           const errorCode = error?.error?.code;
           const errorTitle = this.getErrorTitle(errorCode);
 
           this.messageService.add({
             severity: 'error',
             summary: errorTitle,
-            detail: errorMessage
+            detail: errorMessage,
           });
-        }
+        },
       );
     } catch (error) {
       console.error('Error al guardar el tipo de cuenta:', error);
@@ -1119,11 +1278,13 @@ export class AccountListComponent implements OnInit {
    * Luego de la eliminación, actualiza la lista de cuentas y expande la cuenta padre si es necesario.
    */
   deleteAccount() {
+    if (!this.authService.requireAnyPermission(['AC#D'])) return;
     // Validate if the account is linked to any tax
     if (this.accountSelected?.id) {
       try {
         this.confirmationService.confirm({
-          message: '¿Desea eliminar esta cuenta? Esta acción no se puede deshacer.',
+          message:
+            '¿Desea eliminar esta cuenta? Esta acción no se puede deshacer.',
           header: 'Confirmar eliminación',
           icon: 'pi pi-exclamation-triangle',
           acceptLabel: 'Sí, Eliminar',
@@ -1131,57 +1292,66 @@ export class AccountListComponent implements OnInit {
           rejectButtonStyleClass: 'p-button-secondary',
           accept: () => {
             if (this.accountSelected?.id) {
-              this._accountService.deleteAccount(this.accountSelected.id.toString(), this.getIdEnterprise()).subscribe(
-                () => {
-                  this.messageService.add({
-                    severity: 'success',
-                    summary: 'Eliminada',
-                    detail: 'La cuenta se ha eliminado correctamente'
-                  });
-                this.getAccounts()
-                  .then(() => {
-                    if (this.accountSelected?.parent) {
-                      this._accountService.getAccountByCode(this.accountSelected?.parent, this.getIdEnterprise()).subscribe({
-                        next: (account) => {
-                          if (account) {
-                            this.expandAccounts(account);
-                            this.selectAccount(account);
-                            this.noShowFormAddNewClass();
-                            this.noAddNewChild();
-                          } else {
-                            // Si la cuenta es null (no existe)
-                            this.noShowPrincipalAndTransactionalForm();
-                          }
-                        }
-                      });
-                    } else {
-                      this.noShowPrincipalAndTransactionalForm();
-                    }
-                  });
-                },
-                (error) => {
-                  // Extraer el mensaje específico del backend
-                  let errorMessage = 'Ha ocurrido un error al eliminar la cuenta!.';
+              this._accountService
+                .deleteAccount(
+                  this.accountSelected.id.toString(),
+                  this.getIdEnterprise(),
+                )
+                .subscribe(
+                  () => {
+                    this.messageService.add({
+                      severity: 'success',
+                      summary: 'Eliminada',
+                      detail: 'La cuenta se ha eliminado correctamente',
+                    });
+                    this.getAccounts().then(() => {
+                      if (this.accountSelected?.parent) {
+                        this._accountService
+                          .getAccountByCode(
+                            this.accountSelected?.parent,
+                            this.getIdEnterprise(),
+                          )
+                          .subscribe({
+                            next: (account) => {
+                              if (account) {
+                                this.expandAccounts(account);
+                                this.selectAccount(account);
+                                this.noShowFormAddNewClass();
+                                this.noAddNewChild();
+                              } else {
+                                // Si la cuenta es null (no existe)
+                                this.noShowPrincipalAndTransactionalForm();
+                              }
+                            },
+                          });
+                      } else {
+                        this.noShowPrincipalAndTransactionalForm();
+                      }
+                    });
+                  },
+                  (error) => {
+                    // Extraer el mensaje específico del backend
+                    let errorMessage =
+                      'Ha ocurrido un error al eliminar la cuenta!.';
 
-                  if (error.error) {
-                    if (typeof error.error === 'string') {
-                      errorMessage = error.error;
-                    } else if (error.error.message) {
-                      errorMessage = error.error.message;
+                    if (error.error) {
+                      if (typeof error.error === 'string') {
+                        errorMessage = error.error;
+                      } else if (error.error.message) {
+                        errorMessage = error.error.message;
+                      }
                     }
-                  }
 
-                  this.messageService.add({
-                    severity: 'info',
-                    summary: 'Información',
-                    detail: errorMessage
-                  });
-                }
-              );
+                    this.messageService.add({
+                      severity: 'info',
+                      summary: 'Información',
+                      detail: errorMessage,
+                    });
+                  },
+                );
             }
-          }
+          },
         });
-
       } catch (error) {
         console.error('Error al eliminar el tipo de cuenta: ', error);
       }
@@ -1200,6 +1370,8 @@ export class AccountListComponent implements OnInit {
    * Si no hay cambios, el botón permanece inactivo y no se realiza ninguna acción.
    */
   async updateAccount() {
+    if (!this.authService.requireAnyPermission(['AC#U'])) return;
+
     // Prevenir múltiples actualizaciones simultáneas
     if (this.isUpdating) {
       return;
@@ -1213,7 +1385,7 @@ export class AccountListComponent implements OnInit {
         // Construir el código correctamente según el nivel de cuenta
         let newCode = '';
         const codeValue = this.accountForm.get(this.code)?.value || '';
-        
+
         // Asegurar que el código mantenga la longitud correcta según el nivel
         if (this.num === 1) {
           newCode = codeValue.padStart(1, '0');
@@ -1235,31 +1407,37 @@ export class AccountListComponent implements OnInit {
           code: newCode,
           description: this.accountForm.get(this.name)?.value,
 
-          nature: transactionalValues.selectedNatureType ? transactionalValues.selectedNatureType.name : null,
-          financialStatus: transactionalValues.selectedFinancialStateType ? transactionalValues.selectedFinancialStateType.name : null,
-          classification: transactionalValues.selectedClasificationType ? transactionalValues.selectedClasificationType.name : null,
+          nature: transactionalValues.selectedNatureType
+            ? transactionalValues.selectedNatureType.name
+            : null,
+          financialStatus: transactionalValues.selectedFinancialStateType
+            ? transactionalValues.selectedFinancialStateType.name
+            : null,
+          classification: transactionalValues.selectedClasificationType
+            ? transactionalValues.selectedClasificationType.name
+            : null,
           crossing: transactionalValues.crossing || false,
-          costCenter: transactionalValues.costCenter || false
+          costCenter: transactionalValues.costCenter || false,
         };
 
         // Verificar si realmente hay cambios en los datos
-        const hasChanges = (
+        const hasChanges =
           this.accountSelected.code !== account.code ||
           this.accountSelected.description !== account.description ||
           this.accountSelected.nature !== account.nature ||
           this.accountSelected.financialStatus !== account.financialStatus ||
           this.accountSelected.classification !== account.classification ||
           this.accountSelected.crossing !== account.crossing ||
-          this.accountSelected.costCenter !== account.costCenter
-        );
-        
+          this.accountSelected.costCenter !== account.costCenter;
+
         if (hasChanges) {
           // Verificar que tenemos un ID válido
           if (!this.accountSelected?.id) {
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: 'No se pudo identificar la cuenta a actualizar. Por favor, recargue la página.'
+              detail:
+                'No se pudo identificar la cuenta a actualizar. Por favor, recargue la página.',
             });
             return;
           }
@@ -1286,33 +1464,38 @@ export class AccountListComponent implements OnInit {
   update(id?: number, account?: Account) {
     this._accountService.updateAccount(id, account).subscribe(
       (response) => {
-        this.getAccounts()
-          .then(() => {
-            this.expandAccounts(response);
-            this.selectAccount(response);
-            this.noShowFormAddNewClass();
-            this.noAddNewChild();
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Actualización exitosa',
-              detail: 'La cuenta se ha actualizado correctamente'
-            });
+        this.getAccounts().then(() => {
+          this.expandAccounts(response);
+          this.selectAccount(response);
+          this.noShowFormAddNewClass();
+          this.noAddNewChild();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Actualización exitosa',
+            detail: 'La cuenta se ha actualizado correctamente',
           });
+        });
       },
       (error) => {
-        const errorMessage = error?.error?.message || 'Ha ocurrido un error al actualizar la cuenta!.';
+        const errorMessage =
+          error?.error?.message ||
+          'Ha ocurrido un error al actualizar la cuenta!.';
         const errorCode = error?.error?.code;
         const errorTitle = this.getErrorTitle(errorCode);
 
         // Determinar la severidad basada en el código de error
-        const severity = (errorCode === 'ACCOUNT_ASSOCIATED_WITH_ACCOUNTING_MOVEMENTS' || errorCode === 'ACCOUNT_IN_USE') ? 'info' : 'error';
+        const severity =
+          errorCode === 'ACCOUNT_ASSOCIATED_WITH_ACCOUNTING_MOVEMENTS' ||
+          errorCode === 'ACCOUNT_IN_USE'
+            ? 'info'
+            : 'error';
 
         this.messageService.add({
           severity: severity,
           summary: errorTitle,
-          detail: errorMessage
+          detail: errorMessage,
         });
-      }
+      },
     );
   }
 
@@ -1394,11 +1577,16 @@ export class AccountListComponent implements OnInit {
 
           if (!currentAccount) continue;
 
-          if (currentAccount.code === code.slice(0, currentAccount.code.length)) {
+          if (
+            currentAccount.code === code.slice(0, currentAccount.code.length)
+          ) {
             currentAccount.showSubAccounts = true;
 
             if (currentAccount.code.length < code.length) {
-              const nextCodeSegment = code.slice(0, currentAccount.code.length + 2);
+              const nextCodeSegment = code.slice(
+                0,
+                currentAccount.code.length + 2,
+              );
               if (currentAccount.children) {
                 for (let child of currentAccount.children) {
                   if (child.code === nextCodeSegment) {
@@ -1422,21 +1610,30 @@ export class AccountListComponent implements OnInit {
     });
   }
 
-
   /**
- * Verifica si una cuenta está asociada a algún impuesto, buscando si su código se encuentra en las listas de cuentas de reembolso o de depósito.
- * @param accountCode El código de la cuenta a verificar.
- * @returns `true` si el código de la cuenta está presente en alguna de las listas, `false` en caso contrario.
- */
+   * Verifica si una cuenta está asociada a algún impuesto, buscando si su código se encuentra en las listas de cuentas de reembolso o de depósito.
+   * @param accountCode El código de la cuenta a verificar.
+   * @returns `true` si el código de la cuenta está presente en alguna de las listas, `false` en caso contrario.
+   */
   searchIfAccountIsLinked(accountCode: string) {
-    return this.accountCataloguePresentationService.isAccountLinked(accountCode, this.listRefundAccount, this.listDepositAccount);
+    return this.accountCataloguePresentationService.isAccountLinked(
+      accountCode,
+      this.listRefundAccount,
+      this.listDepositAccount,
+    );
   }
 
   /**
    * Verifica si la cuenta seleccionada está vinculada a algún impuesto
    */
   get isSelectedAccountLinked(): boolean {
-    return this.accountSelected ? this.accountCataloguePresentationService.isAccountLinked(this.accountSelected.code, this.listRefundAccount, this.listDepositAccount) : false;
+    return this.accountSelected
+      ? this.accountCataloguePresentationService.isAccountLinked(
+          this.accountSelected.code,
+          this.listRefundAccount,
+          this.listDepositAccount,
+        )
+      : false;
   }
 
   /**
@@ -1453,11 +1650,19 @@ export class AccountListComponent implements OnInit {
 
     // Permitir teclas de navegación
     const allowedKeys = new Set([
-      'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
-      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-      'Home', 'End'
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
     ]);
-    
+
     if (allowedKeys.has(event.key)) {
       return;
     }
@@ -1471,7 +1676,7 @@ export class AccountListComponent implements OnInit {
     // Obtener el valor actual del campo
     const target = event.target as HTMLInputElement;
     const currentValue = target.value;
-    
+
     // Limitar longitud según el nivel
     if (currentValue.length >= maxLength && !allowedKeys.has(event.key)) {
       event.preventDefault();
@@ -1486,18 +1691,18 @@ export class AccountListComponent implements OnInit {
   onCodeInput(event: Event, maxLength: number) {
     const target = event.target as HTMLInputElement;
     let value = target.value;
-    
+
     // Remover caracteres que no sean números
     value = value.replaceAll(/\D/g, '');
-    
+
     // Limitar longitud según el nivel
     if (value.length > maxLength) {
       value = value.substring(0, maxLength);
     }
-    
+
     // Actualizar el valor del campo
     target.value = value;
-    
+
     // Actualizar el FormControl correspondiente
     const formControlName = target.getAttribute('formControlName');
     if (formControlName) {
@@ -1518,9 +1723,18 @@ export class AccountListComponent implements OnInit {
 
     // Permitir teclas de navegación
     const allowedKeys = new Set([
-      'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
-      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-      'Home', 'End', ' '
+      'Backspace',
+      'Delete',
+      'Tab',
+      'Escape',
+      'Enter',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+      ' ',
     ]);
 
     if (allowedKeys.has(event.key)) {
@@ -1580,7 +1794,10 @@ export class AccountListComponent implements OnInit {
    * @param parent La cuenta padre.
    * @param status El nuevo estado a aplicar.
    */
-  private updateChildrenStatusRecursively(parent: Account, status: boolean): void {
+  private updateChildrenStatusRecursively(
+    parent: Account,
+    status: boolean,
+  ): void {
     if (parent.children && parent.children.length > 0) {
       for (const child of parent.children) {
         child.status = status;
@@ -1596,7 +1813,10 @@ export class AccountListComponent implements OnInit {
    */
   private activateParentHierarchy(child: Account): void {
     // Función auxiliar para encontrar el padre en la jerarquía
-    const findParentInHierarchy = (accounts: Account[], targetCode: string): Account | null => {
+    const findParentInHierarchy = (
+      accounts: Account[],
+      targetCode: string,
+    ): Account | null => {
       for (const account of accounts) {
         if (account.code === targetCode) {
           return account;
@@ -1628,7 +1848,10 @@ export class AccountListComponent implements OnInit {
    */
   private deactivateParentHierarchy(child: Account): void {
     // Función auxiliar para encontrar el padre en la jerarquía
-    const findParentInHierarchy = (accounts: Account[], targetCode: string): Account | null => {
+    const findParentInHierarchy = (
+      accounts: Account[],
+      targetCode: string,
+    ): Account | null => {
       for (const account of accounts) {
         if (account.code === targetCode) {
           return account;
@@ -1664,12 +1887,18 @@ export class AccountListComponent implements OnInit {
    */
   private getParentCode(code: string): string | null {
     switch (code.length) {
-      case 1: return null; // Clase, no tiene padre
-      case 2: return code.substring(0, 1); // Grupo -> Clase
-      case 4: return code.substring(0, 2); // Cuenta -> Grupo
-      case 6: return code.substring(0, 4); // Subcuenta -> Cuenta
-      case 8: return code.substring(0, 6); // Auxiliar -> Subcuenta
-      default: return null;
+      case 1:
+        return null; // Clase, no tiene padre
+      case 2:
+        return code.substring(0, 1); // Grupo -> Clase
+      case 4:
+        return code.substring(0, 2); // Cuenta -> Grupo
+      case 6:
+        return code.substring(0, 4); // Subcuenta -> Cuenta
+      case 8:
+        return code.substring(0, 6); // Auxiliar -> Subcuenta
+      default:
+        return null;
     }
   }
 
@@ -1706,7 +1935,7 @@ export class AccountListComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Faltan datos para cambiar el estado de la cuenta.'
+        detail: 'Faltan datos para cambiar el estado de la cuenta.',
       });
       this.isChangingState = false;
       return;
@@ -1715,41 +1944,45 @@ export class AccountListComponent implements OnInit {
     const enterpriseId = this.getIdEnterprise();
     const newStatus = account.status;
 
-    this._accountService.changeState(account.id, enterpriseId, newStatus).subscribe({
-      next: () => {
-        if (newStatus) {
-          this.activateParentHierarchy(account);
-        } else {
-          this.updateChildrenStatusRecursively(account, newStatus);
-        }
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Estado de la cuenta "${account.description}" cambiado correctamente`
-        });
-        this.isChangingState = false;
-      },
-      error: () => {
-        account.status = !newStatus;
-        if (newStatus) {
-          this.deactivateParentHierarchy(account);
-        } else {
-          this.updateChildrenStatusRecursively(account, !newStatus);
-        }
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo cambiar el estado de la cuenta.'
-        });
-        this.isChangingState = false;
-      }
-    });
+    this._accountService
+      .changeState(account.id, enterpriseId, newStatus)
+      .subscribe({
+        next: () => {
+          if (newStatus) {
+            this.activateParentHierarchy(account);
+          } else {
+            this.updateChildrenStatusRecursively(account, newStatus);
+          }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Estado de la cuenta "${account.description}" cambiado correctamente`,
+          });
+          this.isChangingState = false;
+        },
+        error: () => {
+          account.status = !newStatus;
+          if (newStatus) {
+            this.deactivateParentHierarchy(account);
+          } else {
+            this.updateChildrenStatusRecursively(account, !newStatus);
+          }
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo cambiar el estado de la cuenta.',
+          });
+          this.isChangingState = false;
+        },
+      });
   }
 
   /**
    * Muestra el modal de confirmación para exportar cuentas
    */
   showExportConfirmDialog() {
+    if (!this.authService.requireAnyPermission(['AC#E'])) return;
+
     this.selectedExportStatus = undefined; // "Todos" por defecto
 
     this.confirmationService.confirm({
@@ -1762,7 +1995,7 @@ export class AccountListComponent implements OnInit {
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
         this.exportAccounts(this.selectedExportStatus);
-      }
+      },
     });
   }
 
@@ -1778,67 +2011,83 @@ export class AccountListComponent implements OnInit {
     this.progressOperationType = 'export';
 
     // Iniciar exportación asíncrona
-    this._accountService.exportAccountsAsync(entId, companyName, status).subscribe({
-      next: (response) => {
-        // Guardar el jobId y mostrar diálogo de progreso
-        this.progressJobId = response.jobId;
-        this.progressValue = 0;
-        this.progressStatus = 'PROCESSING';
-        this.progressPhase = 'Iniciando exportación...';
-        this.showProgressDialog = true;
-        
-        // Iniciar polling cada 5 segundos
-        this.startProgressPolling();
+    this._accountService
+      .exportAccountsAsync(entId, companyName, status)
+      .subscribe({
+        next: (response) => {
+          // Guardar el jobId y mostrar diálogo de progreso
+          this.progressJobId = response.jobId;
+          this.progressValue = 0;
+          this.progressStatus = 'PROCESSING';
+          this.progressPhase = 'Iniciando exportación...';
+          this.showProgressDialog = true;
 
-        // NO mostrar notificación aquí - solo al completar exitosamente
-      },
-      error: (error) => {
-        this.isExporting = false;
-        
-        // Manejar error del backend (por ejemplo, no hay cuentas disponibles)
-        if (error.error instanceof Blob) {
-          // Si el error viene como Blob, leerlo
-          const reader = new FileReader();
-          reader.onload = () => {
-            try {
-              const errorData = JSON.parse(reader.result as string);
-              const errorMessage = errorData.message || 'No se pudo iniciar la exportación';
-              const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
+          // Iniciar polling cada 5 segundos
+          this.startProgressPolling();
 
-              this.messageService.add({
-                severity: isNoAccountsMessage ? 'info' : 'error',
-                summary: isNoAccountsMessage ? 'Información' : 'Error al Iniciar Exportación',
-                detail: isNoAccountsMessage ? this.getNoAccountsMessage(status) : errorMessage
-              });
-            } catch (e) {
+          // NO mostrar notificación aquí - solo al completar exitosamente
+        },
+        error: (error) => {
+          this.isExporting = false;
+
+          // Manejar error del backend (por ejemplo, no hay cuentas disponibles)
+          if (error.error instanceof Blob) {
+            // Si el error viene como Blob, leerlo
+            const reader = new FileReader();
+            reader.onload = () => {
+              try {
+                const errorData = JSON.parse(reader.result as string);
+                const errorMessage =
+                  errorData.message || 'No se pudo iniciar la exportación';
+                const isNoAccountsMessage =
+                  this.isNoAccountsAvailableMessage(errorMessage);
+
+                this.messageService.add({
+                  severity: isNoAccountsMessage ? 'info' : 'error',
+                  summary: isNoAccountsMessage
+                    ? 'Información'
+                    : 'Error al Iniciar Exportación',
+                  detail: isNoAccountsMessage
+                    ? this.getNoAccountsMessage(status)
+                    : errorMessage,
+                });
+              } catch (e) {
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error al Iniciar Exportación',
+                  detail: 'No se pudo iniciar la exportación',
+                });
+              }
+            };
+            reader.onerror = () => {
               this.messageService.add({
                 severity: 'error',
                 summary: 'Error al Iniciar Exportación',
-                detail: 'No se pudo iniciar la exportación'
+                detail: 'No se pudo procesar el error del servidor',
               });
-            }
-          };
-          reader.onerror = () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error al Iniciar Exportación',
-              detail: 'No se pudo procesar el error del servidor'
-            });
-          };
-          reader.readAsText(error.error);
-        } else {
-          // Error directo (JSON)
-          const errorMessage = error.error?.message || error.message || 'No se pudo iniciar la exportación';
-          const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
+            };
+            reader.readAsText(error.error);
+          } else {
+            // Error directo (JSON)
+            const errorMessage =
+              error.error?.message ||
+              error.message ||
+              'No se pudo iniciar la exportación';
+            const isNoAccountsMessage =
+              this.isNoAccountsAvailableMessage(errorMessage);
 
-          this.messageService.add({
-            severity: isNoAccountsMessage ? 'info' : 'error',
-            summary: isNoAccountsMessage ? 'Información' : 'Error al Iniciar Exportación',
-            detail: isNoAccountsMessage ? this.getNoAccountsMessage(status) : errorMessage
-          });
-        }
-      }
-    });
+            this.messageService.add({
+              severity: isNoAccountsMessage ? 'info' : 'error',
+              summary: isNoAccountsMessage
+                ? 'Información'
+                : 'Error al Iniciar Exportación',
+              detail: isNoAccountsMessage
+                ? this.getNoAccountsMessage(status)
+                : errorMessage,
+            });
+          }
+        },
+      });
   }
 
   /**
@@ -1851,11 +2100,11 @@ export class AccountListComponent implements OnInit {
       'no se encontraron cuentas',
       'no hay registros',
       'empty',
-      'sin cuentas'
+      'sin cuentas',
     ];
 
-    return noAccountsPatterns.some(pattern =>
-      message.toLowerCase().includes(pattern.toLowerCase())
+    return noAccountsPatterns.some((pattern) =>
+      message.toLowerCase().includes(pattern.toLowerCase()),
     );
   }
 
@@ -1883,7 +2132,9 @@ export class AccountListComponent implements OnInit {
     let filename = 'catalogo_cuentas.xlsx';
 
     if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      const filenameMatch = contentDisposition.match(
+        /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
+      );
       if (filenameMatch && filenameMatch[1]) {
         filename = filenameMatch[1].replace(/['"]/g, '');
       }
@@ -1902,7 +2153,14 @@ export class AccountListComponent implements OnInit {
   /**
    * Muestra el modal con los detalles de errores de importación.
    */
-  private showImportErrorsModal(errors: ImportError[], fileName: string, totalRecords?: number, failedImports?: number, successfulImports?: number, duplicatesSkipped?: number): void {
+  private showImportErrorsModal(
+    errors: ImportError[],
+    fileName: string,
+    totalRecords?: number,
+    failedImports?: number,
+    successfulImports?: number,
+    duplicatesSkipped?: number,
+  ): void {
     this.importErrors = errors;
     this.totalErrors = errors.length;
     this.totalRecordsImported = totalRecords || 0;
@@ -1935,7 +2193,7 @@ export class AccountListComponent implements OnInit {
         this.messageService.add({
           severity: 'warn',
           summary: 'Sin Errores',
-          detail: 'No hay errores para exportar'
+          detail: 'No hay errores para exportar',
         });
         return;
       }
@@ -1948,11 +2206,14 @@ export class AccountListComponent implements OnInit {
       const headerInfo = [
         ['ERRORES DE IMPORTACIÓN DE CATÁLOGO DE CUENTAS'],
         [''],
-        ['Fecha de exportación:', new Date().toLocaleDateString('es-CO', {
-          day: '2-digit',
-          month: 'long',
-          year: 'numeric'
-        })],
+        [
+          'Fecha de exportación:',
+          new Date().toLocaleDateString('es-CO', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+          }),
+        ],
         ['Hora:', new Date().toLocaleTimeString('es-CO')],
         [''],
         ['RESUMEN DE IMPORTACIÓN'],
@@ -1961,27 +2222,25 @@ export class AccountListComponent implements OnInit {
         ['Fallidos:', this.failedImportsCount],
         ['Duplicados omitidos:', this.duplicatesSkipped],
         [''],
-        ['DETALLE DE ERRORES']
+        ['DETALLE DE ERRORES'],
       ];
 
       // Agregar la información del encabezado
       XLSX.utils.sheet_add_aoa(ws, headerInfo, { origin: 'A1' });
 
       // Encabezados de la tabla
-      const tableHeaders = [
-        ['Fila', 'Columna', 'Campo', 'Valor', 'Error']
-      ];
+      const tableHeaders = [['Fila', 'Columna', 'Campo', 'Valor', 'Error']];
 
       // Agregar encabezados de la tabla
       XLSX.utils.sheet_add_aoa(ws, tableHeaders, { origin: 'A14' });
 
       // Preparar los datos de la tabla
-      const tableData = this.importErrors.map(error => [
+      const tableData = this.importErrors.map((error) => [
         error.rowNumber,
         this.getExcelColumnLetter(error.columnNumber),
         error.columnName,
         error.fieldValue || '(vacío)',
-        error.errorMessage
+        error.errorMessage,
       ]);
 
       // Agregar los datos de la tabla
@@ -1993,11 +2252,11 @@ export class AccountListComponent implements OnInit {
 
       // Configurar anchos de columnas
       ws['!cols'] = [
-        { wch: 8 },  // A - Fila
+        { wch: 8 }, // A - Fila
         { wch: 10 }, // B - Columna
         { wch: 25 }, // C - Campo
         { wch: 25 }, // D - Valor
-        { wch: 60 }  // E - Error
+        { wch: 60 }, // E - Error
       ];
 
       // Combinar celdas para el título
@@ -2027,14 +2286,13 @@ export class AccountListComponent implements OnInit {
       this.messageService.add({
         severity: 'success',
         summary: 'Exportación exitosa',
-        detail: 'El archivo se ha exportado correctamente.'
+        detail: 'El archivo se ha exportado correctamente.',
       });
-
     } catch (error) {
       this.messageService.add({
         severity: 'error',
         summary: 'Error en Exportación',
-        detail: 'Ocurrió un error al exportar los errores.'
+        detail: 'Ocurrió un error al exportar los errores.',
       });
     }
   }
@@ -2060,24 +2318,28 @@ export class AccountListComponent implements OnInit {
    * @param event Evento del selector de archivos.
    */
   onFileSelect(event: any): void {
+    if (!this.authService.requireAnyPermission(['AC#I'])) return;
+
     const file = event.files?.[0];
     if (!file) return;
 
     // Validar tipo de archivo manualmente
     const allowedMimeTypes = [
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-      'application/vnd.ms-excel' // .xls
+      'application/vnd.ms-excel', // .xls
     ];
 
     if (!allowedMimeTypes.includes(file.type)) {
       this.messageService.add({
         severity: 'error',
         summary: 'Archivo inválido',
-        detail: 'Por favor, selecciona un archivo EXCEL válido'
+        detail: 'Por favor, selecciona un archivo EXCEL válido',
       });
 
       // Limpiar la selección del archivo
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const fileInput = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement;
       if (fileInput) {
         fileInput.value = '';
       }
@@ -2098,14 +2360,14 @@ export class AccountListComponent implements OnInit {
         this.progressStatus = 'PROCESSING';
         this.progressPhase = 'Iniciando importación...';
         this.showProgressDialog = true;
-        
+
         // Iniciar polling cada 5 segundos
         this.startProgressPolling();
 
         this.messageService.add({
           severity: 'info',
           summary: 'Importación iniciada',
-          detail: 'La importación se está procesando.'
+          detail: 'La importación se está procesando.',
         });
       },
       error: (error) => {
@@ -2113,15 +2375,17 @@ export class AccountListComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error al Iniciar Importación',
-          detail: error.error?.message || 'No se pudo iniciar la importación'
+          detail: error.error?.message || 'No se pudo iniciar la importación',
         });
 
         // Limpiar la selección del archivo
-        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        const fileInput = document.querySelector(
+          'input[type="file"]',
+        ) as HTMLInputElement;
         if (fileInput) {
           fileInput.value = '';
         }
-      }
+      },
     });
   }
 
@@ -2147,41 +2411,49 @@ export class AccountListComponent implements OnInit {
   private checkProgressStatus(): void {
     if (!this.progressJobId) return;
 
-    const statusObservable = this.progressOperationType === 'import'
-      ? this._accountService.getImportStatus(this.progressJobId)
-      : this._accountService.getExportStatus(this.progressJobId);
+    const statusObservable =
+      this.progressOperationType === 'import'
+        ? this._accountService.getImportStatus(this.progressJobId)
+        : this._accountService.getExportStatus(this.progressJobId);
 
     statusObservable.subscribe({
       next: (status) => {
         this.progressValue = status.progress || 0;
         this.progressStatus = status.status;
-        
+
         // Actualizar mensaje de fase
         this.progressPhase = this.getProgressPhaseMessage(status);
 
         // Si la operación terminó (éxito, con errores o falla)
-        if (status.status === 'COMPLETED' || status.status === 'COMPLETED_WITH_ERRORS' || status.status === 'FAILED') {
+        if (
+          status.status === 'COMPLETED' ||
+          status.status === 'COMPLETED_WITH_ERRORS' ||
+          status.status === 'FAILED'
+        ) {
           this.stopProgressPolling();
           this.handleProgressCompletion(status);
         }
       },
       error: (error) => {
-        const operationName = this.progressOperationType === 'import' ? 'importación' : 'exportación';
+        const operationName =
+          this.progressOperationType === 'import'
+            ? 'importación'
+            : 'exportación';
         this.stopProgressPolling();
         this.showProgressDialog = false;
-        
+
         if (this.progressOperationType === 'import') {
           this.isImporting = false;
         } else {
           this.isExporting = false;
         }
-        
+
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `No se pudo consultar el estado de la ${operationName}`
+          detail: `No se pudo consultar el estado de la ${operationName}`,
         });
-      }
+      },
     });
   }
 
@@ -2213,23 +2485,23 @@ export class AccountListComponent implements OnInit {
     if (status.progress === 100) {
       return 'Finalizando importación...';
     }
-    
+
     if (status.progress >= 80) {
       return 'Guardando cuentas en la base de datos...';
     }
-    
+
     if (status.progress >= 60) {
       return 'Validando jerarquía de cuentas...';
     }
-    
+
     if (status.progress >= 40) {
       return 'Detectando duplicados...';
     }
-    
+
     if (status.progress >= 20) {
       return 'Validando datos de cuentas...';
     }
-    
+
     return 'Analizando archivo Excel...';
   }
 
@@ -2240,15 +2512,15 @@ export class AccountListComponent implements OnInit {
     if (status.progress === 100) {
       return 'Finalizando exportación...';
     }
-    
+
     if (status.progress >= 66) {
       return 'Almacenando archivo...';
     }
-    
+
     if (status.progress >= 33) {
       return 'Generando archivo Excel...';
     }
-    
+
     return 'Obteniendo datos de cuentas...';
   }
 
@@ -2273,22 +2545,29 @@ export class AccountListComponent implements OnInit {
     this.progressJobId = null;
 
     // Limpiar la selección del archivo
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
 
-    const { totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = status;
+    const {
+      totalRecords,
+      successfulImports,
+      failedImports,
+      duplicatesSkipped,
+      errors,
+    } = status;
 
-  
     if (errors && errors.length > 0) {
       this.showImportErrorsModal(
-        errors, 
-        status.fileName || 'importacion.xlsx', 
-        totalRecords, 
-        failedImports, 
-        successfulImports, 
-        duplicatesSkipped
+        errors,
+        status.fileName || 'importacion.xlsx',
+        totalRecords,
+        failedImports,
+        successfulImports,
+        duplicatesSkipped,
       );
 
       // Recargar lista si hubo importaciones exitosas
@@ -2306,7 +2585,7 @@ export class AccountListComponent implements OnInit {
         severity: 'error',
         summary: 'Importación Fallida',
         detail: status.errorMessage || 'La importación no pudo completarse',
-        life: 8000
+        life: 8000,
       });
       return;
     }
@@ -2318,12 +2597,12 @@ export class AccountListComponent implements OnInit {
       if (duplicatesSkipped > 0) {
         detailMessage += `\nDuplicados omitidos: ${duplicatesSkipped}`;
       }
-      
+
       this.messageService.add({
         severity: 'success',
         summary: 'Importación Exitosa',
         detail: detailMessage,
-        life: 8000
+        life: 8000,
       });
       this.getAccounts();
     }
@@ -2333,61 +2612,60 @@ export class AccountListComponent implements OnInit {
    * Maneja la finalización de la exportación.
    */
   private handleExportCompletion(status: any): void {
-    
-    
     // Guardar el jobId antes de limpiarlo
     const jobId = this.progressJobId;
-    
+
     // Cerrar modal si está abierto
     this.showProgressDialog = false;
     this.isExporting = false;
     this.progressJobId = null;
 
     if (status.status === 'FAILED') {
-      const errorMessage = status.errorMessage || 'La exportación no pudo completarse';
-      const isNoAccountsMessage = this.isNoAccountsAvailableMessage(errorMessage);
+      const errorMessage =
+        status.errorMessage || 'La exportación no pudo completarse';
+      const isNoAccountsMessage =
+        this.isNoAccountsAvailableMessage(errorMessage);
 
       this.messageService.add({
         severity: isNoAccountsMessage ? 'info' : 'error',
         summary: isNoAccountsMessage ? 'Información' : 'Exportación Fallida',
         detail: errorMessage,
-        life: 8000
+        life: 8000,
       });
       return;
     }
 
     // Exportación exitosa - descargar archivo
     if (status.status === 'COMPLETED' && jobId) {
-      
       this._accountService.downloadExportFile(jobId).subscribe({
         next: (response) => {
           if (!response.body) {
             this.messageService.add({
               severity: 'error',
               summary: 'Error de Exportación',
-              detail: 'No se recibió el archivo del servidor'
+              detail: 'No se recibió el archivo del servidor',
             });
             return;
           }
 
           this.downloadFile(response);
-          
+
           let detailMessage = `Total de registros: ${status.totalRecords || 0}`;
-          
+
           this.messageService.add({
             severity: 'success',
             summary: 'Exportación Exitosa',
             detail: detailMessage,
-            life: 8000
+            life: 8000,
           });
         },
         error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error de Descarga',
-            detail: 'No se pudo descargar el archivo exportado'
+            detail: 'No se pudo descargar el archivo exportado',
           });
-        }
+        },
       });
     }
   }
@@ -2400,5 +2678,4 @@ export class AccountListComponent implements OnInit {
     // Solo cerrar el modal, el polling continúa en segundo plano
     this.showProgressDialog = false;
   }
-
 }

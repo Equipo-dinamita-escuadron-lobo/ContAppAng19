@@ -1,14 +1,20 @@
 <!-- Contenedor Principal con la fuente y fondo estandarizados -->
 <div class="flex w-full h-full font-titillium">
   <!-- Tarjeta de Contenido Principal, aplicando el estilo de la guía -->
-  <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
-
+  <div
+    class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10"
+  >
     <!-- 1. CABECERA: Título y Botón de Crear -->
     <div class="flex justify-between items-start mb-40">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Unidades</span> de Medida
+        <h1
+          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1"
+        >
+          <span class="border-b-4 border-secondary-light inline-block pb-1"
+            >Unidades</span
+          >
+          de Medida
         </h1>
         <p class="font-family-sans font-normal text-sm mt-12">
           Gestione las unidades de medida utilizadas en el sistema.
@@ -16,7 +22,7 @@
       </div>
 
       <!-- Botones de acción -->
-      <div class="flex gap-3">        
+      <div class="flex gap-3">
         <p-button
           label="Crear"
           icon="pi pi-plus"
@@ -107,7 +113,10 @@
           <td class="py-3">{{ unit.abbreviation }}</td>
           <td class="py-3">{{ unit.description }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="unit.state ? 'Activo' : 'Inactivo'" [severity]="unit.state ? 'success' : 'danger'">
+            <p-tag
+              [value]="unit.state ? 'Activo' : 'Inactivo'"
+              [severity]="unit.state ? 'success' : 'danger'"
+            >
             </p-tag>
           </td>
           <td class="py-3 text-center">
@@ -130,10 +139,11 @@
               <p-toggleSwitch
                 [(ngModel)]="unit.state"
                 (onChange)="changeUnitState(unit)"
+                [disabled]="!canToggleState"
                 [pTooltip]="unit.state ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
-                [style]="{'transform': 'scale(0.8)'}"
+                [style]="{ transform: 'scale(0.8)' }"
               ></p-toggleSwitch>
             </div>
           </td>
@@ -141,7 +151,10 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <app-table-empty-message [loading]="loading" [colspan]="5"></app-table-empty-message>
+        <app-table-empty-message
+          [loading]="loading"
+          [colspan]="5"
+        ></app-table-empty-message>
       </ng-template>
     </p-table>
   </div>
@@ -152,5 +165,3 @@
 
 <!-- Confirmation dialog -->
 <p-confirmDialog></p-confirmDialog>
-
-

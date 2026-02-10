@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { hasPermissionGuard } from '../../Core/Guards/has-permission.guard';
 
 export const THIRD_PARTIES_ROUTES: Routes = [
   {
@@ -13,7 +14,7 @@ export const THIRD_PARTIES_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../GeneralMasters/ThirdParties/Components/third-list/third-list.component').then(
-        (m) => m.ThirdListComponent
+        (m) => m.ThirdListComponent,
       ),
   },
   {
@@ -23,8 +24,9 @@ export const THIRD_PARTIES_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../GeneralMasters/ThirdParties/Components/third-creation/third-creation.component').then(
-        (m) => m.ThirdCreationComponent
+        (m) => m.ThirdCreationComponent,
       ),
+    canActivate: [hasPermissionGuard(['TD#C'])],
   },
   {
     path: 'edit/:id',
@@ -33,8 +35,9 @@ export const THIRD_PARTIES_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../GeneralMasters/ThirdParties/Components/third-edit/third-edit.component').then(
-        (m) => m.ThirdEditComponent
+        (m) => m.ThirdEditComponent,
       ),
+    canActivate: [hasPermissionGuard(['TD#U'])],
   },
   {
     path: 'configuration',
@@ -43,7 +46,7 @@ export const THIRD_PARTIES_ROUTES: Routes = [
     },
     loadComponent: () =>
       import('../../GeneralMasters/ThirdParties/Components/third-config/third-config.component').then(
-        (m) => m.ThirdConfigComponent
+        (m) => m.ThirdConfigComponent,
       ),
   },
 ];
