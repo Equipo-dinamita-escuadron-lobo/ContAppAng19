@@ -12,6 +12,7 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { CashReceiptService } from '../../../CashReceipts/Service/cash-receipt.service';
 import { PortfolioReportsService } from '../../Service/portfolio-reports.service';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-aging-porfolio-report',
@@ -25,6 +26,8 @@ export class AgingPorfolioReportComponent implements OnInit {
   public clientSuggestions: Client[] = [];
   public reportData: TreeNode[] = [];
   public isLoading = false;
+  private rawReportData: PortfolioAgingAccount[] = []; // Guardar datos sin procesar
+  private selectedClientName?: string; // Guardar nombre del cliente
 
   constructor(
     private fb: FormBuilder,
@@ -73,6 +76,7 @@ export class AgingPorfolioReportComponent implements OnInit {
         next: (data: PortfolioAgingAccount[]) => {
           // p-treeTable requiere un formato de datos específico (TreeNode).
           // Necesitamos transformar la respuesta del API.
+          this.rawReportData = data;
           this.reportData = this.mapToTreeNode(data, selectedClient ? selectedClient.name : undefined);
           this.isLoading = false;
         },
@@ -83,6 +87,122 @@ export class AgingPorfolioReportComponent implements OnInit {
         }
       });
   }
+
+  /**
+   * Exporta el reporte a Excel
+   */
+  exportToExcel(): void {
+    if (this.rawReportData.length === 0) {
+      console.warn('No hay datos para exportar');
+      return;
+    }
+
+    const cutoffDate: Date = this.filterForm.value.cutoffDate;
+    const includeDocuments: boolean = this.filterForm.value.includeDocuments;
+    
+    // Crear el array de datos planos para Excel
+    const excelData = this.flattenReportData(this.rawReportData, includeDocuments);
+
+    // Crear worksheet
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Configurar anchos de columna
+    const columnWidths = [
+      { wch: 15 }, // Código Cuenta
+      { wch: 40 }, // Nombre Cuenta
+      { wch: 20 }, // Código Factura
+      { wch: 15 }, // Fecha Vencimiento
+      { wch: 15 }, // Días Vencidos
+      { wch: 18 }, // Total Adeudado
+      { wch: 15 }, // Corriente
+      { wch: 15 }, // 1-30 días
+      { wch: 15 }, // 31-60 días
+      { wch: 15 }, // 61-90 días
+      { wch: 15 }  // +90 días
+    ];
+    ws['!cols'] = columnWidths;
+
+    // Crear workbook
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte Antigüedad');
+
+    // Generar nombre de archivo
+    const fileName = this.generateFileName(cutoffDate);
+    
+    // Guardar archivo
+    XLSX.writeFile(wb, fileName);
+  }
+
+  /**
+   * Aplana la estructura jerárquica para Excel
+   */
+   private flattenReportData(accounts: PortfolioAgingAccount[], includeDocuments: boolean, level: number = 0): any[] {
+    const result: any[] = [];
+
+    accounts.forEach(account => {
+      // Agregar la cuenta
+      const accountRow: any = {
+        'Código Cuenta': account.accountCode || '',
+        'Nombre Cuenta': '  '.repeat(level) + account.accountName,
+        'Código Factura': '',
+        'Fecha Vencimiento': '',
+        'Días Vencidos': '',
+        'Total Adeudado': account.totalAdeudado,
+        'Corriente': account.corriente,
+        '1-30 días': account.dias1a30,
+        '31-60 días': account.dias31a60,
+        '61-90 días': account.dias61a90,
+        '+90 días': account.masDe90dias
+      };
+      result.push(accountRow);
+
+      // Si incluye documentos y hay documentos, agregarlos
+      if (includeDocuments && account.documents && account.documents.length > 0) {
+        account.documents.forEach(doc => {
+          const docRow: any = {
+            'Código Cuenta': '',
+            'Nombre Cuenta': '  '.repeat(level + 1) + '└─ Documento',
+            'Código Factura': doc.factCode,
+            'Fecha Vencimiento': this.formatDate(doc.expirationDate),
+            'Días Vencidos': doc.daysInArrears > 0 ? doc.daysInArrears : '',
+            'Total Adeudado': doc.pendingValue,
+            'Corriente': '',
+            '1-30 días': '',
+            '31-60 días': '',
+            '61-90 días': '',
+            '+90 días': ''
+          };
+          result.push(docRow);
+        });
+      }
+
+      // Procesar cuentas hijas recursivamente
+      if (account.children && account.children.length > 0) {
+        const childrenData = this.flattenReportData(account.children, includeDocuments, level + 1);
+        result.push(...childrenData);
+      }
+    });
+    return result;
+  }
+
+  /**
+   * Genera el nombre del archivo
+   */
+  private generateFileName(cutoffDate: Date): string {
+    const formattedDate = cutoffDate.toISOString().split('T')[0];
+    const clientPart = this.selectedClientName ? `_${this.selectedClientName.replace(/\s+/g, '_')}` : '';
+    return `Reporte_Antigüedad${clientPart}_${formattedDate}.xlsx`;
+  }
+
+  /**
+   * Formatea una fecha para Excel
+   */
+  private formatDate(date: Date | string): string {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('es-CO');
+  }
+
 
   /**
    * Limpia los filtros y resetea la tabla.
