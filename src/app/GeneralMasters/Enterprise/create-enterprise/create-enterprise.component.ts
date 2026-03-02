@@ -21,6 +21,8 @@ import { Enterprise } from '../models/enterprise';
 import { EnterpriseList } from '../models/EnterpriseList';
 import { SubjectService } from '../../Subjects/services/subjects.service';
 import { Subject } from '../../Subjects/models/subjects';
+import { COUNTRIES, DEPARTMENTS, CITIES } from '../shared/data/location-data';
+import { SEMESTERS, SUBJECTS } from '../shared/data/semesters-data';
 
 @Component({
   selector: 'app-create-enterprise',
@@ -65,102 +67,16 @@ export class CreateEnterpriseComponent implements OnInit {
     { id: 2, name: 'No responsable de IVA' },
     { id: 3, name: 'Gran contribuyente' },
   ];
+  semesters = SEMESTERS;
+  subjects = SUBJECTS;
+  subjectsList: any[] = [];
 
-  countries = [
-    { id: 1, name: 'Colombia' },
-    { id: 2, name: 'Estados Unidos' },
-    { id: 3, name: 'España' },
-  ];
+  filteredDepartments: any[] = [];
+  filteredCities: any[] = [];
 
-  departments = [
-    { id: 1, name: 'Amazonas' },
-    { id: 2, name: 'Antioquia' },
-    { id: 3, name: 'Arauca' },
-    { id: 4, name: 'Atlántico' },
-    { id: 5, name: 'Bolívar' },
-    { id: 6, name: 'Boyacá' },
-    { id: 7, name: 'Caldas' },
-    { id: 8, name: 'Caquetá' },
-    { id: 9, name: 'Casanare' },
-    { id: 10, name: 'Cauca' },
-    { id: 11, name: 'Cesar' },
-    { id: 12, name: 'Chocó' },
-    { id: 13, name: 'Córdoba' },
-    { id: 14, name: 'Cundinamarca' },
-    { id: 15, name: 'Guainía' },
-    { id: 16, name: 'Guaviare' },
-    { id: 17, name: 'Huila' },
-    { id: 18, name: 'La Guajira' },
-    { id: 19, name: 'Magdalena' },
-    { id: 20, name: 'Meta' },
-    { id: 21, name: 'Nariño' },
-    { id: 22, name: 'Norte de Santander' },
-    { id: 23, name: 'Putumayo' },
-    { id: 24, name: 'Quindío' },
-    { id: 25, name: 'Risaralda' },
-    { id: 26, name: 'San Andrés y Providencia' },
-    { id: 27, name: 'Santander' },
-    { id: 28, name: 'Sucre' },
-    { id: 29, name: 'Tolima' },
-    { id: 30, name: 'Valle del Cauca' },
-    { id: 31, name: 'Vaupés' },
-    { id: 32, name: 'Vichada' },
-    { id: 33, name: 'Bogotá D.C.' },
-  ];
-
-  city = [
-    { id: 1, name: 'Leticia', departmentId: 1 }, // Amazonas
-    { id: 2, name: 'Medellín', departmentId: 2 }, // Antioquia
-    { id: 3, name: 'Arauca', departmentId: 3 }, // Arauca
-    { id: 4, name: 'Barranquilla', departmentId: 4 }, // Atlántico
-    { id: 5, name: 'Cartagena', departmentId: 5 }, // Bolívar
-    { id: 6, name: 'Tunja', departmentId: 6 }, // Boyacá
-    { id: 7, name: 'Manizales', departmentId: 7 }, // Caldas
-    { id: 8, name: 'Florencia', departmentId: 8 }, // Caquetá
-    { id: 9, name: 'Yopal', departmentId: 9 }, // Casanare
-    { id: 10, name: 'Popayán', departmentId: 10 }, // Cauca
-    { id: 11, name: 'Valledupar', departmentId: 11 }, // Cesar
-    { id: 12, name: 'Quibdó', departmentId: 12 }, // Chocó
-    { id: 13, name: 'Montería', departmentId: 13 }, // Córdoba
-    { id: 14, name: 'Bogotá', departmentId: 14 }, // Cundinamarca (si tú usas Bogotá aparte, dímelo)
-    { id: 15, name: 'Inírida', departmentId: 15 }, // Guainía
-    { id: 16, name: 'San José del Guaviare', departmentId: 16 }, // Guaviare
-    { id: 17, name: 'Neiva', departmentId: 17 }, // Huila
-    { id: 18, name: 'Riohacha', departmentId: 18 }, // La Guajira
-    { id: 19, name: 'Santa Marta', departmentId: 19 }, // Magdalena
-    { id: 20, name: 'Villavicencio', departmentId: 20 }, // Meta
-    { id: 21, name: 'Pasto', departmentId: 21 }, // Nariño
-    { id: 22, name: 'Cúcuta', departmentId: 22 }, // Norte de Santander
-    { id: 23, name: 'Mocoa', departmentId: 23 }, // Putumayo
-    { id: 24, name: 'Armenia', departmentId: 24 }, // Quindío
-    { id: 25, name: 'Pereira', departmentId: 25 }, // Risaralda
-    { id: 26, name: 'San Andrés', departmentId: 26 }, // San Andrés y Providencia
-    { id: 27, name: 'Bucaramanga', departmentId: 27 }, // Santander
-    { id: 28, name: 'Sincelejo', departmentId: 28 }, // Sucre
-    { id: 29, name: 'Ibagué', departmentId: 29 }, // Tolima
-    { id: 30, name: 'Cali', departmentId: 30 }, // Valle del Cauca
-    { id: 31, name: 'Mitú', departmentId: 31 }, // Vaupés
-    { id: 32, name: 'Puerto Carreño', departmentId: 32 }, // Vichada
-  ];
-
-  subjects = [
-    { id: 1, name: 'Contabilidad Financiera', departmentId: 1 },
-    { id: 2, name: 'Contabilidad de Costos', departmentId: 1 },
-    { id: 3, name: 'Contabilidad Administrativa', departmentId: 1 },
-    {
-      id: 4,
-      name: 'NIIF (Normas Internacionales de Información Financiera)',
-      departmentId: 1,
-    },
-    { id: 5, name: 'Auditoría', departmentId: 1 },
-    { id: 6, name: 'Revisoría Fiscal', departmentId: 1 },
-    { id: 7, name: 'Tributaria (Impuestos)', departmentId: 1 },
-    { id: 8, name: 'Finanzas Corporativas', departmentId: 1 },
-    { id: 9, name: 'Presupuestos', departmentId: 1 },
-    { id: 10, name: 'Control Interno y Gestión del Riesgo', departmentId: 1 },
-  ];
-
-  subjectsList: Subject[] = [];
+  countries = COUNTRIES;
+  departments = DEPARTMENTS;
+  city = CITIES;
 
   constructor(
     private fb: FormBuilder,
@@ -173,9 +89,9 @@ export class CreateEnterpriseComponent implements OnInit {
   // Inicialización del componente
   ngOnInit(): void {
     this.initForm();
-    this.subjectsList = this.subjects as any;
+    this.initLocationFilters();
+    this.initAcademicFilters();
   }
-
   // Inicialización del formulario reactivo
   initForm(): void {
     this.enterpriseForm = this.fb.group({
@@ -374,20 +290,62 @@ export class CreateEnterpriseComponent implements OnInit {
     }
   }
 
+  /* ==================== CIUDADES ==================== */
+  // filterCities(departmentId: number): void {
+  //   this.filteredCities = this.city.filter(
+  //     (c) => c.departmentId === departmentId,
+  //   );
+  // }
+
+  private initLocationFilters(): void {
+    // Country → Departments
+    this.enterpriseForm.get('country')?.valueChanges.subscribe((country) => {
+      this.filteredDepartments = country
+        ? this.departments.filter((d) => d.countryId === country.id)
+        : [];
+
+      this.enterpriseForm.get('department')?.setValue(null);
+      this.filteredCities = [];
+    });
+
+    // Department → Cities
+    this.enterpriseForm
+      .get('department')
+      ?.valueChanges.subscribe((department) => {
+        this.filteredCities = department
+          ? this.city.filter((c) => c.departmentId === department.id)
+          : [];
+
+        this.enterpriseForm.get('city')?.setValue(null);
+      });
+  }
+
   /* ==================== CARGAR MATERIAS ==================== */
-  loadSubjects(): void {
-    this.subjectService.getAllSubjects().subscribe({
-      next: (data) => {
-        this.subjectsList = data;
-      },
-      error: (err) => {
-        console.error('Error al cargar materias:', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudieron cargar las materias desde el servidor.',
-        });
-      },
+  // loadSubjects(): void {
+  //   this.subjectService.getAllSubjects().subscribe({
+  //     next: (data) => {
+  //       this.subjectsList = data;
+  //     },
+  //     error: (err) => {
+  //       console.error('Error al cargar materias:', err);
+  //       this.messageService.add({
+  //         severity: 'error',
+  //         summary: 'Error',
+  //         detail: 'No se pudieron cargar las materias desde el servidor.',
+  //       });
+  //     },
+  //   });
+  // }
+
+  private initAcademicFilters(): void {
+    this.subjectsList = [];
+
+    this.enterpriseForm.get('semester')?.valueChanges.subscribe((semester) => {
+      this.subjectsList = semester
+        ? this.subjects.filter((s) => s.semesterId === semester.id)
+        : [];
+
+      this.enterpriseForm.get('subject')?.setValue(null);
     });
   }
 }

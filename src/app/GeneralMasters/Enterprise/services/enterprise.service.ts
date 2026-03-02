@@ -104,6 +104,7 @@ export class EnterpriseService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<{ url: string }>(`${this.apiUrl}upload/logo`, formData);
-    
+
+
   }
 }
