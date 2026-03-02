@@ -23,7 +23,7 @@ export class EnterpriseService {
   // }
 
   getEnterprisesActive(
-    role: string = 'Profesor'
+    role: string = 'Profesor',
   ): Observable<EnterpriseList[]> {
     const headers = { 'X-User-Role': role };
     return this.http.get<EnterpriseList[]>(this.apiUrl, { headers });
@@ -45,7 +45,7 @@ export class EnterpriseService {
 
   /** ==================== CRUD ==================== */
   createEnterprise(
-    enterprise: EnterpriseDetails
+    enterprise: EnterpriseDetails,
   ): Observable<EnterpriseDetails> {
     return this.http.post<EnterpriseDetails>(this.apiUrl, enterprise);
   }
@@ -53,11 +53,11 @@ export class EnterpriseService {
   // Actualiza todos los datos de la empresa
   updateEnterprise(
     id: string,
-    enterprise: EnterpriseDetails
+    enterprise: EnterpriseDetails,
   ): Observable<EnterpriseDetails> {
     return this.http.put<EnterpriseDetails>(
       `${this.apiUrl}update/${id}`,
-      enterprise
+      enterprise,
     );
   }
 
@@ -97,5 +97,13 @@ export class EnterpriseService {
 
   uploadEnterprisePdf(formData: FormData): Observable<any> {
     return this.http.post(`${this.apiUrl}create-from-pdf`, formData);
+  }
+
+  //** ==================== LOGO =========================== */
+  uploadLogo(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.apiUrl}upload/logo`, formData);
+    
   }
 }
