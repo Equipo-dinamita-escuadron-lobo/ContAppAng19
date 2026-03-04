@@ -47,6 +47,10 @@ export class ListEnterpriseComponent implements OnInit {
   filteredEnterprises: EnterpriseList[] = [];
   archivedEnterprises: EnterpriseList[] = [];
 
+  // Estado para manejar el archivo seleccionado
+  selectedJsonFile: File | null = null;
+  showImportModal: boolean = false;
+
   selectedStatus: string = 'active';
   searchTerm: string = '';
 
@@ -74,7 +78,7 @@ export class ListEnterpriseComponent implements OnInit {
     private enterpriseService: EnterpriseService,
     private router: Router,
     private http: HttpClient,
-    private messageService: MessageService
+    private messageService: MessageService,
   ) {}
 
   ngOnInit() {
@@ -128,7 +132,7 @@ export class ListEnterpriseComponent implements OnInit {
       this.filteredEnterprises = [...this.enterprises];
     } else {
       this.filteredEnterprises = this.enterprises.filter((e) =>
-        e.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+        e.name.toLowerCase().includes(this.searchTerm.toLowerCase()),
       );
     }
   }
@@ -157,13 +161,17 @@ export class ListEnterpriseComponent implements OnInit {
           this.duplicateEnterprise(this.selectedEnterpriseForMenu!),
       },
       {
+        label: 'Exportar',
+        icon: 'pi pi-download',
+        command: () => this.exportEnterprise(this.selectedEnterpriseForMenu!),
+      },
+      {
         label: 'Compartir',
         icon: 'pi pi-save',
-        // command: () => this.backupEnterprise(this.selectedEnterpriseForMenu!),
         command: () => this.shareEnterprise(this.selectedEnterpriseForMenu!),
       },
       {
-        label: 'inactivar',
+        label: 'Inactivar',
         icon: 'pi pi-folder',
         command: () => this.InactiveEnterprise(this.selectedEnterpriseForMenu!),
       },
@@ -566,17 +574,61 @@ export class ListEnterpriseComponent implements OnInit {
   //     });
   // }
 
-  /* ==================== LOGO ==================== */
-  onImageError(event: any) {
-    console.error('Error loading image:', event);
-  }
+  // == ================== EXPORTAR EMPRESA ==================== */
+  exportEnterprise(enterprise: EnterpriseList) {
+    if (!enterprise.id) return;
 
-  onImageLoad(enterprise: EnterpriseList) {
-    console.log(
-      'Imagen cargada correctamente:',
-      enterprise.name,
-      enterprise.logo
-    );
+    // Obtener los datos completos de la empresa
+    this.enterpriseService.getEnterpriseById(String(enterprise.id)).subscribe({
+      next: (data) => {
+        // Preparar los datos para exportar (solo incluir IDs donde es necesario)
+        const exportableData = {
+          name: data.name,
+          nit: data.nit,
+          dv: data.dv,
+          phone: data.phone,
+          branch: data.branch,
+          email: data.email,
+          logo: data.logo,
+          mainActivity: data.mainActivity,
+          secondaryActivity: data.secondaryActivity,
+          taxLiabilities: data.taxLiabilities.map((t) => t.id), // Extraer solo los IDs de taxLiabilities
+        
+          taxPayerType: data.taxPayerType.id, // Extraer solo el ID de taxPayerType
+          enterpriseType: data.enterpriseType.id, // Extraer solo el ID de enterpriseType
+          personType: {
+            type: data.personType.type,
+            name: data.personType.name,
+            surname: data.personType.surname,
+            bussinessName: data.personType.bussinessName,
+          },
+          location: {
+            address: data.location.address,
+            city: data.location.city.id, // Extraer solo el ID de city
+            department: data.location.department.id, // Extraer solo el ID de department
+            country: data.location.country.id, // Extraer solo el ID de country
+          },
+        };
+
+        // Convertir los datos de la empresa en un archivo JSON
+        const jsonString = JSON.stringify(exportableData, null, 2); // Formateado para facilitar la lectura
+        const blob = new Blob([jsonString], { type: 'application/json' }); // Crear un Blob con el tipo MIME adecuado
+        const url = window.URL.createObjectURL(blob); // Crear una URL para el Blob
+        const a = document.createElement('a'); // Crear un enlace
+        a.href = url;
+        a.download = `${data.name}.json`; // Nombre del archivo
+        a.click(); // Simular clic para iniciar la descarga
+        window.URL.revokeObjectURL(url); // Limpiar la URL creada
+      },
+      error: (err) => {
+        console.error('Error al obtener los datos de la empresa:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo exportar la empresa.',
+        });
+      },
+    });
   }
 
   onImportEnterprise(): void {
@@ -636,5 +688,18 @@ export class ListEnterpriseComponent implements OnInit {
     });
 
     input.click();
+  }
+
+  /* ==================== LOGO ==================== */
+  onImageError(event: any) {
+    console.error('Error loading image:', event);
+  }
+
+  onImageLoad(enterprise: EnterpriseList) {
+    console.log(
+      'Imagen cargada correctamente:',
+      enterprise.name,
+      enterprise.logo,
+    );
   }
 }
