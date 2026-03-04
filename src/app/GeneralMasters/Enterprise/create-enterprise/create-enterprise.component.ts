@@ -78,6 +78,10 @@ export class CreateEnterpriseComponent implements OnInit {
   departments = DEPARTMENTS;
   city = CITIES;
 
+ inventoryMethods = [
+    { value: 'PEPS', label: 'PEPS (Primero en Entrar, Primero en Salir)' },
+    { value: 'WEIGHTED_AVERAGE', label: 'Promedio Ponderado' },
+  ];
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -202,6 +206,7 @@ export class CreateEnterpriseComponent implements OnInit {
           taxLiabilities: f.taxLiabilities.map((t: any) => t.id ?? t),
           state: 'ACTIVE',
           taxPayerType: f.taxPayerType.id ?? f.taxPayerType,
+          inventoryConfigurationType: f.inventoryConfigurationType.value || f.inventoryConfigurationType,
           enterpriseType: f.enterpriseType.id ?? f.enterpriseType,
 
           personType:
