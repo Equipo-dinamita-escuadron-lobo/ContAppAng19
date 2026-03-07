@@ -578,47 +578,18 @@ export class ListEnterpriseComponent implements OnInit {
   exportEnterprise(enterprise: EnterpriseList) {
     if (!enterprise.id) return;
 
-    // Obtener los datos completos de la empresa
-    this.enterpriseService.getEnterpriseById(String(enterprise.id)).subscribe({
+    // Llamar al nuevo método que retorna el JSON listo para exportar
+    this.enterpriseService.getEnterpriseExportData(String(enterprise.id)).subscribe({
       next: (data) => {
-        // Preparar los datos para exportar (solo incluir IDs donde es necesario)
-        const exportableData = {
-          name: data.name,
-          nit: data.nit,
-          dv: data.dv,
-          phone: data.phone,
-          branch: data.branch,
-          email: data.email,
-          logo: data.logo,
-          mainActivity: data.mainActivity,
-          secondaryActivity: data.secondaryActivity,
-          taxLiabilities: data.taxLiabilities.map((t) => t.id), // Extraer solo los IDs de taxLiabilities
-        
-          taxPayerType: data.taxPayerType.id, // Extraer solo el ID de taxPayerType
-          enterpriseType: data.enterpriseType.id, // Extraer solo el ID de enterpriseType
-          personType: {
-            type: data.personType.type,
-            name: data.personType.name,
-            surname: data.personType.surname,
-            bussinessName: data.personType.bussinessName,
-          },
-          location: {
-            address: data.location.address,
-            city: data.location.city.id, // Extraer solo el ID de city
-            department: data.location.department.id, // Extraer solo el ID de department
-            country: data.location.country.id, // Extraer solo el ID de country
-          },
-        };
-
-        // Convertir los datos de la empresa en un archivo JSON
-        const jsonString = JSON.stringify(exportableData, null, 2); // Formateado para facilitar la lectura
-        const blob = new Blob([jsonString], { type: 'application/json' }); // Crear un Blob con el tipo MIME adecuado
-        const url = window.URL.createObjectURL(blob); // Crear una URL para el Blob
-        const a = document.createElement('a'); // Crear un enlace
+        // TODO: Validar estructura si es necesario
+        const jsonString = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
         a.href = url;
-        a.download = `${data.name}.json`; // Nombre del archivo
-        a.click(); // Simular clic para iniciar la descarga
-        window.URL.revokeObjectURL(url); // Limpiar la URL creada
+        a.download = `${data.name || 'empresa'}.json`;
+        a.click();
+        window.URL.revokeObjectURL(url);
       },
       error: (err) => {
         console.error('Error al obtener los datos de la empresa:', err);

@@ -39,6 +39,16 @@ export class EnterpriseService {
     return this.http.get<EnterpriseDetails>(`${this.apiUrl}enterprise/${id}`);
   }
 
+  getEnterpriseExportData(id: string): Observable<any> {
+    // Retornamos un ejemplo de json de exportación usando RxJS 'of'.
+    // const exampleExportData = {
+    //   enterpriseId: id,
+    //   name: "Empresa Ejemplo",
+    // };
+    // return of(exampleExportData);
+    return this.http.get<any>(`${this.apiUrl}export/${id}`);
+  }
+
   getSelectedEnterprise() {
     return this.localStorageMethods.loadEnterpriseData();
   }
