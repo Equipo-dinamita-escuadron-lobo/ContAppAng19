@@ -1,0 +1,153 @@
+﻿.criteria-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+  .criteria-grid {
+    grid-template-columns: 1.5fr 1.5fr 1fr auto;
+    align-items: stretch;
+  }
+}
+
+.criteria-card {
+  border: 1px solid #dbeafe;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.criteria-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+.criteria-fields {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.criteria-fields.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.criteria-field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.2rem;
+}
+
+.level-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.generate-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+}
+
+.report-table-shell {
+  overflow: hidden;
+}
+
+:host ::ng-deep .fs-report-table .p-datatable-wrapper,
+:host ::ng-deep .fs-report-table .p-datatable-table-container {
+  overflow-x: auto;
+}
+
+:host ::ng-deep .fs-report-table table {
+  width: 100%;
+  min-width: 920px;
+  table-layout: fixed;
+}
+
+:host ::ng-deep .fs-report-table .p-datatable-thead > tr > th {
+  padding: 0.45rem 0.35rem;
+  font-size: 0.74rem;
+  line-height: 1.1;
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: middle;
+}
+
+:host ::ng-deep .fs-report-table .p-datatable-tbody > tr > td {
+  padding: 0.48rem 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1.1;
+  vertical-align: middle;
+}
+
+:host ::ng-deep .fs-report-table .p-datatable-thead > tr > th:first-child,
+:host ::ng-deep .fs-report-table .p-datatable-tbody > tr > td:first-child {
+  width: 34%;
+  min-width: 220px;
+}
+
+:host ::ng-deep .fs-report-table .p-datatable-thead > tr > th:not(:first-child),
+:host ::ng-deep .fs-report-table .p-datatable-tbody > tr > td:not(:first-child) {
+  width: 11%;
+  min-width: 92px;
+}
+
+.compact-number {
+  display: inline-block;
+  width: 100%;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  color: #1f2937;
+}
+
+.compact-percentage,
+.percentage-cell {
+  font-weight: 600;
+}
+
+.percentage-cell {
+  text-align: right;
+}
+
+.negative {
+  color: #dc2626 !important;
+}
+
+.esf-section-row td {
+  font-weight: 700;
+  background-color: #f8fafc;
+  text-transform: uppercase;
+}
+
+.esf-total-row td {
+  font-weight: 700;
+  background-color: #eef2ff;
+}
+
+@media (max-width: 1280px) {
+  :host ::ng-deep .fs-report-table table {
+    min-width: 860px;
+  }
+
+  :host ::ng-deep .fs-report-table .p-datatable-thead > tr > th {
+    padding: 0.4rem 0.3rem;
+    font-size: 0.7rem;
+  }
+
+  :host ::ng-deep .fs-report-table .p-datatable-tbody > tr > td {
+    padding: 0.42rem 0.3rem;
+    font-size: 0.76rem;
+  }
+
+  .compact-number {
+    font-size: 0.74rem;
+  }
+}

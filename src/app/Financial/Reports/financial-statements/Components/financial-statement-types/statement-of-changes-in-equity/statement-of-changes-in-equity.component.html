@@ -1,5 +1,5 @@
 ﻿<div class="h-full w-full rounded-2xl p-4 md:p-6">
-  <div class="mb-6 flex justify-between items-start">
+  <div class="mb-6 flex justify-between items-start gap-4">
     <div>
       <div class="flex items-center gap-3 mb-3">
         <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
@@ -16,13 +16,13 @@
       </p>
     </div>
 
-    <div class="flex items-start" *ngIf="isReportGenerated">
+    <div *ngIf="isReportGenerated" class="flex items-start">
       <p-button
-        (click)="showExportDialog()"
-        (keydown.enter)="showExportDialog()"
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
       ></p-button>
     </div>
   </div>
@@ -32,36 +32,32 @@
   </h3>
 
   <div class="p-4 bg-white rounded-lg shadow-sm">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-      <div class="lg:col-span-4">
-        <h4 class="text-xs font-bold text-primary mb-2">
-          Fecha de Corte Actual <span class="text-error"> *</span>
-        </h4>
+    <div class="criteria-grid">
+      <div class="criteria-card">
+        <h4 class="criteria-title">Fecha de Corte Actual *</h4>
         <p-datepicker
           [(ngModel)]="criteria.endDate"
           (ngModelChange)="onCurrentCutoffDateChange()"
           dateFormat="dd/mm/yy"
-          placeholder="DD/MM/YYYY"
+          placeholder="Fecha actual"
           [showIcon]="true"
           styleClass="w-full text-xs"
         ></p-datepicker>
       </div>
 
-      <div class="lg:col-span-4">
-        <h4 class="text-xs font-bold text-primary mb-2">
-          Fecha de Corte Anterior <span class="text-error"> *</span>
-        </h4>
+      <div class="criteria-card">
+        <h4 class="criteria-title">Fecha de Corte Anterior *</h4>
         <p-datepicker
           [(ngModel)]="criteria.startDate"
           (ngModelChange)="onPreviousCutoffDateChange()"
           dateFormat="dd/mm/yy"
-          placeholder="DD/MM/YYYY"
+          placeholder="Fecha anterior"
           [showIcon]="true"
           styleClass="w-full text-xs"
         ></p-datepicker>
       </div>
 
-      <div class="lg:col-span-4 flex justify-end lg:pt-7">
+      <div class="criteria-card search-card">
         <button
           pButton
           type="button"
@@ -70,63 +66,52 @@
           (click)="generateReport()"
         ></button>
       </div>
-
-      <div class="lg:col-span-8">
-        <small class="text-gray-500 block mt-2">
-          Reporte en pesos colombianos (COP), comparativo entre corte actual y
-          anterior.
-        </small>
-      </div>
     </div>
   </div>
 
-  <div class="mt-10 bg-white rounded-lg shadow-sm report-table-shell">
+  <div class="mt-10 bg-white rounded-lg shadow-sm">
     <p-table
       showGridlines
       [value]="dataTable"
       [resizableColumns]="true"
-      [scrollable]="true"
       [responsiveLayout]="'scroll'"
       styleClass="p-datatable-header min-h-[20rem] fs-report-table"
     >
       <ng-template pTemplate="header">
-        <ng-container *ngIf="headerConfig?.length; else simpleHeader">
-          <tr *ngFor="let headerRow of headerConfig">
-            <th
-              pResizableColumn
-              *ngFor="let col of headerRow"
-              class="report-header-cell"
-              [class.text-left]="col.field === 'lineDescription'"
-              [class.text-center]="col.field !== 'lineDescription'"
-              [attr.colspan]="col.colspan"
-              [attr.rowspan]="col.rowspan"
-            >
-              {{ col.header }}
-            </th>
-          </tr>
-        </ng-container>
-
-        <ng-template #simpleHeader>
-          <tr>
-            <th class="text-center" pResizableColumn *ngFor="let col of tableColumns">
-              {{ col.header }}
-            </th>
-          </tr>
-        </ng-template>
+        <tr>
+          <th pResizableColumn *ngFor="let col of headerConfig[0]" [attr.colspan]="col.colspan" [attr.rowspan]="col.rowspan" class="text-center">
+            {{ col.header }}
+          </th>
+        </tr>
+        <tr>
+          <th pResizableColumn *ngFor="let col of headerConfig[1]" class="text-center">
+            {{ col.header }}
+          </th>
+        </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-row>
         <tr [ngClass]="getRowClass(row)">
           <td *ngFor="let col of tableColumns" [class]="col.type === 'number' ? 'p-2' : ''">
-            <ng-container *ngIf="col.type === 'number'; else notNumberValue">
-              <span class="compact-number">{{ formatMoneyCompact(getNestedValue(row, col.field)) }}</span>
+            <ng-container *ngIf="col.type === 'number'; else plainValue">
+              <div
+                class="money-cell"
+                [innerHTML]="
+                  formatMoneyAligned(
+                    getNestedValue(row, col.field),
+                    col.natureField ? getNestedValue(row, col.natureField) : undefined
+                  )
+                "
+              ></div>
             </ng-container>
-            <ng-template #notNumberValue>
-              <ng-container *ngIf="col.type === 'percentage'; else plainValue">
-                <span class="compact-number compact-percentage">{{ formatPercentage(getNestedValue(row, col.field)) }}</span>
+            <ng-template #plainValue>
+              <ng-container *ngIf="col.type === 'percentage'; else textValue">
+                <div class="money-cell">
+                  {{ formatPercentage(getNestedValue(row, col.field)) }}
+                </div>
               </ng-container>
             </ng-template>
-            <ng-template #plainValue>
+            <ng-template #textValue>
               {{ getNestedValue(row, col.field) }}
             </ng-template>
           </td>
@@ -137,7 +122,7 @@
         <tr style="height: 200px">
           <td [attr.colspan]="tableColumns.length">
             <div class="flex flex-col items-center justify-center h-full">
-              <p class="text-sm text-gray-600 max-w-md text-center">
+              <p class="text-md text-gray-600 max-w-md text-center">
                 NO HAY INFORMACION PARA MOSTRAR
               </p>
             </div>

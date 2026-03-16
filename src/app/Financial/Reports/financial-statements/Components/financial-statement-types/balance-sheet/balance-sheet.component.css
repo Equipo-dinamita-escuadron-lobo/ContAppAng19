@@ -1,0 +1,36 @@
+﻿.money-cell {
+  text-align: right;
+}
+
+.money {
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  font-family: "Courier New", monospace;
+  min-width: 180px;
+  color: #1f2937;
+}
+
+.money .symbol {
+  display: inline-block;
+  width: 20px;
+  text-align: right;
+  padding-right: 4px;
+}
+
+.money .integer {
+  display: inline-block;
+  text-align: right;
+  width: 120px;
+}
+
+.money .decimal {
+  display: inline-block;
+  text-align: left;
+  width: 60px;
+}
+
+.negative {
+  color: #dc2626 !important;
+}
+

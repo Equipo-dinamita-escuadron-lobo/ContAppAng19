@@ -1,0 +1,168 @@
+﻿<div class="bg-gray-200 p-4 rounded-md">
+  <div
+    class="report-container bg-white p-6 shadow-lg"
+    *ngIf="styles"
+    [ngStyle]="{ 'font-family': styles.font, 'font-size.px': styles.fontSize }"
+  >
+    <header class="flex justify-between items-center mb-4 pb-4 border-b">
+      <div class="w-1/4">
+        <ng-container [ngSwitch]="styles.align">
+          <div *ngSwitchCase="'left'" class="flex items-center gap-4">
+            <div class="w-4/5 flex-shrink-0">
+              <img
+                [src]="enterpriseData?.logo"
+                alt="Logo"
+                class="w-full h-auto object-contain"
+              />
+            </div>
+            <div>
+              <h1 class="font-bold text-[1.2em] leading-tight">
+                {{ enterpriseData?.name }}
+              </h1>
+              <h2 class="font-semibold uppercase text-[0.9em] text-gray-600">
+                {{ reportTitle }}
+              </h2>
+            </div>
+          </div>
+
+          <div *ngSwitchCase="'center'" class="w-4/5">
+            <img
+              [src]="enterpriseData?.logo"
+              alt="Logo"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+
+          <div *ngSwitchCase="'right'" class="text-gray-600 text-left">
+            <p class="font-semibold">Generado en:</p>
+            <p>{{ generationDate | date : "HH:mm dd/MM/yyyy" }}</p>
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="w-1/2 text-center">
+        <ng-container *ngIf="styles.align === 'center'">
+          <div>
+            <h1 class="font-bold text-[1.5em] leading-tight">
+              {{ enterpriseData?.name }}
+            </h1>
+            <h2 class="font-semibold uppercase text-[1.1em] text-gray-600">
+              {{ reportTitle }}
+            </h2>
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="w-1/4 flex justify-end">
+        <ng-container *ngIf="styles.align !== 'right'">
+          <div class="text-gray-600 text-right">
+            <p class="font-semibold">Generado en:</p>
+            <p>{{ generationDate | date : "HH:mm dd/MM/yyyy" }}</p>
+          </div>
+        </ng-container>
+
+        <ng-container [ngSwitch]="styles.align">
+          <div
+            *ngSwitchCase="'right'"
+            class="flex items-center justify-end gap-2"
+          >
+            <div class="w-4/5 flex-shrink-0">
+              <img
+                [src]="enterpriseData?.logo"
+                alt="Logo"
+                class="w-full h-auto object-contain"
+              />
+            </div>
+            <div class="text-right">
+              <h1 class="font-bold text-[1.2em] leading-tight">
+                {{ enterpriseData?.name }}
+              </h1>
+              <h2 class="font-semibold uppercase text-[0.9em] text-gray-600">
+                {{ reportTitle }}
+              </h2>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </header>
+
+    <section class="mb-6" *ngIf="criteria.length > 0">
+      <h4 class="font-bold mb-2 text-gray-800">Criterios Utilizados:</h4>
+      <div class="grid grid-cols-2 gap-x-8">
+        <div>
+          <div *ngFor="let item of leftCriteria" class="flex justify-between">
+            <span class="font-semibold text-gray-900">{{ item.key }}:</span>
+            <span class="text-gray-700">{{ item.value }}</span>
+          </div>
+        </div>
+
+        <div>
+          <div *ngFor="let item of rightCriteria" class="flex justify-between">
+            <span class="font-semibold text-gray-900">{{ item.key }}:</span>
+            <span class="text-gray-700">{{ item.value }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <table class="w-full border-collapse">
+      <thead [ngStyle]="{ 'background-color': styles.color }">
+        <tr *ngFor="let headerRow of headerConfig">
+          <th
+            *ngFor="let col of headerRow"
+            class="p-2 font-semibold border border-gray-400"
+            [attr.colspan]="col.colspan"
+            [attr.rowspan]="col.rowspan"
+            [ngStyle]="{ color: getHeaderTextColor(styles.color) }"
+          >
+            {{ col.header }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of previewData" class="bg-gray-100">
+          <td
+            *ngFor="let col of flatColumns"
+            class="p-2 border border-gray-300"
+            [class.text-right]="col.type === 'number' || col.type === 'percentage'"
+          >
+            <ng-container *ngIf="col.type === 'number'; else notNumberValue">
+              {{ getNestedValue(row, col.field!) | number : "1.2-2" }}
+            </ng-container>
+            <ng-template #notNumberValue>
+              <ng-container *ngIf="col.type === 'percentage'; else textValue">
+                {{ getNestedValue(row, col.field!) | number : "1.2-2" }}%
+              </ng-container>
+            </ng-template>
+            <ng-template #textValue>
+              {{ getNestedValue(row, col.field!) }}
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+
+      <tfoot *ngIf="previewData.length > 0 && hasTotals">
+        <tr class="font-bold bg-gray-100 border-t-2 border-gray-400">
+          <td
+            class="p-2 border border-gray-300 text-right"
+            [attr.colspan]="totalColspan"
+          >
+            TOTAL:
+          </td>
+          <td
+            *ngIf="totals.totalDebit !== undefined"
+            class="p-2 border border-gray-300 text-right"
+          >
+            {{ totals.totalDebit | number : "1.2-2" }}
+          </td>
+          <td
+            *ngIf="totals.totalCredit !== undefined"
+            class="p-2 border border-gray-300 text-right"
+          >
+            {{ totals.totalCredit | number : "1.2-2" }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

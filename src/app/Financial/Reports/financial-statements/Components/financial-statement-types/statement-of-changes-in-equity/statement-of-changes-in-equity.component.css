@@ -1,0 +1,88 @@
+.criteria-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+  .criteria-grid {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: stretch;
+  }
+}
+
+.criteria-card {
+  border: 1px solid #dbeafe;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.criteria-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+.search-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 170px;
+}
+
+.money-cell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.money {
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  font-family: "Courier New", monospace;
+  min-width: 180px;
+  color: #1f2937;
+}
+
+.money .symbol {
+  display: inline-block;
+  width: 20px;
+  text-align: right;
+  padding-right: 4px;
+}
+
+.money .integer {
+  display: inline-block;
+  text-align: right;
+  width: 120px;
+}
+
+.money .decimal {
+  display: inline-block;
+  text-align: left;
+  width: 60px;
+}
+
+.negative {
+  color: #dc2626 !important;
+}
+
+.percentage-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.esf-section-row td {
+  font-weight: 700;
+  background-color: #f8fafc;
+  text-transform: uppercase;
+}
+
+.esf-total-row td {
+  font-weight: 700;
+  background-color: #eef2ff;
+}
