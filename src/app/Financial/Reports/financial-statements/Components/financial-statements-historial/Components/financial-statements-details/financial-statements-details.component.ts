@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
@@ -162,7 +162,6 @@ export class FinancialStatementsDetailsComponent implements OnInit {
       STATEMENT_FINANCIAL_POSITION: 'Estado de Situacion Financiera',
       INCOME_STATEMENT: 'Estado de Resultados',
       STATEMENT_CHANGES_EQUITY: 'Estado de Cambios en el Patrimonio',
-      BALANCE_SHEET: 'Balance General',
     };
 
     return map[type] || type || 'Estado Financiero';
@@ -257,6 +256,7 @@ export class FinancialStatementsDetailsComponent implements OnInit {
     return status?.trim().toUpperCase() || '';
   }
 }
+
 
 
 

@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -318,7 +318,6 @@ export class FinancialStatementsHistorialComponent implements OnInit {
       STATEMENT_FINANCIAL_POSITION: 'Estado de Situacion Financiera',
       INCOME_STATEMENT: 'Estado de Resultados',
       STATEMENT_CHANGES_EQUITY: 'Estado de Cambios en el Patrimonio',
-      BALANCE_SHEET: 'Balance General',
     };
 
     return map[type] || type || 'Estado Financiero';
@@ -353,7 +352,6 @@ export class FinancialStatementsHistorialComponent implements OnInit {
     const isCutoffReport = [
       'STATEMENT_FINANCIAL_POSITION',
       'STATEMENT_CHANGES_EQUITY',
-      'BALANCE_SHEET',
     ].includes(String(statementType || '').toUpperCase());
 
     if (isCutoffReport && endDate) {
@@ -514,12 +512,7 @@ export class FinancialStatementsHistorialComponent implements OnInit {
   private buildHistoryPreviewHeaderConfig(
     statementType: string,
     rows: any[]
-  ): ColumnDefinition[][] {
-    if (statementType === 'BALANCE_SHEET') {
-      return this.buildBalanceSheetHeaderConfig();
-    }
-
-    return this.buildComparativeHeaderConfig(rows);
+  ): ColumnDefinition[][] {return this.buildComparativeHeaderConfig(rows);
   }
 
   private buildComparativeHeaderConfig(rows: any[]): ColumnDefinition[][] {
@@ -609,27 +602,6 @@ export class FinancialStatementsHistorialComponent implements OnInit {
     ];
   }
 
-  private buildBalanceSheetHeaderConfig(): ColumnDefinition[][] {
-    return [
-      [
-        {
-          header: 'Cuenta',
-          colspan: 2,
-          children: [
-            { header: 'Código', field: 'account.accountCode' },
-            { header: 'Descripción', field: 'account.accountDescription' },
-          ],
-        },
-        { header: 'Descripción', field: 'description', rowspan: 2 },
-        { header: 'Valor', field: 'value', type: 'number', rowspan: 2 },
-      ],
-      [
-        { header: 'Código', field: 'account.accountCode' },
-        { header: 'Descripción', field: 'account.accountDescription' },
-      ],
-    ];
-  }
-
   private resolvePercentageField(
     rows: any[],
     numericField: string,
@@ -653,3 +625,4 @@ export class FinancialStatementsHistorialComponent implements OnInit {
     );
   }
 }
+

@@ -48,16 +48,6 @@ export const FINANCIAL_STATEMENTS_ROUTES: Routes = [
       ),
   },
   {
-    path: 'balance-sheet',
-    data: {
-      breadcrumb: 'Balance General',
-    },
-    loadComponent: () =>
-      import('../../Financial/Reports/financial-statements/Components/financial-statement-types/balance-sheet/balance-sheet.component').then(
-        (m) => m.BalanceSheetComponent
-      ),
-  },
-  {
     path: 'historial',
     data: {
       breadcrumb: 'Historial',
@@ -78,3 +68,4 @@ export const FINANCIAL_STATEMENTS_ROUTES: Routes = [
       ),
   },
 ];
+

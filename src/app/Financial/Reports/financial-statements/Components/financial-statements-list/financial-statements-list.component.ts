@@ -1,4 +1,4 @@
-Ôªøimport { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -26,12 +26,12 @@ export class FinancialStatementsListComponent implements OnInit {
 
   financialStatements: FinancialStatementOption[] = [
     {
-      name: 'Estado de Situaci√≥n Financiera',
+      name: 'Estado de SituaciÛn Financiera',
       route: '/financial/reports/financial-statements/statement-financial-position',
       description:
         'Muestra activos, pasivos y patrimonio en una fecha determinada.',
       longDescription:
-        'Refleja la posici√≥n financiera de la entidad en un momento espec√≠fico con enfoque en su estructura patrimonial.',
+        'Refleja la posiciÛn financiera de la entidad en un momento especÌfico con enfoque en su estructura patrimonial.',
       icon: 'account_balance_wallet',
     },
     {
@@ -39,7 +39,7 @@ export class FinancialStatementsListComponent implements OnInit {
       route: '/financial/reports/financial-statements/income-statement',
       description: 'Presenta ingresos, costos y gastos del periodo.',
       longDescription:
-        'Permite evaluar si la entidad obtuvo utilidad o p√©rdida en el periodo contable seleccionado.',
+        'Permite evaluar si la entidad obtuvo utilidad o pÈrdida en el periodo contable seleccionado.',
       icon: 'monitoring',
     },
     {
@@ -47,17 +47,9 @@ export class FinancialStatementsListComponent implements OnInit {
       route: '/financial/reports/financial-statements/statement-of-changes-in-equity',
       description: 'Expone variaciones del patrimonio de la entidad.',
       longDescription:
-        'Detalla c√≥mo se transform√≥ el patrimonio a lo largo del periodo, incluyendo resultados y movimientos patrimoniales.',
+        'Detalla cÛmo se transformÛ el patrimonio a lo largo del periodo, incluyendo resultados y movimientos patrimoniales.',
       icon: 'swap_horiz',
     },
-    /*{
-      name: 'Balance General',
-      route: '/financial/reports/financial-statements/balance-sheet',
-      description: 'Resume la situaci√≥n general de cuentas contables.',
-      longDescription:
-        'Consolida los principales saldos para an√°lisis financiero integral y verificaci√≥n de consistencia contable.',
-      icon: 'balance',
-    },*/
   ];
 
   filteredFinancialStatements: FinancialStatementOption[] = [];
@@ -98,4 +90,5 @@ export class FinancialStatementsListComponent implements OnInit {
     this.router.navigate(['/financial/reports/financial-statements/historial']);
   }
 }
+
 
