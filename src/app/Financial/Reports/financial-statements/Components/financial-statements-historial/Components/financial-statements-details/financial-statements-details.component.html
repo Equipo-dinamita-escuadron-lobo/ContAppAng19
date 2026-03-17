@@ -1,0 +1,64 @@
+<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <p-toast></p-toast>
+
+  <div class="mb-6 flex items-center gap-3">
+    <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
+      receipt_long
+    </span>
+    <h1
+      class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary underline-offset-4"
+    >
+      Detalles del Reporte: {{
+        getStatementTypeLabel(financialStatementDetails?.type)
+      }}
+    </h1>
+  </div>
+
+  <p-card header="Informacion General" styleClass="mb-6">
+    <div *ngIf="financialStatementDetails" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <strong>ID de Registro:</strong>
+        <p>{{ financialStatementDetails.publicId }}</p>
+      </div>
+      <div>
+        <strong>Fecha de Generacion:</strong>
+        <p>{{ financialStatementDetails.createdAt | date : "dd/MM/yyyy hh:mm a" }}</p>
+      </div>
+      <div>
+        <strong>Usuario:</strong>
+        <p>{{ financialStatementDetails.userId }}</p>
+      </div>
+      <div>
+        <strong>Estado Actual:</strong>
+        <p>
+          <p-tag
+            [value]="getStatusLabel(getLastLogStatus())"
+            [severity]="getStatusSeverity(getLastLogStatus())"
+          ></p-tag>
+        </p>
+      </div>
+    </div>
+    <div *ngIf="!financialStatementDetails" class="text-center p-4">
+      Cargando detalles...
+    </div>
+  </p-card>
+
+  <p-card header="Historial de Actividad">
+    <p-timeline [value]="logs" align="alternate" styleClass="customized-timeline">
+      <ng-template pTemplate="marker" let-event>
+        <span class="custom-marker shadow-2" [style.backgroundColor]="event.color">
+          <i [class]="event.icon"></i>
+        </span>
+      </ng-template>
+      <ng-template pTemplate="content" let-event>
+        <p-card
+          [header]="getEventLabel(event.etypeEvent)"
+          [subheader]="(event.createdAt | date : 'dd/MM/yyyy hh:mm:ss a') ?? ''"
+        >
+          <p>{{ getEventMessage(event) }}</p>
+        </p-card>
+      </ng-template>
+    </p-timeline>
+  </p-card>
+</div>
+

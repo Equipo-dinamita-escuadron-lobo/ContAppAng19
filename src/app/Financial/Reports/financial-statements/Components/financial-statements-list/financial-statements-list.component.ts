@@ -1,70 +1,94 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
+
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { AuthService } from '../../../../../Core/auth/services/auth.service';
+
+interface FinancialStatementOption {
+  name: string;
+  route: string;
+  description: string;
+  longDescription: string;
+  icon: string;
+}
 
 @Component({
   selector: 'app-financial-statements-list',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ButtonModule, RippleModule],
   templateUrl: './financial-statements-list.component.html',
-  styleUrl: './financial-statements-list.component.css'
+  styleUrl: './financial-statements-list.component.css',
 })
 export class FinancialStatementsListComponent implements OnInit {
-  searchTerm: string = '';
-  financialStatements = [
-    {
-      name: 'Estado de situacion Financiera',
-      route: '/financial/reports/financial-statements/statement-financial-position',
-      description: 'Muestra los activos, pasivos y patrimonio de la entidad en una fecha determinada.',
-      longDescription:
-        'Refleja la posición financiera de la entidad en un momento específico, mostrando recursos, obligaciones y patrimonio.',
-      icon: 'bar_chart',
-    },
+  searchTerm = '';
 
-     {
+  financialStatements: FinancialStatementOption[] = [
+    {
+      name: 'Estado de Situaci�n Financiera',
+      route: '/financial/reports/financial-statements/statement-financial-position',
+      description:
+        'Muestra activos, pasivos y patrimonio en una fecha determinada.',
+      longDescription:
+        'Refleja la posici�n financiera de la entidad en un momento espec�fico con enfoque en su estructura patrimonial.',
+      icon: 'account_balance_wallet',
+    },
+    {
       name: 'Estado de Resultados',
-      route: '/financial/reports/financial-statements/statement-financial-position',
-      description: 'Presenta ingresos, costos y gastos de un período.',
+      route: '/financial/reports/financial-statements/income-statement',
+      description: 'Presenta ingresos, costos y gastos del periodo.',
       longDescription:
-        'Permite conocer si la entidad obtuvo utilidad o pérdida en el período contable.',
-      icon: 'attach_money',
+        'Permite evaluar si la entidad obtuvo utilidad o p�rdida en el periodo contable seleccionado.',
+      icon: 'monitoring',
     },
     {
-      name: 'Balance de Prueba',
-      route: '/financial/reports/financial-statements/statement-financial-position',
-      description: 'Resume saldos de todas las cuentas contables.',
+      name: 'Estado de Cambios en el Patrimonio',
+      route: '/financial/reports/financial-statements/statement-of-changes-in-equity',
+      description: 'Expone variaciones del patrimonio de la entidad.',
       longDescription:
-        'Verifica que los débitos y créditos estén equilibrados, garantizando consistencia contable.',
-      icon: 'scale',
-    },
-    {
-      name: 'Estado de Cambio en el Patrimonio',
-      route: '/financial/reports/financial-statements/statement-financial-position',
-      description: 'Expone variaciones en el patrimonio de la entidad.',
-      longDescription:
-        'Muestra cómo cambió el patrimonio a lo largo del período contable, incluyendo aportes, utilidades o pérdidas.',
-      icon: 'sync_alt',
+        'Detalla c�mo se transform� el patrimonio a lo largo del periodo, incluyendo resultados y movimientos patrimoniales.',
+      icon: 'swap_horiz',
     },
   ];
 
-  filteredFinancialStatements: any[] = [];
+  filteredFinancialStatements: FinancialStatementOption[] = [];
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private readonly router: Router,
+    private readonly authService: AuthService
+  ) {}
+
+  get isAdmin(): boolean {
+    return this.authService.hasRole('Administrador');
+  }
 
   ngOnInit(): void {
     this.filteredFinancialStatements = [...this.financialStatements];
   }
 
-  filterFinancialStatements() {
-    const term = this.searchTerm.toLowerCase();
+  filterFinancialStatements(): void {
+    const term = this.searchTerm.trim().toLowerCase();
+
+    if (!term) {
+      this.filteredFinancialStatements = [...this.financialStatements];
+      return;
+    }
+
     this.filteredFinancialStatements = this.financialStatements.filter(
-      (book) =>
-        book.name.toLowerCase().includes(term) ||
-        book.description.toLowerCase().includes(term)
+      (statement) =>
+        statement.name.toLowerCase().includes(term) ||
+        statement.description.toLowerCase().includes(term)
     );
   }
 
-  goTo(route: String): void {
-    this.router.navigate([route], { relativeTo: this.route });
+  goTo(route: string): void {
+    this.router.navigate([route]);
+  }
+
+  goToHistory(): void {
+    this.router.navigate(['/financial/reports/financial-statements/historial']);
   }
 }
+
+
