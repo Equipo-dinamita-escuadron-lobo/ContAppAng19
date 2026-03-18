@@ -1,4 +1,4 @@
-<div class="h-full w-full rounded-2xl p-4 md:p-6">
+﻿<div class="h-full w-full rounded-2xl p-4 md:p-6">
   <p-toast></p-toast>
 
   <div class="mb-6 flex flex-col">
@@ -42,7 +42,7 @@
           pInputText
           type="text"
           (input)="applyGlobalFilter($event)"
-          placeholder="Buscar por reporte, usuario..."
+          placeholder="Buscar por reporte o usuario..."
           class="w-full md:w-[30rem]"
         />
       </p-iconField>
@@ -66,8 +66,8 @@
   >
     <ng-template pTemplate="header">
       <tr>
-        <th pSortableColumn="financialStatement.type">
-          Reporte Generado <p-sortIcon field="financialStatement.type"></p-sortIcon>
+        <th>
+          Reporte Generado
         </th>
 
         <th pSortableColumn="createdAt">
@@ -75,8 +75,8 @@
           <p-sortIcon field="createdAt"></p-sortIcon>
         </th>
 
-        <th pSortableColumn="financialStatement.userId">
-          Usuario <p-sortIcon field="financialStatement.userId"></p-sortIcon>
+        <th>
+          Usuario
         </th>
 
         <th pSortableColumn="state">
@@ -155,3 +155,6 @@
     </ng-template>
   </p-table>
 </div>
+
+
+

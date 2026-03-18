@@ -61,10 +61,10 @@
               <div>
                 <label
                   class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1"
-                  >ID Publico</label
+                  >ID del Reporte</label
                 >
                 <span class="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded font-mono"
-                  >#{{ reportInfo?.publicId || "N/A" }}</span
+                  >#{{ reportInfo?.reportId || "N/A" }}</span
                 >
               </div>
             </div>
@@ -76,7 +76,7 @@
               >
               <div class="flex items-center gap-2">
                 <i class="pi pi-user text-slate-400"></i>
-                <span class="text-slate-700">{{ reportInfo?.user || "Sistema" }}</span>
+                <span class="text-slate-700">{{ reportInfo?.enterprise || reportInfo?.entId || "Sistema" }}</span>
               </div>
             </div>
           </div>
@@ -175,3 +175,4 @@
     </div>
   </form>
 </div>
+

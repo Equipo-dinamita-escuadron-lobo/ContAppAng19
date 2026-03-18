@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
+import { RadioButton } from 'primeng/radiobutton';
 import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -16,9 +17,7 @@ import { FinancialStatementType } from '../../../Models/eFinancialStatementType'
 import { GenerateFinancialStatementRequest } from '../../../Models/Requests/GenerateFinancialStatementRequest';
 import { FinancialPositionStatementResponse } from '../../../Models/Responses/FinancialPositionStatementResponse';
 import { FinancialStatementsService } from '../../../Services/financial-statements.service';
-import { AuthService } from '../../../../../../Core/auth/services/auth.service';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
-import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { ColumnDefinition } from '../../report-preview/report-preview.component';
 
@@ -35,6 +34,7 @@ interface IncomeStatementComparativeRow extends FinancialPositionStatementRespon
     FormsModule,
     ButtonModule,
     DatePickerModule,
+    RadioButton,
     TableModule,
   ],
   providers: [DatePipe, DialogService],
@@ -52,11 +52,8 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
     endDate: null,
   };
 
-  isLoadingComparison = false;
-
   override request: GenerateFinancialStatementRequest = {
     entId: '',
-    userId: 0,
     type: FinancialStatementType.INCOME_STATEMENT,
     criteria: this.criteria,
   };
@@ -125,9 +122,7 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
 
   constructor(
     financialStatementsService: FinancialStatementsService,
-    authService: AuthService,
     enterpriseService: EnterpriseService,
-    thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,
@@ -135,9 +130,7 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
   ) {
     super(
       financialStatementsService,
-      authService,
       enterpriseService,
-      thirdService,
       accountService,
       messageService,
       dialogService
@@ -152,10 +145,9 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
         'Compara ingresos, costos y gastos entre un periodo actual y un periodo anterior.',
       icon: 'monitoring',
       usesCutoffDate: false,
-      requiresLevelSelection: false,
+      requiresLevelSelection: true,
     };
-    this.criteria.criteriaType = '';
-    this.isLevelSelected = true;
+    this.initializeLevelFilter();
 
     this.initializeDefaultPeriods();
     this.configureComparativeColumns(
@@ -228,7 +220,7 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
   }
 
   override normalizeDataTable(dataTable: any[]): IncomeStatementComparativeRow[] {
-    return (dataTable || [])
+    const normalizedRows = (dataTable || [])
       .map((row) => this.normalizeIncomeRow(row))
       .filter(
         (row) =>
@@ -237,6 +229,8 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
           row.previousAmount !== null ||
           row.variation !== null
       );
+
+    return this.projectRowsToSelectedLevel(normalizedRows);
   }
 
   override afterReportLoaded(_rawResponse: any): void {}
@@ -305,7 +299,6 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
     previousEndDate: string | null
   ): GenerateFinancialStatementRequest {
     const enterpriseId = this.resolveEnterpriseId();
-    const userId = this.resolveCurrentUserId();
 
     return {
       entId: enterpriseId ?? '',
@@ -317,7 +310,6 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
         previousEndDate,
       },
       type: FinancialStatementType.INCOME_STATEMENT,
-      userId: userId ?? 0,
     };
   }
 
@@ -351,6 +343,16 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
   }
 
   private normalizeIncomeRow(row: any): IncomeStatementComparativeRow {
+    const accountCode = this.normalizeAccountCode(
+      this.getFirstDefinedValue(row, ['account.accountCode', 'accountCode', 'code'])
+    );
+    const accountDescription = String(
+      this.getFirstDefinedValue(row, [
+        'account.accountDescription',
+        'accountDescription',
+        'description',
+      ]) ?? ''
+    ).trim();
     const debit = this.parseAmount(this.getFirstDefinedValue(row, ['debit', 'debitMovement'])) ?? 0;
     const credit = this.parseAmount(this.getFirstDefinedValue(row, ['credit', 'creditMovement'])) ?? 0;
     const nature = String(
@@ -409,6 +411,9 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
         : null);
 
     return {
+      account: row.account ?? null,
+      accountCode,
+      accountDescription,
       lineDescription: String(
         this.getFirstDefinedValue(row, [
           'lineDescription',
@@ -429,6 +434,126 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
       previousPercentageLabel: this.formatPercentage(previousPercentage),
       variationPercentageLabel: this.formatPercentage(variationPercentage),
     };
+  }
+
+  private projectRowsToSelectedLevel(
+    rows: IncomeStatementComparativeRow[]
+  ): IncomeStatementComparativeRow[] {
+    const targetLength = this.getSelectedLevelCodeLength();
+    if (!targetLength) {
+      return rows;
+    }
+
+    const accountRows = rows.filter((row) =>
+      !!this.normalizeAccountCode(row.accountCode ?? row.account?.accountCode)
+    );
+
+    if (accountRows.length === 0) {
+      return rows;
+    }
+
+    const exactLevelRows = accountRows.filter((row) => {
+      const accountCode = this.normalizeAccountCode(
+        row.accountCode ?? row.account?.accountCode
+      );
+      return accountCode?.length === targetLength;
+    });
+
+    if (exactLevelRows.length > 0) {
+      return rows.filter((row) => {
+        const accountCode = this.normalizeAccountCode(
+          row.accountCode ?? row.account?.accountCode
+        );
+
+        return (
+          this.isStructuralRow(row.rowType, accountCode) ||
+          accountCode?.length === targetLength
+        );
+      });
+    }
+
+    return this.aggregateRowsToSelectedLevel(rows, targetLength);
+  }
+
+  private aggregateRowsToSelectedLevel(
+    rows: IncomeStatementComparativeRow[],
+    targetLength: number
+  ): IncomeStatementComparativeRow[] {
+    const aggregatedRows = new Map<
+      string,
+      IncomeStatementComparativeRow & { order: number }
+    >();
+
+    rows.forEach((row, index) => {
+      const accountCode = this.normalizeAccountCode(
+        row.accountCode ?? row.account?.accountCode
+      );
+      if (!accountCode) {
+        return;
+      }
+
+      const projectedCode = accountCode.slice(0, Math.min(targetLength, accountCode.length));
+      const existingRow = aggregatedRows.get(projectedCode);
+      const accountDescription = this.resolveProjectedDescription(
+        projectedCode,
+        row.accountDescription ?? row.account?.accountDescription ?? row.lineDescription
+      );
+
+      aggregatedRows.set(projectedCode, {
+        account: {
+          accountCode: projectedCode,
+          accountDescription,
+          nature: row.account?.nature ?? '',
+        },
+        accountCode: projectedCode,
+        accountDescription,
+        lineDescription: `${projectedCode} - ${accountDescription}`,
+        note: null,
+        rowType: '',
+        currentAmount: this.sumNullableValues(
+          existingRow?.currentAmount,
+          row.currentAmount
+        ),
+        currentPercentage: null,
+        previousAmount: this.sumNullableValues(
+          existingRow?.previousAmount,
+          row.previousAmount
+        ),
+        previousPercentage: null,
+        variation: this.sumNullableValues(existingRow?.variation, row.variation),
+        variationPercentage: null,
+        currentPercentageLabel: '-',
+        previousPercentageLabel: '-',
+        variationPercentageLabel: '-',
+        order: existingRow?.order ?? this.resolveAccountOrder(projectedCode, index),
+      });
+    });
+
+    return Array.from(aggregatedRows.values())
+      .sort((left, right) => left.order - right.order)
+      .map(({ order, ...row }) => ({
+        ...row,
+        variation:
+          row.variation ??
+          (row.currentAmount !== null &&
+          row.currentAmount !== undefined &&
+          row.previousAmount !== null &&
+          row.previousAmount !== undefined
+            ? row.currentAmount - row.previousAmount
+            : null),
+      }));
+  }
+
+  private resolveProjectedDescription(
+    projectedCode: string,
+    fallbackDescription?: string | null
+  ): string {
+    const resolvedDescription = this.resolveAccountDescription(
+      projectedCode,
+      fallbackDescription
+    );
+
+    return resolvedDescription || projectedCode;
   }
 
   getRowClass(row: IncomeStatementComparativeRow): string {
@@ -530,3 +655,4 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
     return null;
   }
 }
+

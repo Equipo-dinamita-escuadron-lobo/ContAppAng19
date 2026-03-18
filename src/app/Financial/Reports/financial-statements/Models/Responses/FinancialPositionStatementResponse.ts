@@ -6,6 +6,8 @@ interface ReportAccount {
 
 export interface FinancialPositionStatementResponse {
   account?: ReportAccount | null;
+  accountCode?: string | null;
+  accountDescription?: string | null;
   description?: string;
   value?: number | null;
   lineDescription?: string;

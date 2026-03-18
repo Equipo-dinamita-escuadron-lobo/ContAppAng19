@@ -21,6 +21,7 @@
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        [disabled]="isGeneratingReport"
         (click)="showExportDialog()"
         (keydown.enter)="showExportDialog()"
       ></p-button>
@@ -62,6 +63,7 @@
           pButton
           type="button"
           label="Generar Reporte"
+          [loading]="isGeneratingReport"
           (keydown.enter)="generateReport()"
           (click)="generateReport()"
         ></button>
@@ -75,6 +77,7 @@
       [value]="dataTable"
       [resizableColumns]="true"
       [responsiveLayout]="'scroll'"
+      [loading]="isGeneratingReport"
       styleClass="p-datatable-header min-h-[20rem] fs-report-table"
     >
       <ng-template pTemplate="header">
@@ -98,8 +101,8 @@
                 class="money-cell"
                 [innerHTML]="
                   formatMoneyAligned(
-                    getNestedValue(row, col.field),
-                    col.natureField ? getNestedValue(row, col.natureField) : undefined
+                    getNestedNumberValue(row, col.field),
+                    col.natureField ? getNestedTextValue(row, col.natureField) : undefined
                   )
                 "
               ></div>
@@ -107,12 +110,12 @@
             <ng-template #plainValue>
               <ng-container *ngIf="col.type === 'percentage'; else textValue">
                 <div class="money-cell">
-                  {{ formatPercentage(getNestedValue(row, col.field)) }}
+                  {{ formatPercentage(getNestedNumberValue(row, col.field)) }}
                 </div>
               </ng-container>
             </ng-template>
             <ng-template #textValue>
-              {{ getNestedValue(row, col.field) }}
+              {{ getNestedTextValue(row, col.field) }}
             </ng-template>
           </td>
         </tr>

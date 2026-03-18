@@ -21,6 +21,7 @@
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        [disabled]="isGeneratingReport"
         (click)="showExportDialog()"
         (keydown.enter)="showExportDialog()"
       ></p-button>
@@ -33,6 +34,29 @@
 
   <div class="p-4 bg-white rounded-lg shadow-sm">
     <div class="criteria-grid">
+      <div class="criteria-card level-card">
+        <h4 class="criteria-title">
+          Nivel <span class="text-error">*</span>
+        </h4>
+        <div class="level-options-grid">
+          <div class="level-option" *ngFor="let level of levels">
+            <p-radioButton
+              [inputId]="'income-level-' + level.value"
+              name="incomeStatementCriteriaType"
+              [value]="level.value"
+              [(ngModel)]="criteria.criteriaType"
+              (ngModelChange)="onLevelChange()"
+            ></p-radioButton>
+            <label
+              class="text-sm cursor-pointer"
+              [for]="'income-level-' + level.value"
+            >
+              {{ level.label }}
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div class="criteria-card">
         <h4 class="criteria-title">Periodo Actual</h4>
         <div class="criteria-fields two-columns">
@@ -96,6 +120,7 @@
           pButton
           type="button"
           label="Generar Reporte"
+          [loading]="isGeneratingReport"
           (keydown.enter)="generateReport()"
           (click)="generateReport()"
         ></button>
@@ -110,7 +135,7 @@
       [resizableColumns]="true"
       [scrollable]="true"
       [responsiveLayout]="'scroll'"
-      [loading]="isLoadingComparison"
+      [loading]="isGeneratingReport"
       styleClass="p-datatable-header fs-report-table"
     >
       <ng-template pTemplate="header">
@@ -145,10 +170,12 @@
             [class.percentage-cell]="isPercentageColumn(col.field)"
           >
             <ng-container *ngIf="col.type === 'number'; else plainValue">
-              <span class="compact-number">{{ formatMoneyCompact(getNestedValue(row, col.field)) }}</span>
+              <span class="compact-number">{{
+                formatMoneyCompact(getNestedNumberValue(row, col.field))
+              }}</span>
             </ng-container>
             <ng-template #plainValue>
-              {{ getNestedValue(row, col.field) }}
+              {{ getNestedTextValue(row, col.field) }}
             </ng-template>
           </td>
         </tr>
@@ -168,4 +195,6 @@
     </p-table>
   </div>
 </div>
+
+
 

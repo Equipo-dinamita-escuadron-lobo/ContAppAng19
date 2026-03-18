@@ -26,12 +26,12 @@ export class FinancialStatementsListComponent implements OnInit {
 
   financialStatements: FinancialStatementOption[] = [
     {
-      name: 'Estado de Situación Financiera',
+      name: 'Estado de SituaciÃ³n Financiera',
       route: '/financial/reports/financial-statements/statement-financial-position',
       description:
         'Muestra activos, pasivos y patrimonio en una fecha determinada.',
       longDescription:
-        'Refleja la posición financiera de la entidad en un momento específico con enfoque en su estructura patrimonial.',
+        'Refleja la posiciÃ³n financiera de la entidad en un momento especÃ­fico con enfoque en su estructura patrimonial.',
       icon: 'account_balance_wallet',
     },
     {
@@ -39,7 +39,7 @@ export class FinancialStatementsListComponent implements OnInit {
       route: '/financial/reports/financial-statements/income-statement',
       description: 'Presenta ingresos, costos y gastos del periodo.',
       longDescription:
-        'Permite evaluar si la entidad obtuvo utilidad o pérdida en el periodo contable seleccionado.',
+        'Permite evaluar si la entidad obtuvo utilidad o perdida en el periodo contable seleccionado.',
       icon: 'monitoring',
     },
     {
@@ -47,7 +47,7 @@ export class FinancialStatementsListComponent implements OnInit {
       route: '/financial/reports/financial-statements/statement-of-changes-in-equity',
       description: 'Expone variaciones del patrimonio de la entidad.',
       longDescription:
-        'Detalla cómo se transformó el patrimonio a lo largo del periodo, incluyendo resultados y movimientos patrimoniales.',
+        'Detalla cÃ³mo se transforma el patrimonio a lo largo del periodo, incluyendo resultados y movimientos patrimoniales.',
       icon: 'swap_horiz',
     },
   ];

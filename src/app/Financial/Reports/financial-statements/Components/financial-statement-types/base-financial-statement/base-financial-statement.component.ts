@@ -1,19 +1,20 @@
-﻿import { Directive, OnInit, ViewChild } from '@angular/core';
-import { Select } from 'primeng/select';
+import { Directive, OnInit } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 import { Account } from '../../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
-import { Third } from '../../../../../../GeneralMasters/ThirdParties/models/Third';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
-import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
-import { AuthService } from '../../../../../../Core/auth/services/auth.service';
 import { Criteria } from '../../../Models/Criteria';
+import { GenerateFinancialStatementRequest } from '../../../Models/Requests/GenerateFinancialStatementRequest';
 import { FinancialStatementType } from '../../../Models/eFinancialStatementType';
+import { FinancialStatementGenerationResultResponse } from '../../../Models/Responses/FinancialStatementGenerationResultResponse';
+import { FinancialStatementMetadataResponse } from '../../../Models/Responses/FinancialStatementMetadataResponse';
+import { FinancialStatementRowResponse } from '../../../Models/Responses/FinancialStatementRowResponse';
 import { FinancialStatementsService } from '../../../Services/financial-statements.service';
 import { ExportFinancialStatementComponent } from '../../export-financial-statement/export-financial-statement.component';
 import { ColumnDefinition } from '../../report-preview/report-preview.component';
+import { extractApiErrorMessage } from '../../../Utils/financial-statements.utils';
 
 export interface FinancialStatementInfo {
   name: string;
@@ -34,45 +35,20 @@ export interface FinancialStatementTableColumn {
 
 @Directive()
 export abstract class BaseFinancialStatementComponent implements OnInit {
-  @ViewChild('fromSelect') fromSelect!: Select;
-  @ViewChild('toSelect') toSelect!: Select;
-  @ViewChild('thirdPartySelect') thirdPartySelect!: Select;
-
   financialStatementInfo!: FinancialStatementInfo;
-  financialStatementGenerated: any;
-
-  isOptionLevelSelect = false;
-  isLevelSelected = false;
-
-  isRangeOptionSelected = false;
-  rangeFromOptions: Account[] = [];
-  rangeToOptions: Account[] = [];
-
-  thirdPartyOptions: Third[] = [];
-  isThirdPartyOptionSelected = false;
-  thirdPartySelected: Third | null = null;
+  financialStatementGenerated: FinancialStatementMetadataResponse | null = null;
 
   datePeriod: Date[] = [];
 
   levels: { label: string; value: string }[] = [];
-  levelRange: { from: number | null; to: number | null } = {
-    from: null,
-    to: null,
-  };
+  protected accountCatalogByCode = new Map<string, Account>();
+  protected accountOrderByCode = new Map<string, number>();
 
-  enterpriseData: any;
-
-  thirdPartyInfo: {
-    typeId: string;
-    name: string;
-    types: string;
-  } | null = null;
+  enterpriseData: Record<string, unknown> | null = null;
 
   criteria: Criteria = {
     criteriaType: '',
     criteriaRange: null,
-    costCenterId: null,
-    thirdPartyId: null,
     startDate: null,
     endDate: null,
   };
@@ -80,9 +56,13 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
   errors: string[] = [];
 
   isReportGenerated = false;
+  isGeneratingReport = false;
 
-  request: any;
-  dataTable: any[] = [];
+  request: GenerateFinancialStatementRequest | null = null;
+  dataTable: unknown[] = [];
+  protected rawReportData: FinancialStatementRowResponse[] = [];
+  protected lastReportResponse: FinancialStatementGenerationResultResponse | null =
+    null;
 
   tableColumns: FinancialStatementTableColumn[] = [];
   headerConfig: ColumnDefinition[][] = [];
@@ -94,9 +74,7 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
 
   constructor(
     protected readonly financialStatementsService: FinancialStatementsService,
-    protected readonly authService: AuthService,
     protected readonly enterpriseService: EnterpriseService,
-    protected readonly thirdService: ThirdService,
     protected readonly accountService: ChartAccountService,
     protected readonly messageService: MessageService,
     protected readonly dialogService: DialogService
@@ -104,230 +82,144 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadConfig();
-    this.getEnterpriseInfo();
-    this.ensureEnterpriseContext();
+    this.enterpriseData =
+      (this.enterpriseService.getSelectedEnterprise() as unknown as
+        | Record<string, unknown>
+        | null) ??
+      null;
+    this.preloadAccountCatalog();
   }
 
   protected abstract loadConfig(): void;
 
   protected abstract organizeRequest(): void;
 
-  protected calculateTotals(): void {}
-
-  protected normalizeDataTable(dataTable: any[], _rawResponse?: any): any[] {
-    return dataTable;
-  }
-
-  protected afterReportLoaded(_rawResponse: any): void {}
-
-  private getEnterpriseInfo(): void {
-    this.enterpriseData = this.enterpriseService.getSelectedEnterprise();
-  }
-
-  private ensureEnterpriseContext(): void {
-    const selectedEnterprise = this.enterpriseService.getSelectedEnterprise();
-    if (selectedEnterprise?.id) {
-      this.enterpriseData = selectedEnterprise;
-      return;
-    }
+  protected initializeLevelFilter(): void {
+    this.levels = [
+      { label: 'Clase', value: 'NUMBER_CLASS' },
+      { label: 'Grupo', value: 'GROUP' },
+      { label: 'Cuenta', value: 'ACCOUNT' },
+      { label: 'SubCuenta', value: 'SUB_ACCOUNT' },
+      { label: 'Auxiliar', value: 'AUXILIARY_ACCOUNT' },
+    ];
+    this.criteria.criteriaType = '';
+    this.criteria.criteriaRange = null;
   }
 
   onLevelChange(): void {
-    if (this.criteria.criteriaType.length > 0) {
-      this.isLevelSelected = true;
-      if (this.isRangeOptionSelected) {
-        this.getAccountOptions();
-        this.resetRangeDropDowns();
-      }
-    }
-  }
-
-  onRangeSelectionChange(): void {
-    if (this.criteria.criteriaType.length === 0) {
-      this.isRangeOptionSelected = false;
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail:
-          'No se puede seleccionar un rango ya que no ha escogido un nivel',
-      });
-      return;
-    }
-
-    if (this.isRangeOptionSelected) {
-      this.criteria.criteriaRange = { from: 0, to: 0 };
-      this.getAccountOptions();
-      return;
-    }
-
     this.criteria.criteriaRange = null;
-    this.resetRangeDropDowns();
+    this.refreshRenderedReport();
   }
 
-  private getAccountOptions(): void {
-    const enterpriseId = this.resolveEnterpriseId();
-    if (!enterpriseId) {
-      return;
+  protected getLevelCodeLength(level: string | null | undefined): number | null {
+    const map: Record<string, number> = {
+      NUMBER_CLASS: 1,
+      GROUP: 2,
+      ACCOUNT: 4,
+      SUB_ACCOUNT: 6,
+      AUXILIARY_ACCOUNT: 8,
+    };
+
+    return map[String(level || '').trim().toUpperCase()] ?? null;
+  }
+
+  protected getSelectedLevelCodeLength(): number | null {
+    return this.getLevelCodeLength(this.criteria.criteriaType);
+  }
+
+  protected normalizeAccountCode(value: unknown): string | null {
+    if (value === null || value === undefined) {
+      return null;
     }
 
-    this.accountService.getListAccounts(enterpriseId).subscribe({
-      next: (response: Account[]) => {
-        this.rangeFromOptions = this.filterAccountsByLevel(
-          response,
-          this.criteria.criteriaType
-        );
-      },
-      error: (err) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail:
-            'No se han encontrado Cuentas para esta Empresa. Error: ' +
-            err.message,
-        });
-      },
-    });
+    const rawValue = String(value).trim();
+    if (!rawValue) {
+      return null;
+    }
+
+    const digitsOnly = rawValue.replace(/\D/g, '');
+    return digitsOnly || rawValue;
   }
 
-  get rangeFromOptionsFiltered(): Account[] {
-    const maxValue = Math.max(
-      ...this.rangeFromOptions.map((opt) => Number.parseInt(opt.code, 10))
+  protected isStructuralRow(
+    rowType?: string | null,
+    accountCode?: string | null
+  ): boolean {
+    if (!accountCode) {
+      return true;
+    }
+
+    const normalizedType = String(rowType || '').trim().toUpperCase();
+    return (
+      normalizedType.includes('SECTION') ||
+      normalizedType.includes('HEADER') ||
+      normalizedType.includes('TOTAL') ||
+      normalizedType.includes('SUBSECTION')
+    );
+  }
+
+  protected sumNullableValues(
+    ...values: Array<number | null | undefined>
+  ): number | null {
+    const numericValues = values.filter(
+      (value): value is number => typeof value === 'number' && !Number.isNaN(value)
     );
 
-    return this.rangeFromOptions.filter(
-      (opt) => Number.parseInt(opt.code, 10) < maxValue
-    );
+    if (numericValues.length === 0) {
+      return null;
+    }
+
+    return numericValues.reduce((sum, value) => sum + value, 0);
   }
 
-  onFromChange(): void {
-    if (this.isRangeOptionSelected && this.levelRange.from !== null) {
-      this.criteria.criteriaRange!.from = this.levelRange.from;
-      this.rangeToOptions = this.rangeFromOptions.filter(
-        (opt) => Number.parseInt(opt.code, 10) > this.levelRange.from!
-      );
+  protected resolveAccountDescription(
+    code: string,
+    fallbackDescription?: string | null
+  ): string {
+    const normalizedCode = this.normalizeAccountCode(code);
+    if (!normalizedCode) {
+      return String(fallbackDescription || '').trim();
     }
+
+    const account = this.accountCatalogByCode.get(normalizedCode);
+    if (account?.description) {
+      return account.description;
+    }
+
+    return String(fallbackDescription || '').trim();
   }
 
-  onToChange(): void {
-    if (this.isRangeOptionSelected && this.levelRange.to !== null) {
-      this.criteria.criteriaRange!.to = this.levelRange.to;
+  protected resolveAccountOrder(
+    code: string,
+    fallbackOrder = Number.MAX_SAFE_INTEGER
+  ): number {
+    const normalizedCode = this.normalizeAccountCode(code);
+    if (!normalizedCode) {
+      return fallbackOrder;
     }
+
+    return this.accountOrderByCode.get(normalizedCode) ?? fallbackOrder;
   }
 
-  private resetRangeDropDowns(): void {
-    if (this.fromSelect) {
-      this.fromSelect.clear();
-    }
+  protected calculateTotals(): void {}
 
-    if (this.toSelect) {
-      this.toSelect.clear();
-    }
-
-    this.levelRange = { from: 0, to: 0 };
+  protected normalizeDataTable(
+    dataTable: FinancialStatementRowResponse[],
+    _rawResponse?: FinancialStatementGenerationResultResponse | null
+  ): unknown[] {
+    return dataTable;
   }
 
-  private filterAccountsByLevel(accounts: Account[], level: string): Account[] {
-    switch (level) {
-      case 'NUMBER_CLASS':
-        return accounts;
-      case 'GROUP':
-        return accounts.flatMap((a) => a.children || []);
-      case 'ACCOUNT':
-        return accounts.flatMap((a) =>
-          (a.children || []).flatMap((b) => b.children || [])
-        );
-      case 'SUB_ACCOUNT':
-        return accounts.flatMap((a) =>
-          (a.children || []).flatMap((b) =>
-            (b.children || []).flatMap((c) => c.children || [])
-          )
-        );
-      case 'AUXILIARY_ACCOUNT':
-        return accounts.flatMap((a) =>
-          (a.children || []).flatMap((b) =>
-            (b.children || []).flatMap((c) =>
-              (c.children || []).flatMap((d) => d.children || [])
-            )
-          )
-        );
-      default:
-        return [];
-    }
-  }
-
-  onThirdPartyOptionSelected(): void {
-    if (this.isThirdPartyOptionSelected) {
-      this.getThirdPartyOptions();
-      return;
-    }
-
-    if (this.thirdPartySelect) {
-      this.thirdPartySelect.clear();
-    }
-    this.thirdPartySelected = null;
-    this.thirdPartyInfo = null;
-    this.criteria.thirdPartyId = null;
-  }
-
-  private getThirdPartyOptions(): void {
-    const enterpriseId = this.resolveEnterpriseId();
-    if (!enterpriseId) {
-      return;
-    }
-
-    this.thirdService.getThirdList(enterpriseId).subscribe({
-      next: (response: Third[]) => {
-        this.thirdPartyOptions = response.map((third) => ({
-          ...third,
-          fullName: `${third.names} ${third.lastNames}`,
-        }));
-      },
-      error: (err: any) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail:
-            'No se han encontrado Terceros para esta Empresa. Error: ' +
-            err.message,
-        });
-      },
-    });
-  }
-
-  onSelectThirdParty(): void {
-    if (!this.thirdPartySelected) {
-      this.thirdPartyInfo = null;
-      this.criteria.thirdPartyId = null;
-      return;
-    }
-
-    const selectedThird: Third = this.thirdPartySelected;
-
-    setTimeout(() => {
-      this.thirdPartyInfo = {
-        typeId: selectedThird.typeId.typeId,
-        name: `${selectedThird.names} ${selectedThird.lastNames}`,
-        types: this.concatenateThirdTypeInfo(selectedThird.thirdTypes),
-      };
-
-      this.criteria.thirdPartyId = selectedThird.thId;
-    }, 300);
-  }
-
-  concatenateThirdTypeInfo(thirdTypes: any): string {
-    if (thirdTypes && thirdTypes.length > 0) {
-      return thirdTypes.map((type: any) => type.thirdTypeName).join(', ');
-    }
-
-    return '';
-  }
+  protected afterReportLoaded(
+    _rawResponse: FinancialStatementGenerationResultResponse
+  ): void {}
 
   protected generateReport(): void {
     if (!this.validateCriteria()) {
       this.messageService.add({
         severity: 'error',
         summary: 'Errores en el formulario',
-        detail: this.errors.join('\n'),
+        detail: this.errors.join(' '),
       });
       return;
     }
@@ -337,17 +229,22 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
       return;
     }
 
-    this.financialStatementsService
-      .registerFinancialStatement(this.request)
-      .subscribe({
-        next: (data: any) => {
-          const resolvedDataTable = this.resolveDataTableFromResponse(data);
-          this.dataTable = this.normalizeDataTable(resolvedDataTable, data);
-          this.financialStatementGenerated =
-            this.resolveFinancialStatementFromResponse(data);
+    this.resetGeneratedReport();
+    this.isGeneratingReport = true;
 
+    this.financialStatementsService
+      .registerFinancialStatement(this.request as GenerateFinancialStatementRequest)
+      .subscribe({
+        next: (response) => {
+          this.isGeneratingReport = false;
+          this.lastReportResponse = response;
+          this.financialStatementGenerated = response.financialStatement ?? null;
+          this.rawReportData = Array.isArray(response.financialStatementData)
+            ? [...response.financialStatementData]
+            : [];
+          this.dataTable = this.normalizeDataTable(this.rawReportData, response);
           this.calculateTotals();
-          this.afterReportLoaded(data);
+          this.afterReportLoaded(response);
           this.isReportGenerated = true;
 
           if (this.dataTable.length === 0) {
@@ -363,54 +260,43 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
           this.messageService.add({
             severity: 'success',
             summary: 'Exito',
-            detail: 'Se obtuvo la informacion contable con exito.',
+            detail: 'El reporte fue generado correctamente.',
           });
         },
-        error: (err) => {
+        error: (error) => {
+          this.isGeneratingReport = false;
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail:
-              'No se pudo obtener la informacion contable. Error: ' +
-              err.message,
+            detail: extractApiErrorMessage(
+              error,
+              'Error al generar el reporte. Intente mas tarde'
+            ),
           });
         },
       });
   }
 
-  private resolveDataTableFromResponse(data: any): any[] {
-    if (!data) {
-      return [];
+  protected refreshRenderedReport(): void {
+    if (!this.isReportGenerated || this.rawReportData.length === 0) {
+      return;
     }
 
-    const possibleCollections = [
-      data.accountingData,
-      data.financialStatementData,
-      data.reportData,
-      data.content,
-      data.data,
-    ];
-
-    const collection = possibleCollections.find((item) => Array.isArray(item));
-    return Array.isArray(collection) ? collection : [];
-  }
-
-  private resolveFinancialStatementFromResponse(data: any): any {
-    if (!data) {
-      return null;
-    }
-
-    return data.financialStatement ?? data.report ?? data;
+    this.dataTable = this.normalizeDataTable(
+      this.rawReportData,
+      this.lastReportResponse
+    );
+    this.calculateTotals();
   }
 
   protected resolveEnterpriseId(): string | null {
-    const selectedEnterprise = this.enterpriseService.getSelectedEnterprise();
-    if (selectedEnterprise?.id) {
-      this.enterpriseData = selectedEnterprise;
-      return String(selectedEnterprise.id);
-    }
+    const selectedEnterprise =
+      (this.enterpriseService.getSelectedEnterprise() as unknown as
+        | Record<string, unknown>
+        | null) ??
+      null;
+    const enterpriseId = selectedEnterprise?.['id'] ?? this.enterpriseData?.['id'];
 
-    const enterpriseId = this.enterpriseData?.id;
     if (!enterpriseId) {
       this.messageService.add({
         severity: 'warn',
@@ -420,129 +306,184 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
       return null;
     }
 
+    this.enterpriseData = selectedEnterprise ?? this.enterpriseData;
     return String(enterpriseId);
   }
 
-  protected resolveCurrentUserId(): number | null {
-    const profileId = this.toPositiveNumber(
-      this.authService.returnUserInfo()?.id
-    );
-
-    if (profileId !== null) {
-      return profileId;
-    }
-
-    const token = this.authService.getToken();
-    if (!token) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Atencion',
-        detail: 'No se encontro un usuario autenticado para generar el reporte.',
-      });
-      return null;
-    }
-
-    try {
-      const payload = this.decodeJwtPayload(token);
-      const tokenUserId =
-        this.toPositiveNumber(payload?.['userId']) ??
-        this.toPositiveNumber(payload?.['user_id']) ??
-        this.toPositiveNumber(payload?.['id']) ??
-        this.toPositiveNumber(payload?.['sub']);
-
-      if (tokenUserId !== null) {
-        return tokenUserId;
-      }
-
-      const fallbackValue =
-        payload?.['sub'] ??
-        payload?.['userId'] ??
-        payload?.['user_id'] ??
-        payload?.['id'] ??
-        payload?.['preferred_username'] ??
-        payload?.['email'];
-      const derivedUserId = this.toDeterministicPositiveNumber(fallbackValue);
-      if (derivedUserId !== null) {
-        return derivedUserId;
-      }
-    } catch {
-      // Si el token no puede parsearse, reportamos error mas abajo.
-    }
-
-    this.messageService.add({
-      severity: 'warn',
-      summary: 'Atencion',
-      detail:
-        'No fue posible resolver un userId numerico desde la sesion. El backend requiere userId numerico.',
+  showExportDialog(): void {
+    this.refDialog = this.dialogService.open(ExportFinancialStatementComponent, {
+      data: {
+        reportTitle: this.financialStatementInfo.name,
+        statementType: this.financialStatementInfo.type,
+        financialStatement: this.buildFinancialStatementForExport(),
+        dataTable: this.dataTable,
+        headerConfig: this.headerConfig,
+        enterpriseData: this.enterpriseData,
+        generationDate: this.resolveGenerationDate(),
+        totals: {
+          totalDebit: this.totalDebit,
+          totalCredit: this.totalCredit,
+          totalAssets: this.lastReportResponse?.totalAssets ?? null,
+          totalLiabilities: this.lastReportResponse?.totalLiabilities ?? null,
+          totalEquity: this.lastReportResponse?.totalEquity ?? null,
+        },
+      },
     });
-    return null;
   }
 
-  private decodeJwtPayload(token: string): Record<string, any> | null {
-    try {
-      const tokenParts = token.split('.');
-      if (tokenParts.length < 2) {
-        return null;
+  getNestedValue(obj: unknown, path: string): unknown {
+    if (!path || !obj || typeof obj !== 'object') {
+      return '';
+    }
+
+    return path
+      .split('.')
+      .reduce<unknown>((accumulator, key) => {
+        if (
+          accumulator &&
+          typeof accumulator === 'object' &&
+          key in accumulator
+        ) {
+          return (accumulator as Record<string, unknown>)[key];
+        }
+
+        return '';
+      }, obj);
+  }
+
+  getNestedNumberValue(obj: unknown, path: string): number | null {
+    const value = this.getNestedValue(obj, path);
+    return typeof value === 'number' && !Number.isNaN(value) ? value : null;
+  }
+
+  getNestedTextValue(obj: unknown, path: string): string {
+    const value = this.getNestedValue(obj, path);
+    return value === null || value === undefined ? '' : String(value);
+  }
+
+  formatMoneyAligned(value: number | null | undefined, nature?: string): string {
+    if (value == null || Number.isNaN(value)) {
+      return '';
+    }
+
+    const parts = new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).formatToParts(Math.abs(value));
+
+    const integer = parts
+      .filter((part) => part.type === 'integer' || part.type === 'group')
+      .map((part) => part.value)
+      .join('');
+
+    const decimal = parts.find((part) => part.type === 'decimal')?.value ?? ',';
+    const fraction =
+      parts.find((part) => part.type === 'fraction')?.value ?? '00';
+
+    const symbol = '$';
+    const isNegative = value < 0;
+    const sign = isNegative ? '-' : '';
+
+    let cssClasses = '';
+
+    if (nature) {
+      const normalizedNature = nature.trim().toUpperCase();
+      const isRed =
+        (normalizedNature === 'DEBITO' && value < 0) ||
+        (normalizedNature === 'CREDITO' && value > 0);
+
+      if (isRed) {
+        cssClasses = 'text-red-600 font-bold';
       }
-
-      const payload = tokenParts[1]
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
-        .padEnd(Math.ceil(tokenParts[1].length / 4) * 4, '=');
-
-      return JSON.parse(atob(payload));
-    } catch {
-      return null;
+    } else if (isNegative) {
+      cssClasses = 'negative';
     }
+
+    return `
+      <span class="money font-mono ${cssClasses}">
+        <span class="symbol">${symbol}</span>
+        <span class="integer">${sign}${integer}</span>
+        <span class="decimal">${decimal}${fraction}</span>
+      </span>
+    `;
   }
 
-  private toPositiveNumber(value: unknown): number | null {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      return null;
+  formatMoneyCompact(value: number | null | undefined): string {
+    if (value == null || Number.isNaN(value)) {
+      return '';
     }
 
-    return parsed;
+    const sign = value < 0 ? '-$ ' : '$ ';
+    const absoluteValue = Math.abs(value);
+    const formattedValue = new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(absoluteValue);
+
+    return `${sign}${formattedValue}`;
   }
 
-  private toDeterministicPositiveNumber(value: unknown): number | null {
-    if (value === null || value === undefined) {
-      return null;
+  private preloadAccountCatalog(): void {
+    const selectedEnterprise =
+      (this.enterpriseService.getSelectedEnterprise() as unknown as
+        | Record<string, unknown>
+        | null) ?? this.enterpriseData;
+    const enterpriseId = selectedEnterprise?.['id']
+      ? String(selectedEnterprise['id'])
+      : null;
+
+    if (!enterpriseId) {
+      return;
     }
 
-    const text = String(value).trim();
-    if (!text) {
-      return null;
-    }
+    this.accountService.getListAccounts(enterpriseId).subscribe({
+      next: (accounts) => {
+        this.accountCatalogByCode.clear();
+        this.accountOrderByCode.clear();
 
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-      hash = (hash << 5) - hash + text.charCodeAt(i);
-      hash |= 0;
-    }
+        let order = 0;
+        const visit = (items: Account[]) => {
+          for (const item of items || []) {
+            const normalizedCode = this.normalizeAccountCode(item.code);
+            if (normalizedCode) {
+              this.accountCatalogByCode.set(normalizedCode, item);
+              this.accountOrderByCode.set(normalizedCode, order++);
+            }
 
-    const positive = Math.abs(hash);
-    return positive > 0 ? positive : null;
+            if (item.children?.length) {
+              visit(item.children);
+            }
+          }
+        };
+
+        visit(accounts);
+      },
+      error: () => {
+        this.accountCatalogByCode.clear();
+        this.accountOrderByCode.clear();
+      },
+    });
+  }
+
+  private resetGeneratedReport(): void {
+    this.isReportGenerated = false;
+    this.financialStatementGenerated = null;
+    this.rawReportData = [];
+    this.lastReportResponse = null;
+    this.dataTable = [];
+    this.totalDebit = null;
+    this.totalCredit = null;
   }
 
   private hasValidRequestContext(): boolean {
     const enterpriseId = String(this.request?.entId ?? '').trim();
-    const userId = this.toPositiveNumber(this.request?.userId);
 
     if (!enterpriseId) {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo generar el reporte porque la empresa no esta definida.',
-      });
-      return false;
-    }
-
-    if (userId === null) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se pudo generar el reporte porque el usuario no esta definido.',
+        detail:
+          'No se pudo generar el reporte porque la empresa no esta definida.',
       });
       return false;
     }
@@ -553,9 +494,9 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
   private validateCriteria(): boolean {
     this.errors = [];
     const requiresLevelSelection =
-      this.financialStatementInfo?.requiresLevelSelection !== false;
+      this.financialStatementInfo?.requiresLevelSelection === true;
 
-    if (requiresLevelSelection && !this.isLevelValid()) {
+    if (requiresLevelSelection && !this.criteria.criteriaType) {
       this.errors.push('No ha seleccionado un nivel.');
     }
 
@@ -596,28 +537,17 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
       );
     }
 
-    if (this.isRangeOptionSelected && !this.isRangeValid()) {
-      this.errors.push('El rango del nivel seleccionado no es valido.');
-    }
-
-    if (this.isThirdPartyOptionSelected && !this.isThirdPartyValid()) {
-      this.errors.push(
-        'No ha seleccionado un tercero antes de generar el reporte.'
-      );
-    }
-
     return this.errors.length === 0;
   }
 
-  private isLevelValid(): boolean {
-    return !!this.criteria.criteriaType;
+  private isDateValid(date: string | Date | null | undefined): boolean {
+    return this.parseToDate(date) !== null;
   }
 
-  private isDateValid(date: string | null): boolean {
-    return !!date;
-  }
-
-  private isPreviousCutoffBeforeCurrent(previousDate: any, currentDate: any): boolean {
+  private isPreviousCutoffBeforeCurrent(
+    previousDate: string | Date | null | undefined,
+    currentDate: string | Date | null | undefined
+  ): boolean {
     const previous = this.parseToDate(previousDate);
     const current = this.parseToDate(currentDate);
 
@@ -628,7 +558,7 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
     return previous.getTime() < current.getTime();
   }
 
-  private parseToDate(value: any): Date | null {
+  private parseToDate(value: string | Date | null | undefined): Date | null {
     if (!value) {
       return null;
     }
@@ -637,106 +567,30 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
-  private isRangeValid(): boolean {
-    const { from, to } = this.levelRange;
-    return !!(from && to && from < to);
-  }
-
-  private isThirdPartyValid(): boolean {
-    return !!this.criteria.thirdPartyId;
-  }
-
   private isDatePeriodValid(): boolean {
-    return !(this.datePeriod[0].getTime() > this.datePeriod[1].getTime());
-  }
-
-  showExportDialog(): void {
-    this.refDialog = this.dialogService.open(ExportFinancialStatementComponent, {
-      data: {
-        reportTitle: this.financialStatementInfo.name,
-        statementType: this.financialStatementInfo.type,
-        financialStatement: this.financialStatementGenerated,
-        dataTable: this.dataTable,
-        headerConfig: this.headerConfig,
-        enterpriseData: this.enterpriseData,
-        thirdPartyInfo: this.thirdPartyInfo,
-        totals: {
-          totalDebit: this.totalDebit,
-          totalCredit: this.totalCredit,
-        },
-      },
-    });
-  }
-
-  getNestedValue(obj: any, path: string): any {
-    if (!path) {
-      return '';
+    if (this.datePeriod.length !== 2) {
+      return false;
     }
 
-    return path
-      .split('.')
-      .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : ''), obj);
+    return this.datePeriod[0].getTime() <= this.datePeriod[1].getTime();
   }
 
-  formatMoneyAligned(value: number | null | undefined, nature?: string): string {
-    if (value == null || Number.isNaN(value)) {
-      return '';
-    }
+  private buildFinancialStatementForExport(): Record<string, unknown> {
+    const currentCriteria = {
+      ...(this.financialStatementGenerated?.criteria ?? {}),
+      ...(this.criteria ?? {}),
+    };
 
-    const parts = new Intl.NumberFormat('es-CO', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).formatToParts(Math.abs(value));
-
-    const integer = parts
-      .filter((p) => p.type === 'integer' || p.type === 'group')
-      .map((p) => p.value)
-      .join('');
-
-    const decimal = parts.find((p) => p.type === 'decimal')?.value ?? ',';
-    const fraction = parts.find((p) => p.type === 'fraction')?.value ?? '00';
-
-    const symbol = '$';
-    const isNegative = value < 0;
-    const sign = isNegative ? '-' : '';
-
-    let cssClasses = '';
-
-    if (nature) {
-      const normalizedNature = nature.trim().toUpperCase();
-      const isRed =
-        (normalizedNature === 'DEBITO' && value < 0) ||
-        (normalizedNature === 'CREDITO' && value > 0);
-
-      if (isRed) {
-        cssClasses = 'text-red-600 font-bold';
-      }
-    } else if (isNegative) {
-      cssClasses = 'negative';
-    }
-
-    return `
-      <span class="money font-mono ${cssClasses}">
-        <span class="symbol">${symbol}</span>
-        <span class="integer">${sign}${integer}</span>
-        <span class="decimal">${decimal}${fraction}</span>
-      </span>
-    `;
+    return {
+      ...(this.financialStatementGenerated ?? {}),
+      type: this.financialStatementGenerated?.type ?? this.financialStatementInfo.type,
+      criteria: currentCriteria,
+    };
   }
-  formatMoneyCompact(value: number | null | undefined): string {
-    if (value == null || Number.isNaN(value)) {
-      return '';
-    }
 
-    const sign = value < 0 ? '-$ ' : '$ ';
-    const absoluteValue = Math.abs(value);
-    const formattedValue = new Intl.NumberFormat('es-CO', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(absoluteValue);
-
-    return `${sign}${formattedValue}`;
+  private resolveGenerationDate(): Date {
+    const rawDate = this.financialStatementGenerated?.createdAt;
+    const parsedDate = rawDate ? new Date(rawDate) : new Date();
+    return Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
   }
 }
-
-

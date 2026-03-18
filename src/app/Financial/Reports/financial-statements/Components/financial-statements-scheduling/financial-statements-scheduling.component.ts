@@ -33,10 +33,10 @@ import {
 export interface FinancialStatementHistory {
   id: number;
   reportId?: string;
-  publicId?: string;
   bookName: string;
   generationDate: Date;
-  user: string;
+  enterprise?: string;
+  entId?: string;
   status: string;
 }
 
@@ -206,3 +206,4 @@ export class FinancialStatementsSchedulingComponent implements OnInit {
     return jsDay === 0 ? 7 : jsDay;
   }
 }
+

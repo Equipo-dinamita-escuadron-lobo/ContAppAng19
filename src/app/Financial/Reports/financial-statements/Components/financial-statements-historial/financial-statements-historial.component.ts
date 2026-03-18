@@ -10,18 +10,47 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { RippleModule } from 'primeng/ripple';
 import { DialogModule } from 'primeng/dialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 import { FinancialStatementsService } from '../../Services/financial-statements.service';
 import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
+import { AuthService } from '../../../../../Core/auth/services/auth.service';
 import { FinancialStatementsSchedulingComponent } from '../financial-statements-scheduling/financial-statements-scheduling.component';
 import { ExportFinancialStatementComponent } from '../export-financial-statement/export-financial-statement.component';
 import { ColumnDefinition } from '../report-preview/report-preview.component';
+import { Criteria } from '../../Models/Criteria';
+import { FinancialStatementHistoryItemResponse } from '../../Models/Responses/FinancialStatementHistoryItemResponse';
+import { FinancialStatementRecordResponse } from '../../Models/Responses/FinancialStatementRecordResponse';
+import { FinancialStatementMetadataResponse } from '../../Models/Responses/FinancialStatementMetadataResponse';
+import { FinancialStatementRowResponse } from '../../Models/Responses/FinancialStatementRowResponse';
+import {
+  extractApiErrorMessage,
+  formatFinancialStatementType,
+  getFinancialStatementStatusLabel,
+  getFinancialStatementStatusSeverity,
+  isFinancialStatementCompleted,
+  resolveFinancialStatementMetadata,
+  resolveFinancialStatementRows,
+} from '../../Utils/financial-statements.utils';
+
+interface FinancialStatementHistoryViewModel {
+  reportId: string;
+  type: string;
+  entId: string;
+  user: string;
+  criteria: Criteria | null;
+  bookName: string;
+  reportPeriodLabel: string;
+  generationDate: Date | null;
+  reportCreatedAt: Date | null;
+  deliveryWay: string;
+  downloadUrl?: string | null;
+  status: string;
+}
 
 @Component({
   selector: 'app-financial-statements-historial',
@@ -35,24 +64,25 @@ import { ColumnDefinition } from '../report-preview/report-preview.component';
     InputIconModule,
     TagModule,
     ToastModule,
-    ConfirmDialogModule,
     TooltipModule,
     RippleModule,
     DialogModule,
   ],
-  providers: [MessageService, ConfirmationService, DialogService],
+  providers: [MessageService, DialogService],
   templateUrl: './financial-statements-historial.component.html',
   styleUrl: './financial-statements-historial.component.css',
 })
 export class FinancialStatementsHistorialComponent implements OnInit {
   @ViewChild('dt') dt!: Table;
-  refDialog: DynamicDialogRef | undefined;
 
-  history: any[] = [];
+  refDialog: DynamicDialogRef | undefined;
+  history: FinancialStatementHistoryViewModel[] = [];
+  private loadedHistory: FinancialStatementHistoryViewModel[] = [];
+
   isLoading = false;
   isDownloading = false;
 
-  selectedHistoryItem: any | null = null;
+  selectedHistoryItem: FinancialStatementHistoryViewModel | null = null;
 
   totalRecords = 0;
   rows = 10;
@@ -64,6 +94,7 @@ export class FinancialStatementsHistorialComponent implements OnInit {
   constructor(
     private readonly financialStatementsService: FinancialStatementsService,
     private readonly enterpriseService: EnterpriseService,
+    private readonly authService: AuthService,
     private readonly router: Router,
     private readonly messageService: MessageService,
     protected readonly dialogService: DialogService
@@ -73,18 +104,24 @@ export class FinancialStatementsHistorialComponent implements OnInit {
     this.ensureEnterpriseAndLoadHistory();
   }
 
-  loadHistory(event?: any): void {
+  loadHistory(event?: {
+    first?: number;
+    rows?: number;
+    sortField?: string;
+    sortOrder?: number;
+  }): void {
     this.isLoading = true;
 
     if (event) {
-      this.first = event.first;
-      this.rows = event.rows;
+      this.first = event.first ?? this.first;
+      this.rows = event.rows ?? this.rows;
       this.sortField = event.sortField || this.sortField;
       this.sortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
     }
 
     const enterpriseId = this.resolveEnterpriseId();
     if (!enterpriseId) {
+      this.loadedHistory = [];
       this.history = [];
       this.totalRecords = 0;
       this.isLoading = false;
@@ -103,36 +140,26 @@ export class FinancialStatementsHistorialComponent implements OnInit {
     };
 
     this.financialStatementsService
-      .getHistoryByEnterprise(enterpriseId, pageable, this.searchValue)
+      .getHistoryByEnterprise(enterpriseId, pageable)
       .subscribe({
-        next: (response) => {
-          const content = response?.data?.content;
-
-          if (!Array.isArray(content)) {
-            this.history = [];
-            this.totalRecords = 0;
-            this.messageService.add({
-              severity: 'warn',
-              summary: 'Atencion',
-              detail: 'La respuesta del servidor no tuvo el formato esperado.',
-            });
-            this.isLoading = false;
-            return;
-          }
-
-          this.history = content.map((item: any) => this.mapHistoryItem(item));
-          this.totalRecords = Number(
-            response?.data?.totalElements ?? this.history.length
+        next: (pageResult) => {
+          this.loadedHistory = (pageResult.content || []).map((item) =>
+            this.mapHistoryItem(item)
           );
+          this.totalRecords = Number(pageResult.totalElements ?? 0);
+          this.applyClientFilter();
           this.isLoading = false;
         },
-        error: (err) => {
-          const statusCode = err?.status ? ` (${err.status})` : '';
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: `No se pudo cargar el historial${statusCode}. Intente de nuevo.`,
+            detail: extractApiErrorMessage(
+              error,
+              'No se pudo cargar el historial. Intente de nuevo.'
+            ),
           });
+          this.loadedHistory = [];
           this.history = [];
           this.totalRecords = 0;
           this.isLoading = false;
@@ -143,138 +170,63 @@ export class FinancialStatementsHistorialComponent implements OnInit {
   applyGlobalFilter(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.searchValue = target.value;
-    this.first = 0;
-    this.dt.first = 0;
-    this.loadHistory();
+    this.applyClientFilter();
   }
 
-  onPageChange(event: any): void {
+  onPageChange(event: {
+    first?: number;
+    rows?: number;
+    sortField?: string;
+    sortOrder?: number;
+  }): void {
     this.loadHistory(event);
   }
 
-  onSort(event: any): void {
+  onSort(event: {
+    first?: number;
+    rows?: number;
+    sortField?: string;
+    sortOrder?: number;
+  }): void {
     this.loadHistory(event);
   }
 
   getStatusSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    const normalizedStatus = this.normalizeStatus(status);
-
-    if (
-      this.isCompletedStatus(normalizedStatus) ||
-      normalizedStatus === 'SCHEDULED_EMAIL_SENT' ||
-      (normalizedStatus.includes('EMAIL') && normalizedStatus.includes('SENT'))
-    ) {
-      return 'success';
-    }
-
-    if (
-      normalizedStatus.includes('GENERAT') ||
-      normalizedStatus.includes('GENERAND') ||
-      normalizedStatus.includes('SCHEDULED')
-    ) {
-      return 'info';
-    }
-
-    if (
-      normalizedStatus.includes('ERROR') ||
-      normalizedStatus.includes('FAIL')
-    ) {
-      return 'danger';
-    }
-
-    return 'warning';
+    return getFinancialStatementStatusSeverity(status);
   }
 
   getStatusLabel(status: string): string {
-    const normalizedStatus = this.normalizeStatus(status);
-
-    if (normalizedStatus === 'GENERATED') {
-      return 'Generado';
-    }
-
-    if (normalizedStatus === 'EXPORTED_DOWNLOAD') {
-      return 'Exportado (Descarga)';
-    }
-
-    if (normalizedStatus === 'EXPORTED_EMAIL') {
-      return 'Exportado (Correo)';
-    }
-
-    if (normalizedStatus === 'SCHEDULED_EMAIL_SENT') {
-      return 'Correo programado enviado';
-    }
-
-    if (normalizedStatus === 'EMAIL_SCHEDULED') {
-      return 'Correo programado';
-    }
-
-    if (normalizedStatus === 'COMPLETED') {
-      return 'Completado';
-    }
-
-    if (
-      normalizedStatus.includes('GENERAT') ||
-      normalizedStatus.includes('GENERAND')
-    ) {
-      return 'Generando';
-    }
-
-    if (
-      normalizedStatus.includes('ERROR') ||
-      normalizedStatus.includes('FAIL')
-    ) {
-      return 'Error';
-    }
-
-    if (normalizedStatus.includes('PEND')) {
-      return 'Pendiente';
-    }
-
-    if (normalizedStatus.includes('SCHEDULED')) {
-      return 'Programado';
-    }
-
-    return status || 'Desconocido';
+    return getFinancialStatementStatusLabel(status);
   }
 
-  showDetails(item: any): void {
+  showDetails(item: FinancialStatementHistoryViewModel): void {
     this.router.navigate([
       '/financial/reports/financial-statements/historial/details',
-      item.publicId,
+      item.reportId,
     ]);
   }
 
-  showSchedulingDialog(item: any): void {
+  showSchedulingDialog(item: FinancialStatementHistoryViewModel): void {
     this.selectedHistoryItem = item;
-
     this.refDialog = this.dialogService.open(
       FinancialStatementsSchedulingComponent,
       {
-        data: this.selectedHistoryItem,
+        data: item,
       }
     );
   }
 
-  downloadReport(item: any): void {
-    if (!this.isCompletedStatus(item?.status)) {
+  downloadReport(item: FinancialStatementHistoryViewModel): void {
+    if (!isFinancialStatementCompleted(item.status)) {
       this.messageService.add({
         severity: 'info',
         summary: 'Atencion',
         detail:
-          'El estado sigue en generacion. Se abrira la vista previa para revisar la informacion.',
+          'El reporte aun no finaliza. Puedes revisar la vista previa y exportarlo manualmente.',
       });
     }
 
-    if (!item?.reportId) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se encontro reportId para descargar el reporte.',
-      });
-      return;
-    }
-
-    if (this.isDownloading) {
+    if (!item.reportId || this.isDownloading) {
       return;
     }
 
@@ -284,47 +236,76 @@ export class FinancialStatementsHistorialComponent implements OnInit {
         this.isDownloading = false;
         this.openExportPreviewDialog(item, reportResponse);
       },
-      error: (err) => {
+      error: (error) => {
         this.isDownloading = false;
-        const statusCode = err?.status ? ` (${err.status})` : '';
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: `No se pudo cargar el reporte para la vista previa${statusCode}.`,
+          detail: extractApiErrorMessage(
+            error,
+            'No se pudo cargar el reporte para la vista previa.'
+          ),
         });
       },
     });
   }
 
-  private mapHistoryItem(item: any): any {
-    const report = item?.financialStatement ?? {};
-    const eventDate = item?.createdAt ?? report?.createdAt;
+  isCompletedStatus(status: string): boolean {
+    return isFinancialStatementCompleted(status);
+  }
+
+  private applyClientFilter(): void {
+    const normalizedTerm = this.searchValue.trim().toLowerCase();
+
+    if (!normalizedTerm) {
+      this.history = [...this.loadedHistory];
+      return;
+    }
+
+    this.history = this.loadedHistory.filter((item) =>
+      [
+        item.bookName,
+        item.user,
+        item.reportPeriodLabel,
+        this.getStatusLabel(item.status),
+      ].some((value) =>
+        String(value || '').toLowerCase().includes(normalizedTerm)
+      )
+    );
+  }
+
+  private mapHistoryItem(
+    item: FinancialStatementHistoryItemResponse
+  ): FinancialStatementHistoryViewModel {
+    const eventDate = item.eventAt ?? item.reportCreatedAt;
 
     return {
-      id: Number(item?.id ?? 0),
-      reportId: report.reportId,
-      publicId: report.publicId,
-      type: report.type,
-      bookName: this.formatStatementType(report.type),
-      reportPeriodLabel: this.buildReportPeriodLabel(report.type, report.criteria),
+      reportId: item.reportId,
+      type: item.type,
+      entId: item.entId,
+      user: this.resolveCurrentUserLabel(),
+      criteria: item.criteria ?? null,
+      bookName: formatFinancialStatementType(item.type),
+      reportPeriodLabel: this.buildReportPeriodLabel(item.type, item.criteria),
       generationDate: eventDate ? new Date(eventDate) : null,
-      user: report.userId,
-      status: item?.state ?? report.state,
+      reportCreatedAt: item.reportCreatedAt ? new Date(item.reportCreatedAt) : null,
+      deliveryWay: item.deliveryWay,
+      downloadUrl: item.downloadUrl,
+      status: item.state,
     };
   }
 
-  private formatStatementType(type: string): string {
-    const map: Record<string, string> = {
-      STATEMENT_FINANCIAL_POSITION: 'Estado de Situacion Financiera',
-      INCOME_STATEMENT: 'Estado de Resultados',
-      STATEMENT_CHANGES_EQUITY: 'Estado de Cambios en el Patrimonio',
+  private buildReportPeriodLabel(
+    statementType: string,
+    criteria: Criteria | null
+  ): string {
+    const safeCriteria = criteria || {
+      criteriaType: null,
+      criteriaRange: null,
+      startDate: null,
+      endDate: null,
     };
-
-    return map[type] || type || 'Estado Financiero';
-  }
-
-  private buildReportPeriodLabel(statementType: string, criteria: any): string {
-    const safeCriteria = criteria || {};
+    const levelLabel = this.resolveCriteriaLevelLabel(safeCriteria.criteriaType);
 
     const startDate = this.resolveCriteriaDateLabel(safeCriteria.startDate);
     const endDate = this.resolveCriteriaDateLabel(safeCriteria.endDate);
@@ -346,7 +327,10 @@ export class FinancialStatementsHistorialComponent implements OnInit {
         previousStartDate,
         previousEndDate
       );
-      return `${currentPeriod} | ${previousPeriod}`;
+      return this.prependLevelLabel(
+        levelLabel,
+        `${currentPeriod} | ${previousPeriod}`
+      );
     }
 
     const isCutoffReport = [
@@ -359,22 +343,22 @@ export class FinancialStatementsHistorialComponent implements OnInit {
         startDate ? `Corte anterior: ${startDate}` : '',
         `Corte actual: ${endDate}`,
       ].filter(Boolean);
-      return labels.join(' | ');
+      return this.prependLevelLabel(levelLabel, labels.join(' | '));
     }
 
     if (startDate && endDate) {
-      return `Periodo: ${startDate} - ${endDate}`;
+      return this.prependLevelLabel(levelLabel, `Periodo: ${startDate} - ${endDate}`);
     }
 
     if (endDate) {
-      return `Corte: ${endDate}`;
+      return this.prependLevelLabel(levelLabel, `Corte: ${endDate}`);
     }
 
     if (startDate) {
-      return `Desde: ${startDate}`;
+      return this.prependLevelLabel(levelLabel, `Desde: ${startDate}`);
     }
 
-    return 'Sin fechas de criterio';
+    return levelLabel ? `Nivel: ${levelLabel}` : 'Sin fechas de criterio';
   }
 
   private buildDateRangeLabel(
@@ -393,9 +377,13 @@ export class FinancialStatementsHistorialComponent implements OnInit {
     return `${label}: Sin datos`;
   }
 
-  private resolveCriteriaDateLabel(value: unknown): string | null {
-    const parsedDate = this.parseDateValue(value);
-    if (!parsedDate) {
+  private resolveCriteriaDateLabel(value: string | Date | null | undefined): string | null {
+    if (!value) {
+      return null;
+    }
+
+    const parsedDate = value instanceof Date ? value : new Date(String(value));
+    if (Number.isNaN(parsedDate.getTime())) {
       return null;
     }
 
@@ -406,18 +394,52 @@ export class FinancialStatementsHistorialComponent implements OnInit {
     return `${day}/${month}/${year}`;
   }
 
-  private parseDateValue(value: unknown): Date | null {
-    if (!value) {
-      return null;
+  private resolveCriteriaLevelLabel(criteriaType: string | null | undefined): string | null {
+    const map: Record<string, string> = {
+      NUMBER_CLASS: 'Clase',
+      GROUP: 'Grupo',
+      ACCOUNT: 'Cuenta',
+      SUB_ACCOUNT: 'SubCuenta',
+      AUXILIARY_ACCOUNT: 'Auxiliar',
+    };
+
+    const normalizedType = String(criteriaType || '').trim().toUpperCase();
+    return map[normalizedType] || null;
+  }
+
+  private prependLevelLabel(levelLabel: string | null, baseLabel: string): string {
+    if (!levelLabel) {
+      return baseLabel;
     }
 
-    const parsedDate = value instanceof Date ? value : new Date(String(value));
-    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+    return `Nivel: ${levelLabel} | ${baseLabel}`;
+  }
+
+  private resolveCurrentUserLabel(): string {
+    const currentUser = this.authService.returnUserInfo() as Record<string, unknown> | null;
+    const fullName = `${currentUser?.['firstName'] ?? ''} ${
+      currentUser?.['lastName'] ?? ''
+    }`.trim();
+
+    if (fullName) {
+      return fullName;
+    }
+
+    const fallback =
+      currentUser?.['username'] ??
+      currentUser?.['userName'] ??
+      currentUser?.['name'] ??
+      currentUser?.['email'];
+
+    return String(fallback || 'Usuario').trim();
   }
 
   private resolveEnterpriseId(): string | null {
-    const selectedEnterprise = this.enterpriseService.getSelectedEnterprise();
-    const selectedEnterpriseId = selectedEnterprise?.id;
+    const selectedEnterprise =
+      this.enterpriseService.getSelectedEnterprise() as unknown as
+        | Record<string, unknown>
+        | null;
+    const selectedEnterpriseId = selectedEnterprise?.['id'];
 
     return selectedEnterpriseId ? String(selectedEnterpriseId) : null;
   }
@@ -429,6 +451,7 @@ export class FinancialStatementsHistorialComponent implements OnInit {
       return;
     }
 
+    this.loadedHistory = [];
     this.history = [];
     this.totalRecords = 0;
     this.messageService.add({
@@ -438,25 +461,27 @@ export class FinancialStatementsHistorialComponent implements OnInit {
     });
   }
 
-  private normalizeStatus(status: string): string {
-    return status?.trim().toUpperCase() || '';
-  }
-
-  private openExportPreviewDialog(item: any, reportResponse: any): void {
+  private openExportPreviewDialog(
+    item: FinancialStatementHistoryViewModel,
+    reportResponse: FinancialStatementRecordResponse
+  ): void {
     const enterprise = this.enterpriseService.getSelectedEnterprise();
-    const financialStatement = this.resolveFinancialStatementFromResponse(
-      item,
-      reportResponse
-    );
-    const financialStatementData =
-      this.resolveFinancialStatementDataFromResponse(reportResponse);
-    const statementType = String(financialStatement?.type || item?.type || '')
+    const financialStatement =
+      resolveFinancialStatementMetadata(reportResponse) ?? {
+        reportId: item.reportId,
+        type: item.type,
+        criteria: item.criteria,
+        createdAt: item.reportCreatedAt?.toISOString() ?? null,
+        entId: item.entId,
+      };
+    const financialStatementData = resolveFinancialStatementRows(reportResponse);
+    const statementType = String(financialStatement?.type || item.type || '')
       .trim()
       .toUpperCase();
 
     this.refDialog = this.dialogService.open(ExportFinancialStatementComponent, {
       data: {
-        reportTitle: this.formatStatementType(statementType),
+        reportTitle: formatFinancialStatementType(statementType),
         statementType,
         financialStatement,
         dataTable: financialStatementData,
@@ -465,57 +490,46 @@ export class FinancialStatementsHistorialComponent implements OnInit {
           financialStatementData
         ),
         enterpriseData: enterprise,
-        generationDate: this.resolvePreviewGenerationDate(
-          financialStatement,
-          item
-        ),
-        totals: {},
+        generationDate: this.resolvePreviewGenerationDate(financialStatement, item),
+        totals:
+          'totalAssets' in reportResponse
+            ? {
+                totalAssets: reportResponse.totalAssets ?? null,
+                totalLiabilities: reportResponse.totalLiabilities ?? null,
+                totalEquity: reportResponse.totalEquity ?? null,
+              }
+            : {},
       },
     });
   }
 
-  private resolveFinancialStatementFromResponse(item: any, reportResponse: any): any {
-    return (
-      reportResponse?.financialStatement ??
-      reportResponse?.report ??
-      reportResponse ?? {
-        reportId: item?.reportId,
-        publicId: item?.publicId,
-        type: item?.type,
-      }
-    );
-  }
-
-  private resolveFinancialStatementDataFromResponse(reportResponse: any): any[] {
-    const possibleDataCollections = [
-      reportResponse?.financialStatementData,
-      reportResponse?.reportData,
-      reportResponse?.data,
-      reportResponse?.content,
-    ];
-
-    const financialStatementData = possibleDataCollections.find((collection) =>
-      Array.isArray(collection)
-    );
-
-    return Array.isArray(financialStatementData) ? financialStatementData : [];
-  }
-
-  private resolvePreviewGenerationDate(financialStatement: any, item: any): Date {
+  private resolvePreviewGenerationDate(
+    financialStatement:
+      | FinancialStatementMetadataResponse
+      | { createdAt?: string | Date | null },
+    item: FinancialStatementHistoryViewModel
+  ): Date {
     const rawValue =
-      financialStatement?.createdAt ?? item?.generationDate ?? item?.createdAt;
+      financialStatement['createdAt'] ??
+      item.reportCreatedAt ??
+      item.generationDate ??
+      new Date();
 
-    const parsedDate = rawValue ? new Date(rawValue) : new Date();
+    const parsedDate =
+      rawValue instanceof Date ? rawValue : new Date(String(rawValue));
     return Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
   }
 
   private buildHistoryPreviewHeaderConfig(
-    statementType: string,
-    rows: any[]
-  ): ColumnDefinition[][] {return this.buildComparativeHeaderConfig(rows);
+    _statementType: string,
+    rows: FinancialStatementRowResponse[]
+  ): ColumnDefinition[][] {
+    return this.buildComparativeHeaderConfig(rows);
   }
 
-  private buildComparativeHeaderConfig(rows: any[]): ColumnDefinition[][] {
+  private buildComparativeHeaderConfig(
+    rows: FinancialStatementRowResponse[]
+  ): ColumnDefinition[][] {
     const currentPercentageField = this.resolvePercentageField(
       rows,
       'currentPercentage',
@@ -603,26 +617,15 @@ export class FinancialStatementsHistorialComponent implements OnInit {
   }
 
   private resolvePercentageField(
-    rows: any[],
+    rows: FinancialStatementRowResponse[],
     numericField: string,
     labelField: string
   ): string {
-    const hasLabelField = (rows || []).some((row) => {
-      const value = row?.[labelField];
+    const hasLabelField = rows.some((row) => {
+      const value = (row as Record<string, unknown>)?.[labelField];
       return value !== undefined && value !== null && value !== '';
     });
 
     return hasLabelField ? labelField : numericField;
   }
-
-  isCompletedStatus(status: string): boolean {
-    const normalizedStatus = this.normalizeStatus(status);
-    return (
-      normalizedStatus.includes('COMPLET') ||
-      normalizedStatus.includes('SUCCESS') ||
-      normalizedStatus === 'GENERATED' ||
-      normalizedStatus.includes('EXPORTED')
-    );
-  }
 }
-

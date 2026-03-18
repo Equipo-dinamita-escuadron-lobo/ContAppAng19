@@ -58,7 +58,7 @@ export const FINANCIAL_STATEMENTS_ROUTES: Routes = [
       ),
   },
   {
-    path: 'historial/details/:publicId',
+    path: 'historial/details/:reportId',
     data: {
       breadcrumb: 'Detalle',
     },
@@ -68,4 +68,6 @@ export const FINANCIAL_STATEMENTS_ROUTES: Routes = [
       ),
   },
 ];
+
+
 
