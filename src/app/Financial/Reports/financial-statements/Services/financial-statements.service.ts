@@ -32,9 +32,7 @@ import { PageResult } from '../Models/Responses/PageResult';
   providedIn: 'root',
 })
 export class FinancialStatementsService {
-  private readonly apiUrl =
-    environment.FINANCIAL_STATEMENTS_API_URL ??
-    `${environment.API_URL}financial-statements`;
+  private readonly apiUrl = `${environment.API_URL}financial-statements`;
 
   constructor(private readonly http: HttpClient) {}
 
