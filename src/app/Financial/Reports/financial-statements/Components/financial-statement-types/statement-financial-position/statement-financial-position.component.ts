@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+﻿import { Component } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
+import { RadioButton } from 'primeng/radiobutton';
 import { SplitButtonModule } from 'primeng/splitbutton';
 import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
@@ -17,9 +18,7 @@ import { FinancialStatementType } from '../../../Models/eFinancialStatementType'
 import { GenerateFinancialStatementRequest } from '../../../Models/Requests/GenerateFinancialStatementRequest';
 import { FinancialPositionStatementResponse } from '../../../Models/Responses/FinancialPositionStatementResponse';
 import { FinancialStatementsService } from '../../../Services/financial-statements.service';
-import { AuthService } from '../../../../../../Core/auth/services/auth.service';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
-import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { ColumnDefinition } from '../../report-preview/report-preview.component';
 
@@ -31,6 +30,7 @@ import { ColumnDefinition } from '../../report-preview/report-preview.component'
     ButtonModule,
     SplitButtonModule,
     DatePickerModule,
+    RadioButton,
     TableModule,
   ],
   providers: [DatePipe, DialogService],
@@ -40,7 +40,6 @@ import { ColumnDefinition } from '../../report-preview/report-preview.component'
 export class StatementFinancialPositionComponent extends BaseFinancialStatementComponent {
   override request: GenerateFinancialStatementRequest = {
     entId: '',
-    userId: 0,
     type: FinancialStatementType.STATEMENT_FINANCIAL_POSITION,
     criteria: this.criteria,
   };
@@ -51,9 +50,7 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
 
   constructor(
     financialStatementsService: FinancialStatementsService,
-    authService: AuthService,
     enterpriseService: EnterpriseService,
-    thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,
@@ -61,9 +58,7 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
   ) {
     super(
       financialStatementsService,
-      authService,
       enterpriseService,
-      thirdService,
       accountService,
       messageService,
       dialogService
@@ -78,9 +73,10 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
         'Presenta activos, pasivos y patrimonio en formato comparativo entre fecha de corte actual y anterior.',
       icon: 'account_balance_wallet',
       usesCutoffDate: true,
-      requiresLevelSelection: false,
+      requiresLevelSelection: true,
       requiresPreviousCutoffDate: true,
     };
+    this.initializeLevelFilter();
 
     this.configureComparativeColumns(null, null);
   }
@@ -103,19 +99,21 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
     const currentCutoffDate = this.parseDate(this.criteria.endDate);
     const previousCutoffDate = this.parseDate(this.criteria.startDate);
     const enterpriseId = this.resolveEnterpriseId();
-    const userId = this.resolveCurrentUserId();
 
     this.configureComparativeColumns(currentCutoffDate, previousCutoffDate);
 
     const requestCriteria = {
-      criteriaType: '',
-      criteriaRange: null,
-      costCenterId: null,
-      thirdPartyId: null,
+      ...this.criteria,
       startDate: previousCutoffDate
         ? this.datePipe.transform(previousCutoffDate, 'yyyy-MM-dd')
         : null,
       endDate: currentCutoffDate
+        ? this.datePipe.transform(currentCutoffDate, 'yyyy-MM-dd')
+        : null,
+      previousCutoffDate: previousCutoffDate
+        ? this.datePipe.transform(previousCutoffDate, 'yyyy-MM-dd')
+        : null,
+      currentCutoffDate: currentCutoffDate
         ? this.datePipe.transform(currentCutoffDate, 'yyyy-MM-dd')
         : null,
     };
@@ -124,14 +122,13 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
       entId: enterpriseId ?? '',
       criteria: requestCriteria,
       type: FinancialStatementType.STATEMENT_FINANCIAL_POSITION,
-      userId: userId ?? 0,
     };
   }
 
   override normalizeDataTable(
     dataTable: any[]
   ): FinancialPositionStatementResponse[] {
-    return dataTable
+    const normalizedRows = dataTable
       .map((row) => this.normalizeRow(row))
       .filter(
         (row) =>
@@ -144,6 +141,8 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
           row.variation !== null ||
           row.variationPercentage !== null
       );
+
+    return this.projectRowsToSelectedLevel(normalizedRows);
   }
 
   override afterReportLoaded(rawResponse: any): void {
@@ -325,6 +324,16 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
   }
 
   private normalizeRow(row: any): FinancialPositionStatementResponse {
+    const accountCode = this.normalizeAccountCode(
+      this.getFirstDefinedValue(row, ['account.accountCode', 'accountCode', 'code'])
+    );
+    const accountDescription = String(
+      this.getFirstDefinedValue(row, [
+        'account.accountDescription',
+        'accountDescription',
+        'description',
+      ]) ?? ''
+    ).trim();
     const currentAmount = this.parseAmount(
       this.getFirstDefinedValue(row, [
         'currentAmount',
@@ -385,6 +394,8 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
 
     return {
       account: row.account ?? null,
+      accountCode,
+      accountDescription,
       description: row.description,
       value: this.parseAmount(row.value),
       lineDescription: String(
@@ -410,6 +421,124 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
         this.getFirstDefinedValue(row, ['rowType', 'lineType', 'type']) ?? ''
       ).trim(),
     };
+  }
+
+  private projectRowsToSelectedLevel(
+    rows: FinancialPositionStatementResponse[]
+  ): FinancialPositionStatementResponse[] {
+    const targetLength = this.getSelectedLevelCodeLength();
+    if (!targetLength) {
+      return rows;
+    }
+
+    const accountRows = rows.filter((row) =>
+      !!this.normalizeAccountCode(row.accountCode ?? row.account?.accountCode)
+    );
+
+    if (accountRows.length === 0) {
+      return rows;
+    }
+
+    const exactLevelRows = accountRows.filter((row) => {
+      const accountCode = this.normalizeAccountCode(
+        row.accountCode ?? row.account?.accountCode
+      );
+      return accountCode?.length === targetLength;
+    });
+
+    if (exactLevelRows.length > 0) {
+      return rows.filter((row) => {
+        const accountCode = this.normalizeAccountCode(
+          row.accountCode ?? row.account?.accountCode
+        );
+
+        return (
+          this.isStructuralRow(row.rowType, accountCode) ||
+          accountCode?.length === targetLength
+        );
+      });
+    }
+
+    return this.aggregateRowsToSelectedLevel(rows, targetLength);
+  }
+
+  private aggregateRowsToSelectedLevel(
+    rows: FinancialPositionStatementResponse[],
+    targetLength: number
+  ): FinancialPositionStatementResponse[] {
+    const aggregatedRows = new Map<
+      string,
+      FinancialPositionStatementResponse & { order: number }
+    >();
+
+    rows.forEach((row, index) => {
+      const accountCode = this.normalizeAccountCode(
+        row.accountCode ?? row.account?.accountCode
+      );
+      if (!accountCode) {
+        return;
+      }
+
+      const projectedCode = accountCode.slice(0, Math.min(targetLength, accountCode.length));
+      const existingRow = aggregatedRows.get(projectedCode);
+      const accountDescription = this.resolveProjectedDescription(
+        projectedCode,
+        row.accountDescription ?? row.account?.accountDescription ?? row.lineDescription
+      );
+
+      aggregatedRows.set(projectedCode, {
+        account: {
+          accountCode: projectedCode,
+          accountDescription,
+          nature: row.account?.nature ?? '',
+        },
+        accountCode: projectedCode,
+        accountDescription,
+        description: accountDescription,
+        lineDescription: `${projectedCode} - ${accountDescription}`,
+        note: null,
+        currentAmount: this.sumNullableValues(
+          existingRow?.currentAmount,
+          row.currentAmount
+        ),
+        currentPercentage: null,
+        previousAmount: this.sumNullableValues(
+          existingRow?.previousAmount,
+          row.previousAmount
+        ),
+        previousPercentage: null,
+        variation: this.sumNullableValues(existingRow?.variation, row.variation),
+        variationPercentage: null,
+        rowType: '',
+        order: existingRow?.order ?? this.resolveAccountOrder(projectedCode, index),
+      });
+    });
+
+    return Array.from(aggregatedRows.values())
+      .sort((left, right) => left.order - right.order)
+      .map(({ order, ...row }) => ({
+        ...row,
+        variation:
+          row.variation ??
+          (row.currentAmount !== null &&
+          row.currentAmount !== undefined &&
+          row.previousAmount !== null &&
+          row.previousAmount !== undefined
+            ? row.currentAmount - row.previousAmount
+            : null),
+      }));
+  }
+
+  private resolveProjectedDescription(
+    projectedCode: string,
+    fallbackDescription?: string | null
+  ): string {
+    const resolvedDescription = this.resolveAccountDescription(
+      projectedCode,
+      fallbackDescription
+    );
+
+    return resolvedDescription || projectedCode;
   }
 
   private parseDate(value: any): Date | null {
@@ -489,3 +618,4 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
     return null;
   }
 }
+

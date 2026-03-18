@@ -1,11 +1,23 @@
-﻿export interface Criteria {
-  criteriaType: string;
-  criteriaRange: { from: number | null; to: number | null } | null;
-  costCenterId: number | null;
-  thirdPartyId: number | null;
-  startDate: any;
-  endDate: any;
-  previousStartDate?: any;
-  previousEndDate?: any;
+export type FinancialStatementCriteriaType =
+  | 'NUMBER_CLASS'
+  | 'GROUP'
+  | 'ACCOUNT'
+  | 'SUB_ACCOUNT'
+  | 'AUXILIARY_ACCOUNT'
+  | 'ACCOUNT_RANGE';
+
+export interface CriteriaRange {
+  from: number | null;
+  to: number | null;
 }
 
+export interface Criteria {
+  criteriaType: FinancialStatementCriteriaType | '' | null;
+  criteriaRange: CriteriaRange | null;
+  startDate: string | Date | null;
+  endDate: string | Date | null;
+  previousStartDate?: string | Date | null;
+  previousEndDate?: string | Date | null;
+  currentCutoffDate?: string | Date | null;
+  previousCutoffDate?: string | Date | null;
+}

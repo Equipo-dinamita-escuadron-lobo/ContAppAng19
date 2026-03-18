@@ -23,6 +23,7 @@
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        [disabled]="isGeneratingReport"
       ></p-button>
     </div>
   </div>
@@ -34,6 +35,29 @@
   <div class="p-4 bg-white rounded-lg shadow-sm">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
       <div class="lg:col-span-4">
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Nivel
+        </h4>
+        <div class="level-options-grid">
+          <div class="level-option" *ngFor="let level of levels">
+            <p-radioButton
+              [inputId]="'statement-level-' + level.value"
+              name="statementFinancialPositionCriteriaType"
+              [value]="level.value"
+              [(ngModel)]="criteria.criteriaType"
+              (ngModelChange)="onLevelChange()"
+            ></p-radioButton>
+            <label
+              class="text-sm cursor-pointer"
+              [for]="'statement-level-' + level.value"
+            >
+              {{ level.label }}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-3">
         <h4 class="text-xs font-bold text-primary mb-2">
           Fecha de Corte Actual <span class="text-error"> *</span>
         </h4>
@@ -47,7 +71,7 @@
         ></p-datepicker>
       </div>
 
-      <div class="lg:col-span-4">
+      <div class="lg:col-span-3">
         <h4 class="text-xs font-bold text-primary mb-2">
           Fecha de Corte Anterior <span class="text-error"> *</span>
         </h4>
@@ -61,17 +85,18 @@
         ></p-datepicker>
       </div>
 
-      <div class="lg:col-span-4 flex justify-end lg:pt-7">
+      <div class="lg:col-span-2 flex justify-end lg:pt-7">
         <button
           pButton
           type="button"
           label="Generar Reporte"
+          [loading]="isGeneratingReport"
           (keydown.enter)="generateReport()"
           (click)="generateReport()"
         ></button>
       </div>
 
-      <div class="lg:col-span-8">
+      <div class="lg:col-span-12">
         <small class="text-gray-500 block mt-2">
           Reporte en pesos colombianos (COP), comparativo entre corte actual y
           anterior.
@@ -87,6 +112,7 @@
       [resizableColumns]="true"
       [scrollable]="true"
       [responsiveLayout]="'scroll'"
+      [loading]="isGeneratingReport"
       styleClass="p-datatable-header min-h-[20rem] fs-report-table"
     >
       <ng-template pTemplate="header">
@@ -119,15 +145,19 @@
         <tr [ngClass]="getRowClass(row)">
           <td *ngFor="let col of tableColumns" [class]="col.type === 'number' ? 'p-2' : ''">
             <ng-container *ngIf="col.type === 'number'; else notNumberValue">
-              <span class="compact-number">{{ formatMoneyCompact(getNestedValue(row, col.field)) }}</span>
+              <span class="compact-number">{{
+                formatMoneyCompact(getNestedNumberValue(row, col.field))
+              }}</span>
             </ng-container>
             <ng-template #notNumberValue>
               <ng-container *ngIf="col.type === 'percentage'; else plainValue">
-                <span class="compact-number compact-percentage">{{ formatPercentage(getNestedValue(row, col.field)) }}</span>
+                <span class="compact-number compact-percentage">{{
+                  formatPercentage(getNestedNumberValue(row, col.field))
+                }}</span>
               </ng-container>
             </ng-template>
             <ng-template #plainValue>
-              {{ getNestedValue(row, col.field) }}
+              {{ getNestedTextValue(row, col.field) }}
             </ng-template>
           </td>
         </tr>
@@ -147,4 +177,6 @@
     </p-table>
   </div>
 </div>
+
+
 

@@ -1,11 +1,11 @@
 export interface UpsertFinancialStatementTemplateRequest {
-  entId: string;
+  id?: number;
+  enterpriseId: string;
   name: string;
   pathLogotype?: string;
   alignment?: string;
   font?: string;
   fontSize?: number;
   mainColor?: string;
-  isDefault: boolean;
+  isDefault?: boolean;
 }
-

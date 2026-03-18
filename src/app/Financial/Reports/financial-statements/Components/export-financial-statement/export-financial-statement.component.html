@@ -1,19 +1,21 @@
-﻿<div class="p-fluid p-4 md:p-6">
-  <div class="flex justify-between items-center mb-6">
+<p-confirmDialog></p-confirmDialog>
+
+<div class="p-fluid p-4 md:p-6">
+  <div class="mb-6 flex items-center justify-between">
     <h2 class="text-2xl font-bold text-gray-800">Exportar Estado Financiero</h2>
     <button
       pButton
       type="button"
       icon="pi pi-times"
       (click)="closeModal()"
-      class="p-button-text p-button-secondary p-button-rounded"
+      class="p-button-rounded p-button-secondary p-button-text"
       aria-label="Cerrar modal"
     ></button>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+  <div class="grid grid-cols-1 gap-8 lg:grid-cols-5">
     <div
-      class="lg:col-span-3 w-full h-full rounded-lg border border-gray-200 overflow-auto"
+      class="w-full overflow-auto rounded-lg border border-gray-200 lg:col-span-3"
     >
       <app-financial-statement-report-preview
         [reportTitle]="reportTitle"
@@ -28,17 +30,18 @@
       ></app-financial-statement-report-preview>
     </div>
 
-    <div
-      class="lg:col-span-2 flex flex-col space-y-6 overflow-y-auto max-h-[70vh] pr-2"
-    >
-      <div>
-        <label for="template-select" class="text-lg font-medium mb-2 block"
-          >Plantilla</label
-        >
+    <div class="flex max-h-[75vh] flex-col gap-6 overflow-y-auto pr-2 lg:col-span-2">
+      <div class="rounded-lg border border-slate-200 p-4">
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <label for="template-select" class="text-lg font-medium">Plantillas</label>
+          <small class="text-slate-500">{{ templateCountLabel }}</small>
+        </div>
+
         <p-select
           inputId="template-select"
           [options]="templates"
           [(ngModel)]="selectedTemplate"
+          (ngModelChange)="onTemplateSelected($event)"
           optionLabel="name"
           [filter]="true"
           filterBy="name"
@@ -53,15 +56,89 @@
             </div>
           </ng-template>
           <ng-template pTemplate="item" let-option>
-            <div class="flex items-center gap-2">
+            <div class="flex w-full items-center justify-between gap-2">
               <span>{{ option.name }}</span>
+              <small *ngIf="option.isDefault" class="text-slate-500">Predeterminada</small>
             </div>
           </ng-template>
         </p-select>
-        <small class="text-gray-500 mt-2 block">
-          Si modificas una opción, la plantilla se marcara como
-          <b>Personalizada</b>.
+
+        <label for="template-name" class="mb-2 mt-4 block font-medium">
+          Nombre de plantilla
+        </label>
+        <input
+          id="template-name"
+          pInputText
+          [(ngModel)]="templateName"
+          placeholder="Ej: ContApp Azul"
+        />
+
+        <div class="mt-3 flex items-center gap-2">
+          <p-checkbox
+            inputId="template-default"
+            [(ngModel)]="isDefaultTemplate"
+            [binary]="true"
+          ></p-checkbox>
+          <label for="template-default" class="cursor-pointer text-sm text-slate-700">
+            Marcar como plantilla predeterminada
+          </label>
+        </div>
+
+        <small class="mt-2 block text-slate-500">
+          Puedes guardar hasta 3 plantillas por empresa.
         </small>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <p-button
+            label="Guardar plantilla"
+            icon="pi pi-save"
+            styleClass="p-button-outlined"
+            [loading]="isSavingTemplate"
+            [disabled]="!canCreateAnotherTemplate && !selectedTemplate"
+            (click)="saveTemplate()"
+            type="button"
+          ></p-button>
+          <p-button
+            label="Eliminar seleccionadas"
+            icon="pi pi-trash"
+            severity="danger"
+            styleClass="p-button-text"
+            [disabled]="!selectedTemplateIdsForDeletion.length"
+            (click)="confirmDeleteSelectedTemplates()"
+            type="button"
+          ></p-button>
+          <p-button
+            label="Eliminar todas"
+            icon="pi pi-trash"
+            severity="danger"
+            styleClass="p-button-text"
+            [disabled]="!templates.length"
+            (click)="confirmDeleteAllTemplates()"
+            type="button"
+          ></p-button>
+        </div>
+
+        <div *ngIf="templates.length" class="mt-4 flex flex-col gap-2">
+          <div
+            *ngFor="let template of templates"
+            class="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2"
+          >
+            <div class="flex items-center gap-3">
+              <p-checkbox
+                [inputId]="'template-delete-' + template.id"
+                [(ngModel)]="selectedTemplateIdsForDeletion"
+                [value]="template.id"
+              ></p-checkbox>
+              <label
+                [for]="'template-delete-' + template.id"
+                class="cursor-pointer text-sm text-slate-700"
+              >
+                {{ template.name }}
+              </label>
+            </div>
+            <small *ngIf="template.isDefault" class="text-slate-500">Default</small>
+          </div>
+        </div>
       </div>
 
       <p-fieldset legend="Formato">
@@ -81,11 +158,9 @@
       </p-fieldset>
 
       <p-fieldset legend="Estilos del Encabezado">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
-            <label for="align-select" class="font-medium mb-2 block"
-              >Alineacion</label
-            >
+            <label for="align-select" class="mb-2 block font-medium">Alineacion</label>
             <p-selectButton
               id="align-select"
               [options]="alignOptions"
@@ -103,8 +178,8 @@
             </p-selectButton>
           </div>
           <div>
-            <label for="header-color-picker" class="font-medium mb-2 block"
-              >Color de Cabecera
+            <label for="header-color-picker" class="mb-2 block font-medium">
+              Color de Cabecera
               <p-colorPicker
                 [ngModel]="styles.color"
                 (ngModelChange)="updateStyles({ color: $event })"
@@ -115,56 +190,159 @@
       </p-fieldset>
 
       <p-fieldset legend="Estilos del Contenido">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
-            <label for="font-select" class="font-medium mb-2 block"
-              >Fuente
-              <p-select
-                inputId="font-select"
-                [options]="fonts"
-                [ngModel]="styles.font"
-                (ngModelChange)="updateStyles({ font: $event })"
-                optionLabel="name"
-                optionValue="value"
-                placeholder="Selecciona una fuente"
-                styleClass="w-full"
-                [appendTo]="'body'"
-              >
-                <ng-template let-font pTemplate="item">
-                  <div [style.font-family]="font.value">{{ font.name }}</div>
-                </ng-template>
-                <ng-template let-font pTemplate="selectedItem">
-                  <div *ngIf="font" [style.font-family]="font.value">
-                    {{ font.name }}
-                  </div>
-                </ng-template>
-              </p-select>
-            </label>
+            <label for="font-select" class="mb-2 block font-medium">Fuente</label>
+            <p-select
+              inputId="font-select"
+              [options]="fonts"
+              [ngModel]="styles.font"
+              (ngModelChange)="updateStyles({ font: $event })"
+              optionLabel="name"
+              optionValue="value"
+              placeholder="Selecciona una fuente"
+              styleClass="w-full"
+              [appendTo]="'body'"
+            >
+              <ng-template let-font pTemplate="item">
+                <div [style.font-family]="font.value">{{ font.name }}</div>
+              </ng-template>
+              <ng-template let-font pTemplate="selectedItem">
+                <div *ngIf="font" [style.font-family]="font.value">
+                  {{ font.name }}
+                </div>
+              </ng-template>
+            </p-select>
           </div>
           <div>
-            <label for="fontsize-select" class="font-medium mb-2 block"
-              >Tamaño
-              <p-select
-                inputId="fontsize-select"
-                [options]="fontSizes"
-                [ngModel]="styles.fontSize"
-                (ngModelChange)="updateStyles({ fontSize: $event })"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Ej: 12px"
-                styleClass="w-full"
-                [appendTo]="'body'"
-              ></p-select>
-            </label>
+            <label for="fontsize-select" class="mb-2 block font-medium">Tamano</label>
+            <p-select
+              inputId="fontsize-select"
+              [options]="fontSizes"
+              [ngModel]="styles.fontSize"
+              (ngModelChange)="updateStyles({ fontSize: $event })"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Ej: 12px"
+              styleClass="w-full"
+              [appendTo]="'body'"
+            ></p-select>
+          </div>
+        </div>
+      </p-fieldset>
+
+      <p-fieldset legend="Anotaciones">
+        <div class="flex flex-col gap-3">
+          <textarea
+            pInputTextarea
+            rows="4"
+            [(ngModel)]="annotationDraft"
+            placeholder="Escribe una anotacion para incluirla en el reporte exportado."
+          ></textarea>
+
+          <div class="flex flex-wrap gap-2">
+            <p-button
+              [label]="editingAnnotationId ? 'Actualizar anotacion' : 'Guardar anotacion'"
+              icon="pi pi-comment"
+              styleClass="p-button-outlined"
+              [loading]="isSavingAnnotation"
+              (click)="saveAnnotation()"
+              type="button"
+            ></p-button>
+            <p-button
+              *ngIf="editingAnnotationId"
+              label="Cancelar edicion"
+              styleClass="p-button-text"
+              (click)="cancelAnnotationEdition()"
+              type="button"
+            ></p-button>
+          </div>
+
+          <div *ngIf="hasAnnotations" class="flex flex-col gap-2">
+            <div
+              *ngFor="let annotation of annotations"
+              class="rounded-md border border-slate-200 bg-slate-50 p-3"
+            >
+              <div class="mb-2 flex items-start justify-between gap-3">
+                <p class="m-0 text-sm text-slate-800">{{ annotation.text }}</p>
+                <div class="flex gap-1">
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-text"
+                    (click)="editAnnotation(annotation)"
+                  ></button>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-danger p-button-text"
+                    [disabled]="isDeletingAnnotation"
+                    (click)="confirmDeleteAnnotation(annotation)"
+                  ></button>
+                </div>
+              </div>
+              <small class="text-slate-500">
+                Actualizada:
+                {{ annotation.updatedAt | date : "dd/MM/yyyy hh:mm a" }}
+              </small>
+            </div>
+          </div>
+        </div>
+      </p-fieldset>
+
+      <p-fieldset legend="Firma">
+        <div class="flex flex-col gap-3">
+          <input
+            #signatureFileInput
+            type="file"
+            class="hidden"
+            accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+            (change)="onSignatureSelected($event)"
+          />
+
+          <div class="flex flex-wrap gap-2">
+            <p-button
+              label="Agregar firma"
+              icon="pi pi-image"
+              styleClass="p-button-outlined"
+              (click)="triggerSignatureUpload()"
+              type="button"
+            ></p-button>
+            <p-button
+              *ngIf="signaturePreviewUrl"
+              label="Quitar firma"
+              icon="pi pi-trash"
+              severity="danger"
+              styleClass="p-button-text"
+              (click)="removeSignature()"
+              type="button"
+            ></p-button>
+          </div>
+
+          <small class="text-slate-500">
+            Formatos permitidos: PNG y JPG.
+          </small>
+
+          <div
+            *ngIf="signaturePreviewUrl"
+            class="rounded-lg border border-dashed border-slate-300 p-3"
+          >
+            <img
+              [src]="signaturePreviewUrl"
+              alt="Vista previa de la firma"
+              class="max-h-28 max-w-full rounded border border-slate-200 object-contain"
+            />
           </div>
         </div>
       </p-fieldset>
 
       <p-fieldset legend="Envio Manual por Email">
         <div class="flex flex-col gap-3">
-          <label for="email-to" class="font-medium text-sm text-slate-700"
-            >Correo destino</label
-          >
+          <label for="email-to" class="text-sm font-medium text-slate-700">
+            Correo destino
+          </label>
           <input
             id="email-to"
             pInputText
@@ -172,15 +350,15 @@
             [(ngModel)]="toEmail"
             placeholder="ejemplo@gmail.com"
           />
-          <small class="text-gray-500">
-            Envia el reporte usando el formato seleccionado.
+          <small class="text-slate-500">
+            El backend enviara el archivo con anotaciones y firma si estan cargadas.
           </small>
           <p-button
             label="Enviar por Email"
             icon="pi pi-envelope"
             styleClass="p-button-outlined"
+            [loading]="isSendingEmail"
             (click)="sendReportByEmail()"
-            (keydown.enter)="sendReportByEmail()"
             type="button"
           ></p-button>
         </div>
@@ -188,21 +366,19 @@
     </div>
   </div>
 
-  <div class="flex justify-end gap-3 mt-8 border-t border-gray-200 pt-4">
+  <div class="mt-8 flex justify-end gap-3 border-t border-gray-200 pt-4">
     <p-button
       label="Cancelar"
       styleClass="p-button-outlined p-button-secondary"
-      (keydown.enter)="closeModal()"
       (click)="closeModal()"
+      type="button"
     ></p-button>
     <p-button
       label="Exportar"
       icon="pi pi-download"
+      [loading]="isExporting"
       (click)="exportReport()"
-      (keydown.enter)="exportReport()"
       type="button"
     ></p-button>
   </div>
 </div>
-
-

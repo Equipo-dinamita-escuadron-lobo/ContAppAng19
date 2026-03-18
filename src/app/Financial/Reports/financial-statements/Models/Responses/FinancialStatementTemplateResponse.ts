@@ -8,5 +8,5 @@ export interface FinancialStatementTemplateResponse {
   fontSize?: number;
   mainColor?: string;
   isDefault?: boolean;
+  createdAt?: string;
 }
-

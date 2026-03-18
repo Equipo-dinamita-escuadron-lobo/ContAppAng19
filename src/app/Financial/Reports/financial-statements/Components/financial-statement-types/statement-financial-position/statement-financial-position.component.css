@@ -1,4 +1,17 @@
-﻿.report-table-shell {
+.level-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 0.75rem;
+}
+
+.level-option {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2rem;
+}
+
+.report-table-shell {
   overflow: hidden;
 }
 
@@ -87,5 +100,11 @@
 
   .compact-number {
     font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .level-options-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -15,9 +15,7 @@ import {
 import { FinancialStatementType } from '../../../Models/eFinancialStatementType';
 import { GenerateFinancialStatementRequest } from '../../../Models/Requests/GenerateFinancialStatementRequest';
 import { FinancialStatementsService } from '../../../Services/financial-statements.service';
-import { AuthService } from '../../../../../../Core/auth/services/auth.service';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
-import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { ColumnDefinition } from '../../report-preview/report-preview.component';
 
@@ -43,7 +41,6 @@ interface EquityChangesComparativeRow {
 export class StatementOfChangesInEquityComponent extends BaseFinancialStatementComponent {
   override request: GenerateFinancialStatementRequest = {
     entId: '',
-    userId: 0,
     type: FinancialStatementType.STATEMENT_CHANGES_EQUITY,
     criteria: this.criteria,
   };
@@ -140,9 +137,7 @@ export class StatementOfChangesInEquityComponent extends BaseFinancialStatementC
 
   constructor(
     financialStatementsService: FinancialStatementsService,
-    authService: AuthService,
     enterpriseService: EnterpriseService,
-    thirdService: ThirdService,
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,
@@ -150,9 +145,7 @@ export class StatementOfChangesInEquityComponent extends BaseFinancialStatementC
   ) {
     super(
       financialStatementsService,
-      authService,
       enterpriseService,
-      thirdService,
       accountService,
       messageService,
       dialogService
@@ -203,7 +196,6 @@ export class StatementOfChangesInEquityComponent extends BaseFinancialStatementC
     const currentCutoffDate = this.parseDate(this.criteria.endDate);
     const previousCutoffDate = this.parseDate(this.criteria.startDate);
     const enterpriseId = this.resolveEnterpriseId();
-    const userId = this.resolveCurrentUserId();
 
     this.configureComparativeColumns(currentCutoffDate, previousCutoffDate);
 
@@ -217,9 +209,14 @@ export class StatementOfChangesInEquityComponent extends BaseFinancialStatementC
         endDate: currentCutoffDate
           ? this.datePipe.transform(currentCutoffDate, 'yyyy-MM-dd')
           : null,
+        previousCutoffDate: previousCutoffDate
+          ? this.datePipe.transform(previousCutoffDate, 'yyyy-MM-dd')
+          : null,
+        currentCutoffDate: currentCutoffDate
+          ? this.datePipe.transform(currentCutoffDate, 'yyyy-MM-dd')
+          : null,
       },
       type: FinancialStatementType.STATEMENT_CHANGES_EQUITY,
-      userId: userId ?? 0,
     };
   }
 

@@ -14,7 +14,7 @@ export class MainViewComponent {
       name: 'Estados Financieros',
       route: '/financial/reports/financial-statements/list',
       type: 'Estados',
-      amount: 4,
+      amount: 3,
       icon: 'docs',
     },
     {
