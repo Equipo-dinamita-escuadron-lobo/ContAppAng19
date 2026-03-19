@@ -136,9 +136,9 @@ export class FinancialStatementsDetailsComponent implements OnInit {
     const iconMap: Record<string, string> = {
       description: 'description',
       download: 'download',
-      mail: 'mail',
+      mail: 'download_done',
       generated: 'task_alt',
-      emailed: 'mail',
+      emailed: 'download_done',
       downloaded: 'download',
       exported: 'download_done',
       error: 'error',
@@ -151,11 +151,11 @@ export class FinancialStatementsDetailsComponent implements OnInit {
       return iconMap[rawIcon];
     }
 
-    if (eventType.includes('EMAIL')) {
-      return eventType.includes('SENT') ? 'mark_email_read' : 'mail';
-    }
-
-    if (eventType.includes('EXPORT') || eventType.includes('DOWNLOAD')) {
+    if (
+      eventType.includes('EXPORT') ||
+      eventType.includes('DOWNLOAD') ||
+      eventType === 'EMAILED'
+    ) {
       return 'download';
     }
 
@@ -201,9 +201,9 @@ export class FinancialStatementsDetailsComponent implements OnInit {
     }
 
     if (
-      eventType.includes('EMAIL') ||
       eventType.includes('EXPORT') ||
-      eventType.includes('DOWNLOAD')
+      eventType.includes('DOWNLOAD') ||
+      eventType === 'EMAILED'
     ) {
       return '#2563eb';
     }
@@ -231,15 +231,15 @@ export class FinancialStatementsDetailsComponent implements OnInit {
     }
 
     if (eventType === 'EXPORTED_EMAIL' || eventType === 'EMAILED') {
-      return 'El reporte fue exportado por correo.';
+      return 'El reporte fue exportado correctamente.';
     }
 
     if (eventType === 'SCHEDULED_EMAIL_SENT') {
-      return 'El correo programado fue enviado correctamente.';
+      return 'La accion programada fue ejecutada correctamente.';
     }
 
     if (eventType === 'EMAIL_SCHEDULED') {
-      return 'El envio por correo quedo programado.';
+      return 'La accion quedo programada correctamente.';
     }
 
     return 'Evento registrado por el backend.';
@@ -267,27 +267,20 @@ export class FinancialStatementsDetailsComponent implements OnInit {
     if (
       eventType === 'EXPORTED_EMAIL' ||
       eventType === 'EMAILED' ||
-      (normalizedMessage.includes('export') &&
-        normalizedMessage.includes('correo'))
+      normalizedMessage.includes('emailed')
     ) {
-      return 'El reporte fue exportado por correo.';
+      return 'El reporte fue exportado correctamente.';
     }
 
     if (
       eventType === 'SCHEDULED_EMAIL_SENT' ||
-      (normalizedMessage.includes('scheduled') &&
-        normalizedMessage.includes('email') &&
-        normalizedMessage.includes('sent'))
+      normalizedMessage.includes('scheduled')
     ) {
-      return 'El correo programado fue enviado correctamente.';
+      return 'La accion programada fue ejecutada correctamente.';
     }
 
-    if (
-      eventType === 'EMAIL_SCHEDULED' ||
-      (normalizedMessage.includes('scheduled') &&
-        normalizedMessage.includes('email'))
-    ) {
-      return 'El envio por correo quedo programado.';
+    if (eventType === 'EMAIL_SCHEDULED') {
+      return 'La accion quedo programada correctamente.';
     }
 
     return message;

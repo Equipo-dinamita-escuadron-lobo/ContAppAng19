@@ -22,7 +22,8 @@ export function isFinancialStatementCompleted(
     normalizedStatus === 'GENERATED' ||
     normalizedStatus.includes('EXPORTED') ||
     normalizedStatus.includes('DOWNLOADED') ||
-    normalizedStatus.includes('EMAILED')
+    normalizedStatus === 'EMAILED' ||
+    normalizedStatus === 'SCHEDULED_EMAIL_SENT'
   );
 }
 
@@ -31,10 +32,7 @@ export function getFinancialStatementStatusSeverity(
 ): FinancialStatementStatusSeverity {
   const normalizedStatus = normalizeFinancialStatementStatus(status);
 
-  if (
-    isFinancialStatementCompleted(normalizedStatus) ||
-    normalizedStatus === 'SCHEDULED_EMAIL_SENT'
-  ) {
+  if (isFinancialStatementCompleted(normalizedStatus)) {
     return 'success';
   }
 
@@ -64,11 +62,11 @@ export function getFinancialStatementStatusLabel(
     GENERATED: 'Generado',
     EXPORTED: 'Exportado',
     EXPORTED_DOWNLOAD: 'Exportado (Descarga)',
-    EXPORTED_EMAIL: 'Exportado (Correo)',
+    EXPORTED_EMAIL: 'Exportado',
     DOWNLOADED: 'Descargado',
-    EMAILED: 'Enviado por correo',
-    SCHEDULED_EMAIL_SENT: 'Correo programado enviado',
-    EMAIL_SCHEDULED: 'Correo programado',
+    EMAILED: 'Exportado',
+    SCHEDULED_EMAIL_SENT: 'Ejecutado',
+    EMAIL_SCHEDULED: 'Programado',
     COMPLETED: 'Completado',
   };
 
@@ -119,7 +117,10 @@ export function getCriteriaLevelLabel(
     ACCOUNT_RANGE: 'Rango de cuentas',
   };
 
-  return map[String(criteriaType || '').trim().toUpperCase()] || 'No definido';
+  return (
+    map[String(criteriaType || '').trim().toUpperCase()] ||
+    'Estructura predeterminada'
+  );
 }
 
 export function resolveFinancialStatementMetadata(

@@ -145,7 +145,7 @@ export class IncomeStatementComponent extends BaseFinancialStatementComponent {
         'Compara ingresos, costos y gastos entre un periodo actual y un periodo anterior.',
       icon: 'monitoring',
       usesCutoffDate: false,
-      requiresLevelSelection: true,
+      requiresLevelSelection: false,
     };
     this.initializeLevelFilter();
 

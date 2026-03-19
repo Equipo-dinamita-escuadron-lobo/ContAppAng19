@@ -35,9 +35,17 @@
   <div class="p-4 bg-white rounded-lg shadow-sm">
     <div class="criteria-grid">
       <div class="criteria-card level-card">
-        <h4 class="criteria-title">
-          Nivel <span class="text-error">*</span>
-        </h4>
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <h4 class="criteria-title mb-0">Nivel</h4>
+          <p-button
+            *ngIf="criteria.criteriaType"
+            label="Limpiar"
+            icon="pi pi-times"
+            styleClass="p-button-text p-button-sm"
+            (click)="clearLevelSelection()"
+            type="button"
+          ></p-button>
+        </div>
         <div class="level-options-grid">
           <div class="level-option" *ngFor="let level of levels">
             <p-radioButton
@@ -55,6 +63,9 @@
             </label>
           </div>
         </div>
+        <small class="mt-2 block text-gray-500">
+          Si no seleccionas un nivel, se usará la estructura predeterminada.
+        </small>
       </div>
 
       <div class="criteria-card">
