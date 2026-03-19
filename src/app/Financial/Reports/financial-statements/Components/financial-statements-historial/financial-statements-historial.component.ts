@@ -19,7 +19,6 @@ import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { FinancialStatementsService } from '../../Services/financial-statements.service';
 import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { AuthService } from '../../../../../Core/auth/services/auth.service';
-import { FinancialStatementsSchedulingComponent } from '../financial-statements-scheduling/financial-statements-scheduling.component';
 import { ExportFinancialStatementComponent } from '../export-financial-statement/export-financial-statement.component';
 import { ColumnDefinition } from '../report-preview/report-preview.component';
 import { Criteria } from '../../Models/Criteria';
@@ -81,8 +80,6 @@ export class FinancialStatementsHistorialComponent implements OnInit {
 
   isLoading = false;
   isDownloading = false;
-
-  selectedHistoryItem: FinancialStatementHistoryViewModel | null = null;
 
   totalRecords = 0;
   rows = 10;
@@ -204,16 +201,6 @@ export class FinancialStatementsHistorialComponent implements OnInit {
       '/financial/reports/financial-statements/historial/details',
       item.reportId,
     ]);
-  }
-
-  showSchedulingDialog(item: FinancialStatementHistoryViewModel): void {
-    this.selectedHistoryItem = item;
-    this.refDialog = this.dialogService.open(
-      FinancialStatementsSchedulingComponent,
-      {
-        data: item,
-      }
-    );
   }
 
   downloadReport(item: FinancialStatementHistoryViewModel): void {

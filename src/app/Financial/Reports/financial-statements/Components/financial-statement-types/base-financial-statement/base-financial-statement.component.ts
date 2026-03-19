@@ -37,6 +37,7 @@ export interface FinancialStatementTableColumn {
 export abstract class BaseFinancialStatementComponent implements OnInit {
   financialStatementInfo!: FinancialStatementInfo;
   financialStatementGenerated: FinancialStatementMetadataResponse | null = null;
+  readonly maxSelectableDate = new Date();
 
   datePeriod: Date[] = [];
 
@@ -47,7 +48,7 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
   enterpriseData: Record<string, unknown> | null = null;
 
   criteria: Criteria = {
-    criteriaType: '',
+    criteriaType: null,
     criteriaRange: null,
     startDate: null,
     endDate: null,
@@ -102,11 +103,17 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
       { label: 'SubCuenta', value: 'SUB_ACCOUNT' },
       { label: 'Auxiliar', value: 'AUXILIARY_ACCOUNT' },
     ];
-    this.criteria.criteriaType = '';
+    this.criteria.criteriaType = null;
     this.criteria.criteriaRange = null;
   }
 
   onLevelChange(): void {
+    this.criteria.criteriaRange = null;
+    this.refreshRenderedReport();
+  }
+
+  clearLevelSelection(): void {
+    this.criteria.criteriaType = null;
     this.criteria.criteriaRange = null;
     this.refreshRenderedReport();
   }
@@ -505,6 +512,12 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
         this.errors.push('No ha seleccionado una fecha de corte.');
       }
 
+      if (this.isFutureDate(this.criteria.endDate)) {
+        this.errors.push(
+          'La fecha de corte actual no puede ser posterior a la fecha actual del sistema.'
+        );
+      }
+
       if (
         this.financialStatementInfo?.requiresPreviousCutoffDate &&
         !this.isDateValid(this.criteria.startDate)
@@ -558,6 +571,18 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
     return previous.getTime() < current.getTime();
   }
 
+  private isFutureDate(value: string | Date | null | undefined): boolean {
+    const parsedDate = this.parseToDate(value);
+    if (!parsedDate) {
+      return false;
+    }
+
+    return (
+      this.toDateOnly(parsedDate).getTime() >
+      this.toDateOnly(this.maxSelectableDate).getTime()
+    );
+  }
+
   private parseToDate(value: string | Date | null | undefined): Date | null {
     if (!value) {
       return null;
@@ -565,6 +590,10 @@ export abstract class BaseFinancialStatementComponent implements OnInit {
 
     const parsed = value instanceof Date ? value : new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private toDateOnly(value: Date): Date {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
   }
 
   private isDatePeriodValid(): boolean {

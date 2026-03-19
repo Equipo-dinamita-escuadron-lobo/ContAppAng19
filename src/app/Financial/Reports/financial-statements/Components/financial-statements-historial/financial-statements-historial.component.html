@@ -28,7 +28,7 @@
 
     <p class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl mb-6">
       Aqui podras visualizar el historial de estados financieros generados,
-      consultar su estado, revisar detalles y programar acciones.
+      consultar su estado, revisar detalles y exportarlos nuevamente.
     </p>
 
     <div class="border-t border-gray-200 my-6"></div>
@@ -127,15 +127,6 @@
               pTooltip="Detalles"
               tooltipPosition="top"
               (click)="showDetails(item)"
-            ></button>
-            <button
-              pButton
-              pRipple
-              icon="pi pi-calendar-plus"
-              class="p-button-rounded p-button-info p-button-text"
-              pTooltip="Programar"
-              tooltipPosition="top"
-              (click)="showSchedulingDialog(item)"
             ></button>
           </div>
         </td>

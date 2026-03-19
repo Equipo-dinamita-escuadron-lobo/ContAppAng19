@@ -3,7 +3,8 @@ import {
   ElementRef,
   OnDestroy,
   OnInit,
-  ViewChild,
+  QueryList,
+  ViewChildren,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import {
   ColumnDefinition,
   ReportPreviewComponent,
+  ReportPreviewSignature,
   ReportStyles,
 } from '../report-preview/report-preview.component';
 
@@ -27,7 +29,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { FinancialStatementsService } from '../../Services/financial-statements.service';
-import { ExportFinancialStatementEmailRequest } from '../../Models/Requests/ExportFinancialStatementEmailRequest';
 import {
   ExportFinancialStatementRequest,
   InfoReportTemplate,
@@ -45,6 +46,16 @@ import {
   extractApiErrorMessageAsync,
   extractResponseFileName,
 } from '../../Utils/financial-statements.utils';
+
+interface SignatureSlot {
+  index: number;
+  previewUrl: string | null;
+  fileName: string | null;
+  contentType: SignatureContentType | null;
+  base64Content: string | null;
+  signerName: string;
+  signerRole: string;
+}
 
 @Component({
   selector: 'app-export-financial-statement',
@@ -67,8 +78,8 @@ import {
   templateUrl: './export-financial-statement.component.html',
 })
 export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
-  @ViewChild('signatureFileInput')
-  signatureFileInput?: ElementRef<HTMLInputElement>;
+  @ViewChildren('signatureFileInput')
+  signatureFileInputs?: QueryList<ElementRef<HTMLInputElement>>;
 
   previewData: FinancialStatementRowResponse[] = [];
   headerConfig: ColumnDefinition[][] = [];
@@ -80,11 +91,9 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
   enterpriseData: Record<string, unknown> | null = null;
 
   formatSelected: 'pdf' | 'excel' = 'pdf';
-  toEmail = '';
 
   isSavingTemplate = false;
   isExporting = false;
-  isSendingEmail = false;
   isSavingAnnotation = false;
   isDeletingAnnotation = false;
 
@@ -101,8 +110,10 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
   editingAnnotationId: number | null = null;
   annotations: FinancialStatementAnnotationResponse[] = [];
 
-  signaturePreviewUrl: string | null = null;
-  signatureRequest: VisualSignatureRequest | null = null;
+  signatureSlots: SignatureSlot[] = [
+    this.createEmptySignatureSlot(0),
+    this.createEmptySignatureSlot(1),
+  ];
 
   formatOptions = [
     { label: 'PDF', icon: 'pi pi-file-pdf', value: 'pdf' },
@@ -132,6 +143,8 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
     { label: 'Normal (12px)', value: 12 },
     { label: 'Grande (14px)', value: 14 },
   ];
+
+  private readonly defaultLevelLabel = 'Estructura predeterminada';
 
   private readonly criteriaKeyMap: Record<string, string> = {
     criteriaType: 'Tipo de Nivel',
@@ -182,6 +195,16 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
     return this.annotations.length > 0;
   }
 
+  get previewSignatures(): ReportPreviewSignature[] {
+    return this.signatureSlots
+      .filter((slot) => !this.isSignatureSlotEmpty(slot) && Boolean(slot.previewUrl))
+      .map((slot) => ({
+        imageUrl: slot.previewUrl as string,
+        signerName: slot.signerName.trim(),
+        signerRole: slot.signerRole.trim(),
+      }));
+  }
+
   ngOnInit(): void {
     if (!this.config.data) {
       return;
@@ -209,7 +232,9 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.signaturePreviewUrl = null;
+    this.signatureSlots = this.signatureSlots.map((slot) =>
+      this.createEmptySignatureSlot(slot.index)
+    );
   }
 
   updateStyles(newStyles: Partial<ReportStyles>): void {
@@ -229,6 +254,16 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
 
   async exportReport(): Promise<void> {
     if (this.isExporting) {
+      return;
+    }
+
+    const signatureValidationMessage = this.validateSignatureSlots();
+    if (signatureValidationMessage) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Firma incompleta',
+        detail: signatureValidationMessage,
+      });
       return;
     }
 
@@ -263,47 +298,6 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
             detail: await extractApiErrorMessageAsync(
               error,
               'No se pudo exportar el reporte.'
-            ),
-          });
-        },
-      });
-  }
-
-  sendReportByEmail(): void {
-    if (this.isSendingEmail) {
-      return;
-    }
-
-    if (!this.toEmail || !this.toEmail.includes('@')) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Atencion',
-        detail: 'Ingresa un correo valido para el envio.',
-      });
-      return;
-    }
-
-    this.isSendingEmail = true;
-
-    this.financialStatementsService
-      .exportFinancialStatementByEmail(this.buildEmailExportRequest())
-      .subscribe({
-        next: () => {
-          this.isSendingEmail = false;
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Exito',
-            detail: `Reporte enviado a ${this.toEmail.trim()}.`,
-          });
-        },
-        error: (error) => {
-          this.isSendingEmail = false;
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: extractApiErrorMessage(
-              error,
-              'No se pudo enviar el correo.'
             ),
           });
         },
@@ -465,11 +459,11 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
     });
   }
 
-  triggerSignatureUpload(): void {
-    this.signatureFileInput?.nativeElement.click();
+  triggerSignatureUpload(slotIndex: number): void {
+    this.signatureFileInputs?.get(slotIndex)?.nativeElement.click();
   }
 
-  onSignatureSelected(event: Event): void {
+  onSignatureSelected(slotIndex: number, event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
@@ -501,22 +495,29 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.signaturePreviewUrl = rawResult;
-      this.signatureRequest = {
-        fileName: file.name,
-        contentType: file.type as SignatureContentType,
-        base64Content,
-      };
+      this.signatureSlots = this.signatureSlots.map((slot) =>
+        slot.index === slotIndex
+          ? {
+              ...slot,
+              previewUrl: rawResult,
+              fileName: file.name,
+              contentType: file.type as SignatureContentType,
+              base64Content,
+            }
+          : slot
+      );
     };
     reader.readAsDataURL(file);
   }
 
-  removeSignature(): void {
-    this.signaturePreviewUrl = null;
-    this.signatureRequest = null;
+  removeSignature(slotIndex: number): void {
+    this.signatureSlots = this.signatureSlots.map((slot) =>
+      slot.index === slotIndex ? this.createEmptySignatureSlot(slotIndex) : slot
+    );
 
-    if (this.signatureFileInput?.nativeElement) {
-      this.signatureFileInput.nativeElement.value = '';
+    const input = this.signatureFileInputs?.get(slotIndex)?.nativeElement;
+    if (input) {
+      input.value = '';
     }
   }
 
@@ -572,15 +573,8 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
       financialStatement: this.financialStatement,
       financialStatementData: this.previewData,
       annotations: this.toAnnotationRequests(),
-      signature: this.signatureRequest,
+      signatures: this.buildSignatureRequests(),
       infoReportTemplate: this.buildInfoTemplate(),
-    };
-  }
-
-  private buildEmailExportRequest(): ExportFinancialStatementEmailRequest {
-    return {
-      ...this.buildExportRequest(),
-      toEmail: this.toEmail.trim(),
     };
   }
 
@@ -598,6 +592,62 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
       font: this.styles.font,
       fontSize: this.styles.fontSize,
       mainColor: this.styles.color,
+    };
+  }
+
+  private buildSignatureRequests(): VisualSignatureRequest[] {
+    return this.signatureSlots
+      .filter((slot) => !this.isSignatureSlotEmpty(slot))
+      .map((slot) => ({
+        fileName: slot.fileName as string,
+        contentType: slot.contentType as SignatureContentType,
+        base64Content: slot.base64Content as string,
+        signerName: slot.signerName.trim(),
+        signerRole: slot.signerRole.trim(),
+      }));
+  }
+
+  private validateSignatureSlots(): string | null {
+    for (const slot of this.signatureSlots) {
+      if (this.isSignatureSlotEmpty(slot)) {
+        continue;
+      }
+
+      if (!slot.base64Content || !slot.fileName || !slot.contentType) {
+        return `Debe cargar la imagen de la firma ${slot.index + 1}.`;
+      }
+
+      if (!slot.signerName.trim()) {
+        return `Debe ingresar el nombre de la persona para la firma ${slot.index + 1}.`;
+      }
+
+      if (!slot.signerRole.trim()) {
+        return `Debe ingresar el cargo de la persona para la firma ${slot.index + 1}.`;
+      }
+    }
+
+    return null;
+  }
+
+  private isSignatureSlotEmpty(slot: SignatureSlot): boolean {
+    return !(
+      slot.previewUrl ||
+      slot.fileName ||
+      slot.base64Content ||
+      slot.signerName.trim() ||
+      slot.signerRole.trim()
+    );
+  }
+
+  private createEmptySignatureSlot(index: number): SignatureSlot {
+    return {
+      index,
+      previewUrl: null,
+      fileName: null,
+      contentType: null,
+      base64Content: null,
+      signerName: '',
+      signerRole: '',
     };
   }
 
@@ -743,7 +793,7 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
         statementType === 'STATEMENT_CHANGES_EQUITY') &&
       (criteria['previousCutoffDate'] || criteria['currentCutoffDate']);
 
-    return Object.keys(criteria)
+    const formattedCriteria = Object.keys(criteria)
       .filter((key) => {
         const value = criteria[key];
         if (value === null || value === undefined || value === '') {
@@ -762,7 +812,7 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
 
         if (key === 'criteriaType') {
           formattedValue =
-            this.criteriaValueMap[String(criteria[key])] || String(criteria[key]);
+            this.criteriaValueMap[String(criteria[key])] || this.defaultLevelLabel;
         }
 
         if (key === 'criteriaRange' && typeof criteria[key] === 'object') {
@@ -790,6 +840,22 @@ export class ExportFinancialStatementComponent implements OnInit, OnDestroy {
           value: String(formattedValue),
         };
       });
+
+    if (
+      (statementType === 'INCOME_STATEMENT' ||
+        statementType === 'STATEMENT_FINANCIAL_POSITION') &&
+      !String(criteria['criteriaType'] || '').trim()
+    ) {
+      return [
+        {
+          key: this.resolveCriteriaLabel('criteriaType'),
+          value: this.defaultLevelLabel,
+        },
+        ...formattedCriteria,
+      ];
+    }
+
+    return formattedCriteria;
   }
 
   private resolveCriteriaLabel(key: string): string {

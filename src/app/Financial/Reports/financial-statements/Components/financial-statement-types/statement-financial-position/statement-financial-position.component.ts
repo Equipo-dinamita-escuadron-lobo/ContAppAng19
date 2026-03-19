@@ -73,7 +73,7 @@ export class StatementFinancialPositionComponent extends BaseFinancialStatementC
         'Presenta activos, pasivos y patrimonio en formato comparativo entre fecha de corte actual y anterior.',
       icon: 'account_balance_wallet',
       usesCutoffDate: true,
-      requiresLevelSelection: true,
+      requiresLevelSelection: false,
       requiresPreviousCutoffDate: true,
     };
     this.initializeLevelFilter();

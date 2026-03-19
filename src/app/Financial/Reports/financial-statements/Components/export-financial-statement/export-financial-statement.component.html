@@ -27,6 +27,7 @@
         [totals]="totals"
         [styles]="styles"
         [format]="formatSelected"
+        [signatures]="previewSignatures"
       ></app-financial-statement-report-preview>
     </div>
 
@@ -292,75 +293,94 @@
         </div>
       </p-fieldset>
 
-      <p-fieldset legend="Firma">
-        <div class="flex flex-col gap-3">
-          <input
-            #signatureFileInput
-            type="file"
-            class="hidden"
-            accept=".png,.jpg,.jpeg,image/png,image/jpeg"
-            (change)="onSignatureSelected($event)"
-          />
-
-          <div class="flex flex-wrap gap-2">
-            <p-button
-              label="Agregar firma"
-              icon="pi pi-image"
-              styleClass="p-button-outlined"
-              (click)="triggerSignatureUpload()"
-              type="button"
-            ></p-button>
-            <p-button
-              *ngIf="signaturePreviewUrl"
-              label="Quitar firma"
-              icon="pi pi-trash"
-              severity="danger"
-              styleClass="p-button-text"
-              (click)="removeSignature()"
-              type="button"
-            ></p-button>
-          </div>
-
+      <p-fieldset legend="Firmas">
+        <div class="flex flex-col gap-4">
           <small class="text-slate-500">
-            Formatos permitidos: PNG y JPG.
+            Puedes exportar el reporte sin firmas, con una firma o con dos.
           </small>
 
-          <div
-            *ngIf="signaturePreviewUrl"
-            class="rounded-lg border border-dashed border-slate-300 p-3"
+          <article
+            *ngFor="let signatureSlot of signatureSlots"
+            class="rounded-lg border border-slate-200 p-4"
           >
-            <img
-              [src]="signaturePreviewUrl"
-              alt="Vista previa de la firma"
-              class="max-h-28 max-w-full rounded border border-slate-200 object-contain"
-            />
-          </div>
-        </div>
-      </p-fieldset>
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <h4 class="m-0 text-base font-semibold text-slate-800">
+                Firma {{ signatureSlot.index + 1 }}
+              </h4>
+              <div class="flex flex-wrap gap-2">
+                <input
+                  #signatureFileInput
+                  type="file"
+                  class="hidden"
+                  accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+                  (change)="onSignatureSelected(signatureSlot.index, $event)"
+                />
+                <p-button
+                  label="Cargar imagen"
+                  icon="pi pi-image"
+                  styleClass="p-button-outlined p-button-sm"
+                  (click)="triggerSignatureUpload(signatureSlot.index)"
+                  type="button"
+                ></p-button>
+                <p-button
+                  *ngIf="signatureSlot.previewUrl"
+                  label="Quitar"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  styleClass="p-button-text p-button-sm"
+                  (click)="removeSignature(signatureSlot.index)"
+                  type="button"
+                ></p-button>
+              </div>
+            </div>
 
-      <p-fieldset legend="Envio Manual por Email">
-        <div class="flex flex-col gap-3">
-          <label for="email-to" class="text-sm font-medium text-slate-700">
-            Correo destino
-          </label>
-          <input
-            id="email-to"
-            pInputText
-            type="email"
-            [(ngModel)]="toEmail"
-            placeholder="ejemplo@gmail.com"
-          />
-          <small class="text-slate-500">
-            El backend enviara el archivo con anotaciones y firma si estan cargadas.
-          </small>
-          <p-button
-            label="Enviar por Email"
-            icon="pi pi-envelope"
-            styleClass="p-button-outlined"
-            [loading]="isSendingEmail"
-            (click)="sendReportByEmail()"
-            type="button"
-          ></p-button>
+            <div class="grid gap-3 md:grid-cols-2">
+              <div>
+                <label
+                  [for]="'signature-name-' + signatureSlot.index"
+                  class="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  Nombre de la persona
+                </label>
+                <input
+                  [id]="'signature-name-' + signatureSlot.index"
+                  pInputText
+                  [(ngModel)]="signatureSlot.signerName"
+                  placeholder="Ej: Maria Perez"
+                />
+              </div>
+
+              <div>
+                <label
+                  [for]="'signature-role-' + signatureSlot.index"
+                  class="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  Cargo
+                </label>
+                <input
+                  [id]="'signature-role-' + signatureSlot.index"
+                  pInputText
+                  [(ngModel)]="signatureSlot.signerRole"
+                  placeholder="Ej: Contadora General"
+                />
+              </div>
+            </div>
+
+            <small class="mt-3 block text-slate-500">
+              Formatos permitidos: PNG y JPG.
+            </small>
+
+            <div
+              *ngIf="signatureSlot.previewUrl"
+              class="mt-3 rounded-lg border border-dashed border-slate-300 p-3"
+            >
+              <img
+                [src]="signatureSlot.previewUrl"
+                [alt]="'Vista previa de la firma ' + (signatureSlot.index + 1)"
+                class="max-h-28 max-w-full rounded border border-slate-200 object-contain"
+              />
+            </div>
+          </article>
         </div>
       </p-fieldset>
     </div>

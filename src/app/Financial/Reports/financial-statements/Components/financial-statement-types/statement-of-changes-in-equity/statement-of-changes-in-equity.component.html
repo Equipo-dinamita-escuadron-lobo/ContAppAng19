@@ -39,6 +39,7 @@
         <p-datepicker
           [(ngModel)]="criteria.endDate"
           (ngModelChange)="onCurrentCutoffDateChange()"
+          [maxDate]="maxSelectableDate"
           dateFormat="dd/mm/yy"
           placeholder="Fecha actual"
           [showIcon]="true"
@@ -51,6 +52,7 @@
         <p-datepicker
           [(ngModel)]="criteria.startDate"
           (ngModelChange)="onPreviousCutoffDateChange()"
+          [maxDate]="maxSelectableDate"
           dateFormat="dd/mm/yy"
           placeholder="Fecha anterior"
           [showIcon]="true"

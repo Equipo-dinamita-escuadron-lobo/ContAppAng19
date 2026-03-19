@@ -164,5 +164,34 @@
         </tr>
       </tfoot>
     </table>
+
+    <section
+      *ngIf="signatures.length > 0"
+      class="mt-8 border-t pt-6"
+    >
+      <div
+        class="grid gap-6"
+        [ngClass]="signatures.length > 1 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'"
+      >
+        <article
+          *ngFor="let signature of signatures"
+          class="flex flex-col items-center gap-3 text-center"
+        >
+          <img
+            [src]="signature.imageUrl"
+            [alt]="'Firma de ' + signature.signerName"
+            class="max-h-24 max-w-full object-contain"
+          />
+          <div>
+            <p class="m-0 font-semibold text-gray-900">
+              {{ signature.signerName }}
+            </p>
+            <p class="m-0 text-sm text-gray-600">
+              {{ signature.signerRole }}
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
   </div>
 </div>

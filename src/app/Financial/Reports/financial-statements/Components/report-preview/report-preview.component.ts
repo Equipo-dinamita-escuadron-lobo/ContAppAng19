@@ -8,6 +8,12 @@ export interface ReportStyles {
   fontSize: number;
 }
 
+export interface ReportPreviewSignature {
+  imageUrl: string;
+  signerName: string;
+  signerRole: string;
+}
+
 export interface ColumnDefinition {
   header: string;
   field?: string;
@@ -34,6 +40,7 @@ export class ReportPreviewComponent {
   @Input() totals: any = {};
   @Input() styles: ReportStyles | null = null;
   @Input() format: 'pdf' | 'excel' = 'pdf';
+  @Input() signatures: ReportPreviewSignature[] = [];
 
   get flatColumns(): ColumnDefinition[] {
     const flat: ColumnDefinition[] = [];

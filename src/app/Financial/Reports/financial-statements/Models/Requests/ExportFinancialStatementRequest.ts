@@ -8,6 +8,8 @@ export interface VisualSignatureRequest {
   fileName: string;
   contentType: SignatureContentType;
   base64Content: string;
+  signerName: string;
+  signerRole: string;
 }
 
 export interface InfoReportTemplate {
@@ -27,6 +29,6 @@ export interface ExportFinancialStatementRequest {
   financialStatement?: Record<string, unknown> | null;
   financialStatementData?: FinancialStatementRowResponse[];
   annotations?: UpsertFinancialStatementAnnotationRequest[];
-  signature?: VisualSignatureRequest | null;
+  signatures?: VisualSignatureRequest[] | null;
   infoReportTemplate?: InfoReportTemplate | null;
 }

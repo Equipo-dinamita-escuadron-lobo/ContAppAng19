@@ -6,11 +6,7 @@ import {
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import {
-  CreateFinancialStatementEmailScheduleRequest,
-} from '../Models/Requests/CreateFinancialStatementEmailScheduleRequest';
 import { DeleteFinancialStatementTemplatesRequest } from '../Models/Requests/DeleteFinancialStatementTemplatesRequest';
-import { ExportFinancialStatementEmailRequest } from '../Models/Requests/ExportFinancialStatementEmailRequest';
 import {
   ExportFinancialStatementRequest,
   ReportExportFormat,
@@ -20,7 +16,6 @@ import { UpsertFinancialStatementAnnotationRequest } from '../Models/Requests/Up
 import { UpsertFinancialStatementTemplateRequest } from '../Models/Requests/UpsertFinancialStatementTemplateRequest';
 import { ApiResponse } from '../Models/Responses/ApiResponse';
 import { FinancialStatementAnnotationResponse } from '../Models/Responses/FinancialStatementAnnotationResponse';
-import { FinancialStatementEmailScheduleResponse } from '../Models/Responses/FinancialStatementEmailScheduleResponse';
 import { FinancialStatementGenerationResultResponse } from '../Models/Responses/FinancialStatementGenerationResultResponse';
 import { FinancialStatementHistoryItemResponse } from '../Models/Responses/FinancialStatementHistoryItemResponse';
 import { FinancialStatementLogResponse } from '../Models/Responses/FinancialStatementLogResponse';
@@ -89,51 +84,6 @@ export class FinancialStatementsService {
       observe: 'response',
       responseType: 'blob',
     });
-  }
-
-  exportFinancialStatementByEmail(
-    request: ExportFinancialStatementEmailRequest
-  ): Observable<void> {
-    return this.http
-      .post<ApiResponse<void>>(`${this.apiUrl}/export/email`, request)
-      .pipe(map((response) => this.unwrapApiResponse(response)));
-  }
-
-  createEmailSchedule(
-    request: CreateFinancialStatementEmailScheduleRequest
-  ): Observable<FinancialStatementEmailScheduleResponse> {
-    return this.http
-      .post<ApiResponse<FinancialStatementEmailScheduleResponse>>(
-        `${this.apiUrl}/email-schedules`,
-        request
-      )
-      .pipe(map((response) => this.unwrapApiResponse(response)));
-  }
-
-  getEmailSchedulesByReport(
-    reportId: string
-  ): Observable<FinancialStatementEmailScheduleResponse[]> {
-    const params = new HttpParams().set('reportId', reportId);
-    return this.http
-      .get<ApiResponse<FinancialStatementEmailScheduleResponse[]>>(
-        `${this.apiUrl}/email-schedules`,
-        { params }
-      )
-      .pipe(map((response) => this.unwrapApiResponse(response, [])));
-  }
-
-  updateEmailScheduleStatus(
-    scheduleId: number,
-    active: boolean
-  ): Observable<FinancialStatementEmailScheduleResponse> {
-    return this.http
-      .patch<ApiResponse<FinancialStatementEmailScheduleResponse>>(
-        `${this.apiUrl}/email-schedules/${scheduleId}/status`,
-        {
-          active,
-        }
-      )
-      .pipe(map((response) => this.unwrapApiResponse(response)));
   }
 
   getHistoryByEnterprise(
