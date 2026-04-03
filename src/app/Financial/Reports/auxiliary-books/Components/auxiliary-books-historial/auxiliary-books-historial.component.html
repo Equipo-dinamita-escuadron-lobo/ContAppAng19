@@ -9,7 +9,7 @@
           history
         </span>
         <h1
-          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary underline-offset-4"
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
         >
           Historial de Libros Auxiliares
         </h1>
@@ -100,7 +100,7 @@
         <td>{{ item.bookName }}</td>
 
         <td>
-          {{ item.generationDate | date : "dd/MM/yyyy hh:mm a" }}
+          {{ item.generationDate | date: "dd/MM/yyyy hh:mm a" }}
         </td>
 
         <td>{{ item.user }}</td>

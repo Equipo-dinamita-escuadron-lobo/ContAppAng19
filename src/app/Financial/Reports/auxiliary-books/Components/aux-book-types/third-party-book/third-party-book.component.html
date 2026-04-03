@@ -125,12 +125,49 @@
       <!-- Body -->
       <ng-template pTemplate="body" let-accountInfo>
         <tr>
+          <td>{{ accountInfo.date }}</td>
           <td>{{ accountInfo.accountCode }}</td>
           <td>{{ accountInfo.accountDescription }}</td>
-          <td>{{ accountInfo.description }}</td>
-          <td [ngClass]="{ 'text-red-500': accountInfo.value < 0 }">
-            {{ accountInfo.value | currency : "COP $" : "symbol" : "1.0-0" }}
+
+          <td>
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.debit,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
           </td>
+          <td>
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.credit,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+          <td>
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.finalBalance,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+
+          <td>{{ accountInfo.thirdPartyIdentificationNumber }}</td>
+          <td>{{ accountInfo.thirdPartyName }}</td>
+
+          <td>{{ accountInfo.costCenter }}</td>
+          <td>{{ accountInfo.documentNumber }}</td>
         </tr>
       </ng-template>
 

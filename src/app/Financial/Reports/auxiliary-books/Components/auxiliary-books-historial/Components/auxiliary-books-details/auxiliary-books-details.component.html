@@ -6,7 +6,7 @@
       receipt_long
     </span>
     <h1
-      class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary underline-offset-4"
+      class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
     >
       Detalles del Reporte: {{ bookDetails?.type }}
     </h1>
@@ -21,7 +21,7 @@
       </div>
       <div>
         <strong>Fecha de Generación:</strong>
-        <p>{{ bookDetails.createdAt | date : "dd/MM/yyyy hh:mm a" }}</p>
+        <p>{{ bookDetails.createdAt | date: "dd/MM/yyyy hh:mm a" }}</p>
       </div>
       <div>
         <strong>Usuario:</strong>
@@ -58,7 +58,7 @@
       <ng-template pTemplate="content" let-event>
         <p-card
           [header]="event.etypeEvent"
-          [subheader]="(event.createdAt | date : 'dd/MM/yyyy hh:mm:ss a') ?? ''"
+          [subheader]="(event.createdAt | date: 'dd/MM/yyyy hh:mm:ss a') ?? ''"
         >
           <p>{{ event.message }}</p>
         </p-card>
