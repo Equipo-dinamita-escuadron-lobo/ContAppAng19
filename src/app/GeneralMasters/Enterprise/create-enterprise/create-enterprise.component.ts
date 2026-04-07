@@ -21,7 +21,10 @@ import { Enterprise } from '../models/enterprise';
 import { EnterpriseList } from '../models/EnterpriseList';
 import { SubjectService } from '../../Subjects/services/subjects.service';
 import { Subject } from '../../Subjects/models/subjects';
-import { COUNTRIES, DEPARTMENTS, CITIES } from '../shared/data/location-data';
+import { AddressService } from '../services/addressService';
+import { Country } from '../../ThirdParties/models/Country';
+import { Department } from '../../ThirdParties/models/Department';
+import { City } from '../../ThirdParties/models/City';
 import { SEMESTERS, SUBJECTS } from '../shared/data/semesters-data';
 
 @Component({
@@ -47,6 +50,7 @@ export class CreateEnterpriseComponent implements OnInit {
   personType: 'juridica' | 'natural' = 'juridica';
   selectedFile: File | null = null;
   loading: boolean = false;
+  activeIndex: number = 0;
 
   // Opciones para los dropdowns
   enterpriseTypes = [
@@ -74,11 +78,15 @@ export class CreateEnterpriseComponent implements OnInit {
   filteredDepartments: any[] = [];
   filteredCities: any[] = [];
 
-  countries = COUNTRIES;
-  departments = DEPARTMENTS;
-  city = CITIES;
+  countries: any[] = [];
+  departments: any[] = [];
+  cities: any[] = [];
 
- inventoryMethods = [
+  loadedCountries: Country[] = [];
+  loadedDepartments: Department[] = [];
+  loadedCities: City[] = [];
+
+  inventoryMethods = [
     { value: 'PEPS', label: 'PEPS (Primero en Entrar, Primero en Salir)' },
     { value: 'WEIGHTED_AVERAGE', label: 'Promedio Ponderado' },
   ];
@@ -87,13 +95,14 @@ export class CreateEnterpriseComponent implements OnInit {
     private router: Router,
     private enterpriseService: EnterpriseService,
     private subjectService: SubjectService,
+    private addressService: AddressService,
     private messageService: MessageService,
   ) {}
 
   // Inicialización del componente
   ngOnInit(): void {
     this.initForm();
-    this.initLocationFilters();
+    this.loadCountries();
     this.initAcademicFilters();
   }
   // Inicialización del formulario reactivo
@@ -206,7 +215,8 @@ export class CreateEnterpriseComponent implements OnInit {
           taxLiabilities: f.taxLiabilities.map((t: any) => t.id ?? t),
           state: 'ACTIVE',
           taxPayerType: f.taxPayerType.id ?? f.taxPayerType,
-          inventoryConfigurationType: f.inventoryConfigurationType.value || f.inventoryConfigurationType,
+          inventoryConfigurationType:
+            f.inventoryConfigurationType.value || f.inventoryConfigurationType,
           enterpriseType: f.enterpriseType.id ?? f.enterpriseType,
 
           personType:
@@ -273,6 +283,86 @@ export class CreateEnterpriseComponent implements OnInit {
     this.router.navigate(['/enterprise/list']);
   }
 
+  // Permite avanzar al siguiente paso del formulario
+  nextStep(): void {
+    let fieldsToValidate: string[] = [];
+
+    if (this.activeIndex === 0) {
+      fieldsToValidate = [
+        'name',
+        'nit',
+        'dv',
+        'enterpriseType',
+        'taxPayerType',
+      ];
+
+      if (this.personType === 'juridica') {
+        fieldsToValidate.push('legalName');
+      }
+
+      if (this.personType === 'natural') {
+        fieldsToValidate.push('ownerName', 'lastNames');
+      }
+    }
+
+    if (this.activeIndex === 1) {
+      fieldsToValidate = [
+        'country',
+        // 'department',
+        // 'city',
+        'address',
+        'email',
+        'phone',
+      ];
+    }
+
+    if (this.activeIndex === 2) {
+      fieldsToValidate = ['mainActivity'];
+    }
+
+    let isStepValid = true;
+
+    fieldsToValidate.forEach((fieldName) => {
+      const control = this.enterpriseForm.get(fieldName);
+      if (control) {
+        control.markAsTouched();
+        control.markAsDirty();
+        control.updateValueAndValidity();
+
+        const value = control.value;
+        const isEmpty =
+          value === null ||
+          value === undefined ||
+          value === '' ||
+          (Array.isArray(value) && value.length === 0);
+
+        if (control.invalid || isEmpty) {
+          isStepValid = false;
+        }
+      }
+    });
+
+    if (!isStepValid) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Campos incompletos',
+        detail: 'Complete los campos requeridos antes de continuar.',
+      });
+      return;
+    }
+
+    if (this.activeIndex < 2) {
+      this.activeIndex++;
+    }
+  }
+
+  // Permite regresar al paso anterior
+  prevStep(): void {
+    if (this.activeIndex > 0) {
+      this.activeIndex--;
+    }
+  }
+
   // validateNumberInput(event: KeyboardEvent): void {
   //   const input = event.target as HTMLInputElement;
   //   const key = event.key;
@@ -302,27 +392,85 @@ export class CreateEnterpriseComponent implements OnInit {
   //   );
   // }
 
+  private loadCountries(): void {
+    this.addressService.getCountries().subscribe({
+      next: (data: Country[]) => {
+        this.loadedCountries = data;
+        this.countries = data.map(c => ({ id: c.countryCode, name: c.countryName, ...c }));
+        this.initLocationFilters();
+      },
+      error: (err) => {
+        console.error('Error loading countries:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los países.',
+        });
+      },
+    });
+  }
+
   private initLocationFilters(): void {
     // Country → Departments
     this.enterpriseForm.get('country')?.valueChanges.subscribe((country) => {
-      this.filteredDepartments = country
-        ? this.departments.filter((d) => d.countryId === country.id)
-        : [];
-
-      this.enterpriseForm.get('department')?.setValue(null);
-      this.filteredCities = [];
+      if (country) {
+        this.loadDepartments(country.countryCode);
+      } else {
+        this.filteredDepartments = [];
+        this.enterpriseForm.get('department')?.setValue(null);
+        this.filteredCities = [];
+      }
     });
 
     // Department → Cities
     this.enterpriseForm
       .get('department')
       ?.valueChanges.subscribe((department) => {
-        this.filteredCities = department
-          ? this.city.filter((c) => c.departmentId === department.id)
-          : [];
-
-        this.enterpriseForm.get('city')?.setValue(null);
+        if (department) {
+          this.loadCities(department.stateCode);
+        } else {
+          this.filteredCities = [];
+          this.enterpriseForm.get('city')?.setValue(null);
+        }
       });
+  }
+
+  private loadDepartments(countryCode: string): void {
+    this.addressService.getDepartmentsByCountry(countryCode).subscribe({
+      next: (data: Department[]) => {
+        this.loadedDepartments = data;
+        this.filteredDepartments = data.map(d => ({ id: d.stateCode, name: d.stateName, ...d }));
+        this.enterpriseForm.get('department')?.setValue(null);
+        this.filteredCities = [];
+      },
+      error: (err) => {
+        console.error('Error loading departments:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los departamentos.',
+        });
+      },
+    });
+  }
+
+  private loadCities(departmentCode: string): void {
+    this.addressService.getCitiesByDepartment(departmentCode).subscribe({
+      next: (data: any) => {
+        // Assuming CitiesbyDepartmentResponse has cities: City[]
+        this.loadedCities = data.cities || [];
+        this.filteredCities = this.loadedCities.map(c => ({ id: c.cityCode, name: c.cityName, ...c }));
+        this.enterpriseForm.get('city')?.setValue(null);
+      },
+      error: (err) => {
+        console.error('Error loading cities:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las ciudades.',
+        });
+      },
+    });
   }
 
   /* ==================== CARGAR MATERIAS ==================== */

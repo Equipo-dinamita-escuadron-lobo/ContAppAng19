@@ -1,4 +1,3 @@
-import { Department } from './../../ThirdParties/models/Department';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
@@ -53,7 +52,7 @@ export class EnterpriseService {
     return this.localStorageMethods.loadEnterpriseData();
   }
 
-  /** ==================== CRUD ==================== */
+  /** ==================== PUT EMPRESAS  ==================== */
   createEnterprise(
     enterprise: EnterpriseDetails,
   ): Observable<EnterpriseDetails> {
@@ -100,11 +99,6 @@ export class EnterpriseService {
     return this.http.post<void>(`${this.apiUrl}share`, payload);
   }
 
-  /** ==================== Departamentos ==================== */
-  // getDepartaments(): Observable<DepartmentList[]> {
-  //   return this.http.get<DepartmentList[]>(this.apiUrl);
-  // }
-
   uploadEnterprisePdf(formData: FormData): Observable<any> {
     return this.http.post(`${this.apiUrl}create-from-pdf`, formData);
   }
@@ -117,4 +111,7 @@ export class EnterpriseService {
 
 
   }
+
+
+
 }
