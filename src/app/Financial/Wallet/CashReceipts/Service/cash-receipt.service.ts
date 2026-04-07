@@ -141,7 +141,8 @@ export class CashReceiptService {
    * @returns Un Observable con un array de facturas pendientes.
    */
   getInvoicesByClient(clientId: number): Observable<Invoice[]> {
-    const url = `${this.apiUrl}/invoices/status/by-client/${clientId}/PENDING`;
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    const url = `${this.apiUrl}/invoices/status/by-client/${clientId}/PENDING/${enterpriseId}`;
     return this.http.get<ApiResponse<Invoice[]>>(url).pipe(
       map(response => {
         if (response.code === 'NO_CONTENT') {
