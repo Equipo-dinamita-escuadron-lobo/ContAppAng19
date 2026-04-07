@@ -8,11 +8,12 @@ import {
 } from '../../../Shared/Methods/local-storage.method';
 import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
+import { DialogModule } from 'primeng/dialog';
 
 @Component({
   selector: 'app-view-enterprise',
   standalone: true,
-  imports: [CommonModule, ButtonModule],
+  imports: [CommonModule, ButtonModule, DialogModule],
   templateUrl: './view-enterprise.component.html',
   styleUrl: './view-enterprise.component.css',
 })
@@ -20,16 +21,40 @@ export class ViewEnterpriseComponent implements OnInit {
   entData: EntData | null = null;
   enterpriseData: EnterpriseDetails | null = null;
   loading: boolean = false;
+  showSuccessModal: boolean = false;
 
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
 
+  // Controla la visibilidad del modal
+  showCompleteModal: boolean = false;
+
+  // (Opcional - futuro) controla si la empresa está completa
+  // Por ahora lo dejamos en false para que siempre se muestre el mensaje
+  enterpriseCompleta: boolean = false;
+
+  // (Opcional - futuro) porcentaje dinámico
+  completionPercentage: number = 0;
+
+  // valor objetivo (lo puedes cambiar luego dinámicamente)
+  targetPercentage: number = 80;
+
+  // valores del círculo
+  radius: number = 45;
+  circumference: number = 2 * Math.PI * this.radius;
+
+  // offset dinámico (esto mueve el borde)
+  strokeDashoffset: number = this.circumference;
   constructor(
     private router: Router,
-    private enterpriseService: EnterpriseService
+    private enterpriseService: EnterpriseService,
   ) {}
 
   ngOnInit(): void {
     this.loadEnterpriseData();
+    // 🔥 iniciar animación
+    setTimeout(() => {
+      this.animateProgress();
+    }, 500);
   }
 
   loadEnterpriseData(): void {
@@ -99,7 +124,7 @@ export class ViewEnterpriseComponent implements OnInit {
       return 'No disponible';
     return this.enterpriseData.taxLiabilities
       .map((liability: any) =>
-        typeof liability === 'object' ? liability.name : liability
+        typeof liability === 'object' ? liability.name : liability,
       )
       .join(', ');
   }
@@ -126,5 +151,61 @@ export class ViewEnterpriseComponent implements OnInit {
       default:
         return 'No disponible';
     }
+  }
+
+  // ==================== MÉTODOS PARA MODAL COMPLETAR EMPRESA ====
+
+  // Abrir modal
+  openCompleteModal(): void {
+    this.showCompleteModal = true;
+  }
+
+  // Cerrar modal
+  closeCompleteModal(): void {
+    this.showCompleteModal = false;
+  }
+
+  // Ir a crear impuestos
+  goToCreateTaxes(): void {
+    this.showSuccessModal = false;
+    this.router.navigate(['/gen-masters/taxes/create']);
+  }
+
+  // Ir a crear materias (pendiente conectar ruta real)
+  goToCreateSubjects(): void {
+    this.router.navigate(['/subjects/list']);
+    this.showSuccessModal = false;
+  }
+
+  // Completar empresa
+  completeEnterprise(): void {
+    this.closeCompleteModal();
+    this.goToEdit();
+  }
+
+  // ==================== ANIMACIÓN PROGRESO ====================
+  animateProgress(): void {
+    const duration = 1200; // duración total (ms)
+    const steps = 60; // suavidad
+    const increment = this.targetPercentage / steps;
+    const intervalTime = duration / steps;
+
+    let current = 0;
+
+    const interval = setInterval(() => {
+      current += increment;
+
+      if (current >= this.targetPercentage) {
+        current = this.targetPercentage;
+        clearInterval(interval);
+      }
+
+      // actualizar porcentaje (texto)
+      this.completionPercentage = Math.round(current);
+
+      // calcular offset del círculo
+      const progressRatio = current / 100;
+      this.strokeDashoffset = this.circumference * (1 - progressRatio);
+    }, intervalTime);
   }
 }

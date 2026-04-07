@@ -632,10 +632,8 @@ private exportInterval: any;
 
   onConfigureTaxes(): void {
     this.showSuccessModal = false;
-    this.router.navigate(['/enterprise/list']);
+    this.router.navigate(['/gen-masters/taxes/create']);
     // Aquí después podrás redirigir al módulo de impuestos
-    // Ejemplo futuro:
-    // this.router.navigate(['/ruta-impuestos']);
   }
 
   onDoItLater(): void {

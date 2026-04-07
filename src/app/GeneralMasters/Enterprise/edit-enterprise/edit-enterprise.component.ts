@@ -265,7 +265,7 @@ export class EditEnterpriseComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/enterprise/list']);
+    this.router.navigate(['/home']);
   }
 
   validateNumberInput(event: KeyboardEvent, maxLength: number): void {
