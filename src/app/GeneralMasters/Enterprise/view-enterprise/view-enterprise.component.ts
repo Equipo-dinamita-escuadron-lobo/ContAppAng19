@@ -22,6 +22,8 @@ export class ViewEnterpriseComponent implements OnInit {
   enterpriseData: EnterpriseDetails | null = null;
   loading: boolean = false;
   showSuccessModal: boolean = false;
+  showArchiveConfirm: boolean = false;
+  showArchiveSuccessModal: boolean = false;
 
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
 
@@ -44,6 +46,7 @@ export class ViewEnterpriseComponent implements OnInit {
 
   // offset dinámico (esto mueve el borde)
   strokeDashoffset: number = this.circumference;
+  
   constructor(
     private router: Router,
     private enterpriseService: EnterpriseService,
@@ -173,8 +176,36 @@ export class ViewEnterpriseComponent implements OnInit {
 
   // Ir a crear materias (pendiente conectar ruta real)
   goToCreateSubjects(): void {
-    this.router.navigate(['/subjects/list']);
     this.showSuccessModal = false;
+    this.router.navigate(['/gen-masters/subjects/list']);
+  }
+
+  openArchiveConfirmation(): void {
+    this.showArchiveConfirm = true;
+  }
+
+  cancelArchive(): void {
+    this.showArchiveConfirm = false;
+  }
+
+  confirmArchive(): void {
+    const enterpriseId = this.entData?.id;
+    if (!enterpriseId) return;
+
+    this.enterpriseService.archiveEnterprise(enterpriseId).subscribe({
+      next: () => {
+        this.showArchiveConfirm = false;
+        this.showArchiveSuccessModal = true;
+      },
+      error: (error) => {
+        console.error('Error al archivar la empresa:', error);
+        this.showArchiveConfirm = false;
+      },
+    });
+  }
+
+  closeArchiveSuccess(): void {
+    this.showArchiveSuccessModal = false;
   }
 
   // Completar empresa

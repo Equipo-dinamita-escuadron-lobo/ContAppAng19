@@ -342,12 +342,66 @@
             label="Archivar"
             icon="pi pi-archive"
             class="flex-1 text-gray-600 h-12"
+            (click)="openArchiveConfirmation()"
           ></p-button>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Modal Confirmar Archivar Empresa -->
+<p-dialog
+  header="Confirmar archivo"
+  [(visible)]="showArchiveConfirm"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col items-center gap-4 p-4 text-center">
+    <i class="pi pi-archive text-6xl text-yellow-500"></i>
+    <p>
+      ¿Estás seguro de que deseas archivar la empresa
+      <strong>{{ enterpriseData?.name }}</strong>?
+    </p>
+    <div class="flex gap-3 mt-4">
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-secondary"
+        (click)="cancelArchive()"
+      ></p-button>
+      <p-button
+        label="Archivar"
+        icon="pi pi-check"
+        class="p-button-warning"
+        (click)="confirmArchive()"
+      ></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Modal Empresa Inactivada -->
+<p-dialog
+  header="Empresa inactivada"
+  [(visible)]="showArchiveSuccessModal"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col items-center gap-4 p-4 text-center">
+    <i class="pi pi-check-circle text-6xl text-green-500"></i>
+    <p>La empresa fue inactivada correctamente.</p>
+    <p-button
+      label="Aceptar"
+      icon="pi pi-check"
+      class="p-button-success"
+      (click)="closeArchiveSuccess()"
+    ></p-button>
+  </div>
+</p-dialog>
 
 <!-- MODAL COMPLETAR INFORMACIÓN -->
 <p-dialog

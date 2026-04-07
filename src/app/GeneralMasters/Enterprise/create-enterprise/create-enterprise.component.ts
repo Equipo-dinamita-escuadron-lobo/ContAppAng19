@@ -52,9 +52,9 @@ export class CreateEnterpriseComponent implements OnInit {
   loading: boolean = false;
   activeIndex: number = 0;
   showSuccessModal: boolean = false;
-showExportLoadingModal: boolean = false;
-exportProgress: number = 0;
-private exportInterval: any;
+  showExportLoadingModal: boolean = false;
+  exportProgress: number = 0;
+  private exportInterval: any;
 
   // Opciones para los dropdowns
   enterpriseTypes = [
@@ -274,22 +274,22 @@ private exportInterval: any;
 
     this.enterpriseService.createEnterprise(enterpriseDetailsApi).subscribe({
       next: () => {
-  const MIN_TIME = 2000; // 2 segundos
-  const startTime = Date.now();
+        const MIN_TIME = 2000; // 2 segundos
+        const startTime = Date.now();
 
-  const finish = () => {
-    this.loading = false;
-    this.showSuccessModal = true;
-  };
+        const finish = () => {
+          this.loading = false;
+          this.showSuccessModal = true;
+        };
 
-  const elapsed = Date.now() - startTime;
+        const elapsed = Date.now() - startTime;
 
-  if (elapsed < MIN_TIME) {
-    setTimeout(finish, MIN_TIME - elapsed);
-  } else {
-    finish();
-  }
-},
+        if (elapsed < MIN_TIME) {
+          setTimeout(finish, MIN_TIME - elapsed);
+        } else {
+          finish();
+        }
+      },
       error: (err) => {
         console.error('Error al crear empresa:', err);
         this.loading = false;
@@ -625,15 +625,12 @@ private exportInterval: any;
 
   onConfigureSubjects(): void {
     this.showSuccessModal = false;
-    // Aquí después podrás redirigir al módulo de materias
-    // Ejemplo futuro:
-    // this.router.navigate(['/ruta-materias']);
+    this.router.navigate(['/gen-masters/subjects/list']);
   }
 
   onConfigureTaxes(): void {
     this.showSuccessModal = false;
     this.router.navigate(['/gen-masters/taxes/create']);
-    // Aquí después podrás redirigir al módulo de impuestos
   }
 
   onDoItLater(): void {
@@ -645,24 +642,24 @@ private exportInterval: any;
 
   /* ====================  MODAL DE EXPORTACIÓN ==================== */
   onExport(): void {
-  this.showExportLoadingModal = true;
-  this.exportProgress = 0;
+    this.showExportLoadingModal = true;
+    this.exportProgress = 0;
 
-  const totalDuration = 4000; // 4 segundos
-  const intervalTime = 100;   // actualiza cada 100 ms
-  const increment = 100 / (totalDuration / intervalTime);
+    const totalDuration = 4000; // 4 segundos
+    const intervalTime = 100; // actualiza cada 100 ms
+    const increment = 100 / (totalDuration / intervalTime);
 
-  this.exportInterval = setInterval(() => {
-    this.exportProgress += increment;
+    this.exportInterval = setInterval(() => {
+      this.exportProgress += increment;
 
-    if (this.exportProgress >= 100) {
-      this.exportProgress = 100;
-      clearInterval(this.exportInterval);
+      if (this.exportProgress >= 100) {
+        this.exportProgress = 100;
+        clearInterval(this.exportInterval);
 
-      setTimeout(() => {
-        this.showExportLoadingModal = false;
-      }, 150);
-    }
-  }, intervalTime);
-}
+        setTimeout(() => {
+          this.showExportLoadingModal = false;
+        }, 150);
+      }
+    }, intervalTime);
+  }
 }

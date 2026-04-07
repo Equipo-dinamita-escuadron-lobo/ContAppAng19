@@ -13,7 +13,7 @@ interface MenuOption {
   selector: 'app-menu',
   imports: [CommonModule],
   templateUrl: './menu.component.html',
-  styleUrl: './menu.component.css'
+  styleUrls: ['./menu.component.css']
 })
 export class MenuComponent {
 
@@ -23,6 +23,12 @@ export class MenuComponent {
       icon: 'account_balance_wallet',
       route: '/gen-masters/account-catalogue',
       description: 'Gestión del plan de cuentas contables'
+    },
+    {
+      title: 'Materias',
+      icon: 'menu_book',
+      route: '/gen-masters/subjects/list',
+      description: 'Gestión de materias académicas'
     },
     {
       title: 'Impuestos',

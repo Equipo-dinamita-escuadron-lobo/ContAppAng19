@@ -7,7 +7,6 @@ import { ResetPasswordComponent } from './Core/auth/reset-password/reset-passwor
 import { ListEnterpriseComponent } from './GeneralMasters/Enterprise/list-enterprise/list-enterprise.component';
 import { EditEnterpriseComponent } from './GeneralMasters/Enterprise/edit-enterprise/edit-enterprise.component';
 import { CreateEnterpriseComponent } from './GeneralMasters/Enterprise/create-enterprise/create-enterprise.component';
-import { ListSubjectsComponent } from './GeneralMasters/Subjects/list-subjects/list-subjects.component';
 import { ArchiveEnterpriseComponent } from './GeneralMasters/Enterprise/archive-enterprise/archive-enterprise.component';
 import { hasRoleChildGuard, hasRoleGuard } from './Core/Guards/has-role.guard';
 import { MainTemplateComponent } from './Core/Components/MainTemplate/main-template.component';
@@ -272,6 +271,49 @@ export const routes: Routes = [
               import(
                 './GeneralMasters/Components/MenuCards/menu.component'
               ).then((m) => m.MenuComponent),
+          },
+          {
+            path: 'subjects',
+            data: {
+              breadcrumb: 'Materias',
+            },
+            children: [
+              {
+                path: '',
+                redirectTo: 'list',
+                pathMatch: 'full',
+              },
+              {
+                path: 'list',
+                data: {
+                  breadcrumb: null,
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/Subjects/list-subjects/list-subjects.component'
+                  ).then((m) => m.ListSubjectsComponent),
+              },
+              {
+                path: 'create',
+                data: {
+                  breadcrumb: 'Crear Materia',
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/Subjects/create-subjects/create-subjects.component'
+                  ).then((m) => m.CreateSubjectsComponent),
+              },
+              {
+                path: 'edit/:code',
+                data: {
+                  breadcrumb: 'Editar Materia',
+                },
+                loadComponent: () =>
+                  import(
+                    './GeneralMasters/Subjects/edit-subjects/edit-subjects.component'
+                  ).then((m) => m.EditSubjectsComponent),
+              },
+            ],
           },
           {
             path: 'account-catalogue',
