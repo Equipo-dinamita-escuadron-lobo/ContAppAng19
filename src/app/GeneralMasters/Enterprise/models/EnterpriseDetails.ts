@@ -5,7 +5,7 @@ export interface EnterpriseDetails{
     phone: string;
     branch: string;
     email: string;
-    logo: string;
+    logo?: string | null;
     /* Descomentar cuando este implementado
     taxLiabilities: TaxLiability[];
     taxPayerType: TaxPayerType;

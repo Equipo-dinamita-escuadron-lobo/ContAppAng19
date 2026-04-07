@@ -86,6 +86,9 @@ export class CreateEnterpriseComponent implements OnInit {
   loadedDepartments: Department[] = [];
   loadedCities: City[] = [];
 
+  previousCountryId: number | string | null = null;
+  previousDepartmentId: number | string | null = null;
+
   inventoryMethods = [
     { value: 'PEPS', label: 'PEPS (Primero en Entrar, Primero en Salir)' },
     { value: 'WEIGHTED_AVERAGE', label: 'Promedio Ponderado' },
@@ -110,7 +113,7 @@ export class CreateEnterpriseComponent implements OnInit {
     this.enterpriseForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       enterpriseType: [null, Validators.required],
-      taxLiabilities: [[], Validators.required],
+      taxLiabilities: [[]],
       legalName: ['', [Validators.required, Validators.minLength(5)]],
       ownerName: ['', [Validators.minLength(2)]],
       lastNames: ['', [Validators.minLength(2)]],
@@ -122,8 +125,8 @@ export class CreateEnterpriseComponent implements OnInit {
       country: [null],
       department: [null, Validators.required],
       city: [null, Validators.required],
-      subject: [null, Validators.required],
-      semester: [null, Validators.required],
+      subject: [null],
+      semester: [null],
       address: ['', [Validators.required, Validators.minLength(10)]],
       phone: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
       email: ['', [Validators.required, Validators.email]],
@@ -180,11 +183,11 @@ export class CreateEnterpriseComponent implements OnInit {
 
   // Envío del formulario
   onSubmit(): void {
-    if (!this.enterpriseForm.valid || !this.selectedFile) {
+    if (!this.enterpriseForm.valid) {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Faltan campos por llenar o el logo no fue seleccionado',
+        detail: 'Faltan campos por llenar',
       });
       return;
     }
@@ -192,90 +195,98 @@ export class CreateEnterpriseComponent implements OnInit {
     this.loading = true;
     const f = this.enterpriseForm.value;
 
-    this.enterpriseService.uploadLogo(this.selectedFile).subscribe({
-      next: (res) => {
-        const enterpriseDetailsApi = {
-          name: f.name,
-          nit: f.nit,
-          dv: f.dv,
-          phone: '+57 ' + f.phone,
-          branch: f.hasBranches
-            ? 'Comercio al por mayor'
-            : 'Comercio minorista',
-          email: f.email,
-
-          // AQUÍ ya existe res
-          logo: res.url,
-
-          mainActivity: parseInt(f.mainActivity, 10),
-          secondaryActivity: f.secondaryActivity
-            ? parseInt(f.secondaryActivity, 10)
-            : undefined,
-
-          taxLiabilities: f.taxLiabilities.map((t: any) => t.id ?? t),
-          state: 'ACTIVE',
-          taxPayerType: f.taxPayerType.id ?? f.taxPayerType,
-          inventoryConfigurationType:
-            f.inventoryConfigurationType.value || f.inventoryConfigurationType,
-          enterpriseType: f.enterpriseType.id ?? f.enterpriseType,
-
-          personType:
-            this.personType === 'juridica'
-              ? {
-                  type: 'JURIDICA',
-                  name: null,
-                  surname: null,
-                  bussinessName: f.legalName,
-                }
-              : {
-                  type: 'NATURAL',
-                  name: f.ownerName,
-                  surname: f.lastNames,
-                  bussinessName: null,
-                },
-
-          location: {
-            address: f.address,
-            city: f.city,
-            department: f.department,
-            country: f.country,
-          },
-
-          subjects: f.subject
-            ? [{ name: f.subject.name, code: f.subject.code }]
-            : undefined,
-
-          semester: f.semester,
-        };
-
-        this.enterpriseService
-          .createEnterprise(enterpriseDetailsApi)
-          .subscribe({
-            next: () => {
-              this.loading = false;
-              this.router.navigate(['/enterprise/list']);
-            },
-            error: (err) => {
-              console.error('Error al crear empresa:', err);
-              this.loading = false;
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'No se pudo crear la empresa.',
-              });
-            },
+    // Si hay logo, subir primero; si no, enviar directamente
+    if (this.selectedFile) {
+      this.enterpriseService.uploadLogo(this.selectedFile).subscribe({
+        next: (res) => {
+          this.createEnterpriseWithLogo(f, res.url);
+        },
+        error: (err) => {
+          console.error('Error al subir logo:', err);
+          this.loading = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo subir el logo.',
           });
+        },
+      });
+    } else {
+      this.createEnterpriseWithLogo(f, null);
+    }
+  }
+
+  private createEnterpriseWithLogo(f: any, logoUrl: string | null): void {
+    const enterpriseDetailsApi = {
+      name: f.name,
+      nit: f.nit,
+      dv: f.dv,
+      phone: '+57 ' + f.phone,
+      branch: f.hasBranches
+        ? 'Comercio al por mayor'
+        : 'Comercio minorista',
+      email: f.email,
+
+      logo: logoUrl || null,
+
+      mainActivity: parseInt(f.mainActivity, 10),
+      secondaryActivity: f.secondaryActivity
+        ? parseInt(f.secondaryActivity, 10)
+        : undefined,
+
+      taxLiabilities: f.taxLiabilities.map((t: any) => t.id ?? t),
+      state: 'ACTIVE',
+      taxPayerType: f.taxPayerType.id ?? f.taxPayerType,
+      inventoryConfigurationType:
+        f.inventoryConfigurationType?.value || f.inventoryConfigurationType,
+      enterpriseType: f.enterpriseType.id ?? f.enterpriseType,
+
+      personType:
+        this.personType === 'juridica'
+          ? {
+              type: 'JURIDICA',
+              name: null,
+              surname: null,
+              bussinessName: f.legalName,
+            }
+          : {
+              type: 'NATURAL',
+              name: f.ownerName,
+              surname: f.lastNames,
+              bussinessName: null,
+            },
+
+      location: {
+        address: f.address,
+        city: f.city,
+        department: f.department,
+        country: f.country,
       },
-      error: (err) => {
-        console.error('Error al subir logo:', err);
-        this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo subir el logo.',
-        });
-      },
-    });
+
+      subjects: f.subject
+        ? [{ name: f.subject.name, code: f.subject.code }]
+        : undefined,
+
+      semester: f.semester,
+    };
+
+    this.enterpriseService
+      .createEnterprise(enterpriseDetailsApi)
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.router.navigate(['/enterprise/list']);
+        },
+        error: (err) => {
+          console.error('Error al crear empresa:', err);
+          this.loading = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo crear la empresa.',
+          });
+        },
+      });
   }
 
   // Navegación de regreso a la lista de empresas
@@ -352,7 +363,13 @@ export class CreateEnterpriseComponent implements OnInit {
     }
 
     if (this.activeIndex < 2) {
-      this.activeIndex++;
+      if (this.activeIndex === 0) {
+        // Saliendo de paso 0, ir a paso 1
+        this.activeIndex++;
+      } else if (this.activeIndex === 1) {
+        // Saliendo de paso 1, ir a paso 2
+        this.activeIndex++;
+      }
     }
   }
 
@@ -360,6 +377,10 @@ export class CreateEnterpriseComponent implements OnInit {
   prevStep(): void {
     if (this.activeIndex > 0) {
       this.activeIndex--;
+      if (this.activeIndex === 1) {
+        // Regresando a paso 1, refrescar opciones
+        this.refreshLocationOptions();
+      }
     }
   }
 
@@ -397,10 +418,12 @@ export class CreateEnterpriseComponent implements OnInit {
       next: (data: Country[]) => {
         this.loadedCountries = data;
         this.countries = data.map((c) => ({
-          id: c.countryCode ?? (c as any).id ?? (c as any).code,
+          id: Number(c.countryCode ?? (c as any).id ?? (c as any).code),
           name: c.countryName ?? (c as any).name,
           ...c,
         }));
+        this.previousCountryId = null;
+        this.previousDepartmentId = null;
         this.initLocationFilters();
       },
       error: (err) => {
@@ -417,12 +440,25 @@ export class CreateEnterpriseComponent implements OnInit {
   private initLocationFilters(): void {
     // Country → Departments
     this.enterpriseForm.get('country')?.valueChanges.subscribe((countryId) => {
-      if (countryId) {
-        this.loadDepartments(countryId);
+      if (countryId !== null && countryId !== undefined && countryId !== '') {
+        // Si es la primera selección o el país cambió
+        if (
+          this.previousCountryId === null ||
+          this.previousCountryId !== countryId
+        ) {
+          this.loadDepartments(Number(countryId), true);
+        } else {
+          // El país es el mismo, solo recargar opciones sin resetear
+          this.loadDepartments(Number(countryId), false);
+        }
       } else {
         this.filteredDepartments = [];
-        this.enterpriseForm.get('department')?.setValue(null);
+        this.enterpriseForm
+          .get('department')
+          ?.setValue(null, { emitEvent: false });
         this.filteredCities = [];
+        this.previousCountryId = null;
+        this.previousDepartmentId = null;
       }
     });
 
@@ -430,26 +466,70 @@ export class CreateEnterpriseComponent implements OnInit {
     this.enterpriseForm
       .get('department')
       ?.valueChanges.subscribe((departmentId) => {
-        if (departmentId) {
-          this.loadCities(departmentId);
+        if (
+          departmentId !== null &&
+          departmentId !== undefined &&
+          departmentId !== ''
+        ) {
+          // Si es la primera selección o el departamento cambió
+          if (
+            this.previousDepartmentId === null ||
+            this.previousDepartmentId !== departmentId
+          ) {
+            this.loadCities(Number(departmentId), true);
+          } else {
+            // El departamento es el mismo, solo recargar opciones sin resetear
+            this.loadCities(Number(departmentId), false);
+          }
         } else {
           this.filteredCities = [];
-          this.enterpriseForm.get('city')?.setValue(null);
+          this.enterpriseForm.get('city')?.setValue(null, { emitEvent: false });
+          this.previousDepartmentId = null;
         }
       });
   }
 
-  private loadDepartments(countryCode: string): void {
+  private refreshLocationOptions(): void {
+    const countryId = this.enterpriseForm.get('country')?.value;
+    const departmentId = this.enterpriseForm.get('department')?.value;
+
+    if (countryId !== null && countryId !== undefined && countryId !== '') {
+      this.loadDepartments(Number(countryId), false);
+    }
+
+    if (
+      departmentId !== null &&
+      departmentId !== undefined &&
+      departmentId !== ''
+    ) {
+      this.loadCities(Number(departmentId), false);
+    }
+  }
+
+  private loadDepartments(
+    countryCode: number | string,
+    resetDepartment = true,
+  ): void {
     this.addressService.getDepartmentsByCountry(countryCode).subscribe({
       next: (data: Department[]) => {
         this.loadedDepartments = data;
         this.filteredDepartments = data.map((d) => ({
-          id: d.stateCode ?? (d as any).id ?? (d as any).code,
+          id: Number(d.stateCode ?? (d as any).id ?? (d as any).code),
           name: d.stateName ?? (d as any).name,
           ...d,
         }));
-        this.enterpriseForm.get('department')?.setValue(null);
-        this.filteredCities = [];
+
+        // Solo resetear si el país cambió realmente
+        if (resetDepartment && this.previousCountryId !== countryCode) {
+          this.previousCountryId = countryCode;
+          this.enterpriseForm
+            .get('department')
+            ?.setValue(null, { emitEvent: false });
+          this.previousDepartmentId = null;
+          this.filteredCities = [];
+        } else if (this.previousCountryId === null) {
+          this.previousCountryId = countryCode;
+        }
       },
       error: (err) => {
         console.error('Error loading departments:', err);
@@ -462,17 +542,27 @@ export class CreateEnterpriseComponent implements OnInit {
     });
   }
 
-  private loadCities(departmentCode: string): void {
+  private loadCities(departmentCode: number | string, resetCity = true): void {
     this.addressService.getCitiesByDepartment(departmentCode).subscribe({
       next: (data: any) => {
-        // Assuming CitiesbyDepartmentResponse has cities: City[]
-        this.loadedCities = data.cities || [];
+        const citiesArray: City[] = Array.isArray(data)
+          ? data
+          : data?.cities || data?.content || [];
+
+        this.loadedCities = citiesArray;
         this.filteredCities = this.loadedCities.map((c) => ({
-          id: c.cityCode ?? (c as any).id ?? (c as any).code,
+          id: Number(c.cityCode ?? (c as any).id ?? (c as any).code),
           name: c.cityName ?? (c as any).name,
           ...c,
         }));
-        this.enterpriseForm.get('city')?.setValue(null);
+
+        // Solo resetear si el departamento cambió realmente
+        if (resetCity && this.previousDepartmentId !== departmentCode) {
+          this.previousDepartmentId = departmentCode;
+          this.enterpriseForm.get('city')?.setValue(null, { emitEvent: false });
+        } else if (this.previousDepartmentId === null) {
+          this.previousDepartmentId = departmentCode;
+        }
       },
       error: (err) => {
         console.error('Error loading cities:', err);

@@ -22,7 +22,7 @@ export class AddressService {
   }
 
   /** ==================== GET DEPARTAMENTOS ==================== */
-  getDepartmentsByCountry(idCountry: string): Observable<Department[]> {
+  getDepartmentsByCountry(idCountry: number | string): Observable<Department[]> {
     return this.http.get<Department[]>(
       `${this.apiUrl}countries/${idCountry}/departments`
     );
@@ -30,7 +30,7 @@ export class AddressService {
 
   /** ==================== GET CIUDADES ==================== */
   getCitiesByDepartment(
-    idDepartment: string
+    idDepartment: number | string
   ): Observable<CitiesbyDepartmentResponse> {
     return this.http.get<CitiesbyDepartmentResponse>(
       `${this.apiUrl}departments/${idDepartment}/cities`
