@@ -598,3 +598,205 @@
 
 <!-- Notificación de error -->
 <p-toast></p-toast>
+
+
+<!-- Overlay de carga -->
+<div
+  *ngIf="loading"
+  class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-fadein"
+>
+  <div
+    class="relative w-[90%] max-w-md overflow-hidden rounded-3xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.25)] border border-slate-200"
+  >
+    <!-- Franja superior decorativa -->
+    <div class="h-2 bg-gradient-to-r from-primary via-blue-500 to-cyan-400"></div>
+
+    <div class="px-8 py-10 flex flex-col items-center text-center">
+      <!-- Loader -->
+      <div class="relative mb-6">
+        <div
+          class="w-20 h-20 rounded-full border-4 border-slate-200 border-t-primary animate-spin"
+        ></div>
+        <div
+          class="absolute inset-0 flex items-center justify-center"
+        >
+          <i class="pi pi-building text-primary text-2xl"></i>
+        </div>
+      </div>
+
+      <h3 class="text-2xl font-bold text-slate-800 mb-2">
+        Creando empresa
+      </h3>
+
+      <p class="text-sm text-slate-500 leading-relaxed max-w-xs">
+        Estamos guardando la información y preparando la configuración inicial.
+      </p>
+
+      <!-- Indicadores visuales -->
+      <div class="flex items-center gap-2 mt-6">
+        <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-primary/70 animate-pulse"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-primary/40 animate-pulse"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de éxito -->
+<div
+  *ngIf="showSuccessModal"
+  class="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/55 backdrop-blur-sm px-4 animate-fadein"
+>
+  <div
+    class="w-full max-w-2xl overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-[0_24px_80px_rgba(0,0,0,0.30)] transform animate-scalein"
+  >
+    <!-- Encabezado decorativo -->
+    <div class="relative overflow-hidden">
+      <div class="h-2 bg-gradient-to-r from-green-500 via-emerald-500 to-primary"></div>
+
+      <div class="px-7 pt-7 pb-5 border-b border-slate-200 bg-slate-50/70">
+        <div class="flex items-start gap-4">
+          <div
+            class="shrink-0 w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center shadow-sm border border-green-200"
+          >
+            <i class="pi pi-check-circle text-3xl text-green-600"></i>
+          </div>
+
+          <div class="flex-1">
+            <h2 class="text-2xl md:text-3xl font-bold text-slate-800 leading-tight">
+              Empresa creada con éxito
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">
+              La empresa ya fue registrada correctamente en el sistema.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido -->
+    <div class="px-7 py-6">
+      <div class="space-y-5">
+        <p class="text-slate-600 leading-relaxed text-[15px]">
+          Aún es necesario completar la configuración inicial para asegurar
+          su correcto funcionamiento dentro de la plataforma.
+        </p>
+
+        <!-- Opciones sugeridas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div
+            class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 hover:shadow-md transition"
+          >
+            <div class="flex items-start gap-3">
+              <div
+                class="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center shrink-0"
+              >
+                <i class="pi pi-percentage text-blue-600 text-lg"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-slate-800">
+                  Configurar impuestos
+                </h3>
+                <p class="text-sm text-slate-500 mt-1 leading-relaxed">
+                  Define la estructura tributaria necesaria para operar con normalidad.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 hover:shadow-md transition"
+          >
+            <div class="flex items-start gap-3">
+              <div
+                class="w-11 h-11 rounded-xl bg-violet-100 flex items-center justify-center shrink-0"
+              >
+                <i class="pi pi-book text-violet-600 text-lg"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-slate-800">
+                  Crear y asignar materias
+                </h3>
+                <p class="text-sm text-slate-500 mt-1 leading-relaxed">
+                  Organiza las materias para dejar lista la configuración académica.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="text-sm text-slate-500 leading-relaxed">
+          También puedes realizar esta configuración más adelante si lo prefieres.
+        </p>
+
+        <!-- Alerta suave -->
+        <div
+          class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4"
+        >
+          <div class="flex items-start gap-3">
+            <div
+              class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0"
+            >
+              <i class="pi pi-info-circle text-amber-600 text-lg"></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-amber-800">
+                Configuración pendiente
+              </p>
+              <p class="text-sm text-amber-700 mt-1 leading-relaxed">
+                Algunas funcionalidades pueden permanecer limitadas hasta completar
+                la configuración inicial de la empresa.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div
+      class="px-7 py-5 border-t border-slate-200 bg-slate-50 flex flex-col md:flex-row md:justify-end gap-3"
+    >
+      <button
+        type="button"
+        (click)="onConfigureSubjects()"
+        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-violet-600 text-white font-medium shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-200"
+      >
+        <i class="pi pi-book"></i>
+        <span>Configurar materias</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="onConfigureTaxes()"
+        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-white font-medium shadow-sm hover:shadow-md hover:scale-[1.01] transition-all duration-200"
+      >
+        <i class="pi pi-percentage"></i>
+        <span>Configurar impuestos</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="onDoItLater()"
+        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-medium hover:bg-slate-100 hover:border-slate-400 transition-all duration-200"
+      >
+        <i class="pi pi-clock"></i>
+        <span>Lo haré más tarde</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay de carga -->
+<div
+  *ngIf="loading"
+  class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
+>
+  <div class="bg-white rounded-2xl shadow-2xl px-8 py-6 flex flex-col items-center gap-4 min-w-[320px]">
+    <div class="w-14 h-14 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
+    <h3 class="text-xl font-bold text-primary">Creando empresa...</h3>
+    <p class="text-sm text-gray-600 text-center">
+      Por favor espera mientras se guarda la información.
+    </p>
+  </div>
+</div>

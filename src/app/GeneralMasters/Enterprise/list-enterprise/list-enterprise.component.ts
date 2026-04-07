@@ -74,6 +74,12 @@ export class ListEnterpriseComponent implements OnInit {
   emailList: string[] = [];
   newEmail: string = '';
 
+  showExportLoadingModal: boolean = false;
+  exportProgress: number = 0;
+  exportEnterpriseName: string = '';
+  private exportTimeout: any;
+  private exportInterval: any;
+
   constructor(
     private enterpriseService: EnterpriseService,
     private router: Router,
@@ -163,7 +169,7 @@ export class ListEnterpriseComponent implements OnInit {
       {
         label: 'Exportar',
         icon: 'pi pi-download',
-        command: () => this.exportEnterprise(this.selectedEnterpriseForMenu!),
+        command: () => this.startExport(this.selectedEnterpriseForMenu!),
       },
       {
         label: 'Compartir',
@@ -575,31 +581,66 @@ export class ListEnterpriseComponent implements OnInit {
   // }
 
   // == ================== EXPORTAR EMPRESA ==================== */
-  exportEnterprise(enterprise: EnterpriseList) {
-    if (!enterprise.id) return;
 
-    // Llamar al nuevo método que retorna el JSON listo para exportar
-    this.enterpriseService.getEnterpriseExportData(String(enterprise.id)).subscribe({
-      next: (data) => {
-        // TODO: Validar estructura si es necesario
-        const jsonString = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${data.name || 'empresa'}.json`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      },
-      error: (err) => {
-        console.error('Error al obtener los datos de la empresa:', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo exportar la empresa.',
-        });
-      },
-    });
+  // exportEnterprise(enterprise: EnterpriseList) {
+  //   if (!enterprise.id) return;
+
+  //   // Llamar al nuevo método que retorna el JSON listo para exportar
+  //   this.enterpriseService
+  //     .getEnterpriseExportData(String(enterprise.id))
+  //     .subscribe({
+  //       next: (data) => {
+  //         // TODO: Validar estructura si es necesario
+  //         const jsonString = JSON.stringify(data, null, 2);
+  //         const blob = new Blob([jsonString], { type: 'application/json' });
+  //         const url = window.URL.createObjectURL(blob);
+  //         const a = document.createElement('a');
+  //         a.href = url;
+  //         a.download = `${data.name || 'empresa'}.json`;
+  //         a.click();
+  //         window.URL.revokeObjectURL(url);
+  //       },
+  //       error: (err) => {
+  //         console.error('Error al obtener los datos de la empresa:', err);
+  //         this.messageService.add({
+  //           severity: 'error',
+  //           summary: 'Error',
+  //           detail: 'No se pudo exportar la empresa.',
+  //         });
+  //       },
+  //     });
+  // }
+
+  exportEnterprise(enterprise: EnterpriseList) {
+    this.exportEnterpriseName = enterprise.name || 'empresa';
+    this.showExportLoadingModal = true;
+    this.exportProgress = 0;
+
+    const totalDuration = 4000; // 4 segundos
+    const intervalTime = 100; // cada 100 ms
+    const increment = 100 / (totalDuration / intervalTime);
+
+    if (this.exportInterval) {
+      clearInterval(this.exportInterval);
+    }
+
+    if (this.exportTimeout) {
+      clearTimeout(this.exportTimeout);
+    }
+
+    this.exportInterval = setInterval(() => {
+      this.exportProgress += increment;
+
+      if (this.exportProgress >= 100) {
+        this.exportProgress = 100;
+        clearInterval(this.exportInterval);
+      }
+    }, intervalTime);
+
+    this.exportTimeout = setTimeout(() => {
+      this.showExportLoadingModal = false;
+      this.exportProgress = 0;
+    }, totalDuration);
   }
 
   onImportEnterprise(): void {
@@ -661,7 +702,10 @@ export class ListEnterpriseComponent implements OnInit {
     input.click();
   }
 
-  /* ==================== LOGO ==================== */
+  /* ==================== exportacion  ==================== */
+  /* ==================== exportacion  ==================== */
+  showExportErrorModal: boolean = false;
+
   onImageError(event: any) {
     console.error('Error loading image:', event);
   }
@@ -672,5 +716,58 @@ export class ListEnterpriseComponent implements OnInit {
       enterprise.name,
       enterprise.logo,
     );
+  }
+
+  startExport(enterprise: EnterpriseList) {
+    this.exportEnterpriseName = enterprise.name || 'empresa';
+    this.exportProgress = 0;
+    this.showExportLoadingModal = true;
+    this.showExportErrorModal = false;
+
+    if (this.exportInterval) {
+      clearInterval(this.exportInterval);
+      this.exportInterval = null;
+    }
+
+    if (this.exportTimeout) {
+      clearTimeout(this.exportTimeout);
+      this.exportTimeout = null;
+    }
+
+    const maxProgress = 20;
+    const totalTime = 4000;
+    const stepTime = 100;
+    const step = maxProgress / (totalTime / stepTime);
+
+    this.exportInterval = setInterval(() => {
+      this.exportProgress += step;
+
+      if (this.exportProgress >= maxProgress) {
+        this.exportProgress = maxProgress;
+
+        clearInterval(this.exportInterval);
+        this.exportInterval = null;
+
+        this.showExportLoadingModal = false;
+        this.showExportErrorModal = true;
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de exportación',
+          detail: 'La exportación se canceló al llegar al 20%.',
+        });
+      }
+    }, stepTime);
+  }
+
+  closeExportErrorModal() {
+    this.showExportErrorModal = false;
+    this.exportProgress = 0;
+    this.exportEnterpriseName = '';
+  }
+
+  retryExport() {
+    this.showExportErrorModal = false;
+    this.exportProgress = 0;
   }
 }

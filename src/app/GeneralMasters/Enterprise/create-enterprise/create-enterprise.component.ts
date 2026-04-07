@@ -51,6 +51,10 @@ export class CreateEnterpriseComponent implements OnInit {
   selectedFile: File | null = null;
   loading: boolean = false;
   activeIndex: number = 0;
+  showSuccessModal: boolean = false;
+showExportLoadingModal: boolean = false;
+exportProgress: number = 0;
+private exportInterval: any;
 
   // Opciones para los dropdowns
   enterpriseTypes = [
@@ -222,9 +226,7 @@ export class CreateEnterpriseComponent implements OnInit {
       nit: f.nit,
       dv: f.dv,
       phone: '+57 ' + f.phone,
-      branch: f.hasBranches
-        ? 'Comercio al por mayor'
-        : 'Comercio minorista',
+      branch: f.hasBranches ? 'Comercio al por mayor' : 'Comercio minorista',
       email: f.email,
 
       logo: logoUrl || null,
@@ -270,23 +272,34 @@ export class CreateEnterpriseComponent implements OnInit {
       semester: f.semester,
     };
 
-    this.enterpriseService
-      .createEnterprise(enterpriseDetailsApi)
-      .subscribe({
-        next: () => {
-          this.loading = false;
-          this.router.navigate(['/enterprise/list']);
-        },
-        error: (err) => {
-          console.error('Error al crear empresa:', err);
-          this.loading = false;
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo crear la empresa.',
-          });
-        },
-      });
+    this.enterpriseService.createEnterprise(enterpriseDetailsApi).subscribe({
+      next: () => {
+  const MIN_TIME = 2000; // 2 segundos
+  const startTime = Date.now();
+
+  const finish = () => {
+    this.loading = false;
+    this.showSuccessModal = true;
+  };
+
+  const elapsed = Date.now() - startTime;
+
+  if (elapsed < MIN_TIME) {
+    setTimeout(finish, MIN_TIME - elapsed);
+  } else {
+    finish();
+  }
+},
+      error: (err) => {
+        console.error('Error al crear empresa:', err);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo crear la empresa.',
+        });
+      },
+    });
   }
 
   // Navegación de regreso a la lista de empresas
@@ -603,4 +616,55 @@ export class CreateEnterpriseComponent implements OnInit {
       this.enterpriseForm.get('subject')?.setValue(null);
     });
   }
+
+  /* ==================== MODAL DE ÉXITO ==================== */
+
+  closeSuccessModal(): void {
+    this.showSuccessModal = false;
+  }
+
+  onConfigureSubjects(): void {
+    this.showSuccessModal = false;
+    // Aquí después podrás redirigir al módulo de materias
+    // Ejemplo futuro:
+    // this.router.navigate(['/ruta-materias']);
+  }
+
+  onConfigureTaxes(): void {
+    this.showSuccessModal = false;
+    this.router.navigate(['/enterprise/list']);
+    // Aquí después podrás redirigir al módulo de impuestos
+    // Ejemplo futuro:
+    // this.router.navigate(['/ruta-impuestos']);
+  }
+
+  onDoItLater(): void {
+    this.showSuccessModal = false;
+    this.router.navigate(['/enterprise/list']); // ← ESTE ES EL PROBLEMA
+    // Si luego quieres, aquí puedes redirigir al listado:
+    // this.router.navigate(['/enterprise/list']);
+  }
+
+  /* ====================  MODAL DE EXPORTACIÓN ==================== */
+  onExport(): void {
+  this.showExportLoadingModal = true;
+  this.exportProgress = 0;
+
+  const totalDuration = 4000; // 4 segundos
+  const intervalTime = 100;   // actualiza cada 100 ms
+  const increment = 100 / (totalDuration / intervalTime);
+
+  this.exportInterval = setInterval(() => {
+    this.exportProgress += increment;
+
+    if (this.exportProgress >= 100) {
+      this.exportProgress = 100;
+      clearInterval(this.exportInterval);
+
+      setTimeout(() => {
+        this.showExportLoadingModal = false;
+      }, 150);
+    }
+  }, intervalTime);
+}
 }
