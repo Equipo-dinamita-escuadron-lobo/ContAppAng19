@@ -236,9 +236,9 @@ export class CreateEnterpriseComponent implements OnInit {
 
           location: {
             address: f.address,
-            city: f.city.id ?? f.city,
-            department: f.department.id ?? f.department,
-            country: f.country.id ?? f.country,
+            city: f.city,
+            department: f.department,
+            country: f.country,
           },
 
           subjects: f.subject
@@ -396,7 +396,11 @@ export class CreateEnterpriseComponent implements OnInit {
     this.addressService.getCountries().subscribe({
       next: (data: Country[]) => {
         this.loadedCountries = data;
-        this.countries = data.map(c => ({ id: c.countryCode, name: c.countryName, ...c }));
+        this.countries = data.map((c) => ({
+          id: c.countryCode ?? (c as any).id ?? (c as any).code,
+          name: c.countryName ?? (c as any).name,
+          ...c,
+        }));
         this.initLocationFilters();
       },
       error: (err) => {
@@ -412,9 +416,9 @@ export class CreateEnterpriseComponent implements OnInit {
 
   private initLocationFilters(): void {
     // Country → Departments
-    this.enterpriseForm.get('country')?.valueChanges.subscribe((country) => {
-      if (country) {
-        this.loadDepartments(country.countryCode);
+    this.enterpriseForm.get('country')?.valueChanges.subscribe((countryId) => {
+      if (countryId) {
+        this.loadDepartments(countryId);
       } else {
         this.filteredDepartments = [];
         this.enterpriseForm.get('department')?.setValue(null);
@@ -425,9 +429,9 @@ export class CreateEnterpriseComponent implements OnInit {
     // Department → Cities
     this.enterpriseForm
       .get('department')
-      ?.valueChanges.subscribe((department) => {
-        if (department) {
-          this.loadCities(department.stateCode);
+      ?.valueChanges.subscribe((departmentId) => {
+        if (departmentId) {
+          this.loadCities(departmentId);
         } else {
           this.filteredCities = [];
           this.enterpriseForm.get('city')?.setValue(null);
@@ -439,7 +443,11 @@ export class CreateEnterpriseComponent implements OnInit {
     this.addressService.getDepartmentsByCountry(countryCode).subscribe({
       next: (data: Department[]) => {
         this.loadedDepartments = data;
-        this.filteredDepartments = data.map(d => ({ id: d.stateCode, name: d.stateName, ...d }));
+        this.filteredDepartments = data.map((d) => ({
+          id: d.stateCode ?? (d as any).id ?? (d as any).code,
+          name: d.stateName ?? (d as any).name,
+          ...d,
+        }));
         this.enterpriseForm.get('department')?.setValue(null);
         this.filteredCities = [];
       },
@@ -459,7 +467,11 @@ export class CreateEnterpriseComponent implements OnInit {
       next: (data: any) => {
         // Assuming CitiesbyDepartmentResponse has cities: City[]
         this.loadedCities = data.cities || [];
-        this.filteredCities = this.loadedCities.map(c => ({ id: c.cityCode, name: c.cityName, ...c }));
+        this.filteredCities = this.loadedCities.map((c) => ({
+          id: c.cityCode ?? (c as any).id ?? (c as any).code,
+          name: c.cityName ?? (c as any).name,
+          ...c,
+        }));
         this.enterpriseForm.get('city')?.setValue(null);
       },
       error: (err) => {
