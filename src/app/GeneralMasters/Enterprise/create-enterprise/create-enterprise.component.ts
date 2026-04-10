@@ -25,7 +25,6 @@ import { AddressService } from '../services/addressService';
 import { Country } from '../../ThirdParties/models/Country';
 import { Department } from '../../ThirdParties/models/Department';
 import { City } from '../../ThirdParties/models/City';
-import { SEMESTERS, SUBJECTS } from '../shared/data/semesters-data';
 
 @Component({
   selector: 'app-create-enterprise',
@@ -75,9 +74,17 @@ export class CreateEnterpriseComponent implements OnInit {
     { id: 2, name: 'No responsable de IVA' },
     { id: 3, name: 'Gran contribuyente' },
   ];
-  semesters = SEMESTERS;
-  subjects = SUBJECTS;
-  subjectsList: any[] = [];
+
+  inventoryMethods = [
+    { name: 'PEPS / FIFO', value: 'FIFO' },
+    { name: 'UEPS / LIFO', value: 'LIFO' },
+    { name: 'Costo Promedio Ponderado', value: 'CPP' },
+    { name: 'Identificación Específica', value: 'SPECIFIC' },
+  ];
+
+  subjects: any[] = [];
+  loadedSubjects: Subject[] = [];
+  previousSubjectId: number | string | null = null;
 
   filteredDepartments: any[] = [];
   filteredCities: any[] = [];
@@ -93,10 +100,6 @@ export class CreateEnterpriseComponent implements OnInit {
   previousCountryId: number | string | null = null;
   previousDepartmentId: number | string | null = null;
 
-  inventoryMethods = [
-    { value: 'PEPS', label: 'PEPS (Primero en Entrar, Primero en Salir)' },
-    { value: 'WEIGHTED_AVERAGE', label: 'Promedio Ponderado' },
-  ];
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -110,7 +113,7 @@ export class CreateEnterpriseComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadCountries();
-    this.initAcademicFilters();
+    this.loadSubjects();
   }
   // Inicialización del formulario reactivo
   initForm(): void {
@@ -129,8 +132,8 @@ export class CreateEnterpriseComponent implements OnInit {
       country: [null],
       department: [null, Validators.required],
       city: [null, Validators.required],
-      subject: [null],
-      semester: [null],
+      subject: [null as number | null],
+      inventoryMethod: [null, Validators.required],
       address: ['', [Validators.required, Validators.minLength(10)]],
       phone: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
       email: ['', [Validators.required, Validators.email]],
@@ -239,8 +242,7 @@ export class CreateEnterpriseComponent implements OnInit {
       taxLiabilities: f.taxLiabilities.map((t: any) => t.id ?? t),
       state: 'ACTIVE',
       taxPayerType: f.taxPayerType.id ?? f.taxPayerType,
-      inventoryConfigurationType:
-        f.inventoryConfigurationType?.value || f.inventoryConfigurationType,
+      inventoryMethods: f.inventoryMethod,
       enterpriseType: f.enterpriseType.id ?? f.enterpriseType,
 
       personType:
@@ -265,11 +267,7 @@ export class CreateEnterpriseComponent implements OnInit {
         country: f.country,
       },
 
-      subjects: f.subject
-        ? [{ name: f.subject.name, code: f.subject.code }]
-        : undefined,
-
-      semester: f.semester,
+      subjects: f.subject ? [f.subject] : [],
     };
 
     this.enterpriseService.createEnterprise(enterpriseDetailsApi).subscribe({
@@ -589,31 +587,19 @@ export class CreateEnterpriseComponent implements OnInit {
   }
 
   /* ==================== CARGAR MATERIAS ==================== */
-  // loadSubjects(): void {
-  //   this.subjectService.getAllSubjects().subscribe({
-  //     next: (data) => {
-  //       this.subjectsList = data;
-  //     },
-  //     error: (err) => {
-  //       console.error('Error al cargar materias:', err);
-  //       this.messageService.add({
-  //         severity: 'error',
-  //         summary: 'Error',
-  //         detail: 'No se pudieron cargar las materias desde el servidor.',
-  //       });
-  //     },
-  //   });
-  // }
-
-  private initAcademicFilters(): void {
-    this.subjectsList = [];
-
-    this.enterpriseForm.get('semester')?.valueChanges.subscribe((semester) => {
-      this.subjectsList = semester
-        ? this.subjects.filter((s) => s.semesterId === semester.id)
-        : [];
-
-      this.enterpriseForm.get('subject')?.setValue(null);
+  private loadSubjects(): void {
+    this.subjectService.getAllSubjects().subscribe({
+      next: (data: Subject[]) => {
+        this.subjects = data;
+      },
+      error: (err) => {
+        console.error('Error loading subjects:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar las materias.',
+        });
+      },
     });
   }
 

@@ -33,54 +33,48 @@
       </p>
     </div>
 
-<!-- 🔵 PROGRESO LIMPIO Y CENTRADO -->
-<div class="flex flex-col items-center justify-center mb-6">
+    <!-- PROGRESO LIMPIO Y CENTRADO -->
+    <div class="flex flex-col items-center justify-center mb-6">
+      <!-- Contenedor fijo -->
+      <div
+        class="relative flex items-center justify-center w-[110px] h-[110px]"
+      >
+        <svg viewBox="0 0 120 120" class="w-full h-full">
+          <!-- Fondo -->
+          <circle
+            cx="60"
+            cy="60"
+            [attr.r]="radius"
+            stroke="#e5e7eb"
+            stroke-width="8"
+            fill="none"
+          />
 
-  <!-- Contenedor fijo -->
-  <div class="relative flex items-center justify-center w-[110px] h-[110px]">
+          <!-- Progreso dinámico -->
+          <circle
+            cx="60"
+            cy="60"
+            [attr.r]="radius"
+            stroke="#1e3a8a"
+            stroke-width="8"
+            fill="none"
+            stroke-linecap="round"
+            [attr.stroke-dasharray]="circumference"
+            [attr.stroke-dashoffset]="strokeDashoffset"
+            class="transition-all duration-300"
+            transform="rotate(-90 60 60)"
+          />
+        </svg>
 
-    <svg viewBox="0 0 120 120" class="w-full h-full">
-
-      <!-- Fondo -->
-      <circle
-        cx="60"
-        cy="60"
-        [attr.r]="radius"
-        stroke="#e5e7eb"
-        stroke-width="8"
-        fill="none"
-      />
-
-      <!-- Progreso dinámico -->
-      <circle
-        cx="60"
-        cy="60"
-        [attr.r]="radius"
-        stroke="#1e3a8a"
-        stroke-width="8"
-        fill="none"
-        stroke-linecap="round"
-        [attr.stroke-dasharray]="circumference"
-        [attr.stroke-dashoffset]="strokeDashoffset"
-        class="transition-all duration-300"
-        transform="rotate(-90 60 60)"
-      />
-
-    </svg>
-
-    <!-- Texto centrado PERFECTO -->
-    <div class="absolute flex flex-col items-center justify-center">
-      <span class="text-xl font-bold text-gray-800 leading-none">
-        {{ completionPercentage }}%
-      </span>
-      <span class="text-[10px] text-gray-500 mt-1">
-        Completado
-      </span>
+        <!-- Texto centrado PERFECTO -->
+        <div class="absolute flex flex-col items-center justify-center">
+          <span class="text-xl font-bold text-gray-800 leading-none">
+            {{ completionPercentage }}%
+          </span>
+          <span class="text-[10px] text-gray-500 mt-1"> Completado </span>
+        </div>
+      </div>
     </div>
-
-  </div>
-
-</div>
 
     <!-- Divider -->
     <div class="border-t border-gray-200 my-4"></div>
@@ -147,15 +141,12 @@
                 enterpriseData?.mainActivity || "No disponible"
               }}</span>
             </div>
-
             <div class="flex flex-col">
               <label class="text-sm font-medium text-gray-600 mb-1"
-                >Razón social:</label
+                >Actividad económica secundaria:</label
               >
-              <!-- <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.legalName || 'No disponible'
-                }}</span> -->
               <span class="text-lg font-semibold text-gray-800">{{
-                getBusinessName()
+                enterpriseData?.secondaryActivity || "No disponible"
               }}</span>
             </div>
           </div>
@@ -199,10 +190,12 @@
 
             <div class="flex flex-col">
               <label class="text-sm font-medium text-gray-600 mb-1"
-                >Actividad económica secundaria:</label
+                >Razón social:</label
               >
+              <!-- <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.legalName || 'No disponible'
+                }}</span> -->
               <span class="text-lg font-semibold text-gray-800">{{
-                enterpriseData?.secondaryActivity || "No disponible"
+                getBusinessName()
               }}</span>
             </div>
           </div>
@@ -285,6 +278,15 @@
                 enterpriseData?.email || "No disponible"
               }}</span>
             </div>
+
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1"
+                >Materia:</label
+              >
+              <span class="text-lg font-semibold text-gray-800">
+                {{ getSubjectData() }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -349,38 +351,6 @@
     </div>
   </div>
 </div>
-
-<!-- Modal Confirmar Archivar Empresa -->
-<p-dialog
-  header="Confirmar archivo"
-  [(visible)]="showArchiveConfirm"
-  [modal]="true"
-  [closable]="false"
-  [draggable]="false"
-  [resizable]="false"
->
-  <div class="flex flex-col items-center gap-4 p-4 text-center">
-    <i class="pi pi-archive text-6xl text-yellow-500"></i>
-    <p>
-      ¿Estás seguro de que deseas archivar la empresa
-      <strong>{{ enterpriseData?.name }}</strong>?
-    </p>
-    <div class="flex gap-3 mt-4">
-      <p-button
-        label="Cancelar"
-        icon="pi pi-times"
-        class="p-button-secondary"
-        (click)="cancelArchive()"
-      ></p-button>
-      <p-button
-        label="Archivar"
-        icon="pi pi-check"
-        class="p-button-warning"
-        (click)="confirmArchive()"
-      ></p-button>
-    </div>
-  </div>
-</p-dialog>
 
 <!-- Modal Empresa Inactivada -->
 <p-dialog
@@ -453,5 +423,38 @@
       <i class="pi pi-pencil text-lg"></i>
       <span class="text-xs font-medium">Empresa</span>
     </button>
+  </div>
+</p-dialog>
+
+<!-- Modal Confirmar Archivar Empresa -->
+<p-dialog
+  header="Confirmar archivo"
+  [(visible)]="showArchiveConfirm"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="flex flex-col items-center gap-4 p-4 text-center">
+    <i class="pi pi-archive text-6xl text-yellow-500"></i>
+    <p>
+      ¿Estás seguro de que deseas archivar la empresa
+      <strong>{{ enterpriseData?.name }}</strong
+      >?
+    </p>
+    <div class="flex gap-3 mt-4">
+      <p-button
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-secondary"
+        (click)="cancelArchive()"
+      ></p-button>
+      <p-button
+        label="Archivar"
+        icon="pi pi-check"
+        class="p-button-warning"
+        (click)="confirmArchive()"
+      ></p-button>
+    </div>
   </div>
 </p-dialog>

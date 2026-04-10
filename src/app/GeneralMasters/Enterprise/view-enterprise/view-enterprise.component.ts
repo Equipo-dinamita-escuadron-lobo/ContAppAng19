@@ -46,7 +46,7 @@ export class ViewEnterpriseComponent implements OnInit {
 
   // offset dinámico (esto mueve el borde)
   strokeDashoffset: number = this.circumference;
-  
+
   constructor(
     private router: Router,
     private enterpriseService: EnterpriseService,
@@ -154,6 +154,25 @@ export class ViewEnterpriseComponent implements OnInit {
       default:
         return 'No disponible';
     }
+  }
+
+  // Materia
+  /**
+   * Tree la materia asociada a la empresa para mostrarla en la vista. Si no hay materia, devuelve "No disponible".
+   * @param field
+   */
+  getSubjectData(): string {
+    if (
+      !this.enterpriseData?.subjects ||
+      this.enterpriseData.subjects.length === 0
+    ) {
+      return 'No disponible';
+    }
+
+    return this.enterpriseData.subjects
+      .map((subject) => subject.name)
+      .filter((name) => !!name)
+      .join(', ');
   }
 
   // ==================== MÉTODOS PARA MODAL COMPLETAR EMPRESA ====
