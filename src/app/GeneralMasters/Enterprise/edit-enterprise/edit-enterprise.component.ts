@@ -16,6 +16,8 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { HeaderComponent } from '../../../Core/Components/Header/header.component';
 import { EnterpriseService } from '../services/enterprise.service';
+import { SubjectService } from '../../Subjects/services/subjects.service';
+import { AddressService } from '../services/addressService';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
 import {
   LocalStorageMethods,
@@ -56,6 +58,18 @@ export class EditEnterpriseComponent implements OnInit {
     { id: 3, name: 'Mixta' },
   ];
 
+  states = [
+    { id: 'ACTIVE', name: 'Activo' },
+    { id: 'INACTIVE', name: 'Inactivo' },
+  ];
+
+  inventoryMethodsOptions = [
+    { name: 'PEPS / FIFO', value: 'FIFO' },
+    { name: 'UEPS / LIFO', value: 'LIFO' },
+    { name: 'Costo Promedio Ponderado', value: 'CPP' },
+    { name: 'Identificación Específica', value: 'SPECIFIC' },
+  ];
+
   taxLiabilities = [
     { id: 1, name: 'Información exógena' },
     { id: 3, name: 'Informante de beneficiarios finales' },
@@ -67,25 +81,11 @@ export class EditEnterpriseComponent implements OnInit {
     { id: 3, name: 'Gran contribuyente' },
   ];
 
-  countries = [
-    { id: 1, name: 'Colombia' },
-    { id: 2, name: 'Estados Unidos' },
-    { id: 3, name: 'España' },
-  ];
+  subjects: any[] = [];
 
-  departments = [
-    { id: 1, name: 'Cauca' },
-    { id: 2, name: 'Valle del Cauca' },
-    { id: 3, name: 'Antioquia' },
-    { id: 4, name: 'Cundinamarca' },
-  ];
-
-  city = [
-    { id: 1, name: 'Popayán', departmentId: 1 },
-    { id: 2, name: 'Cali', departmentId: 2 },
-    { id: 3, name: 'Medellín', departmentId: 3 },
-    { id: 4, name: 'Bogotá', departmentId: 4 },
-  ];
+  countries: any[] = [];
+  departments: any[] = [];
+  cities: any[] = [];
 
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
 
@@ -93,10 +93,14 @@ export class EditEnterpriseComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private enterpriseService: EnterpriseService,
+    private subjectService: SubjectService,
+    private addressService: AddressService,
     private messageService: MessageService
   ) {}
 
   ngOnInit(): void {
+    this.loadSubjects();
+    this.loadCountries();
     this.loadEnterpriseData();
   }
 
@@ -114,6 +118,14 @@ export class EditEnterpriseComponent implements OnInit {
           this.enterpriseData = data;
           this.personType = data.personType?.type?.toLowerCase() || 'juridica';
           this.initForm();
+          const countryId = this.getEntityId(this.enterpriseData?.location?.country);
+          const departmentId = this.getEntityId(this.enterpriseData?.location?.department);
+          if (this.countries.length && countryId) {
+            this.loadDepartmentsByCountry(countryId);
+          }
+          if (this.departments.length && departmentId) {
+            this.loadCitiesByDepartment(departmentId);
+          }
           this.loading = false;
         },
         error: (error) => {
@@ -131,6 +143,7 @@ export class EditEnterpriseComponent implements OnInit {
     this.enterpriseForm = this.fb.group({
       name: [this.enterpriseData?.name || '', Validators.required],
       enterpriseType: [this.enterpriseData?.enterpriseType || null],
+      state: [this.enterpriseData?.state || 'ACTIVE'],
       taxLiabilities: [this.enterpriseData?.taxLiabilities || []],
       legalName: [this.enterpriseData?.personType?.bussinessName || ''],
       ownerName: [this.enterpriseData?.personType?.name || ''],
@@ -140,13 +153,17 @@ export class EditEnterpriseComponent implements OnInit {
       taxPayerType: [this.enterpriseData?.taxPayerType || null],
       mainActivity: [this.enterpriseData?.mainActivity || ''],
       secondaryActivity: [this.enterpriseData?.secondaryActivity || ''],
-      country: [this.enterpriseData?.location?.country || null],
-      department: [this.enterpriseData?.location?.department || null],
-      city: [this.enterpriseData?.location?.city || null],
+      inventoryMethods: [this.enterpriseData?.inventoryMethods || null],
+      branch: [this.enterpriseData?.branch || ''],
+      country: [this.getEntityId(this.enterpriseData?.location?.country) || null],
+      department: [this.getEntityId(this.enterpriseData?.location?.department) || null],
+      city: [this.getEntityId(this.enterpriseData?.location?.city) || null],
       address: [this.enterpriseData?.location?.address || ''],
       phone: [this.enterpriseData?.phone?.replace(/^\+57 /, '') || ''],
       email: [this.enterpriseData?.email || ''],
-      hasBranches: [this.enterpriseData?.branch === 'Sí'],
+      subjects: [
+        this.enterpriseData?.subjects?.map((subject) => this.getEntityId(subject.id)) || [],
+      ],
     });
 
     this.updateFormValidations();
@@ -192,52 +209,75 @@ export class EditEnterpriseComponent implements OnInit {
    *  Enviar actualización parcial (PATCH)
    *  ==================================== */
   onSubmit(): void {
-    if (this.enterpriseForm.invalid) {
+    if (this.enterpriseForm.get('name')?.invalid) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Campos requeridos',
-        detail: 'Por favor complete los campos mínimos necesarios.',
+        summary: 'Campo requerido',
+        detail: 'El nombre de la empresa es requerido.',
       });
       return;
     }
-    // Asegurar prefijo +57 en el número antes de enviar
-    const phoneValue = this.enterpriseForm.value.phone.startsWith('+57')
-      ? this.enterpriseForm.value.phone
-      : `+57 ${this.enterpriseForm.value.phone}`;
 
-    // console.log(this.enterpriseForm.value); // Verifica el contenido del formulario
+    const f = this.enterpriseForm.value;
+    const phoneValue = f.phone
+      ? f.phone.startsWith('+57')
+        ? f.phone
+        : `+57 ${f.phone}`
+      : this.enterpriseData?.phone || '';
 
-    // Transformar los datos para que coincidan con el formato esperado por el backend
+    const subjectsIds =
+      f.subjects?.length > 0
+        ? f.subjects
+        : this.enterpriseData?.subjects?.map((subject) => this.getEntityId(subject.id)) || [];
+
     const updatedData: any = {
-      name: this.enterpriseForm.value.name,
-      nit: this.enterpriseForm.value.nit,
-      dv: this.enterpriseForm.value.dv,
+      name: f.name || this.enterpriseData?.name || '',
+      nit: f.nit || this.enterpriseData?.nit || '',
+      dv: f.dv || this.enterpriseData?.dv || '',
       phone: phoneValue,
-      branch: this.enterpriseForm.value.mainActivity, // Cambia según el campo correcto
-      email: this.enterpriseForm.value.email,
+      branch: this.enterpriseData?.branch || '',
+      email: f.email || this.enterpriseData?.email || '',
       logo: this.selectedFile
         ? this.selectedFile.name
         : this.enterpriseData?.logo,
-      mainActivity: this.enterpriseForm.value.mainActivity,
-      secondaryActivity: this.enterpriseForm.value.secondaryActivity,
-      taxLiabilities: this.enterpriseForm.value.taxLiabilities.map(
-        (liability: any) => liability.id
-      ), // Solo IDs
-      // state: this.enterpriseData?.state || 'ACTIVE', // Si el estado es requerido
-      taxPayerType: this.enterpriseForm.value.taxPayerType?.id, // Solo ID
-      enterpriseType: this.enterpriseForm.value.enterpriseType?.id, // Solo ID
+      state: f.state || this.enterpriseData?.state || 'ACTIVE',
+      mainActivity:
+        f.mainActivity || this.enterpriseData?.mainActivity || undefined,
+      secondaryActivity:
+        f.secondaryActivity || this.enterpriseData?.secondaryActivity || undefined,
+      inventoryMethods:
+        f.inventoryMethods || this.enterpriseData?.inventoryMethods || undefined,
+      taxLiabilities:
+        f.taxLiabilities?.length > 0
+          ? f.taxLiabilities.map((liability: any) => liability.id ?? liability)
+          : this.enterpriseData?.taxLiabilities?.map(
+              (liability: any) => liability.id ?? liability,
+            ) || [],
+      taxPayerType:
+        f.taxPayerType?.id ?? f.taxPayerType ??
+        this.getEntityId(this.enterpriseData?.taxPayerType),
+      enterpriseType:
+        f.enterpriseType?.id ?? f.enterpriseType ??
+        this.getEntityId(this.enterpriseData?.enterpriseType),
       personType: {
         type: this.personType.toUpperCase(),
-        name: this.enterpriseForm.value.ownerName || null,
-        surname: this.enterpriseForm.value.lastNames || null,
-        bussinessName: this.enterpriseForm.value.legalName,
+        name: f.ownerName || this.enterpriseData?.personType?.name || null,
+        surname: f.lastNames || this.enterpriseData?.personType?.surname || null,
+        bussinessName:
+          f.legalName || this.enterpriseData?.personType?.bussinessName || null,
       },
       location: {
-        address: this.enterpriseForm.value.address,
-        city: this.enterpriseForm.value.city?.id, // Solo ID
-        department: this.enterpriseForm.value.department?.id, // Solo ID
-        country: this.enterpriseForm.value.country?.id, // Solo ID
+        address: f.address || this.enterpriseData?.location?.address || '',
+        city:
+          this.getEntityId(f.city ?? this.enterpriseData?.location?.city) || null,
+        department:
+          this.getEntityId(
+            f.department ?? this.enterpriseData?.location?.department,
+          ) || null,
+        country:
+          this.getEntityId(f.country ?? this.enterpriseData?.location?.country) || null,
       },
+      subjects: subjectsIds,
     };
 
     console.log('Datos transformados:', updatedData); // Verifica el objeto transformado
@@ -278,5 +318,85 @@ export class EditEnterpriseComponent implements OnInit {
     if (!isNumber || input.value.length >= maxLength) {
       event.preventDefault();
     }
+  }
+
+  private loadSubjects(): void {
+    this.subjectService.getAllSubjects().subscribe({
+      next: (data) => {
+        this.subjects = data;
+      },
+      error: (err) => {
+        console.error('Error al cargar materias:', err);
+      },
+    });
+  }
+
+  private loadCountries(): void {
+    this.addressService.getCountries().subscribe({
+      next: (data) => {
+        this.countries = data;
+        const countryId = this.getEntityId(this.enterpriseData?.location?.country);
+        if (countryId) {
+          this.loadDepartmentsByCountry(countryId);
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar países:', err);
+      },
+    });
+  }
+
+  private loadDepartmentsByCountry(countryId: number | string): void {
+    this.addressService.getDepartmentsByCountry(countryId).subscribe({
+      next: (data) => {
+        this.departments = data;
+        const departmentId = this.getEntityId(
+          this.enterpriseData?.location?.department,
+        );
+        if (departmentId) {
+          this.loadCitiesByDepartment(departmentId);
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar departamentos:', err);
+      },
+    });
+  }
+
+  private loadCitiesByDepartment(departmentId: number | string): void {
+    this.addressService.getCitiesByDepartment(departmentId).subscribe({
+      next: (response) => {
+        this.cities = response.cities || [];
+      },
+      error: (err) => {
+        console.error('Error al cargar ciudades:', err);
+      },
+    });
+  }
+
+  onCountryChange(event: any): void {
+    const countryId = event.value;
+    this.enterpriseForm.patchValue({ department: null, city: null });
+    this.departments = [];
+    this.cities = [];
+    if (countryId) {
+      this.loadDepartmentsByCountry(countryId);
+    }
+  }
+
+  onDepartmentChange(event: any): void {
+    const departmentId = event.value;
+    this.enterpriseForm.patchValue({ city: null });
+    this.cities = [];
+    if (departmentId) {
+      this.loadCitiesByDepartment(departmentId);
+    }
+  }
+
+  private getEntityId(value: any): any {
+    if (value == null) {
+      return null;
+    }
+    return typeof value === 'object' ? value.id : value;
   }
 }

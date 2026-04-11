@@ -18,6 +18,8 @@ export interface EnterpriseDetails {
   enterpriseType: any;
   personType: any;
   location: any;
+  state?: string;
+  inventoryMethods?: string;
   dv: string;
   mainActivity?: number;
   secondaryActivity?: number;

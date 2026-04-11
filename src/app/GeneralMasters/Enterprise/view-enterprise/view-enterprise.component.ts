@@ -193,12 +193,6 @@ export class ViewEnterpriseComponent implements OnInit {
     this.router.navigate(['/gen-masters/taxes/create']);
   }
 
-  // Ir a crear materias (pendiente conectar ruta real)
-  goToCreateSubjects(): void {
-    this.showSuccessModal = false;
-    this.router.navigate(['/gen-masters/subjects/list']);
-  }
-
   openArchiveConfirmation(): void {
     this.showArchiveConfirm = true;
   }

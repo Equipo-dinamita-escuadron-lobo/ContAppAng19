@@ -390,13 +390,12 @@
     </p>
 
     <ul class="text-sm text-gray-500 mt-3 space-y-1">
-      <li>• Materias creadas</li>
       <li>• Impuestos configurados</li>
     </ul>
   </div>
 
   <!-- BOTONES EN FILA -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     <!-- Crear impuestos -->
     <button
       (click)="goToCreateTaxes()"
@@ -404,15 +403,6 @@
     >
       <i class="pi pi-percentage text-lg"></i>
       <span class="text-xs font-medium">Impuestos</span>
-    </button>
-
-    <!-- Crear materias -->
-    <button
-      (click)="goToCreateSubjects()"
-      class="flex flex-col items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg hover:opacity-90 transition"
-    >
-      <i class="pi pi-book text-lg"></i>
-      <span class="text-xs font-medium">Materias</span>
     </button>
 
     <!-- Completar empresa -->

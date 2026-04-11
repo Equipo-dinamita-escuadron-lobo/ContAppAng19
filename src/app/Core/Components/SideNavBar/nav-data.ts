@@ -18,11 +18,6 @@ export const navbarData: INavbarData[] = [
         label: 'Catálogo de Cuentas',
       },
       {
-        routeLink: '/gen-masters/subjects/list',
-        icon: 'menu_book',
-        label: 'Materias',
-      },
-      {
         routeLink: '/gen-masters/taxes/list',
         icon: 'request_page',
         label: 'Impuestos',

@@ -25,12 +25,6 @@ export class MenuComponent {
       description: 'Gestión del plan de cuentas contables'
     },
     {
-      title: 'Materias',
-      icon: 'menu_book',
-      route: '/gen-masters/subjects/list',
-      description: 'Gestión de materias académicas'
-    },
-    {
       title: 'Impuestos',
       icon: 'request_page',
       route: '/gen-masters/taxes/list',
