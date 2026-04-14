@@ -102,13 +102,20 @@
                   </p-dropdown>
                 </div>
 
-                <!-- Responsabilidades tributarias -->
+                                <!-- Responsabilidades tributarias -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Responsabilidades tributarias <span class="text-red-500">*</span>
                   </label>
-                  <p-multiselect formControlName="taxLiabilities" [options]="taxLiabilities" optionLabel="name"
-                    placeholder="Seleccione una opción(es)" class="w-full">
+                  <p-multiselect
+                    formControlName="taxLiabilities"
+                    [options]="taxLiabilities"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Seleccione una o más opciones"
+                    class="w-full"
+                    [filter]="true"
+                    display="chip">
                   </p-multiselect>
                 </div>
 

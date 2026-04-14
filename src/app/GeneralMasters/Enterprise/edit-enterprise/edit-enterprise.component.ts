@@ -19,6 +19,7 @@ import { EnterpriseService } from '../services/enterprise.service';
 import { SubjectService } from '../../Subjects/services/subjects.service';
 import { AddressService } from '../services/addressService';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
+import { TaxService } from '../../../GeneralMasters/Taxes/services/tax.service';
 import {
   LocalStorageMethods,
   EntData,
@@ -70,10 +71,7 @@ export class EditEnterpriseComponent implements OnInit {
     { name: 'Identificación Específica', value: 'SPECIFIC' },
   ];
 
-  taxLiabilities = [
-    { id: 1, name: 'Información exógena' },
-    { id: 3, name: 'Informante de beneficiarios finales' },
-  ];
+  taxLiabilities: any[] = [];
 
   taxPayerTypes = [
     { id: 1, name: 'Responsable de IVA' },
@@ -95,12 +93,14 @@ export class EditEnterpriseComponent implements OnInit {
     private enterpriseService: EnterpriseService,
     private subjectService: SubjectService,
     private addressService: AddressService,
-    private messageService: MessageService
+    private taxService: TaxService,
+    private messageService: MessageService,
   ) {}
 
   ngOnInit(): void {
     this.loadSubjects();
     this.loadCountries();
+    this.loadTaxLiabilities();
     this.loadEnterpriseData();
   }
 
@@ -118,8 +118,12 @@ export class EditEnterpriseComponent implements OnInit {
           this.enterpriseData = data;
           this.personType = data.personType?.type?.toLowerCase() || 'juridica';
           this.initForm();
-          const countryId = this.getEntityId(this.enterpriseData?.location?.country);
-          const departmentId = this.getEntityId(this.enterpriseData?.location?.department);
+          const countryId = this.getEntityId(
+            this.enterpriseData?.location?.country,
+          );
+          const departmentId = this.getEntityId(
+            this.enterpriseData?.location?.department,
+          );
           if (this.countries.length && countryId) {
             this.loadDepartmentsByCountry(countryId);
           }
@@ -144,7 +148,9 @@ export class EditEnterpriseComponent implements OnInit {
       name: [this.enterpriseData?.name || '', Validators.required],
       enterpriseType: [this.enterpriseData?.enterpriseType || null],
       state: [this.enterpriseData?.state || 'ACTIVE'],
-      taxLiabilities: [this.enterpriseData?.taxLiabilities || []],
+      taxLiabilities: [
+        this.mapTaxLiabilitiesToIds(this.enterpriseData?.taxLiabilities || []),
+      ],
       legalName: [this.enterpriseData?.personType?.bussinessName || ''],
       ownerName: [this.enterpriseData?.personType?.name || ''],
       lastNames: [this.enterpriseData?.personType?.surname || ''],
@@ -249,10 +255,8 @@ export class EditEnterpriseComponent implements OnInit {
         f.inventoryMethods || this.enterpriseData?.inventoryMethods || undefined,
       taxLiabilities:
         f.taxLiabilities?.length > 0
-          ? f.taxLiabilities.map((liability: any) => liability.id ?? liability)
-          : this.enterpriseData?.taxLiabilities?.map(
-              (liability: any) => liability.id ?? liability,
-            ) || [],
+          ? f.taxLiabilities.map((id: any) => Number(id))
+          : this.mapTaxLiabilitiesToIds(this.enterpriseData?.taxLiabilities || []),
       taxPayerType:
         f.taxPayerType?.id ?? f.taxPayerType ??
         this.getEntityId(this.enterpriseData?.taxPayerType),
@@ -280,7 +284,7 @@ export class EditEnterpriseComponent implements OnInit {
       subjects: subjectsIds,
     };
 
-    console.log('Datos transformados:', updatedData); // Verifica el objeto transformado
+    console.log('Datos transformados:', updatedData);
 
     this.enterpriseService
       .updateEnterprise(this.enterpriseId, updatedData)
@@ -335,7 +339,9 @@ export class EditEnterpriseComponent implements OnInit {
     this.addressService.getCountries().subscribe({
       next: (data) => {
         this.countries = data;
-        const countryId = this.getEntityId(this.enterpriseData?.location?.country);
+        const countryId = this.getEntityId(
+          this.enterpriseData?.location?.country,
+        );
         if (countryId) {
           this.loadDepartmentsByCountry(countryId);
         }
@@ -398,5 +404,53 @@ export class EditEnterpriseComponent implements OnInit {
       return null;
     }
     return typeof value === 'object' ? value.id : value;
+  }
+
+
+
+
+    private getEnterpriseId(): string {
+    const entData = this.localStorageMethods.loadEnterpriseData();
+    return entData?.id || '';
+  }
+
+  private loadTaxLiabilities(): void {
+    const enterpriseId = this.getEnterpriseId();
+
+    if (!enterpriseId) {
+      this.taxLiabilities = [];
+      return;
+    }
+
+    this.taxService
+      .findAll(enterpriseId, 0, 1000, 'description', 'asc', '')
+      .subscribe({
+        next: (response: any) => {
+          const content: any[] = Array.isArray(response)
+            ? response
+            : Array.isArray(response?.content)
+              ? response.content
+              : [];
+
+          this.taxLiabilities = content.map((tax: any) => ({
+            id: Number(tax.id),
+            name: `${tax.code} - ${tax.description}`,
+            code: tax.code,
+            description: tax.description,
+            interest: tax.interest,
+            status: typeof tax.status === 'boolean' ? tax.status : false,
+          }));
+        },
+        error: (err) => {
+          console.error('Error al cargar impuestos:', err);
+          this.taxLiabilities = [];
+        },
+      });
+  }
+
+  private mapTaxLiabilitiesToIds(taxLiabilities: any[] = []): number[] {
+    return taxLiabilities
+      .map((tax: any) => Number(tax?.id ?? tax))
+      .filter((id: number) => !Number.isNaN(id));
   }
 }

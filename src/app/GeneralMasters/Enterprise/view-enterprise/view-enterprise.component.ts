@@ -9,6 +9,7 @@ import {
 import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
 import { DialogModule } from 'primeng/dialog';
+import { TaxService } from '../../../GeneralMasters/Taxes/services/tax.service';
 
 @Component({
   selector: 'app-view-enterprise',
@@ -40,6 +41,12 @@ export class ViewEnterpriseComponent implements OnInit {
   // valor objetivo (lo puedes cambiar luego dinámicamente)
   targetPercentage: number = 80;
 
+  // catálogo de responsabilidades tributarias.
+  taxLiabilitiesCatalog: any[] = [];
+
+  // Controla si se muestra la tarjeta de empresa incompleta
+  showIncompleteCard: boolean = false;
+
   // valores del círculo
   radius: number = 45;
   circumference: number = 2 * Math.PI * this.radius;
@@ -50,14 +57,12 @@ export class ViewEnterpriseComponent implements OnInit {
   constructor(
     private router: Router,
     private enterpriseService: EnterpriseService,
+    private taxService: TaxService,
   ) {}
 
-  ngOnInit(): void {
+    ngOnInit(): void {
+    this.loadTaxLiabilitiesCatalog();
     this.loadEnterpriseData();
-    // 🔥 iniciar animación
-    setTimeout(() => {
-      this.animateProgress();
-    }, 500);
   }
 
   loadEnterpriseData(): void {
@@ -68,6 +73,7 @@ export class ViewEnterpriseComponent implements OnInit {
       this.enterpriseService.getEnterpriseById(this.entData.id).subscribe({
         next: (data: EnterpriseDetails) => {
           this.enterpriseData = data;
+          this.configureEnterpriseCompletionState();
           this.loading = false;
         },
         error: (error) => {
@@ -123,13 +129,34 @@ export class ViewEnterpriseComponent implements OnInit {
     if (
       !this.enterpriseData?.taxLiabilities ||
       this.enterpriseData.taxLiabilities.length === 0
-    )
+    ) {
       return 'No disponible';
-    return this.enterpriseData.taxLiabilities
-      .map((liability: any) =>
-        typeof liability === 'object' ? liability.name : liability,
-      )
-      .join(', ');
+    }
+
+    const names = this.enterpriseData.taxLiabilities
+      .map((liability: any) => {
+        const liabilityId =
+          typeof liability === 'object'
+            ? Number(liability.id)
+            : Number(liability);
+
+        const taxFromCatalog = this.taxLiabilitiesCatalog.find(
+          (tax: any) => Number(tax.id) === liabilityId,
+        );
+
+        if (taxFromCatalog) {
+          return taxFromCatalog.description || taxFromCatalog.name || null;
+        }
+
+        if (typeof liability === 'object') {
+          return liability.description || liability.name || null;
+        }
+
+        return null;
+      })
+      .filter((name: string | null) => !!name);
+
+    return names.length > 0 ? names.join(', ') : 'No disponible';
   }
 
   // Localización
@@ -251,5 +278,70 @@ export class ViewEnterpriseComponent implements OnInit {
       const progressRatio = current / 100;
       this.strokeDashoffset = this.circumference * (1 - progressRatio);
     }, intervalTime);
+  }
+
+  private getEnterpriseId(): string {
+    const entData = this.localStorageMethods.loadEnterpriseData();
+    return entData?.id || '';
+  }
+
+  private loadTaxLiabilitiesCatalog(): void {
+    const enterpriseId = this.getEnterpriseId();
+
+    if (!enterpriseId) {
+      this.taxLiabilitiesCatalog = [];
+      return;
+    }
+
+    this.taxService
+      .findAll(enterpriseId, 0, 1000, 'description', 'asc', '')
+      .subscribe({
+        next: (response: any) => {
+          const content: any[] = Array.isArray(response)
+            ? response
+            : Array.isArray(response?.content)
+              ? response.content
+              : [];
+
+          this.taxLiabilitiesCatalog = content.map((tax: any) => ({
+            id: Number(tax.id),
+            code: tax.code,
+            description: tax.description,
+            name: `${tax.code} - ${tax.description}`,
+          }));
+        },
+        error: (error) => {
+          console.error('Error al cargar catálogo de impuestos:', error);
+          this.taxLiabilitiesCatalog = [];
+        },
+      });
+  }
+
+
+
+
+    private hasTaxLiabilitiesAssigned(): boolean {
+    return !!this.enterpriseData?.taxLiabilities?.length;
+  }
+
+  private configureEnterpriseCompletionState(): void {
+    if (this.hasTaxLiabilitiesAssigned()) {
+      this.showIncompleteCard = false;
+      this.enterpriseCompleta = true;
+      this.targetPercentage = 100;
+      this.completionPercentage = 100;
+      this.strokeDashoffset = 0;
+      return;
+    }
+
+    this.showIncompleteCard = true;
+    this.enterpriseCompleta = false;
+    this.targetPercentage = 97;
+    this.completionPercentage = 0;
+    this.strokeDashoffset = this.circumference;
+
+    setTimeout(() => {
+      this.animateProgress();
+    }, 200);
   }
 }
