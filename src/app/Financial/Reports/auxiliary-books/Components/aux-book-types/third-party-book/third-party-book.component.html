@@ -126,48 +126,69 @@
       <ng-template pTemplate="body" let-accountInfo>
         <tr>
           <td>{{ accountInfo.date }}</td>
-          <td>{{ accountInfo.accountCode }}</td>
-          <td>{{ accountInfo.accountDescription }}</td>
-
-          <td>
+          <td>{{ accountInfo.account.accountCode }}</td>
+          <td>{{ accountInfo.account.accountDescription }}</td>
+          <td class="p-2">
             <div
               class="money-cell"
               [innerHTML]="
                 formatMoneyAligned(
-                  accountInfo.debit,
+                  accountInfo.debitMovement,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.creditMovement,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.balanceMovement,
                   accountInfo.account.nature
                 )
               "
             ></div>
           </td>
           <td>
-            <div
-              class="money-cell"
-              [innerHTML]="
-                formatMoneyAligned(
-                  accountInfo.credit,
-                  accountInfo.account.nature
-                )
-              "
-            ></div>
+            {{
+              accountInfo.thirdPartyId?.trim()
+                ? accountInfo.thirdPartyId
+                : "NO DISPONIBLE"
+            }}
           </td>
           <td>
-            <div
-              class="money-cell"
-              [innerHTML]="
-                formatMoneyAligned(
-                  accountInfo.finalBalance,
-                  accountInfo.account.nature
-                )
-              "
-            ></div>
+            {{
+              accountInfo.thirdPartyName?.trim()
+                ? accountInfo.thirdPartyName
+                : "NO DISPONIBLE"
+            }}
           </td>
-
-          <td>{{ accountInfo.thirdPartyIdentificationNumber }}</td>
-          <td>{{ accountInfo.thirdPartyName }}</td>
-
-          <td>{{ accountInfo.costCenter }}</td>
-          <td>{{ accountInfo.documentNumber }}</td>
+          <td>
+            {{
+              accountInfo.voucherCostCenter?.trim()
+                ? accountInfo.voucherCostCenter
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td>
+            {{
+              accountInfo.voucherNumber?.trim()
+                ? accountInfo.voucherNumber
+                : "NO DISPONIBLE"
+            }}
+          </td>
         </tr>
       </ng-template>
 
