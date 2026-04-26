@@ -31,6 +31,7 @@ import { AuthService } from '../../../../../Core/auth/services/auth.service';
 import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { Criteria } from '../../Models/Criteria';
 import { AuxiliaryBookType } from '../../Models/eAuxiliaryBookType';
+import { AuxiliaryBooksServiceService } from '../../Services/auxiliary-books-service.service';
 
 type ScheduleFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 type DeliveryWay = 'DOWNLOAD' | 'EMAIL';
@@ -236,11 +237,14 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     thirdPartyId: null,
   };
 
+  isSubmitting = false;
+
   constructor(
     private readonly fb: FormBuilder,
     private readonly messageService: MessageService,
     private readonly enterpriseService: EnterpriseService,
     private readonly authService: AuthService,
+    private readonly auxiliaryBookService: AuxiliaryBooksServiceService,
     @Optional() public dynamicDialogConfig: DynamicDialogConfig,
     @Optional() public dynamicDialogRef: DynamicDialogRef,
   ) {}
@@ -456,18 +460,59 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       return;
     }
 
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Programacion guardada',
-      detail: this.isEditingSchedule
-        ? 'La programacion se actualizo correctamente.'
-        : 'La programacion se guardo correctamente.',
-      life: 2200,
-    });
+    const payload = this.buildSchedulePayload('save');
 
-    setTimeout(() => {
-      this.close(this.buildSchedulePayload('save'));
-    }, 900);
+    if (!payload.request) {
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    const editingPublicId =
+      this.isEditingSchedule && typeof payload.scheduleId === 'string'
+        ? payload.scheduleId
+        : null;
+
+    const request$ = editingPublicId
+      ? this.auxiliaryBookService.updateScheduledReport(
+          editingPublicId,
+          payload.request,
+        )
+      : this.auxiliaryBookService.createScheduledReport(payload.request);
+
+    request$.subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Programacion guardada',
+          detail: this.isEditingSchedule
+            ? 'La programacion se actualizo correctamente.'
+            : 'La programacion se guardo correctamente.',
+          life: 2200,
+        });
+
+        const persistedPayload: AuxiliaryBookSchedulePayload = {
+          ...payload,
+          scheduleId: response?.publicId ?? payload.scheduleId,
+          reportPublicId: response?.publicId ?? payload.reportPublicId,
+        };
+
+        setTimeout(() => this.close(persistedPayload), 900);
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al guardar la programacion',
+          detail:
+            err?.error?.message ??
+            err?.message ??
+            'No se pudo guardar la programacion. Intente de nuevo.',
+          life: 5000,
+        });
+      },
+    });
   }
 
   requestDeleteSchedule(): void {
@@ -483,16 +528,47 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       return;
     }
 
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Programacion cancelada',
-      detail: 'La tarea automatica fue marcada para cancelacion.',
-      life: 2200,
-    });
+    const payload = this.buildSchedulePayload('delete');
+    const publicId =
+      typeof payload.scheduleId === 'string' ? payload.scheduleId : null;
 
-    setTimeout(() => {
-      this.close(this.buildSchedulePayload('delete'));
-    }, 900);
+    if (!publicId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'No se pudo cancelar',
+        detail: 'No se encontro un identificador valido para la programacion.',
+        life: 5000,
+      });
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    this.auxiliaryBookService.cancelScheduledReport(publicId).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.showDeleteConfirmation = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Programacion cancelada',
+          detail: 'La tarea automatica fue cancelada correctamente.',
+          life: 2200,
+        });
+        setTimeout(() => this.close(payload), 900);
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error al cancelar',
+          detail:
+            err?.error?.message ??
+            err?.message ??
+            'No se pudo cancelar la programacion. Intente de nuevo.',
+          life: 5000,
+        });
+      },
+    });
   }
 
   getStatusSeverity(
