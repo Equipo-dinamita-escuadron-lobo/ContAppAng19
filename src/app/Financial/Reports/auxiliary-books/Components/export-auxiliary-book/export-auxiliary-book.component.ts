@@ -152,10 +152,20 @@ export class ExportAuxiliaryBookComponent implements OnInit {
   }
 
   exportReport() {
+    if (!this.config.data?.auxiliaryBook) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'No se puede exportar',
+        detail:
+          'Falta la informacion del libro auxiliar generado. Vuelve a generarlo antes de exportar.',
+      });
+      return;
+    }
+
     const infoTemplate: InfoReportTemplate = {
-      id: this.selectedTemplate?.id || 0,
-      name: this.reportTitle,
-      pathLogotype: this.enterpriseData?.logo, // URL del logo
+      id: this.selectedTemplate?.id ?? 0,
+      name: this.reportTitle?.trim() || 'Reporte Auxiliar',
+      pathLogotype: this.enterpriseData?.logo ?? '',
       alienation: this.styles.align.toUpperCase() as
         | 'LEFT'
         | 'CENTER'
@@ -165,13 +175,11 @@ export class ExportAuxiliaryBookComponent implements OnInit {
       mainColor: this.styles.color,
     };
 
-    console.log(this.auxiliaryBook);
-
     const request: ExportAuxiliaryBookRequest = {
       format: this.formatSelected.toUpperCase() as 'PDF' | 'EXCEL',
-      entName: this.enterpriseData?.name || 'Empresa',
+      entName: this.enterpriseData?.name?.trim() || 'Empresa',
       auxiliaryBook: this.config.data.auxiliaryBook,
-      auxBookData: this.previewData,
+      auxBookData: this.previewData ?? [],
       infoReportTemplate: infoTemplate,
     };
 
