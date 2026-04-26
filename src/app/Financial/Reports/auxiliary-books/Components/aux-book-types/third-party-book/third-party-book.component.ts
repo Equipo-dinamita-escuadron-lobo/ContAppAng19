@@ -49,7 +49,7 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
   override request: GenerateAuxiliaryBookRequest = {
     entId: '',
     userId: 0,
-    type: AuxiliaryBookType.DIARY,
+    type: AuxiliaryBookType.THIRD_PARTY,
     criteria: this.criteria,
   };
 
@@ -62,7 +62,7 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
   ) {
     super(
       auxiliaryBookService,
@@ -70,7 +70,7 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
       thirdService,
       accountService,
       messageService,
-      dialogService
+      dialogService,
     );
   }
 
@@ -81,6 +81,23 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
         'Presenta los movimientos contables asociados a terceros (clientes, proveedores, etc.), útil para conciliaciones y seguimiento de cuentas por cobrar o pagar.',
       icon: 'groups_3',
     };
+
+    this.isThirdPartyOptionSelected = true;
+    this.onThirdPartyOptionSelected();
+  }
+
+  protected override generateReport(): void {
+    if (this.criteria.thirdPartyId == null) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Tercero requerido',
+        detail:
+          'Debe seleccionar un tercero antes de generar el Libro Auxiliar por Tercero.',
+      });
+      return;
+    }
+
+    super.generateReport();
   }
 
   protected organizeRequest(): void {
@@ -89,12 +106,12 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
 
     this.criteria.startDate = this.datePipe.transform(
       new Date('01/01/2025'),
-      'yyyy-MM-dd'
+      'yyyy-MM-dd',
     );
 
     this.criteria.endDate = this.datePipe.transform(
       this.criteria.endDate,
-      'yyyy-MM-dd'
+      'yyyy-MM-dd',
     );
 
     this.request = {
