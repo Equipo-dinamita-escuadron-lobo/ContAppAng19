@@ -166,16 +166,6 @@ export class AuxiliaryBooksServiceService {
     });
   }
 
-  getAuxiliaryBookByPublicId(
-    publicId: string,
-  ): Observable<AuxiliaryBookRegisterResponse> {
-    return this.http
-      .get<
-        ApiResponse<AuxiliaryBookRegisterResponse>
-      >(`${this.auxiliaryBooksApiUrl}/${publicId}`)
-      .pipe(map((response) => this.unwrapApiResponse(response)));
-  }
-
   getHistoryByEnterprise(
     enterpriseId: string,
     pageable: PageableParams,
