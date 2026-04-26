@@ -146,8 +146,7 @@ interface AuxiliaryBookLogResponse {
 })
 export class AuxiliaryBooksServiceService {
   private readonly auxiliaryBooksApiUrl = `${environment.API_URL}auxiliary-books`;
-  private readonly scheduledReportsCommandApiUrl = `${this.auxiliaryBooksApiUrl}/scheduled-reports`;
-  private readonly scheduledReportsQueryApiUrl = `${environment.API_URL}scheduled-reports`;
+  private readonly scheduledReportsApiUrl = `${this.auxiliaryBooksApiUrl}/scheduled-reports`;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -165,6 +164,16 @@ export class AuxiliaryBooksServiceService {
     return this.http.post(`${this.auxiliaryBooksApiUrl}/export`, request, {
       responseType: 'blob',
     });
+  }
+
+  getAuxiliaryBookByPublicId(
+    publicId: string,
+  ): Observable<AuxiliaryBookRegisterResponse> {
+    return this.http
+      .get<
+        ApiResponse<AuxiliaryBookRegisterResponse>
+      >(`${this.auxiliaryBooksApiUrl}/${publicId}`)
+      .pipe(map((response) => this.unwrapApiResponse(response)));
   }
 
   getHistoryByEnterprise(
@@ -206,7 +215,7 @@ export class AuxiliaryBooksServiceService {
     return this.http
       .post<
         ApiResponse<ScheduledReportResponse>
-      >(this.scheduledReportsCommandApiUrl, payload)
+      >(this.scheduledReportsApiUrl, payload)
       .pipe(map((response) => this.unwrapApiResponse(response)));
   }
 
@@ -217,7 +226,7 @@ export class AuxiliaryBooksServiceService {
     return this.http
       .put<
         ApiResponse<ScheduledReportResponse>
-      >(`${this.scheduledReportsCommandApiUrl}/${publicId}`, payload)
+      >(`${this.scheduledReportsApiUrl}/${publicId}`, payload)
       .pipe(map((response) => this.unwrapApiResponse(response)));
   }
 
@@ -225,7 +234,7 @@ export class AuxiliaryBooksServiceService {
     return this.http
       .delete<
         ApiResponse<void>
-      >(`${this.scheduledReportsCommandApiUrl}/${publicId}`)
+      >(`${this.scheduledReportsApiUrl}/${publicId}`)
       .pipe(map((response) => this.unwrapApiResponse(response)));
   }
 
@@ -237,7 +246,7 @@ export class AuxiliaryBooksServiceService {
     return this.http
       .get<
         ApiResponse<ScheduledReportListItemResponse[]>
-      >(this.scheduledReportsQueryApiUrl, { params })
+      >(this.scheduledReportsApiUrl, { params })
       .pipe(map((response) => this.unwrapApiResponse(response, [])));
   }
 
@@ -245,7 +254,7 @@ export class AuxiliaryBooksServiceService {
     return this.http
       .get<
         ApiResponse<ScheduledReportResponse>
-      >(`${this.scheduledReportsQueryApiUrl}/${publicId}`)
+      >(`${this.scheduledReportsApiUrl}/${publicId}`)
       .pipe(map((response) => this.unwrapApiResponse(response)));
   }
 
@@ -262,7 +271,7 @@ export class AuxiliaryBooksServiceService {
     return this.http
       .get<
         ApiResponse<ScheduledReportExecutionListItemResponse[]>
-      >(`${this.scheduledReportsQueryApiUrl}/${publicId}/executions`, { params })
+      >(`${this.scheduledReportsApiUrl}/${publicId}/executions`, { params })
       .pipe(map((response) => this.unwrapApiResponse(response, [])));
   }
 
