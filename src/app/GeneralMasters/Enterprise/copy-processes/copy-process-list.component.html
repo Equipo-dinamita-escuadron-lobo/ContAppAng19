@@ -1,0 +1,74 @@
+<p-toast />
+
+<div class="p-4">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-2xl font-semibold">Procesos de copia</h2>
+    <button pButton label="Actualizar" icon="pi pi-refresh" class="p-button-outlined"
+      (click)="loadProcesses()" [disabled]="loading"></button>
+  </div>
+
+  @if (loading) {
+    <div class="flex justify-center py-8">
+      <p-progressSpinner />
+    </div>
+  } @else {
+    <p-table [value]="processes" [paginator]="true" [rows]="6"
+      [rowsPerPageOptions]="[6, 25, 50]" [tableStyle]="{ 'min-width': '60rem' }"
+      emptyMessage="Sin procesos de copia registrados">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th>Empresa destino</th>
+          <th>Iniciado por</th>
+          <th>Iniciado en</th>
+          <th>Backup</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-proc>
+        <tr>
+          <td>{{ proc.tipo }}</td>
+          <td>{{ proc.estado }}</td>
+          <td>{{ proc.empresaDestino }}</td>
+          <td>{{ proc.iniciadoPor }}</td>
+          <td>{{ proc.iniciadoEn | date:'short':'':'es' }}</td>
+          <td>{{ proc.backupRef ?? '—' }}</td>
+          <td>
+            <div class="flex gap-2">
+              @if (proc.backupRef && proc.tipo === 'BACKUP') {
+                <button pButton icon="pi pi-download" label="Descargar"
+                  class="p-button-sm p-button-outlined"
+                  (click)="downloadBackup(proc)"></button>
+              }
+              <button pButton icon="pi pi-replay" label="Restaurar"
+                class="p-button-sm p-button-warning"
+                [disabled]="!proc.backupRef"
+                (click)="openRestoreDialog(proc)"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>
+
+<p-dialog header="Restaurar desde backup" [(visible)]="restoreDialogVisible"
+  [modal]="true" [style]="{ width: '400px' }" (onHide)="cancelRestore()">
+  <div class="flex flex-col gap-3 py-2">
+    <label for="empresaDestino" class="font-medium">Empresa destino</label>
+    <input id="empresaDestino" type="text" pInputText
+      [(ngModel)]="empresaDestinoInput"
+      placeholder="Nombre o ID de la empresa destino" class="w-full" />
+    <small class="text-muted-foreground">
+      Backup: <code>{{ selectedProcess?.backupRef }}</code>
+    </small>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" class="p-button-text" (click)="cancelRestore()"></button>
+    <button pButton label="Restaurar" icon="pi pi-replay"
+      class="p-button-warning"
+      [disabled]="!empresaDestinoInput.trim()"
+      (click)="confirmRestore()"></button>
+  </ng-template>
+</p-dialog>

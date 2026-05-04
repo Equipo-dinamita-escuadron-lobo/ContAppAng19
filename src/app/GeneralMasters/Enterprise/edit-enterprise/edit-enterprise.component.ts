@@ -224,6 +224,27 @@ export class EditEnterpriseComponent implements OnInit {
       return;
     }
 
+    this.loading = true;
+
+    if (this.selectedFile) {
+      this.enterpriseService.uploadLogo(this.selectedFile).subscribe({
+        next: (res) => this.doUpdate(res.url),
+        error: () => {
+          this.loading = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo subir el logo.',
+          });
+        },
+      });
+    } else {
+      const existing = this.enterpriseData?.logo ?? null;
+      this.doUpdate(existing?.startsWith('http') ? existing : null);
+    }
+  }
+
+  private doUpdate(logoUrl: string | null): void {
     const f = this.enterpriseForm.value;
     const phoneValue = f.phone
       ? f.phone.startsWith('+57')
@@ -243,9 +264,7 @@ export class EditEnterpriseComponent implements OnInit {
       phone: phoneValue,
       branch: this.enterpriseData?.branch || '',
       email: f.email || this.enterpriseData?.email || '',
-      logo: this.selectedFile
-        ? this.selectedFile.name
-        : this.enterpriseData?.logo,
+      logo: logoUrl,
       state: f.state || this.enterpriseData?.state || 'ACTIVE',
       mainActivity:
         f.mainActivity || this.enterpriseData?.mainActivity || undefined,
@@ -284,12 +303,11 @@ export class EditEnterpriseComponent implements OnInit {
       subjects: subjectsIds,
     };
 
-    console.log('Datos transformados:', updatedData);
-
     this.enterpriseService
       .updateEnterprise(this.enterpriseId, updatedData)
       .subscribe({
         next: () => {
+          this.loading = false;
           this.messageService.add({
             severity: 'success',
             summary: 'Actualización exitosa',
@@ -299,6 +317,7 @@ export class EditEnterpriseComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al actualizar:', error);
+          this.loading = false;
           this.messageService.add({
             severity: 'error',
             summary: 'Error',

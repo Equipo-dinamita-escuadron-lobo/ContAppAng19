@@ -80,6 +80,11 @@ export class ListEnterpriseComponent implements OnInit {
   private exportTimeout: any;
   private exportInterval: any;
 
+  selectedZipFile: File | null = null;
+  showImportLoadingModal: boolean = false;
+  importProgress: number = 0;
+  importEmpresaDestino: string = '';
+
   constructor(
     private enterpriseService: EnterpriseService,
     private router: Router,
@@ -210,6 +215,11 @@ export class ListEnterpriseComponent implements OnInit {
 
   onListSubjects(): void {
     this.router.navigate(['/subjects/list']);
+  }
+
+  /* ==================== PROCESOS DE COPIA ==================== */
+  goToCopyProcesses(): void {
+    this.router.navigate(['/enterprise/copy-processes']);
   }
 
   /* ==================== ABRIR ARCHIVADAS ==================== */
@@ -646,61 +656,88 @@ export class ListEnterpriseComponent implements OnInit {
   onImportEnterprise(): void {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'application/json';
+    input.accept = '.zip,application/zip';
 
     input.addEventListener('change', (event: any) => {
       const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            // Parsear el contenido del archivo JSON
-            const enterpriseData = JSON.parse(reader.result as string);
-
-            // Validar que el archivo tenga el formato esperado
-            if (
-              !enterpriseData.name ||
-              !enterpriseData.nit ||
-              !enterpriseData.dv
-            ) {
-              throw new Error('El archivo JSON no tiene el formato esperado.');
-            }
-
-            // Enviar los datos al backend para crear la empresa
-            this.enterpriseService.createEnterprise(enterpriseData).subscribe({
-              next: () => {
-                this.messageService.add({
-                  severity: 'success',
-                  summary: 'Importación exitosa',
-                  detail: `La empresa ${enterpriseData.name} fue creada exitosamente.`,
-                });
-                this.getEnterprises(); // Actualizar la lista de empresas
-              },
-              error: (err) => {
-                console.error('Error al importar empresa:', err);
-                this.messageService.add({
-                  severity: 'error',
-                  summary: 'Error',
-                  detail: 'No se pudo importar la empresa. Verifica los datos.',
-                });
-              },
-            });
-          } catch (error) {
-            console.error('Error al leer el archivo JSON:', error);
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'El archivo JSON no es válido.',
-            });
-          }
-        };
-
-        reader.readAsText(file);
-      }
+      if (!file) return;
+      this.selectedZipFile = file;
+      this.confirmImport();
     });
 
     input.click();
   }
+
+  confirmImport(): void {
+    if (!this.selectedZipFile) return;
+
+    const empresaDestino = crypto.randomUUID();
+    this.importProgress = 10;
+    this.showImportLoadingModal = true;
+
+    this.enterpriseService
+      .restoreFromZipUpload(this.selectedZipFile, empresaDestino)
+      .subscribe({
+        next: (process) => {
+          this.importProgress = 20;
+
+          const pollingInterval = setInterval(() => {
+            this.enterpriseService.getCopyProcessStatus(process.idProceso).subscribe({
+              next: (updated) => {
+                if (updated.estado === 'EN_PROCESO' && updated.faseActual) {
+                  this.importProgress = Math.min(20 + (updated.faseActual * 18), 90);
+                }
+                if (updated.estado === 'COMPLETADO') {
+                  clearInterval(pollingInterval);
+                  this.importProgress = 100;
+                  setTimeout(() => {
+                    this.showImportLoadingModal = false;
+                    this.selectedZipFile = null;
+                    this.importEmpresaDestino = '';
+                    this.messageService.add({
+                      severity: 'success',
+                      summary: 'Importación completada',
+                      detail: 'La empresa fue restaurada correctamente.',
+                    });
+                  }, 500);
+                } else if (
+                  updated.estado === 'ERROR' ||
+                  updated.estado === 'FALLIDO' ||
+                  updated.estado === 'CANCELADO'
+                ) {
+                  clearInterval(pollingInterval);
+                  this.showImportLoadingModal = false;
+                  this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error de importación',
+                    detail: updated.errorResumen || `El proceso terminó con estado: ${updated.estado}`,
+                  });
+                }
+              },
+              error: () => {
+                clearInterval(pollingInterval);
+                this.showImportLoadingModal = false;
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error',
+                  detail: 'No se pudo consultar el estado del proceso.',
+                });
+              },
+            });
+          }, 2000);
+        },
+        error: (err) => {
+          this.showImportLoadingModal = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de importación',
+            detail: 'No se pudo subir el archivo ZIP.',
+          });
+          console.error('Error al importar ZIP:', err);
+        },
+      });
+  }
+
 
   /* ==================== exportacion  ==================== */
   /* ==================== exportacion  ==================== */
@@ -719,45 +756,113 @@ export class ListEnterpriseComponent implements OnInit {
   }
 
   startExport(enterprise: EnterpriseList) {
+    if (!enterprise.id) return;
+
     this.exportEnterpriseName = enterprise.name || 'empresa';
     this.exportProgress = 0;
     this.showExportLoadingModal = true;
     this.showExportErrorModal = false;
 
-    if (this.exportInterval) {
-      clearInterval(this.exportInterval);
-      this.exportInterval = null;
-    }
+    // Crear proceso BACKUP
+    this.enterpriseService.startBackupProcess(String(enterprise.id)).subscribe({
+      next: (process) => {
+        // Incrementar progreso mientras se espera
+        let progress = 10;
+        this.exportProgress = progress;
 
-    if (this.exportTimeout) {
-      clearTimeout(this.exportTimeout);
-      this.exportTimeout = null;
-    }
+        // Polling para esperar a que se complete
+        const pollingInterval = setInterval(() => {
+          this.enterpriseService.getCopyProcessStatus(process.idProceso).subscribe({
+            next: (updatedProcess) => {
+              // Progreso real basado en faseActual (1-4 fases = 20-95%)
+              if (updatedProcess.estado === 'EN_PROCESO' && updatedProcess.faseActual) {
+                this.exportProgress = Math.min(20 + (updatedProcess.faseActual * 18), 90);
+              }
 
-    const maxProgress = 20;
-    const totalTime = 4000;
-    const stepTime = 100;
-    const step = maxProgress / (totalTime / stepTime);
+              if (updatedProcess.estado === 'COMPLETADO') {
+                clearInterval(pollingInterval);
+                this.exportProgress = 100;
+                setTimeout(() => {
+                  this.downloadBackup(process.idProceso, enterprise.name || 'empresa');
+                }, 500);
+              } else if (
+                updatedProcess.estado === 'ERROR' ||
+                updatedProcess.estado === 'FALLIDO' ||
+                updatedProcess.estado === 'CANCELADO'
+              ) {
+                clearInterval(pollingInterval);
+                this.showExportLoadingModal = false;
+                this.showExportErrorModal = true;
 
-    this.exportInterval = setInterval(() => {
-      this.exportProgress += step;
+                const detalle = updatedProcess.errorResumen || `El proceso terminó con estado: ${updatedProcess.estado}`;
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error de exportación',
+                  detail: detalle,
+                });
+              }
+            },
+            error: (err) => {
+              clearInterval(pollingInterval);
+              this.showExportLoadingModal = false;
+              this.showExportErrorModal = true;
 
-      if (this.exportProgress >= maxProgress) {
-        this.exportProgress = maxProgress;
-
-        clearInterval(this.exportInterval);
-        this.exportInterval = null;
-
+              console.error('Error al consultar estado del proceso:', err);
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'No se pudo consultar el estado del proceso.',
+              });
+            },
+          });
+        }, 2000);
+      },
+      error: (err) => {
         this.showExportLoadingModal = false;
         this.showExportErrorModal = true;
 
+        console.error('Error al iniciar backup:', err);
         this.messageService.add({
           severity: 'error',
           summary: 'Error de exportación',
-          detail: 'La exportación se canceló al llegar al 20%.',
+          detail: 'No se pudo iniciar el proceso de backup.',
         });
-      }
-    }, stepTime);
+      },
+    });
+  }
+
+  downloadBackup(processId: string, enterpriseName: string) {
+    this.enterpriseService.downloadCopyProcessBackup(processId).subscribe({
+      next: (response) => {
+        const blob = response.body;
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${enterpriseName}-backup.zip`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+
+          this.showExportLoadingModal = false;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Exportación completada',
+            detail: `Se descargó el backup de ${enterpriseName}`,
+          });
+        }
+      },
+      error: (err) => {
+        this.showExportLoadingModal = false;
+        this.showExportErrorModal = true;
+
+        console.error('Error al descargar backup:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de descarga',
+          detail: 'No se pudo descargar el archivo de backup.',
+        });
+      },
+    });
   }
 
   closeExportErrorModal() {

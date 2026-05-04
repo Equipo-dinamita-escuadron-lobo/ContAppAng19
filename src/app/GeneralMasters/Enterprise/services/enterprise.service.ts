@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { EnterpriseList } from '../models/EnterpriseList';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
 import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
+import { CopyProcess } from '../models/CopyProcess';
 
 @Injectable({
   providedIn: 'root',
@@ -83,12 +84,49 @@ export class EnterpriseService {
   }
 
   /** ==================== UTILIDADES ==================== */
+  // LEGACY — copia local de los datos de empresa en JSON. No relacionado con Hito 6.
   duplicateEnterprise(id: string): Observable<any> {
     return this.http.post(`${this.apiUrl}duplicate/${id}`, {});
   }
 
+  // LEGACY — backup local en JSON. No relacionado con los procesos de copia de Hito 6.
   backupEnterprise(id: string): Observable<any> {
     return this.http.post(`${this.apiUrl}backup/${id}`, {});
+  }
+
+  /** ==================== PROCESOS DE COPIA (Hito 6) ==================== */
+  getCopyProcesses(): Observable<CopyProcess[]> {
+    return this.http.get<CopyProcess[]>(`${this.apiUrl}copy/processes`);
+  }
+
+  startBackupProcess(empresaId: string): Observable<CopyProcess> {
+    return this.http.post<CopyProcess>(`${this.apiUrl}copy/processes`, {
+      tipo: 'BACKUP',
+      empresaOrigen: empresaId,
+      generateBackup: true,
+    });
+  }
+
+  getCopyProcessStatus(processId: string): Observable<CopyProcess> {
+    return this.http.get<CopyProcess>(`${this.apiUrl}copy/processes/${processId}`);
+  }
+
+  downloadCopyProcessBackup(id: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiUrl}copy/processes/${id}/backup`, {
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
+
+  restoreFromBackup(backupRef: string, empresaDestino: string): Observable<CopyProcess> {
+    return this.http.post<CopyProcess>(`${this.apiUrl}copy/restore`, { backupRef, empresaDestino });
+  }
+
+  restoreFromZipUpload(file: File, empresaDestino: string): Observable<CopyProcess> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('empresaDestino', empresaDestino);
+    return this.http.post<CopyProcess>(`${this.apiUrl}copy/restore/upload`, formData);
   }
 
   /** ==================== COMPARTIR EMPRESA ==================== */

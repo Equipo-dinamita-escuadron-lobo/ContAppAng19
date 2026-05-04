@@ -72,6 +72,17 @@ export const routes: Routes = [
       ).then((m) => m.EditEnterpriseComponent),
   },
   {
+    path: 'enterprise/copy-processes',
+    canActivate: [isAuthenticatedGuard],
+    data: {
+      breadcrumb: 'enterprise-copy-processes',
+    },
+    loadComponent: () =>
+      import(
+        './GeneralMasters/Enterprise/copy-processes/copy-process-list.component'
+      ).then((m) => m.CopyProcessListComponent),
+  },
+  {
     path: 'subjects/list',
     data: {
       breadcrumb: 'subjects-list',

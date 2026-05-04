@@ -77,6 +77,13 @@
         class="bg-green-600 text-white rounded-full"
       >
       </p-button>
+      <p-button
+        label="Procesos de copia"
+        icon="pi pi-history"
+        (click)="goToCopyProcesses()"
+        class="p-button-outlined p-button-sm"
+      >
+      </p-button>
     </div>
   </div>
 
@@ -390,51 +397,149 @@
 <!-- Modal de carga de exportación -->
 <div
   *ngIf="showExportLoadingModal"
-  class="fixed inset-0 z-[10050] flex items-center justify-center bg-slate-700/60 backdrop-blur-md px-4"
+  class="fixed inset-0 z-[10050] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
 >
-  <div
-    class="w-full max-w-2xl overflow-hidden rounded-[40px] bg-slate-100 shadow-[0_30px_100px_rgba(0,0,0,0.35)]"
-  >
-    <!-- Header suave -->
-    <div class="h-16 bg-slate-200/70"></div>
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
 
-    <div class="px-10 py-10 text-center">
-      <!-- Icono centrado -->
-      <div class="flex justify-center mb-6">
-        <div
-          class="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center"
-        >
-          <i class="pi pi-download text-3xl text-blue-600"></i>
+    <!-- Header con gradiente -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-400 px-8 py-6 flex items-center gap-4">
+      <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+        <i class="pi pi-box text-2xl text-white"></i>
+      </div>
+      <div>
+        <p class="text-white/70 text-xs font-medium uppercase tracking-widest">Exportando empresa</p>
+        <h2 class="text-white text-lg font-semibold leading-tight truncate max-w-xs">
+          {{ exportEnterpriseName }}
+        </h2>
+      </div>
+    </div>
+
+    <!-- Cuerpo -->
+    <div class="px-8 py-8">
+
+      <!-- Pasos del proceso -->
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            [class]="exportProgress >= 10 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'">
+            1
+          </div>
+          <span class="text-xs text-gray-500">Inicio</span>
+        </div>
+        <div class="flex-1 h-0.5 mx-2"
+          [class]="exportProgress >= 30 ? 'bg-blue-600' : 'bg-gray-200'"></div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            [class]="exportProgress >= 30 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'">
+            2
+          </div>
+          <span class="text-xs text-gray-500">Procesando</span>
+        </div>
+        <div class="flex-1 h-0.5 mx-2"
+          [class]="exportProgress >= 70 ? 'bg-blue-600' : 'bg-gray-200'"></div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            [class]="exportProgress >= 70 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'">
+            3
+          </div>
+          <span class="text-xs text-gray-500">Generando</span>
+        </div>
+        <div class="flex-1 h-0.5 mx-2"
+          [class]="exportProgress >= 100 ? 'bg-blue-600' : 'bg-gray-200'"></div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            [class]="exportProgress >= 100 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'">
+            <i class="pi pi-download text-xs"></i>
+          </div>
+          <span class="text-xs text-gray-500">Descarga</span>
         </div>
       </div>
 
-      <!-- Título -->
-      <h2 class="text-3xl font-bold text-slate-800 leading-tight mb-3">
-        Iniciando exportación de empresa {{ exportEnterpriseName }}
-      </h2>
-
-      <!-- Subtítulo -->
-      <p class="text-lg text-slate-500 mb-10">
-        Preparando la información de exportación.
-      </p>
+      <!-- Porcentaje grande -->
+      <div class="text-center mb-4">
+        <span class="text-5xl font-bold text-blue-600">
+          {{ exportProgress | number: "1.0-0" }}
+        </span>
+        <span class="text-2xl font-semibold text-blue-400">%</span>
+      </div>
 
       <!-- Barra de progreso -->
-      <div class="mb-4">
-        <div class="w-full h-2 bg-slate-300 rounded-full overflow-hidden">
-          <div
-            class="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-100"
-            [style.width.%]="exportProgress"
-          ></div>
-        </div>
+      <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-4">
+        <div
+          class="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-300"
+          [style.width.%]="exportProgress"
+        ></div>
       </div>
 
-      <!-- Footer -->
-      <div class="flex items-center justify-between text-lg">
-        <span class="text-slate-500">Procesando...</span>
-        <span class="font-semibold text-slate-700">
-          {{ exportProgress | number: "1.0-0" }}%
-        </span>
+      <!-- Mensaje de estado -->
+      <p class="text-center text-sm text-gray-400">
+        <i class="pi pi-spin pi-spinner mr-1"></i>
+        Esto puede tomar unos segundos, por favor espera...
+      </p>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal de carga de importación -->
+<div
+  *ngIf="showImportLoadingModal"
+  class="fixed inset-0 z-[10050] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+>
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div class="bg-gradient-to-r from-green-600 to-green-400 px-8 py-6 flex items-center gap-4">
+      <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+        <i class="pi pi-upload text-2xl text-white"></i>
       </div>
+      <div>
+        <p class="text-white/70 text-xs font-medium uppercase tracking-widest">Restaurando empresa</p>
+        <h2 class="text-white text-lg font-semibold leading-tight truncate max-w-xs">
+          {{ selectedZipFile?.name }}
+        </h2>
+      </div>
+    </div>
+    <div class="px-8 py-8">
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            [class]="importProgress >= 10 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">1</div>
+          <span class="text-xs text-gray-500">Subida</span>
+        </div>
+        <div class="flex-1 h-0.5 mx-2" [class]="importProgress >= 30 ? 'bg-green-600' : 'bg-gray-200'"></div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            [class]="importProgress >= 30 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">2</div>
+          <span class="text-xs text-gray-500">Procesando</span>
+        </div>
+        <div class="flex-1 h-0.5 mx-2" [class]="importProgress >= 70 ? 'bg-green-600' : 'bg-gray-200'"></div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            [class]="importProgress >= 70 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">3</div>
+          <span class="text-xs text-gray-500">Restaurando</span>
+        </div>
+        <div class="flex-1 h-0.5 mx-2" [class]="importProgress >= 100 ? 'bg-green-600' : 'bg-gray-200'"></div>
+        <div class="flex flex-col items-center gap-1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+            [class]="importProgress >= 100 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'">
+            <i class="pi pi-check text-xs"></i>
+          </div>
+          <span class="text-xs text-gray-500">Listo</span>
+        </div>
+      </div>
+      <div class="text-center mb-4">
+        <span class="text-5xl font-bold text-green-600">{{ importProgress | number: "1.0-0" }}</span>
+        <span class="text-2xl font-semibold text-green-400">%</span>
+      </div>
+      <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-4">
+        <div
+          class="h-full rounded-full bg-gradient-to-r from-green-500 to-green-400 transition-all duration-300"
+          [style.width.%]="importProgress"
+        ></div>
+      </div>
+      <p class="text-center text-sm text-gray-400">
+        <i class="pi pi-spin pi-spinner mr-1"></i>
+        Restaurando datos, por favor espera...
+      </p>
     </div>
   </div>
 </div>
