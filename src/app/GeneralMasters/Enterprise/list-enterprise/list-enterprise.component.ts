@@ -73,6 +73,13 @@ export class ListEnterpriseComponent implements OnInit {
   selectedEnterpriseToShare: EnterpriseList | null = null;
   emailList: string[] = [];
   newEmail: string = '';
+  selectedRole: string = '';
+  roleOptions = [
+    { label: 'Estudiante', value: 'estudiante' },
+    { label: 'Profesor', value: 'profesor' },
+  ];
+  showPendingModal = false;
+  pendingRegistrationUsers: string[] = [];
 
   showExportLoadingModal: boolean = false;
   exportProgress: number = 0;
@@ -412,21 +419,19 @@ export class ListEnterpriseComponent implements OnInit {
 
   /* ==================== AGREGAR CORREO ==================== */
   addEmail() {
-    if (!this.newEmail.trim()) return;
+    const email = this.newEmail.trim();
+    if (!email) return;
 
-    // Validar formato del correo
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(this.newEmail)) {
+    if (!email.endsWith('@unicauca.edu.co')) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Correo inválido',
-        detail: 'Por favor ingresa un correo válido.',
+        summary: 'Dominio inválido',
+        detail: 'Solo se permiten correos @unicauca.edu.co.',
       });
       return;
     }
 
-    // Evitar duplicados
-    if (this.emailList.includes(this.newEmail.trim())) {
+    if (this.emailList.includes(email)) {
       this.messageService.add({
         severity: 'info',
         summary: 'Duplicado',
@@ -435,7 +440,7 @@ export class ListEnterpriseComponent implements OnInit {
       return;
     }
 
-    this.emailList.push(this.newEmail.trim());
+    this.emailList.push(email);
     this.newEmail = '';
   }
 
@@ -449,26 +454,38 @@ export class ListEnterpriseComponent implements OnInit {
     this.showShareModal = false;
     this.emailList = [];
     this.newEmail = '';
+    this.selectedRole = '';
     this.selectedEnterpriseToShare = null;
   }
 
   /* ==================== CONFIRMAR COMPARTIR ==================== */
   confirmShare() {
-    if (!this.selectedEnterpriseToShare?.id) return;
+    if (!this.selectedEnterpriseToShare?.id || !this.selectedRole) return;
 
     const payload = {
-      enterpriseId: this.selectedEnterpriseToShare.id,
+      enterpriseId: String(this.selectedEnterpriseToShare.id),
       emails: this.emailList,
+      role: this.selectedRole,
     };
 
-    // Aquí puedes conectar con el backend
     this.enterpriseService.shareEnterprise(payload).subscribe({
-      next: () => {
+      next: (res) => {
         this.messageService.add({
           severity: 'success',
           summary: 'Compartida',
-          detail: 'La empresa fue compartida exitosamente.',
+          detail: `Empresa compartida con ${res.notified.length} destinatario(s).`,
         });
+        if (res.rejected.length > 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Correos rechazados',
+            detail: `${res.rejected.length} correo(s) no fueron enviados.`,
+          });
+        }
+        if (res.pendingRegistration && res.pendingRegistration.length > 0) {
+          this.pendingRegistrationUsers = res.pendingRegistration;
+          this.showPendingModal = true;
+        }
         this.closeShareModal();
       },
       error: (err) => {

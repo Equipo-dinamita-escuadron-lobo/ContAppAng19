@@ -131,10 +131,11 @@ export class EnterpriseService {
 
   /** ==================== COMPARTIR EMPRESA ==================== */
   shareEnterprise(payload: {
-    enterpriseId: number;
+    enterpriseId: string;
     emails: string[];
-  }): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}share`, payload);
+    role: string;
+  }): Observable<{ notified: string[]; rejected: string[]; pendingRegistration: string[] }> {
+    return this.http.post<{ notified: string[]; rejected: string[]; pendingRegistration: string[] }>(`${this.apiUrl}share`, payload);
   }
 
   uploadEnterprisePdf(formData: FormData): Observable<any> {
