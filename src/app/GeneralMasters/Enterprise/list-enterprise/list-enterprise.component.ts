@@ -148,11 +148,18 @@ export class ListEnterpriseComponent implements OnInit {
   filterEnterprises() {
     if (!this.searchTerm) {
       this.filteredEnterprises = [...this.enterprises];
-    } else {
-      this.filteredEnterprises = this.enterprises.filter((e) =>
-        e.name.toLowerCase().includes(this.searchTerm.toLowerCase()),
-      );
+      return;
     }
+    this.enterpriseService.searchEnterprises(this.searchTerm).subscribe({
+      next: (data) => { this.filteredEnterprises = data; },
+      error: () => {
+        const term = this.searchTerm.toLowerCase();
+        this.filteredEnterprises = this.enterprises.filter((e) =>
+          e.name.toLowerCase().includes(term) ||
+          e.nit?.toLowerCase().includes(term),
+        );
+      },
+    });
   }
 
   selectEnterpriseStatus() {

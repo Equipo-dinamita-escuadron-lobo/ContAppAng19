@@ -29,6 +29,10 @@ export class EnterpriseService {
     return this.http.get<EnterpriseList[]>(this.apiUrl, { headers });
   }
 
+  searchEnterprises(q: string): Observable<EnterpriseList[]> {
+    return this.http.get<EnterpriseList[]>(`${this.apiUrl}search?q=${encodeURIComponent(q)}`);
+  }
+
   getEnterprisesInactive(): Observable<EnterpriseList[]> {
     // Endpoint para empresas inactivas
     return this.http.get<EnterpriseList[]>(`${this.apiUrl}inactive`);
