@@ -19,79 +19,6 @@
     </p-button>
   </div>
 
-  <!--  CARD: EMPRESA INCOMPLETA -->
-     <div
-    *ngIf="showIncompleteCard"
-    class="mt-6 p-6 bg-gradient-to-br from-yellow-50 to-white border border-yellow-200 rounded-xl shadow-md"
-  >
-    <!-- Header -->
-    <div class="text-center mb-5">
-      <p class="text-yellow-800 font-semibold text-base">
-        La empresa aún no está creada por completo
-      </p>
-      <p class="text-sm text-gray-500 mt-1">
-        Complete la información para habilitar todas las funcionalidades
-      </p>
-    </div>
-
-    <!-- PROGRESO LIMPIO Y CENTRADO -->
-    <div class="flex flex-col items-center justify-center mb-6">
-      <!-- Contenedor fijo -->
-      <div
-        class="relative flex items-center justify-center w-[110px] h-[110px]"
-      >
-        <svg viewBox="0 0 120 120" class="w-full h-full">
-          <!-- Fondo -->
-          <circle
-            cx="60"
-            cy="60"
-            [attr.r]="radius"
-            stroke="#e5e7eb"
-            stroke-width="8"
-            fill="none"
-          />
-
-          <!-- Progreso dinámico -->
-          <circle
-            cx="60"
-            cy="60"
-            [attr.r]="radius"
-            stroke="#1e3a8a"
-            stroke-width="8"
-            fill="none"
-            stroke-linecap="round"
-            [attr.stroke-dasharray]="circumference"
-            [attr.stroke-dashoffset]="strokeDashoffset"
-            class="transition-all duration-300"
-            transform="rotate(-90 60 60)"
-          />
-        </svg>
-
-        <!-- Texto centrado PERFECTO -->
-        <div class="absolute flex flex-col items-center justify-center">
-          <span class="text-xl font-bold text-gray-800 leading-none">
-            {{ completionPercentage }}%
-          </span>
-          <span class="text-[10px] text-gray-500 mt-1"> Completado </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Divider -->
-    <div class="border-t border-gray-200 my-4"></div>
-
-    <!-- Botón principal -->
-    <div class="flex justify-center">
-      <p-button
-        label="Completar información"
-        icon="pi pi-check-circle"
-        (click)="openCompleteModal()"
-        class="bg-primary text-white px-6 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
-      >
-      </p-button>
-    </div>
-  </div>
-
   <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
     <!-- Main Content Area -->
     <div class="lg:col-span-3 space-y-6">
@@ -193,11 +120,38 @@
               <label class="text-sm font-medium text-gray-600 mb-1"
                 >Razón social:</label
               >
-              <!-- <span class="text-lg font-semibold text-gray-800">{{ enterpriseData?.legalName || 'No disponible'
-                }}</span> -->
               <span class="text-lg font-semibold text-gray-800">{{
                 getBusinessName()
               }}</span>
+            </div>
+
+            <div *ngIf="enterpriseData?.personType?.type === 'NATURAL'" class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1"
+                >Nombre del propietario:</label
+              >
+              <span class="text-lg font-semibold text-gray-800">{{
+                enterpriseData?.personType?.name || "No disponible"
+              }}</span>
+            </div>
+
+            <div *ngIf="enterpriseData?.personType?.type === 'NATURAL'" class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1"
+                >Apellidos:</label
+              >
+              <span class="text-lg font-semibold text-gray-800">{{
+                enterpriseData?.personType?.surname || "No disponible"
+              }}</span>
+            </div>
+
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1"
+                >Estado:</label
+              >
+              <span class="text-lg font-semibold"
+                [class.text-green-600]="enterpriseData?.state === 'ACTIVE'"
+                [class.text-red-500]="enterpriseData?.state === 'INACTIVE'">
+                {{ enterpriseData?.state === 'ACTIVE' ? 'Activo' : enterpriseData?.state === 'INACTIVE' ? 'Inactivo' : 'No disponible' }}
+              </span>
             </div>
           </div>
         </div>
@@ -282,6 +236,15 @@
 
             <div class="flex flex-col">
               <label class="text-sm font-medium text-gray-600 mb-1"
+                >Método de inventario:</label
+              >
+              <span class="text-lg font-semibold text-gray-800">{{
+                enterpriseData?.inventoryMethods || "No disponible"
+              }}</span>
+            </div>
+
+            <div class="flex flex-col">
+              <label class="text-sm font-medium text-gray-600 mb-1"
                 >Materia:</label
               >
               <span class="text-lg font-semibold text-gray-800">
@@ -294,7 +257,47 @@
     </div>
 
     <!-- Sidebar -->
-    <div class="lg:col-span-1">
+    <div class="lg:col-span-1 space-y-4">
+
+      <!-- CARD EMPRESA INCOMPLETA -->
+      <div
+        *ngIf="showIncompleteCard"
+        class="bg-white rounded-lg shadow-md p-6 border border-yellow-200"
+      >
+        <p class="text-yellow-800 font-semibold text-sm text-center mb-3">
+          Empresa incompleta
+        </p>
+
+        <div class="flex flex-col items-center mb-3">
+          <div class="relative flex items-center justify-center w-[90px] h-[90px]">
+            <svg viewBox="0 0 120 120" class="w-full h-full">
+              <circle cx="60" cy="60" [attr.r]="radius" stroke="#e5e7eb" stroke-width="8" fill="none" />
+              <circle
+                cx="60" cy="60" [attr.r]="radius"
+                stroke="#1e3a8a" stroke-width="8" fill="none"
+                stroke-linecap="round"
+                [attr.stroke-dasharray]="circumference"
+                [attr.stroke-dashoffset]="strokeDashoffset"
+                class="transition-all duration-300"
+                transform="rotate(-90 60 60)"
+              />
+            </svg>
+            <div class="absolute flex flex-col items-center justify-center">
+              <span class="text-base font-bold text-gray-800 leading-none">{{ completionPercentage }}%</span>
+              <span class="text-[9px] text-gray-500 mt-1">Completado</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <p-button
+            label="Completar"
+            icon="pi pi-check-circle"
+            (click)="openCompleteModal()"
+          ></p-button>
+        </div>
+      </div>
+
       <div class="bg-white rounded-lg shadow-md p-8">
         <h3 class="text-xl font-bold text-gray-800 mb-8 text-center">
           Mi empresa
@@ -348,6 +351,7 @@
             (click)="openArchiveConfirmation()"
           ></p-button>
         </div>
+
       </div>
     </div>
   </div>

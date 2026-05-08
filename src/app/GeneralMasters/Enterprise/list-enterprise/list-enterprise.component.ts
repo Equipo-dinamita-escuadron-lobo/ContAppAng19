@@ -78,8 +78,8 @@ export class ListEnterpriseComponent implements OnInit {
     { label: 'Estudiante', value: 'estudiante' },
     { label: 'Profesor', value: 'profesor' },
   ];
-  showPendingModal = false;
-  pendingRegistrationUsers: string[] = [];
+  showNotRegisteredModal = false;
+  notRegisteredUsers: string[] = [];
 
   showExportLoadingModal: boolean = false;
   exportProgress: number = 0;
@@ -470,21 +470,16 @@ export class ListEnterpriseComponent implements OnInit {
 
     this.enterpriseService.shareEnterprise(payload).subscribe({
       next: (res) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Compartida',
-          detail: `Empresa compartida con ${res.notified.length} destinatario(s).`,
-        });
-        if (res.rejected.length > 0) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Correos rechazados',
-            detail: `${res.rejected.length} correo(s) no fueron enviados.`,
-          });
+        if (res.notRegistered && res.notRegistered.length > 0) {
+          this.notRegisteredUsers = res.notRegistered;
+          this.showNotRegisteredModal = true;
         }
-        if (res.pendingRegistration && res.pendingRegistration.length > 0) {
-          this.pendingRegistrationUsers = res.pendingRegistration;
-          this.showPendingModal = true;
+        if (res.notified.length > 0) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Compartida',
+            detail: `Empresa compartida con ${res.notified.length} destinatario(s).`,
+          });
         }
         this.closeShareModal();
       },

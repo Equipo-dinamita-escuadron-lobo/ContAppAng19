@@ -7,10 +7,11 @@
 <div class="m-120 max-w-7xl mx-auto">
   <div class="max-w-5xl mx-auto w-full px-4 py-8">
     <!-- Título principal -->
-    <div class="text-center mb-8">
+    <div class="flex justify-between items-center mb-8">
       <h1 class="font-family-titillium font-bold text-4xl text-primary">
         Crear empresa
       </h1>
+      <p-button label="Regresar" icon="pi pi-arrow-left" (click)="goBack()"></p-button>
     </div>
 
     <!-- Stepper superior -->
@@ -730,9 +731,9 @@
       </div>
 
       <!-- Tarjetas -->
-      <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="mt-8 flex justify-center">
         <!-- Card impuestos -->
-        <div class="rounded-xl border border-gray-200 bg-white p-5">
+        <div class="rounded-xl border border-gray-200 bg-white p-5 w-full max-w-sm">
           <div class="flex items-center gap-3 mb-4">
             <h3 class="text-lg font-semibold text-gray-800">
               Configurar impuestos
@@ -750,28 +751,6 @@
           >
             <i class="pi pi-percentage text-sm"></i>
             Configurar impuestos
-          </button>
-        </div>
-
-        <!-- Card materias -->
-        <div class="rounded-xl border border-gray-200 bg-white p-5">
-          <div class="flex items-center gap-3 mb-4">
-            <h3 class="text-lg font-semibold text-gray-800">
-              Configurar materias
-            </h3>
-          </div>
-
-          <p class="text-sm text-gray-600 mb-5">
-            Organiza las materias necesarias para tu empresa.
-          </p>
-
-          <button
-            type="button"
-            (click)="onConfigureSubjects()"
-            class="w-full flex items-center justify-center gap-2 rounded-md bg-blue-900 px-4 py-2.5 text-white text-sm font-medium hover:bg-blue-700 transition"
-          >
-            <i class="pi pi-book text-sm"></i>
-            Configurar materias
           </button>
         </div>
       </div>

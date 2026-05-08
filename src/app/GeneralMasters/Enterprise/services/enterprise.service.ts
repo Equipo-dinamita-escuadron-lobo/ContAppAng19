@@ -134,8 +134,8 @@ export class EnterpriseService {
     enterpriseId: string;
     emails: string[];
     role: string;
-  }): Observable<{ notified: string[]; rejected: string[]; pendingRegistration: string[] }> {
-    return this.http.post<{ notified: string[]; rejected: string[]; pendingRegistration: string[] }>(`${this.apiUrl}share`, payload);
+  }): Observable<{ notified: string[]; rejected: string[]; notRegistered: string[] }> {
+    return this.http.post<{ notified: string[]; rejected: string[]; notRegistered: string[] }>(`${this.apiUrl}share`, payload);
   }
 
   uploadEnterprisePdf(formData: FormData): Observable<any> {

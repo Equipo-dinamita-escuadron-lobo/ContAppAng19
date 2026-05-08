@@ -8,6 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
+import { Router } from '@angular/router';
 import { EnterpriseService } from '../services/enterprise.service';
 import { CopyProcess } from '../models/CopyProcess';
 
@@ -39,7 +40,12 @@ export class CopyProcessListComponent implements OnInit {
   constructor(
     private enterpriseService: EnterpriseService,
     private messageService: MessageService,
+    private router: Router,
   ) {}
+
+  goBack(): void {
+    this.router.navigate(['/enterprise/list']);
+  }
 
   ngOnInit(): void {
     this.loadProcesses();

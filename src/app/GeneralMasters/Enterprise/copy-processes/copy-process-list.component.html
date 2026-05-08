@@ -3,8 +3,12 @@
 <div class="p-4">
   <div class="flex items-center justify-between mb-4">
     <h2 class="text-2xl font-semibold">Procesos de copia</h2>
-    <button pButton label="Actualizar" icon="pi pi-refresh" class="p-button-outlined"
-      (click)="loadProcesses()" [disabled]="loading"></button>
+    <div class="flex gap-3">
+      <button pButton label="Actualizar" icon="pi pi-refresh" class="p-button-outlined"
+        (click)="loadProcesses()" [disabled]="loading"></button>
+      <button pButton label="Regresar" icon="pi pi-arrow-left"
+        (click)="goBack()"></button>
+    </div>
   </div>
 
   @if (loading) {

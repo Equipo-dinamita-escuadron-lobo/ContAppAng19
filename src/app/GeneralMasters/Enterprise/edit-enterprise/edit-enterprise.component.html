@@ -21,7 +21,7 @@
 
   <!-- Formulario principal -->
   <div class="bg-white rounded-xl shadow-lg p-8">
-    <form [formGroup]="enterpriseForm" (ngSubmit)="onSubmit()">
+    <form *ngIf="enterpriseForm" [formGroup]="enterpriseForm" (ngSubmit)="onSubmit()">
 
       <!-- Sección: Información básica -->
       <div class="mb-8">
@@ -98,7 +98,7 @@
                     Tipo de Empresa <span class="text-red-500">*</span>
                   </label>
                   <p-dropdown formControlName="enterpriseType" [options]="enterpriseTypes" optionLabel="name"
-                    placeholder="Seleccione una opción" class="w-full">
+                    optionValue="id" placeholder="Seleccione una opción" class="w-full">
                   </p-dropdown>
                 </div>
 
@@ -158,7 +158,7 @@
                     Tipo de Contribuyente <span class="text-red-500">*</span>
                   </label>
                   <p-dropdown formControlName="taxPayerType" [options]="taxPayerTypes" optionLabel="name"
-                    placeholder="Seleccione una opción" class="w-full">
+                    optionValue="id" placeholder="Seleccione una opción" class="w-full">
                   </p-dropdown>
                 </div>
 
@@ -168,7 +168,7 @@
                     Estado <span class="text-red-500">*</span>
                   </label>
                   <p-dropdown formControlName="state" [options]="states" optionLabel="name"
-                    placeholder="Seleccione un estado" class="w-full">
+                    optionValue="id" placeholder="Seleccione un estado" class="w-full">
                   </p-dropdown>
                 </div>
 

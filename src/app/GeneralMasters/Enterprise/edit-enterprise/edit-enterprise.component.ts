@@ -146,7 +146,7 @@ export class EditEnterpriseComponent implements OnInit {
   initForm(): void {
     this.enterpriseForm = this.fb.group({
       name: [this.enterpriseData?.name || '', Validators.required],
-      enterpriseType: [this.enterpriseData?.enterpriseType || null],
+      enterpriseType: [this.getEntityId(this.enterpriseData?.enterpriseType) || null],
       state: [this.enterpriseData?.state || 'ACTIVE'],
       taxLiabilities: [
         this.mapTaxLiabilitiesToIds(this.enterpriseData?.taxLiabilities || []),
@@ -156,7 +156,7 @@ export class EditEnterpriseComponent implements OnInit {
       lastNames: [this.enterpriseData?.personType?.surname || ''],
       nit: [this.enterpriseData?.nit || '', Validators.required],
       dv: [this.enterpriseData?.dv || ''],
-      taxPayerType: [this.enterpriseData?.taxPayerType || null],
+      taxPayerType: [this.getEntityId(this.enterpriseData?.taxPayerType) || null],
       mainActivity: [this.enterpriseData?.mainActivity || ''],
       secondaryActivity: [this.enterpriseData?.secondaryActivity || ''],
       inventoryMethods: [this.enterpriseData?.inventoryMethods || null],
@@ -390,8 +390,29 @@ export class EditEnterpriseComponent implements OnInit {
 
   private loadCitiesByDepartment(departmentId: number | string): void {
     this.addressService.getCitiesByDepartment(departmentId).subscribe({
-      next: (response) => {
-        this.cities = response.cities || [];
+      next: (data: any) => {
+        const raw: any[] = Array.isArray(data)
+          ? data
+          : data?.cities || data?.content || [];
+
+        this.cities = raw.map((c: any) => ({
+          id: Number(c.cityCode ?? c.id ?? c.code),
+          name: c.cityName ?? c.name,
+          ...c,
+        }));
+
+        const cityValue = this.enterpriseData?.location?.city;
+        const cityId = cityValue != null
+          ? typeof cityValue === 'object'
+            ? Number((cityValue as any).cityCode ?? (cityValue as any).id)
+            : Number(cityValue)
+          : null;
+
+        if (cityId != null && !isNaN(cityId)) {
+          setTimeout(() => {
+            this.enterpriseForm?.get('city')?.setValue(cityId);
+          });
+        }
       },
       error: (err) => {
         console.error('Error al cargar ciudades:', err);
