@@ -29,12 +29,19 @@ import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../../../../Core/auth/services/auth.service';
 import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
+import { ThirdService } from '../../../../../GeneralMasters/ThirdParties/Services/third.service';
+import { CostCenterService } from '../../../../../GeneralMasters/CostCenters/services/cost-center.service';
+import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
+import { Third } from '../../../../../GeneralMasters/ThirdParties/models/Third';
+import { CostCenter } from '../../../../../GeneralMasters/CostCenters/models/cost-center.model';
+import { Account } from '../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
 import { Criteria } from '../../Models/Criteria';
 import { AuxiliaryBookType } from '../../Models/eAuxiliaryBookType';
 import { AuxiliaryBooksServiceService } from '../../Services/auxiliary-books-service.service';
 
 type ScheduleFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 type DeliveryWay = 'DOWNLOAD' | 'EMAIL';
+type ReportFormat = 'EXCEL' | 'PDF';
 
 interface ScheduleFormControls {
   bookType: FormControl<AuxiliaryBookType | null>;
@@ -42,6 +49,9 @@ interface ScheduleFormControls {
   useAccountRange: FormControl<boolean>;
   rangeFrom: FormControl<number | null>;
   rangeTo: FormControl<number | null>;
+  reportFormat: FormControl<ReportFormat | null>;
+  thirdPartyId: FormControl<number | null>;
+  costCenterId: FormControl<number | null>;
   criteriaStartDate: FormControl<Date | null>;
   criteriaEndDate: FormControl<Date | null>;
   startAt: FormControl<Date | null>;
@@ -78,6 +88,7 @@ export interface CreateScheduledReportRequest {
   createdBy: string | null;
   deliveryWay: DeliveryWay;
   emailConfig: ScheduledReportEmailConfig | null;
+  reportFormat: ReportFormat;
 }
 
 export interface AuxiliaryBookHistory {
@@ -164,7 +175,7 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     {
       label: 'Libro Diario',
       value: AuxiliaryBookType.DIARY,
-      description: 'Movimientos cronologicos por periodo.',
+      description: 'Movimientos cronológicos por período.',
     },
     {
       label: 'Libro Mayor',
@@ -196,11 +207,45 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     { label: 'Auxiliar', value: 'AUXILIARY_ACCOUNT' },
   ];
 
+  readonly accountBookLevelOptions = [
+    { label: 'Cuenta', value: 'ACCOUNT' },
+    { label: 'Subcuenta', value: 'SUB_ACCOUNT' },
+    { label: 'Auxiliar', value: 'AUXILIARY_ACCOUNT' },
+  ];
+
+  thirdPartyOptions: Third[] = [];
+  costCenterOptions: CostCenter[] = [];
+  rangeFromOptions: Account[] = [];
+  rangeToOptions: Account[] = [];
+
+  readonly reportFormatOptions: {
+    label: string;
+    value: ReportFormat;
+    description: string;
+    icon: string;
+    accent: string;
+  }[] = [
+    {
+      label: 'Excel',
+      value: 'EXCEL',
+      description: 'Hoja de cálculo .xlsx editable.',
+      icon: 'pi pi-file-excel',
+      accent: 'text-emerald-600',
+    },
+    {
+      label: 'PDF',
+      value: 'PDF',
+      description: 'Documento .pdf listo para imprimir.',
+      icon: 'pi pi-file-pdf',
+      accent: 'text-red-600',
+    },
+  ];
+
   readonly frequencyOptions = [
     {
       label: 'Diaria',
       value: 'DAILY' as ScheduleFrequency,
-      description: 'Recurrencia cada dia desde la fecha de inicio.',
+      description: 'Recurrencia cada día desde la fecha de inicio.',
     },
     {
       label: 'Semanal',
@@ -219,12 +264,12 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     {
       label: 'Descarga en el sistema',
       value: 'DOWNLOAD' as DeliveryWay,
-      description: 'Deja el reporte disponible para visualizacion y descarga.',
+      description: 'Deja el reporte disponible para visualización y descarga.',
     },
     {
-      label: 'Correo electronico',
+      label: 'Correo electrónico',
       value: 'EMAIL' as DeliveryWay,
-      description: 'Envia el resultado al correo configurado.',
+      description: 'Envía el resultado al correo configurado.',
     },
   ];
 
@@ -245,22 +290,70 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     private readonly enterpriseService: EnterpriseService,
     private readonly authService: AuthService,
     private readonly auxiliaryBookService: AuxiliaryBooksServiceService,
+    private readonly thirdService: ThirdService,
+    private readonly costCenterService: CostCenterService,
+    private readonly chartAccountService: ChartAccountService,
     @Optional() public dynamicDialogConfig: DynamicDialogConfig,
     @Optional() public dynamicDialogRef: DynamicDialogRef,
   ) {}
 
+  get currentBookType(): AuxiliaryBookType | null {
+    return this.scheduleForm?.getRawValue().bookType ?? null;
+  }
+
+  get showLevelField(): boolean {
+    const type = this.currentBookType;
+    return (
+      type === AuxiliaryBookType.DIARY ||
+      type === AuxiliaryBookType.MAJOR_AND_BALANCES ||
+      type === AuxiliaryBookType.INVENTORY_AND_BALANCES ||
+      type === AuxiliaryBookType.ACCOUNT
+    );
+  }
+
+  get showRangeField(): boolean {
+    const type = this.currentBookType;
+    return type !== null && type !== AuxiliaryBookType.THIRD_PARTY;
+  }
+
+  get showThirdPartyField(): boolean {
+    const type = this.currentBookType;
+    return (
+      type === AuxiliaryBookType.THIRD_PARTY ||
+      type === AuxiliaryBookType.INVENTORY_AND_BALANCES
+    );
+  }
+
+  get isThirdPartyRequired(): boolean {
+    return this.currentBookType === AuxiliaryBookType.THIRD_PARTY;
+  }
+
+  get showCostCenterField(): boolean {
+    return this.currentBookType === AuxiliaryBookType.ACCOUNT;
+  }
+
+  get useCutOffDate(): boolean {
+    return this.currentBookType === AuxiliaryBookType.INVENTORY_AND_BALANCES;
+  }
+
+  get availableLevelOptions() {
+    return this.currentBookType === AuxiliaryBookType.ACCOUNT
+      ? this.accountBookLevelOptions
+      : this.criteriaLevelOptions;
+  }
+
   get bookInfo() {
-    return this.normalizeBookInfo(this.sourceData);
+    return this.sourceData ? this.normalizeBookInfo(this.sourceData) : null;
   }
 
   get dialogTitle(): string {
-    return this.isEditingSchedule ? 'Editar Programacion' : 'Programar Reporte';
+    return this.isEditingSchedule ? 'Editar Programación' : 'Programar Reporte';
   }
 
   get submitLabel(): string {
     return this.isEditingSchedule
-      ? 'Actualizar programacion'
-      : 'Guardar programacion';
+      ? 'Actualizar programación'
+      : 'Guardar programación';
   }
 
   get submitIcon(): string {
@@ -309,24 +402,31 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       ),
       criteriaType: this.fb.control<string | null>(
         initialState.criteria.criteriaType || null,
-        Validators.required,
       ),
       useAccountRange: this.fb.nonNullable.control(
         Boolean(initialState.criteria.criteriaRange),
       ),
       rangeFrom: this.fb.control<number | null>(
-        initialState.criteria.criteriaRange?.from ?? null,
+        initialState.criteria.criteriaRange?.fromRange ?? null,
       ),
       rangeTo: this.fb.control<number | null>(
-        initialState.criteria.criteriaRange?.to ?? null,
+        initialState.criteria.criteriaRange?.toRange ?? null,
+      ),
+      reportFormat: this.fb.control<ReportFormat | null>(
+        'EXCEL',
+        Validators.required,
+      ),
+      thirdPartyId: this.fb.control<number | null>(
+        initialState.criteria.thirdPartyId ?? null,
+      ),
+      costCenterId: this.fb.control<number | null>(
+        initialState.criteria.costCenterId ?? null,
       ),
       criteriaStartDate: this.fb.control<Date | null>(
         this.parseDateLike(initialState.criteria.startDate),
-        Validators.required,
       ),
       criteriaEndDate: this.fb.control<Date | null>(
         this.parseDateLike(initialState.criteria.endDate),
-        Validators.required,
       ),
       startAt: this.fb.control<Date | null>(
         initialState.startAt,
@@ -358,6 +458,193 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
 
     this.updateRangeControls(this.control('useAccountRange')?.value === true);
     this.updateEmailValidators(this.control('deliveryWay')?.value ?? null);
+
+    this.control('bookType')?.valueChanges.subscribe((bookType) => {
+      this.applyBookTypeRules(bookType as AuxiliaryBookType | null);
+    });
+
+    this.applyBookTypeRules(this.control('bookType')?.value ?? null);
+
+    this.control('criteriaType')?.valueChanges.subscribe(() => {
+      this.refreshRangeAccountOptions();
+    });
+
+    this.control('useAccountRange')?.valueChanges.subscribe((enabled) => {
+      if (enabled === true) {
+        this.refreshRangeAccountOptions();
+      }
+    });
+
+    this.control('rangeFrom')?.valueChanges.subscribe(() => {
+      this.updateRangeToOptions();
+    });
+
+    if (this.control('useAccountRange')?.value === true) {
+      this.refreshRangeAccountOptions();
+    }
+  }
+
+  get rangeFromOptionsFiltered(): Account[] {
+    if (!this.rangeFromOptions.length) {
+      return [];
+    }
+    const maxValue = Math.max(
+      ...this.rangeFromOptions.map((opt) => parseInt(opt.code, 10)),
+    );
+    return this.rangeFromOptions.filter(
+      (opt) => parseInt(opt.code, 10) < maxValue,
+    );
+  }
+
+  private refreshRangeAccountOptions(): void {
+    const enterpriseId = this.resolveEnterpriseId();
+    const level = this.control('criteriaType')?.value as string | null;
+    if (!enterpriseId || !level || !this.showRangeField) {
+      this.rangeFromOptions = [];
+      this.rangeToOptions = [];
+      return;
+    }
+
+    this.chartAccountService.getListAccounts(enterpriseId).subscribe({
+      next: (accounts: Account[]) => {
+        this.rangeFromOptions = this.filterAccountsByLevel(accounts, level);
+        this.updateRangeToOptions();
+      },
+      error: () => {
+        this.rangeFromOptions = [];
+        this.rangeToOptions = [];
+      },
+    });
+  }
+
+  private updateRangeToOptions(): void {
+    const fromValue = this.toNumber(this.control('rangeFrom')?.value);
+    if (fromValue == null) {
+      this.rangeToOptions = [];
+      return;
+    }
+    this.rangeToOptions = this.rangeFromOptions.filter(
+      (opt) => parseInt(opt.code, 10) > fromValue,
+    );
+  }
+
+  private filterAccountsByLevel(accounts: Account[], level: string): Account[] {
+    switch (level) {
+      case 'NUMBER_CLASS':
+        return accounts;
+      case 'GROUP':
+        return accounts.flatMap((a) => a.children || []);
+      case 'ACCOUNT':
+        return accounts.flatMap((a) =>
+          (a.children || []).flatMap((b) => b.children || []),
+        );
+      case 'SUB_ACCOUNT':
+        return accounts.flatMap((a) =>
+          (a.children || []).flatMap((b) =>
+            (b.children || []).flatMap((c) => c.children || []),
+          ),
+        );
+      case 'AUXILIARY_ACCOUNT':
+        return accounts.flatMap((a) =>
+          (a.children || []).flatMap((b) =>
+            (b.children || []).flatMap((c) =>
+              (c.children || []).flatMap((d) => d.children || []),
+            ),
+          ),
+        );
+      default:
+        return [];
+    }
+  }
+
+  private applyBookTypeRules(bookType: AuxiliaryBookType | null): void {
+    const criteriaTypeControl = this.control('criteriaType');
+    const thirdPartyControl = this.control('thirdPartyId');
+    const costCenterControl = this.control('costCenterId');
+    const startDateControl = this.control('criteriaStartDate');
+    const endDateControl = this.control('criteriaEndDate');
+    const useRangeControl = this.control('useAccountRange');
+
+    if (bookType === AuxiliaryBookType.THIRD_PARTY) {
+      criteriaTypeControl?.setValue('ACCOUNT', { emitEvent: false });
+      criteriaTypeControl?.clearValidators();
+    } else if (bookType === AuxiliaryBookType.ACCOUNTING_MOVEMENT) {
+      criteriaTypeControl?.setValue('ACCOUNT', { emitEvent: false });
+      criteriaTypeControl?.clearValidators();
+    } else if (this.showLevelField) {
+      criteriaTypeControl?.setValidators([Validators.required]);
+    } else {
+      criteriaTypeControl?.clearValidators();
+    }
+    criteriaTypeControl?.updateValueAndValidity({ emitEvent: false });
+
+    if (this.showThirdPartyField) {
+      this.loadThirdPartyOptions();
+      if (this.isThirdPartyRequired) {
+        thirdPartyControl?.setValidators([Validators.required]);
+      } else {
+        thirdPartyControl?.clearValidators();
+      }
+    } else {
+      thirdPartyControl?.clearValidators();
+      thirdPartyControl?.setValue(null, { emitEvent: false });
+    }
+    thirdPartyControl?.updateValueAndValidity({ emitEvent: false });
+
+    if (this.showCostCenterField) {
+      this.loadCostCenterOptions();
+    } else {
+      costCenterControl?.setValue(null, { emitEvent: false });
+    }
+
+    if (!this.showRangeField) {
+      useRangeControl?.setValue(false, { emitEvent: false });
+      this.updateRangeControls(false);
+    }
+
+    if (this.useCutOffDate) {
+      startDateControl?.clearValidators();
+      startDateControl?.setValue(null, { emitEvent: false });
+      endDateControl?.setValidators([Validators.required]);
+    } else {
+      startDateControl?.setValidators([Validators.required]);
+      endDateControl?.setValidators([Validators.required]);
+    }
+    startDateControl?.updateValueAndValidity({ emitEvent: false });
+    endDateControl?.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private loadThirdPartyOptions(): void {
+    const enterpriseId = this.resolveEnterpriseId();
+    if (!enterpriseId || this.thirdPartyOptions.length > 0) {
+      return;
+    }
+    this.thirdService.getThirdList(enterpriseId).subscribe({
+      next: (response: Third[]) => {
+        this.thirdPartyOptions = response.map((third) => ({
+          ...third,
+          fullName: `${third.names} ${third.lastNames}`,
+        }));
+      },
+      error: () => {
+        this.thirdPartyOptions = [];
+      },
+    });
+  }
+
+  private loadCostCenterOptions(): void {
+    const enterpriseId = this.resolveEnterpriseId();
+    if (!enterpriseId || this.costCenterOptions.length > 0) {
+      return;
+    }
+    this.costCenterService.findActiveAuxiliary(enterpriseId).subscribe({
+      next: (response: CostCenter[]) => {
+        this.costCenterOptions = response;
+      },
+      error: () => {
+        this.costCenterOptions = [];
+      },
+    });
   }
 
   control(name: keyof ScheduleFormControls): AbstractControl | null {
@@ -370,6 +657,14 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
 
   setDeliveryWay(deliveryWay: DeliveryWay): void {
     this.control('deliveryWay')?.setValue(deliveryWay);
+  }
+
+  setReportFormat(format: ReportFormat): void {
+    this.control('reportFormat')?.setValue(format);
+  }
+
+  isReportFormatSelected(format: ReportFormat): boolean {
+    return this.control('reportFormat')?.value === format;
   }
 
   isFrequencySelected(frequency: ScheduleFrequency): boolean {
@@ -453,7 +748,7 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     if (validationMessages.length > 0) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Configuracion invalida',
+        summary: 'Configuración inválida',
         detail: validationMessages.join(' '),
         life: 5000,
       });
@@ -485,10 +780,10 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
         this.isSubmitting = false;
         this.messageService.add({
           severity: 'success',
-          summary: 'Programacion guardada',
+          summary: 'Programación guardada',
           detail: this.isEditingSchedule
-            ? 'La programacion se actualizo correctamente.'
-            : 'La programacion se guardo correctamente.',
+            ? 'La programación se actualizó correctamente.'
+            : 'La programación se guardó correctamente.',
           life: 2200,
         });
 
@@ -504,11 +799,11 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
         this.isSubmitting = false;
         this.messageService.add({
           severity: 'error',
-          summary: 'Error al guardar la programacion',
+          summary: 'Error al guardar la programación',
           detail:
             err?.error?.message ??
             err?.message ??
-            'No se pudo guardar la programacion. Intente de nuevo.',
+            'No se pudo guardar la programación. Intente de nuevo.',
           life: 5000,
         });
       },
@@ -536,7 +831,7 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'No se pudo cancelar',
-        detail: 'No se encontro un identificador valido para la programacion.',
+        detail: 'No se encontró un identificador válido para la programación.',
         life: 5000,
       });
       return;
@@ -550,8 +845,8 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
         this.showDeleteConfirmation = false;
         this.messageService.add({
           severity: 'success',
-          summary: 'Programacion cancelada',
-          detail: 'La tarea automatica fue cancelada correctamente.',
+          summary: 'Programación cancelada',
+          detail: 'La tarea automática fue cancelada correctamente.',
           life: 2200,
         });
         setTimeout(() => this.close(payload), 900);
@@ -564,7 +859,7 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
           detail:
             err?.error?.message ??
             err?.message ??
-            'No se pudo cancelar la programacion. Intente de nuevo.',
+            'No se pudo cancelar la programación. Intente de nuevo.',
           life: 5000,
         });
       },
@@ -633,12 +928,6 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     if (requiresEmail) {
       emailControl?.enable({ emitEvent: false });
       emailControl?.setValidators([Validators.required, Validators.email]);
-
-      if (!emailControl?.value.trim()) {
-        emailControl?.setValue(this.resolveCurrentUserEmail(), {
-          emitEvent: false,
-        });
-      }
     } else {
       emailControl?.clearValidators();
       emailControl?.setValue('', { emitEvent: false });
@@ -651,7 +940,6 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
   private collectValidationMessages(): string[] {
     const errors: string[] = [];
     const rawValue = this.scheduleForm.getRawValue();
-    const userId = this.resolveNumericUserId();
     const enterpriseId = this.resolveEnterpriseId();
 
     if (!enterpriseId) {
@@ -660,9 +948,9 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       );
     }
 
-    if (userId == null) {
+    if (!this.authService.returnUserInfo()) {
       errors.push(
-        'No se pudo resolver un userId numerico para el usuario autenticado.',
+        'No se pudo identificar al usuario autenticado. Inicia sesión nuevamente.',
       );
     }
 
@@ -670,11 +958,15 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       errors.push('Debe seleccionar un tipo de reporte.');
     }
 
-    if (!rawValue.criteriaType) {
+    if (this.showLevelField && !rawValue.criteriaType) {
       errors.push('Debe seleccionar un criterio contable.');
     }
 
-    if (!rawValue.criteriaStartDate || !rawValue.criteriaEndDate) {
+    if (this.useCutOffDate) {
+      if (!rawValue.criteriaEndDate) {
+        errors.push('Debe seleccionar la fecha de corte del reporte.');
+      }
+    } else if (!rawValue.criteriaStartDate || !rawValue.criteriaEndDate) {
       errors.push('Debe definir un rango de fechas para los criterios.');
     } else if (this.isCriteriaDateRangeInvalid()) {
       errors.push(
@@ -682,7 +974,11 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       );
     }
 
-    if (rawValue.useAccountRange) {
+    if (this.isThirdPartyRequired && rawValue.thirdPartyId == null) {
+      errors.push('Debe seleccionar un Tercero para este reporte.');
+    }
+
+    if (this.showRangeField && rawValue.useAccountRange) {
       const rangeFrom = this.toNumber(rawValue.rangeFrom);
       const rangeTo = this.toNumber(rawValue.rangeTo);
 
@@ -720,11 +1016,9 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
 
     if (this.requiresEmailConfig(rawValue.deliveryWay)) {
       if (!rawValue.email.trim()) {
-        errors.push(
-          'Debe ingresar un correo electronico para construir el emailConfig.',
-        );
+        errors.push('Debe ingresar un correo electrónico válido.');
       } else if (this.control('email')?.invalid) {
-        errors.push('El correo electronico ingresado no es valido.');
+        errors.push('El correo electrónico ingresado no es válido.');
       }
     }
 
@@ -754,19 +1048,26 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       reportPublicId: this.sourceData?.publicId ?? null,
       request: {
         entId: this.resolveEnterpriseId() ?? '',
-        userId: this.resolveNumericUserId() ?? 0,
+        userId: this.resolveNumericUserId(),
         bookType: bookType ?? AuxiliaryBookType.DIARY,
         criteria: {
           criteriaType: rawValue.criteriaType ?? '',
-          criteriaRange: rawValue.useAccountRange
-            ? {
-                from: this.toNumber(rawValue.rangeFrom),
-                to: this.toNumber(rawValue.rangeTo),
-              }
-            : null,
-          costCenterId: this.initialCriteriaMetadata.costCenterId,
-          thirdPartyId: this.initialCriteriaMetadata.thirdPartyId,
-          startDate: this.formatDateOnly(rawValue.criteriaStartDate),
+          criteriaRange:
+            this.showRangeField && rawValue.useAccountRange
+              ? {
+                  fromRange: this.toNumber(rawValue.rangeFrom),
+                  toRange: this.toNumber(rawValue.rangeTo),
+                }
+              : null,
+          costCenterId: this.showCostCenterField
+            ? this.toNumber(rawValue.costCenterId)
+            : this.initialCriteriaMetadata.costCenterId,
+          thirdPartyId: this.showThirdPartyField
+            ? this.toNumber(rawValue.thirdPartyId)
+            : this.initialCriteriaMetadata.thirdPartyId,
+          startDate: this.useCutOffDate
+            ? this.buildYearStartDate(rawValue.criteriaEndDate)
+            : this.formatDateOnly(rawValue.criteriaStartDate),
           endDate: this.formatDateOnly(rawValue.criteriaEndDate),
         },
         frequency: rawValue.frequency ?? 'DAILY',
@@ -779,6 +1080,7 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
               email: rawValue.email.trim(),
             }
           : null,
+        reportFormat: rawValue.reportFormat ?? 'EXCEL',
       },
     };
   }
@@ -816,7 +1118,7 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       endAt: this.parseDateLike(incomingEndAt),
       frequency: this.parseFrequency(incomingFrequency) ?? 'DAILY',
       deliveryWay: this.parseDeliveryWay(incomingDeliveryWay) ?? 'DOWNLOAD',
-      email: emailSource || this.resolveCurrentUserEmail(),
+      email: emailSource ?? '',
       isEditing: Boolean(
         this.resolveScheduleId(source) != null ||
         incomingStartAt ||
@@ -848,10 +1150,10 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     return {
       criteriaType: criteriaSource?.criteriaType ?? '',
       criteriaRange:
-        criteriaRange?.from != null && criteriaRange?.to != null
+        criteriaRange?.fromRange != null && criteriaRange?.toRange != null
           ? {
-              from: this.toNumber(criteriaRange.from),
-              to: this.toNumber(criteriaRange.to),
+              fromRange: this.toNumber(criteriaRange.fromRange),
+              toRange: this.toNumber(criteriaRange.toRange),
             }
           : null,
       costCenterId: this.toNumber(criteriaSource?.costCenterId),
@@ -1061,6 +1363,15 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     return Number.isFinite(parsedValue) ? parsedValue : null;
   }
 
+  private buildYearStartDate(reference: Date | null): string {
+    const baseDate =
+      reference instanceof Date && !isNaN(reference.getTime())
+        ? reference
+        : new Date();
+    console.log(`${baseDate.getFullYear() - 1}-01-01`);
+    return `${baseDate.getFullYear() - 1}-01-01`;
+  }
+
   private formatDateOnly(value: Date | null): string | null {
     if (!(value instanceof Date) || isNaN(value.getTime())) {
       return null;
@@ -1080,18 +1391,15 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     return date;
   }
 
-  private resolveCurrentUserEmail(): string {
-    return this.authService.returnUserInfo()?.email ?? '';
-  }
-
   private resolveEnterpriseId(): string | null {
-    const selectedEnterprise = this.enterpriseService.getSelectedEnterprise();
-    return selectedEnterprise?.id ? String(selectedEnterprise.id) : null;
+    //const selectedEnterprise = this.enterpriseService.getSelectedEnterprise();
+    return 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d'; //selectedEnterprise?.id ? String(selectedEnterprise.id) : null;
   }
 
-  private resolveNumericUserId(): number | null {
-    const userId = this.authService.returnUserInfo()?.id;
-    return this.toNumber(userId);
+  private resolveNumericUserId(): number {
+    const rawId = this.authService.returnUserInfo()?.id;
+    const parsed = Number(rawId);
+    return Number.isFinite(parsed) ? parsed : 0;
   }
 
   private resolveCreatedBy(

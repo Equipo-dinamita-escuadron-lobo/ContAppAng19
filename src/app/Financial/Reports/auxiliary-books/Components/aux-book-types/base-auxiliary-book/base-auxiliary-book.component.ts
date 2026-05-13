@@ -90,7 +90,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
    * Returns the active enterprise id or empty string if none is selected.
    */
   protected resolveEntId(): string {
-    return this.enterpriseData?.id ?? '';
+    return 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d' /*this.enterpriseData?.id ?? '' */;
   }
 
   /**
@@ -155,7 +155,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       });
     } else {
       if (this.isRangeOptionSelected === true) {
-        this.criteria.criteriaRange = { from: 0, to: 0 };
+        this.criteria.criteriaRange = { fromRange: 0, toRange: 0 };
         this.getAccountOptions();
       } else {
         this.criteria.criteriaRange = null;
@@ -196,7 +196,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   onFromChange() {
     if (this.isRangeOptionSelected && this.levelRange.from !== null) {
-      this.criteria.criteriaRange!.from = this.levelRange.from;
+      this.criteria.criteriaRange!.fromRange = this.levelRange.from;
       this.rangeToOptions = this.rangeFromOptions.filter(
         (opt) => parseInt(opt.code) > this.levelRange.from!,
       );
@@ -205,7 +205,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   onToChange() {
     if (this.isRangeOptionSelected && this.levelRange.to !== null) {
-      this.criteria.criteriaRange!.to = this.levelRange.to;
+      this.criteria.criteriaRange!.toRange = this.levelRange.to;
     }
     ``;
   }

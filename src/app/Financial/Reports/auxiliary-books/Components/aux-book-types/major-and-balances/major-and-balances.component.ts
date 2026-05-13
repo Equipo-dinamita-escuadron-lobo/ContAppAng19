@@ -21,6 +21,7 @@ import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCat
 import { MessageService } from 'primeng/api';
 import { MajorAndBalancesResponse } from '../../../Models/Responses/MajorAndBalancesBookResponse';
 import { DialogService } from 'primeng/dynamicdialog';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 @Component({
   selector: 'app-major-and-balances',
   imports: [
@@ -47,6 +48,35 @@ export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
   };
 
   override dataTable: MajorAndBalancesResponse[] = [];
+
+  headerConfig: ColumnDefinition[][] = [
+    [
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        children: [
+          { header: 'Código', field: 'account.accountCode' },
+          { header: 'Descripción', field: 'account.accountDescription' },
+        ],
+      },
+      { header: 'Saldo Inicial', field: 'initialBalance', type: 'number', rowspan: 2 },
+      {
+        header: 'Movimiento',
+        colspan: 2,
+        children: [
+          { header: 'Débito', field: 'debitMovement', type: 'number' },
+          { header: 'Crédito', field: 'creditMovement', type: 'number' },
+        ],
+      },
+      { header: 'Nuevo Saldo', field: 'finalBalance', type: 'number', rowspan: 2 },
+    ],
+    [
+      { header: 'Código' },
+      { header: 'Descripción' },
+      { header: 'Débito' },
+      { header: 'Crédito' },
+    ],
+  ];
 
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,

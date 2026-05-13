@@ -15,13 +15,14 @@ import { SelectModule } from 'primeng/select';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { FieldsetModule } from 'primeng/fieldset';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { ToastModule } from 'primeng/toast';
 import { AuxiliaryBooksServiceService } from '../../Services/auxiliary-books-service.service';
 import {
   ExportAuxiliaryBookRequest,
   InfoReportTemplate,
 } from '../../Models/Requests/ExportAuxiliaryBookRequest';
 import { MessageService } from 'primeng/api';
-import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 
 @Component({
   selector: 'app-export-auxiliary-book',
@@ -35,10 +36,13 @@ import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/serv
     ColorPickerModule,
     TooltipModule,
     FieldsetModule,
+    ProgressSpinnerModule,
+    ToastModule,
     ReportPreviewComponent,
   ],
   providers: [MessageService],
   templateUrl: './export-auxiliary-book.component.html',
+  styleUrls: ['./export-auxiliary-book.component.css'],
 })
 export class ExportAuxiliaryBookComponent implements OnInit {
   // --- DATOS RECIBIDOS PARA LA PREVISUALIZACIÓN ---
@@ -50,6 +54,8 @@ export class ExportAuxiliaryBookComponent implements OnInit {
   criteriaForPreview: { key: string; value: string }[] = [];
   totals: any = {}; // ✅ NUEVO: Propiedad para almacenar los totales.
   enterpriseData: any = null;
+
+  isExporting: boolean = false;
 
   // --- ESTADO DE LAS OPCIONES ---
   formatSelected: 'pdf' | 'excel' = 'pdf';
@@ -100,8 +106,8 @@ export class ExportAuxiliaryBookComponent implements OnInit {
     criteriaType: 'Tipo de Nivel',
     criteriaRange: 'Rango de Cuentas',
     thirdPartyId: 'Tercero',
-    startDate: 'Fecha de Inicio',
-    endDate: 'Fecha de Corte',
+    startDate: 'Fecha Inicial',
+    endDate: 'Fecha Final',
   };
 
   private readonly criteriaValueMap: { [key: string]: string } = {
@@ -137,7 +143,8 @@ export class ExportAuxiliaryBookComponent implements OnInit {
       ) {
         this.criteriaForPreview = this.translateAndFormatCriteria(
           this.config.data.auxiliaryBook.criteria,
-          this.config.data.thirdPartyInfo
+          this.config.data.thirdPartyInfo,
+          this.config.data.auxBookType
         );
       }
     }
@@ -152,12 +159,25 @@ export class ExportAuxiliaryBookComponent implements OnInit {
   }
 
   exportReport() {
+    if (this.isExporting) {
+      return;
+    }
+
     if (!this.config.data?.auxiliaryBook) {
       this.messageService.add({
         severity: 'error',
         summary: 'No se puede exportar',
         detail:
           'Falta la informacion del libro auxiliar generado. Vuelve a generarlo antes de exportar.',
+      });
+      return;
+    }
+
+    if (!this.previewData || this.previewData.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin datos',
+        detail: 'No hay información disponible para exportar.',
       });
       return;
     }
@@ -183,50 +203,86 @@ export class ExportAuxiliaryBookComponent implements OnInit {
       infoReportTemplate: infoTemplate,
     };
 
+    this.isExporting = true;
+
     this.auxiliaryBookService.exportAuxiliaryBook(request).subscribe({
       next: (blob) => {
-        const url = globalThis.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const extension = this.formatSelected.toLowerCase();
-        const fileName = `${this.reportTitle.replaceAll(' ', '_')}_${new Date()
-          .toISOString()
-          .slice(0, 10)}.${extension}`;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        globalThis.URL.revokeObjectURL(url);
-        a.remove();
+        try {
+          const url = globalThis.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          const extension = this.formatSelected.toLowerCase();
+          const fileName = `${this.reportTitle.replaceAll(' ', '_')}_${new Date()
+            .toISOString()
+            .slice(0, 10)}.${extension}`;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          globalThis.URL.revokeObjectURL(url);
+          a.remove();
 
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'El reporte ha sido generado y descargado.',
-        });
-        this.ref.close();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Reporte generado',
+            detail: 'El reporte ha sido generado y descargado correctamente.',
+            life: 3000,
+          });
+
+          setTimeout(() => {
+            this.isExporting = false;
+            this.ref.close();
+          }, 1200);
+        } catch (e: any) {
+          this.isExporting = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error al descargar',
+            detail:
+              'No se pudo iniciar la descarga del archivo. ' +
+              (e?.message ?? ''),
+          });
+        }
       },
       error: (err) => {
+        this.isExporting = false;
         this.messageService.add({
           severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo generar el reporte. ' + err.message,
+          summary: 'Error al exportar',
+          detail:
+            'No se pudo generar el reporte. ' +
+            (err?.error?.message || err?.message || 'Intenta nuevamente.'),
+          life: 5000,
         });
       },
     });
   }
 
   closeModal() {
+    if (this.isExporting) {
+      return;
+    }
     this.ref.close(null);
   }
 
   private translateAndFormatCriteria(
     criteria: any,
-    thirdPartyInfo: any
+    thirdPartyInfo: any,
+    auxBookType?: string
   ): { key: string; value: string }[] {
+    const isInventoryAndBalances =
+      auxBookType === 'INVENTORY_AND_BALANCES' ||
+      (this.reportTitle ?? '').toLowerCase().includes('inventarios');
+
     return Object.keys(criteria)
       .filter((key) => criteria[key] != null)
+      .filter((key) => !(isInventoryAndBalances && key === 'startDate'))
       .map((key) => {
-        const translatedKey = this.criteriaKeyMap[key] || key;
+        let translatedKey = this.criteriaKeyMap[key] || key;
+
+        if (isInventoryAndBalances && key === 'endDate') {
+          translatedKey = 'Fecha de Corte';
+        }
+
         let formattedValue = criteria[key];
 
         // 1. Traducir el valor de 'criteriaType'

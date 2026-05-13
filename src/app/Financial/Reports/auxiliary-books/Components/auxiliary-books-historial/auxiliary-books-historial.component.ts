@@ -70,12 +70,12 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
     protected enterpriseService: EnterpriseService,
     private router: Router,
     private messageService: MessageService,
-    protected dialogService: DialogService
+    protected dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
-    this.enterpriseId =
-      this.enterpriseService.getSelectedEnterprise()?.id ?? null;
+    this.enterpriseId = 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d';
+    //this.enterpriseService.getSelectedEnterprise()?.id ?? null;
 
     if (!this.enterpriseId) {
       this.messageService.add({
@@ -249,7 +249,18 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
       AuxiliaryBooksSchedulingComponent,
       {
         data: this.selectedHistoryItem,
-      }
+        modal: true,
+        width: '72rem',
+        breakpoints: {
+          '1200px': '85vw',
+          '768px': '95vw',
+        },
+      },
     );
+
+    this.refDialog.onClose.subscribe(() => {
+      this.selectedHistoryItem = null;
+      this.loadHistory();
+    });
   }
 }

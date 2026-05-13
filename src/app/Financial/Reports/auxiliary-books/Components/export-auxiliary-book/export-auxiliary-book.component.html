@@ -1,7 +1,37 @@
-<div class="p-fluid p-4 md:p-6">
+<div class="p-fluid p-4 md:p-6 relative">
+  <p-toast position="top-right"></p-toast>
+
+  <div
+    *ngIf="isExporting"
+    class="export-loading-overlay"
+    aria-live="polite"
+    aria-busy="true"
+  >
+    <div class="export-loading-card">
+      <p-progressSpinner
+        styleClass="export-spinner"
+        strokeWidth="4"
+        animationDuration="0.8s"
+      ></p-progressSpinner>
+      <p class="text-primary font-semibold mt-3">Generando reporte...</p>
+      <p class="text-xs text-gray-500">
+        Esto puede tomar unos segundos. No cierres la ventana.
+      </p>
+    </div>
+  </div>
+
   <!-- Encabezado -->
-  <div class="flex justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">Exportar Reporte Auxiliar</h2>
+  <div class="flex justify-between items-center mb-6 pb-3 border-b border-gray-200">
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary text-3xl">
+        description
+      </span>
+      <h2
+        class="text-xl md:text-2xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
+      >
+        Exportar Reporte Auxiliar
+      </h2>
+    </div>
     <button
       pButton
       type="button"
@@ -33,14 +63,20 @@
     </div>
 
     <!-- ✅ Panel de Opciones (2 de 5 columnas) -->
-    <div
-      class="lg:col-span-2 flex flex-col space-y-6 overflow-y-auto max-h-[70vh] pr-2"
+    <aside
+      class="lg:col-span-2 flex flex-col gap-5 overflow-y-auto max-h-[70vh] pr-2 export-options-panel"
     >
       <!-- Plantilla -->
-      <div>
-        <label for="template-select" class="text-lg font-medium mb-2 block"
-          >Plantilla</label
-        >
+      <section class="export-section">
+        <header class="flex items-center gap-2 mb-2">
+          <i class="pi pi-clone text-primary"></i>
+          <label
+            for="template-select"
+            class="text-sm font-bold text-primary uppercase tracking-wide"
+          >
+            Plantilla
+          </label>
+        </header>
         <p-select
           inputId="template-select"
           [options]="templates"
@@ -68,33 +104,48 @@
           Si modificas una opción, la plantilla se marcará como
           <b>Personalizada</b>.
         </small>
-      </div>
+      </section>
 
       <!-- Formato -->
-      <p-fieldset legend="Formato">
+      <section class="export-section">
+        <header class="flex items-center gap-2 mb-3">
+          <i class="pi pi-file text-primary"></i>
+          <h3 class="text-sm font-bold text-primary uppercase tracking-wide m-0">
+            Formato
+          </h3>
+        </header>
         <p-selectButton
           [options]="formatOptions"
           [(ngModel)]="formatSelected"
           optionValue="value"
           [allowEmpty]="false"
+          styleClass="w-full export-format-toggle"
         >
           <ng-template let-item pTemplate="item">
-            <div class="flex items-center justify-center gap-2 px-2">
+            <div class="flex items-center justify-center gap-2 px-3 py-1">
               <i [class]="item.icon"></i>
               <span>{{ item.label }}</span>
             </div>
           </ng-template>
         </p-selectButton>
-      </p-fieldset>
+      </section>
 
       <!-- Estilos del Encabezado -->
-      <p-fieldset legend="Estilos del Encabezado">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- ✅ CORREGIDO: Label asociado con for/id -->
-          <div>
-            <label for="align-select" class="font-medium mb-2 block"
-              >Alineación</label
+      <section class="export-section">
+        <header class="flex items-center gap-2 mb-3">
+          <i class="pi pi-palette text-primary"></i>
+          <h3 class="text-sm font-bold text-primary uppercase tracking-wide m-0">
+            Estilos del Encabezado
+          </h3>
+        </header>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label
+              for="align-select"
+              class="text-xs font-semibold text-gray-700"
             >
+              Alineación
+            </label>
             <p-selectButton
               id="align-select"
               [options]="alignOptions"
@@ -111,68 +162,86 @@
               </ng-template>
             </p-selectButton>
           </div>
-          <!-- ✅ CORREGIDO: Label asociado con for/id -->
-          <div>
-            <label for="header-color-picker" class="font-medium mb-2 block"
-              >Color de Cabecera
+          <div class="flex flex-col gap-2">
+            <label
+              for="header-color-picker"
+              class="text-xs font-semibold text-gray-700"
+            >
+              Color de Cabecera
+            </label>
+            <div class="flex items-center gap-2">
               <p-colorPicker
+                inputId="header-color-picker"
                 [ngModel]="styles.color"
                 (ngModelChange)="updateStyles({ color: $event })"
               ></p-colorPicker>
-            </label>
+              <span
+                class="text-xs font-mono text-gray-600 uppercase"
+              >{{ styles.color }}</span>
+            </div>
           </div>
         </div>
-      </p-fieldset>
+      </section>
 
       <!-- Estilos del Contenido -->
-      <p-fieldset legend="Estilos del Contenido">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <!-- ✅ CORREGIDO: Label asociado y appendTo para el dropdown -->
-            <label for="font-select" class="font-medium mb-2 block"
-              >Fuente
-              <p-select
-                inputId="font-select"
-                [options]="fonts"
-                [ngModel]="styles.font"
-                (ngModelChange)="updateStyles({ font: $event })"
-                optionLabel="name"
-                optionValue="value"
-                placeholder="Selecciona una fuente"
-                styleClass="w-full"
-                [appendTo]="'body'"
-              >
-                <ng-template let-font pTemplate="item">
-                  <div [style.font-family]="font.value">{{ font.name }}</div>
-                </ng-template>
-                <ng-template let-font pTemplate="selectedItem">
-                  <div *ngIf="font" [style.font-family]="font.value">
-                    {{ font.name }}
-                  </div>
-                </ng-template>
-              </p-select>
+      <section class="export-section">
+        <header class="flex items-center gap-2 mb-3">
+          <i class="pi pi-pencil text-primary"></i>
+          <h3 class="text-sm font-bold text-primary uppercase tracking-wide m-0">
+            Estilos del Contenido
+          </h3>
+        </header>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label
+              for="font-select"
+              class="text-xs font-semibold text-gray-700"
+            >
+              Fuente
             </label>
+            <p-select
+              inputId="font-select"
+              [options]="fonts"
+              [ngModel]="styles.font"
+              (ngModelChange)="updateStyles({ font: $event })"
+              optionLabel="name"
+              optionValue="value"
+              placeholder="Selecciona una fuente"
+              styleClass="w-full"
+              [appendTo]="'body'"
+            >
+              <ng-template let-font pTemplate="item">
+                <div [style.font-family]="font.value">{{ font.name }}</div>
+              </ng-template>
+              <ng-template let-font pTemplate="selectedItem">
+                <div *ngIf="font" [style.font-family]="font.value">
+                  {{ font.name }}
+                </div>
+              </ng-template>
+            </p-select>
           </div>
-          <div>
-            <!-- ✅ CORREGIDO: Label asociado y appendTo para el dropdown -->
-            <label for="fontsize-select" class="font-medium mb-2 block"
-              >Tamaño
-              <p-select
-                inputId="fontsize-select"
-                [options]="fontSizes"
-                [ngModel]="styles.fontSize"
-                (ngModelChange)="updateStyles({ fontSize: $event })"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Ej: 12px"
-                styleClass="w-full"
-                [appendTo]="'body'"
-              />
+          <div class="flex flex-col gap-2">
+            <label
+              for="fontsize-select"
+              class="text-xs font-semibold text-gray-700"
+            >
+              Tamaño
             </label>
+            <p-select
+              inputId="fontsize-select"
+              [options]="fontSizes"
+              [ngModel]="styles.fontSize"
+              (ngModelChange)="updateStyles({ fontSize: $event })"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Ej: 12px"
+              styleClass="w-full"
+              [appendTo]="'body'"
+            />
           </div>
         </div>
-      </p-fieldset>
-    </div>
+      </section>
+    </aside>
   </div>
 
   <!-- Footer con Botones de Acción -->
@@ -180,12 +249,15 @@
     <p-button
       label="Cancelar"
       styleClass="p-button-outlined p-button-secondary"
+      [disabled]="isExporting"
       (keydown.enter)="closeModal()"
       (click)="closeModal()"
     />
     <p-button
-      label="Exportar"
-      icon="pi pi-download"
+      [label]="isExporting ? 'Generando...' : 'Exportar'"
+      [icon]="isExporting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"
+      [loading]="isExporting"
+      [disabled]="isExporting"
       (click)="exportReport()"
       (keydown.enter)="exportReport()"
       type="button"

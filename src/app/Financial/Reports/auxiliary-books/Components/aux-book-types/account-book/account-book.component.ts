@@ -16,6 +16,7 @@ import { TableModule } from 'primeng/table';
 import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { ThirdPartyBookResponse } from '../../../Models/Responses/ThirdPartyBookResponse';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 
 // Services
 import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
@@ -57,6 +58,56 @@ export class AccountBookComponent extends BaseAuxiliaryBookComponent {
   };
 
   override dataTable: ThirdPartyBookResponse[] = [];
+
+  headerConfig: ColumnDefinition[][] = [
+    [
+      { header: 'Fecha', field: 'date', rowspan: 2 },
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        children: [
+          { header: 'Código', field: 'account.accountCode' },
+          { header: 'Descripción', field: 'account.accountDescription' },
+        ],
+      },
+      {
+        header: 'Movimiento',
+        colspan: 3,
+        children: [
+          { header: 'Débito', field: 'debitMovement', type: 'number' },
+          { header: 'Crédito', field: 'creditMovement', type: 'number' },
+          { header: 'Saldo', field: 'balanceMovement', type: 'number' },
+        ],
+      },
+      {
+        header: 'Tercero',
+        colspan: 2,
+        children: [
+          { header: 'Identificación', field: 'thirdPartyId' },
+          { header: 'Nombre', field: 'thirdPartyName' },
+        ],
+      },
+      {
+        header: 'Documento',
+        colspan: 2,
+        children: [
+          { header: 'Centro de Costos', field: 'voucherCostCenter' },
+          { header: 'Número', field: 'voucherNumber' },
+        ],
+      },
+    ],
+    [
+      { header: 'Código' },
+      { header: 'Descripción' },
+      { header: 'Débito' },
+      { header: 'Crédito' },
+      { header: 'Saldo' },
+      { header: 'Identificación' },
+      { header: 'Nombre' },
+      { header: 'Centro de Costos' },
+      { header: 'Número' },
+    ],
+  ];
 
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,

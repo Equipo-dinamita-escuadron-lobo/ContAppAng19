@@ -1,19 +1,40 @@
 <!-- Main container -->
 <div class="h-full w-full rounded-2xl p-4 md:p-6">
   <!-- Header -->
-  <div class="mb-6 flex items-center gap-3">
-    <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
-      receipt_long
-    </span>
-    <h1
-      class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
-    >
-      Detalles del Reporte: {{ bookDetails?.type }}
-    </h1>
+  <div
+    class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between"
+  >
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
+        receipt_long
+      </span>
+      <h1
+        class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
+      >
+        Detalles del Reporte: {{ bookDetails?.type }}
+      </h1>
+    </div>
+
+    <div class="flex flex-col gap-2 md:min-w-60">
+      <p-button
+        label="Volver al Historial"
+        icon="pi pi-arrow-left"
+        styleClass="p-button-outlined p-button-secondary w-full"
+        (click)="goToHistory()"
+      ></p-button>
+
+      <p-button
+        label="Programar Reporte"
+        icon="pi pi-calendar-plus"
+        styleClass="w-full"
+        [disabled]="!bookDetails"
+        (click)="showSchedulingDialog()"
+      ></p-button>
+    </div>
   </div>
 
   <!-- Details Card -->
-  <p-card header="Información General" styleClass="mb-6">
+  <p-card header="Información General" styleClass="mb-6 details-card">
     <div *ngIf="bookDetails" class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <strong>ID de Registro:</strong>
@@ -31,7 +52,7 @@
         <strong>Estado Actual:</strong>
         <p>
           <p-tag
-            [value]="getLastLogStatus()"
+            [value]="getStatusLabel(getLastLogStatus())"
             [severity]="getStatusSeverity(getLastLogStatus())"
           ></p-tag>
         </p>
@@ -41,28 +62,67 @@
   </p-card>
 
   <!-- Logs Timeline -->
-  <p-card header="Historial de Actividad">
+  <p-card styleClass="logs-card">
+    <ng-template pTemplate="header">
+      <div class="flex items-center justify-between px-4 pt-4">
+        <div class="flex items-center gap-2">
+          <i class="pi pi-history text-primary"></i>
+          <h3
+            class="text-base font-bold text-primary uppercase tracking-wide m-0"
+          >
+            Historial de Actividad
+          </h3>
+        </div>
+        <span class="text-xs text-gray-500" *ngIf="logs.length">
+          {{ logs.length }} {{ logs.length === 1 ? "evento" : "eventos" }}
+        </span>
+      </div>
+    </ng-template>
+
     <p-timeline
+      *ngIf="logs.length"
       [value]="logs"
-      align="alternate"
+      align="left"
       styleClass="customized-timeline"
     >
       <ng-template pTemplate="marker" let-event>
         <span
-          class="custom-marker shadow-2"
-          [style.backgroundColor]="event.color"
+          [class]="getMarkerClass(event.etypeEvent)"
+          [style.backgroundColor]="event.color || null"
+          [attr.title]="getStatusLabel(event.etypeEvent)"
         >
-          <i [class]="event.icon"></i>
+          <i [class]="event.icon || getStatusIcon(event.etypeEvent)"></i>
         </span>
       </ng-template>
       <ng-template pTemplate="content" let-event>
-        <p-card
-          [header]="event.etypeEvent"
-          [subheader]="(event.createdAt | date: 'dd/MM/yyyy hh:mm:ss a') ?? ''"
-        >
-          <p>{{ event.message }}</p>
-        </p-card>
+        <article [class]="getCardClass(event.etypeEvent)">
+          <header class="log-card__header">
+            <div class="flex items-center gap-2 flex-wrap">
+              <p-tag
+                [value]="getStatusLabel(event.etypeEvent)"
+                [severity]="getStatusSeverity(event.etypeEvent)"
+              ></p-tag>
+              <span class="log-card__time">
+                <i class="pi pi-clock"></i>
+                {{ event.createdAt | date: "dd/MM/yyyy hh:mm:ss a" }}
+              </span>
+            </div>
+          </header>
+          <p class="log-card__message">{{ event.message }}</p>
+        </article>
       </ng-template>
     </p-timeline>
+
+    <div
+      *ngIf="!logs.length"
+      class="flex flex-col items-center justify-center text-center py-10 px-4"
+    >
+      <span class="material-symbols-outlined text-primary text-5xl opacity-60">
+        inbox
+      </span>
+      <p class="text-gray-600 mt-2">
+        Aún no hay actividad registrada para este reporte.
+      </p>
+    </div>
   </p-card>
 </div>

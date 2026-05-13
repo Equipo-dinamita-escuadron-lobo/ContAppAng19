@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,6 +7,8 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { AuthService } from '../../../../../Core/auth/services/auth.service';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { AuxiliaryBooksSchedulingComponent } from '../auxiliary-books-scheduling/auxiliary-books-scheduling.component';
 
 interface AuxiliaryBook {
   name: string;
@@ -20,10 +22,13 @@ interface AuxiliaryBook {
   selector: 'app-auxiliary-books-list',
   standalone: true,
   imports: [CommonModule, FormsModule, ButtonModule, RippleModule],
+  providers: [DialogService],
   templateUrl: './auxiliary-books-list.component.html',
   styleUrls: ['./auxiliary-books-list.component.css'],
 })
 export class AuxiliaryBooksListComponent {
+  refDialog: DynamicDialogRef | undefined;
+
   // Propiedad para almacenar la lista de libros auxiliares
   auxiliaryBooks = [
     // Definición de cada libro auxiliar con sus propiedades
@@ -79,7 +84,11 @@ export class AuxiliaryBooksListComponent {
     },
   ] as AuxiliaryBook[];
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    protected dialogService: DialogService,
+  ) {}
 
   // Getter para verificar si el usuario actual tiene el rol de 'Administrador'
   get isAdmin(): boolean {
@@ -94,7 +103,27 @@ export class AuxiliaryBooksListComponent {
    * Navega a la página de historial de libros auxiliares.
    */
   goToHistory(): void {
-    // Asegúrate de que la ruta coincida con tu configuración de enrutamiento
     this.router.navigate(['/financial/reports/auxiliary-books/historial']);
+  }
+
+  goToAuxiliaryBookScheduler(): void {
+    this.refDialog = this.dialogService.open(
+      AuxiliaryBooksSchedulingComponent,
+      {
+        data: {
+          bookName: 'Libros Auxiliares',
+          publicId: 'N/A',
+          user: 'Sistema',
+          status: 'Generando',
+          generationDate: null,
+        },
+        modal: true,
+        width: '72rem',
+        breakpoints: {
+          '1200px': '85vw',
+          '768px': '95vw',
+        },
+      },
+    );
   }
 }

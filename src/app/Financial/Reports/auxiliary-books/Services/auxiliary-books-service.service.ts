@@ -222,9 +222,7 @@ export class AuxiliaryBooksServiceService {
 
   cancelScheduledReport(publicId: string): Observable<void> {
     return this.http
-      .delete<
-        ApiResponse<void>
-      >(`${this.scheduledReportsApiUrl}/${publicId}`)
+      .delete<ApiResponse<void>>(`${this.scheduledReportsApiUrl}/${publicId}`)
       .pipe(map((response) => this.unwrapApiResponse(response)));
   }
 

@@ -1,7 +1,25 @@
-<div class="p-fluid p-4 md:p-6 h-full flex flex-col">
-  <!-- Encabezado -->
-  <div class="flex justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">Programar Reporte</h2>
+<p-toast></p-toast>
+
+<div class="p-fluid p-4 md:p-6 h-full flex flex-col schedule-shell">
+  <div class="flex justify-between items-start mb-4 gap-4">
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary text-3xl">
+        event_available
+      </span>
+      <div>
+        <h2
+          class="text-xl md:text-2xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
+        >
+          {{ dialogTitle }}
+        </h2>
+        <p class="text-sm text-slate-500 mt-1">
+          Genere una programación para la generación automática del libro
+          auxiliar. Podrá configurar el reporte, la frecuencia de generación y
+          la modalidad de entrega.
+        </p>
+      </div>
+    </div>
+
     <button
       pButton
       type="button"
@@ -12,271 +30,553 @@
     ></button>
   </div>
 
+  <div *ngIf="bookInfo" class="selected-book-banner mb-5">
+    <div class="selected-book-banner__head">
+      <div class="flex items-center gap-2">
+        <i class="pi pi-book text-primary"></i>
+        <h3 class="selected-book-banner__title">Libro seleccionado</h3>
+      </div>
+      <p-tag
+        [value]="bookInfo.status"
+        [severity]="getStatusSeverity(bookInfo.status)"
+      ></p-tag>
+    </div>
+
+    <div class="selected-book-banner__grid">
+      <div class="selected-book-banner__item">
+        <span class="selected-book-banner__label">Nombre</span>
+        <span class="selected-book-banner__value">{{ bookInfo.bookName }}</span>
+      </div>
+      <div class="selected-book-banner__item">
+        <span class="selected-book-banner__label">ID de Registro</span>
+        <span class="selected-book-banner__value font-mono text-xs">
+          {{ bookInfo.publicId }}
+        </span>
+      </div>
+      <div class="selected-book-banner__item">
+        <span class="selected-book-banner__label">Fecha de Generación</span>
+        <span class="selected-book-banner__value">
+          {{
+            bookInfo.generationDate
+              ? (bookInfo.generationDate | date: "dd/MM/yyyy hh:mm a")
+              : "—"
+          }}
+        </span>
+      </div>
+      <div class="selected-book-banner__item">
+        <span class="selected-book-banner__label">Usuario</span>
+        <span class="selected-book-banner__value">{{ bookInfo.user }}</span>
+      </div>
+    </div>
+  </div>
+
   <form
     [formGroup]="scheduleForm"
     (ngSubmit)="onSubmit()"
-    class="flex flex-col flex-1"
+    class="flex flex-col flex-1 min-h-0 overflow-hidden"
   >
-    <!-- Contenido Principal (Grid Layout similar al Export Dialog) -->
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 flex-1">
-      <!-- ✅ COLUMNA IZQUIERDA: Información de Contexto (2 de 5 columnas) -->
-      <!-- Actúa como el "Preview" o panel lateral informativo -->
-      <div class="lg:col-span-2 flex flex-col h-full">
-        <div
-          class="bg-slate-50 rounded-lg border border-slate-200 p-6 h-full flex flex-col gap-6"
+    <div class="schedule-form-body flex-1 min-h-0 overflow-y-auto">
+      <div class="schedule-form-sections flex flex-col gap-6 pr-2">
+        <p-fieldset
+          legend="Configuración del Reporte"
+          styleClass="schedule-fieldset schedule-fieldset--report"
         >
-          <div
-            class="flex items-center gap-3 text-slate-700 mb-2 border-b border-slate-200 pb-4"
-          >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="md:col-span-2 schedule-block schedule-block--feature">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Tipo de Libro Auxiliar
+              </label>
+              <p-select
+                formControlName="bookType"
+                [options]="reportTypeOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione un tipo de reporte"
+                styleClass="w-full schedule-select"
+                [appendTo]="'body'"
+                [filter]="true"
+                filterBy="label"
+                [disabled]="isBookTypeLocked"
+              >
+                <ng-template pTemplate="selectedItem" let-option>
+                  <div *ngIf="option; else emptyBookType">
+                    <span class="font-medium text-slate-700">{{
+                      option.label
+                    }}</span>
+                  </div>
+                </ng-template>
+                <ng-template pTemplate="item" let-option>
+                  <div class="py-1">
+                    <p class="font-medium text-slate-800">{{ option.label }}</p>
+                    <p class="text-xs text-slate-500">
+                      {{ option.description }}
+                    </p>
+                  </div>
+                </ng-template>
+              </p-select>
+              <ng-template #emptyBookType>
+                <span class="text-slate-400">Seleccione un tipo de reporte</span>
+              </ng-template>
+              <small
+                *ngIf="isControlInvalid('bookType')"
+                class="text-[#FF6D0A] text-xs mt-1 block"
+              >
+                Debe seleccionar el Tipo de Libro Auxiliar.
+              </small>
+              <small
+                *ngIf="isBookTypeLocked"
+                class="text-xs text-slate-500 mt-1 block"
+              >
+                El tipo de reporte se bloqueó porque proviene del contexto actual.
+              </small>
+            </div>
+
+            <div *ngIf="showLevelField" class="schedule-block">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Nivel:
+              </label>
+              <p-select
+                formControlName="criteriaType"
+                [options]="availableLevelOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione un criterio"
+                styleClass="w-full schedule-select"
+                [appendTo]="'body'"
+              ></p-select>
+              <small
+                *ngIf="isControlInvalid('criteriaType')"
+                class="text-[#FF6D0A] text-xs mt-1 block"
+              >
+                Debe seleccionar el Nivel.
+              </small>
+            </div>
+
             <div
-              class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm"
+              *ngIf="showThirdPartyField"
+              class="schedule-block"
             >
-              <i class="pi pi-book text-primary text-xl"></i>
-            </div>
-            <div>
-              <h3 class="font-bold text-lg">Resumen</h3>
-              <p class="text-xs text-slate-500">
-                Detalles del libro seleccionado
-              </p>
-            </div>
-          </div>
-
-          <div class="space-y-5">
-            <div>
-              <label
-                class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1"
-                >Nombre del Libro</label
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Tercero
+                <span *ngIf="isThirdPartyRequired" class="text-[#FF6D0A]">*</span>
+              </label>
+              <p-select
+                formControlName="thirdPartyId"
+                [options]="thirdPartyOptions"
+                optionLabel="fullName"
+                optionValue="thId"
+                placeholder="Seleccione un Tercero"
+                styleClass="w-full schedule-select"
+                [appendTo]="'body'"
+                [filter]="true"
+                filterBy="fullName"
+                [showClear]="!isThirdPartyRequired"
+              ></p-select>
+              <small
+                *ngIf="isControlInvalid('thirdPartyId')"
+                class="text-[#FF6D0A] text-xs mt-1 block"
               >
-              <p class="text-slate-800 font-medium text-lg leading-tight">
-                {{ bookInfo?.bookName || "Libro Auxiliar General" }}
-              </p>
+                Debe seleccionar un Tercero.
+              </small>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1"
-                  >Estado</label
-                >
-                <p-tag
-                  [value]="bookInfo?.status || 'Desconocido'"
-                  [severity]="
-                    bookInfo?.status === 'Completado' ? 'success' : 'info'
-                  "
-                  styleClass="text-sm px-3"
-                ></p-tag>
-              </div>
-              <div>
-                <label
-                  class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1"
-                  >ID Público</label
-                >
-                <span
-                  class="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded font-mono"
-                  >#{{ bookInfo?.publicId || "N/A" }}</span
-                >
-              </div>
+            <div *ngIf="showCostCenterField" class="schedule-block">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Centro de Costos
+              </label>
+              <p-select
+                formControlName="costCenterId"
+                [options]="costCenterOptions"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Seleccione un Centro de Costos"
+                styleClass="w-full schedule-select"
+                [appendTo]="'body'"
+                [filter]="true"
+                filterBy="name"
+                [showClear]="true"
+              ></p-select>
             </div>
 
-            <div>
-              <label
-                class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1"
-                >Generado por</label
-              >
-              <div class="flex items-center gap-2">
-                <i class="pi pi-user text-slate-400"></i>
-                <span class="text-slate-700">{{
-                  bookInfo?.user || "Sistema"
-                }}</span>
+            <div *ngIf="showRangeField" class="schedule-block schedule-block--soft">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Rango de Cuentas
+              </label>
+              <div class="schedule-toggle-card">
+                <p-checkbox
+                  formControlName="useAccountRange"
+                  [binary]="true"
+                  inputId="useAccountRange"
+                ></p-checkbox>
+                <label for="useAccountRange" class="text-sm text-slate-700">
+                  Incluir rango de cuentas en la programación
+                </label>
               </div>
             </div>
 
-            <div>
-              <label
-                class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1"
-                >Fecha de Generación</label
-              >
-              <div class="flex items-center gap-2">
-                <i class="pi pi-calendar text-slate-400"></i>
-                <span class="text-slate-700">{{
-                  bookInfo?.generationDate | date : "medium"
-                }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Decorative Bottom -->
-          <div class="mt-auto pt-6 opacity-50 flex justify-center">
-            <i class="pi pi-chart-bar text-6xl text-slate-200"></i>
-          </div>
-        </div>
-      </div>
-
-      <!-- ✅ COLUMNA DERECHA: Formulario de Opciones (3 de 5 columnas) -->
-      <div
-        class="lg:col-span-3 flex flex-col space-y-6 overflow-y-auto max-h-[65vh] pr-2"
-      >
-        <!-- SECCIÓN 1: Método de Entrega (Estilo Fieldset como en Exportar) -->
-        <p-fieldset legend="Método de Entrega">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Opción Descarga -->
-            <div
-              (click)="setSendType('download')"
-              class="cursor-pointer rounded-lg border-2 p-4 transition-all hover:shadow-md flex flex-col items-center text-center gap-3 relative"
-              [ngClass]="{
-                'border-primary-500 bg-primary-50/50':
-                  scheduleForm.get('sendType')?.value === 'download',
-                'border-slate-200 bg-white hover:border-slate-300':
-                  scheduleForm.get('sendType')?.value !== 'download'
-              }"
-            >
-              <div
-                class="w-10 h-10 rounded-full flex items-center justify-center"
-                [ngClass]="
-                  scheduleForm.get('sendType')?.value === 'download'
-                    ? 'bg-blue-100 text-primary'
-                    : 'bg-slate-100 text-slate-500'
-                "
-              >
-                <i class="pi pi-download text-xl"></i>
-              </div>
-              <div>
-                <h4 class="font-bold text-sm text-slate-800">Descargar</h4>
-                <p class="text-xs text-slate-500 mt-1">
-                  Guardar en dispositivo
-                </p>
-              </div>
-              <!-- Check Icon -->
-              <i
-                *ngIf="scheduleForm.get('sendType')?.value === 'download'"
-                class="pi pi-check-circle text-blue-500 absolute top-3 right-3"
-              ></i>
+            <div *ngIf="showRangeField" class="schedule-block">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Cuenta desde
+              </label>
+              <p-select
+                formControlName="rangeFrom"
+                [options]="rangeFromOptionsFiltered"
+                optionLabel="code"
+                optionValue="code"
+                placeholder="Seleccione cuenta inicial"
+                styleClass="w-full schedule-select"
+                [appendTo]="'body'"
+                [filter]="true"
+                filterBy="code,description"
+                [showClear]="true"
+              ></p-select>
             </div>
 
-            <!-- Opción Email -->
-            <div
-              (click)="setSendType('email')"
-              class="cursor-pointer rounded-lg border-2 p-4 transition-all hover:shadow-md flex flex-col items-center text-center gap-3 relative"
-              [ngClass]="{
-                'border-secondary-500 bg-secondary-50/50':
-                  scheduleForm.get('sendType')?.value === 'email',
-                'border-slate-200 bg-white hover:border-slate-300':
-                  scheduleForm.get('sendType')?.value !== 'email'
-              }"
-            >
-              <div
-                class="w-10 h-10 rounded-full flex items-center justify-center"
-                [ngClass]="
-                  scheduleForm.get('sendType')?.value === 'email'
-                    ? 'bg-secondary-100 text-secondary'
-                    : 'bg-slate-100 text-slate-500'
-                "
-              >
-                <i class="pi pi-envelope text-xl"></i>
-              </div>
-              <div>
-                <h4 class="font-bold text-sm text-slate-800">Enviar Email</h4>
-                <p class="text-xs text-slate-500 mt-1">
-                  Enviar a destinatarios
-                </p>
-              </div>
-              <!-- Check Icon -->
-              <i
-                *ngIf="scheduleForm.get('sendType')?.value === 'email'"
-                class="pi pi-check-circle text-secondary absolute top-3 right-3"
-              ></i>
+            <div *ngIf="showRangeField" class="schedule-block">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Cuenta hasta
+              </label>
+              <p-select
+                formControlName="rangeTo"
+                [options]="rangeToOptions"
+                optionLabel="code"
+                optionValue="code"
+                placeholder="Seleccione cuenta final"
+                styleClass="w-full schedule-select"
+                [appendTo]="'body'"
+                [filter]="true"
+                filterBy="code,description"
+                [showClear]="true"
+              ></p-select>
             </div>
-          </div>
-        </p-fieldset>
 
-        <!-- SECCIÓN 2: Configuración (Inputs) -->
-        <p-fieldset legend="Configuración">
-          <div class="flex flex-col gap-5">
-            <!-- Fecha -->
-            <div>
-              <label class="font-medium mb-2 block text-slate-700 text-sm"
-                >Fecha y Hora de Ejecución</label
-              >
+            <div *ngIf="showRangeField && isRangeInvalid()" class="md:col-span-2">
+              <small class="text-[#FF6D0A] text-xs block">
+                El rango de cuentas no es válido. El valor inicial debe ser menor al
+                valor final.
+              </small>
+            </div>
+
+            <div *ngIf="!useCutOffDate" class="schedule-block">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Fecha inicial del Reporte
+              </label>
               <p-datepicker
-                formControlName="scheduleDate"
-                [showTime]="true"
+                formControlName="criteriaStartDate"
                 [showIcon]="true"
-                [minDate]="minDate"
                 dateFormat="dd/mm/yy"
-                hourFormat="12"
-                placeholder="Seleccione fecha..."
-                styleClass="w-full"
+                placeholder="Seleccione una fecha"
+                styleClass="w-full schedule-datepicker"
                 appendTo="body"
               ></p-datepicker>
+              <small
+                *ngIf="isControlInvalid('criteriaStartDate')"
+                class="text-[#FF6D0A] text-xs mt-1 block"
+              >
+                Debe seleccionar la Fecha inicial del Reporte.
+              </small>
             </div>
 
-            <!-- Email Input (Condicional) -->
-            <div
-              *ngIf="scheduleForm.get('sendType')?.value === 'email'"
-              class="animate-fade-in"
-            >
-              <label
-                class="font-medium mb-2 block text-slate-700 text-sm justify-between"
-              >
-                Correo del Destinatario
-                <span
-                  class="text-xs text-secondary bg-purple-50 px-2 rounded border border-purple-100"
-                  >Requerido</span
-                >
+            <div class="schedule-block">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                {{ useCutOffDate ? 'Fecha de Corte' : 'Fecha final del Reporte' }}
               </label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon bg-white border-r-0"
-                  ><i class="pi pi-at text-slate-400"></i
-                ></span>
-                <input
-                  pInputText
-                  formControlName="email"
-                  placeholder="ejemplo@empresa.com"
-                  [ngClass]="{
-                    'ng-invalid ng-dirty':
-                      scheduleForm.get('email')?.invalid &&
-                      scheduleForm.get('email')?.touched
-                  }"
-                />
-              </div>
+              <p-datepicker
+                formControlName="criteriaEndDate"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                placeholder="Seleccione una fecha"
+                styleClass="w-full schedule-datepicker"
+                appendTo="body"
+              ></p-datepicker>
               <small
-                *ngIf="
-                  scheduleForm.get('email')?.invalid &&
-                  scheduleForm.get('email')?.touched
-                "
-                class="text-red-500 text-xs mt-1 block"
+                *ngIf="isControlInvalid('criteriaEndDate')"
+                class="text-[#FF6D0A] text-xs mt-1 block"
               >
-                Ingrese un correo electrónico válido.
+                {{
+                  useCutOffDate
+                    ? 'Debe seleccionar la Fecha de Corte.'
+                    : 'Debe seleccionar la Fecha final del Reporte.'
+                }}
+              </small>
+            </div>
+
+            <div
+              *ngIf="!useCutOffDate && isCriteriaDateRangeInvalid()"
+              class="md:col-span-2"
+            >
+              <small class="text-[#FF6D0A] text-xs block">
+                La fecha inicial del reporte debe ser anterior o igual a la fecha
+                final.
               </small>
             </div>
           </div>
         </p-fieldset>
+
+        <p-fieldset
+          legend="Programación"
+          styleClass="schedule-fieldset schedule-fieldset--schedule"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="schedule-block">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Inicialización de la programación
+              </label>
+              <p-datepicker
+                formControlName="startAt"
+                [showTime]="true"
+                [showIcon]="true"
+                [minDate]="minDate"
+                dateFormat="dd/mm/yy"
+                hourFormat="24"
+                placeholder="Seleccione fecha y hora"
+                styleClass="w-full schedule-datepicker"
+                appendTo="body"
+              ></p-datepicker>
+              <small
+                *ngIf="isControlInvalid('startAt') || isStartAtInvalid()"
+                class="text-[#FF6D0A] text-xs mt-1 block"
+              >
+                Debe definir una fecha y hora futura para la programación.
+              </small>
+            </div>
+
+            <div class="schedule-block">
+              <label class="font-medium mb-2 block text-slate-700 text-sm">
+                Fecha de finalización de la programación
+              </label>
+              <p-datepicker
+                formControlName="endAt"
+                [showTime]="true"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                hourFormat="24"
+                placeholder="Opcional"
+                styleClass="w-full schedule-datepicker"
+                appendTo="body"
+              ></p-datepicker>
+              <small class="text-xs text-slate-500 mt-1 block">
+                Campo opcional para limitar la vigencia de la programación.
+              </small>
+            </div>
+
+            <div *ngIf="isScheduleWindowInvalid()" class="md:col-span-2">
+              <small class="text-[#FF6D0A] text-xs block">
+                La fecha de finalización de la programación debe ser posterior o
+                igual a la fecha de inicialización.
+              </small>
+            </div>
+
+            <div class="md:col-span-2 schedule-block schedule-block--feature">
+              <label class="font-medium mb-3 block text-slate-700 text-sm">
+                Frecuencia
+              </label>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button
+                  *ngFor="let option of frequencyOptions"
+                  type="button"
+                  (click)="setFrequency(option.value)"
+                  class="schedule-option-card text-left rounded-lg border-2 p-4 transition-all hover:shadow-sm"
+                  [attr.aria-pressed]="isFrequencySelected(option.value)"
+                  [ngClass]="{
+                    'border-primary bg-primary/5': isFrequencySelected(
+                      option.value
+                    ),
+                    'border-slate-200 bg-white hover:border-slate-300':
+                      !isFrequencySelected(option.value),
+                  }"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <p class="font-semibold text-slate-800">
+                        {{ option.label }}
+                      </p>
+                      <p class="text-xs text-slate-500 mt-1">
+                        {{ option.description }}
+                      </p>
+                    </div>
+                    <i
+                      *ngIf="isFrequencySelected(option.value)"
+                      class="pi pi-check-circle text-primary mt-1"
+                    ></i>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </p-fieldset>
+
+        <p-fieldset
+          legend="Entrega"
+          styleClass="schedule-fieldset schedule-fieldset--delivery"
+        >
+          <div class="flex flex-col gap-8">
+            <div>
+              <label class="delivery-section-label">Formato del archivo</label>
+              <p class="delivery-section-hint">
+                Seleccione cómo desea recibir el reporte generado.
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
+                <button
+                  *ngFor="let option of reportFormatOptions"
+                  type="button"
+                  (click)="setReportFormat(option.value)"
+                  class="delivery-card delivery-card--format"
+                  [attr.aria-pressed]="isReportFormatSelected(option.value)"
+                >
+                  <div class="delivery-card__icon">
+                    <i [class]="option.icon + ' ' + option.accent"></i>
+                  </div>
+                  <div class="delivery-card__body">
+                    <p class="delivery-card__title">{{ option.label }}</p>
+                    <p class="delivery-card__desc">{{ option.description }}</p>
+                  </div>
+                  <i
+                    *ngIf="isReportFormatSelected(option.value)"
+                    class="pi pi-check-circle delivery-card__check"
+                  ></i>
+                </button>
+              </div>
+              <small
+                *ngIf="isControlInvalid('reportFormat')"
+                class="text-[#FF6D0A] text-xs mt-2 block"
+              >
+                Debe seleccionar el formato de descarga.
+              </small>
+            </div>
+
+            <div>
+              <label class="delivery-section-label">Modalidad de entrega</label>
+              <p class="delivery-section-hint">
+                Defina dónde se entregará el reporte una vez generado.
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-4">
+                <button
+                  *ngFor="let option of deliveryWayOptions"
+                  type="button"
+                  (click)="setDeliveryWay(option.value)"
+                  class="delivery-card delivery-card--way"
+                  [attr.aria-pressed]="isDeliveryWaySelected(option.value)"
+                >
+                  <div class="delivery-card__icon">
+                    <i
+                      [class]="
+                        option.value === 'EMAIL'
+                          ? 'pi pi-envelope'
+                          : 'pi pi-download'
+                      "
+                    ></i>
+                  </div>
+                  <div class="delivery-card__body">
+                    <p class="delivery-card__title">{{ option.label }}</p>
+                    <p class="delivery-card__desc">{{ option.description }}</p>
+                  </div>
+                  <i
+                    *ngIf="isDeliveryWaySelected(option.value)"
+                    class="pi pi-check-circle delivery-card__check"
+                  ></i>
+                </button>
+              </div>
+              <small
+                *ngIf="isControlInvalid('deliveryWay')"
+                class="text-[#FF6D0A] text-xs block mt-2"
+              >
+                Debe seleccionar una modalidad de entrega válida.
+              </small>
+            </div>
+
+            <div
+              *ngIf="requiresEmailConfig(control('deliveryWay')?.value)"
+              class="email-panel animate-fade-in"
+            >
+              <div class="email-panel__icon">
+                <i class="pi pi-envelope"></i>
+              </div>
+              <div class="email-panel__content">
+                <p class="email-panel__title">Destinatario del reporte</p>
+                <p class="email-panel__hint">
+                  El reporte se enviará automáticamente a la dirección que
+                  ingrese a continuación.
+                </p>
+                <div
+                  class="email-panel__field"
+                  [class.email-panel__field--invalid]="isControlInvalid('email')"
+                >
+                  <i class="pi pi-at email-panel__field-icon"></i>
+                  <input
+                    id="emailInput"
+                    pInputText
+                    formControlName="email"
+                    placeholder="ejemplo@empresa.com"
+                    class="email-panel__input"
+                  />
+                </div>
+                <small
+                  *ngIf="isControlInvalid('email')"
+                  class="email-panel__error"
+                >
+                  <i class="pi pi-exclamation-circle"></i>
+                  Debe ingresar un correo válido.
+                </small>
+              </div>
+            </div>
+          </div>
+        </p-fieldset>
+
+        <div
+          *ngIf="showDeleteConfirmation"
+          class="rounded-lg border border-[#FFDBCC] bg-[#FFDBCC]/40 px-4 py-3 animate-fade-in schedule-alert"
+        >
+          <p class="text-sm font-medium text-[#8D3800]">
+            Se cancelará la tarea automática actual.
+          </p>
+          <p class="text-xs text-[#8D3800] mt-1">
+            Confirma solo si deseas impedir futuras ejecuciones de esta
+            programación.
+          </p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <p-button
+              type="button"
+              label="Mantener programación"
+              styleClass="p-button-outlined p-button-secondary"
+              (click)="cancelDeleteRequest()"
+            ></p-button>
+            <p-button
+              type="button"
+              label="Confirmar cancelación"
+              icon="pi pi-trash"
+              severity="danger"
+              (click)="confirmDeleteSchedule()"
+            ></p-button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Footer con Botones de Acción -->
     <div
-      class="flex justify-end gap-3 mt-8 border-t border-gray-200 pt-4 bg-white"
+      class="schedule-dialog-footer flex justify-end gap-3 border-t border-gray-200 bg-white"
     >
       <p-button
+        type="button"
         label="Cancelar"
         styleClass="p-button-outlined p-button-secondary"
         (click)="close()"
       ></p-button>
 
       <p-button
+        *ngIf="canDeleteSchedule"
+        type="button"
+        label="Cancelar programación"
+        icon="pi pi-trash"
+        severity="danger"
+        styleClass="p-button-outlined"
+        (click)="requestDeleteSchedule()"
+      ></p-button>
+
+      <p-button
         type="submit"
-        [label]="
-          scheduleForm.get('sendType')?.value === 'download'
-            ? 'Descargar Ahora'
-            : 'Programar Envío'
-        "
-        [icon]="
-          scheduleForm.get('sendType')?.value === 'download'
-            ? 'pi pi-download'
-            : 'pi pi-send'
-        "
-        [disabled]="scheduleForm.invalid"
+        [label]="submitLabel"
+        [icon]="submitIcon"
         styleClass="p-button-primary"
       ></p-button>
     </div>

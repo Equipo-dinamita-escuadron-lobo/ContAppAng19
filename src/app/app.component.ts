@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Toast } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { Subscription } from 'rxjs';
+import { AuthService } from './Core/auth/services/auth.service';
+import { NotificationStore } from './Core/notifications/state/notification.store';
 
 @Component({
   selector: 'app-root',
@@ -10,6 +12,27 @@ import { MessageService } from 'primeng/api';
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'ContApp';
+
+  private readonly authService = inject(AuthService);
+  private readonly notificationStore = inject(NotificationStore);
+  private userSubscription?: Subscription;
+
+  ngOnInit(): void {
+    this.userSubscription = this.authService.currentUser$.subscribe((user) => {
+      console.log('[Notifications] currentUser$ emitted:', user);
+      if (!user || !user.id) {
+        this.notificationStore.destroy();
+        return;
+      }
+      console.log('[Notifications] initForUser with sub =', user.id);
+      this.notificationStore.initForUser(user.id);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.userSubscription?.unsubscribe();
+    this.notificationStore.destroy();
+  }
 }

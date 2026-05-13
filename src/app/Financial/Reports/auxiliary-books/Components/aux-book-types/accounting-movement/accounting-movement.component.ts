@@ -13,7 +13,7 @@ import { TableModule } from 'primeng/table';
 // Models
 import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
-import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
+import { AccountingMovementBookResponse } from '../../../Models/Responses/AccountingMovementBookResponse';
 
 // Services
 import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
@@ -23,6 +23,7 @@ import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/s
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 import { DialogService } from 'primeng/dynamicdialog';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 @Component({
   selector: 'app-accounting-movement',
   imports: [
@@ -52,7 +53,50 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
     criteria: this.criteria,
   };
 
-  override dataTable: InventoryAndBalancesResponse[] = [];
+  override dataTable: AccountingMovementBookResponse[] = [];
+
+  headerConfig: ColumnDefinition[][] = [
+    [
+      { header: 'Tipo Documento', field: 'voucherType', rowspan: 2 },
+      { header: 'Fecha', field: 'date', rowspan: 2 },
+      { header: 'Estado', field: 'state', rowspan: 2 },
+      {
+        header: 'Tercero',
+        colspan: 2,
+        children: [
+          { header: 'Identificación', field: 'thirdPartyId' },
+          { header: 'Nombre', field: 'thirdPartyName' },
+        ],
+      },
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        children: [
+          { header: 'Código', field: 'account.accountCode' },
+          { header: 'Descripción', field: 'account.accountDescription' },
+        ],
+      },
+      {
+        header: 'Movimiento',
+        colspan: 3,
+        children: [
+          { header: 'Saldo Inicial', field: 'initialBalance', type: 'number' },
+          { header: 'Débito', field: 'debitMovement', type: 'number' },
+          { header: 'Crédito', field: 'creditMovement', type: 'number' },
+        ],
+      },
+      { header: 'Movimiento Neto', field: 'netMovement', type: 'number', rowspan: 2 },
+    ],
+    [
+      { header: 'Identificación' },
+      { header: 'Nombre' },
+      { header: 'Código' },
+      { header: 'Descripción' },
+      { header: 'Saldo Inicial' },
+      { header: 'Débito' },
+      { header: 'Crédito' },
+    ],
+  ];
 
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
@@ -88,6 +132,9 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
         'Resume todos los movimientos contables realizados, facilitando auditorías, validaciones y análisis históricos de operaciones.',
       icon: 'difference',
     };
+
+    this.criteria.criteriaType = 'ACCOUNT';
+    this.isLevelSelected = true;
   }
 
   protected organizeRequest(): void {
