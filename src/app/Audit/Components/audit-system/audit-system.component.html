@@ -1,36 +1,31 @@
-<p-toast></p-toast>
 <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
   <!-- Titulo y descripción -->
-  <div
-    class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-6 mb-10"
-  >
-    <div>
+  <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-10">
+    <div class="items-center mb-6">
       <h1
         class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1"
       >
-        Auditoría de Sesiones
+        Auditoría del Sistema
       </h1>
       <p class="font-family-sans font-normal text-sm mt-10">
-        Aquí podrás supervisar quién y cuándo ingresó al sistema
+        Aquí podrás supervisar los cambios y configuraciones generales del
+        sistema
       </p>
     </div>
-    <p-button
-      label="Volver"
-      icon="pi pi-arrow-left"
-      severity="secondary"
-      [outlined]="true"
-      (onClick)="goBack()"
-    ></p-button>
   </div>
 
   <!-- Contenedor de filtros y botones-->
   <div class="flex flex-col gap-4 mb-6">
     <!-- Contenedor de cajas de filtros -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-14"
+    >
       <div class="flex flex-col">
         <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">
           Fecha inicial
-          <span [class.text-red-500]="!filtro.fechaInicio">*</span>
+          @if (!filtro.fechaInicio) {
+            <span class="text-red-500">*</span>
+          }
         </label>
         <p-datePicker
           id="fechaInicio"
@@ -38,7 +33,6 @@
           dateFormat="dd/mm/yy"
           [dataType]="'date'"
           showIcon="true"
-          placeholder="dd/mm/aaaa"
           [required]="true"
           [maxDate]="filtro.fechaFin ?? today"
         >
@@ -52,7 +46,9 @@
       <div class="flex flex-col">
         <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">
           Fecha final
-          <span [class.text-red-500]="!filtro.fechaFin">*</span>
+          @if (!filtro.fechaFin) {
+            <span class="text-red-500">*</span>
+          }
         </label>
         <p-datePicker
           id="fechaFin"
@@ -60,7 +56,6 @@
           dateFormat="dd/mm/yy"
           [dataType]="'date'"
           showIcon="true"
-          placeholder="dd/mm/aaaa"
           [required]="true"
           [minDate]="filtro.fechaInicio"
           [maxDate]="today"
@@ -96,7 +91,7 @@
           pInputText
           [(ngModel)]="filtro.userName"
           placeholder="Buscar por nombre"
-          (input)="onUserInput($event)"
+          (input)="onInputChange($event, 'userName')"
         />
         @if (
           filtro.userName &&
@@ -107,6 +102,20 @@
             Debe escribir mínimo 3 caracteres
           </small>
         }
+      </div>
+      <div class="flex flex-col">
+        <label for="operation" class="mb-1 text-sm font-medium text-gray-700"
+          >Operación</label
+        >
+        <p-dropdown
+          id="operation"
+          [options]="operationsOptions"
+          [(ngModel)]="filtro.operationType"
+          placeholder="Seleccione una operación"
+          optionLabel="label"
+          optionValue="value"
+        >
+        </p-dropdown>
       </div>
     </div>
 
@@ -123,19 +132,15 @@
         </p-button>
       </div>
 
+      <!-- Boton de exportar -->
       <div>
-        <p-button
-          label="Exportar"
-          icon="pi pi-download"
-          (onClick)="openExportModal()"
-        />
+        <p-button label="Exportar Excel" icon="pi pi-file-excel"> </p-button>
       </div>
     </div>
   </div>
 
-  <!-- Tabla de sesiones -->
   <p-table
-    [value]="sessions"
+    [value]="operations"
     [lazy]="true"
     [paginator]="true"
     [rows]="pageSize"
@@ -158,36 +163,40 @@
           Rol
         </th>
         <th
-          pSortableColumn="loginTime"
+          pSortableColumn="operationAt"
           class="font-semibold text-primary border-b-2 border-primary"
         >
-          Fecha y hora de entrada
-          <p-sortIcon field="loginTime"></p-sortIcon>
+          Fecha y hora
+          <p-sortIcon field="operationAt"></p-sortIcon>
         </th>
         <th class="font-semibold text-primary border-b-2 border-primary">
-          Fecha y hora de salida
+          Operación
+        </th>
+        <th class="font-semibold text-primary border-b-2 border-primary">
+          Datos
         </th>
       </tr>
     </ng-template>
 
-    <ng-template pTemplate="body" let-session>
+    <ng-template pTemplate="body" let-operation>
       <tr class="text-neutral-20">
-        <td class="py-3">{{ session.userName }}</td>
-        <td class="py-3">{{ rolesLabel[session.userRole] }}</td>
-        <td class="py-3">{{ formatDateTime(session.loginTime) }}</td>
-        <td class="py-3">{{ formatDateTime(session.logoutTime) }}</td>
+        <td class="py-3">{{ operation.userName }}</td>
+        <td class="py-3">{{ operation.userRole }}</td>
+        <td class="py-3">{{ formatDateTime(operation.operationAt) }}</td>
+        <td class="py-3">{{ operationTypeLabels[operation.operationType] }}</td>
+        <td class="py-3" [innerHTML]="formatData(operation)"></td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
         <td
-          colspan="4"
+          colspan="8"
           class="text-center py-6 font-family-sans text-neutral-50"
         >
           {{
             hasSearched
-              ? "No se encontraron registros de sesiones."
+              ? "No se encontraron registros de operaciones."
               : 'Use los filtros y presione "Aplicar filtros".'
           }}
         </td>
@@ -195,4 +204,3 @@
     </ng-template>
   </p-table>
 </div>
-<app-export-modal [config]="exportConfig" (closed)="onExportModalClosed()" />

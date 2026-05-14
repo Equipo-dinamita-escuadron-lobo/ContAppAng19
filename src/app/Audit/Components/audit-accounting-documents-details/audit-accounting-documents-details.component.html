@@ -1,0 +1,204 @@
+<p-toast />
+
+<div class="audit-detail-page">
+  <!-- Header de página -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Historial del documento</h1>
+      <p class="page-subtitle">
+        Código: <span class="document-code">{{ documentCode }}</span>
+      </p>
+    </div>
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="goBack()"
+    />
+  </div>
+
+  <!-- Skeleton -->
+  <div *ngIf="loading" class="timeline">
+    <div *ngFor="let i of [1, 2, 3]" class="event-card skeleton-card">
+      <p-skeleton height="1.1rem" width="30%" styleClass="mb-3" />
+      <p-skeleton height="0.875rem" styleClass="mb-2" />
+      <p-skeleton height="0.875rem" width="60%" />
+    </div>
+  </div>
+
+  <!-- Sin resultados -->
+  <div *ngIf="!loading && detailViews.length === 0" class="empty-state">
+    <i class="pi pi-inbox empty-icon"></i>
+    <p>No se encontraron operaciones para este documento.</p>
+  </div>
+
+  <!-- Timeline de operaciones -->
+  <div *ngIf="!loading && detailViews.length > 0" class="timeline">
+    <div *ngFor="let item of detailViews; let i = index" class="event-card">
+      <!-- Cabecera del evento -->
+      <div class="event-header">
+        <div class="event-header-left">
+          <span class="event-index"
+            >Operación {{ detailViews.length - i }}</span
+          >
+          <p-tag
+            [value]="operationLabels[item.operationType] ?? item.operationType"
+            [severity]="operationSeverity[item.operationType]"
+          />
+        </div>
+        <div class="event-header-right">
+          <span class="event-date">{{ formatInstant(item.operationAt) }}</span>
+          <span class="event-user">{{ item.userName }}</span>
+          <span *ngIf="item.userRoles.length" class="event-roles">
+            {{ item.userRoles.join(", ") }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Cuerpo del evento -->
+      <div class="event-body">
+        <!-- ── ENCABEZADO DEL DOCUMENTO (snapshot) ── -->
+        <div *ngIf="!isDiff(item) && item.headerEntries.length" class="section">
+          <div class="section-title">Encabezado</div>
+          <div class="fields-grid">
+            <div *ngFor="let e of item.headerEntries" class="field-item">
+              <span class="field-label">{{ getFieldLabel(e.key) }}</span>
+              <span class="field-value">{{ getValueLabel(e.value) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── ENCABEZADO DEL DOCUMENTO (diff) ── -->
+        <div *ngIf="isDiff(item) && item.headerDiffRows.length" class="section">
+          <div class="section-title">Cambios en encabezado</div>
+          <table class="diff-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Antes</th>
+                <th>Después</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of item.headerDiffRows">
+                <td class="field-label">{{ getFieldLabel(row.field) }}</td>
+                <td class="diff-before">{{ getValueLabel(row.before) }}</td>
+                <td class="diff-after">{{ getValueLabel(row.after) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── LÍNEAS EN SNAPSHOT (CREATE / VOID / DELETE) ── -->
+        <div *ngIf="!isDiff(item) && item.snapshotRows.length" class="section">
+          <div class="section-title">
+            Líneas del documento
+            <span class="section-badge">{{ item.snapshotRows.length }}</span>
+          </div>
+          <div class="table-scroll">
+            <table class="snapshot-table">
+              <thead>
+                <tr>
+                  <th *ngFor="let col of getSnapshotColumns(item.snapshotRows)">
+                    {{ getFieldLabel(col) }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of item.snapshotRows">
+                  <td *ngFor="let cell of row">
+                    {{ getValueLabel(cell.value) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── CAMBIOS EN LÍNEAS (UPDATE / APPROVE) ── -->
+        <div
+          *ngIf="isDiff(item) && item.diffDetailGroups.length"
+          class="section"
+        >
+          <div class="section-title">Cambios en líneas</div>
+          <div *ngFor="let group of item.diffDetailGroups" class="diff-group">
+            <div class="diff-group-label">{{ group.lineLabel }}</div>
+            <table class="diff-table">
+              <thead>
+                <tr>
+                  <th>Campo</th>
+                  <th>Antes</th>
+                  <th>Después</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of group.rows">
+                  <td class="field-label">{{ getFieldLabel(row.field) }}</td>
+                  <td class="diff-before">{{ getValueLabel(row.before) }}</td>
+                  <td class="diff-after">{{ getValueLabel(row.after) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── TOTALES (snapshot) ── -->
+        <div *ngIf="!isDiff(item) && item.totalsEntries.length" class="section">
+          <div class="section-title">Totales</div>
+          <div class="totals-list">
+            <div
+              *ngFor="let e of item.totalsEntries; let last = last"
+              class="totals-row"
+              [class.totals-row--last]="last"
+            >
+              <span class="field-label">{{ getFieldLabel(e.key) }}</span>
+              <span class="field-value" [class.font-bold]="last">
+                {{ getValueLabel(e.value) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── TOTALES (diff) ── -->
+        <div *ngIf="isDiff(item) && item.totalsDiffRows.length" class="section">
+          <div class="section-title">Cambios en totales</div>
+          <table class="diff-table">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Antes</th>
+                <th>Después</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of item.totalsDiffRows">
+                <td class="field-label">{{ getFieldLabel(row.field) }}</td>
+                <td class="diff-before">{{ getValueLabel(row.before) }}</td>
+                <td class="diff-after">{{ getValueLabel(row.after) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── METADATA ── -->
+        <!-- <div *ngIf="item.metadataEntries.length" class="section section--meta">
+          <div class="section-title">
+            <i class="pi pi-info-circle"></i> Metadata técnica
+          </div>
+          <div class="fields-grid fields-grid--compact">
+            <div *ngFor="let e of item.metadataEntries" class="field-item">
+              <span class="field-label">{{ getFieldLabel(e.key) }}</span>
+              <span class="field-value field-value--mono">{{
+                getValueLabel(e.value)
+              }}</span>
+            </div>
+          </div>
+        </div> -->
+      </div>
+      <!-- /event-body -->
+    </div>
+    <!-- /event-card -->
+  </div>
+  <!-- /timeline -->
+</div>

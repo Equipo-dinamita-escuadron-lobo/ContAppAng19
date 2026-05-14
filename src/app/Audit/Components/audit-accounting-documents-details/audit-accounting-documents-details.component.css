@@ -1,0 +1,196 @@
+/* ── Página ─────────────────────────────────── */
+.audit-detail-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.page-title  { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.page-subtitle { font-size: 0.85rem; color: var(--text-color-secondary); margin: 0.25rem 0 0; }
+.document-code { font-family: monospace; font-weight: 600; color: var(--text-color); }
+
+/* ── Timeline ────────────────────────────────── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Tarjeta de evento ───────────────────────── */
+.event-card {
+  border: 1px solid var(--surface-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--surface-card);
+}
+
+.event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface-ground);
+  border-bottom: 1px solid var(--surface-border);
+  flex-wrap: wrap;
+}
+
+.event-header-left  { display: flex; align-items: center; gap: 0.625rem; }
+.event-index        { font-size: 0.75rem; font-weight: 600; color: var(--text-color-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.event-header-right { text-align: right; }
+.event-date  { display: block; font-size: 0.8rem; color: var(--text-color-secondary); }
+.event-user  { display: block; font-size: 0.875rem; font-weight: 600; margin-top: 0.2rem; }
+.event-roles { display: block; font-size: 0.75rem; color: var(--text-color-secondary); margin-top: 0.15rem; }
+
+/* ── Cuerpo ──────────────────────────────────── */
+.event-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Secciones ───────────────────────────────── */
+.section { display: flex; flex-direction: column; gap: 0.625rem; }
+.section--meta { opacity: 0.8; }
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-color-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.section-badge {
+  background: var(--surface-border);
+  color: var(--text-color-secondary);
+  border-radius: 999px;
+  padding: 0 0.4rem;
+  font-size: 0.7rem;
+}
+
+/* ── Grid de campos ──────────────────────────── */
+.fields-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem 1rem;
+}
+.fields-grid--compact { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+
+.field-item     { display: flex; flex-direction: column; gap: 0.2rem; }
+.field-label    { font-size: 0.75rem; color: var(--text-color-secondary); }
+.field-value    { font-size: 0.875rem; font-weight: 500; color: var(--text-color); }
+.field-value--mono { font-family: monospace; font-size: 0.8rem; }
+
+/* ── Tabla diff ──────────────────────────────── */
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.diff-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-color-secondary);
+  padding: 0.5rem 0.875rem;
+  background: var(--surface-ground);
+  border-bottom: 1px solid var(--surface-border);
+}
+.diff-table td {
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--surface-border);
+  vertical-align: middle;
+}
+.diff-table tr:last-child td { border-bottom: none; }
+
+.diff-before { color: var(--text-color-secondary); }
+.diff-after  { font-weight: 600; color: var(--text-color); }
+
+/* ── Grupos de diff por línea ────────────────── */
+.diff-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.diff-group-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  padding-left: 0.25rem;
+}
+
+/* ── Tabla snapshot ──────────────────────────── */
+.table-scroll { overflow-x: auto; }
+.snapshot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  min-width: 480px;
+}
+.snapshot-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-color-secondary);
+  padding: 0.5rem 0.875rem;
+  background: var(--surface-ground);
+  border-bottom: 1px solid var(--surface-border);
+  white-space: nowrap;
+}
+.snapshot-table td {
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--surface-border);
+  color: var(--text-color);
+}
+.snapshot-table tr:last-child td { border-bottom: none; }
+
+/* ── Totales ─────────────────────────────────── */
+.totals-list {
+  background: var(--surface-ground);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+.totals-row--last {
+  border-top: 1px solid var(--surface-border);
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* ── Estado vacío ────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-color-secondary);
+}
+.empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+
+/* ── Skeleton ────────────────────────────────── */
+.skeleton-card { padding: 1.25rem; }

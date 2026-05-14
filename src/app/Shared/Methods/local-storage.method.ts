@@ -47,6 +47,14 @@ export class LocalStorageMethods {
     return enterpriseData?.id || '';
   }
 
+    /**
+     * Obtiene solo el nombre de la empresa
+    */
+  public getEnterpriseName(): string {
+    const enterpriseData = this.loadEnterpriseData();
+    return enterpriseData?.name || '';
+  }
+
   /**
    * Obtiene el tipo de configuración de inventario actual
    */

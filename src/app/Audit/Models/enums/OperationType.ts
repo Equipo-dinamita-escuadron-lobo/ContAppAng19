@@ -3,5 +3,6 @@ export enum OperationType {
   CREATE = 'CREATE',
   UPDATE = 'UPDATE',
   DELETE = 'DELETE',
-  INACTIVATE = 'INACTIVATE'
+  INACTIVATE = 'INACTIVATE',
+  ACTIVATE = 'ACTIVATE'
 }

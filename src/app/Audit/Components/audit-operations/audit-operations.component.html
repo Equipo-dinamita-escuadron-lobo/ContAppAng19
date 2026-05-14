@@ -1,127 +1,166 @@
 <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
-
   <!-- Titulo y descripción -->
-  <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-10">
-    <div class="items-center mb-6">
-      <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-        Auditoría de Operaciones
+  <div
+    class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-6 mb-10"
+  >
+    <div>
+      <h1
+        class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1"
+      >
+        {{
+          auditType === "system"
+            ? "Auditoría de operaciones de configuración"
+            : "Auditoría de Operaciones"
+        }}
       </h1>
       <p class="font-family-sans font-normal text-sm mt-10">
-        Aquí podrás supervisar el detalle de las operaciones realizadas en el sistema
+        {{
+          auditType === "system"
+            ? "Aquí podrás supervisar el detalle de las operaciones de la gestión de empresas y configuración de usuarios"
+            : "Aquí podrás supervisar el detalle de las operaciones realizadas en la empresa"
+        }}
       </p>
     </div>
+    <p-button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="goBack()"
+    ></p-button>
   </div>
 
   <!-- Contenedor de filtros y botones-->
-   <div class="flex flex-col gap-4 mb-6">
+  <div class="flex flex-col gap-4 mb-6">
     <!-- Contenedor de cajas de filtros -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-14">
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-14"
+    >
       <div class="flex flex-col">
         <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">
-          Fecha inicial 
+          Fecha inicial
           @if (!filtro.fechaInicio) {
             <span class="text-red-500">*</span>
           }
         </label>
-        <p-datePicker  
+        <p-datePicker
           id="fechaInicio"
           [(ngModel)]="filtro.fechaInicio"
           dateFormat="dd/mm/yy"
           [dataType]="'date'"
-          showIcon="true"
+          [showIcon]="true"
           [required]="true"
-          [maxDate]="filtro.fechaFin ?? today">
+          placeholder="dd/mm/aaaa"
+          [maxDate]="filtro.fechaFin ?? today"
+        >
         </p-datePicker>
         @if (!filtro.fechaInicio && filtro.fechaFin) {
-          <small style="color: var(--color-error-35);">Debe ingresar la fecha inicial</small>
+          <small style="color: var(--color-error-35)"
+            >Debe ingresar la fecha inicial</small
+          >
         }
       </div>
       <div class="flex flex-col">
         <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">
-          Fecha final 
+          Fecha final
           @if (!filtro.fechaFin) {
             <span class="text-red-500">*</span>
           }
         </label>
-        <p-datePicker 
+        <p-datePicker
           id="fechaFin"
           [(ngModel)]="filtro.fechaFin"
           dateFormat="dd/mm/yy"
           [dataType]="'date'"
-          showIcon="true"
+          [showIcon]="true"
           [required]="true"
+          placeholder="dd/mm/aaaa"
           [minDate]="filtro.fechaInicio"
-          [maxDate]="today">
+          [maxDate]="today"
+        >
         </p-datePicker>
         @if (filtro.fechaInicio && !filtro.fechaFin) {
-          <small style="color: var(--color-error-35);">Debe ingresar la fecha final</small>
+          <small style="color: var(--color-error-35)"
+            >Debe ingresar la fecha final</small
+          >
         }
       </div>
       <div class="flex flex-col mr-5">
-        <label for="modulo" class="mb-1 text-sm font-medium text-gray-700">Módulo</label>
-        <input
-          id="modulo"
-          type="text"
-          pInputText
+        <label for="modulo" class="mb-1 text-sm font-medium text-gray-700"
+          >Módulo</label
+        >
+        <p-dropdown
+          [options]="moduleOptions"
           [(ngModel)]="filtro.moduleName"
-          placeholder="Buscar por módulo"
-          (input)="onInputChange($event, 'moduleName')">
-          @if (filtro.moduleName && filtro.moduleName.length > 0 && filtro.moduleName.length < 3) {
-            <small style="color: var(--color-error-35);">
-              Debe escribir mínimo 3 caracteres
-            </small>
-          }
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos los módulos"
+          (onChange)="onModuleChange()"
+          styleClass="w-full"
+        />
       </div>
       <div class="flex flex-col mr-5">
-        <label for="tabla" class="mb-1 text-sm font-medium text-gray-700">Tabla</label>
-        <input
-          id="tabla"
-          type="text"
-          pInputText
+        <label for="tabla" class="mb-1 text-sm font-medium text-gray-700"
+          >Entidad</label
+        >
+        <p-dropdown
+          [options]="tableOptions"
           [(ngModel)]="filtro.affectedTable"
-          placeholder="Buscar por tabla"
-          (input)="onInputChange($event, 'affectedTable')">
-          @if (filtro.affectedTable && filtro.affectedTable.length > 0 && filtro.affectedTable.length < 3) {
-            <small style="color: var(--color-error-35);">
-              Debe escribir mínimo 3 caracteres
-            </small>
-          }
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todas las entidades"
+          [disabled]="!filtro.moduleName"
+          styleClass="w-full"
+        />
       </div>
       <div class="flex flex-col">
-        <label for="rol" class="mb-1 text-sm font-medium text-gray-700">Rol</label>
-        <p-dropdown 
+        <label for="rol" class="mb-1 text-sm font-medium text-gray-700"
+          >Rol</label
+        >
+        <p-dropdown
           id="rol"
           [options]="roles"
           [(ngModel)]="filtro.userRole"
           placeholder="Seleccione un rol"
           optionLabel="label"
-          optionValue="value">
+          optionValue="value"
+        >
         </p-dropdown>
       </div>
       <div class="flex flex-col mr-5">
-        <label for="usuario" class="mb-1 text-sm font-medium text-gray-700">Usuario</label>
+        <label for="usuario" class="mb-1 text-sm font-medium text-gray-700"
+          >Usuario operación</label
+        >
         <input
           id="usuario"
           type="text"
           pInputText
           [(ngModel)]="filtro.userName"
           placeholder="Buscar por nombre"
-          (input)="onInputChange($event, 'userName')">
-          @if (filtro.userName && filtro.userName.length > 0 && filtro.userName.length < 3) {
-            <small style="color: var(--color-error-35);">
-              Debe escribir mínimo 3 caracteres
-            </small>
-          }
+          (input)="onInputChange($event, 'userName')"
+        />
+        @if (
+          filtro.userName &&
+          filtro.userName.length > 0 &&
+          filtro.userName.length < 3
+        ) {
+          <small style="color: var(--color-error-35)">
+            Debe escribir mínimo 3 caracteres
+          </small>
+        }
       </div>
       <div class="flex flex-col">
-        <label for="operation" class="mb-1 text-sm font-medium text-gray-700">Operación</label>
+        <label for="operation" class="mb-1 text-sm font-medium text-gray-700"
+          >Operación</label
+        >
         <p-dropdown
           id="operation"
           [options]="operationsOptions"
           [(ngModel)]="filtro.operationType"
           placeholder="Seleccione una operación"
           optionLabel="label"
-          optionValue="value">
+          optionValue="value"
+        >
         </p-dropdown>
       </div>
     </div>
@@ -130,88 +169,109 @@
     <div class="flex justify-between items-center mt-20 mb-10">
       <!-- Boton de aplicar filtros -->
       <div>
-        <p-button 
-          label="Aplicar filtros" 
-          icon="pi pi-filter" 
+        <p-button
+          label="Aplicar filtros"
+          icon="pi pi-filter"
           [loading]="loading"
-          (onClick)="applyFilters()">
+          (onClick)="applyFilters()"
+        >
         </p-button>
       </div>
 
       <!-- Boton de exportar -->
       <div>
-        <p-button 
-          label="Exportar Excel" 
-          icon="pi pi-file-excel">
+        <p-button
+          label="Exportar Excel"
+          icon="pi pi-file-excel"
+          (onClick)="openExportModal()"
+        >
         </p-button>
       </div>
     </div>
   </div>
 
-  <p-table 
+  <p-table
     [value]="operations"
     [lazy]="true"
     [paginator]="true"
     [rows]="pageSize"
     [totalRecords]="totalRecords"
-    [rowsPerPageOptions]="[5,10,20]"
-    [loading]="loading" 
+    [rowsPerPageOptions]="[5, 10, 20]"
+    [loading]="loading"
     (onLazyLoad)="onLazyLoad($event)"
     [sortField]="sortField"
     [sortOrder]="sortOrder"
-    styleClass="p-datatable-striped font-family-sans" 
-    [tableStyle]="{'min-width': '50rem'}" 
-    responsiveLayout="scroll">
-
+    styleClass="p-datatable-striped font-family-sans"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    responsiveLayout="scroll"
+  >
     <ng-template pTemplate="header">
       <tr>
         <th class="font-semibold text-primary border-b-2 border-primary">
           Usuario
         </th>
         <th class="font-semibold text-primary border-b-2 border-primary">
-          Rol 
+          Rol
         </th>
-        <th pSortableColumn="operationAt" class="font-semibold text-primary border-b-2 border-primary">
+        <th
+          pSortableColumn="operationAt"
+          class="font-semibold text-primary border-b-2 border-primary"
+        >
           Fecha y hora
-          <p-sortIcon field="operationAt"></p-sortIcon> 
+          <p-sortIcon field="operationAt"></p-sortIcon>
         </th>
         <th class="font-semibold text-primary border-b-2 border-primary">
           Módulo
         </th>
         <th class="font-semibold text-primary border-b-2 border-primary">
-          Tabla 
-        </th>
-        <th class="font-semibold text-primary border-b-2 border-primary">
-          Código
+          Entidad
         </th>
         <th class="font-semibold text-primary border-b-2 border-primary">
           Operación
         </th>
         <th class="font-semibold text-primary border-b-2 border-primary">
           Datos
-        </th> 
+        </th>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="body" let-operation>
       <tr class="text-neutral-20">
         <td class="py-3">{{ operation.userName }}</td>
-        <td class="py-3">{{ operation.userRole }}</td>
+        <td class="py-3">{{ rolesLabel[operation.userRole] }}</td>
         <td class="py-3">{{ formatDateTime(operation.operationAt) }}</td>
-        <td class="py-3">{{ operation.moduleName }}</td>
-        <td class="py-3">{{ operation.affectedTable }}</td>
-        <td class="py-3">{{ operation.registerId }}</td>
+        <td class="py-3">{{ moduleLabels[operation.moduleName] }}</td>
+        <td class="py-3">{{ tableLabels[operation.affectedTable] }}</td>
         <td class="py-3">{{ operationTypeLabels[operation.operationType] }}</td>
-        <td class="py-3" [innerHTML]="formatData(operation)"></td>
+        <td class="py-3 text-center">
+          <p-button
+            icon="pi pi-eye"
+            styleClass="p-button-rounded p-button-text text-primary"
+            pTooltip="Ver detalle"
+            (onClick)="openDetail(operation)"
+          ></p-button>
+        </td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="8" class="text-center py-6 font-family-sans text-neutral-50">
-          {{ hasSearched ? 'No se encontraron registros de operaciones.' : 'Use los filtros y presione "Aplicar filtros".' }}
+        <td
+          colspan="8"
+          class="text-center py-6 font-family-sans text-neutral-50"
+        >
+          {{
+            hasSearched
+              ? "No se encontraron registros de operaciones."
+              : 'Use los filtros y presione "Aplicar filtros".'
+          }}
         </td>
       </tr>
     </ng-template>
   </p-table>
 </div>
+<app-operation-detail-modal
+  [(visible)]="modalVisible"
+  [operation]="selectedOperation"
+/>
+<app-export-modal [config]="exportConfig" (closed)="onExportModalClosed()" />
