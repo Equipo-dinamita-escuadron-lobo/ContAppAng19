@@ -10,8 +10,8 @@ export interface OperationAuditFilters {
   userRole?: UserRole;    
   operationType?: OperationType; 
   registerId?: string;
-  page: number;
-  size: number;
+  page?: number;
+  size?: number;
   sortField?: string;
   sortDirection?: 'ASC' | 'DESC';
 }

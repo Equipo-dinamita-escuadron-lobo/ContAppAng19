@@ -282,9 +282,16 @@ export const navbarData: INavbarData[] = [
     label: 'Auditoría',
     items: [
       {
+        routeLink: '/audit/system',
+        icon: 'admin_panel_settings',
+        label: 'Configuración',
+        roles: ['Administrador'],
+      },
+      {
         routeLink: '/audit/sessions',
         icon: 'schedule',
-        label: 'Sesión de Auditoría',
+        label: 'Sesiones',
+        roles: ['Administrador','Profesor'],
       },
       {
         routeLink: '/audit/operations',

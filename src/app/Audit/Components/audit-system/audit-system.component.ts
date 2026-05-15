@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, ViewChild } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -11,7 +11,6 @@ import { ToastModule } from 'primeng/toast';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { DropdownModule } from 'primeng/dropdown';
-import { Location } from '@angular/common';
 import { DatePickerModule } from 'primeng/datepicker';
 import { AuditOperationServiceService } from '../../Services/audit-operation-service.service';
 import { MessageService } from 'primeng/api';
@@ -21,15 +20,9 @@ import { Option } from '../../Models/common/Option';
 import { OperationAudit } from '../../Models/operations/OperationAudit';
 import { OperationAuditFilters } from '../../Models/operations/OperationAuditFilters';
 import { PageResponse } from '../../Models/common/PageResponse';
-import { OperationDetailModalComponent } from '../operation-detail-modal/operation-detail-modal.component';
-import { MODULE_LABELS, TABLE_LABELS } from '../../Models/config/entity-field-config';
-import { ActivatedRoute, Router } from '@angular/router';
-import { ExportModalConfig } from '../../Models/export/ExportModalConfig';
-import { ExportModalComponent } from '../export-modal/export-modal.component';
 
 @Component({
-  standalone: true,
-  selector: 'app-audit-operations',
+  selector: 'app-audit-system',
   imports: [
     CommonModule,
     TableModule,
@@ -44,43 +37,30 @@ import { ExportModalComponent } from '../export-modal/export-modal.component';
     IconFieldModule,
     DropdownModule,
     DatePickerModule,
-    OperationDetailModalComponent,
-    ExportModalComponent,
   ],
-  templateUrl: './audit-operations.component.html',
-  styleUrl: './audit-operations.component.css'
+  templateUrl: './audit-system.component.html',
+  styleUrl: './audit-system.component.css'
 })
-export class AuditOperationsComponent {
-
+export class AuditSystemComponent {
   private readonly operationService = inject(AuditOperationServiceService);
   private readonly messageService = inject(MessageService);
-  private route = inject(ActivatedRoute);
-  private location = inject(Location);
-  private router = inject(Router);
-
   private firstLoad = true;
 
   filtro: {
     fechaInicio: Date | null;
     fechaFin: Date | null;
-    moduleName: string | null;
-    affectedTable: string | null;
     userName: string;
     userRole: UserRole | null;
     operationType: OperationType | null;
-    registerId: string;
   } = {
-    fechaInicio: null,
-    fechaFin: null,
-    moduleName: null,
-    affectedTable: null,
-    userName: '',
-    userRole: null,
-    operationType: null,
-    registerId: ''
-  };
+      fechaInicio: null,
+      fechaFin: null,
+      userName: '',
+      userRole: null,
+      operationType: null,
+    };
   
-  roles : Option<UserRole>[] = [
+  roles: Option<UserRole>[] = [
     { label: 'Todos', value: null },
     { label: 'Administrador', value: UserRole.ADMINISTRADOR },
     { label: 'Profesor', value: UserRole.PROFESOR },
@@ -100,20 +80,10 @@ export class AuditOperationsComponent {
     [OperationType.CREATE]: 'Creación',
     [OperationType.UPDATE]: 'Modificación',
     [OperationType.DELETE]: 'Eliminación',
-    [OperationType.INACTIVATE]: 'Inactivación',
-    [OperationType.ACTIVATE]: 'Activación'
-  };
-
-  rolesLabel: Record<string, string> = {
-    [UserRole.ADMINISTRADOR]: 'Administrador',
-    [UserRole.PROFESOR]: 'Profesor',
-    [UserRole.ESTUDIANTE]: 'Estudiante'
+    [OperationType.INACTIVATE]: 'Inactivación'
   };
 
   operations: OperationAudit[] = [];
-  moduleOptions: Option<string>[] = [];
-  tableOptions: Option<string>[] = [];       
-  allTablesByModule: Record<string, string[]> = {};
 
   totalRecords = 0;
   currentPage = 0;
@@ -125,58 +95,6 @@ export class AuditOperationsComponent {
   sortOrder: number = 0;
 
   today = new Date();
-
-  selectedOperation: OperationAudit | null = null;
-  modalVisible = false;
-
-  auditType: 'operations' | 'system' = 'operations';
-
-  readonly moduleLabels = MODULE_LABELS;
-  readonly tableLabels  = TABLE_LABELS;
-
-  @ViewChild(ExportModalComponent) exportModal!: ExportModalComponent;
-
-  readonly exportConfig: ExportModalConfig = {
-    type: 'OPERATION',
-    title: 'Exportar auditoría de operaciones',
-    infoMessage: 'Se exportarán las operaciones según los filtros aplicados actualmente.',
-    allowedFormats: ['EXCEL'],
-    showExtraFilters: false,
-    currentFilters: () => ({
-      dateFrom: this.formatDateToISO(this.filtro.fechaInicio!),
-      dateTo: this.formatDateToISO(this.filtro.fechaFin!, true),
-      moduleName: this.filtro.moduleName || undefined,
-      affectedTable: this.filtro.affectedTable || undefined,
-      userName: this.filtro.userName || undefined,
-      userRole: this.filtro.userRole || undefined,
-      operationType: this.filtro.operationType || undefined,
-    }),
-    initiateExport: (format, filters) =>
-      this.operationService.initiateExport({ ...filters, exportFormat: format })
-  };
-
-  onExportModalClosed(): void { }
-  
-  openExportModal(): void {
-    if (!this.isValidFilters()) {
-      return;
-    }
-    this.exportModal.open();
-  }
-
-  ngOnInit(): void {
-    this.auditType = this.route.snapshot.data['auditType'] ?? 'operations';
-    this.loadModulesAndTables();
-  }
-
-  openDetail(operation: OperationAudit): void {
-    this.selectedOperation = { ...operation };
-    this.modalVisible = true;
-  }
-
-  goBack() {
-    this.location.back();
-  }
 
   applyFilters(page: number = 0): void {
     if (!this.isValidFilters()) {
@@ -192,16 +110,13 @@ export class AuditOperationsComponent {
     const filters: OperationAuditFilters = {
       dateFrom: this.formatDateToISO(fechaInicio),
       dateTo: this.formatDateToISO(fechaFin, true),
-      moduleName: this.filtro.moduleName || undefined,
-      affectedTable: this.filtro.affectedTable || undefined,
       page: this.currentPage,
       size: this.pageSize,
       sortField: this.sortField,
       sortDirection: this.sortOrder === 1 ? 'ASC' : 'DESC'
     }
-    const userName = this.sanitizeInput(this.filtro.userName || '');
-    if (userName) {
-      filters.userName = userName;
+    if (this.filtro.userName && this.filtro.userName.trim()) {
+      filters.userName = this.filtro.userName.replace(/\s+/g, ' ').trim();
     }
     if (this.filtro.userRole) {
       filters.userRole = this.filtro.userRole;
@@ -210,7 +125,7 @@ export class AuditOperationsComponent {
       filters.operationType = this.filtro.operationType;
     }
 
-    this.operationService.getOperations(filters, this.auditType).subscribe({
+    this.operationService.getOperations(filters).subscribe({
       next: (response: PageResponse<OperationAudit>) => {
         this.operations = response.data;
         this.totalRecords = response.totalElements;
@@ -223,7 +138,8 @@ export class AuditOperationsComponent {
           });
         }
       },
-      error: () => {
+      error: (error) => {
+        console.error('Error al obtener operaciones de auditoría:', error);
         this.loading = false;
         this.messageService.add({
           severity: 'error',
@@ -237,7 +153,7 @@ export class AuditOperationsComponent {
   onLazyLoad(event: any) {
     if (this.firstLoad) {
       this.firstLoad = false;
-      return; 
+      return;
     }
     this.pageSize = event.rows;
     this.currentPage = event.first / event.rows;
@@ -257,10 +173,9 @@ export class AuditOperationsComponent {
 
   private sanitizeInput(value: string): string {
     if (!value) return '';
-    return value
-      .replace(/[%_]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    let sanitized = value.replace(/[%_]/g, '');
+    sanitized = sanitized.replace(/\s+/g, ' ').trim();
+    return sanitized;
   }
 
   private isValidFilters(): boolean { 
@@ -273,14 +188,14 @@ export class AuditOperationsComponent {
       });
       return false;
     }
-    // Rango maximo 2 años
+    // Rango maximo 1 año
     const diff = this.filtro.fechaFin.getTime() - this.filtro.fechaInicio.getTime();
     const days = diff / (1000 * 60 * 60 * 24);
-    if (days > 730) {
+    if (days > 365) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Rango muy grande',
-        detail: 'El rango máximo permitido es de 2 años'
+        detail: 'El rango máximo permitido es de 1 año'
       });
       return false;
     }
@@ -313,16 +228,6 @@ export class AuditOperationsComponent {
 
     const trimmed = value.trim();
 
-    if (this.containsInvalidCharacters(trimmed)) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Caracteres inválidos',
-        detail: `El campo ${fieldLabel} contiene caracteres no permitidos`
-      });
-
-      return false;
-    }
-
     if (trimmed.length < min) {
       this.messageService.add({
         severity: 'warn',
@@ -342,51 +247,6 @@ export class AuditOperationsComponent {
     }
 
     return true;
-  }
-
-  private containsInvalidCharacters(value: string): boolean {
-    return /[<>;"']/g.test(value);
-  }
-
-
-  private loadModulesAndTables(): void {
-    this.operationService.getModulesAndTables(this.auditType).subscribe({
-      next: (data) => {
-        this.allTablesByModule = data.reduce((acc, item) => {
-          if (!acc[item.moduleName]) acc[item.moduleName] = [];
-          acc[item.moduleName].push(item.affectedTable);
-          return acc;
-        }, {} as Record<string, string[]>);
-
-        this.moduleOptions = [
-          { label: 'Todos', value: null },
-          ...Object.keys(this.allTablesByModule).map(m => ({
-            label: MODULE_LABELS[m] ?? m,   
-            value: m                         
-          }))
-        ];
-
-        this.tableOptions = [{ label: 'Todas', value: null }];
-      }
-    });
-  }
-
-  onModuleChange(): void {
-    this.filtro.affectedTable = null;
-
-    if (!this.filtro.moduleName) {
-      this.tableOptions = [{ label: 'Todas', value: null }];
-      return;
-    }
-
-    const tables = this.allTablesByModule[this.filtro.moduleName] ?? [];
-    this.tableOptions = [
-      { label: 'Todas', value: null },
-      ...tables.map(t => ({
-        label: TABLE_LABELS[t] ?? t,   
-        value: t
-      }))
-    ];
   }
 
   private formatDateToISO(date: Date, endOfDay = false): string {
@@ -475,5 +335,4 @@ export class AuditOperationsComponent {
 
     return `${title}:<br>${entries}`;
   }
-
 }

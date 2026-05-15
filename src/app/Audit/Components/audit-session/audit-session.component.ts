@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -12,6 +12,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
+import { Location } from '@angular/common';
 import { SessionAudit } from '../../Models/sessions/SessionAudit';
 import { UserRole } from '../../Models/enums/UserRole';
 import { Option } from '../../Models/common/Option';
@@ -19,6 +20,8 @@ import { SessionAuditFilters } from '../../Models/sessions/SessionAuditFilters';
 import { AuditSessionServiceService } from '../../Services/audit-session-service.service';
 import { MessageService } from 'primeng/api';
 import { PageResponse } from '../../Models/common/PageResponse';
+import { ExportModalConfig } from '../../Models/export/ExportModalConfig';
+import { ExportModalComponent } from '../export-modal/export-modal.component';
 
 
 @Component({
@@ -38,14 +41,19 @@ import { PageResponse } from '../../Models/common/PageResponse';
     IconFieldModule,
     DatePickerModule,
     DropdownModule,
+    ExportModalComponent,
   ],
+  providers: [MessageService],
   templateUrl: './audit-session.component.html',
   styleUrl: './audit-session.component.css'
 })
 export class AuditSessionComponent {
 
-  private readonly auditService = inject(AuditSessionServiceService);
-  private readonly messageService = inject(MessageService);
+  constructor(
+    private location: Location,
+    private auditService: AuditSessionServiceService,
+    private messageService: MessageService
+  ) {}
 
   filtro: {
     fechaInicio: Date | null;
@@ -66,6 +74,12 @@ export class AuditSessionComponent {
     { label: 'Estudiante', value: UserRole.ESTUDIANTE }
   ];
 
+  rolesLabel: Record<string, string> = {
+    [UserRole.ADMINISTRADOR]: 'Administrador',
+    [UserRole.PROFESOR]: 'Profesor',
+    [UserRole.ESTUDIANTE]: 'Estudiante'
+  };
+
   sessions: SessionAudit[] = [];
 
   totalRecords = 0;
@@ -79,6 +93,33 @@ export class AuditSessionComponent {
   sortOrder: number = 0;
 
   today = new Date();
+
+  @ViewChild(ExportModalComponent) exportModal!: ExportModalComponent;
+
+  readonly exportConfig: ExportModalConfig = {
+    type: 'SESSION',
+    title: 'Exportar auditoría de sesiones',
+    infoMessage: 'Se exportarán las sesiones según los filtros aplicados actualmente.',
+    allowedFormats: ['EXCEL', 'PDF'],
+    showExtraFilters: false,
+    currentFilters: () => ({
+      dateFrom: this.formatDateToISO(this.filtro.fechaInicio!),
+      dateTo: this.formatDateToISO(this.filtro.fechaFin!, true),
+      userName: this.filtro.userName || undefined,
+      userRole: this.filtro.userRole || undefined
+    }),
+    initiateExport: (format, filters) =>
+      this.auditService.initiateExport({ ...filters, exportFormat: format })
+  };
+
+  onExportModalClosed(): void { }
+  
+  openExportModal(): void {
+    if (!this.isValidFilters()) {
+      return;
+    }
+    this.exportModal.open();
+  }
 
   applyFilters(page: number = 0): void {
     if (!this.isValidFilters()) {
@@ -99,9 +140,9 @@ export class AuditSessionComponent {
       sortField: this.sortField,
       sortDirection: this.sortOrder === 1 ? 'ASC' : 'DESC'
     };
-
-    if (this.filtro.userName && this.filtro.userName.trim()) {
-      filters.userName = this.filtro.userName.replace(/\s+/g, ' ').trim();
+    const userName = this.sanitizeInput(this.filtro.userName || '');
+    if (userName) {
+      filters.userName = userName;
     }
 
     if (this.filtro.userRole) {
@@ -151,9 +192,13 @@ export class AuditSessionComponent {
     this.applyFilters(this.currentPage);
   }
 
+  goBack() {
+    this.location.back();
+  }
+
   onUserInput(event: any) {
     const value = event.target.value;
-    this.filtro.userName = value.replace(/[%_]/g, '');
+    this.filtro.userName = this.sanitizeInput(value);
   }
 
   private isValidFilters(): boolean {
@@ -200,90 +245,36 @@ export class AuditSessionComponent {
     if (this.filtro.userName && this.filtro.userName.length > 50) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Texto muy largo',
+        summary: 'Texto muy largo', 
         detail: 'El nombre de usuario no puede exceder 50 caracteres'
     });
+      return false;
+    }
+
+    if (this.containsInvalidCharacters(this.filtro.userName)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Caracteres inválidos',
+        detail: `El campo de nomre deusuario contiene caracteres no permitidos`
+      });
+
       return false;
     }
 
     return true;
   }
 
-  //Exportar a PDF
-  exportPdf(): void {
-    if (!this.filtro.fechaInicio || !this.filtro.fechaFin) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Atención',
-        detail: 'Debe seleccionar un rango de fechas'
-      });
-      return;
-    }
-
-    const filters: SessionAuditFilters = {
-      dateFrom: this.formatDateToISO(this.filtro.fechaInicio),
-      dateTo: this.formatDateToISO(this.filtro.fechaFin, true),
-      userName: this.filtro.userName || undefined,
-      userRole: this.filtro.userRole || undefined
-    };
-
-    this.auditService.exportToPdf(filters).subscribe({
-      next: (blob) => {
-        this.downloadFile(blob, 'sesiones-audit.pdf');
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'PDF descargado correctamente'
-        });
-      },
-      error: (error) => {
-        console.error('Error al exportar PDF:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo exportar el PDF'
-        });
-      }
-    });
+  private containsInvalidCharacters(value: string): boolean {
+    return /[<>;"']/g.test(value);
   }
 
-  
-  //Exportar a Excel
-  exportExcel(): void {
-    if (!this.filtro.fechaInicio || !this.filtro.fechaFin) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Atención',
-        detail: 'Debe seleccionar un rango de fechas'
-      });
-      return;
-    }
 
-    const filters: SessionAuditFilters = {
-      dateFrom: this.formatDateToISO(this.filtro.fechaInicio),
-      dateTo: this.formatDateToISO(this.filtro.fechaFin, true),
-      userName: this.filtro.userName || undefined,
-      userRole: this.filtro.userRole || undefined
-    };
-
-    this.auditService.exportToExcel(filters).subscribe({
-      next: (blob) => {
-        this.downloadFile(blob, 'sesiones-audit.xlsx');
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Excel descargado correctamente'
-        });
-      },
-      error: (error) => {
-        console.error('Error al exportar Excel:', error);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo exportar el Excel'
-        });
-      }
-    });
+  private sanitizeInput(value: string): string {
+    if (!value) return '';
+    return value
+      .replace(/[%_]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   //Se formatea la fecha para enviar al tipo del backend
@@ -309,16 +300,6 @@ export class AuditSessionComponent {
     }
 
     return d.toISOString();
-  }
-
-  //Para descargar archivo
-  private downloadFile(blob: Blob, filename: string): void {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    window.URL.revokeObjectURL(url);
   }
 
   //Se formatea la fecha para mostrar en la tabla

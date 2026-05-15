@@ -1,0 +1,165 @@
+<p-toast />
+<p-dialog
+  [header]="config.title"
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="phase !== 'progress'"
+  [style]="{ width: '540px', maxWidth: '95vw' }"
+  styleClass="export-modal"
+  (onHide)="close()"
+>
+  <!-- CONFIRM -->
+  <div *ngIf="phase === 'confirm'" class="modal-phase">
+    <div class="phase-icon-wrap confirm-icon">
+      <i class="pi pi-file-export"></i>
+    </div>
+    <p class="phase-title">¿Confirmar exportación?</p>
+    <p class="phase-subtitle">{{ config.infoMessage }}</p>
+  </div>
+
+  <!-- FILTERS (solo documentos) -->
+  <div
+    *ngIf="phase === 'filters' && config.showExtraFilters"
+    class="modal-phase filters-phase"
+  >
+    <!-- Mensaje informativo -->
+    <div class="info-banner">
+      <i class="pi pi-info-circle info-icon"></i>
+      <span>{{ config.infoMessage }}</span>
+    </div>
+    <!-- Filtros aplicados desde el padre -->
+    <div class="filters-section" *ngIf="resolvedAppliedFilters.length > 0">
+      <div class="section-label">Filtros aplicados que se mantendrán</div>
+      <div class="applied-filters-grid">
+        <div
+          class="applied-filter-chip"
+          *ngFor="let filter of resolvedAppliedFilters"
+        >
+          <i class="pi pi-check chip-check"></i>
+          <div class="chip-content">
+            <span class="chip-label">{{ filter.label }}</span>
+            <span class="chip-value">{{ filter.value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Filtros adicionales opcionales -->
+    <div class="filters-section">
+      <div class="section-label">Filtro de operación adicional (Opcional)</div>
+      <div class="operation-grid">
+        <div
+          *ngFor="let option of documentOperationOptions"
+          class="operation-item"
+          (click)="extraFilters.operationType = option.value"
+        >
+          <p-radioButton
+            [inputId]="'operation-' + option.label"
+            name="operationType"
+            [value]="option.value"
+            [(ngModel)]="extraFilters.operationType"
+          />
+
+          <label [for]="'operation-' + option.label" class="operation-label">
+            {{ option.label }}
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESO -->
+  <div *ngIf="phase === 'progress'" class="modal-phase">
+    <div class="phase-icon-wrap progress-icon">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+    <p class="phase-title">Generando exportación…</p>
+    <p class="phase-subtitle">No cierres esta ventana hasta que finalice.</p>
+    <div class="progress-wrap">
+      <p-progressbar
+        [value]="progress"
+        [showValue]="false"
+        styleClass="export-progress-bar"
+      />
+      <div class="progress-labels">
+        <span class="progress-pct">{{ progress }}% completado</span>
+        <span *ngIf="totalRecords > 0" class="progress-records">
+          {{ totalRecords | number }} registros
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="phase === 'error'" class="modal-phase">
+    <div class="phase-icon-wrap error-icon">
+      <i class="pi pi-times-circle"></i>
+    </div>
+    <p class="phase-title">Error en la exportación</p>
+    <p class="phase-subtitle">{{ errorMessage }}</p>
+  </div>
+
+  <!-- FOOTER -->
+  <ng-template pTemplate="footer">
+    <!-- Confirm -->
+    <ng-container *ngIf="phase === 'confirm'">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="close()"
+      />
+      <p-button
+        *ngIf="config.allowedFormats.includes('EXCEL')"
+        label="Exportar Excel"
+        icon="pi pi-file-excel"
+        (onClick)="startExport('EXCEL')"
+      />
+      <p-button
+        *ngIf="config.allowedFormats.includes('PDF')"
+        label="Exportar PDF"
+        icon="pi pi-file-pdf"
+        severity="danger"
+        (onClick)="startExport('PDF')"
+      />
+    </ng-container>
+
+    <!-- filters -->
+    <ng-container *ngIf="phase === 'filters'">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="close()"
+      />
+      <p-button
+        *ngIf="config.allowedFormats.includes('EXCEL')"
+        label="Exportar Excel"
+        icon="pi pi-file-excel"
+        (onClick)="startExport('EXCEL')"
+      />
+      <p-button
+        *ngIf="config.allowedFormats.includes('PDF')"
+        label="Exportar PDF"
+        icon="pi pi-file-pdf"
+        severity="danger"
+        (onClick)="startExport('PDF')"
+      />
+    </ng-container>
+
+    <!-- error -->
+    <ng-container *ngIf="phase === 'error'">
+      <p-button
+        label="Cerrar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="close()"
+      />
+      <p-button
+        label="Intentar de nuevo"
+        icon="pi pi-refresh"
+        severity="warn"
+        (onClick)="retryFilters()"
+      />
+    </ng-container>
+  </ng-template>
+</p-dialog>
