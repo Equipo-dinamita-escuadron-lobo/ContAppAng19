@@ -16,6 +16,7 @@ import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateA
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
 import { Third } from '../../../../../../GeneralMasters/ThirdParties/models/Third';
 import { ThirdPartyBookResponse } from '../../../Models/Responses/ThirdPartyBookResponse';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 
 // Services
 import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
@@ -49,11 +50,61 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
   override request: GenerateAuxiliaryBookRequest = {
     entId: '',
     userId: 0,
-    type: AuxiliaryBookType.DIARY,
+    type: AuxiliaryBookType.THIRD_PARTY,
     criteria: this.criteria,
   };
 
   override dataTable: ThirdPartyBookResponse[] = [];
+
+  headerConfig: ColumnDefinition[][] = [
+    [
+      { header: 'Fecha', field: 'date', rowspan: 2 },
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        children: [
+          { header: 'Código', field: 'account.accountCode' },
+          { header: 'Descripción', field: 'account.accountDescription' },
+        ],
+      },
+      {
+        header: 'Movimiento',
+        colspan: 3,
+        children: [
+          { header: 'Débito', field: 'debitMovement', type: 'number' },
+          { header: 'Crédito', field: 'creditMovement', type: 'number' },
+          { header: 'Saldo', field: 'balanceMovement', type: 'number' },
+        ],
+      },
+      {
+        header: 'Tercero',
+        colspan: 2,
+        children: [
+          { header: 'Identificación', field: 'thirdPartyId' },
+          { header: 'Nombre', field: 'thirdPartyName' },
+        ],
+      },
+      {
+        header: 'Documento',
+        colspan: 2,
+        children: [
+          { header: 'Centro de Costos', field: 'voucherCostCenter' },
+          { header: 'Número', field: 'voucherNumber' },
+        ],
+      },
+    ],
+    [
+      { header: 'Código' },
+      { header: 'Descripción' },
+      { header: 'Débito' },
+      { header: 'Crédito' },
+      { header: 'Saldo' },
+      { header: 'Identificación' },
+      { header: 'Nombre' },
+      { header: 'Centro de Costos' },
+      { header: 'Número' },
+    ],
+  ];
 
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
@@ -62,7 +113,7 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
   ) {
     super(
       auxiliaryBookService,
@@ -70,7 +121,7 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
       thirdService,
       accountService,
       messageService,
-      dialogService
+      dialogService,
     );
   }
 
@@ -81,6 +132,23 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
         'Presenta los movimientos contables asociados a terceros (clientes, proveedores, etc.), útil para conciliaciones y seguimiento de cuentas por cobrar o pagar.',
       icon: 'groups_3',
     };
+
+    this.isThirdPartyOptionSelected = true;
+    this.onThirdPartyOptionSelected();
+  }
+
+  protected override generateReport(): void {
+    if (this.criteria.thirdPartyId == null) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Tercero requerido',
+        detail:
+          'Debe seleccionar un tercero antes de generar el Libro Auxiliar por Tercero.',
+      });
+      return;
+    }
+
+    super.generateReport();
   }
 
   protected organizeRequest(): void {
@@ -89,23 +157,21 @@ export class ThirdPartyBookComponent extends BaseAuxiliaryBookComponent {
 
     this.criteria.startDate = this.datePipe.transform(
       new Date('01/01/2025'),
-      'yyyy-MM-dd'
+      'yyyy-MM-dd',
     );
 
     this.criteria.endDate = this.datePipe.transform(
       this.criteria.endDate,
-      'yyyy-MM-dd'
+      'yyyy-MM-dd',
     );
 
     this.request = {
-      //TO DO: Change the value of entId when the enterprise has accounting info
-      //Meanwhile we used this entId because the mock has this id bf4d475f-5d02-4551-b7f0-49a5c426ac0d
-      //entId: this.enterpriseData.id,
-      entId: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
+      
+      entId: this.resolveEntId(),
       criteria: this.criteria,
       type: AuxiliaryBookType.THIRD_PARTY,
-      //TO DO: Change the value of userId when the method to get the user ID is implemented
-      userId: 123,
+      
+      userId: this.resolveUserId(),
     };
   }
 }

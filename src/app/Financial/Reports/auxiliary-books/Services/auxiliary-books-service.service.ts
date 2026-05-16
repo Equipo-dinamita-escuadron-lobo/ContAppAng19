@@ -1,53 +1,175 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { environment } from '../../../../../environments/environment.dev';
-import { auxBookResponse } from '../Models/Responses/BookResponse';
+import { map, Observable } from 'rxjs';
+import { ApiResponse } from '../../../../Core/Model/apiResponseModel';
+import { environment } from '../../../../../environments/environment.local';
+import { Criteria } from '../Models/Criteria';
 import { ExportAuxiliaryBookRequest } from '../Models/Requests/ExportAuxiliaryBookRequest';
+import { GenerateAuxiliaryBookRequest } from '../Models/Requests/GenerateAuxiliaryBookRequest';
+import { AuxiliaryBookType } from '../Models/eAuxiliaryBookType';
+
+interface PageableParams {
+  page: number;
+  size: number;
+  sort?: string;
+}
+
+type ScheduledReportFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY';
+type ScheduledReportDeliveryWay = 'DOWNLOAD' | 'EMAIL';
+
+export interface ScheduledReportEmailConfig {
+  email: string;
+}
+
+export interface ScheduledReportUpsertRequest {
+  entId: string;
+  userId: number;
+  bookType: AuxiliaryBookType;
+  criteria: Criteria;
+  frequency: ScheduledReportFrequency;
+  startAt: string;
+  endAt?: string | null;
+  createdBy?: string | null;
+  deliveryWay: ScheduledReportDeliveryWay;
+  emailConfig?: ScheduledReportEmailConfig | null;
+}
+
+export type CreateScheduledReportRequest = ScheduledReportUpsertRequest;
+export type UpdateScheduledReportRequest = ScheduledReportUpsertRequest;
+
+export interface ScheduledReportListItemResponse {
+  publicId: string;
+  entId?: string;
+  userId?: number;
+  bookType?: AuxiliaryBookType | string;
+  criteria?: Criteria | null;
+  frequency?: ScheduledReportFrequency | null;
+  startAt?: string | null;
+  endAt?: string | null;
+  createdBy?: string | null;
+  deliveryWay?: ScheduledReportDeliveryWay | null;
+  emailConfig?: ScheduledReportEmailConfig | null;
+  nextExecutionAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  status?: string | null;
+  scheduleId?: string | number | null;
+}
+
+export interface ScheduledReportResponse extends ScheduledReportListItemResponse {
+  publicId: string;
+  entId: string;
+  userId: number;
+  bookType: AuxiliaryBookType;
+  criteria: Criteria;
+  frequency: ScheduledReportFrequency;
+  startAt: string;
+  deliveryWay: ScheduledReportDeliveryWay;
+}
+
+export interface ScheduledReportExecutionListItemResponse {
+  publicId?: string;
+  executionPublicId?: string;
+  scheduledReportPublicId?: string;
+  auxiliaryBookPublicId?: string | null;
+  status?: string | null;
+  eventType?: string | null;
+  message?: string | null;
+  deliveryWay?: ScheduledReportDeliveryWay | null;
+  executedAt?: string | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  createdAt?: string | null;
+}
+
+interface AuxiliaryBookResponse {
+  publicId: string;
+  type?: AuxiliaryBookType | string;
+  createdAt?: string | null;
+  userId?: string | number | null;
+  criteria?: Criteria | null;
+  deliveryWay?: ScheduledReportDeliveryWay | string | string[] | null;
+  frequency?: ScheduledReportFrequency | string | null;
+  startAt?: string | null;
+  endAt?: string | null;
+  scheduleDate?: string | null;
+  nextExecutionAt?: string | null;
+  email?: string | null;
+  scheduleId?: string | number | null;
+  [key: string]: unknown;
+}
+
+interface AuxiliaryBookRegisterResponse {
+  accountingData: unknown[];
+  auxiliaryBook: AuxiliaryBookResponse;
+  [key: string]: unknown;
+}
+
+interface AuxiliaryBookHistoryItemResponse {
+  id: number | string;
+  state?: string | null;
+  eventAt?: string | null;
+  scheduleDate?: string | null;
+  nextExecutionAt?: string | null;
+  startAt?: string | null;
+  endAt?: string | null;
+  deliveryWay?: ScheduledReportDeliveryWay | string | string[] | null;
+  frequency?: ScheduledReportFrequency | string | null;
+  email?: string | null;
+  scheduleId?: string | number | null;
+  weekday?: string | number | null;
+  monthDay?: string | number | null;
+  auxiliaryBook: AuxiliaryBookResponse;
+}
+
+interface AuxiliaryBookHistoryPageResult {
+  content: AuxiliaryBookHistoryItemResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+interface AuxiliaryBookLogResponse {
+  id?: number | string;
+  etypeEvent?: string | null;
+  state?: string | null;
+  eventAt?: string | null;
+  createdAt?: string | null;
+  message?: string | null;
+  auxiliaryBook?: AuxiliaryBookResponse | null;
+  [key: string]: unknown;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuxiliaryBooksServiceService {
-  private apiUrl = environment.API_URL + 'auxiliary-books'; // 👈 Ajusta la URL base si es necesario
+  private readonly auxiliaryBooksApiUrl = `${environment.API_URL}auxiliary-books`;
+  private readonly scheduledReportsApiUrl = `${this.auxiliaryBooksApiUrl}/scheduled-reports`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {}
 
-  /**
-   * Llama al endpoint POST /register para generar un libro auxiliar
-   */
-  registerAuxiliaryBook(request: any): Observable<any[]> {
+  registerAuxiliaryBook(
+    request: GenerateAuxiliaryBookRequest,
+  ): Observable<AuxiliaryBookRegisterResponse> {
     return this.http
-      .post<auxBookResponse>(`${this.apiUrl}/register`, request)
-      .pipe(
-        map((response) => response.data || []) // Extrae la propiedad 'data' y asegura que sea un array
-      );
+      .post<
+        ApiResponse<AuxiliaryBookRegisterResponse>
+      >(`${this.auxiliaryBooksApiUrl}/register`, request)
+      .pipe(map((response) => this.unwrapApiResponse(response)));
   }
 
-  /**
-   * Llama al endpoint POST /export para generar un archivo de reporte (PDF o Excel).
-   * @param request El cuerpo de la solicitud con los criterios del reporte.
-   * @returns Un Observable que emite el archivo como un Blob.
-   */
   exportAuxiliaryBook(request: ExportAuxiliaryBookRequest): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/export`, request, {
+    return this.http.post(`${this.auxiliaryBooksApiUrl}/export`, request, {
       responseType: 'blob',
     });
   }
 
-  /**
-   * (NUEVO) Obtiene el historial paginado de libros auxiliares por empresa.
-   * Llama al endpoint GET /history.
-   * @param enterpriseId El ID de la empresa.
-   * @param pageable Objeto con parámetros de paginación (page, size, sort).
-   * @returns Un Observable de ResponseDTO que contiene una Page de historial.
-   */
   getHistoryByEnterprise(
     enterpriseId: string,
-    pageable: any // Actualizado de 'PageableParams' a 'any'
-  ): Observable<any> {
-    // Actualizado de 'ResponseDTO<Page<...>>' a 'any'
-
+    pageable: PageableParams,
+  ): Observable<ApiResponse<AuxiliaryBookHistoryPageResult>> {
     let params = new HttpParams()
       .set('enterpriseId', enterpriseId)
       .set('page', pageable.page.toString())
@@ -57,27 +179,106 @@ export class AuxiliaryBooksServiceService {
       params = params.set('sort', pageable.sort);
     }
 
-    return this.http.get<any>( // Actualizado
-      `${this.apiUrl}/history`,
-      { params }
+    return this.http.get<ApiResponse<AuxiliaryBookHistoryPageResult>>(
+      `${this.auxiliaryBooksApiUrl}/history`,
+      { params },
     );
   }
 
-  /**
-   * (NUEVO) Obtiene los logs para un libro auxiliar específico por su ID.
-   * Llama al endpoint GET /logs.
-   * @param auxiliaryBookId El ID (público) del libro auxiliar.
-   * @returns Un Observable de ResponseDTO que contiene una lista de logs.
-   */
-  getLogsByPublicId(auxiliaryBookPublicId: string): Observable<any> {
+  getLogsByPublicId(
+    auxiliaryBookPublicId: string,
+  ): Observable<ApiResponse<AuxiliaryBookLogResponse[]>> {
     const params = new HttpParams().set(
       'auxiliaryBookId',
-      auxiliaryBookPublicId
+      auxiliaryBookPublicId,
     );
 
-    return this.http.get<any>( // Actualizado
-      `${this.apiUrl}/logs`,
-      { params }
+    return this.http.get<ApiResponse<AuxiliaryBookLogResponse[]>>(
+      `${this.auxiliaryBooksApiUrl}/logs`,
+      { params },
     );
+  }
+
+  createScheduledReport(
+    payload: CreateScheduledReportRequest,
+  ): Observable<ScheduledReportResponse> {
+    return this.http
+      .post<
+        ApiResponse<ScheduledReportResponse>
+      >(this.scheduledReportsApiUrl, payload)
+      .pipe(map((response) => this.unwrapApiResponse(response)));
+  }
+
+  updateScheduledReport(
+    publicId: string,
+    payload: UpdateScheduledReportRequest,
+  ): Observable<ScheduledReportResponse> {
+    return this.http
+      .put<
+        ApiResponse<ScheduledReportResponse>
+      >(`${this.scheduledReportsApiUrl}/${publicId}`, payload)
+      .pipe(map((response) => this.unwrapApiResponse(response)));
+  }
+
+  cancelScheduledReport(publicId: string): Observable<void> {
+    return this.http
+      .delete<ApiResponse<void>>(`${this.scheduledReportsApiUrl}/${publicId}`)
+      .pipe(map((response) => this.unwrapApiResponse(response)));
+  }
+
+  listScheduledReports(
+    entId: string,
+  ): Observable<ScheduledReportListItemResponse[]> {
+    const params = new HttpParams().set('entId', entId);
+
+    return this.http
+      .get<
+        ApiResponse<ScheduledReportListItemResponse[]>
+      >(this.scheduledReportsApiUrl, { params })
+      .pipe(map((response) => this.unwrapApiResponse(response, [])));
+  }
+
+  getScheduledReport(publicId: string): Observable<ScheduledReportResponse> {
+    return this.http
+      .get<
+        ApiResponse<ScheduledReportResponse>
+      >(`${this.scheduledReportsApiUrl}/${publicId}`)
+      .pipe(map((response) => this.unwrapApiResponse(response)));
+  }
+
+  listScheduledReportExecutions(
+    publicId: string,
+    filters?: string | null,
+  ): Observable<ScheduledReportExecutionListItemResponse[]> {
+    let params = new HttpParams();
+
+    if (filters?.trim()) {
+      params = params.set('filters', filters.trim());
+    }
+
+    return this.http
+      .get<
+        ApiResponse<ScheduledReportExecutionListItemResponse[]>
+      >(`${this.scheduledReportsApiUrl}/${publicId}/executions`, { params })
+      .pipe(map((response) => this.unwrapApiResponse(response, [])));
+  }
+
+  private unwrapApiResponse<T>(
+    response: ApiResponse<T> | T | null | undefined,
+    fallbackValue?: T,
+  ): T {
+    if (response === null || response === undefined) {
+      return fallbackValue as T;
+    }
+
+    if (
+      typeof response === 'object' &&
+      response !== null &&
+      'data' in response
+    ) {
+      return (response.data ?? fallbackValue) as T;
+    }
+
+    return response as T;
   }
 }

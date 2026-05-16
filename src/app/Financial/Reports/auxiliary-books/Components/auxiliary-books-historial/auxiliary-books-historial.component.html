@@ -9,7 +9,7 @@
           history
         </span>
         <h1
-          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary underline-offset-4"
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
         >
           Historial de Libros Auxiliares
         </h1>
@@ -100,7 +100,7 @@
         <td>{{ item.bookName }}</td>
 
         <td>
-          {{ item.generationDate | date : "dd/MM/yyyy hh:mm a" }}
+          {{ item.generationDate | date: "dd/MM/yyyy hh:mm a" }}
         </td>
 
         <td>{{ item.user }}</td>
@@ -117,7 +117,7 @@
               pButton
               pRipple
               icon="pi pi-download"
-              class="p-button-rounded p-button-success p-button-text"
+              class="p-button-rounded p-button-success p-button-text mr-2"
               pTooltip="Descargar"
               tooltipPosition="top"
               [disabled]="item.status !== 'Completado'"
@@ -126,7 +126,7 @@
               pButton
               pRipple
               icon="pi pi-eye"
-              class="p-button-rounded p-button-success p-button-text"
+              class="p-button-rounded p-button-success p-button-text ml-2"
               pTooltip="Detalles"
               tooltipPosition="top"
               (click)="showDetails(item)"
@@ -135,8 +135,8 @@
               pButton
               pRipple
               icon="pi pi-calendar-plus"
-              class="p-button-rounded p-button-info p-button-text"
-              pTooltip="Programar"
+              class="p-button-rounded p-button-info p-button-text ml-2"
+              pTooltip="Gestionar programación"
               tooltipPosition="top"
               (click)="showSchedulingDialog(item)"
             ></button>

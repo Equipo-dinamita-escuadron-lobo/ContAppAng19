@@ -86,7 +86,7 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
   ) {
     super(
       auxiliaryBookService,
@@ -94,7 +94,7 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
       thirdService,
       accountService,
       messageService,
-      dialogService
+      dialogService,
     );
   }
 
@@ -122,23 +122,22 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
 
     this.criteria.startDate = this.datePipe.transform(
       new Date('01/01/2025'),
-      'yyyy-MM-dd'
+      'yyyy-MM-dd',
     );
 
     this.criteria.endDate = this.datePipe.transform(
       this.criteria.endDate,
-      'yyyy-MM-dd'
+      'yyyy-MM-dd',
     );
 
     this.request = {
-      //TO DO: Change the value of entId when the enterprise has accounting info
-      //Meanwhile we used this entId because the mock has this id bf4d475f-5d02-4551-b7f0-49a5c426ac0d
-      //entId: this.enterpriseData.id,
-      entId: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
+      entId: this.resolveEntId(),
       criteria: this.criteria,
       type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
-      //TO DO: Change the value of userId when the method to get the user ID is implemented
-      userId: 123,
+
+      userId: this.resolveUserId(),
     };
+
+    console.log(this.request);
   }
 }
