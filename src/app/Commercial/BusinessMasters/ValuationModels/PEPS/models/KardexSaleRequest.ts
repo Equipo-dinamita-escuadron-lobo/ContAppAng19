@@ -1,6 +1,6 @@
 export interface KardexSaleRequest {
+  details?: string;
   quantity: number;
   productId: number;
-  factCode: number;
-  details: string;
+  date?: string; 
 }

@@ -33,6 +33,10 @@ export const hasPermissionGuard = (permissions: string[]): CanActivateFn => {
     }
 
     // Si no está autenticado -> redirigir
+    if (authService.sessionExpiredVisible()) {
+      return false;
+    }
+
     router.navigate(['/login']);
     return false;
   };

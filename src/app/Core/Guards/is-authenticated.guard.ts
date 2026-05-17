@@ -8,7 +8,10 @@ export const isAuthenticatedGuard: CanActivateFn = (route, state) => {
 
   if (auth.isAuthenticated()) return true;
 
-  auth.logout();
+  if (auth.sessionExpiredVisible()) {
+    return false;
+  }
+
   router.navigate(['/login']);
   return false;
 };

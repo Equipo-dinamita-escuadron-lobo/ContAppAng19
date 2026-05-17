@@ -6,12 +6,12 @@
     <div>
       <div class="flex items-center gap-3 mb-3">
         <span
-          class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
+          class="material-symbols-outlined text-primary text-3xl md:text-4xl"
         >
           {{ auxiliaryBookInfo.icon }}
         </span>
         <h1
-          class="text-xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
         >
           {{ auxiliaryBookInfo.name }}
         </h1>
@@ -34,7 +34,7 @@
   </div>
 
   <!-- Filtros -->
-  <h3 class="text-sm font-semibold text-[var(--color-primary)] mb-3">
+  <h3 class="text-sm font-semibold text-primary mb-3">
     Criterios para la Generación:
   </h3>
 
@@ -42,8 +42,8 @@
     <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
       <!-- 1. Tercero -->
       <div class="flex flex-col md:border-r md:border-gray-300 md:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Tercero <span class="text-[var(--color-secondary)]"> *</span>
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Tercero <span class="text-error"> *</span>
         </h4>
         <p-select
           [options]="thirdPartyOptions"
@@ -58,8 +58,8 @@
 
       <!-- 2. Periodo -->
       <div class="flex flex-col md:px-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Periodo <span class="text-[var(--color-secondary)]"> *</span>
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Periodo <span class="text-error"> *</span>
         </h4>
         <p-datepicker
           [(ngModel)]="datePeriod"
@@ -81,7 +81,7 @@
           pButton
           type="button"
           label="Generar Reporte"
-          class="!bg-[var(--color-primary)] !text-white !rounded-full px-6 py-2"
+          class="bg-primary text-white rounded-full px-6 py-2"
           (click)="generateReport()"
         ></button>
       </div>

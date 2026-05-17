@@ -37,15 +37,38 @@
                         placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
                 </div>
 
-                <!-- Cuenta Auxiliar Débito -->
+                <!-- Cuenta Auxiliar Débito (Cuenta de Gasto) -->
                 <div class="flex flex-col gap-2">
                     <label for="debitAuxiliaryAccount" class="font-semibold text-[var(--color-primary)]">Cuenta de Gasto
                         <span class="text-red-500">*</span></label>
                     <p-dropdown id="debitAuxiliaryAccount" formControlName="debitAuxiliaryAccount"
                         [options]="auxiliaryAccounts" optionLabel="label" optionValue="value"
-                        placeholder="Seleccione la cuenta contable" [showClear]="true" [styleClass]="'w-full'">
+                        placeholder="Seleccione la cuenta contable" [showClear]="true" [styleClass]="'w-full'"
+                        (onChange)="onAuxiliaryAccountChange()"
+                        [ngClass]="{'ng-invalid ng-dirty': writeOffForm.get('debitAuxiliaryAccount')?.invalid && writeOffForm.get('debitAuxiliaryAccount')?.touched}">
                     </p-dropdown>
+                    <!-- Añadir validación visual si falta -->
+                    @if (writeOffForm.get('debitAuxiliaryAccount')?.touched && writeOffForm.get('debitAuxiliaryAccount')?.invalid) {
+                        <small class="text-red-500">La cuenta es requerida.</small>
+                    }
                 </div>
+
+                <!-- NUEVO CAMPO: Centro de Costo (Condicional) -->
+                @if (showCostCenterField) {
+                <div class="flex flex-col gap-2">
+                    <label for="centerCost" class="font-semibold text-[var(--color-primary)]">
+                        Centro de Costo <span class="text-red-500">*</span>
+                    </label>
+                    <p-dropdown id="centerCost" formControlName="centerCost" [options]="costCenters" optionLabel="name"
+                        optionValue="id" placeholder="Seleccione un centro de costo" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': writeOffForm.get('centerCost')?.invalid && writeOffForm.get('centerCost')?.touched}">
+                    </p-dropdown>
+                    @if (writeOffForm.get('centerCost')?.touched && writeOffForm.get('centerCost')?.invalid) {
+                        <small class="text-red-500">El centro de costo es requerido.</small>
+                    }
+                </div>
+                }
+
 
                 <!-- Justificación -->
                 <div class="flex flex-col gap-2 md:col-span-2">

@@ -4,15 +4,16 @@ import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.me
 import { CashReceiptService } from '../../CashReceipts/Service/cash-receipt.service';
 import { AccountingEntryResponse } from '../../CashReceipts/Model/api';
 import { environment } from '../../../../../environments/environment';
-import { forkJoin, map, Observable, of, switchMap } from 'rxjs';
+import { forkJoin, map, Observable, of, switchMap, throwError } from 'rxjs';
 import { AccountingEntryView, AccountingMovementView } from '../../CashReceipts/Model/view';
+import { ApiResponse } from '../../../../Core/Model/apiResponseModel';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AccountingEntriesService {
 
-  private accountingApiUrl = environment.API_URL + 'accountCatalogue/accounting'; // Nuevo URL para asientos contables
+   private accountingApiUrl = environment.API_URL + 'accountCatalogue/accounting';
 
   constructor(
     private http: HttpClient,
@@ -21,42 +22,47 @@ export class AccountingEntriesService {
   ) { }
 
   /**
-   * Obtiene el asiento contable crudo desde la API por ID de origen y tipo.
-   * @param sourceDocumentId - El ID del documento fuente (recibo o castigo).
-   * @param type - El tipo de documento ('receipt' o 'write-off').
-   * @returns Un Observable con la respuesta de la API.
+   * Obtiene el asiento contable crudo envuelto en ApiResponse.
    */
-
-  private getAccountingEntryBySourceApi(sourceDocumentId: number, type: string): Observable<AccountingEntryResponse> {
-    return this.http.get<AccountingEntryResponse>(`${this.accountingApiUrl}/entries/by-source/${sourceDocumentId}/${type}`);
+  private getAccountingEntryBySourceApi(sourceDocumentId: number, type: string): Observable<ApiResponse<AccountingEntryResponse>> {
+    return this.http.get<ApiResponse<AccountingEntryResponse>>(`${this.accountingApiUrl}/entries/by-source/${sourceDocumentId}/${type}`);
   }
 
   /**
-  * ORQUESTADOR: Obtiene el asiento contable por ID y tipo de documento fuente y lo enriquece.
-  * @param sourceDocumentId - El ID del documento fuente.
-  * @param type - El tipo de documento ('receipt' o 'write-off').
-  * @returns Un Observable con el asiento contable listo para la vista.
+  * ORQUESTADOR: Obtiene el asiento, maneja los estados de error/vacío y enriquece la data.
   */
-  getAccountingEntryViewBySource(sourceDocumentId: number, type: string): Observable<AccountingEntryView> {
+  getAccountingEntryViewBySource(sourceDocumentId: number, type: string): Observable<AccountingEntryView | null> {
     const enterpriseId = this.localStorageMethods.getIdEnterprise();
-    console.log('Enterprise ID obtenido para obtener asientos contables:', enterpriseId);
+    
     if (!enterpriseId) {
-      return of({} as AccountingEntryView); // Manejar error
+      console.warn('No se encontró Enterprise ID');
+      return of(null);
     }
 
-    // 1. Obtener el asiento contable de la API usando el nuevo método
     return this.getAccountingEntryBySourceApi(sourceDocumentId, type).pipe(
-      switchMap(entryApi => {
-        // El resto de la lógica de enriquecimiento permanece igual
+      switchMap(response => {
+        // CASO 1: ACCOUNTINGENTRYNOTFOUND o NO_CONTENT
+        if (response.code === 'ACCOUNTINGENTRYNOTFOUND' || response.code === 'NO_CONTENT') {
+          console.warn(`Aviso: ${response.message}`);
+          return of(null); // Retornamos null para que el componente sepa que no hay nada que mostrar
+        }
+
+        // CASO 2: Error genérico de la API (success: false)
+        if (!response.success || !response.data) {
+          return throwError(() => new Error(response.message || 'Error al obtener el asiento contable'));
+        }
+
+        // CASO 3: Éxito, procedemos a enriquecer la data
+        const entryApi = response.data;
         const accountIds = [...new Set(entryApi.movements.map(m => m.account))];
         const thirdPartyIds = [...new Set(entryApi.movements.map(m => m.thirdPartyId))];
-
-        console.log(`Cuentas involucradas en el asiento del documento ${sourceDocumentId} (${type}):`, accountIds);
 
         return forkJoin({
           entry: of(entryApi),
           accounts: this.cashReceiptService.getAuxiliaryAccountsCached(enterpriseId),
-          thirdParties: forkJoin(thirdPartyIds.map(id => this.cashReceiptService.getClientById(id)))
+          thirdParties: thirdPartyIds.length > 0 
+            ? forkJoin(thirdPartyIds.map(id => this.cashReceiptService.getClientById(id)))
+            : of([]) // Si no hay terceros, devolvemos array vacío
         }).pipe(
           map(({ entry, accounts, thirdParties }) => {
             const accountsMap = new Map(accounts.map(acc => [acc.value, acc]));
@@ -93,7 +99,7 @@ export class AccountingEntriesService {
               totalDebit,
               totalCredit
             };
-            console.log("Asiento contable enriquecido:", entryView);
+
             return entryView;
           })
         );

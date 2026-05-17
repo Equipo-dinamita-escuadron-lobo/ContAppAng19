@@ -19,6 +19,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // Models and Services
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
@@ -46,7 +47,8 @@ import { TypeId } from '../../models/TypeId';
     IconFieldModule,
     InputIconModule,
     ToggleSwitchModule,
-    RadioButtonModule
+    RadioButtonModule,
+    TableEmptyMessageComponent
   ],
   providers: [MessageService, ConfirmationService, LocalStorageMethods],
   templateUrl: './third-config.component.html',
@@ -480,26 +482,46 @@ export class ThirdConfigComponent implements OnInit {
           });
         },
         error: (error: any) => {
-          
-          let errorMessage = 'Error al actualizar el tipo de identificación';
+
+          // Verificar si es error específico de tipo de identificación en uso
+          const errorCode = error?.error?.code || error?.code || '';
+
+          if (errorCode === 'THIRD_IN_USE') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'No se puede editar el tipo de identificación porque tiene terceros con movimientos contables'
+            });
+            return;
+          }
+
+          // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+          const errorMessage = error?.error?.message || error?.message || '';
+
+          if (errorMessage.includes('No se puede editar el tipo de identificación') && errorMessage.includes('movimientos contables')) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: errorMessage
+            });
+            return;
+          }
+
           let errorSummary = 'Error';
-          if (error.error?.message) {
-            errorMessage = error.error.message;
-            if (error.error.message.includes('Ya existe un tipo de identificación')) {
-              if (error.error.message.includes('con el código')) {
-                errorSummary = 'Tipo ID Duplicado';
-              } else if (error.error.message.includes('con el nombre')) {
-                errorSummary = 'Nombre Duplicado';
-              } else {
-                errorSummary = 'Tipo ID Duplicado';
-              }
+          if (errorMessage.includes('Ya existe un tipo de identificación')) {
+            if (errorMessage.includes('con el código')) {
+              errorSummary = 'Tipo ID Duplicado';
+            } else if (errorMessage.includes('con el nombre')) {
+              errorSummary = 'Nombre Duplicado';
+            } else {
+              errorSummary = 'Tipo ID Duplicado';
             }
           }
-          
+
           this.messageService.add({
             severity: 'error',
             summary: errorSummary,
-            detail: errorMessage
+            detail: errorMessage || 'Error al actualizar el tipo de identificación'
           });
         }
       });
@@ -733,22 +755,44 @@ export class ThirdConfigComponent implements OnInit {
           });
         },
         error: (error: any) => {
-          let errorMessage = 'Error al crear el tipo de tercero';
+          
+          // Verificar si es error específico de tipo de tercero en uso
+          const errorCode = error?.error?.code || error?.code || '';          
+
+          if (errorCode === 'THIRD_IN_USE') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'No se puede editar el tipo de tercero porque tiene terceros con movimientos contables'
+            });
+            return;
+          }
+
+          // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+          const errorMessage = error?.error?.message || error?.message || '';
+
+          if (errorMessage.includes('No se puede editar el tipo de tercero') && errorMessage.includes('movimientos contables')) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: errorMessage
+            });
+            return;
+          }
+
           let errorSummary = 'Error';
-          if (error.error?.message) {
-            errorMessage = error.error.message;
-            if (error.error.message.includes('Ya existe un tipo de tercero')) {
-              if (error.error.message.includes('con el nombre')) {
-                errorSummary = 'Nombre Duplicado';
-              } else {
-                errorSummary = 'Tipo de Tercero Duplicado';
-              }
+          if (errorMessage.includes('Ya existe un tipo de tercero')) {
+            if (errorMessage.includes('con el nombre')) {
+              errorSummary = 'Nombre Duplicado';
+            } else {
+              errorSummary = 'Tipo de Tercero Duplicado';
             }
           }
+
           this.messageService.add({
             severity: 'error',
             summary: errorSummary,
-            detail: errorMessage
+            detail: errorMessage || 'Error al actualizar el tipo de tercero'
           });
         }
       });

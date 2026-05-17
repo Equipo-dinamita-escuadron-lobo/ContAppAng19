@@ -1,0 +1,135 @@
+<div class="p-6">
+    <!-- ENCABEZADO -->
+    <div class="mb-10">
+        <h1
+            class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            Facturas Próximas a Vencer
+        </h1>
+
+        <p class="font-normal text-sm mt-2 text-gray-600">
+            En este apartado podrá visualizar las facturas con fecha de vencimiento cercana y realizar acciones como
+            reprogramar su fecha límite de pago.
+        </p>
+    </div>
+
+    <!-- BOTÓN ACTUALIZAR (alineado a la derecha) -->
+    <div class="flex justify-end mb-6">
+        <button 
+            pButton 
+            label="Actualizar" 
+            icon="pi pi-refresh" 
+            (click)="loadData()" 
+            class="p-button-text">
+        </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="overflow-x-auto">
+        <p-table 
+            [value]="invoices"
+            [loading]="loading"
+            styleClass="p-datatable-striped w-full"
+            [tableStyle]="{'min-width': '50rem'}"
+            responsiveLayout="scroll">
+
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>N° Factura</th>
+                    <th>Tercero</th> <!-- 1. Nueva columna en el header -->
+                    <th>Valor Pendiente</th>
+                    <th>Vence</th>
+                    <th class="text-center" style="width: 150px">Acciones</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-inv>
+                <tr>
+                    <td class="font-semibold text-gray-700">{{ inv.factCode }}</td>
+                    <td>{{ inv.clientName }}</td> <!-- 2. Celda para mostrar el nombre del tercero -->
+
+                    <td class="text-right font-semibold">
+                        {{ inv.pendingValue | currency:'COP':'symbol-narrow':'1.0-0' }}
+                    </td>
+
+                    <td class="text-red-600 font-bold">
+                        {{ inv.expirationDate | date:'dd/MM/yyyy' }}
+                    </td>
+
+                    <td class="text-center">
+                        <button
+                            pButton
+                            pRipple
+                            type="button"
+                            icon="pi pi-calendar-plus"
+                            class="p-button-rounded p-button-warning p-button-text"
+                            pTooltip="Reprogramar Vencimiento"
+                            tooltipPosition="top"
+                            (click)="openReschedule(inv)">
+                        </button>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <!-- 3. Actualizar el colspan para coincidir con el nuevo número de columnas -->
+                    <td colspan="6" class="text-center p-6"> 
+                        <i class="pi pi-check-circle text-green-500 text-4xl mb-2 block"></i>
+                        <span class="text-gray-500 font-semibold">
+                            ¡Todo al día! No hay facturas por vencer pronto.
+                        </span>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <!-- MODAL REPROGRAMAR -->
+    <p-dialog 
+        header="Reprogramar Vencimiento" 
+        [(visible)]="displayModal"
+        [modal]="true"
+        [style]="{width: '400px'}"
+        [draggable]="false"
+        [resizable]="false">
+
+        <div class="flex flex-col gap-4 pt-2" *ngIf="selectedInvoice">
+            <p>
+                Seleccione la nueva fecha de vencimiento para la factura
+                <strong>{{ selectedInvoice.factCode }}</strong>:
+            </p>
+
+            <div class="field">
+                <label for="newDate" class="block mb-2 font-medium">Nueva Fecha</label>
+                <p-calendar 
+                    id="newDate"
+                    [(ngModel)]="newDueDate"
+                    [minDate]="minDate"
+                    [showIcon]="true"
+                    appendTo="body"
+                    dateFormat="yy-mm-dd"
+                    class="w-full">
+                </p-calendar>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <button 
+                pButton 
+                label="Cancelar" 
+                icon="pi pi-times" 
+                (click)="displayModal=false"
+                class="p-button-text">
+            </button>
+
+            <button 
+                pButton 
+                label="Guardar" 
+                icon="pi pi-check" 
+                (click)="saveNewDate()"
+                [disabled]="!newDueDate"
+                autofocus>
+            </button>
+        </ng-template>
+    </p-dialog>
+</div>

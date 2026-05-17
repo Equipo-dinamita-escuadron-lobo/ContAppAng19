@@ -72,7 +72,7 @@ export class PurchaseBillService {
     // return this.http.get<ExpenseAccount[]>(`${environment.API_URL}chart-accounts/expense-accounts`);
   }
 
-  // Generar siguiente Bill ID
+  // Generar siguiente número de factura
   getNextBillId(): Observable<string> {
     // Mock: generar un ID basado en fecha
     const now = new Date();
@@ -96,37 +96,314 @@ export class PurchaseBillService {
     //   map(bills => this.mapBillsToListView(bills))
     // );
 
-    // Mock data para desarrollo
+    // Mock data para desarrollo - Datos más completos
     const mockBills: PurchaseBillResponse[] = [
+      // Facturas Contabilizadas (POSTED) - Últimos 6 meses
       {
         id: 1,
-        billId: 'BILL-20250914-0001',
-        dateOpened: '2025-09-14',
+        billId: 'BILL-2025-0001',
+        dateOpened: '2025-11-05',
         supplierId: 1,
-        subtotal: 1000000,
-        taxes: 190000,
-        total: 1190000,
-        notes: 'Factura de prueba 1',
+        subtotal: 2500000,
+        taxes: 475000,
+        total: 2975000,
+        notes: 'Suministros de oficina - Noviembre',
         status: 'POSTED',
         lineItems: [],
         enterpriseId: 'test-enterprise',
-        createdAt: '2025-09-14T10:00:00Z',
-        updatedAt: '2025-09-14T10:00:00Z'
+        createdAt: '2025-11-05T09:00:00Z',
+        updatedAt: '2025-11-05T09:00:00Z'
       },
       {
         id: 2,
-        billId: 'BILL-20250914-0002',
-        dateOpened: '2025-09-13',
+        billId: 'BILL-2025-0002',
+        dateOpened: '2025-11-01',
         supplierId: 2,
-        subtotal: 500000,
-        taxes: 95000,
-        total: 595000,
-        notes: 'Factura de prueba 2',
+        subtotal: 1800000,
+        taxes: 342000,
+        total: 2142000,
+        notes: 'Servicios de mantenimiento mensual',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-11-01T14:30:00Z',
+        updatedAt: '2025-11-01T14:30:00Z'
+      },
+      {
+        id: 3,
+        billId: 'BILL-2025-0003',
+        dateOpened: '2025-10-28',
+        supplierId: 3,
+        subtotal: 3200000,
+        taxes: 608000,
+        total: 3808000,
+        notes: 'Equipos de cómputo',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-10-28T11:15:00Z',
+        updatedAt: '2025-10-28T11:15:00Z'
+      },
+      {
+        id: 4,
+        billId: 'BILL-2025-0004',
+        dateOpened: '2025-10-20',
+        supplierId: 4,
+        subtotal: 950000,
+        taxes: 180500,
+        total: 1130500,
+        notes: 'Servicios de consultoría',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-10-20T16:45:00Z',
+        updatedAt: '2025-10-20T16:45:00Z'
+      },
+      {
+        id: 5,
+        billId: 'BILL-2025-0005',
+        dateOpened: '2025-10-15',
+        supplierId: 5,
+        subtotal: 1500000,
+        taxes: 285000,
+        total: 1785000,
+        notes: 'Material de construcción',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-10-15T10:20:00Z',
+        updatedAt: '2025-10-15T10:20:00Z'
+      },
+      {
+        id: 6,
+        billId: 'BILL-2025-0006',
+        dateOpened: '2025-10-05',
+        supplierId: 1,
+        subtotal: 2200000,
+        taxes: 418000,
+        total: 2618000,
+        notes: 'Suministros de limpieza',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-10-05T13:00:00Z',
+        updatedAt: '2025-10-05T13:00:00Z'
+      },
+      {
+        id: 7,
+        billId: 'BILL-2025-0007',
+        dateOpened: '2025-09-25',
+        supplierId: 6,
+        subtotal: 4500000,
+        taxes: 855000,
+        total: 5355000,
+        notes: 'Equipos industriales',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-09-25T09:30:00Z',
+        updatedAt: '2025-09-25T09:30:00Z'
+      },
+      {
+        id: 8,
+        billId: 'BILL-2025-0008',
+        dateOpened: '2025-09-15',
+        supplierId: 2,
+        subtotal: 1100000,
+        taxes: 209000,
+        total: 1309000,
+        notes: 'Servicios técnicos',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-09-15T15:00:00Z',
+        updatedAt: '2025-09-15T15:00:00Z'
+      },
+      {
+        id: 9,
+        billId: 'BILL-2025-0009',
+        dateOpened: '2025-08-30',
+        supplierId: 3,
+        subtotal: 2800000,
+        taxes: 532000,
+        total: 3332000,
+        notes: 'Mobiliario de oficina',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-08-30T11:45:00Z',
+        updatedAt: '2025-08-30T11:45:00Z'
+      },
+      {
+        id: 10,
+        billId: 'BILL-2025-0010',
+        dateOpened: '2025-08-15',
+        supplierId: 4,
+        subtotal: 1650000,
+        taxes: 313500,
+        total: 1963500,
+        notes: 'Asesoría legal',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-08-15T14:20:00Z',
+        updatedAt: '2025-08-15T14:20:00Z'
+      },
+      {
+        id: 11,
+        billId: 'BILL-2025-0011',
+        dateOpened: '2025-07-28',
+        supplierId: 5,
+        subtotal: 3100000,
+        taxes: 589000,
+        total: 3689000,
+        notes: 'Herramientas industriales',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-07-28T10:00:00Z',
+        updatedAt: '2025-07-28T10:00:00Z'
+      },
+      {
+        id: 12,
+        billId: 'BILL-2025-0012',
+        dateOpened: '2025-06-20',
+        supplierId: 1,
+        subtotal: 1900000,
+        taxes: 361000,
+        total: 2261000,
+        notes: 'Papelería corporativa',
+        status: 'POSTED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-06-20T12:30:00Z',
+        updatedAt: '2025-06-20T12:30:00Z'
+      },
+
+      // Facturas Pagadas (PAID)
+      {
+        id: 13,
+        billId: 'BILL-2025-0013',
+        dateOpened: '2025-06-10',
+        supplierId: 2,
+        subtotal: 2400000,
+        taxes: 456000,
+        total: 2856000,
+        notes: 'Servicios de internet - Semestre',
+        status: 'PAID',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-06-10T09:00:00Z',
+        updatedAt: '2025-06-15T16:00:00Z'
+      },
+      {
+        id: 14,
+        billId: 'BILL-2025-0014',
+        dateOpened: '2025-05-25',
+        supplierId: 6,
+        subtotal: 5200000,
+        taxes: 988000,
+        total: 6188000,
+        notes: 'Maquinaria pesada',
+        status: 'PAID',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-05-25T11:00:00Z',
+        updatedAt: '2025-05-30T14:00:00Z'
+      },
+      {
+        id: 15,
+        billId: 'BILL-2025-0015',
+        dateOpened: '2025-05-15',
+        supplierId: 3,
+        subtotal: 1750000,
+        taxes: 332500,
+        total: 2082500,
+        notes: 'Materiales eléctricos',
+        status: 'PAID',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-05-15T13:30:00Z',
+        updatedAt: '2025-05-20T10:00:00Z'
+      },
+
+      // Facturas en Borrador (DRAFT)
+      {
+        id: 16,
+        billId: 'BILL-2025-0016',
+        dateOpened: '2025-11-06',
+        supplierId: 4,
+        subtotal: 850000,
+        taxes: 161500,
+        total: 1011500,
+        notes: 'Servicios contables - Pendiente de revisar',
         status: 'DRAFT',
         lineItems: [],
         enterpriseId: 'test-enterprise',
-        createdAt: '2025-09-13T15:30:00Z',
-        updatedAt: '2025-09-13T15:30:00Z'
+        createdAt: '2025-11-06T08:00:00Z',
+        updatedAt: '2025-11-06T08:00:00Z'
+      },
+      {
+        id: 17,
+        billId: 'BILL-2025-0017',
+        dateOpened: '2025-11-05',
+        supplierId: 5,
+        subtotal: 1200000,
+        taxes: 228000,
+        total: 1428000,
+        notes: 'Compra de inventario - Borrador',
+        status: 'DRAFT',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-11-05T15:00:00Z',
+        updatedAt: '2025-11-05T15:00:00Z'
+      },
+      {
+        id: 18,
+        billId: 'BILL-2025-0018',
+        dateOpened: '2025-11-04',
+        supplierId: 1,
+        subtotal: 650000,
+        taxes: 123500,
+        total: 773500,
+        notes: 'Catering evento corporativo',
+        status: 'DRAFT',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-11-04T10:30:00Z',
+        updatedAt: '2025-11-04T10:30:00Z'
+      },
+
+      // Facturas Canceladas (CANCELLED)
+      {
+        id: 19,
+        billId: 'BILL-2025-0019',
+        dateOpened: '2025-10-10',
+        supplierId: 2,
+        subtotal: 980000,
+        taxes: 186200,
+        total: 1166200,
+        notes: 'Cancelada por duplicidad',
+        status: 'CANCELLED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-10-10T12:00:00Z',
+        updatedAt: '2025-10-12T09:00:00Z'
+      },
+      {
+        id: 20,
+        billId: 'BILL-2025-0020',
+        dateOpened: '2025-09-05',
+        supplierId: 6,
+        subtotal: 1550000,
+        taxes: 294500,
+        total: 1844500,
+        notes: 'Cancelada por error en facturación',
+        status: 'CANCELLED',
+        lineItems: [],
+        enterpriseId: 'test-enterprise',
+        createdAt: '2025-09-05T16:00:00Z',
+        updatedAt: '2025-09-07T11:00:00Z'
       }
     ];
 

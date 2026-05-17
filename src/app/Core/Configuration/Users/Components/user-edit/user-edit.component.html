@@ -1,0 +1,235 @@
+<div class="w-full">
+  <p-toast></p-toast>
+
+  <h1
+    class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
+  >
+    Editar Usuario
+  </h1>
+  <p class="mb-6 text-lg text-gray-700">
+    Complete la información necesaria para editar el usuario.
+  </p>
+</div>
+
+<div class="mt-6">
+  <form *ngIf="userForm" [formGroup]="userForm" (ngSubmit)="onSubmit()" class="mt-4">
+    <div class="w-full">
+      <div class="flex gap-4 mb-4">
+        <!-- Nombre -->
+        <div class="w-1/2">
+          <label for="firstName" class="block mb-2 font-semibold">
+            Nombre <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            id="firstName"
+            formControlName="firstName"
+            placeholder="Ej: Ana"
+            class="w-full"
+          />
+          <!-- Requerido -->
+          <p-message
+            severity="error"
+            *ngIf="
+              userForm.get('firstName')?.touched &&
+              userForm.get('firstName')?.hasError('required')
+            "
+            text="El nombre es requerido"
+          ></p-message>
+          <!-- Solo letras -->
+          <p-message
+            severity="error"
+            *ngIf="
+              userForm.get('firstName')?.touched &&
+              userForm.get('firstName')?.hasError('pattern')
+            "
+            text="El nombre solo debe contener letras y espacios."
+          ></p-message>
+        </div>
+
+        <!-- Apellido -->
+        <div class="w-1/2">
+          <label for="lastName" class="block mb-2 font-semibold">
+            Apellido <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            id="lastName"
+            formControlName="lastName"
+            placeholder="Ej: Gómez"
+            class="w-full"
+          />
+          <!-- Requerido -->
+          <p-message
+            severity="error"
+            *ngIf="
+              userForm.get('lastName')?.touched &&
+              userForm.get('lastName')?.hasError('required')
+            "
+            text="El apellido es requerido"
+          ></p-message>
+          <!-- Solo letras -->
+          <p-message
+            severity="error"
+            *ngIf="
+              userForm.get('lastName')?.touched &&
+              userForm.get('lastName')?.hasError('pattern')
+            "
+            text="El apellido solo debe contener letras y espacios."
+          ></p-message>
+        </div>
+      </div>
+
+      <div class="flex gap-4 mb-4">
+        <!-- Correo Electrónico -->
+        <div class="w-1/2">
+          <label for="email" class="block mb-2 font-semibold">
+            Correo Electrónico <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            id="email"
+            formControlName="email"
+            placeholder="usuario@ejemplo.com"
+            class="w-full"
+          />
+          <!-- Requerido -->
+          <p-message
+            severity="error"
+            *ngIf="
+              userForm.get('email')?.touched &&
+              userForm.get('email')?.hasError('required')
+            "
+            text="El correo electrónico es requerido"
+          ></p-message>
+          <!-- Email inválido -->
+          <p-message
+            severity="error"
+            *ngIf="
+              userForm.get('email')?.touched &&
+              userForm.get('email')?.hasError('email')
+            "
+            text="El correo electrónico no es válido."
+          ></p-message>
+        </div>
+
+        <!-- Contraseña (opcional) -->
+        <div class="w-1/2">
+          <label for="password" class="block mb-2 font-semibold">
+            Contraseña
+          </label>
+          <input
+            pInputText
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="Dejar vacío para mantener la actual"
+            class="w-full"
+          />
+
+          <ul
+            *ngIf="shouldShowPasswordChecklist()"
+            class="password-checklist mt-3"
+          >
+            <li [class.valid]="hasMinLength()" [class.invalid]="!hasMinLength()">
+              Minimo 8 caracteres
+            </li>
+            <li [class.valid]="hasMaxLength()" [class.invalid]="!hasMaxLength()">
+              Maximo 20 caracteres
+            </li>
+            <li [class.valid]="hasUppercase()" [class.invalid]="!hasUppercase()">
+              Al menos una mayuscula
+            </li>
+            <li [class.valid]="hasLowercase()" [class.invalid]="!hasLowercase()">
+              Al menos una minuscula
+            </li>
+            <li [class.valid]="hasNumber()" [class.invalid]="!hasNumber()">
+              Al menos un numero
+            </li>
+            <li [class.valid]="hasSpecialChar()" [class.invalid]="!hasSpecialChar()">
+              Al menos un caracter especial (&#64;$!%*#?&)
+            </li>
+          </ul>
+
+          <p-message
+            severity="error"
+            *ngIf="
+              userForm.get('password')?.touched &&
+              userForm.get('password')?.hasError('minlength')
+            "
+            text="La contrasena debe tener al menos 8 caracteres"
+          ></p-message>
+          <p-message
+            severity="error"
+            *ngIf="
+              userForm.get('password')?.touched &&
+              userForm.get('password')?.hasError('maxlength')
+            "
+            text="La contrasena no puede superar los 20 caracteres"
+          ></p-message>
+          <p-message
+            severity="error"
+            *ngIf="
+              userForm.get('password')?.touched &&
+              userForm.get('password')?.hasError('weakPassword')
+            "
+            text="La contrasena no cumple todos los requisitos"
+          ></p-message>
+        </div>
+      </div>
+
+      <!-- Roles -->
+      <div class="mb-4">
+        <label for="roles" class="block mb-2 font-semibold">
+          Rol <span class="text-red-500">*</span>
+        </label>
+        <p-multiSelect
+          id="roles"
+          [options]="roleOptions"
+          formControlName="roles"
+          placeholder="Seleccione roles"
+          display="chip"
+          [displaySelectedLabel]="false"
+          class="w-full"
+        ></p-multiSelect>
+        <small
+          class="block mt-2 text-gray-600"
+          *ngIf="(userForm.get('roles')?.value || []).length > 0"
+        >
+          Seleccionados:
+          <span *ngFor="let role of userForm.get('roles')?.value; let last = last">
+            {{ role | titlecase }}<span *ngIf="!last">, </span>
+          </span>
+        </small>
+        <!-- Requerido -->
+        <p-message
+          severity="error"
+          *ngIf="
+            userForm.get('roles')?.touched &&
+            userForm.get('roles')?.hasError('required')
+          "
+          text="El rol es requerido"
+        ></p-message>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="flex justify-center gap-4 mt-12 pt-40">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          [disabled]="isLoading"
+          (onClick)="goBack()"
+        >
+        </p-button>
+        <p-button
+          type="submit"
+          label="Actualizar Usuario"
+          [disabled]="userForm.invalid || isLoading"
+          [loading]="isLoading"
+        >
+        </p-button>
+      </div>
+    </div>
+  </form>
+</div>

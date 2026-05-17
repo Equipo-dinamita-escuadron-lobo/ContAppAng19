@@ -1,2 +1,26 @@
 <p-toast></p-toast>
 <router-outlet></router-outlet>
+
+<p-dialog
+	header="Sesion expirada"
+	[visible]="authService.sessionExpiredVisible()"
+	[modal]="true"
+	[draggable]="false"
+	[resizable]="false"
+	[closable]="false"
+	[closeOnEscape]="false"
+	[dismissableMask]="false"
+	[style]="{ width: '28rem', maxWidth: '92vw' }"
+	styleClass="session-expired-dialog"
+>
+	<p class="session-expired-message">
+		Tu sesion ha expirado. Debes iniciar sesion nuevamente para continuar.
+	</p>
+
+	<ng-template pTemplate="footer">
+		<p-button
+			label="Aceptar"
+			(onClick)="authService.acknowledgeSessionExpired()"
+		></p-button>
+	</ng-template>
+</p-dialog>

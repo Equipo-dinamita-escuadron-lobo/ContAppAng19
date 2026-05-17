@@ -6,6 +6,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AuthLayoutComponent } from '../../../auth-layout/auth-layout.component';
 import { MessageModule } from 'primeng/message';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-reset-password',
@@ -25,6 +26,7 @@ export class ResetPasswordComponent implements OnInit {
   token: string = '';
   passwordReset: boolean = false;
   errorMessage: string = '';
+  isLoading: boolean = false;
 
   authService: AuthService = inject(AuthService);
   route: ActivatedRoute = inject(ActivatedRoute);
@@ -58,7 +60,12 @@ export class ResetPasswordComponent implements OnInit {
 
     const newPassword = this.resetForm.value.newPassword || '';
 
-    this.authService.resetPassword(this.token, newPassword).subscribe({
+    this.isLoading = true;
+    this.authService.resetPassword(this.token, newPassword).pipe(
+      finalize(() => {
+        this.isLoading = false;
+      })
+    ).subscribe({
       next: () => {
         this.passwordReset = true;
         this.errorMessage = '';

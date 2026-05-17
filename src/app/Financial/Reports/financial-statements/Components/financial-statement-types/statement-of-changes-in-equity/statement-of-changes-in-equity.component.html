@@ -1,0 +1,140 @@
+﻿<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <div class="mb-6 flex justify-between items-start gap-4">
+    <div>
+      <div class="flex items-center gap-3 mb-3">
+        <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
+          {{ financialStatementInfo.icon }}
+        </span>
+        <h1
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
+        >
+          {{ financialStatementInfo.name }}
+        </h1>
+      </div>
+      <p class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl">
+        {{ financialStatementInfo.description }}
+      </p>
+    </div>
+
+    <div *ngIf="isReportGenerated" class="flex items-start">
+      <p-button
+        styleClass="p-button-secondary"
+        icon="pi pi-file-export"
+        label="Exportar"
+        [disabled]="isGeneratingReport"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
+      ></p-button>
+    </div>
+  </div>
+
+  <h3 class="text-sm font-semibold text-primary mb-3">
+    Criterios para la Generacion:
+  </h3>
+
+  <div class="p-4 bg-white rounded-lg shadow-sm">
+    <div class="criteria-grid">
+      <div class="criteria-card">
+        <h4 class="criteria-title">Fecha de Corte Actual *</h4>
+        <p-datepicker
+          [(ngModel)]="criteria.endDate"
+          (ngModelChange)="onCurrentCutoffDateChange()"
+          [maxDate]="maxSelectableDate"
+          dateFormat="dd/mm/yy"
+          placeholder="Fecha actual"
+          [showIcon]="true"
+          styleClass="w-full text-xs"
+        ></p-datepicker>
+      </div>
+
+      <div class="criteria-card">
+        <h4 class="criteria-title">Fecha de Corte Anterior *</h4>
+        <p-datepicker
+          [(ngModel)]="criteria.startDate"
+          (ngModelChange)="onPreviousCutoffDateChange()"
+          [maxDate]="maxSelectableDate"
+          dateFormat="dd/mm/yy"
+          placeholder="Fecha anterior"
+          [showIcon]="true"
+          styleClass="w-full text-xs"
+        ></p-datepicker>
+      </div>
+
+      <div class="criteria-card search-card">
+        <button
+          pButton
+          type="button"
+          label="Generar Reporte"
+          [loading]="isGeneratingReport"
+          (keydown.enter)="generateReport()"
+          (click)="generateReport()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-10 bg-white rounded-lg shadow-sm">
+    <p-table
+      showGridlines
+      [value]="dataTable"
+      [resizableColumns]="true"
+      [responsiveLayout]="'scroll'"
+      [loading]="isGeneratingReport"
+      styleClass="p-datatable-header min-h-[20rem] fs-report-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pResizableColumn *ngFor="let col of headerConfig[0]" [attr.colspan]="col.colspan" [attr.rowspan]="col.rowspan" class="text-center">
+            {{ col.header }}
+          </th>
+        </tr>
+        <tr>
+          <th pResizableColumn *ngFor="let col of headerConfig[1]" class="text-center">
+            {{ col.header }}
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr [ngClass]="getRowClass(row)">
+          <td *ngFor="let col of tableColumns" [class]="col.type === 'number' ? 'p-2' : ''">
+            <ng-container *ngIf="col.type === 'number'; else plainValue">
+              <div
+                class="money-cell"
+                [innerHTML]="
+                  formatMoneyAligned(
+                    getNestedNumberValue(row, col.field),
+                    col.natureField ? getNestedTextValue(row, col.natureField) : undefined
+                  )
+                "
+              ></div>
+            </ng-container>
+            <ng-template #plainValue>
+              <ng-container *ngIf="col.type === 'percentage'; else textValue">
+                <div class="money-cell">
+                  {{ formatPercentage(getNestedNumberValue(row, col.field)) }}
+                </div>
+              </ng-container>
+            </ng-template>
+            <ng-template #textValue>
+              {{ getNestedTextValue(row, col.field) }}
+            </ng-template>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr style="height: 200px">
+          <td [attr.colspan]="tableColumns.length">
+            <div class="flex flex-col items-center justify-center h-full">
+              <p class="text-md text-gray-600 max-w-md text-center">
+                NO HAY INFORMACION PARA MOSTRAR
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+

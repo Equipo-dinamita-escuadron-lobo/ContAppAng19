@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   FormGroup,
   FormBuilder,
@@ -38,6 +39,7 @@ export class ForgotPasswordComponent {
   private readonly messageService = inject(MessageService);
 
   forgotForm: FormGroup;
+  isLoading = false;
 
   constructor() {
     this.forgotForm = this.formBuilder.group({
@@ -51,26 +53,41 @@ export class ForgotPasswordComponent {
       return;
     }
 
-    const email = this.forgotForm.value.email || '';
+    const email = (this.forgotForm.value.email || '').trim().toLowerCase();
+    this.isLoading = true;
 
     this.authService.forgotPassword(email).subscribe({
       next: () => {
+        this.isLoading = false;
         this.messageService.add({
           severity: 'success',
-          summary: 'Petición Enviada',
+          summary: 'Correo Enviado',
           detail: 'Si el correo está registrado, recibirás un enlace para recuperar tu contraseña.',
-          life: 5000,
+          life: 6000,
         });
         this.forgotForm.reset();
+        setTimeout(() => {
+          this.goToLogin();
+        }, 1200);
       },
-      error: (err) => {
-        // Por seguridad, mostramos el mismo mensaje de éxito incluso si hay un error
-        // (ej: el usuario no existe). Esto previene la enumeración de correos.
+      error: (error: HttpErrorResponse) => {
+        this.isLoading = false;
+
+        if (error.status === 0) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de conexión',
+            detail: 'No fue posible conectar con el servicio de recuperación. Verifica que el backend esté corriendo y la URL del ambiente actual sea correcta.',
+            life: 7000,
+          });
+          return;
+        }
+
         this.messageService.add({
-          severity: 'success',
-          summary: 'Petición Enviada',
-          detail: 'Si el correo está registrado, recibirás un enlace para recuperar tu contraseña.',
-          life: 5000,
+          severity: 'error',
+          summary: 'No se pudo enviar el correo',
+          detail: 'El servicio respondió con error. Intenta nuevamente en unos minutos.',
+          life: 7000,
         });
       },
     });
@@ -82,7 +99,6 @@ export class ForgotPasswordComponent {
     });
   }
 
-  // Removed getFieldError method as individual p-message are used now
 
   goToLogin(): void {
     this.router.navigate(['/login']);

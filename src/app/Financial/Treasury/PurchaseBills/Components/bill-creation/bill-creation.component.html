@@ -19,10 +19,10 @@
     <!-- Bill Header Form -->
     <p-card header="Información del Encabezado" class="mb-4">
         <form [formGroup]="billHeaderForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Bill ID -->
+            <!-- Número de factura -->
             <div class="flex flex-col gap-2">
                 <label for="billId" class="font-semibold text-[var(--color-primary)]">
-                    Bill ID <span class="text-red-500">*</span>
+                    Número de factura <span class="text-red-500">*</span>
                 </label>
                 <input
                     pInputText
@@ -31,7 +31,7 @@
                     placeholder="Ej: BILL-20250914-0001"
                     [ngClass]="{'ng-invalid ng-dirty': billHeaderForm.get('billId')?.invalid && billHeaderForm.get('billId')?.touched}">
                 @if (billHeaderForm.get('billId')?.touched && billHeaderForm.get('billId')?.invalid) {
-                    <small class="p-error">El Bill ID es requerido.</small>
+                    <small class="p-error">El número de factura es requerido.</small>
                 }
             </div>
 

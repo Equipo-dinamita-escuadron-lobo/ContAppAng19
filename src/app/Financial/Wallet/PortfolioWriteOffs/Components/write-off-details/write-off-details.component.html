@@ -15,8 +15,8 @@
         <!-- 1. Cabecera (sin cambios) -->
         <div class="mb-28">
             <h1
-                class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
-                Detalle Castigo: <span class="text-[var(--color-accessibility)]">{{ writeOff.code }}</span>
+                class="font-['Titillium_Web'] font-bold text-3xl text-primary border-b-4 border-secondary inline-block pb-1">
+                Detalle Castigo: <span class="text-accessibility">{{ writeOff.code }}</span>
             </h1>
             <p class="font-normal text-sm mt-2 text-gray-600">
                 Revise la información del castigo y ejecute las acciones correspondientes. Aqui podra realizar la
@@ -36,16 +36,16 @@
 
             <!-- Título centrado -->
             <ng-template pTemplate="header">
-                <div class="font-semibold text-xl text-center text-[var(--color-primary)]">
+                <div class="font-semibold text-xl text-center text-primary">
                     Información General
                 </div>
             </ng-template>
 
             <!-- Insignia de estado (sin cambios) -->
             <div [ngClass]="{
-                    'bg-[var(--color-accessibility)]': getStatusSeverity(writeOff.status) === 'success',
-                    'bg-[var(--color-secondary-light)]': getStatusSeverity(writeOff.status) === 'danger',
-                    'bg-[var(--color-complementary-gold)]': getStatusSeverity(writeOff.status) === 'warning',
+                    'bg-accessibility': getStatusSeverity(writeOff.status) === 'success',
+                    'bg-secondary-light': getStatusSeverity(writeOff.status) === 'danger',
+                    'bg-complementary-gold': getStatusSeverity(writeOff.status) === 'warning',
                     'bg-gray-400': getStatusSeverity(writeOff.status) !== 'success' && getStatusSeverity(writeOff.status) !== 'danger' && getStatusSeverity(writeOff.status) !== 'warning'
                  }"
                 class="absolute top-0 right-0 px-4 py-1 rounded-bl-lg rounded-tr-lg text-white text-xs font-bold uppercase tracking-wider">
@@ -56,29 +56,29 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-sm">
                 <!-- Fila 1 -->
                 <div class="mb-4">
-                    <p class="text-[var(--color-primary)] font-semibold uppercase text-xs tracking-wider mb-1">Código:</p>
+                    <p class="text-primary font-semibold uppercase text-xs tracking-wider mb-1">Código:</p>
                     <p class="text-base">{{ writeOff.code }}</p>
                 </div>
                 <div class="mb-4">
-                    <p class="text-[var(--color-primary)] font-semibold uppercase text-xs tracking-wider mb-1">Fecha de Castigo:</p>
+                    <p class="text-primary font-semibold uppercase text-xs tracking-wider mb-1">Fecha de Castigo:</p>
                     <p class="text-base">{{ writeOff.writeOffDate | date:'dd \'de\' MMMM \'de\' yyyy' }}</p>
                 </div>
 
                 <!-- Fila 2 (ocupa todo el ancho) -->
                 <div class="mb-4">
-                    <p class="text-[var(--color-primary)] font-semibold uppercase text-xs tracking-wider mb-1">Cliente:</p>
+                    <p class="text-primary font-semibold uppercase text-xs tracking-wider mb-1">Cliente:</p>
                     <p class="text-base">{{ writeOff.thirdName || 'N/A' }}</p>
                 </div>
                 
                 <!-- Fila 3 (ocupa todo el ancho) -->
                 <div class="mb-4">
-                    <p class="text-[var(--color-primary)] font-semibold uppercase text-xs tracking-wider mb-1">Cuenta de Gasto:</p>
+                    <p class="text-primary font-semibold uppercase text-xs tracking-wider mb-1">Cuenta de Gasto:</p>
                     <p class="text-base">{{ writeOff.debitAuxiliaryAccount }}</p>
                 </div>
                 
                 <!-- Fila 4: Justificación (siempre al final y ocupando todo el ancho) -->
                 <div class="md:col-span-2">
-                    <p class="text-[var(--color-primary)] font-semibold uppercase text-xs tracking-wider mb-1">Justificación:</p>
+                    <p class="text-primary font-semibold uppercase text-xs tracking-wider mb-1">Justificación:</p>
                     <p class="whitespace-pre-wrap">{{ writeOff.justification }}</p>
                 </div>
             </div>
@@ -87,7 +87,7 @@
         <!-- Card de la Tabla (sin cambios) -->
         <p-card>
             <ng-template pTemplate="header">
-                <div class="text-[var(--color-primary)] bg-white font-['Titillium_Web'] font-bold p-3 text-center rounded-t-lg">
+                <div class="text-primary bg-white font-['Titillium_Web'] font-bold p-3 text-center rounded-t-lg">
                     Detalle de Facturas Castigadas
                 </div>
             </ng-template>
@@ -115,7 +115,7 @@
                         <td colspan="3" class="text-right p-4 font-bold text-lg text-gray-800">
                             Total Castigado:
                         </td>
-                        <td class="text-right p-4 font-bold text-xl text-[var(--color-primary)]">
+                        <td class="text-right p-4 font-bold text-xl text-primary">
                             {{ writeOff.totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}
                         </td>
                     </tr>

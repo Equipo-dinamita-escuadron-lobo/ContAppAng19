@@ -21,9 +21,12 @@ export interface EnterpriseDetails{
     dv: string;
     mainActivity?:number;
     secondaryActivity?: number;
+
     // Campos específicos para persona jurídica
     legalName?: string;
+
     // Campos específicos para persona natural
     ownerName?: string;
     lastNames?: string;
+    inventoryConfigurationType:string;
 }

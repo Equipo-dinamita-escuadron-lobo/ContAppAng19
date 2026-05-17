@@ -2,7 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
-import { LocalStorageMethods, EntData } from '../../../Shared/Methods/local-storage.method';
+import {
+  LocalStorageMethods,
+  EntData,
+} from '../../../Shared/Methods/local-storage.method';
 import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseDetails } from '../models/EnterpriseDetails';
 
@@ -11,7 +14,7 @@ import { EnterpriseDetails } from '../models/EnterpriseDetails';
   standalone: true,
   imports: [CommonModule, ButtonModule],
   templateUrl: './view-enterprise.component.html',
-  styleUrl: './view-enterprise.component.css'
+  styleUrl: './view-enterprise.component.css',
 })
 export class ViewEnterpriseComponent implements OnInit {
   entData: EntData | null = null;
@@ -31,7 +34,7 @@ export class ViewEnterpriseComponent implements OnInit {
 
   loadEnterpriseData(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
-    
+
     if (this.entData?.id) {
       this.loading = true;
       this.enterpriseService.getEnterpriseById(this.entData.id).subscribe({
@@ -42,7 +45,7 @@ export class ViewEnterpriseComponent implements OnInit {
         error: (error) => {
           console.error('Error al cargar datos de la empresa:', error);
           this.loading = false;
-        }
+        },
       });
     }
   }
@@ -55,71 +58,69 @@ export class ViewEnterpriseComponent implements OnInit {
     this.router.navigate(['/enterprise/edit']);
   }
 
-  // Métodos para obtener nombres de los tipos
-  getEnterpriseTypeName(type: any): string {
-    if (!type) return 'No disponible';
-    
-    const types: { [key: number]: string } = {
-      1: 'Privada',
-      2: 'Oficial', 
-      3: 'Mixta'
-    };
-    
-    const typeId = typeof type === 'object' ? type.id : type;
-    return types[typeId] || (typeof type === 'object' ? type.name : type) || 'No disponible';
+  /** ==================== GETTERS DE DATOS ==================== */
+
+  // Tipo de empresa
+  getEnterpriseTypeName(): string {
+    if (!this.enterpriseData?.enterpriseType) return 'No disponible';
+    const type = this.enterpriseData.enterpriseType;
+    return typeof type === 'object' ? type.name : type;
   }
 
-  getPersonTypeName(type: any): string {
-    if (!type) return 'No disponible';
-    
-    if (typeof type === 'string') {
-      return type === 'juridica' ? 'Persona Jurídica' : 'Persona Natural';
-    }
-    
-    return type.name || 'No disponible';
+  // Tipo de persona
+  getPersonTypeName(): string {
+    if (!this.enterpriseData?.personType) return 'No disponible';
+    const type = this.enterpriseData.personType;
+    return typeof type === 'object' ? type.type : type;
   }
 
-  getTaxPayerTypeName(type: any): string {
-    if (!type) return 'No disponible';
-    
-    const types: { [key: number]: string } = {
-      1: 'Responsable de IVA',
-      2: 'No responsable de IVA',
-      3: 'Gran contribuyente'
-    };
-    
-    const typeId = typeof type === 'object' ? type.id : type;
-    return types[typeId] || (typeof type === 'object' ? type.name : type) || 'No disponible';
+  // Razón social (business name)
+  getBusinessName(): string {
+    if (!this.enterpriseData?.personType) return 'No disponible';
+    const person = this.enterpriseData.personType;
+    return typeof person === 'object' && person.bussinessName
+      ? person.bussinessName
+      : 'No disponible';
   }
 
-  getTaxLiabilitiesNames(liabilities: any[] | undefined): string {
-    if (!liabilities || liabilities.length === 0) return 'No disponible';
-    
-    const liabilityNames: { [key: number]: string } = {
-      1: 'IVA',
-      2: 'ICA', 
-      3: 'Retención en la fuente',
-      4: 'Retención de IVA'
-    };
-    
-    return liabilities.map(liability => {
-      const liabilityId = typeof liability === 'object' ? liability.id : liability;
-      return liabilityNames[liabilityId] || (typeof liability === 'object' ? liability.name : liability) || 'Desconocido';
-    }).join(', ');
+  // Tipo de contribuyente
+  getTaxPayerTypeName(): string {
+    if (!this.enterpriseData?.taxPayerType) return 'No disponible';
+    const type = this.enterpriseData.taxPayerType;
+    return typeof type === 'object' ? type.name : type;
   }
 
+  // Responsabilidades tributarias
+  getTaxLiabilitiesNames(): string {
+    if (
+      !this.enterpriseData?.taxLiabilities ||
+      this.enterpriseData.taxLiabilities.length === 0
+    )
+      return 'No disponible';
+    return this.enterpriseData.taxLiabilities
+      .map((liability: any) =>
+        typeof liability === 'object' ? liability.name : liability
+      )
+      .join(', ');
+  }
+
+  // Localización
   getLocationData(field: string): string {
     if (!this.enterpriseData?.location) return 'No disponible';
-    
     const location = this.enterpriseData.location;
-    
     switch (field) {
       case 'country':
-        return location.country?.name || location.country || 'No disponible';
+        return typeof location.country === 'object'
+          ? location.country.name
+          : location.country;
       case 'department':
-        return location.department?.name || location.department || 'No disponible';
+        return typeof location.department === 'object'
+          ? location.department.name
+          : location.department;
       case 'city':
-        return location.city?.name || location.city || 'No disponible';
+        return typeof location.city === 'object'
+          ? location.city.name
+          : location.city;
       case 'address':
         return location.address || 'No disponible';
       default:

@@ -3,8 +3,8 @@
     <!-- Page Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">Facturas de Compra</h1>
-            <p class="text-gray-600">Gestión de facturas de proveedores (Bills)</p>
+            <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">Programación Pagos de Factura</h1>
+            <p class="text-gray-600">Organiza y controla los pagos pendientes a proveedores</p>
         </div>
         <div class="flex gap-2">
             <p-button
@@ -13,25 +13,31 @@
                 severity="secondary"
                 (onClick)="onExportData()">
             </p-button>
-            <p-button
-                label="Nueva Factura"
-                icon="pi pi-plus"
-                (onClick)="onCreateBill()">
-            </p-button>
         </div>
     </div>
 
     <!-- Filters Card -->
     <p-card header="Filtros de Búsqueda" class="mb-4">
+        <!-- Info banner cuando se selecciona Contabilizada -->
+        <div *ngIf="showCutoffDateSelector" class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+            <div class="flex items-center gap-2">
+                <i class="pi pi-info-circle text-blue-600"></i>
+                <div class="text-sm">
+                    <p class="font-semibold text-blue-800">Filtro de Fecha de Corte Activo</p>
+                    <p class="text-blue-700">Seleccione un rango de fechas predefinido o personalizado para filtrar las facturas contabilizadas.</p>
+                </div>
+            </div>
+        </div>
+
         <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            <!-- Bill ID Filter -->
+            <!-- Número de factura Filter -->
             <div class="flex flex-col gap-2">
-                <label for="billId" class="font-semibold text-[var(--color-primary)]">Bill ID</label>
+                <label for="billId" class="font-semibold text-[var(--color-primary)]">Número de factura</label>
                 <input
                     pInputText
                     id="billId"
                     formControlName="billId"
-                    placeholder="Buscar por Bill ID...">
+                    placeholder="Buscar por número de factura...">
             </div>
 
             <!-- Supplier Filter -->
@@ -57,26 +63,50 @@
                 </p-dropdown>
             </div>
 
+            <!-- Fecha de Corte Filter (solo para Contabilizada) -->
+            <div class="flex flex-col gap-2" *ngIf="showCutoffDateSelector">
+                <label for="cutoffDateRange" class="font-semibold text-[var(--color-primary)]">
+                    📅 Fecha de Corte
+                </label>
+                <p-dropdown
+                    id="cutoffDateRange"
+                    formControlName="cutoffDateRange"
+                    [options]="cutoffDateOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Seleccione un rango"
+                    [showClear]="true">
+                </p-dropdown>
+            </div>
+
             <!-- Date From Filter -->
             <div class="flex flex-col gap-2">
-                <label for="dateFrom" class="font-semibold text-[var(--color-primary)]">Desde</label>
+                <label for="dateFrom" class="font-semibold text-[var(--color-primary)]">
+                    Desde
+                    <span *ngIf="showCutoffDateSelector" class="text-xs text-gray-500">(Auto)</span>
+                </label>
                 <p-calendar
                     id="dateFrom"
                     formControlName="dateFrom"
                     dateFormat="dd/mm/yy"
                     [showIcon]="true"
+                    [disabled]="showCutoffDateSelector && filterForm.get('cutoffDateRange')?.value && filterForm.get('cutoffDateRange')?.value !== 'CUSTOM'"
                     placeholder="Fecha desde">
                 </p-calendar>
             </div>
 
             <!-- Date To Filter -->
             <div class="flex flex-col gap-2">
-                <label for="dateTo" class="font-semibold text-[var(--color-primary)]">Hasta</label>
+                <label for="dateTo" class="font-semibold text-[var(--color-primary)]">
+                    Hasta
+                    <span *ngIf="showCutoffDateSelector" class="text-xs text-gray-500">(Auto)</span>
+                </label>
                 <p-calendar
                     id="dateTo"
                     formControlName="dateTo"
                     dateFormat="dd/mm/yy"
                     [showIcon]="true"
+                    [disabled]="showCutoffDateSelector && filterForm.get('cutoffDateRange')?.value && filterForm.get('cutoffDateRange')?.value !== 'CUSTOM'"
                     placeholder="Fecha hasta">
                 </p-calendar>
             </div>
@@ -130,7 +160,7 @@
     </p-card>
 
     <!-- Bills Table -->
-    <p-card header="Lista de Facturas" class="mb-4">
+    <p-card header="Programación de Pagos" class="mb-4">
         <p-table
             [value]="filteredBills"
             [loading]="loading"
@@ -138,14 +168,14 @@
             [rows]="10"
             [rowsPerPageOptions]="[5, 10, 20, 50]"
             [showCurrentPageReport]="true"
-            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} facturas"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} programaciones"
             [globalFilterFields]="['billId', 'supplierName', 'statusDisplay']"
             styleClass="p-datatable-striped">
 
             <ng-template pTemplate="caption">
                 <div class="flex justify-between items-center">
                     <span class="text-lg font-semibold">
-                        Total: {{ filteredBills.length }} facturas
+                        Total: {{ filteredBills.length }} programaciones
                     </span>
                     <div class="flex gap-2">
                         <span class="p-input-icon-left">
@@ -164,7 +194,7 @@
             <ng-template pTemplate="header">
                 <tr>
                     <th pSortableColumn="billId" style="width: 150px">
-                        Bill ID <p-sortIcon field="billId"></p-sortIcon>
+                        Número de factura <p-sortIcon field="billId"></p-sortIcon>
                     </th>
                     <th pSortableColumn="dateOpened" style="width: 120px">
                         Fecha <p-sortIcon field="dateOpened"></p-sortIcon>
@@ -206,7 +236,15 @@
                         </p-tag>
                     </td>
                     <td>
-                        <div class="flex gap-1">
+                        <div class="flex gap-2 flex-wrap">
+                            <p-button
+                                label="Pagar"
+                                icon="pi pi-wallet"
+                                size="small"
+                                severity="success"
+                                pTooltip="Programar pago"
+                                (onClick)="onPayBill(bill)">
+                            </p-button>
                             <!-- View Button -->
                             <p-button
                                 icon="pi pi-eye"
@@ -249,19 +287,13 @@
                         <div class="flex flex-col items-center gap-4">
                             <i class="pi pi-inbox text-4xl text-gray-400"></i>
                             <div>
-                                <p class="text-lg font-semibold text-gray-600 mb-2">No se encontraron facturas</p>
+                                <p class="text-lg font-semibold text-gray-600 mb-2">No se encontraron programaciones</p>
                                 <p class="text-gray-500">
                                     {{ filteredBills.length === 0 && allBills.length > 0
                                         ? 'Intente ajustar los filtros de búsqueda'
-                                        : 'Comience creando su primera factura de compra' }}
+                                        : 'No existen pagos programados actualmente' }}
                                 </p>
                             </div>
-                            <p-button
-                                *ngIf="filteredBills.length === 0 && allBills.length === 0"
-                                label="Crear Primera Factura"
-                                icon="pi pi-plus"
-                                (onClick)="onCreateBill()">
-                            </p-button>
                         </div>
                     </td>
                 </tr>
@@ -280,13 +312,13 @@
         </p-table>
     </p-card>
 
-    <!-- Summary Statistics (Optional) -->
+    <!-- Summary Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <p-card>
             <div class="text-center">
                 <i class="pi pi-file-o text-3xl text-blue-500 mb-2"></i>
                 <h3 class="text-2xl font-bold text-gray-800">{{ allBills.length }}</h3>
-                <p class="text-gray-600">Total Facturas</p>
+                <p class="text-gray-600">Total Programaciones</p>
             </div>
         </p-card>
 
@@ -300,13 +332,16 @@
             </div>
         </p-card>
 
-        <p-card>
+        <p-card [ngClass]="{'border-2 border-green-400': showCutoffDateSelector}">
             <div class="text-center">
                 <i class="pi pi-check-circle text-3xl text-green-500 mb-2"></i>
                 <h3 class="text-2xl font-bold text-gray-800">
                     {{ getPostedCount() }}
                 </h3>
                 <p class="text-gray-600">Contabilizadas</p>
+                <span *ngIf="showCutoffDateSelector" class="text-xs text-green-600 font-semibold">
+                    🎯 Filtro activo
+                </span>
             </div>
         </p-card>
 
@@ -320,6 +355,32 @@
             </div>
         </p-card>
     </div>
+
+    <!-- Estadísticas adicionales de filtrado por fecha de corte -->
+    <p-card *ngIf="showCutoffDateSelector && filterForm.get('cutoffDateRange')?.value && filterForm.get('cutoffDateRange')?.value !== ''"
+            class="mb-4 border-l-4 border-green-500">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center">
+                <i class="pi pi-filter text-2xl text-green-600 mb-2"></i>
+                <h4 class="text-lg font-bold text-gray-800">{{ filteredBills.length }}</h4>
+                <p class="text-sm text-gray-600">Facturas en Rango</p>
+            </div>
+            <div class="text-center">
+                <i class="pi pi-calendar text-2xl text-blue-600 mb-2"></i>
+                <h4 class="text-lg font-bold text-gray-800">
+                    {{ filterForm.get('cutoffDateRange')?.value ? getCutoffDateLabel() : '-' }}
+                </h4>
+                <p class="text-sm text-gray-600">Período Seleccionado</p>
+            </div>
+            <div class="text-center">
+                <i class="pi pi-dollar text-2xl text-purple-600 mb-2"></i>
+                <h4 class="text-lg font-bold text-gray-800">
+                    {{ getTotalFilteredAmount() }}
+                </h4>
+                <p class="text-sm text-gray-600">Total del Período</p>
+            </div>
+        </div>
+    </p-card>
 
     <!-- Toast Messages -->
     <p-toast></p-toast>

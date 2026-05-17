@@ -112,3 +112,21 @@
   font-size: 0.85rem;
   margin-top: 0.5rem;
 }
+
+.password-checklist {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.9rem;
+}
+
+.password-checklist li {
+  margin-bottom: 0.2rem;
+}
+
+.password-checklist li.valid {
+  color: #166534;
+}
+
+.password-checklist li.invalid {
+  color: #991b1b;
+}

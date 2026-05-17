@@ -1,0 +1,404 @@
+<p-confirmDialog></p-confirmDialog>
+
+<div class="p-fluid p-4 md:p-6">
+  <div class="mb-6 flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-gray-800">Exportar Estado Financiero</h2>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-times"
+      (click)="closeModal()"
+      class="p-button-rounded p-button-secondary p-button-text"
+      aria-label="Cerrar modal"
+    ></button>
+  </div>
+
+  <div class="grid grid-cols-1 gap-8 lg:grid-cols-5">
+    <div
+      class="w-full overflow-auto rounded-lg border border-gray-200 lg:col-span-3"
+    >
+      <app-financial-statement-report-preview
+        [reportTitle]="reportTitle"
+        [enterpriseData]="enterpriseData"
+        [generationDate]="generationDate"
+        [criteria]="criteriaForPreview"
+        [headerConfig]="headerConfig"
+        [previewData]="previewData"
+        [totals]="totals"
+        [styles]="styles"
+        [format]="formatSelected"
+        [signatures]="previewSignatures"
+      ></app-financial-statement-report-preview>
+    </div>
+
+    <div class="flex max-h-[75vh] flex-col gap-6 overflow-y-auto pr-2 lg:col-span-2">
+      <div class="rounded-lg border border-slate-200 p-4">
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <label for="template-select" class="text-lg font-medium">Plantillas</label>
+          <small class="text-slate-500">{{ templateCountLabel }}</small>
+        </div>
+
+        <p-select
+          inputId="template-select"
+          [options]="templates"
+          [(ngModel)]="selectedTemplate"
+          (ngModelChange)="onTemplateSelected($event)"
+          optionLabel="name"
+          [filter]="true"
+          filterBy="name"
+          [showClear]="true"
+          placeholder="Selecciona una plantilla"
+          styleClass="w-full"
+          [appendTo]="'body'"
+        >
+          <ng-template pTemplate="selectedItem" let-selectedOption>
+            <div *ngIf="selectedOption" class="flex items-center gap-2">
+              <span>{{ selectedOption.name }}</span>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="item" let-option>
+            <div class="flex w-full items-center justify-between gap-2">
+              <span>{{ option.name }}</span>
+              <small *ngIf="option.isDefault" class="text-slate-500">Predeterminada</small>
+            </div>
+          </ng-template>
+        </p-select>
+
+        <label for="template-name" class="mb-2 mt-4 block font-medium">
+          Nombre de plantilla
+        </label>
+        <input
+          id="template-name"
+          pInputText
+          [(ngModel)]="templateName"
+          placeholder="Ej: ContApp Azul"
+        />
+
+        <div class="mt-3 flex items-center gap-2">
+          <p-checkbox
+            inputId="template-default"
+            [(ngModel)]="isDefaultTemplate"
+            [binary]="true"
+          ></p-checkbox>
+          <label for="template-default" class="cursor-pointer text-sm text-slate-700">
+            Marcar como plantilla predeterminada
+          </label>
+        </div>
+
+        <small class="mt-2 block text-slate-500">
+          Puedes guardar hasta 3 plantillas por empresa.
+        </small>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <p-button
+            label="Guardar plantilla"
+            icon="pi pi-save"
+            styleClass="p-button-outlined"
+            [loading]="isSavingTemplate"
+            [disabled]="!canCreateAnotherTemplate && !selectedTemplate"
+            (click)="saveTemplate()"
+            type="button"
+          ></p-button>
+          <p-button
+            label="Eliminar seleccionadas"
+            icon="pi pi-trash"
+            severity="danger"
+            styleClass="p-button-text"
+            [disabled]="!selectedTemplateIdsForDeletion.length"
+            (click)="confirmDeleteSelectedTemplates()"
+            type="button"
+          ></p-button>
+          <p-button
+            label="Eliminar todas"
+            icon="pi pi-trash"
+            severity="danger"
+            styleClass="p-button-text"
+            [disabled]="!templates.length"
+            (click)="confirmDeleteAllTemplates()"
+            type="button"
+          ></p-button>
+        </div>
+
+        <div *ngIf="templates.length" class="mt-4 flex flex-col gap-2">
+          <div
+            *ngFor="let template of templates"
+            class="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2"
+          >
+            <div class="flex items-center gap-3">
+              <p-checkbox
+                [inputId]="'template-delete-' + template.id"
+                [(ngModel)]="selectedTemplateIdsForDeletion"
+                [value]="template.id"
+              ></p-checkbox>
+              <label
+                [for]="'template-delete-' + template.id"
+                class="cursor-pointer text-sm text-slate-700"
+              >
+                {{ template.name }}
+              </label>
+            </div>
+            <small *ngIf="template.isDefault" class="text-slate-500">Default</small>
+          </div>
+        </div>
+      </div>
+
+      <p-fieldset legend="Formato">
+        <p-selectButton
+          [options]="formatOptions"
+          [(ngModel)]="formatSelected"
+          optionValue="value"
+          [allowEmpty]="false"
+        >
+          <ng-template let-item pTemplate="item">
+            <div class="flex items-center justify-center gap-2 px-2">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </div>
+          </ng-template>
+        </p-selectButton>
+      </p-fieldset>
+
+      <p-fieldset legend="Estilos del Encabezado">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <label for="align-select" class="mb-2 block font-medium">Alineacion</label>
+            <p-selectButton
+              id="align-select"
+              [options]="alignOptions"
+              [ngModel]="styles.align"
+              (ngModelChange)="updateStyles({ align: $event })"
+              optionValue="value"
+            >
+              <ng-template let-item pTemplate="item">
+                <i
+                  [class]="item.icon"
+                  [pTooltip]="item.tooltip"
+                  tooltipPosition="top"
+                ></i>
+              </ng-template>
+            </p-selectButton>
+          </div>
+          <div>
+            <label for="header-color-picker" class="mb-2 block font-medium">
+              Color de Cabecera
+              <p-colorPicker
+                [ngModel]="styles.color"
+                (ngModelChange)="updateStyles({ color: $event })"
+              ></p-colorPicker>
+            </label>
+          </div>
+        </div>
+      </p-fieldset>
+
+      <p-fieldset legend="Estilos del Contenido">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <label for="font-select" class="mb-2 block font-medium">Fuente</label>
+            <p-select
+              inputId="font-select"
+              [options]="fonts"
+              [ngModel]="styles.font"
+              (ngModelChange)="updateStyles({ font: $event })"
+              optionLabel="name"
+              optionValue="value"
+              placeholder="Selecciona una fuente"
+              styleClass="w-full"
+              [appendTo]="'body'"
+            >
+              <ng-template let-font pTemplate="item">
+                <div [style.font-family]="font.value">{{ font.name }}</div>
+              </ng-template>
+              <ng-template let-font pTemplate="selectedItem">
+                <div *ngIf="font" [style.font-family]="font.value">
+                  {{ font.name }}
+                </div>
+              </ng-template>
+            </p-select>
+          </div>
+          <div>
+            <label for="fontsize-select" class="mb-2 block font-medium">Tamano</label>
+            <p-select
+              inputId="fontsize-select"
+              [options]="fontSizes"
+              [ngModel]="styles.fontSize"
+              (ngModelChange)="updateStyles({ fontSize: $event })"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Ej: 12px"
+              styleClass="w-full"
+              [appendTo]="'body'"
+            ></p-select>
+          </div>
+        </div>
+      </p-fieldset>
+
+      <p-fieldset legend="Anotaciones">
+        <div class="flex flex-col gap-3">
+          <textarea
+            pInputTextarea
+            rows="4"
+            [(ngModel)]="annotationDraft"
+            placeholder="Escribe una anotacion para incluirla en el reporte exportado."
+          ></textarea>
+
+          <div class="flex flex-wrap gap-2">
+            <p-button
+              [label]="editingAnnotationId ? 'Actualizar anotacion' : 'Guardar anotacion'"
+              icon="pi pi-comment"
+              styleClass="p-button-outlined"
+              [loading]="isSavingAnnotation"
+              (click)="saveAnnotation()"
+              type="button"
+            ></p-button>
+            <p-button
+              *ngIf="editingAnnotationId"
+              label="Cancelar edicion"
+              styleClass="p-button-text"
+              (click)="cancelAnnotationEdition()"
+              type="button"
+            ></p-button>
+          </div>
+
+          <div *ngIf="hasAnnotations" class="flex flex-col gap-2">
+            <div
+              *ngFor="let annotation of annotations"
+              class="rounded-md border border-slate-200 bg-slate-50 p-3"
+            >
+              <div class="mb-2 flex items-start justify-between gap-3">
+                <p class="m-0 text-sm text-slate-800">{{ annotation.text }}</p>
+                <div class="flex gap-1">
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-text"
+                    (click)="editAnnotation(annotation)"
+                  ></button>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-trash"
+                    class="p-button-rounded p-button-danger p-button-text"
+                    [disabled]="isDeletingAnnotation"
+                    (click)="confirmDeleteAnnotation(annotation)"
+                  ></button>
+                </div>
+              </div>
+              <small class="text-slate-500">
+                Actualizada:
+                {{ annotation.updatedAt | date : "dd/MM/yyyy hh:mm a" }}
+              </small>
+            </div>
+          </div>
+        </div>
+      </p-fieldset>
+
+      <p-fieldset legend="Firmas">
+        <div class="flex flex-col gap-4">
+          <small class="text-slate-500">
+            Puedes exportar el reporte sin firmas, con una firma o con dos.
+          </small>
+
+          <article
+            *ngFor="let signatureSlot of signatureSlots"
+            class="rounded-lg border border-slate-200 p-4"
+          >
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <h4 class="m-0 text-base font-semibold text-slate-800">
+                Firma {{ signatureSlot.index + 1 }}
+              </h4>
+              <div class="flex flex-wrap gap-2">
+                <input
+                  #signatureFileInput
+                  type="file"
+                  class="hidden"
+                  accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+                  (change)="onSignatureSelected(signatureSlot.index, $event)"
+                />
+                <p-button
+                  label="Cargar imagen"
+                  icon="pi pi-image"
+                  styleClass="p-button-outlined p-button-sm"
+                  (click)="triggerSignatureUpload(signatureSlot.index)"
+                  type="button"
+                ></p-button>
+                <p-button
+                  *ngIf="signatureSlot.previewUrl"
+                  label="Quitar"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  styleClass="p-button-text p-button-sm"
+                  (click)="removeSignature(signatureSlot.index)"
+                  type="button"
+                ></p-button>
+              </div>
+            </div>
+
+            <div class="grid gap-3 md:grid-cols-2">
+              <div>
+                <label
+                  [for]="'signature-name-' + signatureSlot.index"
+                  class="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  Nombre de la persona
+                </label>
+                <input
+                  [id]="'signature-name-' + signatureSlot.index"
+                  pInputText
+                  [(ngModel)]="signatureSlot.signerName"
+                  placeholder="Ej: Maria Perez"
+                />
+              </div>
+
+              <div>
+                <label
+                  [for]="'signature-role-' + signatureSlot.index"
+                  class="mb-2 block text-sm font-medium text-slate-700"
+                >
+                  Cargo
+                </label>
+                <input
+                  [id]="'signature-role-' + signatureSlot.index"
+                  pInputText
+                  [(ngModel)]="signatureSlot.signerRole"
+                  placeholder="Ej: Contadora General"
+                />
+              </div>
+            </div>
+
+            <small class="mt-3 block text-slate-500">
+              Formatos permitidos: PNG y JPG.
+            </small>
+
+            <div
+              *ngIf="signatureSlot.previewUrl"
+              class="mt-3 rounded-lg border border-dashed border-slate-300 p-3"
+            >
+              <img
+                [src]="signatureSlot.previewUrl"
+                [alt]="'Vista previa de la firma ' + (signatureSlot.index + 1)"
+                class="max-h-28 max-w-full rounded border border-slate-200 object-contain"
+              />
+            </div>
+          </article>
+        </div>
+      </p-fieldset>
+    </div>
+  </div>
+
+  <div class="mt-8 flex justify-end gap-3 border-t border-gray-200 pt-4">
+    <p-button
+      label="Cancelar"
+      styleClass="p-button-outlined p-button-secondary"
+      (click)="closeModal()"
+      type="button"
+    ></p-button>
+    <p-button
+      label="Exportar"
+      icon="pi pi-download"
+      [loading]="isExporting"
+      (click)="exportReport()"
+      type="button"
+    ></p-button>
+  </div>
+</div>

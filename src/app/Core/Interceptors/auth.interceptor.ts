@@ -1,8 +1,15 @@
-import { HttpInterceptorFn } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { inject } from '@angular/core';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { BehaviorSubject, throwError } from 'rxjs';
+import { catchError, filter, finalize, switchMap, take } from 'rxjs/operators';
 import { BYPASS_AUTH } from './http-context';
+import { AuthService } from '../auth/services/auth.service';
+
+let isRefreshing = false;
+const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const authService = inject(AuthService);
 
   // --- INICIO DE DEBUG ---
   // Imprime cada petición que el interceptor ve
@@ -19,7 +26,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  const token = localStorage.getItem('token');
+  const token = authService.getToken();
 
   // Si no hay bandera y no hay token, la deja pasar
   if (!token) {
@@ -35,5 +42,60 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     },
   });
 
-  return next(cloned);
+  return next(cloned).pipe(
+    catchError((error: HttpErrorResponse) => {
+      const isUnauthorized = error.status === 401;
+      const isRefreshRequest = req.url.includes('/token/refresh');
+
+      if (!isUnauthorized || isRefreshRequest) {
+        return throwError(() => error);
+      }
+
+      const refreshToken = authService.getRefreshToken();
+      if (!refreshToken) {
+        authService.handleSessionExpired();
+        return throwError(() => error);
+      }
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+        refreshTokenSubject.next(null);
+
+        return authService.refreshAccessToken().pipe(
+          switchMap((tokens) => {
+            refreshTokenSubject.next(tokens.access_token);
+
+            const retriedRequest = req.clone({
+              setHeaders: {
+                Authorization: `Bearer ${tokens.access_token}`,
+              },
+            });
+
+            return next(retriedRequest);
+          }),
+          catchError((refreshError) => {
+            authService.handleSessionExpired();
+            return throwError(() => refreshError);
+          }),
+          finalize(() => {
+            isRefreshing = false;
+          })
+        );
+      }
+
+      return refreshTokenSubject.pipe(
+        filter((newToken): newToken is string => !!newToken),
+        take(1),
+        switchMap((newToken) => {
+          const retriedRequest = req.clone({
+            setHeaders: {
+              Authorization: `Bearer ${newToken}`,
+            },
+          });
+
+          return next(retriedRequest);
+        })
+      );
+    })
+  );
 };

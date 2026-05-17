@@ -20,6 +20,10 @@ export const hasRoleGuard = (): CanActivateFn => {
       }
     }
 
+    if (authService.sessionExpiredVisible()) {
+      return false;
+    }
+
     router.navigate(['/login']);
     return false;
   };

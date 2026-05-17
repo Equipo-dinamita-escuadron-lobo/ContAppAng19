@@ -15,6 +15,7 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '../services/auth.service';
 import { Login } from '../models/login';
 import { AuthLayoutComponent } from '../../../auth-layout/auth-layout.component';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -40,6 +41,7 @@ export class LoginComponent {
   private readonly messageService = inject(MessageService);
 
   loginForm: FormGroup;
+  isLoading = false;
 
   constructor() {
     this.loginForm = this.formBuilder.group({
@@ -59,8 +61,21 @@ export class LoginComponent {
       password: this.loginForm.value.password || '',
     };
 
-    this.authService.login(login).subscribe({
-      // La navegación en caso de éxito ya se maneja dentro del AuthService
+    this.isLoading = true;
+    this.authService.login(login).pipe(
+      finalize(() => {
+        this.isLoading = false;
+      })
+    ).subscribe({
+      next: (response) => {
+        if (!response) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error de Autenticación',
+            detail: 'No se pudo iniciar sesión. Verifica tus credenciales e intenta nuevamente.',
+          });
+        }
+      },
       error: (err) => {
         let errorMessage = 'Error al iniciar sesión. Por favor intenta nuevamente.';
         

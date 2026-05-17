@@ -6,12 +6,12 @@
     <div>
       <div class="flex items-center gap-3 mb-3">
         <span
-          class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
+          class="material-symbols-outlined text-primary text-3xl md:text-4xl"
         >
           {{ auxiliaryBookInfo.icon }}
         </span>
         <h1
-          class="text-xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
         >
           {{ auxiliaryBookInfo.name }}
         </h1>
@@ -34,15 +34,15 @@
   </div>
 
   <!-- Filtros -->
-  <h3 class="text-sm font-semibold text-[var(--color-primary)] mb-3">
+  <h3 class="text-sm font-semibold text-primary mb-3">
     Criterios para la Generación:
   </h3>
   <div class="p-4 bg-white rounded-lg shadow-sm">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
       <!-- 1. Nivel -->
       <div class="lg:col-span-2 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Nivel <span class="text-[var(--color-secondary)]"> *</span>
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Nivel <span class="text-error"> *</span>
         </h4>
         <div class="">
           <div class="flex items-center gap-2" *ngFor="let level of levels">
@@ -62,7 +62,7 @@
 
       <!-- 2. Rango -->
       <div class="lg:col-span-2 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+        <h4 class="text-xs font-bold text-primary mb-2">
           <p-checkbox
             [(ngModel)]="isRangeOptionSelected"
             [binary]="true"
@@ -100,7 +100,7 @@
 
       <!-- 3. Centro de Costos -->
       <div class="lg:col-span-3 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+        <h4 class="text-xs font-bold text-primary mb-2">
           <p-checkbox
             [(ngModel)]="isCostCenterOptionSelected"
             [binary]="true"
@@ -137,8 +137,8 @@
 
       <!-- 4. Periodo (sin línea a la derecha) -->
       <div class="lg:col-span-3">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Periodo <span class="text-[var(--color-secondary)]"> *</span>
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Periodo <span class="text-error"> *</span>
         </h4>
         <p-datepicker
           [(ngModel)]="datePeriod"

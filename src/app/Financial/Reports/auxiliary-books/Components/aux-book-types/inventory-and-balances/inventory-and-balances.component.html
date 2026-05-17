@@ -6,12 +6,12 @@
     <div>
       <div class="flex items-center gap-3 mb-3">
         <span
-          class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
+          class="material-symbols-outlined text-primary text-3xl md:text-4xl"
         >
           {{ auxiliaryBookInfo.icon }}
         </span>
         <h1
-          class="text-xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
         >
           {{ auxiliaryBookInfo.name }}
         </h1>
@@ -34,15 +34,15 @@
   </div>
 
   <!-- Filtros -->
-  <h3 class="text-sm font-semibold text-[var(--color-primary)] mb-3">
+  <h3 class="text-sm font-semibold text-primary mb-3">
     Criterios para la Generación:
   </h3>
   <div class="p-4 bg-white rounded-lg shadow-sm">
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
       <!-- 1. Nivel -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Nivel <span class="text-[var(--color-secondary)]"> *</span>
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Nivel <span class="text-error"> *</span>
         </h4>
         <div class="grid grid-cols-2 gap-2">
           <div class="flex items-center gap-2" *ngFor="let level of levels">
@@ -62,7 +62,7 @@
 
       <!-- 2. Rango -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+        <h4 class="text-xs font-bold text-primary mb-2">
           <p-checkbox
             [(ngModel)]="isRangeOptionSelected"
             [binary]="true"
@@ -100,7 +100,7 @@
 
       <!-- 3. Tercero -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+        <h4 class="text-xs font-bold text-primary mb-2">
           <p-checkbox
             [(ngModel)]="isThirdPartyOptionSelected"
             [binary]="true"
@@ -144,8 +144,8 @@
 
       <!-- 4. Fecha de Corte (sin línea a la derecha) -->
       <div class="col-span-1">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Fecha de Corte <span class="text-[var(--color-secondary)]"> *</span>
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Fecha de Corte <span class="text-error"> *</span>
         </h4>
         <p-datepicker
           [(ngModel)]="criteria.endDate"
@@ -185,12 +185,10 @@
       <ng-template pTemplate="header">
         <tr>
           <th class="text-center" pResizableColumn rowspan="1" colspan="2">
-            Cuenta
+            Cuenta Contable
           </th>
           <th class="text-center" pResizableColumn rowspan="2">Descripción</th>
-          <th scope="row" class="text-right pr-4" pResizableColumn rowspan="2">
-            Valor
-          </th>
+          <th class="text-right pr-4" pResizableColumn rowspan="2">Valor</th>
         </tr>
         <tr>
           <th class="text-center">Código</th>
@@ -201,14 +199,18 @@
       <!-- Body -->
       <ng-template pTemplate="body" let-accountInfo>
         <tr>
-          <td>{{ accountInfo.accountCode }}</td>
-          <td>{{ accountInfo.accountDescription }}</td>
+          <td>{{ accountInfo.account?.accountCode }}</td>
+          <td>{{ accountInfo.account?.accountDescription }}</td>
           <td>{{ accountInfo.description }}</td>
-          <!-- ✅ CORREGIDO: Añadida la clase tabular-nums -->
           <td class="p-2">
             <div
               class="money-cell"
-              [innerHTML]="formatMoneyAligned(accountInfo.value)"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.value,
+                  accountInfo.account.nature
+                )
+              "
             ></div>
           </td>
         </tr>

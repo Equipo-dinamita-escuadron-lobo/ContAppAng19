@@ -2,15 +2,16 @@
 <div class="w-full h-full flex flex-col">
   <app-header></app-header>
 </div>
-<div class="m-120  max-w-7xl mx-auto">
+
+<div class="m-120 max-w-7xl mx-auto">
   <!-- Título -->
   <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
     Listado de empresas
   </h1>
-  <p class="font-family-sans font-normal text-xs/21 ">Elija una empresa para acceder a sus funcionalidades</p>
+  <p class="font-family-sans font-normal text-xs/21">Elija una empresa para acceder a sus funcionalidades</p>
 
   <!-- Filtros y Buscador -->
-  <div class="flex items-center justify-between flex-wrap gap-6">
+  <div class="flex items-center justify-between flex-wrap gap-6 mt-4">
     <div class="flex items-center gap-6 flex-wrap">
       <!-- Buscador -->
       <div class="w-full sm:w-[30rem]">
@@ -18,94 +19,117 @@
           <p-inputicon>
             <i class="pi pi-search text-gray-500"></i>
           </p-inputicon>
-          <input
-          pInputText
-            type="text"
-            placeholder="Buscar..."
+          <input pInputText type="text" placeholder="Buscar..."
             class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
-            [(ngModel)]="searchTerm"
-            (ngModelChange)="filterEnterprises()"
-          />
+            [(ngModel)]="searchTerm" (ngModelChange)="filterEnterprises()" />
         </p-iconfield>
       </div>
 
       <!-- Filtro -->
-        <p-dropdown
-          [options]="[{ label: 'Activas', value: 'active' }, { label: 'Inactivas', value: 'inactive' }]"
-          [(ngModel)]="selectedStatus"
-          (onChange)="selectEnterpriseStatus()"
-          placeholder="Seleccione un estado"
-          styleClass="w-40"
-        ></p-dropdown>
-
+      <p-dropdown [options]="[{ label: 'Activas', value: 'active' }, { label: 'Inactivas', value: 'inactive' }]"
+        [(ngModel)]="selectedStatus" (onChange)="selectEnterpriseStatus()" placeholder="Seleccione un estado">
+      </p-dropdown>
     </div>
 
     <!-- Botones de acción -->
     <div class="flex gap-3">
-      <p-button
-        label="Método de Inventario"
-        icon="pi pi-warehouse"
-        severity="success"
-        (click)="showValuationConfigModal()">
+      <p-button label="Ver Materias" icon="pi pi-book" (click)="onListSubjects()"
+        class="bg-green-600 text-white rounded-full">
       </p-button>
-      <p-button
-        label="PDF RUT"
-        icon="pi pi-file-pdf"
-        (click)="showPdfRutModal()">
+      <p-button label="Método de Inventario" icon="pi pi-cog" (click)="showValuationConfigModal()"
+        class="bg-purple-600 text-white rounded-full">
       </p-button>
-      <p-button
-        label="Agregar"
-        icon="pi pi-plus"
-        (click)="onCreateEnterprise()">
+      <p-button label="PDF RUT" icon="pi pi-file-pdf" (click)="showPdfRutModal()"
+        class="bg-blue-600 text-white rounded-full">
       </p-button>
+      <p-button label="Agregar" icon="pi pi-plus" (click)="onCreateEnterprise()"
+        class="bg-primary text-white rounded-full">
+      </p-button>
+      <!-- <p-button label="Importar" icon="pi pi-upload" (click)="onImportEnterprise()"
+        class="bg-green-600 text-white rounded-full">
+      </p-button> -->
     </div>
   </div>
 
-  <!-- Cards -->
-  <div class="bg-neutral-90 p-18 mt-10 rounded-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
-    <div *ngFor="let enterprise of filteredEnterprises" class="bg-white p-8 rounded-xl shadow text-center max-w-sm w-full">
+  <!-- Cards de empresas activas -->
+  <div
+    class="bg-neutral-90 p-18 mt-10 rounded-xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+    <div *ngFor="let enterprise of filteredEnterprises"
+      class="bg-white p-8 rounded-xl shadow text-center max-w-sm w-full relative">
+
+      <!-- Logo de la empresa -->
       <div class="w-64 h-64 mx-auto rounded-full bg-gray-200 mb-6 flex items-center justify-center overflow-hidden">
-        <img
-          *ngIf="enterprise.logo"
-          [src]="enterprise.logo"
-          [alt]="enterprise.name"
-          (error)="onImageError($event)"
-          (load)="onImageLoad(enterprise)"
-          class="w-full h-full rounded-full object-cover">
+        <img *ngIf="enterprise.logo" [src]="enterprise.logo" [alt]="enterprise.name" (error)="onImageError($event)"
+          (load)="onImageLoad(enterprise)" class="w-full h-full rounded-full object-cover">
         <i *ngIf="!enterprise.logo" class="pi pi-building text-6xl text-gray-400"></i>
       </div>
+
+      <!-- Nombre y NIT -->
       <h3 class="font-family-titillium font-semibold text-xl/22 mb-2">{{ enterprise.name }}</h3>
       <p class="font-family-sans font-normal text-sm/21 text-neutral-50 mb-6">NIT: {{ enterprise.nit }}</p>
-      <div class="flex items-center justify-center">
-        <a
-          [routerLink]="['/home']"
-          (click)="saveSelectedEnterprise(enterprise)"
-        >
+
+      <!-- Botón Seleccionar -->
+      <div class="flex items-center justify-center mb-4">
+        <a [routerLink]="['/home']" (click)="saveSelectedEnterprise(enterprise)" class="w-full">
           <p-button label="Seleccionar" class="w-full"></p-button>
         </a>
       </div>
+
+      <!-- Menú de tres puntos -->
+      <div class="absolute bottom-4 right-4">
+        <p-menu #menu [popup]="true" [model]="menuItems" appendTo="body"></p-menu>
+        <button pButton type="button" icon="pi pi-ellipsis-v" class="custom-ellipsis-btn"
+          (click)="openMenu(enterprise, menu, $event)">
+        </button>
+      </div>
+
+
     </div>
   </div>
 
+  <!-- Empresas Archivadas -->
+  <div class="mt-12">
+    <h2 class="font-family-titillium font-bold text-2xl text-gray-700 mb-4 flex items-center gap-2">
+      <i class="pi pi-archive text-xl"></i> Archivadas / Inactivas
+    </h2>
+  </div>
+
+  <!-- Carpeta de Empresas Archivadas -->
+  <div class="mt-12 flex justify-center">
+    <div class="relative w-64 h-64 cursor-pointer hover:scale-105 transition-transform"
+      (click)="openArchivedEnterpriseFolder()">
+
+      <!-- Carpeta grande con fondo -->
+      <div class="w-full h-full bg-gray-300 rounded-xl flex flex-col items-center justify-center shadow-lg relative">
+
+        <!-- Ícono de carpeta -->
+        <i class="pi pi-folder text-gray-700 text-9xl"></i>
+
+        <!-- Badge flotante con número de archivadas -->
+        <div
+          class="absolute top-3 right-3 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold shadow-md">
+          {{ archivedEnterprises.length }}
+        </div>
+
+        <!-- Texto debajo del ícono -->
+        <p class="mt-4 text-gray-700 font-semibold text-lg"></p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal PDF RUT -->
-<p-dialog
-  header="Crear una Empresa apartir del PDF del RUT"
-  [(visible)]="showPdfModal"
-  [modal]="true"
-  [closable]="true"
-  [draggable]="false"
-  [resizable]="false"
-  styleClass="w-96"
-  [style]="{width: '500px'}">
+<p-dialog header="Crear una Empresa apartir del PDF del RUT" [(visible)]="showPdfModal" [modal]="true" [closable]="true"
+  [draggable]="false" [resizable]="false" styleClass="w-96" [style]="{width: '500px'}">
 
   <div class="p-6">
     <p class="text-gray-600 mb-6 text-sm leading-relaxed">
-      Por favor, selecciona un archivo PDF para cargar. Asegúrate de que el archivo tenga la informacion con la cual se va a crear el nuevo tercero.
+      Por favor, selecciona un archivo PDF para cargar. Asegúrate de que el archivo tenga la información con la cual se
+      va a crear el nuevo tercero.
     </p>
 
-    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
+    <div
+      class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
       <div *ngIf="!selectedPdfFile">
         <i class="pi pi-file-pdf text-4xl text-gray-400 mb-4"></i>
         <p class="text-gray-600 font-medium">Arrastra y suelta tu PDF del RUT!</p>
@@ -116,44 +140,28 @@
         <p class="text-green-600 font-medium">PDF seleccionado</p>
         <p class="text-sm text-gray-500 mt-2">{{ selectedPdfFile.name }}</p>
       </div>
-      <input
-        type="file"
-        accept=".pdf"
-        class="hidden"
-        #fileInput
-        (change)="onPdfFileSelected($event)">
-      <p-button
-        label="{{ selectedPdfFile ? 'Cambiar PDF' : 'Seleccionar PDF' }}"
-        icon="{{ selectedPdfFile ? 'pi pi-refresh' : 'pi pi-upload' }}"
-        (click)="fileInput.click()"
-        class="mt-4">
+      <input type="file" accept=".pdf" class="hidden" #fileInput (change)="onPdfFileSelected($event)">
+      <p-button label="{{ selectedPdfFile ? 'Cambiar PDF' : 'Seleccionar PDF' }}"
+        icon="{{ selectedPdfFile ? 'pi pi-refresh' : 'pi pi-upload' }}" (click)="fileInput.click()" class="mt-4">
       </p-button>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
     <div class="flex justify-end gap-3">
-      <p-button
-        label="Cancelar"
-        icon="pi pi-times"
-        (click)="closePdfModal()"
-        class="text-gray-600">
+      <p-button label="Cancelar" icon="pi pi-times" (click)="closePdfModal()" class="text-gray-600">
       </p-button>
-      <p-button
-        label="Crear"
-        icon="pi pi-check"
-        (click)="createEnterpriseFromPdf()"
-        [disabled]="!selectedPdfFile"
+      <p-button label="Crear" icon="pi pi-check" (click)="createEnterpriseFromPdf()" [disabled]="!selectedPdfFile"
         class="text-blue-600">
       </p-button>
     </div>
   </ng-template>
 </p-dialog>
 
-<!-- Modal de Configuración de Método de Inventario -->
+<!-- Modal de Configuración -->
 <p-dialog
   header="Configuración de Método de Inventario"
-  [(visible)]="showValuationModal"
+  [(visible)]="showInventoryConfigModal"
   [modal]="true"
   [closable]="true"
   [draggable]="false"
@@ -165,4 +173,70 @@
     <app-valuation-method-config (closeModal)="closeValuationModal()"></app-valuation-method-config>
   </div>
 
+</p-dialog>
+
+<!-- Modal Confirmar "Inactivar" -->
+<p-dialog header="Confirmar Inactivación de Empresa" [(visible)]="showInactivateModal" [modal]="true" [closable]="false"
+  [draggable]="false" [resizable]="false">
+  <div class="flex flex-col items-center gap-4 p-4 text-center">
+    <i class="pi pi-ban text-6xl text-yellow-500"></i>
+    <p>¿Estás seguro de que deseas <strong>inactivar</strong> la empresa <strong>{{ enterpriseToInactivate?.name
+        }}</strong>?</p>
+    <div class="flex gap-3 mt-4">
+      <p-button label="Cancelar" icon="pi pi-times" class="p-button-secondary" (click)="cancelInactivate()">
+      </p-button>
+
+      <p-button label="Inactivar" icon="pi pi-check" class="p-button-warning" (click)="confirmInactivate()">
+      </p-button>
+    </div>
+  </div>
+</p-dialog>
+
+
+<!-- Modal Confirmar Eliminación -->
+<p-dialog header="Confirmar Eliminación" [(visible)]="showDeleteModal" [modal]="true" [closable]="false"
+  [draggable]="false" [resizable]="false">
+  <div class="flex flex-col items-center gap-4 p-4">
+    <i class="pi pi-exclamation-triangle text-6xl text-red-500"></i>
+    <p>¿Estás seguro de que deseas eliminar la empresa <strong>{{ enterpriseToDelete?.name }}</strong>?</p>
+    <div class="flex gap-3 mt-4">
+      <p-button label="Cancelar" icon="pi pi-times" class="p-button-secondary" (click)="cancelDelete()"></p-button>
+      <p-button label="Eliminar" icon="pi pi-check" class="p-button-danger2" (click)="confirmDelete()"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Modal Compartir Empresa -->
+<p-dialog header="Compartir Empresa" [(visible)]="showShareModal" [modal]="true" [closable]="false" [draggable]="false"
+  [resizable]="false" styleClass="w-96" [style]="{ width: '500px' }">
+  <div class="p-6">
+    <p class="text-gray-600 mb-4 text-sm">
+      Ingresa los correos electrónicos de los estudiantes con los que deseas
+      compartir esta empresa.
+    </p>
+
+    <!-- Campo de correos -->
+    <div class="flex gap-3 mb-3">
+      <input type="email" placeholder="Correo del estudiante" [(ngModel)]="newEmail"
+        class="flex-1 py-2 px-3 border rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary" />
+      <p-button icon="pi pi-plus" (click)="addEmail()" class="bg-primary text-white rounded-full"></p-button>
+    </div>
+
+    <!-- Lista de correos agregados -->
+    <div *ngIf="emailList.length > 0" class="mt-4 space-y-2">
+      <div *ngFor="let email of emailList; let i = index"
+        class="flex justify-between items-center bg-gray-100 p-2 rounded-md">
+        <span class="text-sm">{{ email }}</span>
+        <button pButton icon="pi pi-times" class="p-button-text text-red-500" (click)="removeEmail(i)"></button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-3">
+      <p-button label="Cancelar" icon="pi pi-times" class="p-button-secondary" (click)="closeShareModal()"></p-button>
+      <p-button label="Compartir" icon="pi pi-share-alt" class="bg-green-600 text-white" (click)="confirmShare()"
+        [disabled]="emailList.length === 0"></p-button>
+    </div>
+  </ng-template>
 </p-dialog>

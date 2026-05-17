@@ -17,6 +17,8 @@ import { PortfolioWriteOffService } from '../../Services/portfolio-write-off.ser
 import { AuxiliaryAccountOption, Client, Invoice } from '../../../CashReceipts/Model';
 import { CreateWriteOffRequestDto, SelectionSummary } from '../../Models';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
+import { CostCenter } from '../../../../../GeneralMasters/CostCenters/models/cost-center.model';
+import { CostCenterService } from '../../../../../GeneralMasters/CostCenters/services/cost-center.service';
 
 
 @Component({
@@ -52,13 +54,17 @@ export class WriteOffCreationComponent {
 
   auxiliaryAccounts: AuxiliaryAccountOption[] = [];
 
+  costCenters: CostCenter[] = [];
+  showCostCenterField: boolean = false;
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private messageService: MessageService,
     private cashReceiptService: CashReceiptService,
     private portfolioWriteOffService: PortfolioWriteOffService,
-    private localStorageMethods: LocalStorageMethods
+    private localStorageMethods: LocalStorageMethods,
+    private costCenterService: CostCenterService,
   ) { }
 
   ngOnInit(): void {
@@ -72,6 +78,7 @@ export class WriteOffCreationComponent {
       writeOffDate: [new Date(), Validators.required],
       debitAuxiliaryAccount: [null, Validators.required],
       client: [null, Validators.required],
+      centerCost: [null],
     });
   }
 
@@ -80,6 +87,50 @@ export class WriteOffCreationComponent {
     this.cashReceiptService.getAuxiliaryAccountsCached(enterpriseId).subscribe(data => {
       this.auxiliaryAccounts = data;
       console.log('Cuentas Auxiliares cargadas:', this.auxiliaryAccounts);
+    });
+  }
+
+  /**
+   * Se ejecuta al cambiar la cuenta auxiliar (cuenta de gasto).
+   * Verifica si la cuenta seleccionada tiene habilitado 'costCenter'.
+   */
+  onAuxiliaryAccountChange(): void {
+    const accountId = this.writeOffForm.get('debitAuxiliaryAccount')?.value;
+    
+    // Resetear campo de centro de costo
+    this.resetCostCenterField();
+
+    if (!accountId) return;
+
+    // Buscar la cuenta completa en el array de opciones
+    // NOTA: Asumo que AuxiliaryAccountOption tiene la propiedad 'costCenter' (boolean) 
+    // tal como funcionaba en tu ejemplo de recibos de caja.
+    const selectedAccount = this.auxiliaryAccounts.find(acc => acc.value === accountId);
+
+    if (selectedAccount && selectedAccount.costCenter) {
+      this.showCostCenterField = true;
+      this.writeOffForm.get('centerCost')?.setValidators(Validators.required);
+      this.loadCostCenters();
+    }
+    
+    this.writeOffForm.get('centerCost')?.updateValueAndValidity();
+  }
+
+  private resetCostCenterField(): void {
+    this.showCostCenterField = false;
+    this.costCenters = [];
+    const control = this.writeOffForm.get('centerCost');
+    control?.clearValidators();
+    control?.setValue(null);
+    control?.updateValueAndValidity();
+  }
+
+  loadCostCenters(): void {
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) return;
+
+    this.costCenterService.findActiveAuxiliary(enterpriseId).subscribe(data => {
+      this.costCenters = data;
     });
   }
 
@@ -136,14 +187,18 @@ export class WriteOffCreationComponent {
       debitAuxiliaryAccountId: formValue.debitAuxiliaryAccount,
       thirdId: formValue.client.id,
       enterpriseId: enterpriseId,
+
+      costCenterId: this.showCostCenterField ? formValue.centerCost : undefined,
+
       details: this.selectedInvoices.map(inv => ({ invoiceId: inv.id })),
+      ...(this.showCostCenterField && { centerCostId: formValue.centerCost })
     };
     
     this.portfolioWriteOffService.createWriteOff(request).subscribe({
       next: (response) => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Borrador de castigo #${response.id} creado correctamente.` });
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: `Borrador de castigo ${response.code} creado correctamente.` });
         setTimeout(() => {
-          this.router.navigate(['/financial/wallet/write-offs', response.id]); // Navegar al detalle
+          this.router.navigate(['/financial/wallet/write-offs/details/', response.id]); // Navegar al detalle
         }, 1500);
       },
       error: (err) => {

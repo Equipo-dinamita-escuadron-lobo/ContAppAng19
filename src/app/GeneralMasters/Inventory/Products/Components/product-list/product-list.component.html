@@ -2,23 +2,29 @@
   <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
     <p-toast></p-toast>
     <p-confirmDialog></p-confirmDialog>
-    
+
     <!-- Confirm Dialog personalizado para exportar -->
-    <p-confirmDialog key="exportDialog" [style]="{width: '30rem'}">
+    <p-confirmDialog key="exportDialog" [style]="{ width: '30rem' }">
       <ng-template pTemplate="message">
         <div class="font-family-sans text-sm">
           <div class="flex items-center gap-2 mb-20">
             <p>{{ exportDialogMessage }}</p>
-          </div>          
+          </div>
           <div class="flex justify-start gap-12 mb-12">
-            <div *ngFor="let option of exportStatusOptions" class="flex items-center mt-4">
-              <p-radioButton 
-                [inputId]="option.label" 
-                [value]="option.value" 
+            <div
+              *ngFor="let option of exportStatusOptions"
+              class="flex items-center mt-4"
+            >
+              <p-radioButton
+                [inputId]="option.label"
+                [value]="option.value"
                 [(ngModel)]="exportStatusFilter"
-                name="exportFilter">
+                name="exportFilter"
+              >
               </p-radioButton>
-              <label [for]="option.label" class="ml-4 cursor-pointer">{{ option.label }}</label>
+              <label [for]="option.label" class="ml-4 cursor-pointer">{{
+                option.label
+              }}</label>
             </div>
           </div>
         </div>
@@ -28,10 +34,45 @@
     <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
       <!-- Título con el estilo de marca (borde inferior) -->
       <div class="items-center mb-6">
-        <h1
-          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Productos</span>
-        </h1>
+        <div class="flex items-center">
+          <h1
+            class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1"
+          >
+            <span class="border-b-4 border-secondary-light inline-block pb-1"
+              >Productos</span
+            >
+          </h1>
+          <span
+            class="ml-10 text-primary cursor-pointer"
+            (click)="op.toggle($event)"
+          >
+            <i
+              class="pi pi-question-circle text-3xl"
+              style="font-size: 1.25rem !important"
+            ></i>
+          </span>
+          <p-popover #op>
+            <div class="p-4" style="max-width: 400px">
+              <h3 class="font-bold text-lg mb-3 text-primary">
+                Gestión de Productos
+              </h3>
+              <p class="text-sm mb-3 text-primary">
+                Administra el catálogo completo de productos y servicios que
+                ofrece tu empresa. Configura códigos, referencias, precios y
+                características específicas de cada ítem para un control
+                detallado de tu portafolio comercial.
+              </p>
+              <a
+                [href]="helpCenterUrl"
+                target="_blank"
+                class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+              >
+                Abrir centro de ayuda para más información.
+                <i class="pi pi-external-link text-xs"></i>
+              </a>
+            </div>
+          </p-popover>
+        </div>
         <p class="font-family-sans font-normal text-sm mt-12">
           Administra y organiza todos tus productos y servicios.
         </p>
@@ -41,13 +82,30 @@
       <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
         <div class="flex flex-wrap gap-3">
           <!-- Botón "Crear Producto" utilizando p-button -->
-          <p-button label="Crear" icon="pi pi-plus"
-            (click)="redirectTo('/gen-masters/inventory/products/create')">
+          <p-button
+            label="Crear"
+            icon="pi pi-plus"
+            (click)="redirectTo('/gen-masters/inventory/products/create')"
+          >
           </p-button>
+
           <!-- Botón "Importar" para importar productos desde Excel -->
-          <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" [chooseIcon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" [auto]="true"
-            (onSelect)="onFileSelect($event)" class="p-button-primeng" [disabled]="isImporting">
-          </p-fileUpload>          
+          <p-button
+            label="Importar"
+            [icon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
+            [disabled]="isImporting"
+            (click)="onImportClick(fileInput)"
+          >
+          </p-button>
+
+          <input
+            #fileInput
+            type="file"
+            accept=".xlsx"
+            (change)="onFileSelect($event)"
+            style="display: none"
+          />
+
           <!-- Botón "Exportar" para exportar productos a Excel -->
           <p-button
             label="Exportar"
@@ -55,22 +113,32 @@
             severity="success"
             (click)="showExportConfirmDialog()"
             [outlined]="true"
-            [disabled]="isExporting">
+            [disabled]="isExporting"
+          >
           </p-button>
           <!-- Botón "Plantilla" para descargar plantilla de productos -->
-          <p-button label="Plantilla" icon="pi pi-download" severity="primary"
-            (click)="openTemplateModal()">
-          </p-button>          
+          <p-button
+            label="Plantilla"
+            icon="pi pi-download"
+            severity="primary"
+            (click)="openTemplateModal()"
+          >
+          </p-button>
           <!-- Botón "Volver" para regresar al menú de inventory -->
-          <p-button icon="pi pi-arrow-left" (click)="goBack()"
-            styleClass="p-button-text p-button-secondary">
+          <p-button
+            icon="pi pi-arrow-left"
+            (click)="goBack()"
+            styleClass="p-button-text p-button-secondary"
+          >
           </p-button>
         </div>
       </div>
     </div>
 
     <!-- 2. BARRA DE BÚSQUEDA: Con el estilo minimalista -->
-    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16 gap-12 items-center">
+    <div
+      class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16 gap-12 items-center"
+    >
       <div class="w-full sm:w-[30rem]">
         <p-iconfield iconPosition="left">
           <p-inputicon>
@@ -87,55 +155,105 @@
         </p-iconfield>
       </div>
 
-      <p-button [label]="showDetailView ? 'Vista resumida' : 'Vista completa'" icon="pi pi-eye" severity="secondary"
-        (click)="toggleDetailView()">
+      <p-button
+        [label]="showDetailView ? 'Vista resumida' : 'Vista completa'"
+        icon="pi pi-eye"
+        severity="secondary"
+        (click)="toggleDetailView()"
+      >
       </p-button>
     </div>
 
-
-    <p-table #productsTable [value]="products" [paginator]="true" [rows]="pageSize" [totalRecords]="productsPage.page.totalElements"
-      [lazy]="true" (onPage)="onPageChange($event)" (onSort)="onSort($event)"
-      [rowsPerPageOptions]="[5, 10, 20]" [loading]="false" [first]="first"
-      styleClass="p-datatable-striped font-family-sans" [tableStyle]="{ 'min-width': '50rem' }"
-      [responsiveLayout]="'scroll'">
+    <p-table
+      #productsTable
+      [value]="products"
+      [paginator]="true"
+      [rows]="pageSize"
+      [totalRecords]="productsPage.page.totalElements"
+      [lazy]="true"
+      (onPage)="onPageChange($event)"
+      (onSort)="onSort($event)"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      [first]="first"
+      styleClass="p-datatable-striped font-family-sans"
+      [tableStyle]="{ 'min-width': '50rem' }"
+      [responsiveLayout]="'scroll'"
+    >
       <ng-template pTemplate="header">
         <tr>
           <!-- Cabeceras de tabla con el estilo de la guía -->
-          <th pSortableColumn="code" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th
+            pSortableColumn="code"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+          >
             Código <p-sortIcon field="code"></p-sortIcon>
           </th>
-          <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th
+            pSortableColumn="name"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+          >
             Nombre <p-sortIcon field="name"></p-sortIcon>
           </th>
-          <th pSortableColumn="reference"
-            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th
+            pSortableColumn="reference"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+          >
             Referencia/SKU <p-sortIcon field="reference"></p-sortIcon>
           </th>
-          <th scope="col" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+          >
             Presentación
           </th>
-          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th
+            scope="col"
+            *ngIf="showDetailView"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+          >
             Descripción
           </th>
-          <th scope="col" class="font-semibold text-primary border-b-2 border-primary text-right whitespace-nowrap">
+          <th
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary text-right whitespace-nowrap"
+          >
             Costo
           </th>
-          <th scope="col" class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
+          <th
+            scope="col"
+            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
+          >
             Cantidad
           </th>
-          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th
+            scope="col"
+            *ngIf="showDetailView"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+          >
             Unidad de Medida
           </th>
-          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th
+            scope="col"
+            *ngIf="showDetailView"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+          >
             Categoría
           </th>
-          <th scope="col" *ngIf="showDetailView" class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap">
+          <th
+            scope="col"
+            *ngIf="showDetailView"
+            class="font-semibold text-primary border-b-2 border-primary whitespace-nowrap"
+          >
             Tipo de Producto
           </th>
-          <th class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
+          <th
+            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
+          >
             Estado
           </th>
-          <th class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap">
+          <th
+            class="font-semibold text-primary border-b-2 border-primary text-center whitespace-nowrap"
+          >
             Acciones
           </th>
         </tr>
@@ -147,34 +265,64 @@
           <td class="py-3 whitespace-nowrap">{{ product.name }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.reference }}</td>
           <td class="py-3 whitespace-nowrap">{{ product.presentation }}</td>
-          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.description }}</td>
-          <td class="py-3 text-right whitespace-nowrap">{{ product.cost | currencyFormat }}</td>
-          <td class="py-3 text-center whitespace-nowrap">{{ product.quantity ?? 0 }}</td>
-          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.unitOfMeasureName }}</td>
-          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.categoryName }}</td>
-          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">{{ product.productTypeName }}</td>
+          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">
+            {{ product.description }}
+          </td>
+          <td class="py-3 text-right whitespace-nowrap">
+            {{ product.cost | currencyFormat }}
+          </td>
           <td class="py-3 text-center whitespace-nowrap">
-            <p-tag [value]="product.state ? 'Activo' : 'Inactivo'" [severity]="product.state ? 'success' : 'danger'">
+            {{ product.quantity ?? 0 }}
+          </td>
+          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">
+            {{ product.unitOfMeasureName }}
+          </td>
+          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">
+            {{ product.categoryName }}
+          </td>
+          <td *ngIf="showDetailView" class="py-3 whitespace-nowrap">
+            {{ product.productTypeName }}
+          </td>
+          <td class="py-3 text-center whitespace-nowrap">
+            <p-tag
+              [value]="product.state ? 'Activo' : 'Inactivo'"
+              [severity]="product.state ? 'success' : 'danger'"
+            >
             </p-tag>
           </td>
           <td class="py-3 text-center whitespace-nowrap">
             <!-- 4. BOTONES DE ACCIÓN -->
             <div class="flex justify-center gap-2 items-center">
-              <p-button *ngIf="!showDetailView" icon="pi pi-eye" pTooltip="Detalles" tooltipPosition="top"
+              <p-button
+                *ngIf="!showDetailView"
+                icon="pi pi-eye"
+                pTooltip="Detalles"
+                tooltipPosition="top"
                 (click)="openDetailsModal(product)"
-                styleClass="p-button-rounded p-button-text text-primary-60"></p-button>
-              <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text text-primary-60"
+              ></p-button>
+              <p-button
+                icon="pi pi-pencil"
+                pTooltip="Editar"
+                tooltipPosition="top"
                 (click)="redirectToEdit(product.id)"
-                styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
-              <p-button icon="pi pi-trash" pTooltip="Eliminar" (click)="deleteProduct(product.id)"
-                tooltipPosition="top" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
+                styleClass="p-button-rounded p-button-text text-complementary-green"
+              ></p-button>
+              <p-button
+                icon="pi pi-trash"
+                pTooltip="Eliminar"
+                (click)="deleteProduct(product.id)"
+                tooltipPosition="top"
+                styleClass="p-button-rounded p-button-text text-secondary"
+              ></p-button>
               <p-toggleSwitch
                 [(ngModel)]="product.state"
                 (onChange)="changeProductState(product)"
+                [disabled]="!canToggleState"
                 [pTooltip]="product.state ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
-                [style]="{'transform': 'scale(0.8)'}"
+                [style]="{ transform: 'scale(0.8)' }"
               ></p-toggleSwitch>
             </div>
           </td>
@@ -182,22 +330,10 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
-            No se encontraron productos.
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <!-- Se ajusta el colspan dinámicamente según la vista -->
-          <td [attr.colspan]="showDetailView ? 12 : 8" class="text-center py-6 font-family-sans text-neutral-50">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p class="mt-2 text-primary">Cargando productos...</p>
-          </td>
-        </tr>
+        <app-table-empty-message
+          [loading]="loading"
+          [colspan]="showDetailView ? 12 : 8"
+        ></app-table-empty-message>
       </ng-template>
     </p-table>
   </div>
@@ -206,114 +342,223 @@
 <!-- =============================================================== -->
 <!-- ===            MODAL DE DETALLES DEL PRODUCTO                 === -->
 <!-- =============================================================== -->
-<p-dialog header="Detalles del Producto" [modal]="true" [(visible)]="isDetailsDialogVisible"
-  [style]="{ width: '50rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [maximizable]="true">
+<p-dialog
+  header="Detalles del Producto"
+  [modal]="true"
+  [(visible)]="isDetailsDialogVisible"
+  [style]="{ width: '50rem' }"
+  [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+  [maximizable]="true"
+>
   <!-- Contenido del Modal -->
   <!-- Usando la sintaxis @if de Angular 17+ -->
   @if (selectedProduct) {
-  <div class="p-4 font-family-sans text-sm">
-    <!-- CAMBIO 6: Se muestra 'name' como título principal en el modal -->
-    <div class="mb-6 border-b pb-4">
-      <p>{{ selectedProduct.code }}</p>
-      <h3 class="text-xl font-bold text-primary">
-        {{ selectedProduct.name }}
-      </h3>
-      <p>{{ selectedProduct.description }}</p>
-    </div>
-
-    <!-- Grid con los detalles del producto -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-      <!-- Columna Izquierda -->
-      <div class="space-y-8">
-        <div>
-          <p class="font-semibold text-primary">Referencia</p>
-          <p>{{ selectedProduct.reference }}</p>
-        </div>
-        <div>
-          <p class="font-semibold text-primary">Presentación</p>
-          <p>{{ selectedProduct.presentation }}</p>
-        </div>
-        <div>
-          <p class="font-semibold text-primary">Costo</p>
-          <p>
-            {{ selectedProduct.cost | currencyFormat }}
-          </p>
-        </div>
-        <div>
-          <p class="font-semibold text-primary">Tipo de Producto</p>
-          <p>
-            {{ selectedProduct.productType.name || 'N/A' }}
-          </p>
-        </div>
-        <div>
-          <p class="font-semibold text-primary">Categoría</p>
-          <p>{{ selectedProduct.categoryName }}</p>
-        </div>
+    <div class="p-4 font-family-sans text-sm">
+      <!-- CAMBIO 6: Se muestra 'name' como título principal en el modal -->
+      <div class="mb-6 border-b pb-4">
+        <p>{{ selectedProduct.code }}</p>
+        <h3 class="text-xl font-bold text-primary">
+          {{ selectedProduct.name }}
+        </h3>
+        <p>{{ selectedProduct.description }}</p>
       </div>
 
-      <!-- Columna Derecha -->
-      <div class="space-y-8">
-        <div>
-          <p class="font-semibold text-primary">Estado</p>
-          <p-tag [value]="selectedProduct.state ? 'Activo' : 'Inactivo'" [severity]="selectedProduct.state ? 'success' : 'danger'">
-          </p-tag>
+      <!-- Grid con los detalles del producto -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+        <!-- Columna Izquierda -->
+        <div class="space-y-8">
+          <div>
+            <p class="font-semibold text-primary">Referencia</p>
+            <p>{{ selectedProduct.reference }}</p>
+          </div>
+          <div>
+            <p class="font-semibold text-primary">Presentación</p>
+            <p>{{ selectedProduct.presentation }}</p>
+          </div>
+          <div>
+            <p class="font-semibold text-primary">Costo</p>
+            <p>
+              {{ selectedProduct.cost | currencyFormat }}
+            </p>
+          </div>
+          <div>
+            <p class="font-semibold text-primary">Tipo de Producto</p>
+            <p>
+              {{ selectedProduct.productType.name || "N/A" }}
+            </p>
+          </div>
+          <div>
+            <p class="font-semibold text-primary">Categoría</p>
+            <p>{{ selectedProduct.categoryName }}</p>
+          </div>
         </div>
-        <div>
-          <p class="font-semibold text-primary">Cantidad</p>
-          <p>{{ selectedProduct.quantity ?? 0 }}</p>
-        </div>
-        <div>
-          <p class="font-semibold text-primary">Unidad de Medida</p>
-          <p>
-            {{ selectedProduct.unitOfMeasureName }}
-          </p>
+
+        <!-- Columna Derecha -->
+        <div class="space-y-8">
+          <div>
+            <p class="font-semibold text-primary">Estado</p>
+            <p-tag
+              [value]="selectedProduct.state ? 'Activo' : 'Inactivo'"
+              [severity]="selectedProduct.state ? 'success' : 'danger'"
+            >
+            </p-tag>
+          </div>
+          <div>
+            <p class="font-semibold text-primary">Cantidad</p>
+            <p>{{ selectedProduct.quantity ?? 0 }}</p>
+          </div>
+          <div>
+            <p class="font-semibold text-primary">Unidad de Medida</p>
+            <p>
+              {{ selectedProduct.unitOfMeasureName }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   }
 
   <ng-template pTemplate="footer">
-    <p-button label="Cerrar" severity="secondary" (click)="isDetailsDialogVisible = false"></p-button>
+    <p-button
+      label="Cerrar"
+      severity="secondary"
+      (click)="isDetailsDialogVisible = false"
+    ></p-button>
   </ng-template>
 </p-dialog>
 
 <!-- Modal de Plantilla de Productos -->
 <app-products-template
   [visible]="showTemplateModal"
-  (close)="closeTemplateModal()">
+  (close)="closeTemplateModal()"
+>
 </app-products-template>
 
-<!-- Modal de Errores de Importación -->
-<p-dialog header="Errores de Importación" [modal]="true" [(visible)]="showErrorModal"
-  [style]="{ width: '90rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"
-  (onHide)="closeErrorModal()">
+<!-- Modal de Progreso Asíncrono (Importación/Exportación) -->
+<p-dialog
+  [header]="
+    progressOperationType === 'import'
+      ? 'Importando Productos'
+      : 'Exportando Productos'
+  "
+  [modal]="true"
+  [(visible)]="showProgressDialog"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '35rem', 'font-family': 'var(--font-family-sans)' }"
+  (onHide)="onProgressDialogClose()"
+>
+  <div class="flex flex-col font-family-sans">
+    <div class="flex items-center gap-8 text-primary">
+      <i class="pi pi-spin pi-spinner text-2xl"></i>
+      <span class="font-semibold">
+        {{
+          progressOperationType === "import"
+            ? "Procesando importación..."
+            : "Procesando exportación..."
+        }}
+      </span>
+    </div>
 
-  <div class="bg-notification-error-container border-l-4 border-notification-error-border px-15 py-15 mb-15 font-family-sans">
-    <p class="font-bold mb-2 text-notification-error-title">Se encontraron errores en la importación</p>
-    <p class="text-sm text-notification-error-text mb-3">No se pudieron importar algunos productos debido a los siguientes errores presentados en la tabla.</p>
+    <div class="mb-16 mt-16">
+      <div class="text-sm mb-8">
+        {{ progressPhase }}
+      </div>
+
+      <div class="w-full">
+        <p-progressBar
+          [value]="progressValue"
+          [showValue]="true"
+          styleClass="h-6"
+        >
+        </p-progressBar>
+      </div>
+    </div>
+
+    <div class="text-xs mb-16">
+      <p>Este proceso puede tomar varios minutos dependiendo del tamaño.</p>
+      <p class="mt-2 font-semibold text-primary">
+        Puedes cerrar esta ventana, se te notificará cuando termine.
+      </p>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Modal de Errores de Importación -->
+<p-dialog
+  header="Errores de Importación"
+  [modal]="true"
+  [(visible)]="showErrorModal"
+  [style]="{ width: '90rem' }"
+  [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }"
+  [maximizable]="true"
+  (onHide)="closeErrorModal()"
+>
+  <div
+    class="bg-notification-error-container border-l-4 border-notification-error-border px-15 py-15 mb-15 font-family-sans"
+  >
+    <p class="font-bold mb-2 text-notification-error-title">
+      Se encontraron errores en la importación
+    </p>
+    <p class="text-sm text-notification-error-text mb-3">
+      No se pudieron importar algunos productos debido a los siguientes errores
+      presentados en la tabla.
+    </p>
 
     <p class="font-bold mb-1 text-notification-error-title">Resumen:</p>
-    <p class="text-sm text-notification-error-text m-0">Total procesados: {{ totalRecordsImported }}</p>
-    <p class="text-sm text-notification-error-text m-0">Exitosos: {{ successfulImports }}</p>
-    <p class="text-sm text-notification-error-text m-0">Fallidos: {{ failedImportsCount }}</p>
-    <p class="text-sm text-notification-error-text m-0">Duplicados omitidos: {{ duplicatesSkipped }}</p>
+    <p class="text-sm text-notification-error-text m-0">
+      Total procesados: {{ totalRecordsImported }}
+    </p>
+    <p class="text-sm text-notification-error-text m-0">
+      Exitosos: {{ successfulImports }}
+    </p>
+    <p class="text-sm text-notification-error-text m-0">
+      Fallidos: {{ failedImportsCount }}
+    </p>
+    <p class="text-sm text-notification-error-text m-0">
+      Duplicados omitidos: {{ duplicatesSkipped }}
+    </p>
   </div>
 
-  <div class="bg-notification-info-container border border-notification-info-border rounded-lg px-15 py-15 mb-15 font-family-sans">
-    <h4 class="font-bold text-base text-notification-info-title mb-2">Información:</h4>
-    <ul class="list-disc list-inside text-sm text-notification-info-text space-y-1">
-      <li>El sistema ingresa todos los registros correctos y solo muestra los que presentaron errores.</li>
-      <li>Los registros duplicados (tanto en el sistema como en el archivo Excel) serán omitidos automáticamente.</li>
-      <li>Cada fila de error indica el número de fila del Excel, la columna, el campo afectado y el error específico.</li>
-      <li>Corrija los errores en su archivo Excel según las indicaciones y vuelva a importar.</li>
+  <div
+    class="bg-notification-info-container border border-notification-info-border rounded-lg px-15 py-15 mb-15 font-family-sans"
+  >
+    <h4 class="font-bold text-base text-notification-info-title mb-2">
+      Información:
+    </h4>
+    <ul
+      class="list-disc list-inside text-sm text-notification-info-text space-y-1"
+    >
+      <li>
+        El sistema ingresa todos los registros correctos y solo muestra los que
+        presentaron errores.
+      </li>
+      <li>
+        Los registros duplicados (tanto en el sistema como en el archivo Excel)
+        serán omitidos automáticamente.
+      </li>
+      <li>
+        Cada fila de error indica el número de fila del Excel, la columna, el
+        campo afectado y el error específico.
+      </li>
+      <li>
+        Corrija los errores en su archivo Excel según las indicaciones y vuelva
+        a importar.
+      </li>
     </ul>
   </div>
 
-  <p-table [value]="importErrors" [paginator]="true" [rows]="10" [totalRecords]="totalErrors"
-    [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} errores"
-    styleClass="p-datatable-sm" [tableStyle]="{'min-width': '70rem'}">
-
+  <p-table
+    [value]="importErrors"
+    [paginator]="true"
+    [rows]="10"
+    [totalRecords]="totalErrors"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} errores"
+    styleClass="p-datatable-sm"
+    [tableStyle]="{ 'min-width': '70rem' }"
+  >
     <ng-template pTemplate="header">
       <tr>
         <th class="w-[8%]">Fila</th>
@@ -327,25 +572,31 @@
     <ng-template pTemplate="body" let-error>
       <tr>
         <td class="font-family-sans text-sm">{{ error.rowNumber }}</td>
-        <td class="font-family-sans text-sm">{{ getExcelColumnLetter(error.columnNumber) }}</td>
-        <td class="font-family-sans text-sm font-semibold">{{ error.columnName }}</td>
-        <td class="font-family-sans text-sm text-neutral-50">{{ error.fieldValue || '(vacío)' }}</td>
-        <td class="font-family-sans text-sm text-error">{{ error.errorMessage }}</td>
+        <td class="font-family-sans text-sm">
+          {{ getExcelColumnLetter(error.columnNumber) }}
+        </td>
+        <td class="font-family-sans text-sm font-semibold">
+          {{ error.columnName }}
+        </td>
+        <td class="font-family-sans text-sm text-neutral-50">
+          {{ error.fieldValue || "(vacío)" }}
+        </td>
+        <td class="font-family-sans text-sm text-error">
+          {{ error.errorMessage }}
+        </td>
       </tr>
     </ng-template>
   </p-table>
 
-<ng-template pTemplate="footer">
-  <div class="flex justify-center gap-3">
-    <p-button
-      label="Exportar Errores"
-      icon="pi pi-download"
-      styleClass="p-button-success"
-      (click)="exportImportErrors()">
-    </p-button>
-  </div>
-</ng-template>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-center gap-3">
+      <p-button
+        label="Exportar Errores"
+        icon="pi pi-download"
+        styleClass="p-button-success"
+        (click)="exportImportErrors()"
+      >
+      </p-button>
+    </div>
+  </ng-template>
 </p-dialog>
-
-<!-- Toast para mensajes -->
-<p-toast></p-toast>

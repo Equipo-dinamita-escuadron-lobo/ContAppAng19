@@ -2,14 +2,14 @@ import { environment } from '../../../../environments/environment';
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient , HttpContext} from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { tap, catchError, map, switchMap, delay } from 'rxjs/operators';
 import { jwtDecode } from 'jwt-decode';
 import { Login } from '../models/login';
 import { UserProfile } from '../models/user-profile';
 import { DecodedToken } from '../models/decoded-token';
-import { Permission } from '../models/permission';
 import { RegisterUser } from '../models/register-user';
+import { MessageService } from 'primeng/api';
 import { BYPASS_AUTH } from '../../Interceptors/http-context';
 
 const keycloakUrl = environment.keycloak_url;
@@ -17,6 +17,7 @@ const keycloakUrlToken = environment.keycloak_url_token;
 
 export interface PayloadToken {
   access_token: string;
+  refresh_token: string;
   refresh_expires_in: number;
   expires_in: number;
 }
@@ -27,6 +28,7 @@ export interface PayloadToken {
 export class AuthService {
   router = inject(Router);
   http = inject(HttpClient);
+  messageService = inject(MessageService);
 
   private bypassAuthContext = new HttpContext().set(BYPASS_AUTH, true);
 
@@ -36,6 +38,7 @@ export class AuthService {
 
   // Señal para saber si se está autenticando
   isAuthenticated = signal<boolean>(this.hasToken());
+  sessionExpiredVisible = signal<boolean>(false);
 
   constructor() {}
 
@@ -45,6 +48,7 @@ export class AuthService {
     if (!token || this.isTokenExpired(token)) {
       console.log('AuthService Init: No valid token found.');
       this.removeToken(); // Asegura la limpieza si el token es inválido
+      this.removeRefreshToken();
       this.isAuthenticated.set(false);
       this._currentUser.next(null);
       // Devuelve un observable que emite null y se completa inmediatamente.
@@ -87,11 +91,15 @@ export class AuthService {
 
   public login(auth: Login) {
     return this.http
-      .post<{ access_token: string }>(`${keycloakUrlToken}`, auth, { 
+      .post<PayloadToken | string>(`${keycloakUrlToken}`, auth, {
         context: this.bypassAuthContext // <-- 3. AÑADIR CONTEXTO
       })
       .pipe(
-        tap((res) => this.saveToken(res.access_token)),
+        map((res) => this.normalizeTokenResponse(res)),
+        tap((res) => {
+          this.saveToken(res.access_token);
+          this.saveRefreshToken(res.refresh_token);
+        }),
         switchMap(() => this.fetchAndSetUser()),
         tap(() => this.isAuthenticated.set(true)),
         tap(() => {
@@ -100,16 +108,39 @@ export class AuthService {
         catchError((error) => {
           console.error('Login failed:', error);
           this.isAuthenticated.set(false);
-          return of(null);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  public refreshAccessToken(): Observable<PayloadToken> {
+    const refreshToken = this.getRefreshToken();
+
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    return this.http
+      .post<PayloadToken | string>(
+        `${keycloakUrlToken}refresh`,
+        { refreshToken },
+        { context: this.bypassAuthContext }
+      )
+      .pipe(
+        map((res) => this.normalizeTokenResponse(res)),
+        tap((res) => {
+          this.saveToken(res.access_token);
+          this.saveRefreshToken(res.refresh_token);
+          this.isAuthenticated.set(true);
         })
       );
   }
 
   public register(user: RegisterUser): Observable<any> {
-    return this.http.post<any>(`${keycloakUrl}register`, user, { 
-      context: this.bypassAuthContext // <-- 3. AÑADIR CONTEXTO
-    }).pipe(
-      tap((createdUser) => console.log('Usuario registrado exitosamente:', createdUser)),
+    return this.http.post<any>(`${keycloakUrl}register`, user).pipe(
+      tap((createdUser) =>
+        console.log('Usuario registrado exitosamente:', createdUser)
+      ),
       catchError((error) => {
         console.error('Error en registro:', error);
         throw error;
@@ -118,27 +149,27 @@ export class AuthService {
   }
 
   public forgotPassword(email: string): Observable<void> {
-    return this.http.post<void>(`${keycloakUrl}forgot-password`, { email }, { 
-      context: this.bypassAuthContext // <-- 3. AÑADIR CONTEXTO
-    }).pipe(
-      tap(() => console.log('Email de recuperación enviado')),
-      catchError((error) => {
-        console.error('Error enviando email de recuperación:', error);
-        throw error;
-      })
-    );
+    return this.http
+      .post<void>(`${keycloakUrlToken}forgot-password`, { email }, { context: this.bypassAuthContext })
+      .pipe(
+        tap(() => console.log('Email de recuperación enviado')),
+        catchError((error) => {
+          console.error('Error enviando email de recuperación:', error);
+          throw error;
+        })
+      );
   }
 
   public resetPassword(token: string, newPassword: string): Observable<void> {
-    return this.http.post<void>(`${keycloakUrl}reset-password`, { token, newPassword }, { 
-      context: this.bypassAuthContext // <-- 3. AÑADIR CONTEXTO
-    }).pipe(
-      tap(() => console.log('Contraseña reseteada exitosamente')),
-      catchError((error) => {
-        console.error('Error reseteando contraseña:', error);
-        throw error;
-      })
-    );
+    return this.http
+      .post<void>(`${keycloakUrl}reset-password`, { token, newPassword })
+      .pipe(
+        tap(() => console.log('Contraseña reseteada exitosamente')),
+        catchError((error) => {
+          console.error('Error reseteando contraseña:', error);
+          throw error;
+        })
+      );
   }
 
   // Obtiene el usuario del backend usando el token actual y actualiza el BehaviorSubject
@@ -155,15 +186,48 @@ export class AuthService {
       })
     );
   }
+  public concatRoles(): string {
+    const user = this._currentUser.value;
+    if (!user || !user.roles) {
+      return '';
+    }
+    return user.roles
+      .filter((role) => !this.isIdpTechnicalRole(role))
+      .map(
+        (role) => role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
+      )
+      .join(', ');
+  }
 
+  private isIdpTechnicalRole(role: string): boolean {
+    const normalizedRole = role.toLowerCase();
+
+    return (
+      normalizedRole === 'offline_access' ||
+      normalizedRole === 'uma_authorization' ||
+      normalizedRole.startsWith('default-roles-')
+    );
+  }
+
+  public returnUserInfo(): UserProfile | null {
+    return this._currentUser.value;
+  }
   // Guarda el token en localStorage
   public saveToken(token: string): void {
     localStorage.setItem('token', token);
   }
 
+  public saveRefreshToken(refreshToken: string): void {
+    localStorage.setItem('refresh_token', refreshToken);
+  }
+
   // Obtiene el token de localStorage
   public getToken(): string | null {
     return localStorage.getItem('token');
+  }
+
+  public getRefreshToken(): string | null {
+    return localStorage.getItem('refresh_token');
   }
 
   // Verifica si existe un token
@@ -195,36 +259,76 @@ export class AuthService {
   // Cierra sesión
   public logout(): Observable<void> {
     const token = this.getToken();
+    const refreshToken = this.getRefreshToken();
     if (!token) {
-      this.removeToken();
-      this._currentUser.next(null);
-      this.isAuthenticated.set(false);
+      this.forceLogout();
       return of(void 0);
     }
 
-    const headers = { Authorization: `Bearer ${token}` };
-    return this.http.post<void>(`${keycloakUrl}token/logout`, {}, { headers }).pipe(
-      tap(() => {
-        this.removeToken();
-        this._currentUser.next(null);
-        this.isAuthenticated.set(false);
-        this.router.navigate(['/login']);
-      }),
-      catchError((error) => {
-        console.error('Error en logout:', error);
-        // Limpia localmente incluso si falla el backend
-        this.removeToken();
-        this._currentUser.next(null);
-        this.isAuthenticated.set(false);
-        this.router.navigate(['/login']);
-        return of(void 0);
-      })
-    );
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    if (refreshToken) {
+      headers['X-Refresh-Token'] = refreshToken;
+    }
+
+    return this.http
+      .post<void>(`${keycloakUrl}token/logout`, {}, { headers })
+      .pipe(
+        tap(() => {
+          this.forceLogout();
+        }),
+        catchError((error) => {
+          console.error('Error en logout:', error);
+          // Limpia localmente incluso si falla el backend
+          this.forceLogout();
+          return of(void 0);
+        })
+      );
+  }
+
+  public forceLogout(): void {
+    this.clearSessionState();
+    this.router.navigate(['/login']);
+  }
+
+  public handleSessionExpired(): void {
+    this.clearSessionState();
+
+    // Evita reabrir multiples modales si llegan varios 401 en cascada.
+    if (!this.sessionExpiredVisible()) {
+      this.sessionExpiredVisible.set(true);
+    }
+  }
+
+  public acknowledgeSessionExpired(): void {
+    this.sessionExpiredVisible.set(false);
+    this.router.navigate(['/login']);
+  }
+
+  private clearSessionState(): void {
+    this.removeToken();
+    this.removeRefreshToken();
+    this._currentUser.next(null);
+    this.isAuthenticated.set(false);
   }
 
   // Remueve el token
   private removeToken(): void {
     localStorage.removeItem('token');
+  }
+
+  private removeRefreshToken(): void {
+    localStorage.removeItem('refresh_token');
+  }
+
+  private normalizeTokenResponse(response: PayloadToken | string): PayloadToken {
+    if (typeof response === 'string') {
+      return JSON.parse(response) as PayloadToken;
+    }
+
+    return response;
   }
 
   // Obtiene los roles actuales del usuario (desde el estado en memoria)
@@ -243,9 +347,44 @@ export class AuthService {
 
     const decodedToken = JSON.parse(atob(token.split('.')[1]));
 
-    const permissions: Permission[] =
-      decodedToken.authorization?.permissions || [];
+    const permissions = decodedToken.authorization?.permissions || [];
 
-    return permissions.map((permission) => permission.rsname);
+    // Flatten: rsname + each scope => "Resource#scope"
+    const flattened: string[] = [];
+
+    for (const p of permissions) {
+      const resource = p.rsname;
+      const scopes: string[] = Array.isArray(p.scopes) ? p.scopes : [];
+
+      for (const s of scopes) {
+        flattened.push(`${resource}#${s}`);
+      }
+    }
+
+    return flattened;
+  }
+  requireAnyPermission(required: string[]): boolean {
+    if (this.isAuthenticated()) {
+      const userPerms = this.getCurrentUserPermissions();
+      const ok = required.some((p) => userPerms.includes(p));
+
+      if (ok) return true;
+
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Acceso denegado',
+        detail: 'No tienes permisos para acceder a esta sección',
+        life: 3000,
+      });
+
+      return false;
+    }
+
+    if (this.sessionExpiredVisible()) {
+      return false;
+    }
+
+    this.router.navigate(['/login']);
+    return false;
   }
 }

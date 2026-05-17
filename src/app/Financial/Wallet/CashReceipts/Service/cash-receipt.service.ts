@@ -12,6 +12,8 @@ import { AccountingEntryResponse, ReceiptCreateRequest, ReceiptResponse, VoidRec
 import { AccountingEntryView, AccountingMovementView, ReceiptView } from '../Model/view';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { Account } from '../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
+import { ReceiptSummaryView } from '../../Reports/Model/Response/PortfolioView';
+import { ApiResponse } from '../../../../Core/Model/apiResponseModel';
 
 @Injectable({
   providedIn: 'root'
@@ -23,12 +25,12 @@ export class CashReceiptService {
   private paymentMethodsCache: PaymentMethod[] = [];
 
   private mockClientsDB: Client[] = [
-    { id: 1, name: 'Julian Ruano Majin' },
-    { id: 2, name: 'Maria Lopez' },
-    { id: 3, name: 'Pedro Gomez' },
-    { id: 4, name: 'Ana Fernandez' },
-    { id: 5, name: 'Julian Piamba' },
-    { id: 6, name: 'Juliana Campo' }
+    { id: 1, name: 'Julian Ruano Majin', identification: '1102345678' },
+    { id: 2, name: 'Maria Lopez', identification: '2202345678' },
+    { id: 3, name: 'Pedro Gomez', identification: '3302345678' },
+    { id: 4, name: 'Ana Fernandez', identification: '4402345678' },
+    { id: 5, name: 'Julian Piamba', identification: '5502345678' },
+    { id: 6, name: 'Juliana Campo', identification: '6602345678' }
   ];
 
   constructor(
@@ -139,12 +141,21 @@ export class CashReceiptService {
    * @returns Un Observable con un array de facturas pendientes.
    */
   getInvoicesByClient(clientId: number): Observable<Invoice[]> {
-    return this.http.get<Invoice[]>(`${this.apiUrl}/pending/client/${clientId}`).pipe(
-      map(invoicesFromApi => {
-        return invoicesFromApi.map(invoice => ({
-          ...invoice,
-          dueDate: new Date(invoice.expirationDate)
-        }));
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    const url = `${this.apiUrl}/invoices/status/by-client/${clientId}/PENDING/${enterpriseId}`;
+    return this.http.get<ApiResponse<Invoice[]>>(url).pipe(
+      map(response => {
+        if (response.code === 'NO_CONTENT') {
+          return [];
+        }
+        if (response.success && response.data) {
+          return response.data.map(invoice => ({
+            ...invoice,
+            dueDate: new Date(invoice.expirationDate)
+          }));
+        } else {
+          throw new Error(response.message || 'Error al obtener las facturas del cliente.');
+        }
       })
     );
   }
@@ -161,27 +172,29 @@ export class CashReceiptService {
       return of([]);
     }
 
-    return this.http.get<ReceiptResponse[]>(`${this.apiUrl}/by-enterprise/${enterpriseId}`).pipe(
-      map(apiReceipts => {
-
-        if (!apiReceipts) 
+    const url = `${this.apiUrl}/by-enterprise/${enterpriseId}`; 
+    return this.http.get<ApiResponse<ReceiptResponse[]>>(url).pipe(
+      map(response => {
+        if (response.code === 'NO_CONTENT' || !response.data) {
           return [];
-
-        // 4. Transformar cada `ReceiptResponse` (de la API) en un `ReceiptView` (para la UI)
-        return apiReceipts.map(receiptFromApi => {
-
-          const client = this.mockClientsDB.find(c => c.id === receiptFromApi.thirdPartyId);
-
-          return {
-            id: receiptFromApi.id,
-            receiptCode: receiptFromApi.receiptCode,
-            issueDate: new Date(receiptFromApi.issueDate),
-            thirdPartyId: receiptFromApi.thirdPartyId,
-            clientName: client ? client.name : `ID: ${receiptFromApi.thirdPartyId}`,
-            status: receiptFromApi.status === 'FINALIZED' ? 'Activo' : 'Anulado',
-            totalAmount: receiptFromApi.totalAmount
-          };
-        });
+        }
+        if (response.success) {
+          // La lógica de transformación a ReceiptView se mantiene
+          return response.data.map(receiptFromApi => {
+            const client = this.mockClientsDB.find(c => c.id === receiptFromApi.thirdPartyId);
+            return {
+              id: receiptFromApi.id,
+              receiptCode: receiptFromApi.receiptCode,
+              issueDate: new Date(receiptFromApi.issueDate),
+              thirdPartyId: receiptFromApi.thirdPartyId,
+              clientName: client ? client.name : `ID: ${receiptFromApi.thirdPartyId}`,
+              status: receiptFromApi.status === 'FINALIZED' ? 'Activo' : 'Anulado',
+              totalAmount: receiptFromApi.totalAmount
+            };
+          });
+        } else {
+          throw new Error(response.message || 'Error al obtener los recibos de la empresa.');
+        }
       })
     );
   }
@@ -192,18 +205,21 @@ export class CashReceiptService {
    * @returns Un Observable con el recibo encontrado o undefined.
    */
   getReceiptById(id: number): Observable<ReceiptDetailsView | undefined> {
-    return this.http.get<ReceiptResponse>(`${this.apiUrl}/${id}`).pipe(
-      switchMap(receiptFromApi => {
-        if (!receiptFromApi) {
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.get<ApiResponse<ReceiptResponse>>(url).pipe(
+      switchMap(response => {
+        if (!response.success || !response.data) {
           return of(undefined);
         }
+
+        const receiptFromApi = response.data;
         return forkJoin({
           receipt: of(receiptFromApi),
           client: this.getClientById(receiptFromApi.thirdPartyId),
           paymentMethod: this.getPaymentMethods().pipe(
             map(methods => methods.find(m => m.id === receiptFromApi.paymentMethodId))
           ),
-          auxiliaryAccounts: this.getAuxiliaryAccounts() // Obtenemos las cuentas para buscar el nombre
+          auxiliaryAccounts: this.getAuxiliaryAccounts()
         });
       }),
       map(result => {
@@ -213,7 +229,6 @@ export class CashReceiptService {
 
         const { receipt, client, paymentMethod, auxiliaryAccounts } = result;
 
-        // 1. Construimos el objeto base 'ReceiptDetailView'
         const receiptDetailsView: ReceiptDetailsView = {
           id: receipt.id,
           receiptCode: receipt.receiptCode,
@@ -235,7 +250,6 @@ export class CashReceiptService {
           ledgerAccountId: receipt.ledgerAccountId,
         };
 
-        // 2. Generamos el asiento contable y lo adjuntamos
         receiptDetailsView.accountingEntry = this.generateAccountingEntry(receiptDetailsView, auxiliaryAccounts);
 
         return receiptDetailsView;
@@ -244,12 +258,30 @@ export class CashReceiptService {
   }
 
   createReceipt(receiptData: ReceiptCreateRequest): Observable<ReceiptResponse> {
-    return this.http.post<ReceiptResponse>(`${this.apiUrl}/`, receiptData);
+    const url = `${this.apiUrl}/`; 
+    return this.http.post<ApiResponse<ReceiptResponse>>(url, receiptData).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          return response.data;
+        } else {
+          throw new Error(response.message || 'Error al crear el recibo.');
+        }
+      })
+    );
   }
 
   voidReceipt(receiptId: number, reason: string): Observable<ReceiptResponse> {
     const requestBody: VoidReceiptRequest = { reason };
-    return this.http.put<ReceiptResponse>(`${this.apiUrl}/${receiptId}/void`, requestBody);
+    const url = `${this.apiUrl}/${receiptId}/void`; 
+    return this.http.put<ApiResponse<ReceiptResponse>>(url, requestBody).pipe(
+      map(response => {
+        if (response.success && response.data) {
+          return response.data;
+        } else {
+          throw new Error(response.message || 'Error al anular el recibo.');
+        }
+      })
+    );
   }
 
   public generateAccountingEntry(receipt: ReceiptDetailsView, auxAccounts: DropdownOption[]): AccountingEntryLine[] {
@@ -296,14 +328,24 @@ export class CashReceiptService {
     if (receipt.status === 'Anulado') {
       const reversedEntry = entry.map(line => ({
         ...line,
-        debit: line.credit,
-        credit: line.debit,
+        debit: line.debit,
+        credit: line.credit,
         description: `Anulación: ${line.description}`
       }));
       return reversedEntry;
     }
 
     return entry;
+  }
+
+  getReceiptsByInvoice(invoiceId: number): Observable<ReceiptSummaryView[]> {
+    const url = `${environment.API_URL}accountCatalogue/portfolio/receipts/by-invoice/${invoiceId}`;
+
+    return this.http
+      .get<ApiResponse<ReceiptSummaryView[]>>(url)
+      .pipe(
+        map(response => response.data)
+      );
   }
 
 }

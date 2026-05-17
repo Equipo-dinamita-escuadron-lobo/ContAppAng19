@@ -89,6 +89,31 @@
           placeholder="Mínimo 8 caracteres"
           class="w-full"
         />
+
+        <ul
+          *ngIf="shouldShowPasswordChecklist()"
+          class="password-checklist mt-3"
+        >
+          <li [class.valid]="hasMinLength()" [class.invalid]="!hasMinLength()">
+            Mínimo 8 caracteres
+          </li>
+          <li [class.valid]="hasMaxLength()" [class.invalid]="!hasMaxLength()">
+            Máximo 20 caracteres
+          </li>
+          <li [class.valid]="hasUppercase()" [class.invalid]="!hasUppercase()">
+            Al menos una mayúscula
+          </li>
+          <li [class.valid]="hasLowercase()" [class.invalid]="!hasLowercase()">
+            Al menos una minúscula
+          </li>
+          <li [class.valid]="hasNumber()" [class.invalid]="!hasNumber()">
+            Al menos un número
+          </li>
+          <li [class.valid]="hasSpecialChar()" [class.invalid]="!hasSpecialChar()">
+            Al menos un carácter especial (&#64;$!%*#?&)
+          </li>
+        </ul>
+
         <p-message
           severity="error"
           *ngIf="
@@ -96,6 +121,30 @@
             registerForm.get('password')?.hasError('required')
           "
           text="La contraseña es requerida"
+        ></p-message>
+        <p-message
+          severity="error"
+          *ngIf="
+            registerForm.get('password')?.touched &&
+            registerForm.get('password')?.hasError('minlength')
+          "
+          text="La contraseña debe tener al menos 8 caracteres"
+        ></p-message>
+        <p-message
+          severity="error"
+          *ngIf="
+            registerForm.get('password')?.touched &&
+            registerForm.get('password')?.hasError('maxlength')
+          "
+          text="La contraseña no puede superar los 20 caracteres"
+        ></p-message>
+        <p-message
+          severity="error"
+          *ngIf="
+            registerForm.get('password')?.touched &&
+            registerForm.get('password')?.hasError('weakPassword')
+          "
+          text="La contraseña aún no cumple todos los requisitos"
         ></p-message>
       </div>
 
@@ -133,7 +182,8 @@
         <p-button
           type="submit"
           label="Registrarse"
-          [disabled]="registerForm.invalid"
+          [disabled]="registerForm.invalid || isLoading"
+          [loading]="isLoading"
         >
         </p-button>
       </div>

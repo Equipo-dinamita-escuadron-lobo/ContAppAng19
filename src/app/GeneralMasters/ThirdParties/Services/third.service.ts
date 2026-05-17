@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { Third } from '../models/Third';
@@ -271,6 +271,23 @@ export class ThirdService {
   }
 
   /**
+   * Obtiene una lista de terceros filtrados por tipo con paginación inteligente
+   * @param entId ID de la empresa
+   * @param thirdTypeName Nombre del tipo de tercero (case insensitive)
+   * @returns Observable con la respuesta paginada de terceros filtrados por tipo
+   */
+  getThirdsByType(entId: string, thirdTypeName: string): Observable<PageResponse<Third>> {
+    let params = new HttpParams()
+      .set('entId', entId)
+      .set('thirdTypeName', thirdTypeName)
+    return this.http.get<PageResponse<Third>>(this.thirdApiUrl + 'by-type', { params }).pipe(
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Cambia el estado de todos los terceros de una empresa de forma masiva
    * @param entId ID de la empresa
    * @param newState Nuevo estado para todos los terceros
@@ -283,6 +300,107 @@ export class ThirdService {
 
     return this.http.patch<any>(`${this.thirdApiUrl}allState`, null, { params }).pipe(
       catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Inicia una importación asíncrona de terceros desde un archivo Excel.
+   * @param entId - El ID de la entidad.
+   * @param file - El archivo Excel a importar.
+   * @returns Un observable con el jobId para hacer seguimiento de la importación.
+   */
+  importThirdsAsync(entId: string, file: File): Observable<{ jobId: string; message: string; statusUrl: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    let params = new HttpParams().set('entId', entId);
+
+    return this.http.post<{ jobId: string; message: string; statusUrl: string }>(
+      `${this.thirdApiUrl}import/excel`,
+      formData,
+      { params }
+    ).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene el estado de una importación asíncrona.
+   * @param jobId - El ID del trabajo de importación.
+   * @returns Un observable con el estado de la importación.
+   */
+  getImportStatus(jobId: string): Observable<any> {
+    return this.http.get(`${this.thirdApiUrl}import/status/${jobId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Inicia una exportación asíncrona de terceros.
+   * @param entId - El ID de la entidad.
+   * @param companyName - Nombre opcional de la empresa para el archivo.
+   * @param status - Estado del filtro (true=activos, false=inactivos, null=todos).
+   * @param optionalFields - Campos opcionales a incluir en la exportación.
+   * @returns Un observable con el jobId para hacer seguimiento de la exportación.
+   */
+  exportThirdsAsync(entId: string, companyName?: string, status?: boolean | null, optionalFields?: string[]): Observable<{ jobId: string; message: string; downloadUrl: string }> {
+    let params = new HttpParams().set('entId', entId);
+
+    if (status !== null && status !== undefined) {
+      params = params.set('status', status.toString());
+    }
+
+    if (companyName && companyName.trim()) {
+      params = params.set('companyName', companyName.trim());
+    }
+
+    // Agregar los campos opcionales si existen
+    if (optionalFields && optionalFields.length > 0) {
+      optionalFields.forEach(field => {
+        params = params.append('optionalFields', field);
+      });
+    }
+
+    return this.http.get<{ jobId: string; message: string; downloadUrl: string }>(
+      `${this.thirdApiUrl}export/excel`,
+      { params }
+    ).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene el estado de una exportación asíncrona.
+   * @param jobId - El ID del trabajo de exportación.
+   * @returns Un observable con el estado de la exportación.
+   */
+  getExportStatus(jobId: string): Observable<any> {
+    return this.http.get(`${this.thirdApiUrl}export/status/${jobId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Descarga el archivo generado de una exportación completada.
+   * @param jobId - El ID del trabajo de exportación.
+   * @returns Un observable con la respuesta HTTP que contiene el blob del archivo.
+   */
+  downloadExportFile(jobId: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.thirdApiUrl}export/download/${jobId}`, {
+      responseType: 'blob',
+      observe: 'response'
+    }).pipe(
+      catchError((error: HttpErrorResponse) => {
         return throwError(() => error);
       })
     );

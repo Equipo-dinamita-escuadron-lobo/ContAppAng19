@@ -6,12 +6,12 @@
     <div>
       <div class="flex items-center gap-3 mb-3">
         <span
-          class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
+          class="material-symbols-outlined text-primary text-3xl md:text-4xl"
         >
           {{ auxiliaryBookInfo.icon }}
         </span>
         <h1
-          class="text-xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
         >
           {{ auxiliaryBookInfo.name }}
         </h1>
@@ -34,15 +34,15 @@
   </div>
 
   <!-- Filtros -->
-  <h3 class="text-sm font-semibold text-[var(--color-primary)] mb-3">
+  <h3 class="text-sm font-semibold text-primary mb-3">
     Criterios para la Generación:
   </h3>
   <div class="p-4 bg-white rounded-lg shadow-sm">
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
       <!-- 1. Nivel -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Nivel <span class="text-[var(--color-secondary)]"> *</span>
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Nivel <span class="text-error"> *</span>
         </h4>
         <div class="grid grid-cols-2 gap-2">
           <div class="flex items-center gap-2" *ngFor="let level of levels">
@@ -62,7 +62,7 @@
 
       <!-- 2. Rango -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+        <h4 class="text-xs font-bold text-primary mb-2">
           <p-checkbox
             [(ngModel)]="isRangeOptionSelected"
             [binary]="true"
@@ -100,8 +100,8 @@
 
       <!-- 3. Periodo (sin línea a la derecha) -->
       <div class="col-span-1">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Periodo <span class="text-[var(--color-secondary)]"> *</span>
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Periodo <span class="text-error"> *</span>
         </h4>
         <p-datepicker
           [(ngModel)]="datePeriod"
@@ -151,9 +151,7 @@
             Saldo Inicial
           </th>
           <th class="text-center" pResizableColumn colspan="2">Movimiento</th>
-          <th class="text-center" pResizableColumn colspan="2" rowspan="2">
-            Nuevo Saldo
-          </th>
+          <th class="text-center" pResizableColumn rowspan="2">Nuevo Saldo</th>
         </tr>
         <tr>
           <th class="text-center">Código</th>
@@ -163,19 +161,45 @@
         </tr>
       </ng-template>
 
-      <!-- Body -->
       <ng-template pTemplate="body" let-row>
         <tr>
-          <td>{{ row.date }}</td>
-          <td>{{ row.accountCode }}</td>
-          <td>{{ row.accountDescription }}</td>
-          <td>{{ row.voucherCode }}</td>
-          <td>{{ row.voucherName }}</td>
-          <td [ngClass]="{ 'text-red-500': row.debit < 0 }">
-            {{ row.debit | currency : "COP $" : "symbol" : "1.0-0" }}
+          <td>{{ row.account.accountCode }}</td>
+          <td>{{ row.account.accountDescription }}</td>
+
+          <!-- ✅ SALDO INICIAL: Pasamos 'row.account.nature' para validar anomalias -->
+          <td colspan="2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(row.initialBalance, row.account.nature)
+              "
+            ></div>
           </td>
-          <td [ngClass]="{ 'text-red-500': row.credit < 0 }">
-            {{ row.credit | currency : "COP $" : "symbol" : "1.0-0" }}
+
+          <!-- ✅ MOVIMIENTO DÉBITO: No pasamos naturaleza, solo marca rojo si es negativo -->
+          <td>
+            <div
+              class="money-cell"
+              [innerHTML]="formatMoneyAligned(row.debitMovement)"
+            ></div>
+          </td>
+
+          <!-- ✅ MOVIMIENTO CRÉDITO: No pasamos naturaleza, solo marca rojo si es negativo -->
+          <td>
+            <div
+              class="money-cell"
+              [innerHTML]="formatMoneyAligned(row.creditMovement)"
+            ></div>
+          </td>
+
+          <!-- ✅ SALDO FINAL: Pasamos 'row.account.nature' para validar anomalias -->
+          <td>
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(row.finalBalance, row.account.nature)
+              "
+            ></div>
           </td>
         </tr>
       </ng-template>

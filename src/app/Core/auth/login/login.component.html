@@ -64,7 +64,8 @@
         <p-button
           type="submit"
           label="Iniciar sesión"
-          [disabled]="loginForm.invalid"
+          [loading]="isLoading"
+          [disabled]="isLoading"
         >
         </p-button>
       </div>

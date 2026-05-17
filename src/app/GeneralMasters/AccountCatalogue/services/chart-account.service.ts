@@ -410,22 +410,96 @@ export class ChartAccountService {
   }
 
   /**
-   * Importa cuentas desde un archivo Excel.
+   * Inicia una importación asíncrona de cuentas desde un archivo Excel.
    *
    * @param entId - El ID de la entidad.
    * @param file - El archivo Excel a importar.
-   * @returns Un observable con la respuesta de la importación.
+   * @returns Un observable con el jobId para hacer seguimiento de la importación.
    */
-  importAccounts(entId: string, file: File): Observable<any> {
+  importAccountsAsync(entId: string, file: File): Observable<{ jobId: string; message: string; statusEndpoint: string }> {
     const formData = new FormData();
     formData.append('entId', entId);
     formData.append('file', file);
 
-    return this.http.post(`${this.apiURL}import/excel`, formData, {
+    return this.http.post<{ jobId: string; message: string; statusEndpoint: string }>(
+      `${this.apiURL}import/excel`, 
+      formData
+    ).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene el estado de una importación asíncrona.
+   *
+   * @param jobId - El ID del trabajo de importación.
+   * @returns Un observable con el estado de la importación.
+   */
+  getImportStatus(jobId: string): Observable<any> {
+    return this.http.get(`${this.apiURL}import/status/${jobId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Inicia una exportación asíncrona del catálogo de cuentas.
+   *
+   * @param entId - El ID de la entidad.
+   * @param companyName - Nombre opcional de la empresa para el archivo.
+   * @param status - Estado del filtro (true=activos, false=inactivos, undefined=todos).
+   * @returns Un observable con el jobId para hacer seguimiento de la exportación.
+   */
+  exportAccountsAsync(entId: string, companyName?: string, status?: boolean): Observable<{ jobId: string; message: string; statusEndpoint: string }> {
+    const params = new URLSearchParams();
+    params.set('entId', entId);
+
+    if (status !== undefined && status !== null) {
+      params.set('status', status.toString());
+    }
+
+    if (companyName && companyName.trim()) {
+      params.set('companyName', companyName.trim());
+    }
+
+    const url = `${this.apiURL}export/excel?${params.toString()}`;
+
+    return this.http.get<{ jobId: string; message: string; statusEndpoint: string }>(url).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene el estado de una exportación asíncrona.
+   *
+   * @param jobId - El ID del trabajo de exportación.
+   * @returns Un observable con el estado de la exportación.
+   */
+  getExportStatus(jobId: string): Observable<any> {
+    return this.http.get(`${this.apiURL}export/status/${jobId}`).pipe(
+      catchError((error: HttpErrorResponse) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Descarga el archivo generado de una exportación completada.
+   *
+   * @param jobId - El ID del trabajo de exportación.
+   * @returns Un observable con la respuesta HTTP que contiene el blob del archivo.
+   */
+  downloadExportFile(jobId: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiURL}export/download/${jobId}`, {
+      responseType: 'blob',
       observe: 'response'
     }).pipe(
       catchError((error: HttpErrorResponse) => {
-        // Re-lanzar el error para que el componente lo maneje
         return throwError(() => error);
       })
     );
