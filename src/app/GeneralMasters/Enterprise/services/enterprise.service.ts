@@ -151,10 +151,26 @@ export class EnterpriseService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<{ url: string }>(`${this.apiUrl}upload/logo`, formData);
-
-
   }
 
+  extractEnterprisePdf(file: File): Observable<{ content: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ content: string }>(`${this.apiUrl}content-PDF-RUT`, formData);
+  }
 
+  /** ==================== RUT DATA (PDF pre-fill) ==================== */
+  private rutData: string | null = null;
 
+  setRutData(data: string): void {
+    this.rutData = data;
+  }
+
+  getRutData(): string | null {
+    return this.rutData;
+  }
+
+  clearRutData(): void {
+    this.rutData = null;
+  }
 }

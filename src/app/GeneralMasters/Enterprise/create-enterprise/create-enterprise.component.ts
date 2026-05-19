@@ -100,6 +100,10 @@ export class CreateEnterpriseComponent implements OnInit {
   previousCountryId: number | string | null = null;
   previousDepartmentId: number | string | null = null;
 
+  private pendingRutCountryName = '';
+  private pendingRutDeptName = '';
+  private pendingRutCityName = '';
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -112,6 +116,7 @@ export class CreateEnterpriseComponent implements OnInit {
   // Inicialización del componente
   ngOnInit(): void {
     this.initForm();
+    this.checkForRUTData();
     this.loadCountries();
     this.loadSubjects();
   }
@@ -164,6 +169,86 @@ export class CreateEnterpriseComponent implements OnInit {
     this.enterpriseForm.get('legalName')?.updateValueAndValidity();
     this.enterpriseForm.get('ownerName')?.updateValueAndValidity();
     this.enterpriseForm.get('lastNames')?.updateValueAndValidity();
+  }
+
+  private checkForRUTData(): void {
+    const raw = this.enterpriseService.getRutData();
+    if (!raw) return;
+    this.enterpriseService.clearRutData();
+
+    const fields = raw.split(';');
+    if (fields.length < 12) return;
+
+    const typePerson = fields[0]?.toLowerCase() || '';
+    const isNatural = typePerson.includes('natural');
+
+    this.personType = isNatural ? 'natural' : 'juridica';
+    this.updateFormValidations();
+
+    const nitRaw = fields[2]?.replace(/[^0-9]/g, '') || '';
+    const patches: any = {
+      nit: nitRaw,
+      email: fields[10]?.trim() || '',
+      phone: fields[11]?.replace(/[^0-9]/g, '') || '',
+      address: fields[9]?.trim() || '',
+    };
+
+    if (isNatural) {
+      patches.ownerName = fields[5]?.trim() || '';
+      patches.lastNames = fields[4]?.trim() || '';
+      patches.name = `${fields[5]?.trim() || ''} ${fields[4]?.trim() || ''}`.trim();
+    } else {
+      patches.legalName = fields[3]?.trim() || '';
+      patches.name = fields[3]?.trim() || '';
+    }
+
+    this.enterpriseForm.patchValue(patches);
+
+    this.pendingRutCountryName = fields[6]?.trim() || '';
+    this.pendingRutDeptName = fields[7]?.trim() || '';
+    this.pendingRutCityName = fields[8]?.trim() || '';
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'PDF procesado',
+      detail: 'Los datos del RUT han sido cargados en el formulario.',
+    });
+  }
+
+  private applyPendingRutCountry(): void {
+    if (!this.pendingRutCountryName || !this.countries.length) return;
+    const name = this.pendingRutCountryName.toLowerCase();
+    const match = this.countries.find((c: any) =>
+      (c.name ?? '').toLowerCase().includes(name) || name.includes((c.name ?? '').toLowerCase()),
+    );
+    if (match) {
+      this.pendingRutCountryName = '';
+      this.enterpriseForm.get('country')?.setValue(match.id);
+    }
+  }
+
+  private applyPendingRutDept(): void {
+    if (!this.pendingRutDeptName || !this.filteredDepartments.length) return;
+    const name = this.pendingRutDeptName.toLowerCase();
+    const match = this.filteredDepartments.find((d: any) =>
+      (d.name ?? '').toLowerCase().includes(name) || name.includes((d.name ?? '').toLowerCase()),
+    );
+    if (match) {
+      this.pendingRutDeptName = '';
+      setTimeout(() => { this.enterpriseForm.get('department')?.setValue(match.id); });
+    }
+  }
+
+  private applyPendingRutCity(): void {
+    if (!this.pendingRutCityName || !this.filteredCities.length) return;
+    const name = this.pendingRutCityName.toLowerCase();
+    const match = this.filteredCities.find((c: any) =>
+      (c.name ?? '').toLowerCase().includes(name) || name.includes((c.name ?? '').toLowerCase()),
+    );
+    if (match) {
+      this.pendingRutCityName = '';
+      setTimeout(() => { this.enterpriseForm.get('city')?.setValue(match.id); });
+    }
   }
 
   // Manejo del cambio de tipo de persona
@@ -436,6 +521,7 @@ export class CreateEnterpriseComponent implements OnInit {
         this.previousCountryId = null;
         this.previousDepartmentId = null;
         this.initLocationFilters();
+        this.applyPendingRutCountry();
       },
       error: (err) => {
         console.error('Error loading countries:', err);
@@ -541,6 +627,7 @@ export class CreateEnterpriseComponent implements OnInit {
         } else if (this.previousCountryId === null) {
           this.previousCountryId = countryCode;
         }
+        this.applyPendingRutDept();
       },
       error: (err) => {
         console.error('Error loading departments:', err);
@@ -574,6 +661,7 @@ export class CreateEnterpriseComponent implements OnInit {
         } else if (this.previousDepartmentId === null) {
           this.previousDepartmentId = departmentCode;
         }
+        this.applyPendingRutCity();
       },
       error: (err) => {
         console.error('Error loading cities:', err);

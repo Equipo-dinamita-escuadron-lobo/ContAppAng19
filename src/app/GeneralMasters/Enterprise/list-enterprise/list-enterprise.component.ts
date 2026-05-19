@@ -9,9 +9,6 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-
 import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseList } from '../models/EnterpriseList';
 import { HeaderComponent } from '../../../Core/Components/Header/header.component';
@@ -95,7 +92,6 @@ export class ListEnterpriseComponent implements OnInit {
   constructor(
     private enterpriseService: EnterpriseService,
     private router: Router,
-    private http: HttpClient,
     private messageService: MessageService,
   ) {}
 
@@ -265,18 +261,21 @@ export class ListEnterpriseComponent implements OnInit {
   createEnterpriseFromPdf(): void {
     if (!this.selectedPdfFile) return;
 
-    const formData = new FormData();
-    formData.append('pdf', this.selectedPdfFile);
-
-    this.http
-      .post(`${environment.API_URL}enterprises/create-from-pdf`, formData)
-      .subscribe({
-        next: () => {
-          this.closePdfModal();
-          this.getEnterprises();
-        },
-        error: (err) => console.error('Error al crear empresa desde PDF:', err),
-      });
+    this.enterpriseService.extractEnterprisePdf(this.selectedPdfFile).subscribe({
+      next: (res) => {
+        this.enterpriseService.setRutData(res.content);
+        this.closePdfModal();
+        this.router.navigate(['/enterprise/create']);
+      },
+      error: (err) => {
+        console.error('Error al procesar PDF:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo procesar el PDF. Verifica que sea un RUT válido.',
+        });
+      },
+    });
   }
 
   /* ==================== ACCIONES ==================== */
