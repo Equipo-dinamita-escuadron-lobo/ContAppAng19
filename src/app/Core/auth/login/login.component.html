@@ -1,77 +1,85 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ContApp - Inicio de Sesión</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ContaApp - Inicio de Sesión</title>
-</head>
+  <body class="login-page">
+    <!-- Encabezado: Logo y título -->
+    <div class="login-header">
+      <img src="logo_unicauca.png" alt="Logo Unicauca" class="logo" />
+      <div class="header-divider"></div>
+      <span class="app-title">ContApp</span>
+    </div>
 
-<body class="login-page">
-
-  <!-- Encabezado: Logo y título -->
-  <div class="login-header">
-    <img src="logo_unicauca.png" alt="Logo Unicauca" class="logo" />
-    <div class="header-divider"></div>
-    <span class="app-title">ContaApp</span>
-  </div>
-
-  <!-- Contenido principal -->
-  <div class="main-content">
-    <!-- Formulario: ocupa la mitad izquierda -->
-    <div class="login-form-container">
-      <div class="login-form">
-        <h2 class="login-title">Inicio de sesión</h2>
-        <form [formGroup]="loginForm" (submit)="onSubmit()" class="form">
-          <!-- Correo institucional -->
-          <div class="form-group">
-            <label for="username" class="loginfields">
-              Correo institucional <span class="required">*</span>
-            </label>
-            <div class="input-container">
-              <input type="text" id="username" placeholder="usuario@unicauca.edu.co" required
-                formControlName="username" />
-              <span class="input-icon pi pi-envelope"></span>
+    <!-- Contenido principal -->
+    <div class="main-content">
+      <!-- Formulario: ocupa la mitad izquierda -->
+      <div class="login-form-container">
+        <div class="login-form">
+          <h2 class="login-title">Inicio de sesión</h2>
+          <form [formGroup]="loginForm" (submit)="onSubmit()" class="form">
+            <!-- Correo institucional -->
+            <div class="form-group">
+              <label for="username" class="loginfields">
+                Correo institucional <span class="required">*</span>
+              </label>
+              <div class="input-container">
+                <input
+                  type="text"
+                  id="username"
+                  placeholder="usuario@unicauca.edu.co"
+                  required
+                  formControlName="username"
+                />
+                <span class="input-icon pi pi-envelope"></span>
+              </div>
             </div>
-          </div>
-          <!-- Contraseña -->
-          <div class="form-group">
-            <label for="password" class="loginfields">
-              Contraseña <span class="required">*</span>
-            </label>
-            <div class="input-container">
-              <input type="password" id="password" placeholder="**********" required formControlName="password" />
-              <span class="input-icon pi pi-eye"></span>
+            <!-- Contraseña -->
+            <div class="form-group">
+              <label for="password" class="loginfields">
+                Contraseña <span class="required">*</span>
+              </label>
+              <div class="input-container">
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="**********"
+                  required
+                  formControlName="password"
+                />
+                <span class="input-icon pi pi-eye"></span>
+              </div>
             </div>
-          </div>
-          <!-- Botón ingresar -->
-          <div class="form-submit">
-            <button type="submit" [disabled]="loginForm.invalid">
-              Iniciar sesión
-            </button>
-          </div>
-          <div class="forgot-password-text">
-            <a routerLink="/forgot-password" class="forgot-password-link">
-              ¿Olvidaste tu contraseña?
-            </a>
-          </div>
-          <div class="new-user-text">
-            ¿Eres un usuario nuevo?
-            <a routerLink="/register" class="register-link">
-              <span>Click aqui para registrarte</span>
-            </a>
-          </div>
-        </form>
+            <!-- Botón ingresar -->
+            <div class="form-submit">
+              <button type="submit" [disabled]="loginForm.invalid">
+                Iniciar sesión
+              </button>
+            </div>
+            <div class="forgot-password-text">
+              <a routerLink="/forgot-password" class="forgot-password-link">
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
+            <div class="new-user-text">
+              ¿Eres un usuario nuevo?
+              <a routerLink="/register" class="register-link">
+                <span>Click aqui para registrarte</span>
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- Imagen derecha: ocupa la mitad derecha -->
+      <div class="login-image">
+        <img src="unicauca-economia.jpg" alt="Edificio Unicauca" />
       </div>
     </div>
-    <!-- Imagen derecha: ocupa la mitad derecha -->
-    <div class="login-image">
-      <img src="unicauca-economia.jpg" alt="Edificio Unicauca" />
-    </div>
-  </div>
 
-  <!-- Footer público -->
-  <app-public-footer></app-public-footer>
-</body>
-
+    <!-- Footer público -->
+    <app-public-footer></app-public-footer>
+  </body>
 </html>

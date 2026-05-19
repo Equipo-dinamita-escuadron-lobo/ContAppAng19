@@ -18,11 +18,24 @@ type ScheduledReportFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 type ScheduledReportDeliveryWay = 'DOWNLOAD' | 'EMAIL';
 
 export interface ScheduledReportEmailConfig {
-  email: string;
+  to: string;
+  subjectTemplate?: string | null;
+  bodyTemplate?: string | null;
+}
+
+export interface ScheduledReportInfoTemplate {
+  id: number;
+  name: string;
+  pathLogotype: string;
+  alienation: 'LEFT' | 'CENTER' | 'RIGHT';
+  font: string;
+  fontSize: number;
+  mainColor: string;
 }
 
 export interface ScheduledReportUpsertRequest {
   entId: string;
+  entName?: string | null;
   userId: number;
   bookType: AuxiliaryBookType;
   criteria: Criteria;
@@ -32,6 +45,8 @@ export interface ScheduledReportUpsertRequest {
   createdBy?: string | null;
   deliveryWay: ScheduledReportDeliveryWay;
   emailConfig?: ScheduledReportEmailConfig | null;
+  reportFormat?: 'EXCEL' | 'PDF';
+  infoReportTemplate?: ScheduledReportInfoTemplate | null;
 }
 
 export type CreateScheduledReportRequest = ScheduledReportUpsertRequest;

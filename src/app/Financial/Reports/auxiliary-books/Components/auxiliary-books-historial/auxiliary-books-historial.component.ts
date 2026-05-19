@@ -244,11 +244,15 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
 
   showSchedulingDialog(item: any) {
     this.selectedHistoryItem = item;
+    const enterpriseData = this.enterpriseService.getSelectedEnterprise();
 
     this.refDialog = this.dialogService.open(
       AuxiliaryBooksSchedulingComponent,
       {
-        data: this.selectedHistoryItem,
+        data: {
+          ...this.selectedHistoryItem,
+          enterpriseData,
+        },
         modal: true,
         width: '72rem',
         breakpoints: {

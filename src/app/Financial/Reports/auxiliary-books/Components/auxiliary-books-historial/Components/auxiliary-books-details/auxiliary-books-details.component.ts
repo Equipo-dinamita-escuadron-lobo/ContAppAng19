@@ -10,6 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { AuxiliaryBooksServiceService } from '../../../../Services/auxiliary-books-service.service';
 import { AuxiliaryBooksSchedulingComponent } from '../../../auxiliary-books-scheduling/auxiliary-books-scheduling.component';
+import { EnterpriseService } from '../../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 
 @Component({
   selector: 'app-auxiliary-books-details',
@@ -28,7 +29,8 @@ export class AuxiliaryBooksDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private auxiliaryBookService: AuxiliaryBooksServiceService,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private enterpriseService: EnterpriseService,
   ) {}
 
   ngOnInit(): void {
@@ -165,9 +167,12 @@ export class AuxiliaryBooksDetailsComponent implements OnInit {
     return {
       publicId: this.bookDetails?.publicId ?? '',
       bookName: this.bookDetails?.type ?? 'Libro Auxiliar General',
+      type: this.bookDetails?.type ?? null,
+      criteria: this.bookDetails?.criteria ?? null,
       generationDate: this.bookDetails?.createdAt ?? null,
       user: this.bookDetails?.userId ?? 'Sistema',
       status: this.getLastLogStatus(),
+      enterpriseData: this.enterpriseService.getSelectedEnterprise(),
     };
   }
 }

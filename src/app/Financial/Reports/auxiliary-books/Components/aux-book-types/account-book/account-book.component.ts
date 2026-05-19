@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, ViewChild, ViewEncapsulation } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -10,7 +10,8 @@ import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SplitButtonModule } from 'primeng/splitbutton';
-import { TableModule } from 'primeng/table';
+import { Table, TableModule } from 'primeng/table';
+import { PopoverModule } from 'primeng/popover';
 
 // Models
 import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
@@ -40,6 +41,7 @@ import { DialogService } from 'primeng/dynamicdialog';
     MultiSelectModule,
     DatePickerModule,
     TableModule,
+    PopoverModule,
   ],
   providers: [DatePipe, DialogService],
   templateUrl: './account-book.component.html',
@@ -47,8 +49,10 @@ import { DialogService } from 'primeng/dynamicdialog';
   encapsulation: ViewEncapsulation.None,
 })
 export class AccountBookComponent extends BaseAuxiliaryBookComponent {
-  thirdSelectedInFilter: any | null = null;
-  thirdsOptions: any[] = [];
+  @ViewChild('dt') dt!: Table;
+
+  thirdsOptions: { id: string; label: string }[] = [];
+  selectedThirdsFilter: string[] = [];
 
   override request: GenerateAuxiliaryBookRequest = {
     entId: '',
@@ -147,23 +151,62 @@ export class AccountBookComponent extends BaseAuxiliaryBookComponent {
     //TO DO: Change the value of start date to enterprise creation date when the enterprise had this attribute
     //this.criteria.startDate = this.enterpriseData.creationDate;
 
-    this.criteria.startDate = this.datePipe.transform(
+    const formattedStartDate = this.datePipe.transform(
       new Date('01/01/2025'),
       'yyyy-MM-dd',
     );
 
-    this.criteria.endDate = this.datePipe.transform(
+    const formattedEndDate = this.datePipe.transform(
       this.criteria.endDate,
       'yyyy-MM-dd',
     );
 
     this.request = {
-      
       entId: this.resolveEntId(),
-      criteria: this.criteria,
+      criteria: {
+        ...this.criteria,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      },
       type: AuxiliaryBookType.ACCOUNT,
-      
       userId: this.resolveUserId(),
     };
+  }
+
+  protected override calculateTotals(): void {
+    const uniqueIds = new Set<string>();
+    (this.dataTable ?? []).forEach((row) => {
+      const id = row?.thirdPartyId?.trim();
+      if (id) {
+        uniqueIds.add(id);
+      }
+    });
+
+    this.thirdsOptions = Array.from(uniqueIds)
+      .sort((a, b) => {
+        const numA = Number(a);
+        const numB = Number(b);
+        if (Number.isFinite(numA) && Number.isFinite(numB)) {
+          return numA - numB;
+        }
+        return a.localeCompare(b, undefined, { numeric: true });
+      })
+      .map((id) => ({ id, label: id }));
+
+    this.selectedThirdsFilter = [];
+    this.dt?.filter(null, 'thirdPartyId', 'in');
+  }
+
+  onThirdFilterChange(values: string[]): void {
+    this.selectedThirdsFilter = values ?? [];
+    const filterValue = this.selectedThirdsFilter.length
+      ? this.selectedThirdsFilter
+      : null;
+    this.dt?.filter(filterValue, 'thirdPartyId', 'in');
+  }
+
+  clearThirdFilter(): void {
+    this.selectedThirdsFilter = [];
+    this.dt?.filter(null, 'thirdPartyId', 'in');
   }
 }

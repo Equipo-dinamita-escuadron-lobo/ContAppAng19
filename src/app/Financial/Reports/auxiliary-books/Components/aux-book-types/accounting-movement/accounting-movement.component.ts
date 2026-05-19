@@ -49,7 +49,7 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
   override request: GenerateAuxiliaryBookRequest = {
     entId: '',
     userId: 0,
-    type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
+    type: AuxiliaryBookType.ACCOUNTING_MOVEMENT,
     criteria: this.criteria,
   };
 
@@ -85,7 +85,12 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
           { header: 'Crédito', field: 'creditMovement', type: 'number' },
         ],
       },
-      { header: 'Movimiento Neto', field: 'netMovement', type: 'number', rowspan: 2 },
+      {
+        header: 'Movimiento Neto',
+        field: 'netMovement',
+        type: 'number',
+        rowspan: 2,
+      },
     ],
     [
       { header: 'Identificación' },
@@ -105,7 +110,7 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
   ) {
     super(
       auxiliaryBookService,
@@ -113,7 +118,7 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
       thirdService,
       accountService,
       messageService,
-      dialogService
+      dialogService,
     );
   }
 
@@ -141,24 +146,26 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
     //TO DO: Change the value of start date to enterprise creation date when the enterprise had this attribute
     //this.criteria.startDate = this.enterpriseData.creationDate;
 
-    this.criteria.startDate = this.datePipe.transform(
-      new Date('01/01/2025'),
-      'yyyy-MM-dd'
-    );
-
-    this.criteria.endDate = this.datePipe.transform(
-      this.criteria.endDate,
-      'yyyy-MM-dd'
-    );
-
     this.criteria.criteriaType = 'ACCOUNT';
 
+    const formattedStartDate = this.datePipe.transform(
+      new Date('01/01/2025'),
+      'yyyy-MM-dd',
+    );
+
+    const formattedEndDate = this.datePipe.transform(
+      this.criteria.endDate,
+      'yyyy-MM-dd',
+    );
+
     this.request = {
-      
       entId: this.resolveEntId(),
-      criteria: this.criteria,
-      type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
-      
+      criteria: {
+        ...this.criteria,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      },
+      type: AuxiliaryBookType.ACCOUNTING_MOVEMENT,
       userId: this.resolveUserId(),
     };
   }

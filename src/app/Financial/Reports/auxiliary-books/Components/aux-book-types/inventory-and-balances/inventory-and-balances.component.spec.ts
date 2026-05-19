@@ -78,7 +78,8 @@ describe('InventoryAndBalancesComponent', () => {
     component.criteria.endDate = new Date(2025, 11, 31) as any;
     (component as any).organizeRequest();
     expect(component.request.type).toBe(AuxiliaryBookType.INVENTORY_AND_BALANCES);
-    expect(component.criteria.endDate).toBe('2025-12-31');
+    expect(component.request.criteria.endDate).toBe('2025-12-31');
+    expect(component.criteria.endDate instanceof Date).toBeTrue();
     expect(component.request.entId).toBe('ent-1');
   });
 
