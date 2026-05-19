@@ -18,13 +18,16 @@ import {
 
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ColorPickerModule } from 'primeng/colorpicker';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { FieldsetModule } from 'primeng/fieldset';
 import { InputTextModule } from 'primeng/inputtext';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 
 import { AuthService } from '../../../../../Core/auth/services/auth.service';
@@ -42,6 +45,17 @@ import { AuxiliaryBooksServiceService } from '../../Services/auxiliary-books-ser
 type ScheduleFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 type DeliveryWay = 'DOWNLOAD' | 'EMAIL';
 type ReportFormat = 'EXCEL' | 'PDF';
+type ReportAlignment = 'LEFT' | 'CENTER' | 'RIGHT';
+
+export interface ScheduleReportInfoTemplate {
+  id: number;
+  name: string;
+  pathLogotype: string;
+  alienation: ReportAlignment;
+  font: string;
+  fontSize: number;
+  mainColor: string;
+}
 
 interface ScheduleFormControls {
   bookType: FormControl<AuxiliaryBookType | null>;
@@ -59,6 +73,11 @@ interface ScheduleFormControls {
   frequency: FormControl<ScheduleFrequency | null>;
   deliveryWay: FormControl<DeliveryWay | null>;
   email: FormControl<string>;
+  styleAlign: FormControl<'left' | 'center' | 'right'>;
+  styleColor: FormControl<string>;
+  styleFont: FormControl<string>;
+  styleFontSize: FormControl<number>;
+  templateName: FormControl<string>;
 }
 
 interface SchedulingInitialState {
@@ -74,11 +93,14 @@ interface SchedulingInitialState {
 }
 
 export interface ScheduledReportEmailConfig {
-  email: string;
+  to: string;
+  subjectTemplate?: string | null;
+  bodyTemplate?: string | null;
 }
 
 export interface CreateScheduledReportRequest {
   entId: string;
+  entName: string;
   userId: number;
   bookType: AuxiliaryBookType;
   criteria: Criteria;
@@ -89,6 +111,7 @@ export interface CreateScheduledReportRequest {
   deliveryWay: DeliveryWay;
   emailConfig: ScheduledReportEmailConfig | null;
   reportFormat: ReportFormat;
+  infoReportTemplate: ScheduleReportInfoTemplate | null;
 }
 
 export interface AuxiliaryBookHistory {
@@ -144,12 +167,15 @@ export interface AuxiliaryBookSchedulePayload {
     ReactiveFormsModule,
     ButtonModule,
     CheckboxModule,
+    ColorPickerModule,
     DatePickerModule,
     FieldsetModule,
     InputTextModule,
+    SelectButtonModule,
     SelectModule,
     TagModule,
     ToastModule,
+    TooltipModule,
   ],
   providers: [MessageService],
   templateUrl: './auxiliary-books-scheduling.component.html',
@@ -273,7 +299,34 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     },
   ];
 
+  readonly templates = [{ id: 0, name: 'Plantilla por defecto' }];
+
+  readonly alignOptions = [
+    { icon: 'pi pi-align-left', value: 'left', tooltip: 'Izquierda' },
+    { icon: 'pi pi-align-center', value: 'center', tooltip: 'Centro' },
+    { icon: 'pi pi-align-right', value: 'right', tooltip: 'Derecha' },
+  ];
+
+  readonly fonts = [
+    { name: 'Arial', value: 'Arial' },
+    { name: 'Calibri', value: 'Calibri' },
+    { name: 'Roboto', value: 'Roboto' },
+    { name: 'Sans Serif', value: 'SansSerif' },
+    { name: 'Times New Roman', value: 'TimesNewRoman' },
+  ];
+
+  readonly fontSizes = [
+    { label: 'Pequeño (10px)', value: 10 },
+    { label: 'Normal (12px)', value: 12 },
+    { label: 'Grande (14px)', value: 14 },
+  ];
+
   private sourceData: AuxiliaryBookHistory | null = null;
+  private cachedEnterpriseData: {
+    id?: string | null;
+    name?: string | null;
+    logo?: string | null;
+  } | null = null;
   private initialCriteriaMetadata: Pick<
     Criteria,
     'costCenterId' | 'thirdPartyId'
@@ -382,9 +435,21 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.sourceData =
-      (this.dynamicDialogConfig?.data as AuxiliaryBookHistory | null) ??
-      this.historyItem;
+    const dialogData = (this.dynamicDialogConfig?.data ?? null) as
+      | (AuxiliaryBookHistory & {
+          enterpriseData?: {
+            id?: string | null;
+            name?: string | null;
+            logo?: string | null;
+          } | null;
+        })
+      | null;
+
+    this.sourceData = dialogData ?? this.historyItem;
+    this.cachedEnterpriseData =
+      dialogData?.enterpriseData ??
+      this.enterpriseService.getSelectedEnterprise() ??
+      null;
 
     const initialState = this.buildInitialState(this.sourceData);
 
@@ -442,6 +507,13 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
         Validators.required,
       ),
       email: this.fb.nonNullable.control(initialState.email),
+      styleAlign: this.fb.nonNullable.control<'left' | 'center' | 'right'>(
+        'left',
+      ),
+      styleColor: this.fb.nonNullable.control('#2d3748'),
+      styleFont: this.fb.nonNullable.control('Arial'),
+      styleFontSize: this.fb.nonNullable.control<number>(12),
+      templateName: this.fb.nonNullable.control('Plantilla por defecto'),
     });
 
     if (this.isBookTypeLocked) {
@@ -1041,6 +1113,7 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
     const user = this.authService.returnUserInfo();
     const bookType =
       rawValue.bookType ?? this.resolveInitialBookType(this.sourceData);
+    const enterpriseData = this.resolveEnterpriseData();
 
     return {
       action,
@@ -1048,6 +1121,7 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
       reportPublicId: this.sourceData?.publicId ?? null,
       request: {
         entId: this.resolveEnterpriseId() ?? '',
+        entName: enterpriseData?.name?.trim() || 'Empresa',
         userId: this.resolveNumericUserId(),
         bookType: bookType ?? AuxiliaryBookType.DIARY,
         criteria: {
@@ -1077,15 +1151,40 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
         deliveryWay: rawValue.deliveryWay ?? 'DOWNLOAD',
         emailConfig: this.requiresEmailConfig(rawValue.deliveryWay)
           ? {
-              email: rawValue.email.trim(),
+              to: rawValue.email.trim(),
             }
           : null,
         reportFormat: rawValue.reportFormat ?? 'EXCEL',
+        infoReportTemplate: this.buildInfoReportTemplate(
+          rawValue,
+          enterpriseData,
+        ),
       },
     };
   }
 
-  private buildInitialState(
+  private buildInfoReportTemplate(
+    rawValue: ReturnType<FormGroup<ScheduleFormControls>['getRawValue']>,
+    enterpriseData:
+      | { id?: string | null; name?: string | null; logo?: string | null }
+      | null,
+  ): ScheduleReportInfoTemplate {
+    const enterpriseName = enterpriseData?.name?.trim() || 'Empresa';
+    const logoUrl = enterpriseData?.logo?.trim() ?? '';
+
+    return {
+      id: 0,
+      name: enterpriseName,
+      pathLogotype: logoUrl,
+      alienation:
+        (rawValue.styleAlign?.toUpperCase() as ReportAlignment) || 'LEFT',
+      font: rawValue.styleFont || 'Arial',
+      fontSize: rawValue.styleFontSize ?? 12,
+      mainColor: rawValue.styleColor || '#2d3748',
+    };
+  }
+
+private buildInitialState(
     source: AuxiliaryBookHistory | null,
   ): SchedulingInitialState {
     const criteria = this.extractCriteria(source);
@@ -1394,6 +1493,18 @@ export class AuxiliaryBooksSchedulingComponent implements OnInit {
   private resolveEnterpriseId(): string | null {
     //const selectedEnterprise = this.enterpriseService.getSelectedEnterprise();
     return 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d'; //selectedEnterprise?.id ? String(selectedEnterprise.id) : null;
+  }
+
+  private resolveEnterpriseData(): {
+    id?: string | null;
+    name?: string | null;
+    logo?: string | null;
+  } | null {
+    return (
+      this.cachedEnterpriseData ??
+      this.enterpriseService.getSelectedEnterprise() ??
+      null
+    );
   }
 
   private resolveNumericUserId(): number {

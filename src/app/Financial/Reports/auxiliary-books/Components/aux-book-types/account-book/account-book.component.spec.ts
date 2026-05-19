@@ -86,7 +86,7 @@ describe('AccountBookComponent', () => {
     expect(component.request.entId).toBe('ent-1');
     expect(component.request.userId).toBe(42);
     expect(component.request.type).toBe(AuxiliaryBookType.ACCOUNT);
-    expect(component.criteria.startDate).toBe('2025-01-01');
+    expect(component.request.criteria.startDate).toBe('2025-01-01');
   });
 
   it('organizeRequest falls back to empty entId / userId 0 when missing', () => {

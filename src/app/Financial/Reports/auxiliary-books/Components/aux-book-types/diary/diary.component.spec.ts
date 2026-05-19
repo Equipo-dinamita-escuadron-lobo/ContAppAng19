@@ -76,8 +76,8 @@ describe('DiaryComponent', () => {
     component.datePeriod = [new Date(2025, 0, 1), new Date(2025, 11, 31)];
     (component as any).organizeRequest();
     expect(component.request.type).toBe(AuxiliaryBookType.DIARY);
-    expect(component.criteria.startDate).toBe('2025-01-01');
-    expect(component.criteria.endDate).toBe('2025-12-31');
+    expect(component.request.criteria.startDate).toBe('2025-01-01');
+    expect(component.request.criteria.endDate).toBe('2025-12-31');
     expect(component.request.userId).toBe(5);
   });
 

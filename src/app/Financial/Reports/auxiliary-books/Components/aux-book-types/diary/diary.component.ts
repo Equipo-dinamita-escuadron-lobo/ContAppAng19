@@ -119,22 +119,24 @@ export class DiaryComponent extends BaseAuxiliaryBookComponent {
     //TO DO: Change the value of start date to enterprise creation date when the enterprise had this attribute
     //this.criteria.startDate = this.enterpriseData.creationDate;
 
-    this.criteria.startDate = this.datePipe.transform(
+    const formattedStartDate = this.datePipe.transform(
       this.datePeriod[0],
       'yyyy-MM-dd'
     );
 
-    this.criteria.endDate = this.datePipe.transform(
+    const formattedEndDate = this.datePipe.transform(
       this.datePeriod[1],
       'yyyy-MM-dd'
     );
 
     this.request = {
-      
       entId: this.resolveEntId(),
-      criteria: this.criteria,
+      criteria: {
+        ...this.criteria,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      },
       type: AuxiliaryBookType.DIARY,
-      
       userId: this.resolveUserId(),
     };
   }

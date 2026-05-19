@@ -178,14 +178,32 @@
                 : "NO DISPONIBLE"
             }}
           </td>
-          <td>
+          <td
+            class="doc-cell"
+            [class.doc-cell-disabled]="!accountInfo.voucherNumber?.trim()"
+            (click)="openDocumentDialog(accountInfo.voucherNumber)"
+            [attr.title]="
+              accountInfo.voucherNumber?.trim()
+                ? 'Ver documento ' + accountInfo.voucherNumber
+                : null
+            "
+          >
             {{
               accountInfo.voucherCostCenter?.trim()
                 ? accountInfo.voucherCostCenter
                 : "NO DISPONIBLE"
             }}
           </td>
-          <td>
+          <td
+            class="doc-cell"
+            [class.doc-cell-disabled]="!accountInfo.voucherNumber?.trim()"
+            (click)="openDocumentDialog(accountInfo.voucherNumber)"
+            [attr.title]="
+              accountInfo.voucherNumber?.trim()
+                ? 'Ver documento ' + accountInfo.voucherNumber
+                : null
+            "
+          >
             {{
               accountInfo.voucherNumber?.trim()
                 ? accountInfo.voucherNumber

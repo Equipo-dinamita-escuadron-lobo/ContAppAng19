@@ -9,6 +9,7 @@ import { RippleModule } from 'primeng/ripple';
 import { AuthService } from '../../../../../Core/auth/services/auth.service';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { AuxiliaryBooksSchedulingComponent } from '../auxiliary-books-scheduling/auxiliary-books-scheduling.component';
+import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 
 interface AuxiliaryBook {
   name: string;
@@ -88,6 +89,7 @@ export class AuxiliaryBooksListComponent {
     private router: Router,
     private authService: AuthService,
     protected dialogService: DialogService,
+    private readonly enterpriseService: EnterpriseService,
   ) {}
 
   // Getter para verificar si el usuario actual tiene el rol de 'Administrador'
@@ -107,6 +109,8 @@ export class AuxiliaryBooksListComponent {
   }
 
   goToAuxiliaryBookScheduler(): void {
+    const enterpriseData = this.enterpriseService.getSelectedEnterprise();
+
     this.refDialog = this.dialogService.open(
       AuxiliaryBooksSchedulingComponent,
       {
@@ -116,6 +120,7 @@ export class AuxiliaryBooksListComponent {
           user: 'Sistema',
           status: 'Generando',
           generationDate: null,
+          enterpriseData,
         },
         modal: true,
         width: '72rem',

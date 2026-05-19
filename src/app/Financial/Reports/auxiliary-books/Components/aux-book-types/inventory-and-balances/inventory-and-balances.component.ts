@@ -120,24 +120,25 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
     //TO DO: Change the value of start date to enterprise creation date when the enterprise had this attribute
     //this.criteria.startDate = this.enterpriseData.creationDate;
 
-    this.criteria.startDate = this.datePipe.transform(
+    const formattedStartDate = this.datePipe.transform(
       new Date('01/01/2025'),
       'yyyy-MM-dd',
     );
 
-    this.criteria.endDate = this.datePipe.transform(
+    const formattedEndDate = this.datePipe.transform(
       this.criteria.endDate,
       'yyyy-MM-dd',
     );
 
     this.request = {
       entId: this.resolveEntId(),
-      criteria: this.criteria,
+      criteria: {
+        ...this.criteria,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      },
       type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
-
       userId: this.resolveUserId(),
     };
-
-    console.log(this.request);
   }
 }

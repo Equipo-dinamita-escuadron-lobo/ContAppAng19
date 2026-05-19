@@ -14,6 +14,7 @@ import { Select } from 'primeng/select';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ExportAuxiliaryBookComponent } from '../../export-auxiliary-book/export-auxiliary-book.component';
 import { AuthService } from '../../../../../../Core/auth/services/auth.service';
+import { UnderConstructionComponent } from '../../../../../../Shared/Components/under-construction/under-construction.component';
 
 @Directive()
 export abstract class BaseAuxiliaryBookComponent implements OnInit {
@@ -487,8 +488,15 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     return !!this.criteria.criteriaType;
   }
 
-  private isDateValid(date: Date | null): boolean {
-    return !!date && !isNaN(date.getTime());
+  private isDateValid(date: unknown): boolean {
+    if (date instanceof Date) {
+      return !isNaN(date.getTime());
+    }
+    if (typeof date === 'string' && date.trim()) {
+      const parsed = new Date(date);
+      return !isNaN(parsed.getTime());
+    }
+    return false;
   }
 
   private isRangeValid(): boolean {
@@ -509,6 +517,24 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   private isDatePeriodValid(): boolean {
     return !(this.datePeriod[0].getTime() > this.datePeriod[1].getTime());
+  }
+
+  openDocumentDialog(voucherNumber: string | null | undefined): void {
+    const trimmed = (voucherNumber ?? '').toString().trim();
+    if (!trimmed) {
+      return;
+    }
+
+    this.refDialog = this.dialogService.open(UnderConstructionComponent, {
+      header: 'Detalle del documento',
+      width: '36rem',
+      modal: true,
+      dismissableMask: true,
+      closable: true,
+      data: {
+        purpose: `Aquí se mostrará el documento con número ${trimmed} en un futuro.`,
+      },
+    });
   }
 
   showExportDialog() {
