@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { MessageService } from 'primeng/api';
-import { environment } from '../../../../../environments/environment.local';
+import { environment } from '../../../../../environments/environment.dev';
 
 @Injectable({ providedIn: 'root' })
 export class ScheduledReportDownloadService {
