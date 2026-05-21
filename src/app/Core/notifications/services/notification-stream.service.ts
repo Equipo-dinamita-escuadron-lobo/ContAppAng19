@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
-import { environment } from '../../../../environments/environment.local';
+import { environment } from '../../../../environments/environment.dev';
 import { AppNotification } from '../models/notification.model';
 
 @Injectable({ providedIn: 'root' })
@@ -37,7 +37,12 @@ export class NotificationStreamService {
     });
 
     es.onerror = (err) => {
-      console.warn('[Notifications] SSE error', err, 'readyState =', es.readyState);
+      console.warn(
+        '[Notifications] SSE error',
+        err,
+        'readyState =',
+        es.readyState,
+      );
     };
   }
 
