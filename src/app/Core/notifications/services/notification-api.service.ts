@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment.local';
+import { environment } from '../../../../environments/environment.dev';
 import { AppNotification } from '../models/notification.model';
 
 interface ApiResponse<T> {
@@ -22,7 +22,9 @@ export class NotificationApiService {
   ): Observable<ApiResponse<AppNotification[]>> {
     const params: Record<string, string | number | boolean> = { userId, limit };
     if (unreadOnly) params['unreadOnly'] = true;
-    return this.http.get<ApiResponse<AppNotification[]>>(this.baseUrl, { params });
+    return this.http.get<ApiResponse<AppNotification[]>>(this.baseUrl, {
+      params,
+    });
   }
 
   unreadCount(userId: string): Observable<ApiResponse<number>> {
