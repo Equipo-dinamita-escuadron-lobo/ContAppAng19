@@ -131,13 +131,9 @@ export class InventoryAndBalancesComponent extends BaseAuxiliaryBookComponent {
     );
 
     this.request = {
-      //TO DO: Change the value of entId when the enterprise has accounting info
-      //Meanwhile we used this entId because the mock has this id bf4d475f-5d02-4551-b7f0-49a5c426ac0d
-      //entId: this.enterpriseData.id,
-      entId: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
+      entId: this.enterpriseData.id,
       criteria: this.criteria,
       type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
-      //TO DO: Change the value of userId when the method to get the user ID is implemented
       userId: 123,
     };
   }

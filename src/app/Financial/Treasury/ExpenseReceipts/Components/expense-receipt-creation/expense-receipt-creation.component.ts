@@ -239,7 +239,7 @@ export class ExpenseReceiptCreationComponent {
 
     const formValue = this.expenseReceiptForm.value;
     const supplier: Supplier = formValue.supplier;
-    const enterpriseId = "asdasdasfafa"; // TODO: Obtener del localStorage
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
 
     if (!enterpriseId) {
       this.messageService.add({

@@ -113,7 +113,7 @@ export class ExpenseReceiptService {
 
   // --- MÉTODOS PARA EL CRUD DE RECIBOS DE GASTOS ---
   getAllExpenseReceipts(): Observable<ExpenseReceiptView[]> {
-    const enterpriseId = "asdasdasfafa";
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
     if (!enterpriseId) {
       console.error("ID de empresa no encontrado. No se pueden cargar los recibos de gastos.");
       return of([]);
