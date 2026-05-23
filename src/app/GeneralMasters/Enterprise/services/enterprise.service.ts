@@ -43,6 +43,10 @@ export class EnterpriseService {
     return this.http.get<EnterpriseDetails>(`${this.apiUrl}enterprise/${id}`);
   }
 
+  getTaxLiabilities(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}taxliabilities`);
+  }
+
   getEnterpriseExportData(id: string): Observable<any> {
     // Retornamos un ejemplo de json de exportación usando RxJS 'of'.
     // const exampleExportData = {
