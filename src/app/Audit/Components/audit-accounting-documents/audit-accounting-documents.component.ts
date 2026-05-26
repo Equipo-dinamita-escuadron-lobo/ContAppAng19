@@ -94,7 +94,8 @@ export class AuditAccountingDocumentsComponent implements OnInit {
     { label: 'Devolución en compra', value: 'RETURN_ON_PURCHASE' },
     { label: 'Entrada no comercial', value: 'NON_COMMERCIAL_ENTRY' },
     { label: 'Salida no comercial', value: 'NON_COMMERCIAL_EXIT' },
-    { label: 'Recibo', value: 'RECEIPT' },
+    { label: 'Recibo de caja directo', value: 'RECEIPT_DIRECT_INCOME' },
+    { label: 'Recibo de caja abono', value: 'RECEIPT_INVOICE_PAYMENT' },
     { label: 'Castigo cartera', value: 'WRITE_OFF' },
   ];
 
@@ -105,7 +106,8 @@ export class AuditAccountingDocumentsComponent implements OnInit {
     RETURN_ON_PURCHASE: 'Dev. Compra',
     NON_COMMERCIAL_ENTRY: 'Entrada No Comercial',
     NON_COMMERCIAL_EXIT: 'Salida No Comercial',
-    RECEIPT: 'Recibo',
+    RECEIPT_DIRECT_INCOME: 'Recibo de caja directo',
+    RECEIPT_INVOICE_PAYMENT: 'Recibo de caja abono',
     WRITE_OFF: 'Castigo cartera',
   };
 

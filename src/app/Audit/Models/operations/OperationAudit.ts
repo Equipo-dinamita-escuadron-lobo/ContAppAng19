@@ -1,9 +1,8 @@
 import { OperationType } from "../enums/OperationType";
-import { UserRole } from "../enums/UserRole";
 
 export interface OperationAudit {
     userName: string;
-    userRole: UserRole;
+    userRole: string[];
     operationAt: string;
     moduleName: string;
     affectedTable: string;

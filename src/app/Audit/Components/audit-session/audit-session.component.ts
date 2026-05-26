@@ -14,7 +14,6 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { Location } from '@angular/common';
 import { SessionAudit } from '../../Models/sessions/SessionAudit';
-import { UserRole } from '../../Models/enums/UserRole';
 import { Option } from '../../Models/common/Option';
 import { SessionAuditFilters } from '../../Models/sessions/SessionAuditFilters';
 import { AuditSessionServiceService } from '../../Services/audit-session-service.service';
@@ -58,27 +57,14 @@ export class AuditSessionComponent {
   filtro: {
     fechaInicio: Date | null;
     fechaFin: Date | null;
-    userRole: UserRole | null;
+    userRole: string;
     userName: string;
   } = {
     fechaInicio: null,
     fechaFin: null,
-    userRole: null,
+    userRole: '',
     userName: ''
   }; 
-
-  roles : Option<UserRole>[] = [
-    { label: 'Todos', value: null },
-    { label: 'Administrador', value: UserRole.ADMINISTRADOR },
-    { label: 'Profesor', value: UserRole.PROFESOR },
-    { label: 'Estudiante', value: UserRole.ESTUDIANTE }
-  ];
-
-  rolesLabel: Record<string, string> = {
-    [UserRole.ADMINISTRADOR]: 'Administrador',
-    [UserRole.PROFESOR]: 'Profesor',
-    [UserRole.ESTUDIANTE]: 'Estudiante'
-  };
 
   sessions: SessionAudit[] = [];
 
@@ -196,9 +182,9 @@ export class AuditSessionComponent {
     this.location.back();
   }
 
-  onUserInput(event: any) {
+  onInputChange(event: any, field: 'userName' | 'userRole') {
     const value = event.target.value;
-    this.filtro.userName = this.sanitizeInput(value);
+    this.filtro[field] = this.sanitizeInput(value);
   }
 
   private isValidFilters(): boolean {

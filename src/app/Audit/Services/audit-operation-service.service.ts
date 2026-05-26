@@ -69,9 +69,13 @@ export class AuditOperationServiceService {
         return this.http.get<PageResponse<OperationAudit>>(this.apiUrl, { params });
     }
 
-    initiateExport(filters: ExportOperationFilters): Observable<{ jobId: string }> {
+    initiateExport(filters: ExportOperationFilters, auditType: string): Observable<{ jobId: string }> {
+        const enterpriseId =
+            auditType === 'system'
+            ? 'SYSTEM'
+            : this.localStorageMethods.getIdEnterprise();
         const body = {
-            enterpriseId: this.localStorageMethods.getIdEnterprise(),
+            enterpriseId: enterpriseId,
             enterpriseName: this.localStorageMethods.getEnterpriseName(),
             dateFrom: filters.dateFrom,
             dateTo: filters.dateTo,

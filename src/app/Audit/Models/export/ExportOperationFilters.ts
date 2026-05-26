@@ -1,5 +1,4 @@
 import { OperationType } from "../enums/OperationType";
-import { UserRole } from "../enums/UserRole";
 
 export interface ExportOperationFilters {
   dateFrom: string;
@@ -8,7 +7,7 @@ export interface ExportOperationFilters {
   moduleName?: string;
   affectedTable?: string;
   userName?: string;
-  userRole?: UserRole;
+  userRole?: string;
   operationType?: OperationType;
   registerId?: string;
 }

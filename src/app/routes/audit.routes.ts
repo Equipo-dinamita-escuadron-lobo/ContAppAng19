@@ -59,12 +59,4 @@ export const AUDIT_ROUTES: Routes = [
       }
     ]
   },
-  {
-    path: 'consecutives',
-    data: { breadcrumb: 'Consecutivos' },
-    loadComponent: () =>
-      import('../Audit/Components/audit-consecutive/audit-consecutive.component').then(
-        (m) => m.AuditConsecutiveComponent
-      ),
-  },
 ];

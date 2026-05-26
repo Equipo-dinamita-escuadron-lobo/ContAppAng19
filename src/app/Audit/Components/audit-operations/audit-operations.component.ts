@@ -15,7 +15,6 @@ import { Location } from '@angular/common';
 import { DatePickerModule } from 'primeng/datepicker';
 import { AuditOperationServiceService } from '../../Services/audit-operation-service.service';
 import { MessageService } from 'primeng/api';
-import { UserRole } from '../../Models/enums/UserRole';
 import { OperationType } from '../../Models/enums/OperationType';
 import { Option } from '../../Models/common/Option';
 import { OperationAudit } from '../../Models/operations/OperationAudit';
@@ -66,7 +65,7 @@ export class AuditOperationsComponent {
     moduleName: string | null;
     affectedTable: string | null;
     userName: string;
-    userRole: UserRole | null;
+    userRole: string;
     operationType: OperationType | null;
     registerId: string;
   } = {
@@ -75,17 +74,10 @@ export class AuditOperationsComponent {
     moduleName: null,
     affectedTable: null,
     userName: '',
-    userRole: null,
+    userRole: '',
     operationType: null,
     registerId: ''
   };
-  
-  roles : Option<UserRole>[] = [
-    { label: 'Todos', value: null },
-    { label: 'Administrador', value: UserRole.ADMINISTRADOR },
-    { label: 'Profesor', value: UserRole.PROFESOR },
-    { label: 'Estudiante', value: UserRole.ESTUDIANTE }
-  ];
 
   operationsOptions: Option<OperationType>[] = [
     { label: 'Todos', value: null },
@@ -102,12 +94,6 @@ export class AuditOperationsComponent {
     [OperationType.DELETE]: 'Eliminación',
     [OperationType.INACTIVATE]: 'Inactivación',
     [OperationType.ACTIVATE]: 'Activación'
-  };
-
-  rolesLabel: Record<string, string> = {
-    [UserRole.ADMINISTRADOR]: 'Administrador',
-    [UserRole.PROFESOR]: 'Profesor',
-    [UserRole.ESTUDIANTE]: 'Estudiante'
   };
 
   operations: OperationAudit[] = [];
@@ -152,7 +138,7 @@ export class AuditOperationsComponent {
       operationType: this.filtro.operationType || undefined,
     }),
     initiateExport: (format, filters) =>
-      this.operationService.initiateExport({ ...filters, exportFormat: format })
+      this.operationService.initiateExport({ ...filters, exportFormat: format }, this.auditType)
   };
 
   onExportModalClosed(): void { }
@@ -250,7 +236,7 @@ export class AuditOperationsComponent {
     this.applyFilters(this.currentPage);
   }
 
-  onInputChange(event: any, field: 'userName') {
+  onInputChange(event: any, field: 'userName' | 'userRole') {
     const value = event.target.value;
     this.filtro[field] = this.sanitizeInput(value);
   }

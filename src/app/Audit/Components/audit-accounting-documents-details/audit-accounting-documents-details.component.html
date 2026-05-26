@@ -92,10 +92,7 @@
 
         <!-- ── LÍNEAS EN SNAPSHOT (CREATE / VOID / DELETE) ── -->
         <div *ngIf="!isDiff(item) && item.snapshotRows.length" class="section">
-          <div class="section-title">
-            Líneas del documento
-            <span class="section-badge">{{ item.snapshotRows.length }}</span>
-          </div>
+          <div class="section-title">Líneas del documento</div>
           <div class="table-scroll">
             <table class="snapshot-table">
               <thead>
@@ -123,7 +120,6 @@
         >
           <div class="section-title">Cambios en líneas</div>
           <div *ngFor="let group of item.diffDetailGroups" class="diff-group">
-            <div class="diff-group-label">{{ group.lineLabel }}</div>
             <table class="diff-table">
               <thead>
                 <tr>
