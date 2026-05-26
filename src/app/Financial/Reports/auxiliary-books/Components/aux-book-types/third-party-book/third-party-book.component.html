@@ -22,7 +22,10 @@
     </div>
 
     <!-- Derecha: Botón Exportar -->
-    <div *ngIf="isReportGenerated" class="flex items-start">
+    <div
+      *ngIf="isReportGenerated && auxiliaryBookInfo !== null && dataTable && dataTable.length > 0"
+      class="flex items-start"
+    >
       <p-button
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
@@ -125,11 +128,87 @@
       <!-- Body -->
       <ng-template pTemplate="body" let-accountInfo>
         <tr>
-          <td>{{ accountInfo.accountCode }}</td>
-          <td>{{ accountInfo.accountDescription }}</td>
-          <td>{{ accountInfo.description }}</td>
-          <td [ngClass]="{ 'text-red-500': accountInfo.value < 0 }">
-            {{ accountInfo.value | currency : "COP $" : "symbol" : "1.0-0" }}
+          <td>{{ accountInfo.date }}</td>
+          <td>{{ accountInfo.account.accountCode }}</td>
+          <td>{{ accountInfo.account.accountDescription }}</td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.debitMovement,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.creditMovement,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.balanceMovement,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+          <td>
+            {{
+              accountInfo.thirdPartyId?.trim()
+                ? accountInfo.thirdPartyId
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td>
+            {{
+              accountInfo.thirdPartyName?.trim()
+                ? accountInfo.thirdPartyName
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td
+            class="doc-cell"
+            [class.doc-cell-disabled]="!accountInfo.voucherNumber?.trim()"
+            (click)="openDocumentDialog(accountInfo.voucherNumber)"
+            [attr.title]="
+              accountInfo.voucherNumber?.trim()
+                ? 'Ver documento ' + accountInfo.voucherNumber
+                : null
+            "
+          >
+            {{
+              accountInfo.voucherCostCenter?.trim()
+                ? accountInfo.voucherCostCenter
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td
+            class="doc-cell"
+            [class.doc-cell-disabled]="!accountInfo.voucherNumber?.trim()"
+            (click)="openDocumentDialog(accountInfo.voucherNumber)"
+            [attr.title]="
+              accountInfo.voucherNumber?.trim()
+                ? 'Ver documento ' + accountInfo.voucherNumber
+                : null
+            "
+          >
+            {{
+              accountInfo.voucherNumber?.trim()
+                ? accountInfo.voucherNumber
+                : "NO DISPONIBLE"
+            }}
           </td>
         </tr>
       </ng-template>

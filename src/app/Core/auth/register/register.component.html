@@ -1,142 +1,170 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ContApp - Registro</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ContaApp - Registro</title>
-</head>
+  <body class="register-page">
+    <!-- Encabezado: Logo y título -->
+    <div class="register-header">
+      <img src="logo_unicauca.png" alt="Logo Unicauca" class="logo" />
+      <div class="header-divider"></div>
+      <span class="app-title">ContApp</span>
+    </div>
 
-<body class="register-page">
-
-  <!-- Encabezado: Logo y título -->
-  <div class="register-header">
-    <img src="logo_unicauca.png" alt="Logo Unicauca" class="logo" />
-    <div class="header-divider"></div>
-    <span class="app-title">ContaApp</span>
-  </div>
-
-  <!-- Contenido principal -->
-  <div class="main-content">
-    <!-- Formulario: ocupa la mitad izquierda -->
-    <div class="register-form-container">
-      <div class="register-form">
-        <h2 class="register-title">Registro de usuario</h2>
-        <form [formGroup]="registerForm" (submit)="onSubmit()" class="form">
-          <!-- Username -->
-          <div class="form-group">
-            <label for="username" class="registerfields">
-              Usuario <span class="required">*</span>
-            </label>
-            <div class="input-container">
-              <input type="text" id="username" placeholder="usuario" required
-                formControlName="username" />
-              <span class="input-icon pi pi-user"></span>
+    <!-- Contenido principal -->
+    <div class="main-content">
+      <!-- Formulario: ocupa la mitad izquierda -->
+      <div class="register-form-container">
+        <div class="register-form">
+          <h2 class="register-title">Registro de usuario</h2>
+          <form [formGroup]="registerForm" (submit)="onSubmit()" class="form">
+            <!-- Username -->
+            <div class="form-group">
+              <label for="username" class="registerfields">
+                Usuario <span class="required">*</span>
+              </label>
+              <div class="input-container">
+                <input
+                  type="text"
+                  id="username"
+                  placeholder="usuario"
+                  required
+                  formControlName="username"
+                />
+                <span class="input-icon pi pi-user"></span>
+              </div>
             </div>
-          </div>
-          <!-- Email -->
-          <div class="form-group">
-            <label for="email" class="registerfields">
-              Correo institucional <span class="required">*</span>
-            </label>
-            <div class="input-container">
-              <input type="email" id="email" placeholder="usuario@unicauca.edu.co" required
-                formControlName="email" />
-              <span class="input-icon pi pi-envelope"></span>
+            <!-- Email -->
+            <div class="form-group">
+              <label for="email" class="registerfields">
+                Correo institucional <span class="required">*</span>
+              </label>
+              <div class="input-container">
+                <input
+                  type="email"
+                  id="email"
+                  placeholder="usuario@unicauca.edu.co"
+                  required
+                  formControlName="email"
+                />
+                <span class="input-icon pi pi-envelope"></span>
+              </div>
             </div>
-          </div>
-          <!-- First Name -->
-          <div class="form-group">
-            <label for="firstName" class="registerfields">
-              Nombres <span class="required">*</span>
-            </label>
-            <div class="input-container">
-              <input type="text" id="firstName" placeholder="Nombres" required
-                formControlName="firstName" />
-              <span class="input-icon pi pi-id-card"></span>
+            <!-- First Name -->
+            <div class="form-group">
+              <label for="firstName" class="registerfields">
+                Nombres <span class="required">*</span>
+              </label>
+              <div class="input-container">
+                <input
+                  type="text"
+                  id="firstName"
+                  placeholder="Nombres"
+                  required
+                  formControlName="firstName"
+                />
+                <span class="input-icon pi pi-id-card"></span>
+              </div>
             </div>
-          </div>
-          <!-- Last Name -->
-          <div class="form-group">
-            <label for="lastName" class="registerfields">
-              Apellidos <span class="required">*</span>
-            </label>
-            <div class="input-container">
-              <input type="text" id="lastName" placeholder="Apellidos" required
-                formControlName="lastName" />
-              <span class="input-icon pi pi-id-card"></span>
+            <!-- Last Name -->
+            <div class="form-group">
+              <label for="lastName" class="registerfields">
+                Apellidos <span class="required">*</span>
+              </label>
+              <div class="input-container">
+                <input
+                  type="text"
+                  id="lastName"
+                  placeholder="Apellidos"
+                  required
+                  formControlName="lastName"
+                />
+                <span class="input-icon pi pi-id-card"></span>
+              </div>
             </div>
-          </div>
-          <!-- Password -->
-          <div class="form-group">
-            <label for="password" class="registerfields">
-              Contraseña <span class="required">*</span>
-            </label>
-            <div class="input-container">
-              <input type="password" id="password" placeholder="**********" required
-                formControlName="password" />
-              <span class="input-icon pi pi-lock"></span>
+            <!-- Password -->
+            <div class="form-group">
+              <label for="password" class="registerfields">
+                Contraseña <span class="required">*</span>
+              </label>
+              <div class="input-container">
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="**********"
+                  required
+                  formControlName="password"
+                />
+                <span class="input-icon pi pi-lock"></span>
+              </div>
             </div>
-          </div>
-          <!-- Botón registrar -->
-          <div class="form-submit">
-            <button type="submit" [disabled]="registerForm.invalid">
-              Registrarse
-            </button>
-          </div>
-          <div class="existing-user-text">
-            ¿Ya tienes cuenta?
-            <a routerLink="/login" class="login-link">
-              <span>Inicia sesión aquí</span>
-            </a>
-          </div>
-        </form>
+            <!-- Botón registrar -->
+            <div class="form-submit">
+              <button type="submit" [disabled]="registerForm.invalid">
+                Registrarse
+              </button>
+            </div>
+            <div class="existing-user-text">
+              ¿Ya tienes cuenta?
+              <a routerLink="/login" class="login-link">
+                <span>Inicia sesión aquí</span>
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- Imagen derecha: ocupa la mitad derecha -->
+      <div class="register-image">
+        <img src="unicauca-economia.jpg" alt="Edificio Unicauca" />
       </div>
     </div>
-    <!-- Imagen derecha: ocupa la mitad derecha -->
-    <div class="register-image">
-      <img src="unicauca-economia.jpg" alt="Edificio Unicauca" />
+
+    <!-- Línea de colores -->
+    <div class="color-strip">
+      <div class="color-red"></div>
+      <div class="color-orange"></div>
+      <div class="color-yellow"></div>
+      <div class="color-blue"></div>
+      <div class="color-purple"></div>
     </div>
-  </div>
 
-  <!-- Línea de colores -->
-  <div class="color-strip">
-    <div class="color-red"></div>
-    <div class="color-orange"></div>
-    <div class="color-yellow"></div>
-    <div class="color-blue"></div>
-    <div class="color-purple"></div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div>
-      <div class="footer-grid">
-        <div class="footer-section">
-          <strong>Universidad del Cauca</strong><br />
-          NIT. 891500319-2
-        </div>
-        <div class="footer-section-data">
+    <!-- Footer -->
+    <footer class="footer">
+      <div>
+        <div class="footer-grid">
           <div class="footer-section">
-            <strong>Software contable ContaApp</strong><br />
-            Facultad de Ciencias Contables<br />
-            <a href="mailto:contapp&#64;unicauca.edu.co" class="footer-link">contapp&#64;unicauca.edu.co</a>
+            <strong>Universidad del Cauca</strong><br />
+            NIT. 891500319-2
           </div>
-          <div class="footer-divider"></div>
-          <div class="footer-section-TIC">
-            <strong>División de Tecnologia de la Información y comunicacion - TIC</strong><br />
-            Versión 1.0.0<br />
-            2025
+          <div class="footer-section-data">
+            <div class="footer-section">
+              <strong>Software contable ContApp</strong><br />
+              Facultad de Ciencias Contables<br />
+              <a href="mailto:contapp&#64;unicauca.edu.co" class="footer-link"
+                >contapp&#64;unicauca.edu.co</a
+              >
+            </div>
+            <div class="footer-divider"></div>
+            <div class="footer-section-TIC">
+              <strong
+                >División de Tecnologia de la Información y comunicacion -
+                TIC</strong
+              ><br />
+              Versión 1.0.0<br />
+              2025
+            </div>
           </div>
         </div>
+        <p class="footer-text">
+          Institución con Acreditación de Alta Calidad por 8 años - Resolución
+          MEN 6218 de 2019 - Vigilada MinEducación<br />
+          Política de Protección de Datos | Seguridad de la Información |
+          Soporte Técnico
+        </p>
       </div>
-      <p class="footer-text">
-        Institución con Acreditación de Alta Calidad por 8 años - Resolución MEN 6218 de 2019 - Vigilada
-        MinEducación<br />
-        Política de Protección de Datos | Seguridad de la Información | Soporte Técnico
-      </p>
-    </div>
-  </footer>
-</body>
-
+    </footer>
+  </body>
 </html>

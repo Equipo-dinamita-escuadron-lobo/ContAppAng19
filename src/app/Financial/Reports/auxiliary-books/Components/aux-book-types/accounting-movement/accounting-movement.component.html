@@ -22,11 +22,16 @@
     </div>
 
     <!-- Derecha: Botón Exportar -->
-    <div *ngIf="isReportGenerated" class="flex items-start">
+    <div
+      *ngIf="isReportGenerated && auxiliaryBookInfo !== null && dataTable && dataTable.length > 0"
+      class="flex items-start"
+    >
       <p-button
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
       />
     </div>
   </div>
@@ -173,13 +178,58 @@
       </ng-template>
 
       <!-- Body -->
-      <ng-template pTemplate="body" let-accountInfo>
+      <ng-template pTemplate="body" let-row>
         <tr>
-          <td>{{ accountInfo.accountCode }}</td>
-          <td>{{ accountInfo.accountDescription }}</td>
-          <td>{{ accountInfo.description }}</td>
-          <td [ngClass]="{ 'text-red-500': accountInfo.value < 0 }">
-            {{ accountInfo.value | currency : "COP $" : "symbol" : "1.0-0" }}
+          <td>
+            {{ row.voucherType?.trim() ? row.voucherType : "NO DISPONIBLE" }}
+          </td>
+          <td>{{ row.date }}</td>
+          <td>
+            {{ row.state?.trim() ? row.state : "NO DISPONIBLE" }}
+          </td>
+          <td>
+            {{
+              row.thirdPartyId?.trim()
+                ? row.thirdPartyId
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td>
+            {{
+              row.thirdPartyName?.trim()
+                ? row.thirdPartyName
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td>{{ row.account?.accountCode }}</td>
+          <td>{{ row.account?.accountDescription }}</td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(row.initialBalance, row.account?.nature)
+              "
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="formatMoneyAligned(row.debitMovement)"
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="formatMoneyAligned(row.creditMovement)"
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(row.netMovement, row.account?.nature)
+              "
+            ></div>
           </td>
         </tr>
       </ng-template>

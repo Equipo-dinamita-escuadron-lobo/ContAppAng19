@@ -13,7 +13,7 @@ import { TableModule } from 'primeng/table';
 // Models
 import { GenerateAuxiliaryBookRequest } from '../../../Models/Requests/GenerateAuxiliaryBookRequest';
 import { AuxiliaryBookType } from '../../../Models/eAuxiliaryBookType';
-import { InventoryAndBalancesResponse } from '../../../Models/Responses/InventoryAndBalancesBookResponse';
+import { AccountingMovementBookResponse } from '../../../Models/Responses/AccountingMovementBookResponse';
 
 // Services
 import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
@@ -23,6 +23,7 @@ import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/s
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { BaseAuxiliaryBookComponent } from '../base-auxiliary-book/base-auxiliary-book.component';
 import { DialogService } from 'primeng/dynamicdialog';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 @Component({
   selector: 'app-accounting-movement',
   imports: [
@@ -48,11 +49,59 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
   override request: GenerateAuxiliaryBookRequest = {
     entId: '',
     userId: 0,
-    type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
+    type: AuxiliaryBookType.ACCOUNTING_MOVEMENT,
     criteria: this.criteria,
   };
 
-  override dataTable: InventoryAndBalancesResponse[] = [];
+  override dataTable: AccountingMovementBookResponse[] = [];
+
+  headerConfig: ColumnDefinition[][] = [
+    [
+      { header: 'Tipo Documento', field: 'voucherType', rowspan: 2 },
+      { header: 'Fecha', field: 'date', rowspan: 2 },
+      { header: 'Estado', field: 'state', rowspan: 2 },
+      {
+        header: 'Tercero',
+        colspan: 2,
+        children: [
+          { header: 'Identificación', field: 'thirdPartyId' },
+          { header: 'Nombre', field: 'thirdPartyName' },
+        ],
+      },
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        children: [
+          { header: 'Código', field: 'account.accountCode' },
+          { header: 'Descripción', field: 'account.accountDescription' },
+        ],
+      },
+      {
+        header: 'Movimiento',
+        colspan: 3,
+        children: [
+          { header: 'Saldo Inicial', field: 'initialBalance', type: 'number' },
+          { header: 'Débito', field: 'debitMovement', type: 'number' },
+          { header: 'Crédito', field: 'creditMovement', type: 'number' },
+        ],
+      },
+      {
+        header: 'Movimiento Neto',
+        field: 'netMovement',
+        type: 'number',
+        rowspan: 2,
+      },
+    ],
+    [
+      { header: 'Identificación' },
+      { header: 'Nombre' },
+      { header: 'Código' },
+      { header: 'Descripción' },
+      { header: 'Saldo Inicial' },
+      { header: 'Débito' },
+      { header: 'Crédito' },
+    ],
+  ];
 
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
@@ -61,7 +110,7 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
     accountService: ChartAccountService,
     messageService: MessageService,
     dialogService: DialogService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
   ) {
     super(
       auxiliaryBookService,
@@ -69,7 +118,7 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
       thirdService,
       accountService,
       messageService,
-      dialogService
+      dialogService,
     );
   }
 
@@ -88,33 +137,36 @@ export class AccountingMovementComponent extends BaseAuxiliaryBookComponent {
         'Resume todos los movimientos contables realizados, facilitando auditorías, validaciones y análisis históricos de operaciones.',
       icon: 'difference',
     };
+
+    this.criteria.criteriaType = 'ACCOUNT';
+    this.isLevelSelected = true;
   }
 
   protected organizeRequest(): void {
     //TO DO: Change the value of start date to enterprise creation date when the enterprise had this attribute
     //this.criteria.startDate = this.enterpriseData.creationDate;
 
-    this.criteria.startDate = this.datePipe.transform(
-      new Date('01/01/2025'),
-      'yyyy-MM-dd'
-    );
-
-    this.criteria.endDate = this.datePipe.transform(
-      this.criteria.endDate,
-      'yyyy-MM-dd'
-    );
-
     this.criteria.criteriaType = 'ACCOUNT';
 
+    const formattedStartDate = this.datePipe.transform(
+      new Date('01/01/2025'),
+      'yyyy-MM-dd',
+    );
+
+    const formattedEndDate = this.datePipe.transform(
+      this.criteria.endDate,
+      'yyyy-MM-dd',
+    );
+
     this.request = {
-      //TO DO: Change the value of entId when the enterprise has accounting info
-      //Meanwhile we used this entId because the mock has this id bf4d475f-5d02-4551-b7f0-49a5c426ac0d
-      //entId: this.enterpriseData.id,
-      entId: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
-      criteria: this.criteria,
-      type: AuxiliaryBookType.INVENTORY_AND_BALANCES,
-      //TO DO: Change the value of userId when the method to get the user ID is implemented
-      userId: 123,
+      entId: this.resolveEntId(),
+      criteria: {
+        ...this.criteria,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      },
+      type: AuxiliaryBookType.ACCOUNTING_MOVEMENT,
+      userId: this.resolveUserId(),
     };
   }
 }

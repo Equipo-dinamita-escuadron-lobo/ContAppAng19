@@ -1,22 +1,27 @@
 // base-aux-book.component.ts
-import { Directive, OnInit, ViewChild } from '@angular/core';
+import { Directive, OnInit, ViewChild, inject } from '@angular/core';
 import { Account } from '../../../../../../GeneralMasters/AccountCatalogue/models/ChartAccount';
 import { Third } from '../../../../../../GeneralMasters/ThirdParties/models/Third';
+import { CostCenter } from '../../../../../../GeneralMasters/CostCenters/models/cost-center.model';
 import { Criteria } from '../../../Models/Criteria';
 import { AuxiliaryBooksServiceService } from '../../../Services/auxiliary-books-service.service';
 import { EnterpriseService } from '../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 import { ThirdService } from '../../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
+import { CostCenterService } from '../../../../../../GeneralMasters/CostCenters/services/cost-center.service';
 import { MessageService } from 'primeng/api';
 import { Select } from 'primeng/select';
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ExportAuxiliaryBookComponent } from '../../export-auxiliary-book/export-auxiliary-book.component';
+import { AuthService } from '../../../../../../Core/auth/services/auth.service';
+import { UnderConstructionComponent } from '../../../../../../Shared/Components/under-construction/under-construction.component';
 
 @Directive()
 export abstract class BaseAuxiliaryBookComponent implements OnInit {
   @ViewChild('fromSelect') fromSelect!: Select;
   @ViewChild('toSelect') toSelect!: Select;
   @ViewChild('thirdPartySelect') thirdPartySelect!: Select;
+  @ViewChild('costCenterSelect') costCenterSelect!: Select;
 
   auxiliaryBookInfo: any;
   auxiliaryBookGenerated: any;
@@ -32,6 +37,10 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   isThirdPartyOptionSelected = false;
   thirdPartySelected: Third | null = null;
 
+  costCenterOptions: CostCenter[] = [];
+  isCostCenterOptionSelected = false;
+  costCenterSelected: CostCenter | null = null;
+
   datePeriod: Date[] = [];
 
   levels: any[] = [];
@@ -46,6 +55,12 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     typeId: string;
     name: string;
     types: string;
+  } | null = null;
+
+  costCenterInfo: {
+    id: number | null;
+    code: string;
+    name: string;
   } | null = null;
 
   criteria: Criteria = {
@@ -69,6 +84,24 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   totalCredit: number | null = null;
 
   refDialog: DynamicDialogRef | undefined;
+  private readonly costCenterService = inject(CostCenterService);
+  protected readonly authService = inject(AuthService);
+
+  /**
+   * Returns the active enterprise id or empty string if none is selected.
+   */
+  protected resolveEntId(): string {
+    return 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d' /*this.enterpriseData?.id ?? '' */;
+  }
+
+  /**
+   * Returns the numeric user id from the auth service, or 0 if unavailable.
+   */
+  protected resolveUserId(): number {
+    const rawId = this.authService.returnUserInfo()?.id;
+    const parsed = Number(rawId);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
 
   constructor(
     protected auxiliaryBookService: AuxiliaryBooksServiceService,
@@ -76,7 +109,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     protected thirdService: ThirdService,
     protected accountService: ChartAccountService,
     protected messageService: MessageService,
-    protected dialogService: DialogService
+    protected dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
@@ -123,7 +156,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       });
     } else {
       if (this.isRangeOptionSelected === true) {
-        this.criteria.criteriaRange = { from: 0, to: 0 };
+        this.criteria.criteriaRange = { fromRange: 0, toRange: 0 };
         this.getAccountOptions();
       } else {
         this.criteria.criteriaRange = null;
@@ -137,7 +170,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       next: (response: Account[]) => {
         const filterAccounts = this.filterAccountsByLevel(
           response,
-          this.criteria.criteriaType
+          this.criteria.criteriaType,
         );
 
         this.rangeFromOptions = filterAccounts;
@@ -157,23 +190,23 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
   get rangeFromOptionsFiltered() {
     const maxValue = Math.max(
-      ...this.rangeFromOptions.map((opt) => parseInt(opt.code))
+      ...this.rangeFromOptions.map((opt) => parseInt(opt.code)),
     );
     return this.rangeFromOptions.filter((opt) => parseInt(opt.code) < maxValue);
   }
 
   onFromChange() {
     if (this.isRangeOptionSelected && this.levelRange.from !== null) {
-      this.criteria.criteriaRange!.from = this.levelRange.from;
+      this.criteria.criteriaRange!.fromRange = this.levelRange.from;
       this.rangeToOptions = this.rangeFromOptions.filter(
-        (opt) => parseInt(opt.code) > this.levelRange.from!
+        (opt) => parseInt(opt.code) > this.levelRange.from!,
       );
     }
   }
 
   onToChange() {
     if (this.isRangeOptionSelected && this.levelRange.to !== null) {
-      this.criteria.criteriaRange!.to = this.levelRange.to;
+      this.criteria.criteriaRange!.toRange = this.levelRange.to;
     }
     ``;
   }
@@ -189,14 +222,21 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
   }
 
   private resetThirdPartySelect(): void {
-    if (this.thirdPartySelect) {
-      this.thirdPartySelect.clear();
-    }
     this.thirdPartySelected = null;
+    this.thirdPartyInfo = null;
+    this.criteria.thirdPartyId = null;
+  }
+
+  private resetCostCenterSelect(): void {
+    this.costCenterSelected = null;
+    this.costCenterInfo = null;
+    this.criteria.costCenterId = null;
   }
 
   private resetCriteria(): void {
     this.isLevelSelected = false;
+    this.isCostCenterOptionSelected = false;
+    this.isThirdPartyOptionSelected = false;
     this.criteria = {
       criteriaType: '',
       costCenterId: null,
@@ -215,21 +255,21 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
         return accounts.flatMap((a) => a.children || []);
       case 'ACCOUNT':
         return accounts.flatMap((a) =>
-          (a.children || []).flatMap((b) => b.children || [])
+          (a.children || []).flatMap((b) => b.children || []),
         );
       case 'SUB_ACCOUNT':
         return accounts.flatMap((a) =>
           (a.children || []).flatMap((b) =>
-            (b.children || []).flatMap((c) => c.children || [])
-          )
+            (b.children || []).flatMap((c) => c.children || []),
+          ),
         );
       case 'AUXILIARY_ACCOUNT':
         return accounts.flatMap((a) =>
           (a.children || []).flatMap((b) =>
             (b.children || []).flatMap((c) =>
-              (c.children || []).flatMap((d) => d.children || [])
-            )
-          )
+              (c.children || []).flatMap((d) => d.children || []),
+            ),
+          ),
         );
       default:
         return [];
@@ -240,7 +280,10 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     if (this.isThirdPartyOptionSelected === true) {
       this.getThirdPartyOptions();
     } else {
-      this.thirdPartySelect.clear();
+      if (this.thirdPartySelect) {
+        this.thirdPartySelect.clear();
+      }
+      this.resetThirdPartySelect();
     }
   }
 
@@ -279,7 +322,61 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
         this.criteria.thirdPartyId = seleccionado.thId;
       }, 300);
     } else {
-      this.thirdPartyInfo = null;
+      this.resetThirdPartySelect();
+    }
+  }
+
+  onCostCenterOptionSelected(): void {
+    if (this.isCostCenterOptionSelected === true) {
+      this.getCostCenterOptions();
+    } else {
+      this.costCenterOptions = [];
+      if (this.costCenterSelect) {
+        this.costCenterSelect.clear();
+      }
+      this.resetCostCenterSelect();
+    }
+  }
+
+  private getCostCenterOptions(): void {
+    console.log(this.enterpriseData.id);
+
+    this.costCenterService
+      .findActiveAuxiliary(this.enterpriseData.id)
+      .subscribe({
+        next: (response: CostCenter[]) => {
+          console.log(response);
+
+          this.costCenterOptions = response;
+        },
+        error: (err: any) => {
+          console.error('Error fetching cost centers:', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              'No se han encontrado Centros de Costos para esta Empresa\n Error:' +
+              err.message,
+          });
+        },
+      });
+  }
+
+  onSelectCostCenter(): void {
+    if (this.costCenterSelected) {
+      const seleccionado: CostCenter = this.costCenterSelected;
+
+      setTimeout(() => {
+        this.costCenterInfo = {
+          id: seleccionado.id ?? null,
+          code: seleccionado.code,
+          name: seleccionado.name,
+        };
+
+        this.criteria.costCenterId = seleccionado.id ?? null;
+      }, 300);
+    } else {
+      this.resetCostCenterSelect();
     }
   }
 
@@ -320,6 +417,8 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
           return;
         }
 
+        console.log('Respuesta del servicio:', data);
+
         this.messageService.add({
           severity: 'success',
           summary: 'Éxito',
@@ -353,7 +452,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
       if (this.datePeriod.length === 2) {
         if (!this.isDatePeriodValid()) {
           this.errors.push(
-            'El rango de fechas no es válido. La fecha inicial debe ser anterior a la fecha final.'
+            'El rango de fechas no es válido. La fecha inicial debe ser anterior a la fecha final.',
           );
         } else {
           this.criteria.startDate = this.datePeriod[0];
@@ -361,7 +460,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
         }
       } else {
         this.errors.push(
-          'Debe seleccionar 2 fechas (Inicial y Final) para el periodo.'
+          'Debe seleccionar 2 fechas (Inicial y Final) para el periodo.',
         );
       }
     }
@@ -372,7 +471,13 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
 
     if (this.isThirdPartyOptionSelected && !this.isThirdPartyValid()) {
       this.errors.push(
-        'No ha seleccionado un Tercero antes de generar el reporte.'
+        'No ha seleccionado un Tercero antes de generar el reporte.',
+      );
+    }
+
+    if (this.isCostCenterOptionSelected && !this.isCostCenterValid()) {
+      this.errors.push(
+        'No ha seleccionado un Centro de Costos antes de generar el reporte.',
       );
     }
 
@@ -383,8 +488,15 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     return !!this.criteria.criteriaType;
   }
 
-  private isDateValid(date: Date | null): boolean {
-    return !!date && !isNaN(date.getTime());
+  private isDateValid(date: unknown): boolean {
+    if (date instanceof Date) {
+      return !isNaN(date.getTime());
+    }
+    if (typeof date === 'string' && date.trim()) {
+      const parsed = new Date(date);
+      return !isNaN(parsed.getTime());
+    }
+    return false;
   }
 
   private isRangeValid(): boolean {
@@ -396,8 +508,33 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
     return !!this.criteria.thirdPartyId;
   }
 
+  private isCostCenterValid(): boolean {
+    return (
+      this.criteria.costCenterId !== null &&
+      this.criteria.costCenterId !== undefined
+    );
+  }
+
   private isDatePeriodValid(): boolean {
     return !(this.datePeriod[0].getTime() > this.datePeriod[1].getTime());
+  }
+
+  openDocumentDialog(voucherNumber: string | null | undefined): void {
+    const trimmed = (voucherNumber ?? '').toString().trim();
+    if (!trimmed) {
+      return;
+    }
+
+    this.refDialog = this.dialogService.open(UnderConstructionComponent, {
+      header: 'Detalle del documento',
+      width: '36rem',
+      modal: true,
+      dismissableMask: true,
+      closable: true,
+      data: {
+        purpose: `Aquí se mostrará el documento con número ${trimmed} en un futuro.`,
+      },
+    });
   }
 
   showExportDialog() {
@@ -425,7 +562,7 @@ export abstract class BaseAuxiliaryBookComponent implements OnInit {
    */
   formatMoneyAligned(
     value: number | null | undefined,
-    nature?: string
+    nature?: string,
   ): string {
     if (value == null || Number.isNaN(value)) {
       return '';

@@ -22,7 +22,10 @@
     </div>
 
     <!-- Derecha: Botón Exportar -->
-    <div *ngIf="isReportGenerated" class="flex items-start">
+    <div
+      *ngIf="isReportGenerated && auxiliaryBookInfo !== null && dataTable && dataTable.length > 0"
+      class="flex items-start"
+    >
       <p-button
         styleClass="p-button-secondary"
         icon="pi pi-file-export"

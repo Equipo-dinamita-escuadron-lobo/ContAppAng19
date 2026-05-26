@@ -10,11 +10,15 @@ import { InvoicePortfolioService } from '../../../Financial/Wallet/PortfolioMana
 import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
 import { HelpCenterService } from '../../../Shared/services/help-center.service';
 import { filter, Subscription } from 'rxjs';
+import {
+  ExternalNotification,
+  NotificationBellComponent,
+} from '../../../Shared/Components/notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, ButtonModule, MenuModule, OverlayPanelModule],
+  imports: [CommonModule, ButtonModule, MenuModule, OverlayPanelModule, NotificationBellComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css'],
 })
@@ -32,6 +36,7 @@ export class HeaderComponent implements OnInit {
   alertsCount: number = 0;
   lastCheckDate: Date = new Date();
   showNotifications: boolean = false;
+  externalNotifications: ExternalNotification[] = [];
   private routerSubscription: Subscription | undefined;
 
   constructor(
@@ -122,6 +127,7 @@ export class HeaderComponent implements OnInit {
       this.showNotifications = false;
       this.alertsCount = 0;
       this.companyName = '';
+      this.refreshExternalNotifications();
       return;
     }
 
@@ -136,6 +142,7 @@ export class HeaderComponent implements OnInit {
       this.showNotifications = false;
       this.alertsCount = 0;
       this.companyName = '';
+      this.refreshExternalNotifications();
     }
   }
 
@@ -144,9 +151,27 @@ export class HeaderComponent implements OnInit {
       next: (invoices) => {
         this.alertsCount = invoices.length;
         this.lastCheckDate = new Date();
+        this.refreshExternalNotifications();
       },
       error: (err) => console.error('Error cargando alertas', err),
     });
+  }
+
+  private refreshExternalNotifications(): void {
+    if (this.alertsCount > 0) {
+      this.externalNotifications = [
+        {
+          id: 'expiring-invoices',
+          title: 'Facturas próximas a vencer',
+          message: `Tienes <strong>${this.alertsCount}</strong> facturas pendientes que requieren atención urgente.`,
+          date: this.lastCheckDate,
+          severity: 'danger',
+          icon: 'pi pi-exclamation-circle',
+        },
+      ];
+    } else {
+      this.externalNotifications = [];
+    }
   }
 
   navigateToAlertsDetail(): void {

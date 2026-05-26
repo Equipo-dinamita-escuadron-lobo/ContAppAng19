@@ -63,26 +63,38 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
   sortOrder: 'asc' | 'desc' = 'desc';
   searchValue = '';
 
-  // --- ¡PENDIENTE! ---
-  // Debes obtener el ID de la empresa actual.
-  // Probablemente de un servicio de autenticación o de contexto.
-  private enterpriseId: string = 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d';
-  // -------------------
+  private enterpriseId: string | null = null;
 
   constructor(
     private auxiliaryBookService: AuxiliaryBooksServiceService,
     protected enterpriseService: EnterpriseService,
     private router: Router,
     private messageService: MessageService,
-    protected dialogService: DialogService
+    protected dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
+    this.enterpriseId = 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d';
+    //this.enterpriseService.getSelectedEnterprise()?.id ?? null;
+
+    if (!this.enterpriseId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Empresa no seleccionada',
+        detail:
+          'Selecciona una empresa para ver el historial de libros auxiliares.',
+      });
+      return;
+    }
+
     this.loadHistory();
-    //this.enterpriseId = this.enterpriseService.getSelectedEnterprise()?.id || 'YOUR_ENTERPRISE_ID_HERE';
   }
 
   loadHistory(event?: any): void {
+    if (!this.enterpriseId) {
+      return;
+    }
+
     this.isLoading = true;
 
     // Si el evento existe (paginación, orden), actualizamos los valores
@@ -118,6 +130,32 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
               generationDate: new Date(item.auxiliaryBook.createdAt),
               user: item.auxiliaryBook.userId,
               status: item.state,
+              type: item.auxiliaryBook.type,
+              createdAt: item.auxiliaryBook.createdAt,
+              userId: item.auxiliaryBook.userId,
+              state: item.state,
+              criteria: item.auxiliaryBook.criteria ?? null,
+              deliveryWay:
+                item.deliveryWay ?? item.auxiliaryBook.deliveryWay ?? null,
+              frequency: item.frequency ?? item.auxiliaryBook.frequency ?? null,
+              scheduleDate:
+                item.scheduleDate ??
+                item.nextExecutionAt ??
+                item.eventAt ??
+                null,
+              startAt:
+                item.startAt ??
+                item.scheduleDate ??
+                item.nextExecutionAt ??
+                item.eventAt ??
+                item.auxiliaryBook.startAt ??
+                null,
+              endAt: item.endAt ?? item.auxiliaryBook.endAt ?? null,
+              weekday: item.weekday ?? item.auxiliaryBook.weekday ?? null,
+              monthDay: item.monthDay ?? item.auxiliaryBook.monthDay ?? null,
+              email: item.email ?? item.auxiliaryBook.email ?? null,
+              scheduleId:
+                item.scheduleId ?? item.auxiliaryBook.scheduleId ?? null,
             }));
 
             // Esto debería funcionar si 'totalElements' está en 'response.data'
@@ -165,16 +203,32 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
   }
 
   getStatusSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    switch (status) {
-      case 'Completado':
-        return 'success';
-      case 'Generando':
-        return 'info';
-      case 'Error':
-        return 'danger';
-      default:
-        return 'warning';
+    const normalizedStatus = String(status ?? '').toUpperCase();
+
+    if (
+      normalizedStatus.includes('COMPLET') ||
+      normalizedStatus.includes('SUCCESS')
+    ) {
+      return 'success';
     }
+
+    if (
+      normalizedStatus.includes('ERROR') ||
+      normalizedStatus.includes('FAIL')
+    ) {
+      return 'danger';
+    }
+
+    if (
+      normalizedStatus.includes('GENER') ||
+      normalizedStatus.includes('PENDING') ||
+      normalizedStatus.includes('SCHEDULE') ||
+      normalizedStatus.includes('PROCESS')
+    ) {
+      return 'info';
+    }
+
+    return 'warning';
   }
 
   /**
@@ -190,12 +244,27 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
 
   showSchedulingDialog(item: any) {
     this.selectedHistoryItem = item;
+    const enterpriseData = this.enterpriseService.getSelectedEnterprise();
 
     this.refDialog = this.dialogService.open(
       AuxiliaryBooksSchedulingComponent,
       {
-        data: this.selectedHistoryItem,
-      }
+        data: {
+          ...this.selectedHistoryItem,
+          enterpriseData,
+        },
+        modal: true,
+        width: '72rem',
+        breakpoints: {
+          '1200px': '85vw',
+          '768px': '95vw',
+        },
+      },
     );
+
+    this.refDialog.onClose.subscribe(() => {
+      this.selectedHistoryItem = null;
+      this.loadHistory();
+    });
   }
 }

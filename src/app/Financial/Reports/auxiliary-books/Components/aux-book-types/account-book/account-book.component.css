@@ -1,19 +1,103 @@
+/* Celdas clickeables de la columna Documento */
+.auxbook-table .doc-cell {
+  cursor: pointer;
+  color: var(--color-primary, #1a1f72);
+  font-weight: 600;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.auxbook-table .doc-cell:hover {
+  background-color: rgba(80, 86, 172, 0.08);
+  text-decoration: underline;
+}
+
+.auxbook-table .doc-cell-disabled {
+  cursor: default;
+  color: inherit;
+  font-weight: inherit;
+}
+
+.auxbook-table .doc-cell-disabled:hover {
+  background-color: transparent;
+  text-decoration: none;
+}
+
+/* Botón personalizado de filtro en el header */
+.auxbook-table .aux-filter-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.85rem !important;
+  height: 1.85rem !important;
+  min-width: 1.85rem !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  background: var(--color-button-primary) !important;
+  border: 1px solid #ffffff !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: filter 0.15s ease-in-out;
+}
+
+.auxbook-table .aux-filter-btn:hover {
+  filter: brightness(1.15);
+}
+
+.auxbook-table .aux-filter-btn i,
+.auxbook-table .aux-filter-btn .pi {
+  color: #ffffff !important;
+  font-size: 0.95rem !important;
+  line-height: 1 !important;
+}
+
 /* Botón del menú de filtro (icono embudo en el header) */
+.auxbook-table .p-column-filter,
+.auxbook-table .p-column-filter-menu {
+  display: inline-flex !important;
+  vertical-align: middle !important;
+  margin-left: 0.5rem !important;
+}
+
+.auxbook-table .p-column-filter-menu-button,
+.auxbook-table .p-column-filter-menu-button.p-button,
 .auxbook-table .p-column-filter-menu-button.p-button.p-button-text {
-  background: var(--color-button-secondary) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.85rem !important;
+  height: 1.85rem !important;
+  min-width: 1.85rem !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  background: var(--color-button-primary) !important;
   border: 1px solid var(--color-button-primary) !important;
-  color: var(--color-primary) !important;
-  border-radius: 8px !important;
-  padding: 0.35rem 0.5rem !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 /* Hover */
-.auxbook-table .p-column-filter-menu-button.p-button.p-button-text:hover {
-  background: var(--color-button-secondary-hover) !important;
+.auxbook-table .p-column-filter-menu-button:hover,
+.auxbook-table .p-column-filter-menu-button.p-button:hover {
+  background: var(--color-button-primary-hover, var(--color-button-primary)) !important;
+  border-color: var(--color-button-primary) !important;
+  filter: brightness(0.95);
 }
 
-/* Tamaño/color del ícono */
-.auxbook-table .p-column-filter-menu-button .p-button-icon {
-  font-size: 1rem;
-  color: var(--color-primary) !important;
+/* Estado activo (filtro aplicado o panel abierto) */
+.auxbook-table .p-column-filter-menu-button.p-column-filter-menu-button-active,
+.auxbook-table .p-column-filter-menu-button.p-column-filter-menu-button-open {
+  background: var(--color-light, var(--color-button-primary)) !important;
+  color: #ffffff !important;
+}
+
+/* Icono blanco (font icon o SVG en PrimeNG v19) */
+.auxbook-table .p-column-filter-menu-button .p-button-icon,
+.auxbook-table .p-column-filter-menu-button .pi,
+.auxbook-table .p-column-filter-menu-button .p-icon,
+.auxbook-table .p-column-filter-menu-button svg {
+  font-size: 1rem !important;
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
 }

@@ -21,6 +21,7 @@ import { ChartAccountService } from '../../../../../../GeneralMasters/AccountCat
 import { MessageService } from 'primeng/api';
 import { MajorAndBalancesResponse } from '../../../Models/Responses/MajorAndBalancesBookResponse';
 import { DialogService } from 'primeng/dynamicdialog';
+import { ColumnDefinition } from '../../export-auxiliary-book/Components/report-preview/report-preview.component';
 @Component({
   selector: 'app-major-and-balances',
   imports: [
@@ -47,6 +48,35 @@ export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
   };
 
   override dataTable: MajorAndBalancesResponse[] = [];
+
+  headerConfig: ColumnDefinition[][] = [
+    [
+      {
+        header: 'Cuenta',
+        colspan: 2,
+        children: [
+          { header: 'Código', field: 'account.accountCode' },
+          { header: 'Descripción', field: 'account.accountDescription' },
+        ],
+      },
+      { header: 'Saldo Inicial', field: 'initialBalance', type: 'number', rowspan: 2 },
+      {
+        header: 'Movimiento',
+        colspan: 2,
+        children: [
+          { header: 'Débito', field: 'debitMovement', type: 'number' },
+          { header: 'Crédito', field: 'creditMovement', type: 'number' },
+        ],
+      },
+      { header: 'Nuevo Saldo', field: 'finalBalance', type: 'number', rowspan: 2 },
+    ],
+    [
+      { header: 'Código' },
+      { header: 'Descripción' },
+      { header: 'Débito' },
+      { header: 'Crédito' },
+    ],
+  ];
 
   constructor(
     auxiliaryBookService: AuxiliaryBooksServiceService,
@@ -96,18 +126,16 @@ export class MajorAndBalancesComponent extends BaseAuxiliaryBookComponent {
     );
 
     this.request = {
-      //TO DO: Change the value of entId when the enterprise has accounting info
-      //Meanwhile we used this entId because the mock has this id bf4d475f-5d02-4551-b7f0-49a5c426ac0d
-      //entId: this.enterpriseData.id,
-      entId: 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d',
+      
+      entId: this.resolveEntId(),
       criteria: {
         ...this.criteria,
         startDate: formattedStartDate,
         endDate: formattedEndDate,
       },
       type: AuxiliaryBookType.MAJOR_AND_BALANCES,
-      //TO DO: Change the value of userId when the method to get the user ID is implemented
-      userId: 123,
+      
+      userId: this.resolveUserId(),
     };
 
     console.log(this.request);

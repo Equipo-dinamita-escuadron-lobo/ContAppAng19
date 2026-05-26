@@ -22,7 +22,10 @@
     </div>
 
     <!-- Derecha: Botón Exportar -->
-    <div *ngIf="isReportGenerated" class="flex items-start">
+    <div
+      *ngIf="isReportGenerated && auxiliaryBookInfo !== null && dataTable && dataTable.length > 0"
+      class="flex items-start"
+    >
       <p-button
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
@@ -116,6 +119,7 @@
           placeholder="Seleccionar Centro de Costos"
           [disabled]="!isCostCenterOptionSelected"
           styleClass="w-full text-xs"
+          optionLabel="name"
           [editable]="true"
           (onChange)="onSelectCostCenter()"
         ></p-select>
@@ -169,6 +173,7 @@
   <!-- Tabla de Resultados -->
   <div class="mt-10 bg-white rounded-lg shadow-sm">
     <p-table
+      #dt
       showGridlines
       [value]="dataTable"
       [paginator]="true"
@@ -185,34 +190,46 @@
           <th class="text-center" pResizableColumn colspan="2">Cuenta</th>
           <th class="text-center" pResizableColumn colspan="3">Movimiento</th>
           <th class="text-center" pResizableColumn colspan="2">
-            Tercero
-            <p-columnFilter
-              field="representative"
-              display="menu"
-              [showMatchModes]="false"
-              [showOperator]="false"
-              [showAddButton]="false"
-            >
-              <ng-template #filter let-value let-filter="filterCallback">
+            <div class="flex items-center justify-center gap-2">
+              <span>Tercero</span>
+              <button
+                type="button"
+                class="aux-filter-btn"
+                (click)="thirdFilterPanel.toggle($event)"
+                [attr.aria-label]="'Filtrar terceros'"
+                title="Filtrar terceros"
+              >
+                <i class="pi pi-filter"></i>
+              </button>
+            </div>
+            <p-popover #thirdFilterPanel [appendTo]="'body'">
+              <div class="p-2" style="min-width: 18rem">
+                <div class="text-xs font-semibold text-gray-700 mb-2">
+                  Filtrar por Tercero
+                </div>
                 <p-multiselect
-                  [(ngModel)]="thirdSelectedInFilter"
+                  [ngModel]="selectedThirdsFilter"
+                  (ngModelChange)="onThirdFilterChange($event)"
                   [options]="thirdsOptions"
-                  placeholder="Any"
-                  (onChange)="filter($event.value)"
-                  optionLabel="name"
-                  [panelStyle]="{ minWidth: '16rem' }"
-                  styleClass="aux-multiselect"
-                  [panelStyleClass]="'aux-multiselect-panel'"
-                  [appendTo]="'self'"
-                >
-                  <ng-template let-option #item>
-                    <div class="flex items-center gap-2">
-                      <span>{{ option.name }}</span>
-                    </div>
-                  </ng-template>
-                </p-multiselect>
-              </ng-template>
-            </p-columnFilter>
+                  optionLabel="label"
+                  optionValue="id"
+                  placeholder="Seleccione una o varias identificaciones"
+                  display="chip"
+                  [filter]="true"
+                  styleClass="w-full"
+                  [style]="{ width: '100%' }"
+                ></p-multiselect>
+                <div class="flex justify-end mt-2">
+                  <button
+                    type="button"
+                    class="text-xs text-primary underline"
+                    (click)="clearThirdFilter()"
+                  >
+                    Limpiar
+                  </button>
+                </div>
+              </div>
+            </p-popover>
           </th>
           <th class="text-center" pResizableColumn colspan="2">Documento</th>
         </tr>
@@ -232,11 +249,87 @@
       <!-- Body -->
       <ng-template pTemplate="body" let-accountInfo>
         <tr>
-          <td>{{ accountInfo.accountCode }}</td>
-          <td>{{ accountInfo.accountDescription }}</td>
-          <td>{{ accountInfo.description }}</td>
-          <td [ngClass]="{ 'text-red-500': accountInfo.value < 0 }">
-            {{ accountInfo.value | currency : "COP $" : "symbol" : "1.0-0" }}
+          <td>{{ accountInfo.date }}</td>
+          <td>{{ accountInfo.account.accountCode }}</td>
+          <td>{{ accountInfo.account.accountDescription }}</td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.debitMovement,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.creditMovement,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(
+                  accountInfo.balanceMovement,
+                  accountInfo.account.nature
+                )
+              "
+            ></div>
+          </td>
+          <td>
+            {{
+              accountInfo.thirdPartyId?.trim()
+                ? accountInfo.thirdPartyId
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td>
+            {{
+              accountInfo.thirdPartyName?.trim()
+                ? accountInfo.thirdPartyName
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td
+            class="doc-cell"
+            [class.doc-cell-disabled]="!accountInfo.voucherNumber?.trim()"
+            (click)="openDocumentDialog(accountInfo.voucherNumber)"
+            [attr.title]="
+              accountInfo.voucherNumber?.trim()
+                ? 'Ver documento ' + accountInfo.voucherNumber
+                : null
+            "
+          >
+            {{
+              accountInfo.voucherCostCenter?.trim()
+                ? accountInfo.voucherCostCenter
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td
+            class="doc-cell"
+            [class.doc-cell-disabled]="!accountInfo.voucherNumber?.trim()"
+            (click)="openDocumentDialog(accountInfo.voucherNumber)"
+            [attr.title]="
+              accountInfo.voucherNumber?.trim()
+                ? 'Ver documento ' + accountInfo.voucherNumber
+                : null
+            "
+          >
+            {{
+              accountInfo.voucherNumber?.trim()
+                ? accountInfo.voucherNumber
+                : "NO DISPONIBLE"
+            }}
           </td>
         </tr>
       </ng-template>
