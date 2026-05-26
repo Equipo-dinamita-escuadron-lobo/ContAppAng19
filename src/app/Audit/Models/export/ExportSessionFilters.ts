@@ -1,4 +1,4 @@
-import { UserRole } from "../enums/UserRole";
+
 import { ExportFormat } from "./ExportJobResponse";
 
 export interface ExportSessionFilters {
@@ -6,6 +6,6 @@ export interface ExportSessionFilters {
   dateTo: string;
 
   userName?: string;
-  userRole?: UserRole;
+  userRole?: string;
   exportFormat: string;
 }

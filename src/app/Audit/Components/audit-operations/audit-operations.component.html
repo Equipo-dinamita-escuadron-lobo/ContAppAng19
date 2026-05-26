@@ -114,18 +114,27 @@
         />
       </div>
       <div class="flex flex-col">
-        <label for="rol" class="mb-1 text-sm font-medium text-gray-700"
-          >Rol</label
-        >
-        <p-dropdown
+        <label for="rol" class="mb-1 text-sm font-medium text-gray-700">
+          Rol
+        </label>
+
+        <input
           id="rol"
-          [options]="roles"
+          type="text"
+          pInputText
           [(ngModel)]="filtro.userRole"
-          placeholder="Seleccione un rol"
-          optionLabel="label"
-          optionValue="value"
-        >
-        </p-dropdown>
+          placeholder="Buscar rol"
+          (input)="onInputChange($event, 'userRole')"
+        />
+        @if (
+          filtro.userRole &&
+          filtro.userRole.length > 0 &&
+          filtro.userRole.length < 3
+        ) {
+          <small style="color: var(--color-error-35)">
+            Debe escribir mínimo 3 caracteres
+          </small>
+        }
       </div>
       <div class="flex flex-col mr-5">
         <label for="usuario" class="mb-1 text-sm font-medium text-gray-700"
@@ -238,7 +247,7 @@
     <ng-template pTemplate="body" let-operation>
       <tr class="text-neutral-20">
         <td class="py-3">{{ operation.userName }}</td>
-        <td class="py-3">{{ rolesLabel[operation.userRole] }}</td>
+        <td class="py-3">{{ operation.userRole?.join(", ") }}</td>
         <td class="py-3">{{ formatDateTime(operation.operationAt) }}</td>
         <td class="py-3">{{ moduleLabels[operation.moduleName] }}</td>
         <td class="py-3">{{ tableLabels[operation.affectedTable] }}</td>

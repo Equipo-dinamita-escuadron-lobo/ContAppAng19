@@ -303,11 +303,6 @@ export const navbarData: INavbarData[] = [
         icon: 'description',
         label: 'Documentos Contables',
       },
-      {
-        routeLink: '/audit/consecutives',
-        icon: 'format_list_numbered',
-        label: 'Consecutivos',
-      },
     ],
   },
 ];

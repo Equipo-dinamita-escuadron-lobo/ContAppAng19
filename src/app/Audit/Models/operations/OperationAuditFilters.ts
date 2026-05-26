@@ -1,4 +1,4 @@
-import { UserRole } from "../enums/UserRole";
+
 import { OperationType } from "../enums/OperationType";
 
 export interface OperationAuditFilters {
@@ -7,7 +7,7 @@ export interface OperationAuditFilters {
   moduleName?: string;
   affectedTable?: string;
   userName?: string;
-  userRole?: UserRole;    
+  userRole?: string;    
   operationType?: OperationType; 
   registerId?: string;
   page?: number;

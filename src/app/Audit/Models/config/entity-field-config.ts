@@ -111,6 +111,8 @@ export const MODULE_LABELS: Record<string, string | undefined> = {
   TYPE_OF_DOCUMENTS:      'Tipos de documento',
   NO_COMMERCIAL_TAGS: 'Etiquetas',
   TAXES: 'Impuestos',
+  ENTERPRISES: 'Empresas',
+  CONFIGURATION: 'Configuración',
 };
 
 export const TABLE_LABELS: Record<string, string | undefined> = {
@@ -129,7 +131,12 @@ export const TABLE_LABELS: Record<string, string | undefined> = {
   PRODUCT_TYPE:       'Tipo de producto',
   CATEGORY:           'Categoría',
   UNIT_OF_MEASURE:    'Unidad de medida',
-  NO_COMMERCIAL_TAG:  'Etiqueta no comercial',
+  NO_COMMERCIAL_TAG: 'Etiqueta no comercial',
+  ENTERPRISE: 'Empresa',
+  SUBJECT: 'Materia',
+  USER: 'Usuario',
+  PROFILE: 'Perfil',
+  PERMISSION: 'Permiso',
 };
 
 

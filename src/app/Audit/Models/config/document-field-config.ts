@@ -9,109 +9,122 @@ export const AUDIT_HIDDEN_FIELDS = new Set<string>([
 ]);
 
 
- //Traducción de campos
 export const AUDIT_FIELD_LABELS: Record<string, string> = {
 
-  // Header
-  factCode:              'Código documento',
-  factureType:           'Tipo documento',
-  thirdPartName:         'Nombre tercero',
-  thirdPartyDisplay:     'Tercero',
-  expirationDate:        'Fecha vencimiento',
-  accountingAccount:     'Cuenta contable',
-  createdAt:             'Fecha creación',
-  inventoryConfigType:   'Configuración inventario',
+  // Receipt
+  receiptCode: 'Código recibo',
+  receiptType: 'Tipo recibo',
+  paymentMethodId: 'Método de pago',
+  paymentMethodAccount: 'Cuenta método de pago',
+  thirdPartName: 'Nombre tercero',
+  thirdPartyName: 'Nombre tercero',
+  thirdPartyId: 'Id tercero',
+  thirdId: 'Id tercero',
+  issueDate: 'Fecha emisión',
+  observations: 'Observaciones',
+  ledgerAccountId: 'Cuenta contable',
+  centerCostId: 'Id centro de costo',
+  costCenterId: 'Id centro de costo',
 
-  //Returns
-  originalFactCode:      'Factura origen',
-  returnType:            'Tipo devolución',
-  reasonSummary:         'Motivo',
+  // Write off
+  code: 'Código',
+  justification: 'Justificación',
+  writeOffDate: 'Fecha castigo',
+  status: 'Estado',
+  debitAuxiliaryAccount: 'Cuenta auxiliar débito',
 
-  //Detail
-  productId:             'Producto',
-  description:           'Descripción',
-  amount:                'Cantidad',
-  quantity:              'Cantidad',
-  unitPrice:             'Precio unitario',
-  discount:              'Descuento',
-  subtotal:              'Subtotal',
-  taxPercentage:         'Impuestos',
-  basePrice:             'Base',
+  // Common
+  accountingAccount: 'Cuenta contable',
+  invoiceId: 'Id factura',
+  invoiceCode: 'Código factura',
+
+  // Receipt detail
+  amountPaid: 'Valor pagado',
+  amountReversed: 'Valor reversado',
+
+  // Write off detail
+  amountWrittenOff: 'Valor castigado',
 
   // Totals
-  totalValue:            'Valor total',
-  totalPay:              'Valor pagado',
-  pendingValue:          'Saldo pendiente',
-  grossValue:            'Valor bruto',
-  taxValue:              'Impuestos',
-  discountValue:         'Descuentos',
-  netValue:              'Valor neto',
-
-  //Recibos
-  receiptType: 'Tipo recibo',
-  paymentMethod: 'Método de pago',
-  paymentMethodId: 'ID Método de pago',
-  observations: 'Observaciones',
-  receiptCode: 'Código recibo',
-  issueDate: 'Fecha emisión',
-  thirdPartyId: 'Id Tercero',
-  voidDate: 'Fecha anulación',
-  voidReasonDescription: 'Motivo anulación',
-  totalAmountReversed: 'Valor anulado',
-  INVOICE_PAYMENT: 'Pago de factura',
   totalAmount: 'Valor total',
-  status: 'Estado',
-  costCenterId: 'Id centro de costo',
-  writeOffDate: 'Fecha castigo',
-  thirdId: 'Id tercero',
+  totalAmountReversed: 'Valor total reversado',
+  totalAmountRestored: 'Valor restaurado',
 
-  //Receipt 
-  appliedValue:          'Valor aplicado',
-  invoiceCode:           'Factura aplicada',
+  // Metadata
+  operationType: 'Tipo operación',
+  documentSubtype: 'Subtipo documento',
+  affectsInvoices: 'Afecta facturas',
 
-  //Accounting
-  debit:                 'Débito',
-  credit:                'Crédito',
-  account:               'Cuenta',
+  // Diff fields
+  invoiceStatus: 'Estado factura',
+  pendingValue: 'Saldo pendiente',
 
-  //Metadata
-  eventVersion:          'Versión evento',
-  source:                'Origen',
-  generatedBy:           'Generado por',
-  affectsInventory:      'Afecta inventario',
-  affectsPortfolio:      'Afecta cartera',
-};
+  factCode: 'Código factura',
+  factureType: 'Tipo factura',
+  expirationDate: 'Fecha vencimiento',
+
+  // Details
+  productId: 'Producto',
+  description: 'Descripción',
+  amount: 'Cantidad',
+  quantity: 'Cantidad',
+  unitPrice: 'Precio unitario',
+  discount: 'Descuento',
+  taxPercentage: 'Impuesto',
+  subtotal: 'Subtotal',
+
+  // Totals
+  totalValue: 'Valor total',
+  totalPay: 'Valor pagado',
+
+  // Returns
+  originalFactCode: 'Factura origen',
+  returnType: 'Tipo devolución',
+  reason: 'Motivo',
+
+  // Void/Delete
+  documentCode: 'Código documento',
+  voidedDocument: 'Documento anulado',
+}
 
 
 export const AUDIT_VALUE_LABELS: Record<string, string> = {
-  // Facture types
-  PURCHASE:               'Compra',
-  SALE:                   'Venta',
-  RETURN_ON_SALE:         'Devolución en venta',
-  RETURN_ON_PURCHASE:     'Devolución en compra',
-  NON_COMMERCIAL_ENTRY:   'Entrada no comercial',
-  NON_COMMERCIAL_EXIT: 'Salida no comercial',
-  PENDING_CONFIRMATION: 'Pendiente',
+
+  // Receipt types
+  INVOICE_PAYMENT: 'Pago de factura',
+  DIRECT_INCOME: 'Ingreso directo',
+
+  // Write off status
+  PENDING_CONFIRMATION: 'Pendiente confirmación',
   CONFIRMED: 'Confirmado',
   VOIDED: 'Anulado',
-  PENDING_WRITEN_OFF: 'Pendiente castigo',
+
+  // Invoice status
+  PENDING: 'Pendiente',
+  PAID: 'Pagado',
+  PENDING_WRITTEN_OFF: 'Pendiente castigo',
   WRITTEN_OFF: 'Castigado',
 
-
-  //Inventory
-  PEPS:                   'PEPS',
-  WEIGHTED_AVERAGE:       'Promedio ponderado',
-
   // Operations
-  CREATE:                 'Creación',
-  UPDATE:                 'Actualización',
-  APPROVE:                'Aprobación',
-  VOID:                   'Anulación',
-  DELETE:                 'Eliminación',
+  CREATE: 'Creación',
+  APPROVE: 'Aprobación',
+  UPDATE: 'Actualización',
+  VOID: 'Anulación',
+  DELETE: 'Eliminación',
 
-  //Boolean
-  true:                   'Sí',
-  false:                  'No',
+  PURCHASE: 'Compra',
+  SALE: 'Venta',
+  RETURN_ON_SALE: 'Devolución en venta',
+  RETURN_ON_PURCHASE: 'Devolución en compra',
+  NON_COMMERCIAL_ENTRY: 'Entrada no comercial',
+  NON_COMMERCIAL_EXIT: 'Salida no comercial',
+
+  PEPS: 'PEPS',
+  WEIGHTED_AVERAGE: 'Promedio ponderado',
+
+  // Boolean
+  true: 'Sí',
+  false: 'No',
 };
 
 /** Traduce una clave */

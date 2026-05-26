@@ -43,12 +43,6 @@ export class AuditHubComponent {
       icon: 'description',
       description: 'Historial de cambios en documentos',
     },
-    {
-      name: 'Auditoría de consecutivos',
-      route: '/audit/consecutives',
-      icon: 'format_list_numbered',
-      description: 'Seguimiento de numeración de documentos',
-    },
   ];
 
   auditItems: typeof this.allAuditItems = [];

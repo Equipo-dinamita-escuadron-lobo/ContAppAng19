@@ -1,10 +1,9 @@
-import { UserRole } from "../enums/UserRole";
 
 export interface SessionAuditFilters {
   dateFrom: string;  
   dateTo: string;
   userName?: string;
-  userRole?: UserRole;
+  userRole?: string;
   page?: number;
   size?: number;
   sortField?: string;
