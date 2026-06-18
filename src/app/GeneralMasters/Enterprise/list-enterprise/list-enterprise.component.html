@@ -1,3 +1,5 @@
+<p-toast />
+
 <!-- Ocupar todo el espacio-->
 <div class="w-full h-full flex flex-col">
   <app-header></app-header>
@@ -396,7 +398,6 @@
       <p-button
         label="Compartir"
         icon="pi pi-share-alt"
-        class="bg-green-600 text-white"
         (click)="confirmShare()"
         [disabled]="emailList.length === 0 || !selectedRole"
       ></p-button>
@@ -681,7 +682,7 @@
         <i class="pi pi-plus-circle text-2xl text-blue-500"></i>
         <div>
           <p class="font-semibold">Crear empresa nueva</p>
-          <p class="text-sm text-gray-500">Se importa como empresa nueva con nombre "(Importada)". Ninguna empresa existente se ve afectada.</p>
+          <p class="text-sm text-gray-500">Se crea una empresa nueva independiente. Podés elegir el nombre antes de confirmar.</p>
         </div>
       </div>
     </div>
@@ -723,6 +724,39 @@
       <p-button label="Continuar" icon="pi pi-arrow-right"
         [disabled]="importMode === 'inplace' && !enterpriseForInplaceRestore"
         (click)="proceedImport()"></p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- ================================================================
+     Modal nombre empresa nueva desde backup
+     ================================================================ -->
+<p-dialog
+  header="Nombre de la empresa"
+  [(visible)]="showImportNameModal"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '460px' }"
+>
+  <div class="flex flex-col gap-3 p-2">
+    <p class="text-sm text-gray-600">
+      Revisá el nombre con el que se va a crear la empresa. Podés modificarlo antes de continuar.
+    </p>
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium">Nombre de la empresa</label>
+      <input pInputText [(ngModel)]="importNameInput" class="w-full" placeholder="Nombre de la empresa" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-3">
+      <p-button label="Cancelar" icon="pi pi-times" class="p-button-text"
+        (click)="cancelImportNameModal()"></p-button>
+      <p-button label="Importar" icon="pi pi-check"
+        [disabled]="!importNameInput.trim()"
+        (click)="confirmImportWithName()"></p-button>
     </div>
   </ng-template>
 </p-dialog>

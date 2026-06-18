@@ -135,15 +135,20 @@ export class EnterpriseService {
     });
   }
 
+  deleteCopyProcess(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}copy/processes/${id}`);
+  }
+
   restoreFromBackup(backupRef: string, empresaDestino: string, inplace = false): Observable<CopyProcess> {
     return this.http.post<CopyProcess>(`${this.apiUrl}copy/restore`, { backupRef, empresaDestino, inplace });
   }
 
-  restoreFromZipUpload(file: File, empresaDestino: string, inplace = false): Observable<CopyProcess> {
+  restoreFromZipUpload(file: File, empresaDestino: string, inplace = false, nombreDestino?: string): Observable<CopyProcess> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('empresaDestino', empresaDestino);
     formData.append('inplace', String(inplace));
+    if (nombreDestino) formData.append('nombreDestino', nombreDestino);
     return this.http.post<CopyProcess>(`${this.apiUrl}copy/restore/upload`, formData);
   }
 

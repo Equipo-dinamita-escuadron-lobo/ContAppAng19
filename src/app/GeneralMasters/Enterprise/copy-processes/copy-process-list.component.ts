@@ -46,6 +46,12 @@ export class CopyProcessListComponent implements OnInit {
   // --- Loading durante restore ---
   restoreInProgress = false;
 
+  // --- Diálogo de eliminación ---
+  showDeleteProcessModal = false;
+  processToDelete: CopyProcess | null = null;
+
+  readonly TERMINAL_STATES = ['COMPLETADO', 'ERROR', 'CANCELADO'];
+
   constructor(
     private enterpriseService: EnterpriseService,
     private messageService: MessageService,
@@ -199,5 +205,39 @@ export class CopyProcessListComponent implements OnInit {
     this.selectedProcess = null;
     this.empresaDestinoInput = '';
     this.restoreMode = null;
+  }
+
+  /* ==================== ELIMINAR PROCESO ==================== */
+  openDeleteProcessDialog(process: CopyProcess): void {
+    this.processToDelete = process;
+    this.showDeleteProcessModal = true;
+  }
+
+  cancelDeleteProcess(): void {
+    this.processToDelete = null;
+    this.showDeleteProcessModal = false;
+  }
+
+  confirmDeleteProcess(): void {
+    if (!this.processToDelete) return;
+
+    this.enterpriseService.deleteCopyProcess(this.processToDelete.idProceso).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Eliminado',
+          detail: `Proceso eliminado correctamente.`,
+        });
+        this.showDeleteProcessModal = false;
+        this.processToDelete = null;
+        this.loadProcesses();
+      },
+      error: (err) => {
+        const detail = err?.status === 409
+          ? 'No se puede eliminar un proceso que no está en estado terminal'
+          : 'No se pudo eliminar el proceso';
+        this.messageService.add({ severity: 'error', summary: 'Error', detail });
+      },
+    });
   }
 }

@@ -13,6 +13,7 @@ import { EnterpriseService } from '../services/enterprise.service';
 import { EnterpriseList } from '../models/EnterpriseList';
 import { HeaderComponent } from '../../../Core/Components/Header/header.component';
 import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 
 import {
   LocalStorageMethods,
@@ -35,6 +36,7 @@ import {
     InputIconModule,
     InputTextModule,
     DropdownModule,
+    ToastModule,
   ],
   templateUrl: './list-enterprise.component.html',
   styleUrls: ['./list-enterprise.component.css'],
@@ -59,6 +61,8 @@ export class ListEnterpriseComponent implements OnInit {
 
   showDeleteModal: boolean = false;
   enterpriseToDelete: EnterpriseList | null = null;
+
+  isEstudiante: boolean = false;
 
   menuItems: any[] = [];
   selectedEnterpriseForMenu: EnterpriseList | null = null;
@@ -99,6 +103,10 @@ export class ListEnterpriseComponent implements OnInit {
   enterpriseForInplaceRestore: EnterpriseList | null = null;
   showImportInplaceWarning: boolean = false;
 
+  // Modal de nombre al crear empresa nueva desde backup
+  showImportNameModal: boolean = false;
+  importNameInput: string = '';
+
   constructor(
     private enterpriseService: EnterpriseService,
     private router: Router,
@@ -106,11 +114,13 @@ export class ListEnterpriseComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const token = localStorage.getItem('token'); // o como lo guardas
+    const token = localStorage.getItem('token');
     if (token) {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      console.log('Roles de realm:', payload.realm_access.roles);
-      console.log('Roles de cliente:', payload.resource_access);
+      const resourceAccess = payload.resource_access ?? {};
+      this.isEstudiante = Object.values(resourceAccess).some(
+        (client: any) => Array.isArray(client?.roles) && client.roles.includes('super_client')
+      );
     }
 
     this.getEnterprises();
@@ -188,8 +198,7 @@ export class ListEnterpriseComponent implements OnInit {
       {
         label: 'Duplicar',
         icon: 'pi pi-copy',
-        command: () =>
-          this.duplicateEnterprise(this.selectedEnterpriseForMenu!),
+        command: () => this.duplicateEnterprise(this.selectedEnterpriseForMenu!),
       },
       {
         label: 'Exportar',
@@ -198,7 +207,7 @@ export class ListEnterpriseComponent implements OnInit {
       },
       {
         label: 'Compartir',
-        icon: 'pi pi-save',
+        icon: 'pi pi-share-alt',
         command: () => this.shareEnterprise(this.selectedEnterpriseForMenu!),
       },
       {
@@ -206,11 +215,11 @@ export class ListEnterpriseComponent implements OnInit {
         icon: 'pi pi-folder',
         command: () => this.InactiveEnterprise(this.selectedEnterpriseForMenu!),
       },
-      {
+      ...(!this.isEstudiante ? [{
         label: 'Eliminar',
         icon: 'pi pi-trash',
         command: () => this.deleteEnterprise(this.selectedEnterpriseForMenu!),
-      },
+      }] : []),
     ];
     menu.toggle(event);
   }
@@ -486,8 +495,8 @@ export class ListEnterpriseComponent implements OnInit {
         if (res.notified.length > 0) {
           this.messageService.add({
             severity: 'success',
-            summary: 'Compartida',
-            detail: `Empresa compartida con ${res.notified.length} destinatario(s).`,
+            summary: '¡Éxito!',
+            detail: 'Empresa compartida con éxito.',
           });
         }
         this.closeShareModal();
@@ -705,9 +714,22 @@ export class ListEnterpriseComponent implements OnInit {
       this.showImportOptionsModal = false;
       this.showImportInplaceWarning = true;
     } else {
+      const filename = this.selectedZipFile?.name ?? '';
+      this.importNameInput = filename.replace(/-backup\.zip$/i, '').replace(/\.zip$/i, '');
       this.showImportOptionsModal = false;
-      this.confirmImport(false);
+      this.showImportNameModal = true;
     }
+  }
+
+  cancelImportNameModal(): void {
+    this.showImportNameModal = false;
+    this.showImportOptionsModal = true;
+  }
+
+  confirmImportWithName(): void {
+    if (!this.importNameInput.trim()) return;
+    this.showImportNameModal = false;
+    this.confirmImport(false, this.importNameInput.trim());
   }
 
   cancelImportInplaceWarning(): void {
@@ -720,7 +742,7 @@ export class ListEnterpriseComponent implements OnInit {
     this.confirmImport(true);
   }
 
-  confirmImport(inplace = false): void {
+  confirmImport(inplace = false, nombreDestino?: string): void {
     if (!this.selectedZipFile) return;
 
     const empresaDestino = inplace
@@ -731,7 +753,7 @@ export class ListEnterpriseComponent implements OnInit {
     this.showImportLoadingModal = true;
 
     this.enterpriseService
-      .restoreFromZipUpload(this.selectedZipFile, empresaDestino, inplace)
+      .restoreFromZipUpload(this.selectedZipFile, empresaDestino, inplace, nombreDestino)
       .subscribe({
         next: (process) => {
           this.importProgress = 20;
