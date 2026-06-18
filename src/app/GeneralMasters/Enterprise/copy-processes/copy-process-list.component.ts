@@ -33,9 +33,18 @@ export class CopyProcessListComponent implements OnInit {
 
   processes: CopyProcess[] = [];
   loading = false;
+
+  // --- Diálogo principal de restore ---
   restoreDialogVisible = false;
   selectedProcess: CopyProcess | null = null;
   empresaDestinoInput = '';
+  restoreMode: 'nueva' | 'inplace' | null = null;
+
+  // --- Diálogo de advertencia inplace ---
+  inplaceWarningVisible = false;
+
+  // --- Loading durante restore ---
+  restoreInProgress = false;
 
   constructor(
     private enterpriseService: EnterpriseService,
@@ -45,6 +54,10 @@ export class CopyProcessListComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/enterprise/list']);
+  }
+
+  viewDetail(process: CopyProcess): void {
+    this.router.navigate(['/enterprise/copy-processes', process.idProceso]);
   }
 
   ngOnInit(): void {
@@ -101,13 +114,65 @@ export class CopyProcessListComponent implements OnInit {
   openRestoreDialog(process: CopyProcess): void {
     this.selectedProcess = process;
     this.empresaDestinoInput = '';
+    this.restoreMode = null;
+    this.inplaceWarningVisible = false;
     this.restoreDialogVisible = true;
+  }
+
+  selectRestoreMode(mode: 'nueva' | 'inplace'): void {
+    this.restoreMode = mode;
+    if (mode === 'inplace') {
+      // Mostrar advertencia antes de confirmar
+      this.restoreDialogVisible = false;
+      this.inplaceWarningVisible = true;
+    }
+  }
+
+  cancelInplaceWarning(): void {
+    this.inplaceWarningVisible = false;
+    this.restoreDialogVisible = true;
+    this.restoreMode = null;
+  }
+
+  confirmInplaceRestore(): void {
+    if (!this.selectedProcess?.backupRef || !this.selectedProcess.empresaOrigen) return;
+
+    this.inplaceWarningVisible = false;
+    this.restoreInProgress = true;
+
+    this.enterpriseService
+      .restoreFromBackup(
+        this.selectedProcess.backupRef,
+        this.selectedProcess.empresaOrigen,
+        true,
+      )
+      .subscribe({
+        next: () => {
+          this.restoreInProgress = false;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Restauración inplace iniciada',
+            detail: 'La empresa está siendo restaurada sobre sí misma. Revisá los procesos para ver el estado.',
+          });
+          this.loadProcesses();
+        },
+        error: (err) => {
+          this.restoreInProgress = false;
+          const status = err?.status;
+          let detail = 'No se pudo iniciar la restauración';
+          if (status === 409) detail = 'No se pudo eliminar la empresa actual. Intentá de nuevo.';
+          if (status === 422) detail = 'El backup no contiene datos de empresa válidos';
+          if (status === 404) detail = 'Backup no encontrado';
+          this.messageService.add({ severity: 'error', summary: 'Error', detail });
+        },
+      });
   }
 
   confirmRestore(): void {
     if (!this.selectedProcess || !this.empresaDestinoInput.trim()) return;
+
     this.enterpriseService
-      .restoreFromBackup(this.selectedProcess.backupRef!, this.empresaDestinoInput.trim())
+      .restoreFromBackup(this.selectedProcess.backupRef!, this.empresaDestinoInput.trim(), false)
       .subscribe({
         next: () => {
           this.restoreDialogVisible = false;
@@ -133,5 +198,6 @@ export class CopyProcessListComponent implements OnInit {
     this.restoreDialogVisible = false;
     this.selectedProcess = null;
     this.empresaDestinoInput = '';
+    this.restoreMode = null;
   }
 }

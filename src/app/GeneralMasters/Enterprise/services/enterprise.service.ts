@@ -115,6 +115,15 @@ export class EnterpriseService {
     });
   }
 
+  startDuplicateProcess(empresaId: string, destinationName: string): Observable<CopyProcess> {
+    return this.http.post<CopyProcess>(`${this.apiUrl}copy/processes`, {
+      tipo: 'DUPLICATE',
+      empresaOrigen: empresaId,
+      empresaDestino: { nombre: destinationName },
+      generateBackup: false,
+    });
+  }
+
   getCopyProcessStatus(processId: string): Observable<CopyProcess> {
     return this.http.get<CopyProcess>(`${this.apiUrl}copy/processes/${processId}`);
   }
@@ -126,14 +135,15 @@ export class EnterpriseService {
     });
   }
 
-  restoreFromBackup(backupRef: string, empresaDestino: string): Observable<CopyProcess> {
-    return this.http.post<CopyProcess>(`${this.apiUrl}copy/restore`, { backupRef, empresaDestino });
+  restoreFromBackup(backupRef: string, empresaDestino: string, inplace = false): Observable<CopyProcess> {
+    return this.http.post<CopyProcess>(`${this.apiUrl}copy/restore`, { backupRef, empresaDestino, inplace });
   }
 
-  restoreFromZipUpload(file: File, empresaDestino: string): Observable<CopyProcess> {
+  restoreFromZipUpload(file: File, empresaDestino: string, inplace = false): Observable<CopyProcess> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('empresaDestino', empresaDestino);
+    formData.append('inplace', String(inplace));
     return this.http.post<CopyProcess>(`${this.apiUrl}copy/restore/upload`, formData);
   }
 

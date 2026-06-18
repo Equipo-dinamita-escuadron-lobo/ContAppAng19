@@ -5,6 +5,7 @@ export interface CopyProcess {
   empresaOrigen: string;
   empresaDestino: string;
   iniciadoPor: string;
+  iniciadoEn?: string;
   snapshotCorte?: string;
   finalizadoEn?: string;
   backupRef?: string | null;

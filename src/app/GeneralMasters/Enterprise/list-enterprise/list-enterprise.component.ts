@@ -89,6 +89,16 @@ export class ListEnterpriseComponent implements OnInit {
   importProgress: number = 0;
   importEmpresaDestino: string = '';
 
+  showDuplicateLoadingModal: boolean = false;
+  duplicateProgress: number = 0;
+  duplicateEnterpriseName: string = '';
+
+  // Restore inplace desde importación ZIP
+  showImportOptionsModal: boolean = false;
+  importMode: 'nueva' | 'inplace' = 'nueva';
+  enterpriseForInplaceRestore: EnterpriseList | null = null;
+  showImportInplaceWarning: boolean = false;
+
   constructor(
     private enterpriseService: EnterpriseService,
     private router: Router,
@@ -287,64 +297,57 @@ export class ListEnterpriseComponent implements OnInit {
   duplicateEnterprise(enterprise: EnterpriseList) {
     if (!enterprise.id) return;
 
-    // Obtener los datos de la empresa a duplicar
-    this.enterpriseService.getEnterpriseById(String(enterprise.id)).subscribe({
-      next: (data) => {
-        // Transformar los datos para cumplir con el formato esperado por el backend
-        const duplicatedEnterprise = {
-          name: `${data.name} (copia)`,
-          nit: data.nit,
-          dv: data.dv,
-          phone: data.phone,
-          branch: data.branch,
-          email: data.email,
-          logo: data.logo,
-          mainActivity: data.mainActivity,
-          secondaryActivity: data.secondaryActivity,
-          taxLiabilities: data.taxLiabilities.map((t: any) => t.id || t), // Extraer IDs
-          // state: data.state,
-          taxPayerType: data.taxPayerType.id || data.taxPayerType, // Extraer ID
-          enterpriseType: data.enterpriseType.id || data.enterpriseType, // Extraer ID
-          personType: {
-            type: data.personType.type,
-            name: data.personType.name,
-            surname: data.personType.surname,
-            bussinessName: data.personType.bussinessName,
-          },
-          location: {
-            address: data.location.address,
-            city: data.location.city.id || data.location.city, // Extraer ID
-            department: data.location.department.id || data.location.department, // Extraer ID
-            country: data.location.country.id || data.location.country, // Extraer ID
-          },
-        };
+    this.duplicateEnterpriseName = enterprise.name || 'empresa';
+    this.duplicateProgress = 0;
+    this.showDuplicateLoadingModal = true;
 
-        console.log('Datos enviados para duplicar:', duplicatedEnterprise);
+    const destinationName = `${enterprise.name} (copia)`;
 
-        // Enviar los datos duplicados para crear una nueva empresa
-        this.enterpriseService
-          .createEnterprise(duplicatedEnterprise)
-          .subscribe({
-            next: () => {
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Duplicada',
-                detail: `${data.name} fue duplicada exitosamente.`,
-              });
-              this.getEnterprises(); // Actualizar la lista de empresas
+    this.enterpriseService.startDuplicateProcess(String(enterprise.id), destinationName).subscribe({
+      next: (process) => {
+        this.duplicateProgress = 5;
+
+        const poll = setInterval(() => {
+          this.enterpriseService.getCopyProcessStatus(process.idProceso).subscribe({
+            next: (updated) => {
+              if (updated.estado === 'EN_PROCESO' && updated.faseActual) {
+                this.duplicateProgress = Math.min(5 + (updated.faseActual * 22), 95);
+              }
+
+              if (updated.estado === 'COMPLETADO') {
+                clearInterval(poll);
+                this.duplicateProgress = 100;
+                setTimeout(() => {
+                  this.showDuplicateLoadingModal = false;
+                  this.messageService.add({
+                    severity: 'success',
+                    summary: 'Duplicada',
+                    detail: `${enterprise.name} fue duplicada exitosamente.`,
+                  });
+                  this.getEnterprises();
+                }, 500);
+              } else if (['ERROR', 'FALLIDO', 'CANCELADO'].includes(updated.estado)) {
+                clearInterval(poll);
+                this.showDuplicateLoadingModal = false;
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error al duplicar',
+                  detail: updated.errorResumen || `El proceso terminó con estado: ${updated.estado}`,
+                });
+              }
             },
-            error: (err) => {
-              console.error('Error al duplicar empresa:', err);
-              this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'No se pudo duplicar la empresa. Verifica los datos.',
-              });
+            error: () => {
+              clearInterval(poll);
+              this.showDuplicateLoadingModal = false;
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo consultar el estado del proceso.' });
             },
           });
+        }, 2000);
       },
-      error: (err) =>
-        console.error('Error al obtener datos de la empresa:', err),
+      error: () => {
+        this.showDuplicateLoadingModal = false;
+        this.messageService.add({ severity: 'error', summary: 'Error al duplicar', detail: 'No se pudo iniciar el proceso de duplicación.' });
+      },
     });
   }
 
@@ -680,21 +683,55 @@ export class ListEnterpriseComponent implements OnInit {
       const file = event.target.files[0];
       if (!file) return;
       this.selectedZipFile = file;
-      this.confirmImport();
+      // Mostrar modal de opciones en lugar de importar directo
+      this.importMode = 'nueva';
+      this.enterpriseForInplaceRestore = null;
+      this.showImportOptionsModal = true;
     });
 
     input.click();
   }
 
-  confirmImport(): void {
+  closeImportOptionsModal(): void {
+    this.showImportOptionsModal = false;
+    this.selectedZipFile = null;
+    this.importMode = 'nueva';
+    this.enterpriseForInplaceRestore = null;
+  }
+
+  proceedImport(): void {
+    if (this.importMode === 'inplace') {
+      if (!this.enterpriseForInplaceRestore) return;
+      this.showImportOptionsModal = false;
+      this.showImportInplaceWarning = true;
+    } else {
+      this.showImportOptionsModal = false;
+      this.confirmImport(false);
+    }
+  }
+
+  cancelImportInplaceWarning(): void {
+    this.showImportInplaceWarning = false;
+    this.showImportOptionsModal = true;
+  }
+
+  confirmImportInplace(): void {
+    this.showImportInplaceWarning = false;
+    this.confirmImport(true);
+  }
+
+  confirmImport(inplace = false): void {
     if (!this.selectedZipFile) return;
 
-    const empresaDestino = crypto.randomUUID();
+    const empresaDestino = inplace
+      ? String(this.enterpriseForInplaceRestore?.id ?? crypto.randomUUID())
+      : crypto.randomUUID();
+
     this.importProgress = 10;
     this.showImportLoadingModal = true;
 
     this.enterpriseService
-      .restoreFromZipUpload(this.selectedZipFile, empresaDestino)
+      .restoreFromZipUpload(this.selectedZipFile, empresaDestino, inplace)
       .subscribe({
         next: (process) => {
           this.importProgress = 20;
@@ -712,11 +749,16 @@ export class ListEnterpriseComponent implements OnInit {
                     this.showImportLoadingModal = false;
                     this.selectedZipFile = null;
                     this.importEmpresaDestino = '';
+                    this.enterpriseForInplaceRestore = null;
                     this.messageService.add({
                       severity: 'success',
                       summary: 'Importación completada',
-                      detail: 'La empresa fue restaurada correctamente.',
+                      detail: inplace
+                        ? 'La empresa fue restaurada sobre sí misma correctamente.'
+                        : 'La empresa fue restaurada correctamente.',
                     });
+                    this.getEnterprises();
+                    this.getArchivedEnterprises();
                   }, 500);
                 } else if (
                   updated.estado === 'ERROR' ||
