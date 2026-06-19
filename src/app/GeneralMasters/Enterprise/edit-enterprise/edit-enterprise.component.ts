@@ -480,6 +480,13 @@ export class EditEnterpriseComponent implements OnInit {
             interest: tax.interest,
             status: typeof tax.status === 'boolean' ? tax.status : false,
           }));
+
+          // Re-apply selection in case the form was initialized before options arrived
+          if (this.enterpriseForm && this.enterpriseData?.taxLiabilities?.length) {
+            this.enterpriseForm.get('taxLiabilities')?.setValue(
+              this.mapTaxLiabilitiesToIds(this.enterpriseData.taxLiabilities)
+            );
+          }
         },
         error: (err) => {
           console.error('Error al cargar impuestos:', err);
