@@ -82,7 +82,7 @@ export class ThirdListComponent implements OnInit {
   selectedThirds: Third[] = [];
   thirdTypes: ThirdType[] = [];
   typeIds: TypeId[] = [];
-  
+
   // UI State
   loading = false;
   loadingPdfRut = false;
@@ -92,7 +92,7 @@ export class ThirdListComponent implements OnInit {
   searchValue = '';
 
   bulkStateToggle = true; // Default to active
-  
+
   // Pagination
   totalRecords = 0;
   rows = 10;
@@ -108,7 +108,7 @@ export class ThirdListComponent implements OnInit {
 
   /** Control de visibilidad del modal de detalles */
   showDetailsModal = false;
-  
+
   // Variables para manejar errores de importación
   importErrors: ImportError[] = [];
   totalErrors = 0;
@@ -119,7 +119,7 @@ export class ThirdListComponent implements OnInit {
 
   /** Datos para el modal de detalles */
   detailsModalData: any = null;
-  
+
   // Company data
   entData: string = '';
 
@@ -312,7 +312,7 @@ export class ThirdListComponent implements OnInit {
    */
   confirmDelete(third: Third): void {
     const displayName = this.getDisplayName(third);
-    
+
     this.confirmationService.confirm({
       message: `¿Desea eliminar a "${displayName}"? Esta acción no se puede deshacer.`,
       header: 'Confirmar Eliminación',
@@ -436,122 +436,255 @@ export class ThirdListComponent implements OnInit {
   /**
    * Importa terceros desde un archivo Excel usando el endpoint del backend
    */
+  // private importThirdsFromExcel(file: File): void {
+  //   this.loading = true;
+
+  //   this.thirdService.importFromExcel(this.entData, file).subscribe({
+  //     next: (response) => {
+  //       this.loading = false;
+  //       const importResult = response.body;
+
+  //       if (importResult) {
+  //         const { status, totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = importResult;
+
+  //         // Si hay errores, mostrar modal de errores Y notificación de resumen
+  //         if (errors && errors.length > 0) {
+
+  //           let detail = `Total procesados: ${totalRecords || 0}\n`;
+  //           detail += `Exitosos: ${successfulImports || 0}\n`;
+  //           detail += `Fallidos: ${failedImports}\n`;
+  //           if (duplicatesSkipped > 0) {
+  //             detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
+  //           }
+
+  //           // Mostrar modal con detalles de errores
+  //           this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
+
+  //           // Recargar lista si hubo importaciones exitosas
+  //           if (successfulImports > 0) {
+  //             this.loadThirds();
+  //           }
+  //           return;
+  //         }
+
+  //         // Si no hay errores, mostrar resumen de importación exitosa
+  //         let severity: 'success' | 'info' | 'warn' | 'error' = 'success';
+  //         let summary = 'Importación Exitosa';
+
+  //         if (status === 'FAILED') {
+  //           severity = 'error';
+  //           summary = 'Error en Importación';
+  //         }
+
+  //         // Construir mensaje detallado
+  //         let detail = `Total procesados: ${totalRecords || 0}\n`;
+  //         detail += `Exitosos: ${successfulImports || 0}\n`;
+  //         if (duplicatesSkipped > 0) {
+  //           detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
+  //         }
+
+  //         this.messageService.add({
+  //           severity,
+  //           summary,
+  //           detail,
+  //           life: 8000
+  //         });
+
+  //         // Recargar lista si hubo importaciones exitosas
+  //         if (successfulImports > 0) {
+  //           this.loadThirds();
+  //         }
+  //       }
+  //     },
+  //     error: (error) => {
+  //       this.loading = false;
+
+  //       // Extraer los errores del backend
+  //       if (error.error && typeof error.error === 'object') {
+  //         const errorResponse = error.error;
+  //         const errors = errorResponse.errors || [];
+
+  //         if (errors && errors.length > 0) {
+  //           // Mostrar modal de errores
+  //           this.showImportErrorsModal(
+  //             errors,
+  //             errorResponse.fileName || file.name,
+  //             errorResponse.totalRecords,
+  //             errorResponse.failedImports,
+  //             errorResponse.successfulImports,
+  //             errorResponse.duplicatesSkipped
+  //           );
+  //           return;
+  //         }
+  //       }
+
+  //       // Si no hay errores estructurados, intentar extraer mensaje genérico
+  //       let errorMessage = 'Error al procesar el archivo de importación';
+
+  //       if (error.error) {
+  //         if (error.error instanceof Blob) {
+  //           const reader = new FileReader();
+  //           reader.onload = () => {
+  //             try {
+  //               const errorObj = JSON.parse(reader.result as string);
+  //               this.handleGenericError(errorObj);
+  //             } catch (e) {
+  //               this.showErrorNotification(reader.result as string || errorMessage, '');
+  //             }
+  //           };
+  //           reader.onerror = () => {
+  //             this.showErrorNotification('Error al leer la respuesta del servidor', '');
+  //           };
+  //           reader.readAsText(error.error);
+  //         } else if (typeof error.error === 'object' && error.error !== null) {
+  //           this.handleGenericError(error.error);
+  //         } else if (typeof error.error === 'string') {
+  //           this.showErrorNotification(error.error, '');
+  //         } else {
+  //           this.showErrorNotification(errorMessage, `Código de error: ${error.status || 'desconocido'}`);
+  //         }
+  //       } else if (error.message) {
+  //         this.showErrorNotification(error.message, '');
+  //       } else {
+  //         this.showErrorNotification(errorMessage, `Código de error: ${error.status || 'desconocido'}`);
+  //       }
+  //     }
+  //   });
+  // }
   private importThirdsFromExcel(file: File): void {
-    this.loading = true;
-    
-    this.thirdService.importFromExcel(this.entData, file).subscribe({
-      next: (response) => {
-        this.loading = false;
-        const importResult = response.body;
-        
-        if (importResult) {
-          const { status, totalRecords, successfulImports, failedImports, duplicatesSkipped, errors } = importResult;
-          
-          // Si hay errores, mostrar modal de errores Y notificación de resumen
-          if (errors && errors.length > 0) {
-           
-            let detail = `Total procesados: ${totalRecords || 0}\n`;
-            detail += `Exitosos: ${successfulImports || 0}\n`;
-            detail += `Fallidos: ${failedImports}\n`;
-            if (duplicatesSkipped > 0) {
-              detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
-            }         
-            
-            // Mostrar modal con detalles de errores
-            this.showImportErrorsModal(errors, importResult.fileName || file.name, totalRecords, failedImports, successfulImports, duplicatesSkipped);
-            
-            // Recargar lista si hubo importaciones exitosas
-            if (successfulImports > 0) {
-              this.loadThirds();
-            }
-            return;
-          }
-          
-          // Si no hay errores, mostrar resumen de importación exitosa
-          let severity: 'success' | 'info' | 'warn' | 'error' = 'success';
-          let summary = 'Importación Exitosa';
-          
-          if (status === 'FAILED') {
-            severity = 'error';
-            summary = 'Error en Importación';
-          }
-          
-          // Construir mensaje detallado
-          let detail = `Total procesados: ${totalRecords || 0}\n`;
-          detail += `Exitosos: ${successfulImports || 0}\n`;
-          if (duplicatesSkipped > 0) {
-            detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
-          }
-          
-          this.messageService.add({
-            severity,
-            summary,
-            detail,
-            life: 8000
-          });
-          
-          // Recargar lista si hubo importaciones exitosas
-          if (successfulImports > 0) {
-            this.loadThirds();
-          }
+  this.loading = true;
+
+  this.thirdService.importFromExcel(this.entData, file).subscribe({
+    next: (response) => {
+      this.loading = false;
+
+      const importResult = response.body;
+
+      if (!importResult) {
+        return;
+      }
+
+      const {
+        status,
+        totalRecords,
+        successfulImports,
+        failedImports,
+        duplicatesSkipped,
+        errors
+      } = importResult;
+
+      if (errors?.length > 0) {
+        this.showImportErrorsModal(
+          errors,
+          importResult.fileName || file.name,
+          totalRecords,
+          failedImports,
+          successfulImports,
+          duplicatesSkipped
+        );
+
+        if (successfulImports > 0) {
+          this.loadThirds();
         }
-      },
-      error: (error) => {
-        this.loading = false;
-        
-        // Extraer los errores del backend
-        if (error.error && typeof error.error === 'object') {
-          const errorResponse = error.error;
-          const errors = errorResponse.errors || [];
-          
-          if (errors && errors.length > 0) {
-            // Mostrar modal de errores
-            this.showImportErrorsModal(
-              errors, 
-              errorResponse.fileName || file.name,
-              errorResponse.totalRecords,
-              errorResponse.failedImports,
-              errorResponse.successfulImports,
-              errorResponse.duplicatesSkipped
-            );
-            return;
-          }
-        }
-        
-        // Si no hay errores estructurados, intentar extraer mensaje genérico
-        let errorMessage = 'Error al procesar el archivo de importación';
-        
-        if (error.error) {
-          if (error.error instanceof Blob) {
-            const reader = new FileReader();
-            reader.onload = () => {
-              try {
-                const errorObj = JSON.parse(reader.result as string);
-                this.handleGenericError(errorObj);
-              } catch (e) {
-                this.showErrorNotification(reader.result as string || errorMessage, '');
-              }
-            };
-            reader.onerror = () => {
-              this.showErrorNotification('Error al leer la respuesta del servidor', '');
-            };
-            reader.readAsText(error.error);
-          } else if (typeof error.error === 'object' && error.error !== null) {
-            this.handleGenericError(error.error);
-          } else if (typeof error.error === 'string') {
-            this.showErrorNotification(error.error, '');
-          } else {
-            this.showErrorNotification(errorMessage, `Código de error: ${error.status || 'desconocido'}`);
-          }
-        } else if (error.message) {
-          this.showErrorNotification(error.message, '');
-        } else {
-          this.showErrorNotification(errorMessage, `Código de error: ${error.status || 'desconocido'}`);
+
+        return;
+      }
+
+      let severity: 'success' | 'info' | 'warn' | 'error' = 'success';
+      let summary = 'Importación Exitosa';
+
+      if (status === 'FAILED') {
+        severity = 'error';
+        summary = 'Error en Importación';
+      }
+
+      let detail = `Total procesados: ${totalRecords || 0}\n`;
+      detail += `Exitosos: ${successfulImports || 0}\n`;
+
+      if (duplicatesSkipped > 0) {
+        detail += `Duplicados omitidos: ${duplicatesSkipped}\n`;
+      }
+
+      this.messageService.add({
+        severity,
+        summary,
+        detail,
+        life: 8000
+      });
+
+      if (successfulImports > 0) {
+        this.loadThirds();
+      }
+    },
+
+    error: (error) => {
+      this.loading = false;
+
+      if (error.error && typeof error.error === 'object') {
+        const errorResponse = error.error;
+        const errors = errorResponse.errors || [];
+
+        if (errors.length > 0) {
+          this.showImportErrorsModal(
+            errors,
+            errorResponse.fileName || file.name,
+            errorResponse.totalRecords,
+            errorResponse.failedImports,
+            errorResponse.successfulImports,
+            errorResponse.duplicatesSkipped
+          );
+
+          return;
         }
       }
-    });
-  }
-  
+
+      const errorMessage = 'Error al procesar el archivo de importación';
+
+      if (error.error) {
+        if (error.error instanceof Blob) {
+          const reader = new FileReader();
+
+          reader.onload = () => {
+            try {
+              const errorObj = JSON.parse(reader.result as string);
+              this.handleGenericError(errorObj);
+            } catch {
+              this.showErrorNotification(reader.result as string || errorMessage, '');
+            }
+          };
+
+          reader.onerror = () => {
+            this.showErrorNotification('Error al leer la respuesta del servidor', '');
+          };
+
+          reader.readAsText(error.error);
+
+        } else if (typeof error.error === 'object' && error.error !== null) {
+          this.handleGenericError(error.error);
+
+        } else if (typeof error.error === 'string') {
+          this.showErrorNotification(error.error, '');
+
+        } else {
+          this.showErrorNotification(
+            errorMessage,
+            `Código de error: ${error.status || 'desconocido'}`
+          );
+        }
+
+      } else if (error.message) {
+        this.showErrorNotification(error.message, '');
+
+      } else {
+        this.showErrorNotification(
+          errorMessage,
+          `Código de error: ${error.status || 'desconocido'}`
+        );
+      }
+    }
+  });
+}
+
   /**
    * Maneja errores genéricos del servidor
    */
@@ -571,7 +704,7 @@ export class ThirdListComponent implements OnInit {
     this.failedImportsCount = failedImports || errors.length;
     this.successfulImports = successfulImports || 0;
     this.duplicatesOmitted = duplicatesSkipped || 0;
-    
+
     this.showErrorModal = true;
   }
 
@@ -580,7 +713,7 @@ export class ThirdListComponent implements OnInit {
    */
   private showErrorNotification(message: string, details: string): void {
     const detailMessage = details ? `${message}\n${details}` : message;
-    
+
     this.messageService.add({
       severity: 'error',
       summary: 'Error de Importación',
@@ -623,7 +756,7 @@ export class ThirdListComponent implements OnInit {
   onTemplateInProgress(inProgress: boolean): void {
     this.loadingTemplate = inProgress;
   }
-  
+
   /**
    * Cierra el modal de errores de importación
    */
@@ -632,7 +765,7 @@ export class ThirdListComponent implements OnInit {
     this.importErrors = [];
     this.totalErrors = 0;
   }
-  
+
   /**
    * Obtiene la etiqueta amigable para el tipo de error
    */
@@ -674,7 +807,7 @@ export class ThirdListComponent implements OnInit {
   onPdfRutSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    
+
     if (!file) {
       return;
     }
@@ -691,11 +824,11 @@ export class ThirdListComponent implements OnInit {
     }
 
     this.loadingPdfRut = true;
-    
+
     this.thirdService.ExtractInfoPDFRUT(file).subscribe({
       next: (response) => {
         const pdfContent = response.content;
-        
+
         if (pdfContent === this.EMPTY_PDF_CONTENT) {
           this.messageService.add({
             severity: 'error',
@@ -709,25 +842,25 @@ export class ThirdListComponent implements OnInit {
             summary: 'Éxito',
             detail: 'Archivo procesado correctamente'
           });
-          
+
           // Redirigir a la creación del tercero
           this.thirdService.setInfoThirdRUT(pdfContent);
           this.router.navigate(['/gen-masters/third-parties/create']);
         }
-        
+
         // Limpiar el input
         input.value = '';
       },
       error: (err) => {
         this.loadingPdfRut = false;
         const errorMessage = err?.error?.message || 'No se pudo procesar el archivo PDF';
-        
+
         this.messageService.add({
           severity: 'error',
           summary: 'Error de procesamiento',
           detail: errorMessage
         });
-        
+
         // Limpiar el input
         input.value = '';
       }
@@ -758,10 +891,10 @@ export class ThirdListComponent implements OnInit {
       const headerInfo = [
         ['ERRORES DE IMPORTACIÓN DE TERCEROS'],
         [''],
-        ['Fecha de exportación:', new Date().toLocaleDateString('es-CO', { 
-          day: '2-digit', 
-          month: 'long', 
-          year: 'numeric' 
+        ['Fecha de exportación:', new Date().toLocaleDateString('es-CO', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
         })],
         ['Hora:', new Date().toLocaleTimeString('es-CO')],
         [''],
