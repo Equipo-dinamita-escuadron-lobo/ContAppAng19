@@ -1,0 +1,239 @@
+/* ================================
+   SCROLLPANEL PERSONALIZADO
+   ================================ */
+
+::ng-deep .custom-scrollpanel .p-scrollpanel-bar {
+  background-color: var(--color-primary);
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+  border-radius: 4px;
+}
+
+::ng-deep .custom-scrollpanel .p-scrollpanel-bar:hover {
+  opacity: 0.7;
+}
+
+/* ================================
+   ESTILOS DEL CONTENIDO DE AYUDA
+   ================================ */
+
+/* ================================
+   ESTILOS DEL CONTENIDO DE AYUDA
+   ================================ */
+
+/* Ocultar toolbar y ajustar contenedor del editor */
+::ng-deep p-editor .p-editor-toolbar {
+  display: none !important;
+}
+
+::ng-deep p-editor .p-editor-container,
+::ng-deep p-editor .p-editor-content,
+::ng-deep p-editor .ql-container {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+::ng-deep p-editor .ql-container {
+  font-size: 1rem !important;
+  line-height: 1.75 !important;
+  color: var(--color-neutral-20) !important;
+}
+
+::ng-deep p-editor .ql-editor {
+  padding: 0 !important;
+  overflow-y: auto !important;
+  cursor: default !important;
+}
+
+/* Ocultar placeholder en modo solo lectura */
+::ng-deep p-editor .ql-editor.ql-blank::before {
+  display: none !important;
+}
+
+/* Estilos para los elementos del contenido */
+::ng-deep p-editor .ql-editor h1,
+::ng-deep p-editor .ql-editor h2,
+::ng-deep p-editor .ql-editor h3,
+::ng-deep p-editor .ql-editor h4 {
+  font-family: 'Titillium Web', sans-serif;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  color: var(--color-primary);
+}
+
+::ng-deep p-editor .ql-editor strong {
+  font-weight: 600;
+  color: var(--color-neutral-10);
+}
+
+::ng-deep p-editor .ql-editor ul,
+::ng-deep p-editor .ql-editor ol {
+  padding-left: 1.5em;
+}
+
+::ng-deep p-editor .ql-editor li {
+  margin-bottom: 0.5em;
+}
+
+::ng-deep p-editor .ql-editor a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+::ng-deep p-editor .ql-editor a:hover {
+  color: var(--color-primary-50);
+}
+
+/* Scrollbar personalizada para el editor */
+::ng-deep p-editor .ql-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+::ng-deep p-editor .ql-editor::-webkit-scrollbar-track {
+  background: var(--color-neutral-95);
+  border-radius: 4px;
+}
+
+::ng-deep p-editor .ql-editor::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+  opacity: 0.4;
+}
+
+::ng-deep p-editor .ql-editor::-webkit-scrollbar-thumb:hover {
+  opacity: 0.7;
+}
+
+.help-item-card {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid var(--color-primary-90);
+  background-color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.help-item-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--color-primary);
+  transform: scaleY(0);
+  transition: transform 0.25s ease;
+}
+
+.help-item-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 102, 0.12);
+  border-color: var(--color-primary-70);
+}
+
+.help-item-card:hover::before {
+  transform: scaleY(1);
+}
+
+.help-item-card.selected {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: translateX(4px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 102, 0.25);
+}
+
+.help-item-card.selected::before {
+  transform: scaleY(1);
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.help-item-title {
+  font-family: 'Titillium Web', sans-serif;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  margin-bottom: 0.75rem;
+  color: var(--color-primary);
+  transition: color 0.25s ease;
+}
+
+.help-item-card.selected .help-item-title {
+  color: white;
+}
+
+.help-item-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-primary-80);
+  background-color: var(--color-primary-97);
+  color: var(--color-primary);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.help-item-card.selected .help-item-badge {
+  background-color: white;
+  border-color: white;
+  color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.help-panel-header {
+  background-color: var(--color-primary);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 102, 0.15);
+}
+
+.help-panel-title {
+  font-family: 'Titillium Web', sans-serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: white;
+  margin-left: 15px;
+}
+
+.help-panel-counter {
+  background-color: rgba(255, 255, 255, 0.95);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 1.75rem;
+  text-align: center;
+}
+
+/* ================================
+   RESPONSIVE
+   ================================ */
+
+@media (max-width: 1024px) {
+  .sticky {
+    position: relative !important;
+    top: 0 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .help-item-card {
+    padding: 0.875rem;
+  }
+
+  .help-item-title {
+    font-size: 0.875rem;
+  }
+}

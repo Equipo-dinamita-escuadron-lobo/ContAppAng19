@@ -1,0 +1,57 @@
+<div class="flex w-full h-full font-titillium">
+  <p-toast></p-toast>
+  <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
+
+    <!-- Cabecera -->
+    <div class="flex justify-between items-start mb-12">
+      <div class="items-center">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Crear</span> Tipo de Documento
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-12">
+          Ingrese la información requerida para registrar un nuevo tipo de documento.
+        </p>
+      </div>
+      <div class="hidden sm:block">
+        <p-button icon="pi pi-arrow-left" (click)="goBack()" styleClass="p-button-text p-button-secondary"></p-button>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
+
+        <div class="flex flex-col gap-2">
+          <label for="prefix" class="label-required font-semibold text-primary">Prefijo</label>
+          <input pInputText pKeyFilter="alphanum" formControlName="prefix" placeholder="Ej: RC, CE" maxlength="10" class="w-full md:w-2/3" />
+          <small class="error-message" *ngIf="form.get('prefix')?.touched && form.get('prefix')?.invalid">Prefijo requerido (máx. 10)</small>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="name" class="label-required font-semibold text-primary">Nombre</label>
+          <input pInputText formControlName="name" placeholder="Ej: Recibo de Caja" class="w-full md:w-2/3" />
+          <small class="error-message" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido (solo letras)</small>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="documentClassId" class="label-required font-semibold text-primary">Clase</label>
+          <p-select [options]="classesOptions" formControlName="documentClassId" placeholder="Seleccione clase" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
+          <small class="error-message" *ngIf="form.get('documentClassId')?.touched && form.get('documentClassId')?.invalid">Seleccione una clase</small>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="moduleId" class="label-required font-semibold text-primary">Módulo</label>
+          <p-select [options]="modulesOptions" formControlName="moduleId" placeholder="Seleccione módulo" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
+          <small class="error-message" *ngIf="form.get('moduleId')?.touched && form.get('moduleId')?.invalid">Seleccione un módulo</small>
+        </div>
+
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="flex justify-center gap-4 mt-12 pt-40">
+        <p-button type="button" label="Cancelar" severity="secondary" (onClick)="goBack()"></p-button>
+        <p-button type="submit" label="Guardar" [disabled]="form.invalid"></p-button>
+      </div>
+    </form>
+  </div>
+</div>

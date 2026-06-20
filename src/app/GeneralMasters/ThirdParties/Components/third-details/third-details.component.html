@@ -1,0 +1,144 @@
+<p-dialog
+  [header]="thirdValidationMessagesService.getModalTitle(thirdData)"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '1000px' }"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="onHide()">
+
+  <!-- Contenido del modal -->
+  <div *ngIf="!loading">
+    <div class="space-y-8 font-family-sans max-w-5xl mx-auto">
+
+      <!-- Panel: Información Básica -->
+      <app-form-panel title="Información Básica">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Tipo de ID"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getTypeId(thirdData.typeId) }}</span>
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Tipo de Persona"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdData.personType }}</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Estado"></app-form-field-label>
+            <div>
+              <p-tag 
+                [value]="thirdValidationMessagesService.getStateText(thirdData.state)" 
+                [severity]="thirdValidationMessagesService.getStateSeverity(thirdData.state)">
+              </p-tag>
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-2 md:col-span-3">
+            <app-form-field-label label="Tipos de Tercero"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getThirdTypesNames(thirdData.thirdTypes) }}</span>
+          </div>
+        </div>
+      </app-form-panel>
+
+      <!-- Panel: Información de Identificación -->
+      <app-form-panel title="Información de Identificación">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Número de Identificación"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdData.idNumber }}</span>
+          </div>
+
+          <div class="flex flex-col gap-2" *ngIf="thirdValidationMessagesService.isJuridicPerson(thirdData.personType)">
+            <app-form-field-label label="Dígito de Verificación (DV)"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getVerificationNumber(thirdData.verificationNumber) }}</span>
+          </div>
+        </div>
+      </app-form-panel>
+
+      <!-- Panel: Información Personal (Persona Natural) -->
+      <app-form-panel title="Información Personal" *ngIf="thirdValidationMessagesService.isNaturalPerson(thirdData.personType)">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Nombre Completo"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getFullName(thirdData) }}</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Género"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getGender(thirdData.gender) }}</span>
+          </div>
+        </div>
+      </app-form-panel>
+
+      <!-- Panel: Información de Empresa (Persona Jurídica) -->
+      <app-form-panel title="Información de Empresa" *ngIf="thirdValidationMessagesService.isJuridicPerson(thirdData.personType)">
+        <div class="grid grid-cols-1 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Razón Social"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getSocialReason(thirdData.socialReason) }}</span>
+          </div>
+        </div>
+      </app-form-panel>
+
+      <!-- Panel: Información de Ubicación -->
+      <app-form-panel title="Información de Ubicación">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="País"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getCountry(thirdData.country) }}</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Departamento"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getDepartment(thirdData.province) }}</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Ciudad"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getCity(thirdData.city) }}</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Dirección"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getAddress(thirdData.address) }}</span>
+          </div>
+        </div>
+      </app-form-panel>
+
+      <!-- Panel: Información de Contacto -->
+      <app-form-panel title="Información de Contacto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Teléfono"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getPhoneNumber(thirdData.phoneNumber) }}</span>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <app-form-field-label label="Correo Electrónico"></app-form-field-label>
+            <span class="font-family-sans font-normal text-base text-neutral-20">{{ thirdValidationMessagesService.getEmail(thirdData.email) }}</span>
+          </div>
+        </div>
+      </app-form-panel>
+
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="flex justify-content-center align-items-center p-6">
+    <i class="pi pi-spinner pi-spin" style="font-size: 2rem; color: var(--color-primary);"></i>
+    <span class="ml-3" style="font-size: 1rem; color: var(--color-neutral-40); font-family: var(--font-family-sans);">Cargando datos del tercero...</span>
+  </div>
+
+  <!-- Footer con botón de cerrar -->
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end" style="padding-top: 0.5rem;">
+      <p-button 
+        label="Cerrar" 
+        severity="secondary"
+        (onClick)="closePopUp()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>

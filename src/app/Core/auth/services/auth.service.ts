@@ -1,7 +1,6 @@
-
 import { environment } from '../../../../environments/environment';
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient} from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, catchError, map, switchMap, delay } from 'rxjs/operators';
@@ -9,9 +8,11 @@ import { jwtDecode } from 'jwt-decode'; // Importar la librería
 import { Login } from '../models/login';
 import { UserProfile } from '../models/user-profile';
 import { DecodedToken } from '../models/decoded-token';
-
+import { Permission } from '../models/permission';
+import { RegisterUser } from '../models/register-user';
 
 const keycloakUrl = environment.keycloak_url;
+const keycloakUrlToken = environment.keycloak_url_token;
 
 export interface PayloadToken {
   access_token: string;
@@ -19,9 +20,8 @@ export interface PayloadToken {
   expires_in: number;
 }
 
-
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   router = inject(Router);
@@ -34,10 +34,7 @@ export class AuthService {
   // Señal para saber si se está autenticando
   isAuthenticated = signal<boolean>(this.hasToken());
 
-  constructor() {
-
-  }
-
+  constructor() {}
 
   initializeAppStatus(): Observable<UserProfile | null> {
     const token = this.getToken();
@@ -51,64 +48,101 @@ export class AuthService {
       return of(null);
     }
 
-    console.log('AuthService Init: Valid token found. Attempting to fetch user...');
+    console.log(
+      'AuthService Init: Valid token found. Attempting to fetch user...'
+    );
     // Si hay token válido, intenta obtener el usuario.
     // fetchAndSetUser ya maneja el estado en memoria y devuelve un observable.
     return this.fetchAndSetUser().pipe(
       // Después de que fetchAndSetUser complete (éxito o error con of(null)),
       // actualiza el estado isAuthenticated.
-      tap(user => {
+      tap((user) => {
         if (user) {
           this.isAuthenticated.set(true);
-          console.log('AuthService Init: User fetched successfully. isAuthenticated = true.');
+          console.log(
+            'AuthService Init: User fetched successfully. isAuthenticated = true.'
+          );
         } else {
           // Esto sucede si fetchAndSetUser devolvió of(null) por error
           this.isAuthenticated.set(false);
-          console.log('AuthService Init: Failed to fetch user. isAuthenticated = false.');
+          console.log(
+            'AuthService Init: Failed to fetch user. isAuthenticated = false.'
+          );
         }
       }),
-      catchError(err => {
-         // Este catchError atraparía errores que *no* fueron manejados por el catchError interno
-         // de fetchAndSetUser.
-         console.error('AuthService Init: Unhandled error during fetch:', err);
-         this.logout(); // Asegura el logout en caso de cualquier error de inicialización
-         this.isAuthenticated.set(false);
-         this._currentUser.next(null);
-         return of(null); // Asegura que el observable complete correctamente
+      catchError((err) => {
+        // Este catchError atraparía errores que *no* fueron manejados por el catchError interno
+        // de fetchAndSetUser.
+        console.error('AuthService Init: Unhandled error during fetch:', err);
+        this.logout().subscribe(); // Asegura el logout en caso de cualquier error de inicialización
+        this.isAuthenticated.set(false);
+        this._currentUser.next(null);
+        return of(null); // Asegura que el observable complete correctamente
       })
     );
   }
 
-
   public login(auth: Login) {
-    return this.http.post<{ access_token: string }>(`${keycloakUrl}keycloak/token/`, auth).pipe(
-      tap(res => this.saveToken(res.access_token)), // Guarda el token primero
-      switchMap(() => this.fetchAndSetUser()), // Luego obtiene y guarda el usuario en memoria
-      tap(() => this.isAuthenticated.set(true)), // Actualiza la señal
-      tap(() => {
-        this.router.navigate(['/enterprise/list']);
-      }),
-      catchError(error => {
-        console.error("Login failed:", error);
-        this.isAuthenticated.set(false);
-        // Devuelve un observable que emite null o propaga el error como prefieras
-        return of(null);
+    return this.http
+      .post<{ access_token: string }>(`${keycloakUrlToken}`, auth)
+      .pipe(
+        tap((res) => this.saveToken(res.access_token)), // Guarda el token primero
+        switchMap(() => this.fetchAndSetUser()), // Luego obtiene y guarda el usuario en memoria
+        tap(() => this.isAuthenticated.set(true)), // Actualiza la señal
+        tap(() => {
+          this.router.navigate(['/enterprise/list']);
+        }),
+        catchError((error) => {
+          console.error('Login failed:', error);
+          this.isAuthenticated.set(false);
+          // Devuelve un observable que emite null o propaga el error como prefieras
+          return of(null);
+        })
+      );
+  }
+
+  public register(user: RegisterUser): Observable<any> {
+    return this.http.post<any>(`${keycloakUrl}register`, user).pipe(
+      tap((createdUser) => console.log('Usuario registrado exitosamente:', createdUser)),
+      catchError((error) => {
+        console.error('Error en registro:', error);
+        throw error;
+      })
+    );
+  }
+
+  public forgotPassword(email: string): Observable<void> {
+    return this.http.post<void>(`${keycloakUrl}forgot-password`, { email }).pipe(
+      tap(() => console.log('Email de recuperación enviado')),
+      catchError((error) => {
+        console.error('Error enviando email de recuperación:', error);
+        throw error;
+      })
+    );
+  }
+
+  public resetPassword(token: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${keycloakUrl}reset-password`, { token, newPassword }).pipe(
+      tap(() => console.log('Contraseña reseteada exitosamente')),
+      catchError((error) => {
+        console.error('Error reseteando contraseña:', error);
+        throw error;
       })
     );
   }
 
   // Obtiene el usuario del backend usando el token actual y actualiza el BehaviorSubject
   private fetchAndSetUser() {
-    return this.http.get<UserProfile>(`${keycloakUrl}keycloak/getCurrentUser`).pipe(
-       tap(user => {
-         this._currentUser.next(user); // Actualiza estado en memoria
-         console.log("User data fetched:", user);
-       }),
-       catchError(error => {
-         console.error("Failed to fetch user data:", error);
-         this._currentUser.next(null); // Limpia el usuario si falla
-         return of(null); // Devuelve null en caso de error
-       })
+    return this.http.get<UserProfile>(`${keycloakUrl}getCurrentUser`).pipe(
+      tap((user) => {
+        this._currentUser.next(user); // Actualiza estado en memoria
+        console.log('User data fetched:', user);
+      }),
+      catchError((error) => {
+        console.error('Failed to fetch user data:', error);
+        this._currentUser.next(null); // Limpia el usuario si falla
+        return of(null); // Devuelve null en caso de error
+      })
     );
   }
 
@@ -132,7 +166,7 @@ export class AuthService {
     try {
       return jwtDecode<DecodedToken>(token);
     } catch (Error) {
-      console.error("Failed to decode token:", Error);
+      console.error('Failed to decode token:', Error);
       return null;
     }
   }
@@ -148,19 +182,40 @@ export class AuthService {
     return expiryDate.valueOf() < new Date().valueOf();
   }
 
-
   // Cierra sesión
-  public logout(): void {
-    this.removeToken();
-    this._currentUser.next(null);
-    this.isAuthenticated.set(false);
+  public logout(): Observable<void> {
+    const token = this.getToken();
+    if (!token) {
+      this.removeToken();
+      this._currentUser.next(null);
+      this.isAuthenticated.set(false);
+      return of(void 0);
+    }
+
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.post<void>(`${keycloakUrl}token/logout`, {}, { headers }).pipe(
+      tap(() => {
+        this.removeToken();
+        this._currentUser.next(null);
+        this.isAuthenticated.set(false);
+        this.router.navigate(['/login']);
+      }),
+      catchError((error) => {
+        console.error('Error en logout:', error);
+        // Limpia localmente incluso si falla el backend
+        this.removeToken();
+        this._currentUser.next(null);
+        this.isAuthenticated.set(false);
+        this.router.navigate(['/login']);
+        return of(void 0);
+      })
+    );
   }
 
   // Remueve el token
   private removeToken(): void {
     localStorage.removeItem('token');
   }
-
 
   // Obtiene los roles actuales del usuario (desde el estado en memoria)
   public getCurrentUserRoles(): string[] {
@@ -170,5 +225,17 @@ export class AuthService {
   // Verifica si el usuario actual tiene un rol específico
   public hasRole(role: string): boolean {
     return this.getCurrentUserRoles().includes(role);
+  }
+
+  public getCurrentUserPermissions(): string[] {
+    const token = this.getToken();
+    if (!token) return [];
+
+    const decodedToken = JSON.parse(atob(token.split('.')[1]));
+
+    const permissions: Permission[] =
+      decodedToken.authorization?.permissions || [];
+
+    return permissions.map((permission) => permission.rsname);
   }
 }

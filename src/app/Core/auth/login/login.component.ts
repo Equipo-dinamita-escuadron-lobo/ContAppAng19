@@ -6,16 +6,20 @@ import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
 import { Login } from '../models/login';
 import { ButtonModule } from 'primeng/button';
+import { PublicFooterComponent } from '../../../PublicSite/public-footer/public-footer.component';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule,CommonModule, RouterModule, ButtonModule],
+  imports: [ReactiveFormsModule,CommonModule, RouterModule, ButtonModule, PublicFooterComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
   loginFail: boolean = false;
   invalidForm: boolean = false;
+  showPassword: boolean = false;
+
+  togglePassword() { this.showPassword = !this.showPassword; }
 
   authService: AuthService = inject(AuthService);
 
@@ -25,8 +29,8 @@ export class LoginComponent {
 
   loginForm = new FormGroup({
     //! Valores por defecto servidor en desarrollo cambiar a '' en produccion
-    username: new FormControl('contables_admin', [Validators.required]),
-    password: new FormControl('12345', [Validators.required]),
+    username: new FormControl('contables2@unicauca.edu.co', [Validators.required]),
+    password: new FormControl('Prueba#123', [Validators.required]),
   });
 
   onSubmit() {

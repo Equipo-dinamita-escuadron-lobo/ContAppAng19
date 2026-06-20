@@ -1,0 +1,83 @@
+<div class="flex w-full h-full font-titillium">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+
+    <!-- Header -->
+    <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+      <div class="items-center mb-6">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Centro</span> de Ayuda
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-12">Lista de todos los centros de ayuda configurados en el sistema.</p>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+        <div class="flex flex-wrap gap-3">
+          <p-button label="Crear" icon="pi pi-plus" (onClick)="createHelpCenter()"></p-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+      <div class="w-full sm:w-[30rem]">
+        <p-iconfield iconPosition="left">
+          <p-inputicon>
+            <i class="pi pi-search text-gray-500"></i>
+          </p-inputicon>
+          <input pInputText type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Buscar centro de ayuda (ID módulo, módulo o nombre)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
+        </p-iconfield>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+        <p-table #helpCentersTable [value]="list" [lazy]="true" (onLazyLoad)="loadHelpCentersLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="font-semibold text-primary border-b-2 border-primary" style="width: 122px;" scope="col">ID Módulo</th>
+          <th pSortableColumn="module" class="font-semibold text-primary border-b-2 border-primary" scope="col">Módulo <p-sortIcon field="module"></p-sortIcon></th>
+          <th pSortableColumn="name" class="font-semibold text-primary border-b-2 border-primary" scope="col">Nombre <p-sortIcon field="name"></p-sortIcon></th>
+          <th class="font-semibold text-primary border-b-2 border-primary" scope="col">Descripción</th>
+          <th class="font-semibold text-primary border-b-2 border-primary text-center" scope="col">Estado</th>
+          <th class="font-semibold text-primary border-b-2 border-primary text-center" scope="col">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr class="text-neutral-20">
+          <td class="py-3">{{ row.moduleId }}</td>
+          <td class="py-3">{{ row.moduleName }}</td>
+          <td class="py-3">{{ row.name }}</td>
+          <td class="py-3">{{ helpCenterPresentationService.truncateDescription(row.description) }}</td>
+          <td class="py-3 text-center">
+            <p-tag [value]="helpCenterPresentationService.formatState(row.status)" [severity]="helpCenterPresentationService.getStateSeverity(row.status)"></p-tag>
+          </td>
+          <td class="py-3 text-center">
+            <div class="flex justify-center gap-2 items-center">
+              <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" (onClick)="editHelpCenter(row)" styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
+              <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" (onClick)="deleteHelpCenter(row)" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
+              <p-toggleSwitch
+                [ngModel]="helpCenterPresentationService.isActive(row.status)"
+                (onChange)="changeHelpCenterState(row)"
+                [pTooltip]="(row.status ? 'Activo' : 'Inactivo')"
+                tooltipPosition="top"
+                styleClass="p-toggleSwitch-sm"
+                [style]="{'transform': 'scale(0.8)'}"
+              ></p-toggleSwitch>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center py-6 font-family-sans text-neutral-50">No se encontraron centros de ayuda.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+  </div>
+</div>

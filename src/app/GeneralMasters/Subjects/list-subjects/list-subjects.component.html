@@ -1,0 +1,103 @@
+<!-- Ocupar todo el espacio -->
+<div class="w-full h-full flex flex-col">
+  <app-header></app-header>
+</div>
+
+<div class="m-120 max-w-7xl mx-auto">
+  <!-- Título -->
+  <h1
+    class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+    Listado de Materias
+  </h1>
+  <p class="font-family-sans font-normal text-xs/21">
+    Consulta, edita o elimina las materias registradas en el sistema
+  </p>
+
+  <!-- Botones de acción -->
+  <div class="flex items-center justify-between flex-wrap gap-6 mt-4">
+    <div></div>
+    <div class="flex gap-3">
+      <p-button label="Regresar" icon="pi pi-arrow-left" (click)="onViewEnterprises()"
+        class="bg-gray-600 text-white rounded-full">
+      </p-button>
+      <p-button label="Agregar Materia" icon="pi pi-plus" (click)="onCreateSubject()"
+        class="bg-primary text-white rounded-full">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Tabla de materias -->
+  <div class="bg-neutral-90 p-18 mt-10 rounded-xl shadow-lg overflow-x-auto">
+    <table class="min-w-full border-collapse">
+      <thead>
+        <tr class="bg-primary text-white text-left">
+          <th class="py-3 px-4 rounded-tl-xl">Código</th>
+          <th class="py-3 px-4">Nombre de la Materia</th>
+          <th class="py-3 px-4 text-center rounded-tr-xl">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let subject of subjects"
+          class="border-b hover:bg-gray-50 transition-colors">
+          <td class="py-3 px-4 font-medium">{{ subject.code }}</td>
+          <td class="py-3 px-4">{{ subject.name }}</td>
+          <td class="py-3 px-4 text-center flex justify-center gap-3">
+            <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-info"
+              (click)="onEditSubject(subject)"></button>
+            <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger"
+              (click)="onDeleteSubject(subject)"></button>
+          </td>
+        </tr>
+        <tr *ngIf="subjects.length === 0">
+          <td colspan="3" class="text-center py-4 text-gray-500">
+            No hay materias registradas actualmente.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Crear / Editar Materia -->
+<p-dialog header="{{ editingSubject ? 'Editar Materia' : 'Crear Materia' }}" [(visible)]="showSubjectModal"
+  [modal]="true" [closable]="false" [draggable]="false" [resizable]="false" styleClass="w-96"
+  [style]="{ width: '500px' }">
+  <div class="p-6 flex flex-col gap-4">
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">Código</label>
+      <input pInputText type="text" [(ngModel)]="subjectData.code" placeholder="Ej: MAT101"
+        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring focus:ring-blue-200" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre de la Materia</label>
+      <input pInputText type="text" [(ngModel)]="subjectData.name" placeholder="Ej: Matemáticas"
+        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring focus:ring-blue-200" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-3">
+      <p-button label="Cancelar" icon="pi pi-times" (click)="cancelSubjectModal()"
+        class="text-primary"></p-button>
+      <p-button label="{{ editingSubject ? 'Actualizar' : 'Crear' }}" icon="pi pi-check"
+        (click)="confirmSubjectModal()" class="text-primary"></p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Modal Confirmar Eliminación -->
+<p-dialog header="Confirmar Eliminación de Materia" [(visible)]="showDeleteModal" [modal]="true"
+  [closable]="false" [draggable]="false" [resizable]="false">
+  <div class="flex flex-col items-center gap-4 p-4 text-center">
+    <i class="pi pi-exclamation-triangle text-6xl text-red-500"></i>
+    <p>¿Estás seguro de que deseas eliminar la materia
+      <strong>{{ subjectToDelete?.name }}</strong>?</p>
+    <div class="flex gap-3 mt-4">
+      <p-button label="Cancelar" icon="pi pi-times" class="p-button-secondary"
+        (click)="cancelDelete()"></p-button>
+      <p-button label="Eliminar" icon="pi pi-check" class="p-button-danger"
+        (click)="confirmDelete()"></p-button>
+    </div>
+  </div>
+</p-dialog>

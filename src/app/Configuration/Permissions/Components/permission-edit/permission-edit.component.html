@@ -1,0 +1,152 @@
+<div class="w-full">
+  <p-toast></p-toast>
+
+  <h1
+    class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
+  >
+    Editar Permisos del Perfil
+  </h1>
+  <p class="mb-6 text-lg text-gray-700">
+    Modifique los permisos asignados al perfil.
+  </p>
+</div>
+
+<div class="mt-6">
+  <form [formGroup]="editForm" (ngSubmit)="onSubmit()" class="mt-4">
+    <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Perfil (solo lectura) -->
+      <div>
+        <label for="profile" class="block mb-2 font-semibold"> Perfil </label>
+        <p-dropdown
+          id="profile"
+          [options]="roleOptions"
+          formControlName="roleName"
+          [disabled]="true"
+          class="w-full"
+        ></p-dropdown>
+      </div>
+
+      <!-- Módulo -->
+      <div>
+        <label for="module" class="block mb-2 font-semibold">
+          Módulo <span class="text-red-500">*</span>
+        </label>
+        <p-dropdown
+          id="module"
+          [options]="moduleOptions"
+          formControlName="module"
+          (onChange)="onModuleChange()"
+          placeholder="Seleccione un módulo"
+          class="w-full"
+          [disabled]="!!editForm.get('module')?.disabled"
+        ></p-dropdown>
+        <p-message
+          severity="error"
+          *ngIf="
+            editForm.get('module')?.touched &&
+            !editForm.get('module')?.value &&
+            !editForm.get('module')?.disabled
+          "
+          text="Debe seleccionar un módulo"
+        ></p-message>
+      </div>
+
+      <!-- Permisos del módulo -->
+      <div>
+        <label for="permissions" class="block mb-2 font-semibold">
+          Permisos del módulo <span class="text-red-500">*</span>
+        </label>
+        <p-multiSelect
+          id="permissions"
+          [options]="modulePermissionsOptions"
+          optionLabel="label"
+          optionValue="value"
+          formControlName="modulePermissions"
+          display="chip"
+          [filter]="true"
+          placeholder="Seleccione permisos"
+          class="w-full"
+          [disabled]="!!editForm.get('modulePermissions')?.disabled"
+        ></p-multiSelect>
+
+        <div class="flex gap-2 mt-2">
+          <p-button
+            type="button"
+            label="Aplicar cambios"
+            icon="pi pi-check"
+            (onClick)="applyModuleChanges()"
+            [disabled]="
+              !!editForm.get('modulePermissions')?.disabled || !moduleHasChanges
+            "
+            size="small"
+          ></p-button>
+          <p-button
+            type="button"
+            label="Limpiar selección"
+            icon="pi pi-times"
+            (onClick)="clearCurrentSelection()"
+            [disabled]="
+              !!editForm.get('modulePermissions')?.disabled ||
+              (editForm.get('modulePermissions')?.value?.length ?? 0) === 0
+            "
+            size="small"
+            styleClass="p-button-outlined"
+          ></p-button>
+        </div>
+
+        <!-- Error visible solo si no hay nada agregado globalmente -->
+        <p-message
+          severity="error"
+          *ngIf="
+            selectedPermissions.size === 0 &&
+            editForm.get('modulePermissions')?.touched &&
+            (editForm.get('modulePermissions')?.value?.length ?? 0) === 0 &&
+            !editForm.get('modulePermissions')?.disabled
+          "
+          text="Debe seleccionar al menos un permiso"
+        ></p-message>
+      </div>
+    </div>
+
+    <!-- Permisos seleccionados -->
+    <div class="mt-10">
+      <h2 class="text-xl font-semibold text-[var(--color-primary)] mb-4">
+        Permisos seleccionados
+      </h2>
+
+      <div *ngIf="selectedPermissions.size === 0" class="text-gray-600">
+        Aún no has agregado permisos. Selecciona un módulo y agrega permisos.
+      </div>
+
+      <div *ngIf="selectedPermissions.size > 0" class="space-y-4">
+        <div *ngFor="let group of groupedSelectedPermissions" class="perm-card">
+          <div class="perm-card__header">
+            <i class="pi pi-folder-open perm-card__icon"></i>
+            <span class="perm-card__title">Módulo {{ group.module }}:</span>
+            <span class="perm-card__count">{{ group.items.length }}</span>
+          </div>
+          <div class="perm-card__chips">
+            <span *ngFor="let perm of group.items" class="perm-chip">{{
+              perm
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex justify-center gap-4 mt-12">
+      <p-button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        (onClick)="goBack()"
+      ></p-button>
+      <p-button
+        type="submit"
+        label="Actualizar Permisos"
+        [disabled]="selectedPermissions.size === 0 || !hasChanges"
+      ></p-button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,274 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20 font-sans">
+    <p-toast></p-toast>
+
+    <!-- CABECERA -->
+    <div class="mb-12">
+        <h1
+            class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            Crear Recibo de Caja
+        </h1>
+        <p class="mt-2 text-base text-gray-600">
+            Complete la información necesaria para registrar un nuevo recibo de caja en el sistema.
+        </p>
+    </div>
+
+    <form [formGroup]="cashReceiptForm" (ngSubmit)="onSubmit()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-12">
+
+            <!-- Tipo de Recibo de Caja -->
+            <div class="flex flex-col gap-2">
+                <label for="receiptType" class="font-semibold text-[var(--color-primary)]">
+                    Tipo de Recibo de Caja <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown id="receiptType" formControlName="receiptType" [options]="receiptTypes"
+                        optionLabel="label" optionValue="value" placeholder="Seleccione el tipo" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('receiptType')?.invalid && cashReceiptForm.get('receiptType')?.touched}">
+                    </p-dropdown>
+                    @if (cashReceiptForm.get('receiptType')?.touched && cashReceiptForm.get('receiptType')?.invalid) {
+                    <small class="p-error error-message">El tipo de recibo es requerido.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Método de Pago -->
+            <div class="flex flex-col gap-2">
+                <label for="paymentMethod" class="font-semibold text-[var(--color-primary)]">
+                    Método de Pago <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown id="paymentMethod" formControlName="paymentMethod" [options]="paymentMethods"
+                        optionLabel="name" optionValue="id" placeholder="Seleccione el método" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('paymentMethod')?.invalid && cashReceiptForm.get('paymentMethod')?.touched}">
+                    </p-dropdown>
+                    @if (cashReceiptForm.get('paymentMethod')?.touched && cashReceiptForm.get('paymentMethod')?.invalid)
+                    {
+                    <small class="p-error error-message">El método de pago es requerido.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Cliente -->
+            <div class="flex flex-col gap-2">
+                <label for="client" class="font-semibold text-[var(--color-primary)]">
+                    Cliente <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-autoComplete id="client" formControlName="client" [suggestions]="filteredClients"
+                        (completeMethod)="searchClient($event)" (onSelect)="onClientSelect($event)" field="name"
+                        [forceSelection]="true" [dropdown]="true" placeholder="Busque un cliente"
+                        [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('client')?.invalid && cashReceiptForm.get('client')?.touched}">
+                        <ng-template let-client pTemplate="item">
+                            <div class="flex items-center gap-2">
+                                <span>{{ client.name }} ({{ client.id }})</span>
+                            </div>
+                        </ng-template>
+                    </p-autoComplete>
+                    @if (cashReceiptForm.get('client')?.touched && cashReceiptForm.get('client')?.invalid) {
+                    <small class="p-error error-message">El cliente es requerido.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Fecha de Elaboración -->
+            <div class="flex flex-col gap-2">
+                <label for="issueDate" class="font-semibold text-[var(--color-primary)]">
+                    Fecha de Elaboración <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-calendar id="issueDate" formControlName="issueDate" dateFormat="dd/mm/yy" [showIcon]="true"
+                        placeholder="Seleccione la fecha" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('issueDate')?.invalid && cashReceiptForm.get('issueDate')?.touched}">
+                    </p-calendar>
+                    @if (cashReceiptForm.get('issueDate')?.touched && cashReceiptForm.get('issueDate')?.invalid) {
+                    <small class="p-error error-message">La fecha es requerida.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Realizar un (Abono o Ingreso directo) -->
+            <div class="flex flex-col gap-2">
+                <label for="receiptTypeOption" class="font-semibold text-[var(--color-primary)]">
+                    Realizar un <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown id="receiptTypeOption" formControlName="receiptTypeOption"
+                        [options]="receiptTypeOptions" optionLabel="label" optionValue="value"
+                        placeholder="Seleccione una opción" [styleClass]="'w-full'"
+                        (onChange)="onReceiptTypeOptionChange()"
+                        [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('receiptTypeOption')?.invalid && cashReceiptForm.get('receiptTypeOption')?.touched}">
+                    </p-dropdown>
+                    @if (cashReceiptForm.get('receiptTypeOption')?.touched &&
+                    cashReceiptForm.get('receiptTypeOption')?.invalid) {
+                    <small class="p-error error-message">Este campo es requerido.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Campos condicionales: Ingreso Directo -->
+            @if (cashReceiptForm.get('receiptTypeOption')?.value === 'direct_income') {
+            <!-- Cuenta Auxiliar -->
+            <div class="flex flex-col gap-2">
+                <label for="auxiliaryAccount" class="font-semibold text-[var(--color-primary)]">
+                    Cuenta Auxiliar <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown id="auxiliaryAccount" formControlName="auxiliaryAccount" [options]="auxiliaryAccounts"
+                        optionLabel="label" optionValue="codeAccount" placeholder="Seleccione una cuenta"
+                        [styleClass]="'w-full'" (onChange)="onAuxiliaryAccountChange()"
+                        [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('auxiliaryAccount')?.invalid && cashReceiptForm.get('auxiliaryAccount')?.touched}">
+                    </p-dropdown>
+                    @if (cashReceiptForm.get('auxiliaryAccount')?.touched &&
+                    cashReceiptForm.get('auxiliaryAccount')?.invalid) {
+                    <small class="p-error error-message">La cuenta auxiliar es requerida.</small>
+                    }
+                </div>
+            </div>
+
+
+
+            <!-- Valor del Ingreso -->
+            <div class="flex flex-col gap-2">
+                <label for="directIncomeAmount" class="font-semibold text-[var(--color-primary)]">
+                    Valor del Ingreso ($) <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-inputNumber id="directIncomeAmount" formControlName="directIncomeAmount" mode="currency"
+                        currency="COP" locale="es-CO" [min]="0" placeholder="0.00" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('directIncomeAmount')?.invalid && cashReceiptForm.get('directIncomeAmount')?.touched}">
+                    </p-inputNumber>
+                    @if (cashReceiptForm.get('directIncomeAmount')?.touched &&
+                    cashReceiptForm.get('directIncomeAmount')?.invalid) {
+                    <small class="p-error error-message">El valor debe ser mayor a 0.</small>
+                    }
+                </div>
+            </div>
+
+            @if (showCostCenterField == true) {
+            <div class="flex flex-col gap-2">
+                <label for="costCenter" class="font-semibold text-[var(--color-primary)]">
+                    Centro de Costo <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown id="costCenter" formControlName="centerCost" [options]="costCenters" optionLabel="name"
+                        optionValue="id" placeholder="Seleccione un centro de costo" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': cashReceiptForm.get('centerCost')?.invalid && cashReceiptForm.get('centerCost')?.touched}">
+                    </p-dropdown>
+                    @if (cashReceiptForm.get('centerCost')?.touched &&
+                    cashReceiptForm.get('centerCost')?.invalid) {
+                    <small class="p-error error-message">El centro de costo es requerido.</small>
+                    }
+                </div>
+            </div>
+            }
+            }
+        </div>
+
+        <!-- Sección: Abono a Deuda -->
+        @if (cashReceiptForm.get('receiptTypeOption')?.value === 'debt_payment') {
+        <div class="mb-12">
+            <h3 class="text-xl font-semibold text-[var(--color-primary)] mb-4">
+                Facturas a Pagar
+            </h3>
+
+            <!-- Botón para abrir selección de facturas -->
+            @if (selectedClientInvoices.length > 0) {
+            <div class="mb-6">
+                <p-button type="button" label="Seleccionar Facturas" icon="pi pi-file-plus"
+                    (onClick)="showInvoiceSelectionDialog()"></p-button>
+            </div>
+            }
+
+            <!-- Tabla: facturas seleccionadas para abono -->
+            @if (selectedInvoicesForPayment.length > 0) {
+            <div class="p-card p-component mb-6 shadow-sm rounded-lg">
+                <p-table [value]="selectedInvoicesForPayment" dataKey="id" [tableStyle]="{'min-width': '50rem'}">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th style="width: 5rem;">Pagar</th>
+                            <th>Código de Factura</th>
+                            <th>Fecha de Vencimiento</th>
+                            <th>Saldo Pendiente</th>
+                            <th>Valor a Abonar</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-invoice let-rowIndex="rowIndex">
+                        <tr>
+                            <td class="text-center">
+                                <p-checkbox [binary]="true" [(ngModel)]="invoice.selectedForPayment"
+                                    [ngModelOptions]="{standalone: true}"
+                                    (onChange)="onInvoiceSelectionChange(invoice, rowIndex)"></p-checkbox>
+                            </td>
+                            <td>{{ invoice.factCode }}</td>
+                            <td>{{ invoice.dueDate | date:'dd/MM/yyyy' }}</td>
+                            <td>{{ invoice.pendingValue | currency:'COP':'symbol-narrow':'1.0-0'}}</td>
+                            <td class="align-top">
+                                <div class="flex flex-col gap-1">
+                                    <p-inputNumber [(ngModel)]="invoice.amountToPay" mode="currency" currency="COP"
+                                        [ngModelOptions]="{standalone: true}" locale="es-CO" [min]="0"
+                                        [max]="invoice.pendingBalance" [disabled]="!invoice.selectedForPayment"
+                                        (onBlur)="onAmountToPayChange(invoice, rowIndex)" [ngClass]="{
+                                                'ng-invalid ng-dirty': invoice.selectedForPayment && (!invoice.amountToPay || invoice.amountToPay <= 0 || invoice.amountToPay > invoice.pendingValue!)
+                                            }"></p-inputNumber>
+                                    @if (invoice.selectedForPayment && (!invoice.amountToPay || invoice.amountToPay <= 0
+                                        || invoice.amountToPay> invoice.pendingValue!)) {
+                                        <small class="p-error error-message">El valor ingresado es invalido</small>
+                                        }
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="empty">
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No hay facturas seleccionadas para abono.</td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+            } @else {
+            <div class="p-message p-message-info my-4">
+                <div class="p-message-wrapper">
+                    <span class="p-message-icon pi pi-info-circle"></span>
+                    <span class="p-message-text">
+                        Seleccione un cliente para ver sus facturas pendientes y poder seleccionarlas.
+                    </span>
+                </div>
+            </div>
+            }
+
+
+            <app-invoice-selection [visible]="displayInvoiceSelectionDialog"
+                [availableInvoices]="availableInvoicesToSelect" [initiallySelectedInvoices]="selectedInvoicesForPayment"
+                (selectionConfirmed)="handleInvoiceSelection($event)" (selectionCancelled)="handleSelectionCancel()">
+            </app-invoice-selection>
+
+        </div>
+        }
+
+        <!-- Observaciones -->
+        <div class="flex flex-col gap-2 mb-12">
+            <label for="observations" class="font-semibold text-[var(--color-primary)]">Observaciones</label>
+            <div class="w-full md:w-2/3">
+                <textarea id="observations" formControlName="observations" pInputTextarea rows="3"
+                    placeholder="Ingrese cualquier observación" class="input-base w-full"></textarea>
+            </div>
+        </div>
+
+        <!-- Valor Total -->
+        <div class="flex justify-end mb-12">
+            <p class="text-xl font-bold text-[var(--color-primary)]">
+                Valor total recibido:
+                <span class="text-[var(--color-accessibility)]">
+                    $ {{ totalAmount | currency:'COP':'symbol-narrow':'1.0-0' }}
+                </span>
+            </p>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="flex justify-center gap-4 pt-8 border-t border-gray-200">
+            <p-button type="button" label="Cancelar" severity="secondary" (onClick)="goBack()"></p-button>
+            <p-button type="submit" label="Guardar y finalizar" [disabled]="!isFormValidForSubmission()"></p-button>
+        </div>
+    </form>
+</div>

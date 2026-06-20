@@ -1,0 +1,197 @@
+
+<div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+
+  <!-- Titulo y descripción -->
+  <div class="grid grid-cols-1 items-start mb-10">
+    <div class="items-center mb-6">
+      <h1 class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
+        Auditoría de documentos contables
+      </h1>
+      <p class="font-family-sans font-normal text-sm mt-10">
+        Aquí podrás supervisar el detalle de acciones realizadas sobre documentos contables del sistema.
+      </p>
+    </div>
+  </div>
+
+  <!-- Contenedor de filtros y botones-->
+   <div class="flex flex-col gap-4 mb-6">
+    <!-- Contenedor de cajas de filtros -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-14">
+      <div class="flex flex-col">
+        <label for="fechaInicio" class="mb-1 text-sm font-medium text-gray-700">Fecha inicial</label>
+        <p-datePicker 
+          id="fechaInicio"
+          [(ngModel)]="filtro.fechaInicio"
+          dateFormat="dd/mm/yy"
+          showIcon="true">
+        </p-datePicker>
+      </div>
+      <div class="flex flex-col">
+        <label for="fechaFin" class="mb-1 text-sm font-medium text-gray-700">Fecha final</label>
+        <p-datePicker 
+          id="fechaFin"
+          [(ngModel)]="filtro.fechaFin"
+          dateFormat="dd/mm/yy"
+          showIcon="true">
+        </p-datePicker>
+      </div>
+      <div class="flex flex-col">
+        <label for="tipoDocumento" class="mb-1 text-sm font-medium text-gray-700">Tipo de documento</label>
+        <p-dropdown 
+          id="tipoDocumento"
+          [options]="tiposDocumentos"
+          [(ngModel)]="filtro.tipoDocumento"
+          placeholder="Seleccione un tipo">
+        </p-dropdown>
+      </div>
+      <div class="flex flex-col">
+        <label for="estado" class="mb-1 text-sm font-medium text-gray-700">Estado</label>
+        <p-dropdown 
+          id="estado"
+          [options]="estados"
+          [(ngModel)]="filtro.estado"
+          placeholder="Seleccione un estado">
+        </p-dropdown>
+      </div>
+      <div class="flex flex-col">
+        <label for="operacion" class="mb-1 text-sm font-medium text-gray-700">Operación</label>
+        <p-dropdown 
+          id="operacion"
+          [options]="operaciones"
+          [(ngModel)]="filtro.operacion"
+          placeholder="Seleccione una operación">
+        </p-dropdown>
+      </div>
+      <div class="flex flex-col mr-5">
+        <label for="companyCode" class="mb-1 text-sm font-medium text-gray-700">NIT empresa</label>
+        <input
+          id="companyCode"
+          type="text"
+          pInputText
+          [(ngModel)]="filtro.companyCode">
+      </div>
+      <div class="flex flex-col mr-5">
+        <label for="usuario" class="mb-1 text-sm font-medium text-gray-700">Usuario</label>
+        <input
+          id="usuario"
+          type="text"
+          pInputText
+          [(ngModel)]="filtro.usuario">
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex justify-between items-center mt-20 mb-10">
+      <!-- Boton de aplicar filtros -->
+      <div>
+        <p-button 
+          label="Aplicar filtros" 
+          icon="pi pi-filter" 
+          severity="info"
+          (onClick)="applyFilters()">
+        </p-button>
+      </div>
+
+      <!-- Boton de exportar -->
+      <div>
+        <p-button 
+          label="Exportar Excel" 
+          icon="pi pi-file-excel">
+        </p-button>
+      </div>
+    </div>
+  </div>
+
+  <p-table 
+    [value]="documentsFilters"
+    [paginator]="true" 
+    [rows]="10" 
+    [rowsPerPageOptions]="[5,10,20]"  
+    styleClass="p-datatable-striped font-family-sans" 
+    [tableStyle]="{'min-width': '50rem'}" 
+    responsiveLayout="scroll">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="numeroDocumento" class="font-semibold text-primary border-b-2 border-primary">
+          Numero documento
+        </th>
+        <th pSortableColumn="razonSocial" class="font-semibold text-primary border-b-2 border-primary">
+          Razón social
+        </th>
+        <th pSortableColumn="credito" class="font-semibold text-primary border-b-2 border-primary">
+          Crédito
+        </th>
+        <th pSortableColumn="debito" class="font-semibold text-primary border-b-2 border-primary">
+          Débito
+        </th>
+        <th pSortableColumn="fecha" class="font-semibold text-primary border-b-2 border-primary">
+          Fecha
+        </th>
+        <th pSortableColumn="empresa" class="font-semibold text-primary border-b-2 border-primary">
+          NIT empresa
+        </th>
+        <th pSortableColumn="usuarioCreacion" class="font-semibold text-primary border-b-2 border-primary">
+          Usuario creación
+        </th>
+        <th pSortableColumn="fechaCreacion" class="font-semibold text-primary border-b-2 border-primary">
+          Fecha creación
+        </th>
+        <th pSortableColumn="usuarioModificacion" class="font-semibold text-primary border-b-2 border-primary">
+          Usuario modificación
+        </th>
+        <th pSortableColumn="fechaModificacion" class="font-semibold text-primary border-b-2 border-primary">
+          Fecha modificación
+        </th>
+        <th pSortableColumn="usuarioAprobacion" class="font-semibold text-primary border-b-2 border-primary">
+          Usuario aprobación
+        </th>
+        <th pSortableColumn="fechaAprobacion" class="font-semibold text-primary border-b-2 border-primary">
+          Fecha aprobación
+        </th>
+        <th pSortableColumn="usuarioAnulacion" class="font-semibold text-primary border-b-2 border-primary">
+          Usuario anulación
+        </th>
+        <th pSortableColumn="fechaAnulacion" class="font-semibold text-primary border-b-2 border-primary">
+          Fecha anulación
+        </th>
+        <th pSortableColumn="estado" class="font-semibold text-primary border-b-2 border-primary">
+          Estado
+        </th>
+        <th pSortableColumn="tercero" class="font-semibold text-primary border-b-2 border-primary">
+          Tercero
+        </th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr class="text-neutral-20">
+        <td class="py-3">{{ row.numeroDocumento }}</td>
+        <td class="py-3">{{ row.razonSocial }}</td>
+        <td class="py-3">{{ row.credito }}</td>
+        <td class="py-3">{{ row.debito }}</td>
+        <td class="py-3">{{ row.fecha }}</td>
+        <td class="py-3">{{ row.empresa }}</td>
+        <td class="py-3">{{ row.usuarioCreacion }}</td>
+        <td class="py-3">{{ row.fechaCreacion }}</td>
+        <td class="py-3">{{ row.usuarioModificacion }}</td>
+        <td class="py-3">{{ row.fechaModificacion }}</td>
+        <td class="py-3">{{ row.usuarioAprobacion }}</td>
+        <td class="py-3">{{ row.fechaAprobacion }}</td>
+        <td class="py-3">{{ row.usuarioAnulacion }}</td>
+        <td class="py-3">{{ row.fechaAnulacion }}</td>
+        <td class="py-3">{{ row.estado }}</td>
+        <td class="py-3">{{ row.tercero }}
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
+          No se encontraron registros de operaciones.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+</div>

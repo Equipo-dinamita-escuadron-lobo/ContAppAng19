@@ -1,0 +1,491 @@
+<!-- Toast y Dialog de confirmación -->
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="flex w-full h-full font-titillium">
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+
+    <!-- Header Section -->
+    <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+      <div class="items-center mb-6">
+        <h1
+          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Configuración</span> de Terceros
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-12">
+          Administra y configura los tipos de terceros y tipos de identificación del sistema.
+        </p>
+      </div>
+      <div class="flex justify-end">
+        <p-button 
+          type="button"
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          (onClick)="goBack()">
+        </p-button>
+      </div>
+    </div>
+
+    <!-- Tabs Container -->
+    <p-tabs [(value)]="activeTab">
+      <p-tablist>
+        <p-tab value="0" class="flex items-center !gap-6">
+          <i class="pi pi-id-card"></i>
+          <span>Tipos de Identificación</span>
+        </p-tab>
+        <p-tab value="1" class="flex items-center !gap-6">
+          <i class="pi pi-users"></i>
+          <span>Tipos de Tercero</span>
+        </p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <!-- Actions Bar -->
+          <div class="mt-20 mb-16">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4">
+              <!-- Search Field -->
+              <div class="w-full sm:w-[30rem]">
+                <p-iconfield iconPosition="left">
+                  <p-inputicon>
+                    <i class="pi pi-search text-gray-500"></i>
+                  </p-inputicon>
+                  <input
+                    pInputText
+                    type="text"
+                    [(ngModel)]="searchTermTypeIds"
+                    (input)="onSearchTypeIdsChange($any($event.target).value)"
+                    placeholder="Buscar tipo de identificación..."
+                    class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+                  />
+                </p-iconfield>
+              </div>
+
+              <!-- Buttons -->
+              <div class="flex flex-wrap justify-start sm:justify-end gap-2">
+                <p-button 
+                  label="Crear" 
+                  icon="pi pi-plus" 
+                  (onClick)="showInputTypeId = true"
+                  size="small">
+                </p-button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input para nueva identificación -->
+          <div *ngIf="showInputTypeId" class="mb-15 mt-12 p-4 border border-gray-200 rounded-lg">
+            <div class="mb-3 p-15">
+              <h3 class="font-semibold text-primary">Crear Tipo de Identificación</h3>
+            </div>
+            <form [formGroup]="typeIdForm" (ngSubmit)="addTypeId(typesId)">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-15 p-15 items-start">
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2 label-required">Tipo ID</label>
+                  <input 
+                    pInputText 
+                    formControlName="code" 
+                    placeholder="Ej: CC, TI, CE"
+                    class="w-full mb-6"
+                    maxlength="10"
+                    (keydown.escape)="cancelAddTypeId()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('code')?.touched && typeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
+                </div>
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
+                  <input 
+                    pInputText 
+                    formControlName="name" 
+                    placeholder="Ej: Cédula de Ciudadanía"
+                    class="w-full mb-6"
+                    (keydown.escape)="cancelAddTypeId()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('name')?.touched && typeIdForm.get('name')?.invalid">Nombre requerido</small>
+                </div>
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2 label-required">Clasificación</label>
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-center">
+                      <p-radioButton 
+                        formControlName="classification"
+                        value="NATURAL_PERSON"
+                        inputId="natural_person">
+                      </p-radioButton>
+                      <label for="natural_person" class="ml-2 text-sm">Persona Natural</label>
+                    </div>
+                    <div class="flex items-center">
+                      <p-radioButton 
+                        formControlName="classification"
+                        value="LEGAL_ENTITY"
+                        inputId="legal_entity">
+                      </p-radioButton>
+                      <label for="legal_entity" class="ml-2 text-sm">Persona Jurídica</label>
+                    </div>
+                  </div>
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('classification')?.touched && typeIdForm.get('classification')?.invalid">Clasificación requerida</small>
+                </div>
+                <div class="flex flex-col justify-center h-full">
+                  <div class="flex gap-2 justify-center">
+                    <p-button 
+                      type="button" 
+                      label="Cancelar" 
+                      severity="secondary" 
+                      (onClick)="cancelAddTypeId()">
+                    </p-button>
+                    <p-button 
+                      type="submit" 
+                      label="Guardar" 
+                      [disabled]="typeIdForm.invalid">
+                    </p-button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Input para editar identificación -->
+          <div *ngIf="showEditTypeId" class="mb-15 mt-12 p-4 border border-gray-200 rounded-lg">
+            <div class="mb-3 p-15">
+              <h3 class="font-semibold text-primary">Editar Tipo de Identificación</h3>
+            </div>
+            <form [formGroup]="editTypeIdForm" (ngSubmit)="updateTypeId()">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-15 p-15 items-start">
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2 label-required">Tipo ID</label>
+                  <input 
+                    pInputText 
+                    formControlName="code" 
+                    placeholder="Ej: CC, TI, CE"
+                    class="w-full mb-6"
+                    maxlength="10"
+                    (keydown.escape)="cancelEditTypeId()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('code')?.touched && editTypeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
+                </div>
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
+                  <input 
+                    pInputText 
+                    formControlName="name" 
+                    placeholder="Ej: Cédula de Ciudadanía"
+                    class="w-full mb-6"
+                    (keydown.escape)="cancelEditTypeId()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('name')?.touched && editTypeIdForm.get('name')?.invalid">Nombre requerido</small>
+                </div>
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2 label-required">Clasificación</label>
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-center">
+                      <p-radioButton 
+                        formControlName="classification"
+                        value="NATURAL_PERSON"
+                        inputId="edit_natural_person">
+                      </p-radioButton>
+                      <label for="edit_natural_person" class="ml-2 text-sm">Persona Natural</label>
+                    </div>
+                    <div class="flex items-center">
+                      <p-radioButton 
+                        formControlName="classification"
+                        value="LEGAL_ENTITY"
+                        inputId="edit_legal_entity">
+                      </p-radioButton>
+                      <label for="edit_legal_entity" class="ml-2 text-sm">Persona Jurídica</label>
+                    </div>
+                  </div>
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('classification')?.touched && editTypeIdForm.get('classification')?.invalid">Clasificación requerida</small>
+                </div>
+                <div class="flex flex-col justify-center h-full">
+                  <div class="flex gap-2 justify-center">
+                    <p-button 
+                      type="button" 
+                      label="Cancelar" 
+                      severity="secondary" 
+                      (onClick)="cancelEditTypeId()">
+                    </p-button>
+                    <p-button 
+                      type="submit" 
+                      label="Guardar Cambios" 
+                      [disabled]="editTypeIdForm.invalid || !hasTypeIdChanges()">
+                    </p-button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabla de Tipos de Identificación -->
+          <p-table #typeIdTable [value]="typesId" [loading]="loadingTypeIds" [lazy]="true" (onLazyLoad)="loadTypeIdsLazy($event)"
+            [paginator]="true" [rows]="currentSizeTypeIds" [totalRecords]="totalRecordsTypeIds"
+            [rowsPerPageOptions]="[5, 10, 20]"
+            styleClass="p-datatable-striped font-family-sans"
+            [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="typeId" class="font-semibold text-primary border-b-2 border-primary">
+                  Tipo ID <p-sortIcon field="typeId"></p-sortIcon>
+                </th>
+                <th pSortableColumn="typeIdname" class="font-semibold text-primary border-b-2 border-primary">
+                  Nombre <p-sortIcon field="typeIdname"></p-sortIcon>
+                </th>
+                <th class="font-semibold text-primary border-b-2 border-primary text-center">
+                  Clasificación
+                </th>
+                <th class="font-semibold text-primary border-b-2 border-primary text-center">
+                  Estado
+                </th>
+                <th class="font-semibold text-primary border-b-2 border-primary text-center">
+                  Acciones
+                </th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-typeId let-i="rowIndex">
+              <tr>
+                <td class="font-medium">{{ typeId.typeId }}</td>
+                <td>{{ typeId.typeIdname }}</td>
+                <td class="text-center">
+                  {{ typeId.classification === 'NATURAL_PERSON' ? 'Persona Natural' : 'Persona Jurídica' }}
+                </td>
+                <td class="text-center">
+                  <p-tag 
+                    [value]="typeId.status ? 'Activo' : 'Inactivo'" 
+                    [severity]="typeId.status ? 'success' : 'danger'">
+                  </p-tag>
+                </td>
+                <td class="text-center">
+                  <div class="flex justify-center items-center gap-2">
+                    <p-button 
+                      icon="pi pi-pencil" 
+                      pTooltip="Editar" 
+                      tooltipPosition="top" 
+                      (onClick)="editTypeId(typeId, i)" 
+                      styleClass="p-button-rounded p-button-text">
+                    </p-button>
+                    <p-button 
+                      icon="pi pi-trash" 
+                      pTooltip="Eliminar" 
+                      tooltipPosition="top" 
+                      (onClick)="confirmDeleteTypeId(typeId, i)" 
+                      styleClass="p-button-rounded p-button-text p-button-danger">
+                    </p-button>
+                    <p-toggleSwitch 
+                      [ngModel]="typeId.status"
+                      (onChange)="toggleTypeIdStatus(typeId, i)"
+                      [style]="{ transform: 'scale(0.8)' }"
+                      [pTooltip]="typeId.status ? 'Activo' : 'Inactivo'"
+                      tooltipPosition="top">
+                    </p-toggleSwitch>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="text-center py-6 font-family-sans text-neutral-50">
+                  No se encontraron tipos de identificación.
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="loadingbody">
+              <tr>
+                <td colspan="5" class="text-center py-8">
+                  <div class="flex flex-col items-center gap-3">
+                    <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
+                    <p class="text-gray-500">Cargando tipos de identificación...</p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+
+        <p-tabpanel value="1">
+          <!-- Actions Bar -->
+          <div class="mt-20 mb-16">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4">
+              <!-- Search Field -->
+              <div class="w-full sm:w-[30rem]">
+                <p-iconfield iconPosition="left">
+                  <p-inputicon>
+                    <i class="pi pi-search text-gray-500"></i>
+                  </p-inputicon>
+                  <input
+                    pInputText
+                    type="text"
+                    [(ngModel)]="searchTermThirdTypes"
+                    (input)="onSearchThirdTypesChange()"
+                    placeholder="Buscar tipo de tercero..."
+                    class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+                  />
+                </p-iconfield>
+              </div>
+
+              <!-- Buttons -->
+              <div class="flex flex-wrap justify-start sm:justify-end gap-2">
+                <p-button 
+                  label="Crear" 
+                  icon="pi pi-plus" 
+                  (onClick)="showInputThirdType = true"
+                  size="small">
+                </p-button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input para nuevo tipo de tercero -->
+          <div *ngIf="showInputThirdType" class="mb-15 mt-12 p-4 border border-gray-200 rounded-lg">
+            <div class="mb-3 p-15">
+              <h3 class="font-semibold text-primary">Crear Tipo de Tercero</h3>
+            </div>
+            <form [formGroup]="thirdTypeForm" (ngSubmit)="addThirdType(thirdTypes)">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-15 p-15 items-start">
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
+                  <input 
+                    pInputText 
+                    formControlName="name" 
+                    placeholder="Ej: Cliente, Proveedor, Empleado"
+                    class="w-full mb-6"
+                    maxlength="100"
+                    (keydown.escape)="cancelAddThirdType()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('required')">Nombre requerido</small>
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('pattern')">Solo se permiten letras y espacios</small>
+                </div>
+                <div class="flex flex-col justify-center h-full">
+                  <div class="flex gap-2 justify-center">
+                    <p-button 
+                      type="button" 
+                      label="Cancelar" 
+                      severity="secondary" 
+                      (onClick)="cancelAddThirdType()">
+                    </p-button>
+                    <p-button 
+                      type="submit" 
+                      label="Guardar" 
+                      [disabled]="thirdTypeForm.invalid">
+                    </p-button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Input para editar tipo de tercero -->
+          <div *ngIf="showEditThirdType" class="mb-15 mt-12 p-4 border border-gray-200 rounded-lg">
+            <div class="mb-3 p-15">
+              <h3 class="font-semibold text-primary">Editar Tipo de Tercero</h3>
+            </div>
+            <form [formGroup]="editThirdTypeForm" (ngSubmit)="updateThirdType()">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-15 p-15 items-start">
+                <div class="relative">
+                  <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
+                  <input 
+                    pInputText 
+                    formControlName="name" 
+                    placeholder="Ej: Cliente, Proveedor, Empleado"
+                    class="w-full mb-6"
+                    maxlength="100"
+                    (keydown.escape)="cancelEditThirdType()">
+                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editThirdTypeForm.get('name')?.touched && editThirdTypeForm.get('name')?.invalid">Nombre requerido</small>
+                </div>
+                <div class="flex flex-col justify-center h-full">
+                  <div class="flex gap-2 justify-center">
+                    <p-button 
+                      type="button" 
+                      label="Cancelar" 
+                      severity="secondary" 
+                      (onClick)="cancelEditThirdType()">
+                    </p-button>
+                    <p-button 
+                      type="submit" 
+                      label="Guardar Cambios" 
+                      [disabled]="editThirdTypeForm.invalid || !hasThirdTypeChanges()">
+                    </p-button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabla de Tipos de Tercero -->
+          <p-table #thirdTypeTable [value]="thirdTypes" [loading]="loadingThirdTypes" [lazy]="true" (onLazyLoad)="loadThirdTypesLazy($event)"
+            [paginator]="true" [rows]="currentSizeThirdTypes" [totalRecords]="totalRecordsThirdTypes"
+            [rowsPerPageOptions]="[5, 10, 20]"
+            styleClass="p-datatable-striped font-family-sans"
+            [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="thirdTypeName" class="font-semibold text-primary border-b-2 border-primary">
+                  Nombre <p-sortIcon field="thirdTypeName"></p-sortIcon>
+                </th>
+                <th class="font-semibold text-primary border-b-2 border-primary text-center">
+                  Estado
+                </th>
+                <th class="font-semibold text-primary border-b-2 border-primary text-center">
+                  Acciones
+                </th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-thirdType let-i="rowIndex">
+              <tr>
+                <td class="font-medium">{{ thirdType.thirdTypeName }}</td>
+                <td class="text-center">
+                  <p-tag 
+                    [value]="thirdType.status ? 'Activo' : 'Inactivo'" 
+                    [severity]="thirdType.status ? 'success' : 'danger'">
+                  </p-tag>
+                </td>
+                <td class="text-center">
+                  <div class="flex justify-center items-center gap-2">
+                    <p-button 
+                      icon="pi pi-pencil" 
+                      pTooltip="Editar" 
+                      tooltipPosition="top" 
+                      (onClick)="editThirdType(thirdType, i)" 
+                      styleClass="p-button-rounded p-button-text">
+                    </p-button>
+                    <p-button 
+                      icon="pi pi-trash" 
+                      pTooltip="Eliminar" 
+                      tooltipPosition="top" 
+                      (onClick)="confirmDeleteThirdType(thirdType, i)" 
+                      styleClass="p-button-rounded p-button-text p-button-danger">
+                    </p-button>
+                    <p-toggleSwitch 
+                      [ngModel]="thirdType.status"
+                      (onChange)="toggleThirdTypeStatus(thirdType, i)"
+                      [style]="{ transform: 'scale(0.8)' }"
+                      [pTooltip]="thirdType.status ? 'Activo' : 'Inactivo'"
+                      tooltipPosition="top">
+                    </p-toggleSwitch>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="3" class="text-center py-6 font-family-sans text-neutral-50">
+                  No se encontraron tipos de tercero.
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="loadingbody">
+              <tr>
+                <td colspan="3" class="text-center py-8">
+                  <div class="flex flex-col items-center gap-3">
+                    <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
+                    <p class="text-gray-500">Cargando tipos de tercero...</p>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>

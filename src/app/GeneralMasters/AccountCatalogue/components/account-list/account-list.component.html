@@ -1,229 +1,320 @@
-<div class="flex w-full h-full font-titillium">
-    <div class="m-10 w-full h-full font-medium  bg-white rounded-3xl p-10">
+<div class="flex w-full h-full font-family-sans mb-20">
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+
+    <!-- Confirm Dialog personalizado para exportar -->
+    <p-confirmDialog key="exportDialog" [style]="{width: '30rem'}">
+      <ng-template pTemplate="message">
+        <div class="font-family-sans text-sm">
+          <div class="flex items-center gap-2 mb-20">
+            <p>{{ exportDialogMessage }}</p>
+          </div>
+          <div class="flex justify-start gap-12 mb-12">
+            <div *ngFor="let option of exportStatusOptions" class="flex items-center mt-4">
+              <p-radioButton
+                [inputId]="option.label"
+                [value]="option.value"
+                [(ngModel)]="selectedExportStatus"
+                name="exportFilter">
+              </p-radioButton>
+              <label [for]="option.label" class="ml-4 cursor-pointer">{{ option.label }}</label>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </p-confirmDialog>
 
 
         <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
             <div class="items-center mb-6">
                 <h1
-                    class="font-family-titillium font-bold text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
-                    Catálogo de cuentas</h1>
-                <p class="font-family-sans font-normal text-sm mt-2">Guía detallada del manejo financiero y
+                    class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
+                    <span class="border-b-4 border-secondary-light inline-block pb-1">Catálogo</span> de cuentas</h1>
+                <p class="font-family-sans font-normal text-sm mt-12">Guía detallada del manejo financiero y
                     transacciones
                     económicas.</p>
             </div>
 
 
-            <!-- Contenedor de botones con alineación y espaciado mejorados -->
+            <!-- Contenedor de botones con alineación -->
             <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
-                <!-- Usamos 'gap' para espaciar los botones de forma consistente -->
                 <div class="flex flex-wrap gap-3">
-                    <p-button label="Crear" type="submit" (click)="showFormAddNewClass()"></p-button>
-                    <p-button label="Exportar" type="submit" (click)="exportAccountsToExcel()"></p-button>
-
-                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" accept=".xlsx" [auto]="true"
-                        (onSelect)="onFileSelect($event)" class="p-button-primeng">
+                    <p-button label="Crear" icon="pi pi-plus" type="submit" (click)="showFormAddNewClass()"></p-button>
+                    <p-fileUpload mode="basic" name="excelUpload" chooseLabel="Importar" [chooseIcon]="isImporting ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" [auto]="true"
+                        (onSelect)="onFileSelect($event)" class="p-button-primeng" [disabled]="isImporting">
                     </p-fileUpload>
-                    <p-button label="Plantilla" (click)="openTemplateModal()"></p-button>
+                    <p-button
+                        label="Exportar"
+                        [icon]="isExporting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"
+                        severity="success"
+                        (click)="showExportConfirmDialog()"
+                        [outlined]="true"
+                        [disabled]="isExporting">
+                    </p-button>
+                    <p-button label="Plantilla" icon="pi pi-download" (click)="openTemplateModal()"></p-button>
                 </div>
             </div>
 
         </div>
 
 
-        <div *ngIf="importedAccounts"
-            class="my-10 p-6 sm:p-8 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.06)] bg-white border border-gray-300 font-family-sans text-sm">
 
-            <div class="grid gap-6 sm:grid-cols-[1fr_auto] sm:gap-12 items-center">
-                <!-- Info -->
-                <div class="flex gap-5 text-[var(--color-primary)]">
-                    <div class="shrink-0">
-                        <svg class="h-20 w-20 mt-1" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path
-                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                            <line x1="12" y1="9" x2="12" y2="13" />
-                            <line x1="12" y1="17" x2="12.01" y2="17" />
-                        </svg>
-                    </div>
-                    <div class="space-y-3">
-                        <p class="font-semibold">
-                            Se ha cargado un listado de cuentas desde su ordenador.
-                        </p>
-                        <p>
-                            Presione <strong>Guardar cambios</strong> para conservar la información o
-                            <strong>Restablecer</strong> para descartarla.
-                        </p>
 
-                        <!-- Advertencia -->
-                        <div
-                            class="flex gap-3 items-start text-[var(--color-error-60)] border-l-4 border-[var(--color-error-60)] pl-4">
-                            <p class="leading-snug">
-                                <strong>Advertencia:</strong> asegúrese de que cada cuenta tenga toda su información
-                                completa.
-                                Si falta algún dato, no se guardará.
-                            </p>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Botones -->
-                <div class="flex flex-wrap gap-3 justify-center sm:justify-end">
-                    <button (click)="cancelImportAccounts()"
-                        class="text-sm py-2.5 px-5 border-2 border-[var(--color-primary)] text-[var(--color-primary)] rounded-full transition duration-200 hover:bg-[var(--color-primary)] hover:text-white">
-                        Restablecer
-                    </button>
-                    <button (click)="saveImportAccounts()"
-                        class="text-sm py-2.5 px-5 border-2 border-[var(--color-primary)] text-[var(--color-primary)] rounded-full transition duration-200 hover:bg-[var(--color-primary)] hover:text-white">
-                        Guardar cambios
-                    </button>
-                </div>
+        <!-- Search Field -->
+        <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+            <div class="w-full sm:w-[30rem]">
+                <p-iconfield iconPosition="left">
+                    <p-inputicon>
+                        <i class="pi pi-search text-gray-500" [class.pi-spin]="isLoading"></i>
+                    </p-inputicon>
+                    <input
+                        pInputText
+                        type="text"
+                        [(ngModel)]="searchTerm"
+                        (ngModelChange)="onSearchChange()"
+                        placeholder="Buscar cuenta (código/nombre)..."
+                        class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition"
+                    />
+                </p-iconfield>
             </div>
         </div>
-
-
-        <form class="flex justify-center sm:justify-start sm:ml-8 mt-20">
-            <div
-                class="mb-16 -ml-7 flex w-full sm:w-2/6 rounded-md border-b-2 border-neutral-400  text-neutral-400 focus-within:border-primary focus-within:text-primary transition-colors duration-300">
-
-                <svg class="h-20 w-20 mx-2 text-inherit" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-
-                <input type="text" id="search" placeholder="Buscar cuenta (código/nombre)" name="filterEnterpriseList"
-                    [(ngModel)]="filterAccount"
-                    class="mb-1 w-10/12 bg-transparent font-family-sans font-normal text-sm  outline-none placeholder-neutral-400 text-inherit focus:text-primary" />
-            </div>
-        </form>
 
 
 
         <div class="grid grid-cols-1 sm:grid-cols-2 font-family-sans text-sm">
-            <div class="list-account overscroll-auto border-r-4 sm:border-blue-950 sm:mr-6 sm:p-3">
-                <div class="w-full flex text-blue-950">
-                    <div class=" w-1/2 border-b-2 border-blue-950 font-semibold">Código</div>
-                    <div class=" w-1/2 border-b-2 border-blue-950 font-semibold">Nombre de la cuenta</div>
+            <div class="list-account overscroll-auto border-r-4 sm:border-primary sm:mr-20 sm:p-3">
+                <div class="w-full flex text-primary">
+                    <div class="w-1/3 border-b-2 border-primary font-semibold">Código</div>
+                    <div class="w-1/3 border-b-2 border-primary font-semibold">Nombre</div>
+                    <div class="w-1/3 border-b-2 border-primary font-semibold">Estado</div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div *ngIf="isLoading" class="w-full flex justify-center items-center py-8 mt-4">
+                    <div class="flex items-center gap-3 text-[var(--color-primary)]">
+                        <i class="pi pi-spin pi-spinner text-xl"></i>
+                        <span class="text-sm font-medium">Cargando...</span>
+                    </div>
                 </div>
                 <div class="w-full flex ">
                     <!--list of class type accounts C:-->
                     <ul class="w-full mt-3">
-                        <li class="list_class mb-2" *ngFor="let class of listAccounts | filterAccounts: filterAccount">
-                            <div class="w-full flex">
+                        <li class="list_class mb-2" *ngFor="let class of (hasActiveSearch ? searchResults : listAccounts)">
+                            <div class="w-full flex items-center transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
                                 <button
-                                    class="w-full  text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                    class="w-full text-start flex items-center"
                                     (click)="toggleSubAccounts(class);selectAccount(class);$event.stopPropagation()">
-                                    <div class=" code w-1/2 flex">
+                                    <div class="code w-1/3 flex">
                                         <svg class="h-16 w-16 mt-1 transform"
                                             [ngClass]="{'text-transparent': !class.children, 'rotate-90': class.showSubAccounts}"
                                             width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
-                                            stroke="currentColor" fill="none" stroke-linejoin="round">
+                                            stroke="currentColor" fill="none" stroke-linejoin="round"
+                                            aria-hidden="true">
                                             <path stroke="none" d="M0 0h24v24H0z" />
                                             <polyline points="9 6 15 12 9 18" />
                                         </svg>
                                         {{ class.code }}
                                     </div>
-                                    <div class="name w-1/2">{{ class.description }}</div>
+                                    <div class="name w-1/3 break-words overflow-hidden max-w-[200px] leading-tight">{{ class.description }}</div>
+                                    <div class="status w-1/3 flex items-center justify-start">
+                                        <p-tag
+                                            [value]="accountCataloguePresentationService.formatState(class.status)"
+                                            [severity]="accountCataloguePresentationService.getStateSeverity(class.status)">
+                                        </p-tag>
+                                    </div>
                                 </button>
+                                <div *ngIf="class.showSubAccounts" class="flex items-center gap-2 pr-4">
+                                    <p-toggleSwitch
+                                        [(ngModel)]="class.status"
+                                        (ngModelChange)="changeAccountState(class)"
+                                        (click)="$event.stopPropagation()"
+                                        [style]="{ transform: 'scale(0.8)' }"
+                                        [pTooltip]="accountCataloguePresentationService.getToggleTooltip(class.status)"
+                                        tooltipPosition="top"
+                                        aria-label="Cambiar estado de la clase">
+                                    </p-toggleSwitch>
+                                </div>
                             </div>
                             <!--list of group type accounts C:-->
 
                             <ul class="ml-12 mt-3" *ngIf="class.showSubAccounts">
                                 <li class="list-group mb-2" *ngFor="let group of class.children">
-                                    <div class="w-full flex">
+                                    <div class="w-full flex items-center transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
                                         <button
-                                            class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                            class="w-full text-start flex items-center"
                                             (click)="toggleSubAccounts(group);selectAccount(group);$event.stopPropagation()">
-                                            <div class="code w-1/2 flex">
+                                            <div class="code w-1/3 flex">
                                                 <svg class="h-16 w-16 mt-1 transform"
                                                     [ngClass]="{'text-white': !group.children || group.children.length === 0, 'rotate-90': group.showSubAccounts}"
                                                     width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
-                                                    stroke="currentColor" fill="none" stroke-linejoin="round">
+                                                    stroke="currentColor" fill="none" stroke-linejoin="round"
+                                                    aria-hidden="true">
                                                     <path stroke="none" d="M0 0h24v24H0z" />
                                                     <polyline points="9 6 15 12 9 18" />
                                                 </svg>
                                                 {{ group.code }}
                                             </div>
-                                            <div class="name w-1/2 -ml-3">{{ group.description }}</div>
+                                            <div class="name w-1/3 -ml-3 break-words overflow-hidden max-w-[200px] leading-tight">{{ group.description }}</div>
+                                            <div class="status w-1/3 flex items-center justify-start">
+                                                <p-tag
+                                                    [value]="accountCataloguePresentationService.formatState(group.status)"
+                                                    [severity]="accountCataloguePresentationService.getStateSeverity(group.status)">
+                                                </p-tag>
+                                            </div>
                                         </button>
+                                        <div *ngIf="class.showSubAccounts" class="flex items-center gap-2 pr-4">
+                                            <p-toggleSwitch
+                                                [(ngModel)]="group.status"
+                                                (ngModelChange)="changeAccountState(group)"
+                                                (click)="$event.stopPropagation()"
+                                                [style]="{ transform: 'scale(0.8)' }"
+                                                [pTooltip]="accountCataloguePresentationService.getToggleTooltip(group.status)"
+                                                tooltipPosition="top"
+                                                aria-label="Cambiar estado del grupo">
+                                            </p-toggleSwitch>
+                                        </div>
                                     </div>
                                     <!--list of account type accounts C:-->
                                     <ul class="ml-12 mt-3" *ngIf="group.showSubAccounts">
                                         <li class="list-account mb-2" *ngFor="let account of group.children">
-                                            <div class="w-full flex">
+                                            <div class="w-full flex items-center transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
                                                 <button
-                                                    class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                                    class="w-full text-start flex items-center"
                                                     (click)="toggleSubAccounts(account);selectAccount(account);$event.stopPropagation()">
-                                                    <div class="code w-1/2 flex">
+                                                    <div class="code w-1/3 flex">
                                                         <svg class="h-16 w-16 mt-1 transform"
                                                             [ngClass]="{'text-white': !account.children || account.children.length === 0, 'rotate-90': account.showSubAccounts}"
                                                             width="24" height="24" viewBox="0 0 24 24" stroke-width="1"
-                                                            stroke="currentColor" fill="none" stroke-linejoin="round">
+                                                            stroke="currentColor" fill="none" stroke-linejoin="round"
+                                                            aria-hidden="true">
                                                             <path stroke="none" d="M0 0h24v24H0z" />
                                                             <polyline points="9 6 15 12 9 18" />
                                                         </svg>
                                                         {{ account.code }}
                                                     </div>
-                                                    <div class="name w-1/2 -ml-6">{{ account.description }}</div>
+                                                    <div class="name w-1/3 -ml-6 break-words overflow-hidden max-w-[200px] leading-tight">{{ account.description }}</div>
+                                                    <div class="status w-1/3 flex items-center justify-start">
+                                                        <p-tag
+                                                            [value]="accountCataloguePresentationService.formatState(account.status)"
+                                                            [severity]="accountCataloguePresentationService.getStateSeverity(account.status)">
+                                                        </p-tag>
+                                                    </div>
                                                 </button>
+                                                <div *ngIf="group.showSubAccounts" class="flex items-center gap-2 pr-4">
+                                                    <p-toggleSwitch
+                                                        [(ngModel)]="account.status"
+                                                        (ngModelChange)="changeAccountState(account)"
+                                                        (click)="$event.stopPropagation()"
+                                                        [style]="{ transform: 'scale(0.8)' }"
+                                                        [pTooltip]="accountCataloguePresentationService.getToggleTooltip(account.status)"
+                                                        tooltipPosition="top"
+                                                        aria-label="Cambiar estado de la cuenta">
+                                                    </p-toggleSwitch>
+                                                </div>
                                             </div>
                                             <!--list of subAccount type accounts C:-->
                                             <ul class="ml-12 mt-3" *ngIf="account.showSubAccounts">
                                                 <li class="list-sub-account mb-2"
                                                     *ngFor="let subAccount of account.children">
-                                                    <div class="w-full flex">
+                                                    <div class="w-full flex items-center transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
                                                         <button
-                                                            class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
-                                                            hover:text-blue-900
+                                                            class="w-full text-start flex items-center"
                                                             (click)="toggleSubAccounts(subAccount);selectAccount(subAccount);$event.stopPropagation()">
-                                                            <div class="code w-1/2 flex">
+                                                            <div class="code w-1/3 flex">
                                                                 <svg class="h-16 w-16 mt-1 transform"
                                                                     [ngClass]="{'text-white': !subAccount.children || subAccount.children.length === 0, 'rotate-90': subAccount.showSubAccounts}"
                                                                     width="24" height="24" viewBox="0 0 24 24"
                                                                     stroke-width="1" stroke="currentColor" fill="none"
-                                                                    stroke-linejoin="round">
+                                                                    stroke-linejoin="round"
+                                                                    aria-hidden="true">
                                                                     <path stroke="none" d="M0 0h24v24H0z" />
                                                                     <polyline points="9 6 15 12 9 18" />
                                                                 </svg>
                                                                 {{ subAccount.code }}
                                                             </div>
-                                                            <div class="name w-1/2 -ml-8">{{ subAccount.description }}
+                                                            <div class="name w-1/3 -ml-8 break-words overflow-hidden max-w-[200px] leading-tight">{{ subAccount.description }}</div>
+                                                            <div class="status w-1/3 flex items-center justify-start">
+                                                                <p-tag
+                                                                    [value]="accountCataloguePresentationService.formatState(subAccount.status)"
+                                                                    [severity]="accountCataloguePresentationService.getStateSeverity(subAccount.status)">
+                                                                </p-tag>
                                                             </div>
                                                         </button>
+                                                        <div *ngIf="account.showSubAccounts" class="flex items-center gap-2 pr-4">
+                                                            <p-toggleSwitch
+                                                                [(ngModel)]="subAccount.status"
+                                                                (ngModelChange)="changeAccountState(subAccount)"
+                                                                (click)="$event.stopPropagation()"
+                                                                [style]="{ transform: 'scale(0.8)' }"
+                                                                [pTooltip]="accountCataloguePresentationService.getToggleTooltip(subAccount.status)"
+                                                                tooltipPosition="top"
+                                                                aria-label="Cambiar estado de la subcuenta">
+                                                            </p-toggleSwitch>
+                                                        </div>
                                                     </div>
                                                     <!--list of aux1 type accounts C:-->
                                                     <ul class="ml-28 mt-3" *ngIf="subAccount.showSubAccounts">
                                                         <li class="list-aux1 mb-2"
                                                             *ngFor="let aux1 of subAccount.children">
-                                                            <div class="w-full flex">
+                                                            <div class="w-full flex items-center transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
                                                                 <button
-                                                                    class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                                                    class="w-full text-start flex items-center"
                                                                     (click)="toggleSubAccounts(aux1);selectAccount(aux1);$event.stopPropagation()">
-                                                                    <div class="code w-1/2 flex">
+                                                                    <div class="code w-1/3 flex">
                                                                         {{ aux1.code }}
                                                                     </div>
-                                                                    <div class="name w-1/2 -ml-24">{{ aux1.description
-                                                                        }}
+                                                                    <div class="name w-1/3 -ml-24 break-words overflow-hidden max-w-[200px] leading-tight">{{ aux1.description }}</div>
+                                                                    <div class="status w-1/3 flex items-center justify-start">
+                                                                        <p-tag
+                                                                            [value]="accountCataloguePresentationService.formatState(aux1.status)"
+                                                                            [severity]="accountCataloguePresentationService.getStateSeverity(aux1.status)">
+                                                                        </p-tag>
                                                                     </div>
                                                                 </button>
+                                                                <div *ngIf="subAccount.showSubAccounts" class="flex items-center gap-2 pr-4">
+                                                                    <p-toggleSwitch
+                                                                        [(ngModel)]="aux1.status"
+                                                                        (ngModelChange)="changeAccountState(aux1)"
+                                                                        (click)="$event.stopPropagation()"
+                                                                        [style]="{ transform: 'scale(0.8)' }"
+                                                                        [pTooltip]="accountCataloguePresentationService.getToggleTooltip(aux1.status)"
+                                                                        tooltipPosition="top"
+                                                                        aria-label="Cambiar estado del auxiliar 1">
+                                                                    </p-toggleSwitch>
+                                                                </div>
                                                             </div>
                                                             <!--list of aux2 type accounts C:-->
                                                             <ul class="ml-28 mt-3" *ngIf="aux1.showSubAccounts">
                                                                 <li class="list-aux2 mb-2"
                                                                     *ngFor="let aux2 of aux1.children">
-                                                                    <div class="w-full flex">
+                                                                    <div class="w-full flex items-center transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900">
                                                                         <button
-                                                                            class="w-full text-start flex transition duration-200 ease-in-out transform hover:bg-gray-200 hover:scale-102 origin-right hover:text-blue-900"
+                                                                            class="w-full text-start flex items-center"
                                                                             (click)="toggleSubAccounts(aux2);selectAccount(aux2);$event.stopPropagation()">
-                                                                            <div class="code w-1/2 flex">
-
+                                                                            <div class="code w-1/3 flex">
                                                                                 {{ aux2.code }}
                                                                             </div>
-                                                                            <div class="name w-1/2 -ml-12">{{
-                                                                                aux2.description
-                                                                                }}
+                                                                            <div class="name w-1/3 -ml-12 break-words overflow-hidden max-w-[200px] leading-tight">{{ aux2.description }}</div>
+                                                                            <div class="status w-1/3 flex items-center justify-start">
+                                                                            <p-tag
+                                                                                [value]="accountCataloguePresentationService.formatState(aux2.status)"
+                                                                                [severity]="accountCataloguePresentationService.getStateSeverity(aux2.status)">
+                                                                            </p-tag>
                                                                             </div>
                                                                         </button>
+                                                                        <div *ngIf="aux1.showSubAccounts" class="flex items-center gap-2 pr-4">
+                                                                            <p-toggleSwitch
+                                                                                [(ngModel)]="aux2.status"
+                                                                                (ngModelChange)="changeAccountState(aux2)"
+                                                                                (click)="$event.stopPropagation()"
+                                                                                [style]="{ transform: 'scale(0.8)' }"
+                                                                                [pTooltip]="accountCataloguePresentationService.getToggleTooltip(aux2.status)"
+                                                                                tooltipPosition="top"
+                                                                                aria-label="Cambiar estado del auxiliar 2">
+                                                                            </p-toggleSwitch>
+                                                                        </div>
                                                                     </div>
                                                                 </li>
                                                             </ul>
@@ -240,7 +331,7 @@
                 </div>
             </div>
 
-            <div *ngIf="!importedAccounts" class="create-account font-normal">
+            <div class="create-account font-normal">
                 <form [formGroup]="accountForm">
                     <div class="mb-4">
                         <div style="position: relative;">
@@ -248,27 +339,27 @@
                                 class="class account-section">
                                 <div class="w-full sm:w-auto">
                                     <input type="text" id="classCode" formControlName="classCode" placeholder="Código"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]=" inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)">
+                                        class="input-base" [readOnly]="inputAccess.class || isSelectedAccountLinked"
+                                        [class.cursor-not-allowed]="inputAccess.class || isSelectedAccountLinked"
+                                        (keydown)="onCodeKeyDown($event, 1)"
+                                        (input)="onCodeInput($event, 1)"
+                                        maxlength="1">
                                 </div>
                                 <div class="w-full sm:w-auto">
                                     <input type="text" id="className" formControlName="className" placeholder="Nombre"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.class || searchIfAccountIsLinked(accountSelected!.code)">
+                                        class="input-base" [readOnly]="inputAccess.class || isSelectedAccountLinked"
+                                        [class.cursor-not-allowed]="inputAccess.class || isSelectedAccountLinked"
+                                        (keydown)="onNameKeyDown($event)">
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('classCode')?.hasError('required') || accountForm.get('classCode')?.value === '') && (accountForm.get('classCode')?.dirty || accountForm.get('classCode')?.touched)"
                                         class="error-message">* Código es obligatorio</div>
                                     <div *ngIf="(accountForm.get('classCode')?.hasError('maxlength') || accountForm.get('classCode')?.hasError('minlength')) && (accountForm.get('classCode')?.dirty || accountForm.get('classCode')?.touched)"
                                         class="error-message">Código solo debe tener un dígito</div>
-                                    <div *ngIf="accountForm.get('classCode')?.hasError('pattern') && (accountForm.get('classCode')?.dirty || accountForm.get('classCode')?.touched)"
-                                        class="error-message">Código inválido (solo números)</div>
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('className')?.hasError('required') || accountForm.get('className')?.value === '') && (accountForm.get('className')?.dirty || accountForm.get('className')?.touched)"
                                         class="error-message">* Nombre es obligatorio</div>
-                                    <div *ngIf="accountForm.get('className')?.hasError('pattern') && (accountForm.get('className')?.dirty || accountForm.get('className')?.touched)"
-                                        class="error-message">Nombre inválido (solo letras)</div>
                                 </div>
 
                                 <div class="floating-label">Clase
@@ -276,9 +367,9 @@
                                 </div>
                                 <div *ngIf="!inputAccess.class && showButtonDelete"
                                     style="position: absolute; right: -0.5rem; top: -0.5rem;">
-                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar clase">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar clase" aria-label="Eliminar clase">
                                         <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
+                                            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -299,35 +390,35 @@
                                         class="col-span-1 mr-4 mt-1">{{accountForm.get('groupCode')?.value}}</label>
 
                                     <input type="text" formControlName="codeGroup" placeholder="Código"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)">
+                                        class="input-base" [readOnly]="inputAccess.group || isSelectedAccountLinked"
+                                        [class.cursor-not-allowed]="inputAccess.group || isSelectedAccountLinked"
+                                        (keydown)="onCodeKeyDown($event, 1)"
+                                        (input)="onCodeInput($event, 1)"
+                                        maxlength="1">
                                 </div>
                                 <div class="w-full sm:w-auto">
                                     <input type="text" formControlName="groupName" placeholder="Nombre"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.group || searchIfAccountIsLinked(accountSelected!.code)">
+                                        class="input-base" [readOnly]="inputAccess.group || isSelectedAccountLinked"
+                                        [class.cursor-not-allowed]="inputAccess.group || isSelectedAccountLinked"
+                                        (keydown)="onNameKeyDown($event)">
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('codeGroup')?.hasError('required') || accountForm.get('codeGroup')?.value === '') && (accountForm.get('codeGroup')?.dirty || accountForm.get('codeGroup')?.touched)"
                                         class="error-message">* Código es obligatorio</div>
                                     <div *ngIf="(accountForm.get('codeGroup')?.hasError('maxlength') || accountForm.get('codeGroup')?.hasError('minlength')) && (accountForm.get('codeGroup')?.dirty || accountForm.get('codeGroup')?.touched)"
                                         class="error-message">Código solo debe tener un dígito</div>
-                                    <div *ngIf="accountForm.get('codeGroup')?.hasError('pattern') && (accountForm.get('codeGroup')?.dirty || accountForm.get('codeGroup')?.touched)"
-                                        class="error-message">Código inválido (solo números)</div>
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('groupName')?.hasError('required') || accountForm.get('groupName')?.value === '') && (accountForm.get('groupName')?.dirty || accountForm.get('groupName')?.touched)"
                                         class="error-message">* Nombre es obligatorio</div>
-                                    <div *ngIf="accountForm.get('groupName')?.hasError('pattern') && (accountForm.get('groupName')?.dirty || accountForm.get('groupName')?.touched)"
-                                        class="error-message">Nombre inválido (solo letras)</div>
                                 </div>
                                 <div class="floating-label">Grupo
                                 </div>
                                 <div *ngIf="!inputAccess.group && showButtonDelete"
                                     style="position: absolute; right: -0.5rem; top: -0.5rem;">
-                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar grupo">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar grupo" aria-label="Eliminar grupo">
                                         <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
+                                            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -336,7 +427,12 @@
                             </div>
                         </div>
 
-                        <div *ngIf="addChild && currentLevelAccount === 'cuenta'">
+                        <div *ngIf="addChild && currentLevelAccount === 'Grupo'">
+                            <app-account-form [currentLevelAccount]="currentLevelAccount" [level]="1"
+                                (newAccount)="addNewAccount($event)" [parent]="accountSelected" (cancelar)="cancel()" />
+                        </div>
+
+                        <div *ngIf="addChild && currentLevelAccount === 'Cuenta'">
                             <app-account-form [currentLevelAccount]="currentLevelAccount" [level]="2"
                                 (newAccount)="addNewAccount($event)" [parent]="accountSelected" (cancelar)="cancel()" />
                         </div>
@@ -348,35 +444,35 @@
                                     <label for="cuenta"
                                         class="col-span-1 mr-4 mt-1">{{accountForm.get('accountCode')?.value}}</label>
                                     <input type="text" formControlName="codeAccount" placeholder="Código"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)">
+                                        class="input-base" [readOnly]="inputAccess.account || isSelectedAccountLinked"
+                                        [class.cursor-not-allowed]="inputAccess.account || isSelectedAccountLinked"
+                                        (keydown)="onCodeKeyDown($event, 2)"
+                                        (input)="onCodeInput($event, 2)"
+                                        maxlength="2">
                                 </div>
                                 <div class="w-full sm:w-auto">
                                     <input type="text" formControlName="accountName" placeholder="Nombre"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.account || searchIfAccountIsLinked(accountSelected!.code)">
+                                        class="input-base" [readOnly]="inputAccess.account || isSelectedAccountLinked"
+                                        [class.cursor-not-allowed]="inputAccess.account || isSelectedAccountLinked"
+                                        (keydown)="onNameKeyDown($event)">
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('codeAccount')?.hasError('required') || accountForm.get('codeAccount')?.value === '') && (accountForm.get('codeAccount')?.dirty || accountForm.get('codeAccount')?.touched)"
                                         class="error-message">* Código es obligatorio</div>
                                     <div *ngIf="(accountForm.get('codeAccount')?.hasError('maxlength') || accountForm.get('codeAccount')?.hasError('minlength')) && (accountForm.get('codeAccount')?.dirty || accountForm.get('codeAccount')?.touched)"
                                         class="error-message">Código debe tener dos dígitos</div>
-                                    <div *ngIf="accountForm.get('codeAccount')?.hasError('pattern') && (accountForm.get('codeAccount')?.dirty || accountForm.get('codeAccount')?.touched)"
-                                        class="error-message">Código inválido (solo números)</div>
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('accountName')?.hasError('required') || accountForm.get('accountName')?.value === '') && (accountForm.get('accountName')?.dirty || accountForm.get('accountName')?.touched)"
                                         class="error-message">* Nombre es obligatorio</div>
-                                    <div *ngIf="accountForm.get('accountName')?.hasError('pattern') && (accountForm.get('accountName')?.dirty || accountForm.get('accountName')?.touched)"
-                                        class="error-message">Nombre inválido (solo letras)</div>
                                 </div>
                                 <div class="floating-label">Cuenta
                                 </div>
                                 <div *ngIf="!inputAccess.account && showButtonDelete"
                                     style="position: absolute; right: -0.5rem; top: -0.5rem;">
-                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar cuenta">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar cuenta" aria-label="Eliminar cuenta">
                                         <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
+                                            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -385,7 +481,7 @@
                             </div>
                         </div>
 
-                        <div *ngIf="addChild && currentLevelAccount === 'subcuenta'">
+                        <div *ngIf="addChild && currentLevelAccount === 'Subcuenta'">
                             <app-account-form [currentLevelAccount]="currentLevelAccount" [level]="2"
                                 (newAccount)="addNewAccount($event)" [parent]="accountSelected" (cancelar)="cancel()" />
                         </div>
@@ -396,36 +492,36 @@
                                 <div class="field-wrapper">
                                     <label for="subcuenta"
                                         class="col-span-1 mr-4 mt-1">{{accountForm.get('subAccountCode')?.value}}</label>
-                                    <input type="text" formControlName="codeSubAccount" placeholder="Código"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)">
+                                                                            <input type="text" formControlName="codeSubAccount" placeholder="Código"
+                                            class="input-base" [readOnly]="inputAccess.subAccount || isSelectedAccountLinked"
+                                            [class.cursor-not-allowed]="inputAccess.subAccount || isSelectedAccountLinked"
+                                            (keydown)="onCodeKeyDown($event, 2)"
+                                            (input)="onCodeInput($event, 2)"
+                                            maxlength="2">
                                 </div>
                                 <div class="w-full sm:w-auto">
-                                    <input type="text" formControlName="subAccountName" placeholder="Nombre"
-                                        class="input-base" [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                        [class.cursor-not-allowed]="inputAccess.subAccount || searchIfAccountIsLinked(accountSelected!.code)">
+                                                                            <input type="text" formControlName="subAccountName" placeholder="Nombre"
+                                            class="input-base" [readOnly]="inputAccess.subAccount || isSelectedAccountLinked"
+                                            [class.cursor-not-allowed]="inputAccess.subAccount || isSelectedAccountLinked"
+                                            (keydown)="onNameKeyDown($event)">
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('codeSubAccount')?.hasError('required') || accountForm.get('codeSubAccount')?.value === '') && (accountForm.get('codeSubAccount')?.dirty || accountForm.get('codeSubAccount')?.touched)"
                                         class="error-message">* Código es obligatorio</div>
                                     <div *ngIf="(accountForm.get('codeSubAccount')?.hasError('maxlength') || accountForm.get('codeSubAccount')?.hasError('minlength')) && (accountForm.get('codeSubAccount')?.dirty || accountForm.get('codeSubAccount')?.touched)"
                                         class="error-message">Código debe tener dos dígitos</div>
-                                    <div *ngIf="accountForm.get('codeSubAccount')?.hasError('pattern') && (accountForm.get('codeSubAccount')?.dirty || accountForm.get('codeSubAccount')?.touched)"
-                                        class="error-message">Código inválido (solo números)</div>
                                 </div>
                                 <div>
                                     <div *ngIf="(accountForm.get('subAccountName')?.hasError('required') || accountForm.get('subAccountName')?.value === '') && (accountForm.get('subAccountName')?.dirty || accountForm.get('subAccountName')?.touched)"
                                         class="error-message">* Nombre es obligatorio</div>
-                                    <div *ngIf="accountForm.get('subAccountName')?.hasError('pattern') && (accountForm.get('subAccountName')?.dirty || accountForm.get('subAccountName')?.touched)"
-                                        class="error-message">Nombre inválido (solo letras)</div>
                                 </div>
                                 <div class="floating-label">Subcuenta
                                 </div>
                                 <div *ngIf="!inputAccess.subAccount && showButtonDelete"
                                     style="position: absolute; right: -0.5rem; top: -0.5rem;">
-                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar subcuenta">
+                                    <button class="delete-button" (click)="deleteAccount()" title="Eliminar subcuenta" aria-label="Eliminar subcuenta">
                                         <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg">
+                                            xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -434,7 +530,7 @@
                             </div>
                         </div>
 
-                        <div *ngIf="addChild && currentLevelAccount === 'auxiliar'">
+                        <div *ngIf="addChild && currentLevelAccount === 'Auxiliar'">
                             <app-account-form [currentLevelAccount]="currentLevelAccount" [level]="2"
                                 (newAccount)="addNewAccount($event)" [parent]="accountSelected" (cancelar)="cancel()" />
                         </div>
@@ -442,50 +538,48 @@
                         <div style="position: relative;">
                             <div *ngIf="accountForm.get('auxiliaryName') && showPrincipalForm"
                                 class="class account-section">
-                                <div>
-                                    <div class="field-wrapper">
-                                        <label for="auxiliar1"
-                                            class="col-span-1 mr-4 mt-1">{{accountForm.get('auxiliaryCode')?.value}}</label>
-                                        <input type="text" formControlName="codeAuxiliary" placeholder="Código"
-                                            class="input-base"
-                                            [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)">
-                                    </div>
-                                    <div class="w-full sm:w-auto">
-                                        <input type="text" formControlName="auxiliaryName" placeholder="Nombre"
-                                            class="input-base"
-                                            [readOnly]="searchIfAccountIsLinked(accountSelected!.code)"
-                                            [class.cursor-not-allowed]="inputAccess.auxiliary || searchIfAccountIsLinked(accountSelected!.code)">
-                                    </div>
+                                <div class="field-wrapper">
+                                    <label for="auxiliar1"
+                                        class="col-span-1 mr-4 mt-1">{{accountForm.get('auxiliaryCode')?.value}}</label>
+                                    <input type="text" formControlName="codeAuxiliary" placeholder="Código"
+                                        class="input-base"
+                                        [readOnly]="inputAccess.auxiliary || isSelectedAccountLinked"
+                                        [class.cursor-not-allowed]="inputAccess.auxiliary || isSelectedAccountLinked"
+                                        (keydown)="onCodeKeyDown($event, 2)"
+                                        (input)="onCodeInput($event, 2)"
+                                        maxlength="2">
+                                </div>
+                                <div class="w-full sm:w-auto">
+                                    <input type="text" formControlName="auxiliaryName" placeholder="Nombre"
+                                        class="input-base"
+                                        [readOnly]="inputAccess.auxiliary || isSelectedAccountLinked"
+                                        [class.cursor-not-allowed]="inputAccess.auxiliary || isSelectedAccountLinked"
+                                        (keydown)="onNameKeyDown($event)">
+                                </div>
                                     <div>
                                         <div *ngIf="(accountForm.get('codeAuxiliary')?.hasError('required') || accountForm.get('codeAuxiliary')?.value === '') && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
                                             class="error-message">* Código es obligatorio</div>
                                         <div *ngIf="(accountForm.get('codeAuxiliary')?.hasError('maxlength') || accountForm.get('codeAuxiliary')?.hasError('minlength')) && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
                                             class="error-message">Código debe tener dos dígitos</div>
-                                        <div *ngIf="accountForm.get('codeAuxiliary')?.hasError('pattern') && (accountForm.get('codeAuxiliary')?.dirty || accountForm.get('codeAuxiliary')?.touched)"
-                                            class="error-message">Código inválido (solo números)</div>
                                     </div>
                                     <div>
                                         <div *ngIf="(accountForm.get('auxiliaryName')?.hasError('required') || accountForm.get('auxiliaryName')?.value === '') && (accountForm.get('auxiliaryName')?.dirty || accountForm.get('auxiliaryName')?.touched)"
                                             class="error-message">* Nombre es obligatorio</div>
-                                        <div *ngIf="accountForm.get('auxiliaryName')?.hasError('pattern') && (accountForm.get('auxiliaryName')?.dirty || accountForm.get('auxiliaryName')?.touched)"
-                                            class="error-message">Nombre inválido (solo letras)</div>
                                     </div>
                                     <div class="floating-label">
                                         Auxiliar</div>
                                     <div *ngIf="!inputAccess.auxiliary && showButtonDelete"
                                         style="position: absolute; right: -0.5rem; top: -0.5rem;">
                                         <button class="delete-button" (click)="deleteAccount()"
-                                            title="Eliminar auxiliar">
+                                            title="Eliminar auxiliar" aria-label="Eliminar auxiliar">
                                             <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg">
+                                                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M6 18L18 6M6 6l12 12">
                                                 </path>
                                             </svg>
                                         </button>
                                     </div>
-                                </div>
                             </div>
                         </div>
 
@@ -494,13 +588,13 @@
                             <hr class="w-auto h-0.5 mx-auto my-4 bg-gray-100 border-0 rounded md:my-5 dark:bg-gray-700">
 
                             <!-- Título de la sección -->
-                            <h2 class="section-title">Datos adicionales</h2>
+                            <h2 class="section-title mt-20">Datos adicionales</h2>
 
                             <div [formGroup]="formTransactional">
 
                                 <!-- Naturaleza -->
-                                <div class="mb-6">
-                                    <label for="nature" class="label-title">
+                                <div class="mt-20">
+                                    <label for="nature" class="label-title label-required">
                                         Naturaleza
                                     </label>
                                     <p-dropdown inputId="nature" name="nature" [options]="listNature" optionLabel="name"
@@ -510,8 +604,8 @@
                                 </div>
 
                                 <!-- Estado Financiero -->
-                                <div class="mb-6">
-                                    <label for="financialState" class="label-title">
+                                <div class="mt-20">
+                                    <label for="financialState" class="label-title label-required">
                                         Estado financiero
                                     </label>
                                     <p-dropdown inputId="financialState" name="financialState"
@@ -522,8 +616,8 @@
                                 </div>
 
                                 <!-- Clasificación -->
-                                <div class="mb-6">
-                                    <label for="clasification" class="label-title">
+                                <div class="mt-20">
+                                    <label for="clasification" class="label-title label-required">
                                         Clasificación
                                     </label>
                                     <p-dropdown inputId="clasification" name="clasification"
@@ -533,20 +627,41 @@
                                         filterBy="name" styleClass="dropdown-custom xl:w-3/4 w-full"></p-dropdown>
                                 </div>
 
+                                <!-- Checkboxes para cuentas auxiliares -->
+                                <div *ngIf="showCrossingCheckboxEdit || showCostCenterCheckboxEdit" class="mb-6 mt-30">
+                                    <div class="flex items-center gap-80">
+                                        <!-- Checkbox de Cruce -->
+                                        <div *ngIf="showCrossingCheckboxEdit" class="flex items-center">
+                                            <p-checkbox inputId="crossingEdit" formControlName="crossing" [binary]="true"></p-checkbox>
+                                            <label for="crossingEdit" class="ml-8 text-sm font-medium text-gray-700">
+                                                Cruce
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Checkbox de Centro de Costo -->
+                                        <div *ngIf="showCostCenterCheckboxEdit" class="flex items-center">
+                                            <p-checkbox inputId="costCenterEdit" formControlName="costCenter" [binary]="true"></p-checkbox>
+                                            <label for="costCenterEdit" class="ml-8 text-sm font-medium text-gray-700">
+                                                Centro de Costo
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
                         <div *ngIf="showAddNewClass">
-                            <app-account-form [currentLevelAccount]="'clase'" [level]="1"
+                            <app-account-form [currentLevelAccount]="'Clase'" [level]="1"
                                 (newAccount)="addNewAccount($event)" [parent]="" (cancelar)="cancel()" />
                         </div>
 
                         <!-- SECCIÓN BOTONES DE ACCIÓN CON p-button -->
-                        <div *ngIf="showButton" class="flex flex-wrap justify-center items-center gap-4 mt-10">
+                        <div *ngIf="showButton" class="flex flex-wrap justify-center items-center gap-4 mt-30">
 
                             <!-- Botón Actualizar (Estilo Primario por defecto) -->
                             <p-button label="Actualizar"
-                                [disabled]="!showUpdateButton || searchIfAccountIsLinked(accountSelected!.code)"
+                                [disabled]="!showUpdateButton || isSelectedAccountLinked"
                                 (click)="updateAccount()" title="Modifique algún campo para habilitar"
                                 styleClass="btn-action-primary">
                             </p-button>
@@ -554,7 +669,7 @@
                             <!-- Botón Agregar (Estilo Secundario) -->
                             <div *ngIf="!accountForm.get('auxiliaryName')">
                                 <p-button [label]="'Agregar ' + currentLevelAccount" styleClass="p-button-secondary"
-                                    [disabled]="searchIfAccountIsLinked(accountSelected!.code)" (click)="addNewChild()">
+                                    [disabled]="isSelectedAccountLinked" (click)="addNewChild()">
                                 </p-button>
                             </div>
 
@@ -565,44 +680,73 @@
         </div>
     </div>
 
-    <p-dialog header="Información de la Plantilla de Importación" [modal]="true" [(visible)]="showImportModal"
-        [style]="{ width: '50rem' }" [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }" [maximizable]="true"
-        (onHide)="closeTemplateModal()">
+    <!-- Modal de Plantilla de Catálogo de Cuentas -->
+    <app-account-template
+        [visible]="showTemplateModal"
+        (close)="closeTemplateModal()">
+    </app-account-template>
 
+    <!-- Modal de Errores de Importación -->
+    <p-dialog header="Errores de Importación" [modal]="true" [(visible)]="showErrorModal"
+      [style]="{ width: '90rem' }" [breakpoints]="{ '1199px': '90vw', '575px': '95vw' }" [maximizable]="true"
+      (onHide)="closeErrorModal()">
 
-        <div class="font-family-sans text-sm space-y-4">
-            <p>
-                Para importar el catálogo de cuentas, por favor, utilice un archivo de Excel (.xlsx) con el siguiente
-                formato y consideraciones.
-            </p>
+      <div class="bg-notification-error-container border-l-4 border-notification-error-border px-15 py-15 mb-15 font-family-sans">
+        <p class="font-bold mb-2 text-notification-error-title">Se encontraron errores en la importación</p>
+        <p class="text-sm text-notification-error-text mb-3">No se pudieron importar algunas cuentas debido a los siguientes errores presentados en la tabla.</p>
 
-            <h4 class="font-bold text-base text-primary">Columnas Requeridas</h4>
-            <p>El archivo debe contener las siguientes columnas en la primera fila:</p>
-            <ul class="list-disc list-inside  p-4 rounded-md">
-                <li><strong>Código</strong></li>
-                <li><strong>Nombre</strong></li>
-                <li><strong>Naturaleza</strong> (Débito o Crédito)</li>
-                <li><strong>Estado Financiero</strong> (Estado de situacion financiero o Estado de resultados)</li>
-                <li><strong>Clasificación</strong></li>
-            </ul>
+        <p class="font-bold mb-1 text-notification-error-title">Resumen:</p>
+        <p class="text-sm text-notification-error-text m-0">Total procesados: {{ totalRecordsImported }}</p>
+        <p class="text-sm text-notification-error-text m-0">Exitosos: {{ successfulImports }}</p>
+        <p class="text-sm text-notification-error-text m-0">Fallidos: {{ failedImportsCount }}</p>
+        <p class="text-sm text-notification-error-text m-0">Duplicados omitidos: {{ duplicatesSkipped }}</p>
+      </div>
 
-            <h4 class="font-bold text-base text-primary">Consideraciones Importantes</h4>
-            <ul class="list-disc list-inside  p-4 rounded-md space-y-2">
-                <li>Asegúrese de que no haya filas completamente vacías entre los registros.</li>
-                <li>Todos los campos son obligatorios. Las filas con alguna celda vacía no serán importadas.</li>
-                <li>La jerarquía de las cuentas se creará automáticamente a partir de los códigos.</li>
-            </ul>
-        </div>
+      <div class="bg-notification-info-container border border-notification-info-border rounded-lg px-15 py-15 mb-15 font-family-sans">
+        <h4 class="font-bold text-base text-notification-info-title mb-2">Información:</h4>
+        <ul class="list-disc list-inside text-sm text-notification-info-text space-y-1">
+          <li>El sistema ingresa todos los registros correctos y solo muestra los que presentaron errores.</li>
+          <li>Los registros duplicados (tanto en el sistema como en el archivo Excel) serán omitidos automáticamente.</li>
+          <li>Cada fila de error indica el número de fila del Excel, la columna, el campo afectado y el error específico.</li>
+          <li>Corrija los errores en su archivo Excel según las indicaciones y vuelva a importar.</li>
+        </ul>
+      </div>
 
+      <p-table [value]="importErrors" [paginator]="true" [rows]="10" [totalRecords]="totalErrors"
+        [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} errores"
+        styleClass="p-datatable-sm" [tableStyle]="{'min-width': '70rem'}">
 
-        <ng-template pTemplate="footer">
-            <div class="flex justify-center">
-                <a href="https://docs.google.com/spreadsheets/d/1U2EYlsvEwmmeF7-tpdb17g7I6PQUdf1V/export?format=xlsx"
-                    download="plantillaCatalogoCuentas.xlsx" pButton pRipple label="Descargar Plantilla"
-                    icon="pi pi-download" styleClass="p-button-success">
-                </a>
-            </div>
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="w-[8%]">Fila</th>
+            <th class="w-[10%]">Columna</th>
+            <th class="w-[18%]">Campo</th>
+            <th class="w-[18%]">Valor</th>
+            <th class="w-[46%]">Error</th>
+          </tr>
         </ng-template>
+
+        <ng-template pTemplate="body" let-error>
+          <tr>
+            <td class="font-family-sans text-sm">{{ error.rowNumber }}</td>
+            <td class="font-family-sans text-sm">{{ getExcelColumnLetter(error.columnNumber) }}</td>
+            <td class="font-family-sans text-sm font-semibold">{{ error.columnName }}</td>
+            <td class="font-family-sans text-sm text-neutral-50">{{ error.fieldValue || '(vacío)' }}</td>
+            <td class="font-family-sans text-sm text-error">{{ error.errorMessage }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-center gap-3">
+      <p-button
+        label="Exportar Errores"
+        icon="pi pi-download"
+        styleClass="p-button-success"
+        (click)="exportImportErrors()">
+      </p-button>
+    </div>
+  </ng-template>
     </p-dialog>
 
 </div>

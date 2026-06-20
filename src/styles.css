@@ -223,6 +223,16 @@ body {
   --spacing: 1px;
 }
 
+/* ================================
+   ESTILOS PARA LABELS REQUERIDOS
+   ================================ */
+
+/* Estilo para asteriscos requeridos en labels */
+.label-required::after {
+  content: ' *';
+  color: var(--color-error);
+}
+
 /* Botón principal */
 .p-button {
   background-color: var(--color-button-primary) !important;
@@ -232,14 +242,36 @@ body {
   padding: 11px 20px !important;
 }
 
+.p-button .p-button-icon {
+  color: white !important;
+}
+
 .p-button-label {
   font-family: var(--font-family-sans) !important;
   font-weight: 600 !important;
   font-size: 14px !important;
+  flex-shrink: 0;
 }
 
 .p-button:hover {
   background-color: var(--color-button-primary-hover) !important;
+}
+
+/* Estado presionado (mientras se hace clic) */
+.p-button:enabled:active {
+  background-color: var(--color-button-primary-pressed) !important;
+  transform: scale(0.98); /* Efecto de "hundimiento" */
+}
+
+/* Estilo personalizado para un botón "seleccionado" */
+.p-button.p-button-selected {
+  background-color: var(--color-light) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-color: var(--color-dark) !important;
+}
+
+.p-button:enabled .p-button-icon {
+  color: white !important;
 }
 
 .p-button:disabled {
@@ -258,6 +290,10 @@ body {
   border: 1px solid var(--color-button-primary) !important;
 }
 
+.p-button.p-button-secondary .p-button-icon {
+  color: var(--color-primary) !important;
+}
+
 .p-button.p-button-secondary:hover {
   background-color: var(--color-button-secondary-hover) !important;
 }
@@ -270,6 +306,21 @@ body {
   cursor: not-allowed !important;
 }
 
+/* Botón de información (info) */
+.p-button.p-button-info {
+  background-color: var(--color-tertiary) !important;
+  border-color: var(--color-tertiary) !important;
+}
+
+.p-button.p-button-info:hover {
+  background-color: var(--color-tertiary-60) !important;
+  border-color: var(--color-tertiary-60) !important;
+}
+
+.p-button.p-button-info .p-button-icon {
+  color: white !important;
+}
+
 /*Estilos personalizados para la seccion del formulario de catalogo de cuentas*/
 .account-section {
   @apply relative  bg-white shadow-md rounded-lg px-6 py-10 mb-16 grid grid-cols-1 sm:grid-cols-2 gap-4;
@@ -277,7 +328,22 @@ body {
 }
 
 .input-base {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900 transition duration-150 ease-in-out;
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 transition duration-150 ease-in-out;
+}
+
+.input-base:focus {
+  --tw-ring-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+
+.input-base::placeholder {
+  color: var(--color-neutral-40);
+}
+
+.input-base[readonly]::placeholder,
+.input-base:disabled::placeholder {
+  color: var(--color-neutral-40);
 }
 
 .error-message {
@@ -286,7 +352,8 @@ body {
 }
 
 .floating-label {
-  @apply absolute left-6 -top-12 bg-transparent rounded-md px-1.5 text-blue-950;
+  @apply absolute left-6 -top-12 bg-transparent rounded-md px-1.5;
+  color: var(--color-primary);
 }
 
 .delete-button {
@@ -300,15 +367,20 @@ body {
 .select-base {
   /* Estilo base para ng-select similar a input-base */
   @apply px-3 py-2 border border-gray-300 rounded-md shadow-sm
-    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900
-    transition duration-150 ease-in-out;
+    focus:outline-none focus:ring-1 transition duration-150 ease-in-out;
+}
+
+.select-base:focus {
+  --tw-ring-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .select-option {
   @apply py-2 px-4 bg-white text-gray-800 cursor-pointer transition-all duration-150 rounded-md;
 
   &:hover {
-    @apply bg-blue-950 text-white;
+    background-color: var(--color-primary);
+    @apply text-white;
   }
 }
 
@@ -319,8 +391,12 @@ body {
 /* Estilo base del dropdown de PrimeNG */
 .dropdown-custom {
   @apply w-full max-h-40 px-3 py-2 border border-gray-300 rounded-md shadow-sm
-    focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-blue-900
-    transition duration-150 ease-in-out text-gray-800 font-normal;
+    focus:outline-none focus:ring-1 transition duration-150 ease-in-out text-gray-800 font-normal;
+}
+
+.dropdown-custom:focus {
+  --tw-ring-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 /* Para el contenido de la lista desplegable */
@@ -335,7 +411,11 @@ body {
 
 /* Items individuales */
 ::ng-deep .p-dropdown-item {
-  @apply px-4 py-2 text-sm text-gray-800 hover:bg-blue-900 hover:text-white cursor-pointer;
+  @apply px-4 py-2 text-sm text-gray-800 hover:text-white cursor-pointer;
+}
+
+::ng-deep .p-dropdown-item:hover {
+  background-color: var(--color-primary);
 }
 
 /* Icono del dropdown */
@@ -344,11 +424,13 @@ body {
 }
 
 .section-title {
-  @apply text-xl font-semibold  text-blue-950 mb-6;
+  @apply text-xl font-semibold mb-6;
+  color: var(--color-primary);
 }
 
 .label-title {
-  @apply block mb-1 text-sm font-sans text-blue-950;
+  @apply block mb-1 text-sm font-sans;
+  color: var(--color-primary);
 }
 
 /* --- Estilos para el panel desplegable y las opciones --- */
@@ -648,4 +730,351 @@ body {
 
 .p-paginator .p-paginator-rpp-dropdown:target {
   border-color: #111827;
+}
+
+/* ================================
+   ESTILOS PARA P-PAGINATOR
+   ================================ */
+
+.p-paginator {
+  background-color: transparent;
+  border: none;
+  padding: 1rem 0;
+}
+
+.p-paginator .p-paginator-current {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin: 0 1rem;
+}
+
+/* Mejorar espaciado entre elementos del paginador */
+.p-paginator .p-paginator-element {
+  margin: 0 0.25rem;
+}
+
+/* ================================
+   ESTILOS PARA P-SLIDER
+   ================================ */
+
+/* 🎚️ Slider para elementos por página */
+.p-slider {
+  background-color: var(--color-neutral-90);
+  border-radius: 0.375rem;
+  height: 0.5rem;
+}
+
+.p-slider .p-slider-handle {
+  background-color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.p-slider .p-slider-handle:hover {
+  background-color: var(--color-light);
+  border-color: var(--color-light);
+  transform: scale(1.1);
+}
+
+.p-slider .p-slider-range {
+  background-color: var(--color-primary);
+  border-radius: 0.375rem;
+}
+
+.p-slider:hover .p-slider-range {
+  background-color: var(--color-light);
+}
+
+/* ================================
+   ESTILOS PARA P-TOGGLESWITCH
+   ================================ */
+
+.p-toggleswitch {
+  --p-toggleswitch-checked-background: var(--color-complementary-green) !important;
+  --p-toggleswitch-checked-hover-background: var(--color-complementary-green) !important;
+  --p-toggleswitch-handle-background: var(--color-primary-100) !important;
+  --p-toggleswitch-handle-checked-background: var(--color-primary-100) !important;
+}
+
+/* ================================
+   ESTILOS PARA P-CHECKBOX
+   ================================ */
+
+/* Contenedor del checkbox */
+.p-checkbox {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+/* Caja del checkbox */
+.p-checkbox .p-checkbox-box {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border: 1px solid var(--color-neutral-60) !important;
+  border-radius: 0.25rem !important;
+  background-color: var(--color-primary-100) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Caja del checkbox en hover */
+.p-checkbox:not(.p-disabled):hover .p-checkbox-box {
+  border-color: var(--color-primary) !important;
+  background-color: var(--color-primary-95) !important;
+}
+
+/* Caja del checkbox cuando está checked */
+.p-checkbox.p-checkbox-checked .p-checkbox-box {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Caja del checkbox cuando está checked en hover */
+.p-checkbox.p-checkbox-checked:not(.p-disabled):hover .p-checkbox-box {
+  background-color: var(--color-light) !important;
+  border-color: var(--color-light) !important;
+}
+
+/* Ícono del checkbox (checkmark) */
+.p-checkbox .p-checkbox-box .p-checkbox-icon {
+  color: var(--color-primary-100) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+}
+
+/* Checkbox en estado focus */
+.p-checkbox:not(.p-disabled) .p-checkbox-box.p-focus {
+  outline: 2px solid var(--color-primary-90) !important;
+  outline-offset: 2px !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Checkbox deshabilitado */
+.p-checkbox.p-disabled .p-checkbox-box {
+  background-color: var(--color-neutral-95) !important;
+  border-color: var(--color-neutral-80) !important;
+}
+
+/* ================================
+   ESTILOS PARA P-CONFIRMDIALOG
+   ================================ */
+
+/* Overlay/fondo oscuro detrás del diálogo */
+.p-dialog-mask {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Contenedor principal del diálogo */
+.p-confirm-dialog {
+  font-family: var(--font-family-sans) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04) !important;
+  border: 1px solid var(--color-neutral-80) !important;
+  overflow: hidden !important;
+  max-width: 400px !important;
+  min-width: 350px !important;
+}
+
+/* Header del diálogo */
+.p-confirm-dialog .p-dialog-header {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-light) 100%) !important;
+  color: var(--color-primary-100) !important;
+  padding: 1.25rem 1.5rem !important;
+  border-bottom: none !important;
+}
+
+/* Título del header */
+.p-confirm-dialog .p-dialog-title {
+  font-family: var(--font-family-titillium) !important;
+  font-weight: 700 !important;
+  font-size: 1.125rem !important;
+  color: var(--color-primary-100) !important;
+}
+
+/* Botón de cerrar (X) */
+.p-confirm-dialog .p-dialog-header-close {
+  color: var(--color-primary-100) !important;
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.p-confirm-dialog .p-dialog-header-close:hover {
+  opacity: 1 !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Contenido del diálogo */
+.p-confirm-dialog .p-dialog-content {
+  background-color: var(--color-primary-100) !important;
+  padding: 1.5rem !important;
+  text-align: center;
+}
+
+/* Contenedor del mensaje */
+.p-confirm-dialog .p-confirm-dialog-message {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 1rem !important;
+  text-align: left !important;
+}
+
+/* Ícono del diálogo */
+.p-confirm-dialog .p-confirm-dialog-icon {
+  color: var(--color-complementary-orange) !important;
+  font-size: 2rem !important;
+  margin-top: 0.25rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* Texto del mensaje */
+.p-confirm-dialog .p-confirm-dialog-message .p-confirm-dialog-message-text {
+  font-family: var(--font-family-sans) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+  color: var(--color-neutral-20) !important;
+  font-weight: 400 !important;
+}
+
+/* Footer con botones */
+.p-confirm-dialog .p-dialog-footer {
+  background-color: var(--color-primary-100) !important;
+  padding: 1rem 1.5rem 1.5rem 1.5rem !important;
+  border-top: 1px solid var(--color-neutral-90) !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 0.75rem !important;
+}
+
+/* Botón de aceptar/confirmar (peligroso) */
+.p-confirm-dialog .p-button.p-button-danger {
+  background-color: var(--color-secondary) !important;
+  border-color: var(--color-secondary) !important;
+  color: var(--color-primary-100) !important;
+  font-weight: 600 !important;
+  padding: 0.625rem 1.25rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.p-confirm-dialog .p-button.p-button-danger:hover {
+  background-color: var(--color-secondary-dark) !important;
+  border-color: var(--color-secondary-dark) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.p-confirm-dialog .p-button.p-button-danger:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Botón de cancelar/rechazar (secundario) */
+.p-confirm-dialog .p-button.p-button-secondary {
+  background-color: transparent !important;
+  border: 1px solid var(--color-neutral-60) !important;
+  color: var(--color-neutral-30) !important;
+  font-weight: 600 !important;
+  padding: 0.625rem 1.25rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.p-confirm-dialog .p-button.p-button-secondary:hover {
+  background-color: var(--color-neutral-95) !important;
+  border-color: var(--color-neutral-50) !important;
+  color: var(--color-neutral-20) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-confirm-dialog .p-button.p-button-secondary:active {
+  transform: translateY(0) !important;
+  box-shadow: none !important;
+}
+
+/* ================================
+   ESTILOS PARA P-TABS
+   ================================ */
+
+/* Fuente y estilo base */
+.p-tabs {
+  font-family: var(--font-family-sans) !important;
+}
+
+/* Color base de las pestañas inactivas */
+.p-tabs .p-tablist .p-tab {
+  color: var(--color-neutral-40) !important;
+  font-weight: 600 !important;
+}
+
+/* Hover para pestañas inactivas */
+.p-tabs .p-tablist .p-tab:not([aria-selected="true"]):hover {
+  color: var(--color-light) !important;
+}
+
+/* Pestaña activa: texto e icono en color primario */
+.p-tabs .p-tablist .p-tab[aria-selected="true"] {
+  color: var(--color-primary) !important;
+}
+
+.p-tabs .p-tablist .p-tab[aria-selected="false"] .pi {
+  color: var(--color-primary) !important;
+}
+
+/* Active bar (inkbar) del tablist: forzar color primario */
+.p-tabs .p-tablist-active-bar {
+  background: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+}
+
+/* Pseudo-elementos de transición: evitar color predeterminado durante animación */
+.p-tabs .p-tablist-active-bar::before,
+.p-tabs .p-tablist-active-bar::after {
+  background: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+}
+
+/* Forzar color primario en todos los estados de transición */
+.p-tabs .p-tablist .p-tab::before,
+.p-tabs .p-tablist .p-tab::after {
+  background: var(--color-primary) !important;
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* Design tokens para controlar colores de transición */
+.p-tabs {
+  --p-tabs-active-bar-background: var(--color-primary) !important;
+  --p-tabs-tab-active-indicator-background: var(--color-primary) !important;
+  --p-tabs-tab-active-border-color: var(--color-primary) !important;
+}
+
+/* ================================
+   ESTILOS PARA P-INPUTNUMBER
+   ================================ */
+
+/* Hacer los botones de incremento/decremento más pequeños y compactos */
+.p-inputnumber-horizontal .p-inputnumber-button {
+  width: 1.75rem !important;
+  padding: 0 !important;
+  min-width: 1.75rem !important;
+}
+
+.p-inputnumber-horizontal .p-inputnumber-button .p-button-icon {
+  font-size: 0.75rem !important;
+}
+
+/* Ajustar el input del número */
+.p-inputnumber-horizontal .p-inputnumber-input {
+  padding: 0.375rem 0.5rem !important;
+  text-align: center !important;
+  min-width: 3rem !important;
+}
+
+/* Reducir el espacio entre los botones y el input */
+.p-inputnumber-horizontal .p-inputnumber-button-group {
+  gap: 0.125rem !important;
 }

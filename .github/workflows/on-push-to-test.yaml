@@ -12,7 +12,7 @@ jobs:
     uses:
       Equipo-dinamita-escuadron-lobo/workflows/.github/workflows/frontend-on-push.yaml@main
     with:
-      repository-name: ${{ github.event.repository.name }}
+      repository-name: contapp-ang-19
       environment: test
       deploy-url: test
       semver-branch: test

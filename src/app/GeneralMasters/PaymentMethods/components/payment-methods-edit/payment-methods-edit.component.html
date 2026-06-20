@@ -1,0 +1,53 @@
+<div class="flex w-full h-full font-titillium">
+  <p-toast></p-toast>
+  <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
+
+    <!-- Cabecera -->
+    <div class="flex justify-between items-start mb-12">
+      <div class="items-center">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Editar</span> Método de Pago
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-12">
+          Modifique la información del método de pago seleccionado.
+        </p>
+      </div>
+      <div class="hidden sm:block">
+        <p-button icon="pi pi-arrow-left" (click)="goBack()" styleClass="p-button-text p-button-secondary"></p-button>
+      </div>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24 font-family-sans">
+
+        <div class="flex flex-col gap-2">
+          <label class="label-required font-semibold text-primary">Nombre</label>
+          <input pInputText formControlName="name" placeholder="Ej: Efectivo, Transferencia bancaria" class="w-full md:w-2/3" maxlength="100" />
+          <small class="error-message" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Nombre requerido (máx. 100 caracteres)</small>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label class="label-required font-semibold text-primary">Cuenta Contable</label>
+          <p-select
+            [options]="accountingAccountsOptions"
+            formControlName="accountingAccount"
+            optionValue="value"
+            placeholder="Seleccione una cuenta"
+            [filter]="true"
+            [showClear]="true"
+            class="w-full md:w-2/3">
+          </p-select>
+
+        </div>
+
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="flex justify-center gap-4 mt-12 pt-40">
+        <p-button type="button" label="Cancelar" severity="secondary" (click)="goBack()"></p-button>
+        <p-button type="submit" label="Actualizar" [disabled]="form.invalid || !hasChanges()"></p-button>
+      </div>
+    </form>
+  </div>
+</div>

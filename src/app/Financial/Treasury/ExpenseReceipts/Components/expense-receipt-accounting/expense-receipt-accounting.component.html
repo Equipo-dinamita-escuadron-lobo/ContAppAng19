@@ -1,0 +1,106 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20 font-sans">
+    @if (errorMessage) {
+        <p-message severity="error" [text]="errorMessage"></p-message>
+    }
+
+    <!-- CABECERA -->
+    <div class="mb-8">
+        <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            Contabilización del Comprobante
+        </h1>
+        <p class="mt-2 text-base text-gray-600">
+            Asientos contables generados para el comprobante {{ receiptCode }}
+        </p>
+    </div>
+
+    <!-- INFORMACIÓN DEL COMPROBANTE -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold text-[var(--color-primary)] mb-4">Información del Comprobante</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <span class="font-medium">Código:</span>
+                <span class="ml-2">{{ receiptCode }}</span>
+            </div>
+            <div>
+                <span class="font-medium">Fecha:</span>
+                <span class="ml-2">{{ issueDate | date:'dd/MM/yyyy' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASIENTOS CONTABLES -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold text-[var(--color-primary)] mb-4">Asientos Contables</h2>
+
+        @if (accountingEntries && accountingEntries.length > 0) {
+            <p-table [value]="accountingEntries" [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-striped">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Código de Cuenta</th>
+                        <th>Nombre de Cuenta</th>
+                        <th>Tercero</th>
+                        <th class="text-right">Débito</th>
+                        <th class="text-right">Crédito</th>
+                        <th>Descripción</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-entry>
+                    <tr>
+                        <td class="font-mono">{{ entry.accountCode }}</td>
+                        <td>{{ entry.accountName }}</td>
+                        <td>{{ entry.thirdPartyId || '-' }}</td>
+                        <td class="text-right">
+                            @if (entry.debit > 0) {
+                                <span class="text-red-600 font-semibold">
+                                    {{ entry.debit | currency:'COP':'symbol':'1.0-0':'es-CO' }}
+                                </span>
+                            } @else {
+                                <span class="text-gray-400">-</span>
+                            }
+                        </td>
+                        <td class="text-right">
+                            @if (entry.credit > 0) {
+                                <span class="text-green-600 font-semibold">
+                                    {{ entry.credit | currency:'COP':'symbol':'1.0-0':'es-CO' }}
+                                </span>
+                            } @else {
+                                <span class="text-gray-400">-</span>
+                            }
+                        </td>
+                        <td>{{ entry.description }}</td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="summary">
+                    <tr class="font-semibold bg-gray-50">
+                        <td colspan="3" class="text-right">TOTALES:</td>
+                        <td class="text-right text-red-600">
+                            {{ getTotalDebit() | currency:'COP':'symbol':'1.0-0':'es-CO' }}
+                        </td>
+                        <td class="text-right text-green-600">
+                            {{ getTotalCredit() | currency:'COP':'symbol':'1.0-0':'es-CO' }}
+                        </td>
+                        <td></td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        } @else {
+            <p-message severity="info" text="No se encontraron asientos contables para este comprobante."></p-message>
+        }
+    </div>
+
+    <!-- BOTONES DE ACCIÓN -->
+    <div class="flex justify-center gap-4 mb-8">
+        <p-button
+            label="Ver Detalles del Comprobante"
+            icon="pi pi-eye"
+            (onClick)="viewReceiptDetails()">
+        </p-button>
+
+        <p-button
+            label="Volver al Listado"
+            icon="pi pi-arrow-left"
+            styleClass="p-button-secondary"
+            (onClick)="goBackToList()">
+        </p-button>
+    </div>
+</div>

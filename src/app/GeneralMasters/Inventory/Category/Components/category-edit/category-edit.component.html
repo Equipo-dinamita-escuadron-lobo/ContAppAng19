@@ -1,0 +1,218 @@
+<!-- Contenedor Principal con la fuente y fondo estandarizados -->
+<div class="flex w-full h-full" style="font-family: var(--font-family-titillium);">
+  <!-- Tarjeta de Contenido Principal, aplicando el estilo de la guía -->
+  <div class="m-4 md:m-10 w-full font-medium rounded-2xl md:rounded-3xl p-6 md:p-10" style="background-color: var(--color-primary-100);">
+
+    <!-- 1. CABECERA: Título y Botón de Regreso -->
+    <div class="flex justify-between items-start mb-12">
+      <!-- Título con el estilo de marca -->
+      <div class="items-center">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span style="border-bottom: 4px solid var(--color-secondary-light);">Editar</span> Categoría
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-12">
+          Modifique la información de la categoría en el sistema.
+        </p>
+      </div>
+
+      <!-- Botón de Regreso -->
+      <div class="hidden sm:block">
+        <p-button icon="pi pi-arrow-left" (click)="goBack()" pTooltip="Regresar a la lista"
+          styleClass="p-button-text p-button-secondary"></p-button>
+      </div>
+    </div>
+
+    <!-- 2. FORMULARIO DE EDICIÓN DE CATEGORÍA -->
+    <form [formGroup]="editForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-24 mt-24" style="font-family: var(--font-family-sans);">
+
+        <!-- Nombre de la Categoría -->
+        <div class="flex flex-col gap-2">
+          <label for="name" class="label-required font-semibold text-primary">Nombre</label>
+          <input pInputText id="name" formControlName="name" placeholder="Ej: Electrónicos, Ropa, Alimentos"
+            class="w-full md:w-2/3" />
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('name'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('name'), 'name') }}</div>
+          }
+        </div>
+
+        <!-- Descripción -->
+        <div class="flex flex-col gap-2">
+          <label for="description" class="label-required font-semibold text-primary">Descripción</label>
+          <textarea pInputText id="description" formControlName="description" 
+            placeholder="Descripción de la categoría"
+            class="w-full md:w-2/3" rows="1" pInputTextarea></textarea>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('description'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('description'), 'description') }}</div>
+          }
+        </div>
+
+        <!-- Impuesto(s) -->
+        <div class="flex flex-col gap-2">
+          <label for="taxes" class="label-required font-semibold text-primary">Impuesto(s)</label>
+          <p-multiSelect
+            id="taxSelect"
+            [options]="taxes"
+            optionLabel="displayText"
+            optionValue="id"
+            placeholder="Seleccione los impuestos"
+            [filter]="true"
+            [showClear]="true"
+            [maxSelectedLabels]="3"
+            selectedItemsLabel="{0} impuestos seleccionados"
+            class="w-full md:w-2/3"
+            formControlName="taxes"
+          >
+            <ng-template pTemplate="selectedItems" let-selectedOptions>
+              <div *ngIf="selectedOptions && selectedOptions.length > 0">
+                <span *ngFor="let option of selectedOptions; let i = index">
+                  {{ option.code }} ({{ option.interest }}%){{ i < selectedOptions.length - 1 ? ', ' : '' }}
+                </span>
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} ({{ option.interest }}%)</div>
+            </ng-template>
+          </p-multiSelect>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('taxes'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('taxes'), 'taxes') }}</div>
+          }
+        </div>
+
+        <!-- Cuenta de Inventario -->
+        <div class="flex flex-col gap-2">
+          <label for="inventory" class="label-required font-semibold text-primary">Cuenta de Inventario</label>
+          <p-select
+            id="inventory"
+            formControlName="inventory"
+            [options]="inventory"
+            optionLabel="description"
+            placeholder="Seleccione una cuenta"
+            [filter]="true"
+            filterBy="code,description"
+            [showClear]="true"
+            class="w-full md:w-2/3"
+          >
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+              <div *ngIf="selectedOption">
+                {{ selectedOption.code }} - {{ selectedOption.description }}
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} - {{ option.description }}</div>
+            </ng-template>
+          </p-select>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('inventory'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('inventory'), 'inventory') }}</div>
+          }
+        </div>
+
+        <!-- Cuenta de Costo -->
+        <div class="flex flex-col gap-2">
+          <label for="cost" class="label-required font-semibold text-primary">Cuenta de Costo</label>
+          <p-select
+            id="cost"
+            formControlName="cost"
+            [options]="cost"
+            optionLabel="description"
+            placeholder="Seleccione una cuenta"
+            [filter]="true"
+            filterBy="code,description"
+            [showClear]="true"
+            class="w-full md:w-2/3"
+          >
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+              <div *ngIf="selectedOption">
+                {{ selectedOption.code }} - {{ selectedOption.description }}
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} - {{ option.description }}</div>
+            </ng-template>
+          </p-select>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('cost'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('cost'), 'cost') }}</div>
+          }
+        </div>
+
+        <!-- Cuenta de Venta -->
+        <div class="flex flex-col gap-2">
+          <label for="sale" class="label-required font-semibold text-primary">Cuenta de Venta</label>
+          <p-select
+            id="sale"
+            formControlName="sale"
+            [options]="sale"
+            optionLabel="description"
+            placeholder="Seleccione una cuenta"
+            [filter]="true"
+            filterBy="code,description"
+            [showClear]="true"
+            class="w-full md:w-2/3"
+          >
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+              <div *ngIf="selectedOption">
+                {{ selectedOption.code }} - {{ selectedOption.description }}
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} - {{ option.description }}</div>
+            </ng-template>
+          </p-select>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('sale'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('sale'), 'sale') }}</div>
+          }
+        </div>
+
+        <!-- Cuenta de Devolución -->
+        <div class="flex flex-col gap-2">
+          <label for="return" class="label-required font-semibold text-primary">Cuenta de Devolución</label>
+          <p-select
+            id="return"
+            formControlName="return"
+            [options]="return"
+            optionLabel="description"
+            placeholder="Seleccione una cuenta"
+            [filter]="true"
+            filterBy="code,description"
+            [showClear]="true"
+            class="w-full md:w-2/3"
+          >
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+              <div *ngIf="selectedOption">
+                {{ selectedOption.code }} - {{ selectedOption.description }}
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-option>
+              <div>{{ option.code }} - {{ option.description }}</div>
+            </ng-template>
+          </p-select>
+          @if (categoryValidationMessagesService.hasFieldError(editForm.get('return'))) {
+          <div class="error-message">{{ categoryValidationMessagesService.getFieldErrorMessage(editForm.get('return'), 'return') }}</div>
+          }
+        </div>
+
+      </div>
+
+      <!-- 3. BOTONES DE ACCIÓN -->
+      <div class="flex justify-center gap-4 mt-12 pt-40">
+        <p-button 
+          type="button"
+          label="Cancelar" 
+          severity="secondary"
+          (onClick)="goBack()">
+        </p-button>
+                 <p-button 
+           type="submit"
+           label="Actualizar"
+           [disabled]="editForm.invalid || !hasChanges()">
+         </p-button>
+      </div>
+    </form>
+
+    <!-- Loading state -->
+    <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <i class="pi pi-spin pi-spinner text-4xl" style="color: var(--color-primary);"></i>
+    </div>
+
+  </div>
+</div>

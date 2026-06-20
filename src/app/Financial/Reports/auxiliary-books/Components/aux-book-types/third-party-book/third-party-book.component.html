@@ -1,0 +1,151 @@
+<!-- Componente de auxbooks Financieros -->
+<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <!-- Header Section -->
+  <div class="mb-6 flex justify-between items-start">
+    <!-- Izquierda: Icono, título y descripción -->
+    <div>
+      <div class="flex items-center gap-3 mb-3">
+        <span
+          class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
+        >
+          {{ auxiliaryBookInfo.icon }}
+        </span>
+        <h1
+          class="text-xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+        >
+          {{ auxiliaryBookInfo.name }}
+        </h1>
+      </div>
+      <p class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl">
+        {{ auxiliaryBookInfo.description }}
+      </p>
+    </div>
+
+    <!-- Derecha: Botón Exportar -->
+    <div *ngIf="isReportGenerated" class="flex items-start">
+      <p-button
+        styleClass="p-button-secondary"
+        icon="pi pi-file-export"
+        label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
+      />
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <h3 class="text-sm font-semibold text-[var(--color-primary)] mb-3">
+    Criterios para la Generación:
+  </h3>
+
+  <div class="p-4 bg-white rounded-lg shadow-sm">
+    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-4">
+      <!-- 1. Tercero -->
+      <div class="flex flex-col md:border-r md:border-gray-300 md:pr-4">
+        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+          Tercero <span class="text-[var(--color-secondary)]"> *</span>
+        </h4>
+        <p-select
+          [options]="thirdPartyOptions"
+          [(ngModel)]="criteria.thirdPartyId"
+          optionLabel="name"
+          placeholder="Ejm: Pepito Perez"
+          filter
+          showClear
+          styleClass="w-full text-sm"
+        ></p-select>
+      </div>
+
+      <!-- 2. Periodo -->
+      <div class="flex flex-col md:px-4">
+        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+          Periodo <span class="text-[var(--color-secondary)]"> *</span>
+        </h4>
+        <p-datepicker
+          [(ngModel)]="datePeriod"
+          selectionMode="multiple"
+          maxDateCount="2"
+          dateFormat="dd/mm/yy"
+          placeholder="DD/MM/YYYY - DD/MM/YYYY"
+          [showIcon]="true"
+          showClear="true"
+          styleClass="w-full text-xs"
+          multipleSeparator="-"
+          [style]="{ width: '100%', minWidth: '310px' }"
+        ></p-datepicker>
+      </div>
+
+      <!-- 3. Botón -->
+      <div class="flex justify-center items-center md:pl-4 h-full">
+        <button
+          pButton
+          type="button"
+          label="Generar Reporte"
+          class="!bg-[var(--color-primary)] !text-white !rounded-full px-6 py-2"
+          (click)="generateReport()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Resultados -->
+  <div class="mt-10 bg-white rounded-lg shadow-sm">
+    <p-table
+      showGridlines
+      [value]="dataTable"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      [resizableColumns]="true"
+      [responsiveLayout]="'scroll'"
+      styleClass="auxbook-table p-datatable-header min-h-[20rem]"
+    >
+      <!-- Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="text-center" pResizableColumn rowspan="2">Fecha</th>
+          <th class="text-center" pResizableColumn colspan="2">Cuenta</th>
+          <th class="text-center" pResizableColumn colspan="3">Movimiento</th>
+          <th class="text-center" pResizableColumn colspan="2">Tercero</th>
+          <th class="text-center" pResizableColumn colspan="2">Documento</th>
+        </tr>
+        <tr>
+          <th class="text-center">Código</th>
+          <th class="text-center">Descripción</th>
+          <th class="text-center">Débito</th>
+          <th class="text-center">Crédito</th>
+          <th class="text-center">Saldo</th>
+          <th class="text-center">Numero de Identificacion</th>
+          <th class="text-center">Nombre</th>
+          <th class="text-center">Centro de Costos</th>
+          <th class="text-center">Numero</th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-accountInfo>
+        <tr>
+          <td>{{ accountInfo.accountCode }}</td>
+          <td>{{ accountInfo.accountDescription }}</td>
+          <td>{{ accountInfo.description }}</td>
+          <td [ngClass]="{ 'text-red-500': accountInfo.value < 0 }">
+            {{ accountInfo.value | currency : "COP $" : "symbol" : "1.0-0" }}
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr style="height: 200px">
+          <!-- aumenta aquí la altura -->
+          <td colspan="10">
+            <div class="flex flex-col items-center justify-center h-full">
+              <p class="text-sm text-gray-600 max-w-md text-center">
+                NO HAY INFORMACION PARA MOSTRAR
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

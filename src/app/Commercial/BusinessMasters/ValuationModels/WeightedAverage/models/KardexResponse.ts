@@ -13,5 +13,6 @@ export interface KardexResponse {
   type: MovementType;
   balanceQuantity: number;
   balanceUnitPrice: string;
+  totalBalance: string;
   date: string;
 }

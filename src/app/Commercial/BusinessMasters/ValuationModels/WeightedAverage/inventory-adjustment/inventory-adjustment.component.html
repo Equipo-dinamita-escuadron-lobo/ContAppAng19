@@ -1,0 +1,267 @@
+<div class="w-full">
+  <p-toast></p-toast>
+
+  <p-dialog
+    [(visible)]="visible"
+    [modal]="true"
+    [closable]="true"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="w-full max-w-4xl"
+    (onHide)="onDialogHide()">
+
+    <ng-template pTemplate="header">
+      <h2 class="font-['Titillium_Web'] font-bold text-2xl text-primary">
+        Ajuste de Inventario
+      </h2>
+    </ng-template>
+
+    <div class="px-4 sm:px-6 font-sans">
+      <!-- Información del producto -->
+      @if (productData) {
+        <div class="mb-8 p-4 rounded-lg border" style="background-color: var(--color-neutral-95); border-color: var(--color-neutral-80);">
+          <h3 class="font-semibold mb-3" style="color: var(--color-primary);">Información del Producto</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="font-normal text-sm" style="color: var(--color-primary);">Nombre:</label>
+              <p class="font-medium">{{ productData.name }}</p>
+            </div>
+            <div>
+              <label class="font-normal text-sm" style="color: var(--color-primary);">Referencia:</label>
+              <p class="font-medium">{{ productData.reference }}</p>
+            </div>
+            <div>
+              <label class="font-normal text-sm" style="color: var(--color-primary);">Presentación:</label>
+              <p class="font-medium">{{ productData.presentation }}</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Saldo actual -->
+      @if (lastKardexRecord) {
+        <div class="mb-8 p-4 rounded-lg border" style="background-color: var(--color-notification-info-container); border-color: var(--color-notification-info-border);">
+          <h3 class="font-semibold mb-3" style="color: var(--color-notification-info-title);">Saldo Actual en Inventario</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="font-normal text-sm" style="color: var(--color-notification-info-title);">Cantidad:</label>
+              <p class="font-medium text-lg">{{ lastKardexRecord.balanceQuantity }}</p>
+            </div>
+            <div>
+              <label class="font-normal text-sm" style="color: var(--color-notification-info-title);">Precio Unitario:</label>
+              <p class="font-medium text-lg">{{ lastKardexRecord.balanceUnitPrice | currency:'$' }}</p>
+            </div>
+            <div>
+              <label class="font-normal text-sm" style="color: var(--color-notification-info-title);">Valor Total:</label>
+              <p class="font-medium text-lg">{{ lastKardexRecord.totalBalance | currency:'$' }}</p>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="mb-8 p-4 rounded-lg border" style="background-color: rgba(248, 174, 21, 0.1); border-color: var(--color-complementary-gold);">
+          <h3 class="font-semibold mb-3" style="color: var(--color-complementary-gold);">Sin Registros de Inventario</h3>
+          <p style="color: var(--color-neutral-40);">No hay registros previos para este producto. Solo se puede realizar ajuste de compra.</p>
+        </div>
+      }
+
+      <!-- Formulario -->
+      <form [formGroup]="adjustmentForm" (ngSubmit)="onSubmit()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-8">
+
+          <!-- Tipo de Ajuste -->
+          <div class="flex flex-col gap-2">
+            <label for="adjustmentType" class="font-semibold" style="color: var(--color-primary);">
+              Tipo de Ajuste <span style="color: var(--color-error);">*</span>
+            </label>
+            <div class="w-full">
+              <p-dropdown
+                id="adjustmentType"
+                formControlName="adjustmentType"
+                [options]="adjustmentTypes"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione el tipo de ajuste"
+                [styleClass]="'w-full'"
+                [ngClass]="{'ng-invalid ng-dirty': adjustmentForm.get('adjustmentType')?.invalid && adjustmentForm.get('adjustmentType')?.touched}">
+              </p-dropdown>
+              @if (adjustmentForm.get('adjustmentType')?.touched && adjustmentForm.get('adjustmentType')?.invalid) {
+                <small class="p-error error-message">El tipo de ajuste es requerido.</small>
+              }
+              @if (adjustmentForm.get('adjustmentType')?.value === 'sale' && !lastKardexRecord) {
+                <small class="p-error error-message">No se puede realizar ajuste de venta sin registros previos.</small>
+              }
+            </div>
+          </div>
+
+          <!-- Cantidad -->
+                    <!-- Cantidad -->
+          <div class="flex flex-col gap-2">
+            <label for="quantity" class="font-semibold" style="color: var(--color-primary);">
+              Cantidad <span style="color: var(--color-error);">*</span>
+            </label>
+            <div class="w-full">
+              <p-inputNumber
+                id="quantity"
+                formControlName="quantity"
+                [min]="1"
+                [max]="adjustmentForm.get('adjustmentType')?.value === 'sale' ? getMaxSaleQuantity() : undefined"
+                placeholder="Ingrese la cantidad"
+                [styleClass]="'w-full'">
+              </p-inputNumber>
+              @if (adjustmentForm.get('quantity')?.touched && adjustmentForm.get('quantity')?.invalid) {
+                <small class="p-error error-message">La cantidad es requerida y debe ser mayor a 0.</small>
+              }
+              @if (adjustmentForm.get('adjustmentType')?.value === 'sale' && !canSubmitSale()) {
+                <small class="p-error error-message">
+                  La cantidad solicitada excede el inventario disponible ({{ getMaxSaleQuantity() }} unidades).
+                </small>
+              }
+            </div>
+          </div>
+
+          <!-- Fecha (opcional) -->
+          <div class="flex flex-col gap-2">
+            <label for="date" class="font-semibold" style="color: var(--color-primary);">
+              Fecha (Opcional)
+            </label>
+            <div class="w-full">
+              <p-datePicker
+                id="date"
+                formControlName="date"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                placeholder="Seleccione una fecha"
+                [styleClass]="'w-full'"
+                [minDate]="minDate"
+                [maxDate]="maxDate"
+                appendTo="body">
+              </p-datePicker>
+              <small class="text-xs" style="color: var(--color-neutral-40);">
+                @if (lastKardexRecord) {
+                  Fecha entre {{ minDate | date:'dd/MM/yyyy' }} y {{ maxDate | date:'dd/MM/yyyy' }}
+                } @else {
+                  Si no se especifica, se usará la fecha actual
+                }
+              </small>
+            </div>
+          </div>
+
+          <!-- Precio Unitario (solo para compras) -->
+
+          <!-- Precio Unitario (solo para compras) -->
+          @if (adjustmentForm.get('adjustmentType')?.value === 'purchase') {
+            <div class="flex flex-col gap-2">
+              <label for="unitPrice" class="font-semibold" style="color: var(--color-primary);">
+                Precio Unitario ($) <span style="color: var(--color-error);">*</span>
+              </label>
+              <div class="w-full">
+                <p-inputNumber
+                  id="unitPrice"
+                  formControlName="unitPrice"
+                  mode="currency"
+                  currency="COP"
+                  locale="es-CO"
+                  [min]="0.01"
+                  placeholder="0.00"
+                  [styleClass]="'w-full'">
+                </p-inputNumber>
+                @if (adjustmentForm.get('unitPrice')?.touched && adjustmentForm.get('unitPrice')?.invalid) {
+                  <small class="p-error error-message">El precio unitario es requerido y debe ser mayor a 0.</small>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Detalles -->
+          <div class="flex flex-col gap-2" [ngClass]="adjustmentForm.get('adjustmentType')?.value === 'purchase' ? '' : 'md:col-span-2'">
+            <label for="details" class="font-semibold" style="color: var(--color-primary);">
+              Detalles (Opcional)
+            </label>
+            <div class="w-full">
+              <textarea
+                id="details"
+                formControlName="details"
+                pInputTextarea
+                rows="3"
+                placeholder="Ingrese los detalles del ajuste"
+                class="input-base w-full">
+              </textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vista previa del resultado (solo para compras) -->
+        @if (showPreview && previewResult) {
+          <div class="mb-8 p-4 rounded-lg border" style="background-color: var(--color-notification-success-container); border-color: var(--color-notification-success-border);">
+            <h3 class="font-semibold mb-3" style="color: var(--color-notification-success-title);">
+              Vista Previa del Resultado
+            </h3>
+
+            @if (previewResult.type === 'purchase') {
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Lo que se agrega -->
+                <div class="p-3 rounded border" style="background-color: var(--color-primary-100); border-color: var(--color-neutral-80);">
+                  <h4 class="font-medium mb-2" style="color: var(--color-complementary-green);">Se Agregará:</h4>
+                  <div class="space-y-1 text-sm">
+                    <p><span class="font-medium">Cantidad:</span> {{ previewResult.addedQuantity }}</p>
+                    <p><span class="font-medium">Precio Unitario:</span> {{ previewResult.addedUnitPrice | currency:'$' }}</p>
+                    <p><span class="font-medium">Valor Total:</span> {{ previewResult.addedTotal | currency:'$' }}</p>
+                  </div>
+                </div>
+
+                <!-- Resultado final -->
+                <div class="p-3 rounded border" style="background-color: var(--color-primary-100); border-color: var(--color-neutral-80);">
+                  <h4 class="font-medium mb-2" style="color: var(--color-tertiary-35);">Nuevo Saldo (Promedio Ponderado):</h4>
+                  <div class="space-y-1 text-sm">
+                    <p><span class="font-medium">Cantidad Total:</span> {{ previewResult.newQuantity }}</p>
+                    <p><span class="font-medium">Precio Promedio:</span> {{ previewResult.newUnitPrice | currency:'$' }}</p>
+                    <p><span class="font-medium">Valor Total:</span> {{ previewResult.newTotal | currency:'$' }}</p>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (previewResult.type === 'sale') {
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Lo que se vende -->
+                <div class="p-3 rounded border" style="background-color: var(--color-primary-100); border-color: var(--color-neutral-80);">
+                  <h4 class="font-medium mb-2" style="color: var(--color-secondary);">Se Venderá:</h4>
+                  <div class="space-y-1 text-sm">
+                    <p><span class="font-medium">Cantidad:</span> {{ previewResult.soldQuantity }}</p>
+                    <p><span class="font-medium">Precio Unitario:</span> {{ previewResult.soldUnitPrice | currency:'$' }}</p>
+                    <p><span class="font-medium">Valor Total:</span> {{ previewResult.soldTotal | currency:'$' }}</p>
+                  </div>
+                </div>
+
+                <!-- Resultado final -->
+                <div class="p-3 rounded border" style="background-color: var(--color-primary-100); border-color: var(--color-neutral-80);">
+                  <h4 class="font-medium mb-2" style="color: var(--color-tertiary-35);">Nuevo Saldo:</h4>
+                  <div class="space-y-1 text-sm">
+                    <p><span class="font-medium">Cantidad Restante:</span> {{ previewResult.newQuantity }}</p>
+                    <p><span class="font-medium">Precio Unitario:</span> {{ previewResult.newUnitPrice | currency:'$' }}</p>
+                    <p><span class="font-medium">Valor Total:</span> {{ previewResult.newTotal | currency:'$' }}</p>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Botones de acción -->
+        <div class="flex justify-end gap-4 pt-6 border-t" style="border-color: var(--color-neutral-80);">
+          <p-button
+            type="button"
+            label="Cancelar"
+            severity="secondary"
+            (onClick)="onDialogHide()">
+          </p-button>
+          <p-button
+            type="submit"
+            label="Registrar Ajuste"
+            [disabled]="!isFormValid()">
+          </p-button>
+        </div>
+      </form>
+    </div>
+  </p-dialog>
+</div>

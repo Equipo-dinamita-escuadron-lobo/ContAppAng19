@@ -1,0 +1,41 @@
+<p-dialog header="Seleccionar Facturas" [(visible)]="visible" [modal]="true"
+    [style]="{ width: '70vw' }" [draggable]="false" [resizable]="false"
+    (onHide)="cancelSelection()"> <!-- Asegura que al cerrar con 'ESC' o 'X' se notifique al padre -->
+
+    <p-table [value]="availableInvoices" dataKey="id" [(selection)]="selectedInvoicesInDialog"
+        [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]">
+        <ng-template pTemplate="header">
+            <tr>
+                <th style="width: 4rem">
+                    <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                </th>
+                <th>Código de Factura</th>
+                <th>Fecha de Vencimiento</th>
+                <th>Saldo Pendiente</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-invoice>
+            <tr>
+                <td>
+                    <p-tableCheckbox [value]="invoice"></p-tableCheckbox>
+                </td>
+                <td>{{ invoice.factCode }}</td>
+                <td>{{ invoice.expirationDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ invoice.pendingValue | currency:'COP':'symbol-narrow':'1.0-0'}}</td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="empty">
+            <tr>
+                <td colspan="4" class="text-center py-4">
+                    No hay facturas pendientes para el cliente seleccionado.
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+
+    <ng-template pTemplate="footer">
+        <p-button label="Cancelar" icon="pi pi-times" styleClass="p-button-secondary"
+            (onClick)="cancelSelection()"></p-button>
+        <p-button label="Aceptar" icon="pi pi-check" (onClick)="confirmSelection()"></p-button>
+    </ng-template>
+</p-dialog>

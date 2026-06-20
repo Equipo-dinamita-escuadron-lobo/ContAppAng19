@@ -1,0 +1,96 @@
+<!-- Contenedor Principal con la fuente Titillium -->
+<div class="flex w-full h-full font-titillium">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="m-10 w-full h-full font-medium bg-white rounded-3xl p-10">
+
+    <!-- Header -->
+    <div class="grid sm:grid-cols-2 sm:justify-between items-start mb-40">
+      <div class="items-center mb-6">
+        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
+          <span class="border-b-4 border-secondary-light inline-block pb-1">Impuestos</span>
+        </h1>
+        <p class="font-family-sans font-normal text-sm mt-12">Administra y configura todos los impuestos del sistema.</p>
+      </div>
+
+      <!-- Botones -->
+      <div class="flex justify-start sm:justify-end mt-4 sm:mt-0">
+        <div class="flex flex-wrap gap-3">
+          <p-button label="Crear" icon="pi pi-plus" (onClick)="createTax()"></p-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="flex justify-center sm:justify-start sm:ml-8 mt-20 mb-16">
+      <div class="w-full sm:w-[30rem]">
+        <p-iconfield iconPosition="left">
+          <p-inputicon>
+            <i class="pi pi-search text-gray-500"></i>
+          </p-inputicon>
+          <input pInputText type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()" placeholder="Buscar impuesto (código/descripción)..." class="w-full py-2 px-3 text-sm rounded-md border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-[var(--color-primary)] transition" />
+        </p-iconfield>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <p-table #taxesTable [value]="taxes" [lazy]="true" (onLazyLoad)="loadTaxesLazy($event)" [paginator]="true" [rows]="currentSize" [rowsPerPageOptions]="[5,10,20]" [totalRecords]="totalRecords" [loading]="loading" styleClass="p-datatable-striped font-family-sans" [tableStyle]="{'min-width': '50rem'}" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="code" class="font-semibold text-primary border-b-2 border-primary">Código <p-sortIcon field="code"></p-sortIcon></th>
+          <th pSortableColumn="description" class="font-semibold text-primary border-b-2 border-primary">Descripción <p-sortIcon field="description"></p-sortIcon></th>
+          <th pSortableColumn="interest" class="font-semibold text-primary border-b-2 border-primary text-right">Tarifa <p-sortIcon field="interest"></p-sortIcon></th>
+          <th class="font-semibold text-primary border-b-2 border-primary">Cuenta Impuesto en Compra</th>
+          <th class="font-semibold text-primary border-b-2 border-primary">Cuenta Impuesto en Venta</th>        
+          <th class="font-semibold text-primary border-b-2 border-primary text-center">Estado</th>
+          <th class="font-semibold text-primary border-b-2 border-primary text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-tax>
+        <tr class="text-neutral-20">
+          <td class="py-3">{{ tax.code }}</td>
+          <td class="py-3">{{ tax.description }}</td>
+          <td class="py-3 text-right">{{ taxValidationMessagesService.formatPercentage(tax.interest) }}</td>
+          <td class="py-3">{{ tax.purchaseTaxName }}</td>
+          <td class="py-3">{{ tax.salesTaxName }}</td>
+          <td class="py-3 text-center">
+            <p-tag [value]="tax.status ? taxValidationMessagesService.getActiveStateText() : taxValidationMessagesService.getInactiveStateText()" [severity]="tax.status ? taxValidationMessagesService.getActiveStateSeverity() : taxValidationMessagesService.getInactiveStateSeverity()"></p-tag>
+          </td>
+          <td class="py-3 text-center">
+            <div class="flex justify-center gap-2 items-center">
+              <p-button icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top" (onClick)="editTax(tax)" styleClass="p-button-rounded p-button-text text-complementary-green"></p-button>
+              <p-button icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top" (onClick)="deleteTax(tax)" styleClass="p-button-rounded p-button-text text-secondary"></p-button>
+              <p-toggleSwitch
+                [ngModel]="tax.status"
+                (onChange)="changeTaxState(tax.id, tax)"
+                [pTooltip]="tax.status ? taxValidationMessagesService.getActiveStateText() : taxValidationMessagesService.getInactiveStateText()"
+                tooltipPosition="top"
+                styleClass="p-toggleSwitch-sm"
+                [style]="{'transform': 'scale(0.8)'}"
+              ></p-toggleSwitch>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-6 font-family-sans text-neutral-50">No se encontraron impuestos.</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td colspan="7" class="text-center py-6 font-family-sans text-neutral-50">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p class="mt-2 text-primary">Cargando impuestos...</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+  </div>
+</div>
+  

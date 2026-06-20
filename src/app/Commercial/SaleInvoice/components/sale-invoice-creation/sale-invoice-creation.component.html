@@ -1,4 +1,7 @@
 <div class="flex w-full h-full font-titillium bg-gray-50 md:bg-transparent">
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+
     <div class="m-2 md:m-10 w-full font-sm bg-white rounded-2xl md:rounded-3xl p-4 md:p-10">
 
         <div class="grid grid-cols-1 md:grid-cols-2 md:justify-between items-center mb-8">
@@ -51,12 +54,12 @@
                 </p-datepicker>
             </div>
 
-            <!-- 3. CAMPO FECHA DE VENCIMIENTO (p-datepicker editable con icono) 
+            <!-- 3. CAMPO FECHA DE VENCIMIENTO (p-datepicker editable con icono)
             <div class="flex flex-col">
                 <label for="dueDate" class="font-normal text-primary mb-1">Fecha de Vencimiento:</label>
                 <p-datepicker id="dueDate" [(ngModel)]="dueDate" dateFormat="dd/mm/yy" size="small"
                     placeholder="Selecciona una fecha" [showIcon]="true" iconDisplay="input" styleClass="w-1/2">
-                </p-datepicker> 
+                </p-datepicker>
             </div> -->
 
         </div>
@@ -90,7 +93,7 @@
                         <tr>
                             <td class="text-center">{{ i + 1 }}</td>
                             <td>
-                                <span class="font-semibold">{{ prod.itemType }}</span><br>
+                                <span class="font-semibold">{{ prod.name }}</span><br>
                                 <small class="text-gray-500">Cód: {{ prod.code }}</small>
                             </td>
                             <td>

@@ -1,0 +1,112 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { Tax, TaxList, TaxCreateRequest, TaxUpdateRequest } from '../models/Tax';
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements?: number;
+  totalPages?: number;
+  size?: number;
+  number?: number;
+  page?: {
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  };
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class TaxService {
+  private readonly http = inject(HttpClient);
+  
+  private readonly apiURL = environment.API_URL + 'tax/';
+
+  /**
+   * Obtiene la lista paginada de impuestos asociados a una empresa específica con opciones de búsqueda y ordenamiento.
+   *
+   * @param enterpriseId - El ID de la empresa para la que se desean obtener los impuestos.
+   * @param page - Número de página (por defecto 0).
+   * @param size - Tamaño de página (por defecto 10).
+   * @param sortField - Campo de ordenamiento (por defecto 'description').
+   * @param sortOrder - Orden de ordenamiento ('asc' o 'desc', por defecto 'asc').
+   * @param search - Término de búsqueda (opcional).
+   * @returns Un observable que emite una página de impuestos.
+   */
+  findAll(enterpriseId: string, page = 0, size = 10, sortField = 'description', sortOrder = 'asc', search = ''): Observable<PageResponse<TaxList>> {
+    let url = `${this.apiURL}taxes/${enterpriseId}?page=${page}&size=${size}&sortField=${sortField}&sortOrder=${sortOrder}`;
+    if (search && search.trim().length > 0) {
+      url += `&search=${encodeURIComponent(search.trim())}`;
+    }
+    return this.http.get<PageResponse<TaxList>>(url);
+  }
+
+  /**
+   * Crea un nuevo impuesto enviando los datos del impuesto
+   *
+   * @param tax - El objeto `TaxCreateRequest` que contiene la información del impuesto a crear.
+   * @returns Un observable que emite el impuesto creado de tipo `Tax`.
+   */
+  createTax(tax: TaxCreateRequest): Observable<Tax> {
+    return this.http.post<Tax>(this.apiURL, tax);
+  }
+
+  /**
+   * Actualiza un impuesto existente enviando los datos modificados
+   *
+   * @param tax - El objeto `TaxUpdateRequest` con los datos actualizados del impuesto.
+   * @returns Un observable que emite el impuesto actualizado de tipo `Tax`.
+   */
+  updateTax(tax: TaxUpdateRequest): Observable<Tax> {
+    const url = this.apiURL + tax.id;
+    return this.http.put<Tax>(url, tax);
+  }
+
+  /**
+   * Obtiene un impuesto específico utilizando su código y el ID de la empresa asociada
+   *
+   * @param code - El código del impuesto que se desea obtener.
+   * @param enterpriseId - El ID de la empresa a la que pertenece el impuesto.
+   * @returns Un observable que emite el impuesto correspondiente de tipo `Tax`.
+   */
+  getTaxById(code: string, enterpriseId: string): Observable<Tax> {
+    const url = this.apiURL + code + '/' + enterpriseId;
+    return this.http.get<Tax>(url);
+  }
+
+  
+  deleteTax(id: number, enterpriseId: string): Observable<void> {
+    const url = `${this.apiURL}${id}/${enterpriseId}`;
+    return this.http.delete<void>(url);
+  }
+
+  /**
+   * Cambia el estado (activo/inactivo) de un impuesto.
+   *
+   * @param id - El ID del impuesto.
+   * @param enterpriseId - El ID de la empresa.
+   * @param status - El nuevo estado (true = activo, false = inactivo).
+   * @returns Un observable que emite el impuesto actualizado.
+   */
+  changeState(id: number, enterpriseId: string, status: boolean): Observable<Tax> {
+    const url = `${this.apiURL}changeState/${id}/${enterpriseId}?status=${status}`;
+    return this.http.patch<Tax>(url, {});
+  }
+
+  /**
+   * Obtiene la lista de impuestos activos para una empresa específica.
+   *
+   * @param enterpriseId - El ID de la empresa para la que se desean obtener los impuestos activos.
+   * @returns Un observable que emite la lista de impuestos activos de tipo `TaxList[]`.
+   */
+  getActiveTaxes(enterpriseId: string): Observable<TaxList[]> {
+    const url = `${this.apiURL}active/${enterpriseId}`;
+    return this.http.get<TaxList[]>(url);
+  }
+}
+
+

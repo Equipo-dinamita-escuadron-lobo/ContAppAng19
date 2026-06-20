@@ -1,0 +1,197 @@
+<!-- Componente de auxbooks Financieros -->
+<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <!-- Header Section -->
+  <div class="mb-6 flex justify-between items-start">
+    <!-- Izquierda: Icono, título y descripción -->
+    <div>
+      <div class="flex items-center gap-3 mb-3">
+        <span
+          class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
+        >
+          {{ auxiliaryBookInfo.icon }}
+        </span>
+        <h1
+          class="text-xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+        >
+          {{ auxiliaryBookInfo.name }}
+        </h1>
+      </div>
+      <p class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl">
+        {{ auxiliaryBookInfo.description }}
+      </p>
+    </div>
+
+    <!-- Derecha: Botón Exportar -->
+    <div *ngIf="isReportGenerated" class="flex items-start">
+      <p-button
+        styleClass="p-button-secondary"
+        icon="pi pi-file-export"
+        label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
+      />
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <h3 class="text-sm font-semibold text-[var(--color-primary)] mb-3">
+    Criterios para la Generación:
+  </h3>
+  <div class="p-4 bg-white rounded-lg shadow-sm">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+      <!-- 1. Nivel -->
+      <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
+        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+          Nivel <span class="text-[var(--color-secondary)]"> *</span>
+        </h4>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="flex items-center gap-2" *ngFor="let level of levels">
+            <p-radioButton
+              [inputId]="level.value"
+              name="criteriaType"
+              [value]="level.value"
+              [(ngModel)]="criteria.criteriaType"
+              (onClick)="onLevelChange()"
+            ></p-radioButton>
+            <label class="text-sm cursor-pointer" [for]="level.value">
+              {{ level.label }}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Rango -->
+      <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
+        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+          <p-checkbox
+            [(ngModel)]="isRangeOptionSelected"
+            [binary]="true"
+            inputId="isRangeOptionSelected"
+            [disabled]="!isLevelSelected"
+            (onChange)="onRangeSelectionChange()"
+          ></p-checkbox>
+          Rango
+        </h4>
+        <div class="space-y-2">
+          <p-select
+            #fromSelect
+            [options]="rangeFromOptionsFiltered"
+            [(ngModel)]="levelRange.from"
+            [disabled]="!isRangeOptionSelected"
+            optionLabel="code"
+            optionValue="code"
+            placeholder="Desde"
+            (onChange)="onFromChange()"
+            styleClass="w-full text-xs"
+          ></p-select>
+          <p-select
+            #toSelect
+            [options]="rangeToOptions"
+            optionLabel="code"
+            optionValue="code"
+            [(ngModel)]="levelRange.to"
+            placeholder="Hasta"
+            [disabled]="!isRangeOptionSelected"
+            (onChange)="onToChange()"
+            styleClass="w-full text-xs"
+          ></p-select>
+        </div>
+      </div>
+
+      <!-- 3. Periodo (sin línea a la derecha) -->
+      <div class="col-span-1">
+        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+          Periodo <span class="text-[var(--color-secondary)]"> *</span>
+        </h4>
+        <p-datepicker
+          [(ngModel)]="datePeriod"
+          selectionMode="multiple"
+          maxDateCount="2"
+          dateFormat="dd/mm/yy"
+          placeholder="DD/MM/YYYY - DD/MM/YYYY"
+          [showIcon]="true"
+          showClear="true"
+          styleClass="w-full text-xs"
+          multipleSeparator="-"
+          [style]="{ width: '100%', minWidth: '310px' }"
+        ></p-datepicker>
+      </div>
+
+      <div class="col-span-1 flex"></div>
+
+      <!-- 4. Botón -->
+      <div class="col-span-1 flex justify-center items-center h-full">
+        <button
+          pButton
+          type="button"
+          label="Generar Reporte"
+          (click)="generateReport()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Resultados -->
+  <div class="mt-10 bg-white rounded-lg shadow-sm">
+    <p-table
+      showGridlines
+      [value]="dataTable"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20]"
+      [resizableColumns]="true"
+      [responsiveLayout]="'scroll'"
+      styleClass="p-datatable-header min-h-[20rem]"
+    >
+      <!-- Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="text-center" pResizableColumn colspan="2">Cuenta</th>
+          <th class="text-center" pResizableColumn colspan="2" rowspan="2">
+            Saldo Inicial
+          </th>
+          <th class="text-center" pResizableColumn colspan="2">Movimiento</th>
+          <th class="text-center" pResizableColumn colspan="2" rowspan="2">
+            Nuevo Saldo
+          </th>
+        </tr>
+        <tr>
+          <th class="text-center">Código</th>
+          <th class="text-center">Descripción</th>
+          <th class="text-center">Débito</th>
+          <th class="text-center">Crédito</th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ row.date }}</td>
+          <td>{{ row.accountCode }}</td>
+          <td>{{ row.accountDescription }}</td>
+          <td>{{ row.voucherCode }}</td>
+          <td>{{ row.voucherName }}</td>
+          <td [ngClass]="{ 'text-red-500': row.debit < 0 }">
+            {{ row.debit | currency : "COP $" : "symbol" : "1.0-0" }}
+          </td>
+          <td [ngClass]="{ 'text-red-500': row.credit < 0 }">
+            {{ row.credit | currency : "COP $" : "symbol" : "1.0-0" }}
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Mensaje vacío -->
+      <ng-template pTemplate="emptymessage">
+        <tr style="height: 200px">
+          <td colspan="8">
+            <div class="flex flex-col items-center justify-center h-full">
+              <p class="text-md text-gray-600 max-w-md text-center">
+                NO HAY INFORMACIÓN PARA MOSTRAR
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
