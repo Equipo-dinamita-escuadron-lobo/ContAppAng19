@@ -112,7 +112,7 @@ export class CreateEnterpriseComponent implements OnInit {
     this.enterpriseForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       enterpriseType: [null, Validators.required],
-      taxLiabilities: [[], Validators.required],
+      taxLiabilities: [[], [Validators.required, Validators.minLength(1)]],
       legalName: ['', [Validators.required, Validators.minLength(5)]],
       ownerName: ['', [Validators.minLength(2)]],
       lastNames: ['', [Validators.minLength(2)]],
@@ -121,10 +121,10 @@ export class CreateEnterpriseComponent implements OnInit {
       taxPayerType: [null, Validators.required],
       mainActivity: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
       secondaryActivity: ['', [Validators.pattern(/^\d{6}$/)]],
-      country: [null],
+      country: [null, Validators.required],
       department: [null, Validators.required],
       city: [null, Validators.required],
-      // subject: [null, Validators.required],
+      subject: [null, Validators.required],
       semester: [null, Validators.required],
       address: ['', [Validators.required, Validators.minLength(10)]],
       phone: ['', [Validators.required, Validators.pattern(/^\d{7,10}$/)]],
@@ -134,6 +134,35 @@ export class CreateEnterpriseComponent implements OnInit {
     });
 
     this.updateFormValidations();
+  }
+
+  private getInvalidFieldLabels(): string[] {
+    const labels: Record<string, string> = {
+      name: 'Nombre de Empresa',
+      enterpriseType: 'Tipo de Empresa',
+      taxLiabilities: 'Responsabilidades tributarias',
+      legalName: 'Razón social',
+      ownerName: 'Nombre de Propietario',
+      lastNames: 'Apellidos',
+      nit: 'NIT',
+      dv: 'DV',
+      taxPayerType: 'Tipo de Contribuyente',
+      mainActivity: 'Actividad Principal',
+      secondaryActivity: 'Actividad Secundaria',
+      country: 'País',
+      department: 'Departamento',
+      city: 'Ciudad',
+      subject: 'Materia',
+      semester: 'Semestre',
+      address: 'Dirección',
+      phone: 'Teléfono',
+      email: 'Email',
+      inventoryConfigurationType: 'Método de Inventario',
+    };
+
+    return Object.keys(this.enterpriseForm.controls)
+      .filter((key) => this.enterpriseForm.get(key)?.invalid)
+      .map((key) => labels[key] || key);
   }
 
   // Actualiza las validaciones del formulario según el tipo de persona
@@ -183,79 +212,100 @@ export class CreateEnterpriseComponent implements OnInit {
 
   // Envío del formulario
   onSubmit(): void {
-    if (this.enterpriseForm.valid && this.selectedFile) {
-      this.loading = true;
-      const f = this.enterpriseForm.value;
+    this.enterpriseForm.markAllAsTouched();
 
-      // Transformación para la API
-      const enterpriseDetailsApi = {
-        name: f.name,
-        nit: f.nit,
-        dv: f.dv,
-        phone: '+57 ' + f.phone,
-        branch: f.hasBranches ? 'Comercio al por mayor' : 'Comercio minorista',
-        email: f.email,
-        logo: 'https://cdn.tusitio.com/logos/' + this.selectedFile.name,
-        mainActivity: parseInt(f.mainActivity),
-        secondaryActivity: f.secondaryActivity
-          ? parseInt(f.secondaryActivity)
-          : undefined,
-        taxLiabilities: f.taxLiabilities.map((t: any) => t.id || t),
-        state: 'ACTIVE',
-        taxPayerType: f.taxPayerType.id || f.taxPayerType,
-        inventoryConfigurationType: f.inventoryConfigurationType.value || f.inventoryConfigurationType,
-        enterpriseType: f.enterpriseType.id || f.enterpriseType,
-        personType:
-          this.personType === 'juridica'
-            ? {
-                type: 'JURIDICA',
-                name: null,
-                surname: null,
-                bussinessName: f.legalName,
-              }
-            : {
-                type: 'NATURAL',
-                name: f.ownerName,
-                surname: f.lastNames,
-                bussinessName: null,
-              },
-        location: {
-          address: f.address,
-          city: f.city.id || f.city,
-          department: f.department.id || f.department,
-          country: f.country.id || f.country,
-        },
-        subjects: f.subject
-          ? [
-              {
-                name: f.subject.name,
-                code: f.subject.code,
-              },
-            ]
-          : undefined,
-        semester: f.semester,
-      };
-
-      console.log('🧾 JSON enviado al backend (enterpriseDetailsApi):');
-      console.log(JSON.stringify(enterpriseDetailsApi, null, 2));
-
-      this.enterpriseService.createEnterprise(enterpriseDetailsApi).subscribe({
-        next: () => {
-          this.loading = false;
-          this.router.navigate(['/enterprise/list']);
-        },
-        error: (err) => {
-          console.error('Error al crear empresa:', err);
-          this.loading = false;
-        },
-      });
-    } else {
+    if (this.enterpriseForm.invalid) {
+      const missing = this.getInvalidFieldLabels();
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Faltan campos por llenar',
+        detail:
+          missing.length > 0
+            ? `Faltan campos por llenar: ${missing.join(', ')}`
+            : 'Faltan campos por llenar',
       });
+      return;
     }
+
+    this.loading = true;
+    const f = this.enterpriseForm.value;
+    const logoName = this.selectedFile?.name || 'default-logo.png';
+
+    // Transformación para la API
+    const enterpriseDetailsApi = {
+      name: f.name,
+      nit: f.nit,
+      dv: f.dv,
+      phone: '+57 ' + f.phone,
+      branch: f.hasBranches ? 'Comercio al por mayor' : 'Comercio minorista',
+      email: f.email,
+      logo: 'https://cdn.tusitio.com/logos/' + logoName,
+      mainActivity: parseInt(f.mainActivity, 10),
+      secondaryActivity: f.secondaryActivity
+        ? parseInt(f.secondaryActivity, 10)
+        : undefined,
+      taxLiabilities: f.taxLiabilities.map((t: any) => t.id || t),
+      state: 'ACTIVE',
+      taxPayerType: f.taxPayerType.id || f.taxPayerType,
+      inventoryConfigurationType:
+        f.inventoryConfigurationType.value || f.inventoryConfigurationType,
+      enterpriseType: f.enterpriseType.id || f.enterpriseType,
+      personType:
+        this.personType === 'juridica'
+          ? {
+              type: 'JURIDICA',
+              name: null,
+              surname: null,
+              bussinessName: f.legalName,
+            }
+          : {
+              type: 'NATURAL',
+              name: f.ownerName,
+              surname: f.lastNames,
+              bussinessName: null,
+            },
+      location: {
+        address: f.address,
+        city: f.city.id || f.city,
+        department: f.department.id || f.department,
+        country: f.country.id || f.country,
+      },
+      subjects: f.subject
+        ? [
+            {
+              name: f.subject.name,
+              code: f.subject.code,
+            },
+          ]
+        : undefined,
+      semester: f.semester,
+    };
+
+    console.log('🧾 JSON enviado al backend (enterpriseDetailsApi):');
+    console.log(JSON.stringify(enterpriseDetailsApi, null, 2));
+
+    this.enterpriseService.createEnterprise(enterpriseDetailsApi).subscribe({
+      next: () => {
+        this.loading = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Empresa creada correctamente',
+        });
+        this.router.navigate(['/enterprise/list']);
+      },
+      error: (err) => {
+        console.error('Error al crear empresa:', err);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail:
+            err?.error?.message ||
+            'No se pudo crear la empresa. Revisa los datos e inténtalo de nuevo.',
+        });
+      },
+    });
   }
 
   // Navegación de regreso a la lista de empresas

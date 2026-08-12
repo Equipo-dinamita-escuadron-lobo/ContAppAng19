@@ -26,8 +26,9 @@ export class LoginComponent {
 
   loginForm = new FormGroup({
     //! Valores por defecto servidor en desarrollo cambiar a '' en produccion
-    username: new FormControl('contables2@unicauca.edu.co', [Validators.required]),
-    password: new FormControl('12345', [Validators.required]),
+    // PP8: usuario de demo local; la contraseña NO se versiona (usar env local).
+    username: new FormControl('pp8.professor', [Validators.required]),
+    password: new FormControl('', [Validators.required]),
   });
 
   onSubmit() {

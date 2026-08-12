@@ -94,8 +94,11 @@ async function createAndPostVoucher(page: Page, token: string, payable: any, amo
 test('1. login, rol y acceso a Tesorería por Angular y Gateway', async ({ page }) => {
   await loginThroughAngular(page);
   await page.goto('/#/financial/treasury/operations');
-  await expect(page.getByRole('heading', { name: 'Operaciones de Tesoreria' })).toBeVisible();
-  await expect(page.getByText('Obligaciones pendientes')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Operaciones de Tesorer[ií]a/i })).toBeVisible();
+  await expect(page.locator('.p-card-title', { hasText: 'Obligaciones pendientes' })).toBeVisible();
+  await expect(page.locator('.p-card').first()).toBeVisible();
+  await expect(page.locator('.p-datatable').first()).toBeVisible();
+  await expect(page.locator('button.p-button').first()).toBeVisible();
 });
 
 test('2. compra → obligación → pago → asiento → correo con servicios reales', async ({ page }) => {
