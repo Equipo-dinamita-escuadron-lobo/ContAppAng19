@@ -72,7 +72,7 @@
                                     <th style="width: 3rem">
                                         <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
                                     </th>
-                                    <th>Bill ID</th>
+                                    <th>N° factura</th>
                                     <th>Fecha</th>
                                     <th class="text-right">Total Factura</th>
                                     <th class="text-right">Pagado</th>
@@ -154,7 +154,7 @@
                     @if (expenseReceiptForm.get('postToAccount')?.touched && expenseReceiptForm.get('postToAccount')?.invalid) {
                         <small class="p-error error-message">La cuenta Post To es requerida.</small>
                     }
-                    <small class="text-gray-500">Cuenta que se debita (reduce la deuda con el proveedor)</small>
+                    <small class="text-gray-500">Solo cuentas de proveedores / pasivo corriente (CxP)</small>
                 </div>
             </div>
 
@@ -167,19 +167,47 @@
                     <p-dropdown
                         id="transferAccount"
                         formControlName="transferAccount"
-                        [options]="paymentMethods"
-                        optionLabel="name"
+                        [options]="paymentMethodOptions"
+                        optionLabel="label"
                         optionValue="id"
-                        placeholder="Cuenta de pago (caja, banco, etc.)"
+                        placeholder="Seleccione método de pago de la empresa"
                         [styleClass]="'w-full'"
+                        (onChange)="onPaymentMethodChange()"
                         [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('transferAccount')?.invalid && expenseReceiptForm.get('transferAccount')?.touched}">
                     </p-dropdown>
                     @if (expenseReceiptForm.get('transferAccount')?.touched && expenseReceiptForm.get('transferAccount')?.invalid) {
-                        <small class="p-error error-message">La cuenta Transfer Account es requerida.</small>
+                        <small class="p-error error-message">El método de pago es requerido.</small>
                     }
-                    <small class="text-gray-500">Cuenta que se acredita (sale el dinero: caja, banco, etc.)</small>
+                    <small class="text-gray-500">Métodos configurados en maestros de la empresa</small>
                 </div>
             </div>
+
+            <!-- Cuenta bancaria (solo si el método lo exige) -->
+            @if (requiresBankAccount) {
+                <div class="flex flex-col gap-2">
+                    <label for="bankAccountId" class="font-semibold text-[var(--color-primary)]">
+                        Cuenta Bancaria <span class="text-red-500">*</span>
+                    </label>
+                    <div class="w-full md:w-2/3">
+                        <p-dropdown
+                            id="bankAccountId"
+                            formControlName="bankAccountId"
+                            [options]="bankAccountOptions"
+                            optionLabel="label"
+                            optionValue="id"
+                            placeholder="Seleccione cuenta bancaria"
+                            [styleClass]="'w-full'"
+                            [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('bankAccountId')?.invalid && expenseReceiptForm.get('bankAccountId')?.touched}">
+                        </p-dropdown>
+                        @if (expenseReceiptForm.get('bankAccountId')?.touched && expenseReceiptForm.get('bankAccountId')?.invalid) {
+                            <small class="p-error error-message">La cuenta bancaria es requerida para este método.</small>
+                        }
+                        @if (bankAccountOptions.length === 0) {
+                            <small class="text-orange-600">No hay cuentas bancarias activas para esta empresa.</small>
+                        }
+                    </div>
+                </div>
+            }
 
 
             <!-- Fecha de Elaboración -->

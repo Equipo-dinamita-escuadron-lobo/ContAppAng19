@@ -39,7 +39,7 @@
                 </div>
                 <div>
                     <span class="font-medium">Estado:</span>
-                    <span class="ml-2" [ngClass]="{'text-red-600': receipt.status === 'Anulado', 'text-green-600': receipt.status === 'Activo'}">
+                    <span class="ml-2" [ngClass]="{'text-red-600': receipt.statusKey === 'VOIDED', 'text-green-600': receipt.statusKey === 'POSTED', 'text-orange-600': receipt.statusKey === 'DRAFT'}">
                         {{ receipt.status }}
                     </span>
                 </div>
@@ -90,7 +90,7 @@
                 (onClick)="viewAccounting()">
             </p-button>
 
-            @if (receipt.status === 'Activo') {
+            @if (receipt.statusKey === 'POSTED') {
                 <p-button
                     label="Anular Comprobante"
                     icon="pi pi-times"

@@ -1,46 +1,213 @@
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, forkJoin, map, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { TreasuryApiService } from '../../../Shared/treasury-api.service';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
-import { AgingReportFilter, AgingReportResponse } from '../Models/AgingReport';
+import { ThirdService } from '../../../../../GeneralMasters/ThirdParties/Services/third.service';
+import {
+  AgingReportFilter,
+  AgingReportResponse,
+  AccountTypeOption,
+  SupplierOption,
+  DocumentOption,
+  AgingFilterOptions,
+} from '../Models/AgingReport';
 
 @Injectable({ providedIn: 'root' })
 export class AgingReportService {
-  constructor(private readonly api: TreasuryApiService, private readonly accounts: ChartAccountService) {}
+  constructor(
+    private readonly api: TreasuryApiService,
+    private readonly accounts: ChartAccountService,
+    private readonly thirds: ThirdService,
+  ) {}
 
   getAgingReport(enterpriseId: string, filters: AgingReportFilter): Observable<AgingReportResponse> {
-    const cutoff = (filters.cutoffDate ?? new Date()).toISOString().slice(0, 10);
-    const supplierId = filters.supplierId ? Number(filters.supplierId) : undefined;
-    return this.api.aging(enterpriseId, cutoff, supplierId, filters.accountTypeStart, filters.document).pipe(map(items => {
-      const lines = items.map(item => ({
-        id: item.invoiceId,
-        accountDescription: `${item.accountCode} · ${item.reference} · Proveedor ${item.supplierId}`,
-        totalDue: item.current + item.days1to30 + item.days31to60 + item.days61to90 + item.days91Plus,
-        current: item.current, days1to30: item.days1to30, days31to60: item.days31to60,
-        days61to90: item.days61to90, days91to180: item.days91Plus,
-        days181to260: 0, daysOver260: 0, status: 'ACTIVE',
-      }));
-      const totals = lines.reduce((sum, line) => ({
-        totalDue: sum.totalDue + line.totalDue, current: sum.current + line.current,
-        days1to30: sum.days1to30 + line.days1to30, days31to60: sum.days31to60 + line.days31to60,
-        days61to90: sum.days61to90 + line.days61to90, days91to180: sum.days91to180 + line.days91to180,
-        days181to260: 0, daysOver260: 0,
-      }), { totalDue: 0, current: 0, days1to30: 0, days31to60: 0, days61to90: 0, days91to180: 0, days181to260: 0, daysOver260: 0 });
-      return { reportDate: new Date(cutoff), supplierName: filters.supplierName ?? '', lines, totals };
-    }));
+    const cutoff = this.toLocalDateString(filters.cutoffDate ?? new Date());
+    const supplierId = filters.supplierId != null ? Number(filters.supplierId) : undefined;
+    const accountCode = filters.accountCode || undefined;
+    const document = filters.document?.trim() || undefined;
+
+    return forkJoin({
+      items: this.api.aging(enterpriseId, cutoff, supplierId, accountCode, document),
+      accounts: this.accounts.getListAuxiliaryAccounts(enterpriseId).pipe(catchError(() => of([]))),
+      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(catchError(() => of({ content: [] } as any))),
+    }).pipe(
+      map(({ items, accounts, thirds }) => {
+        const accountMap = new Map<string, string>(
+          (accounts || []).map((a: any) => [String(a.id), `${a.code} - ${a.description}`] as [string, string]),
+        );
+        const thirdMap = new Map<number, string>(
+          (thirds?.content || []).map((t: any) => {
+            const name =
+              (t.socialReason as string) ||
+              [t.names, t.lastNames].filter(Boolean).join(' ') ||
+              `Proveedor ${t.thId}`;
+            return [Number(t.thId), String(name)] as [number, string];
+          }),
+        );
+
+        const lines = (items || []).map((item) => {
+          const totalDue =
+            Number(item.current || 0) +
+            Number(item.days1to30 || 0) +
+            Number(item.days31to60 || 0) +
+            Number(item.days61to90 || 0) +
+            Number(item.days91Plus || 0);
+
+          const accountLabel =
+            accountMap.get(String(item.accountCode)) ||
+            `Cuenta ${item.accountCode}`;
+
+          return {
+            id: item.invoiceId,
+            supplierId: item.supplierId,
+            reference: item.reference,
+            accountCode: String(item.accountCode),
+            accountDescription: accountLabel,
+            dueDate: item.dueDate,
+            daysOverdue: Number(item.daysOverdue || 0),
+            totalDue,
+            current: Number(item.current || 0),
+            days1to30: Number(item.days1to30 || 0),
+            days31to60: Number(item.days31to60 || 0),
+            days61to90: Number(item.days61to90 || 0),
+            days91Plus: Number(item.days91Plus || 0),
+          };
+        });
+
+        const totals = lines.reduce(
+          (sum, line) => ({
+            totalDue: sum.totalDue + line.totalDue,
+            current: sum.current + line.current,
+            days1to30: sum.days1to30 + line.days1to30,
+            days31to60: sum.days31to60 + line.days31to60,
+            days61to90: sum.days61to90 + line.days61to90,
+            days91Plus: sum.days91Plus + line.days91Plus,
+          }),
+          { totalDue: 0, current: 0, days1to30: 0, days31to60: 0, days61to90: 0, days91Plus: 0 },
+        );
+
+        let supplierName = 'Todos los proveedores';
+        if (supplierId != null) {
+          supplierName =
+            thirdMap.get(supplierId) ??
+            filters.supplierName ??
+            `Proveedor ${supplierId}`;
+        }
+
+        return {
+          reportDate: new Date(cutoff + 'T12:00:00'),
+          supplierName,
+          lines,
+          totals,
+        };
+      }),
+    );
   }
 
-  getAccountTypes(enterpriseId: string): Observable<{label: string; value: string}[]> {
-    return this.accounts.getListAuxiliaryAccounts(enterpriseId).pipe(map(accounts => accounts
-      .filter(account => account.status !== false)
-      .map(account => ({ label: `${account.code} - ${account.description}`, value: account.code }))));
+  /** Opciones de filtro solo desde obligaciones pendientes reales. */
+  getFilterOptions(enterpriseId: string): Observable<AgingFilterOptions> {
+    return forkJoin({
+      payables: this.api.pending(enterpriseId),
+      accounts: this.accounts.getListAuxiliaryAccounts(enterpriseId).pipe(catchError(() => of([]))),
+      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(catchError(() => of({ content: [] } as any))),
+    }).pipe(
+      map(({ payables, accounts, thirds }) => {
+        const thirdNames = new Map<number, string>(
+          (thirds?.content || []).map((t: any) => {
+            const name =
+              (t.socialReason as string) ||
+              [t.names, t.lastNames].filter(Boolean).join(' ') ||
+              `Proveedor ${t.thId}`;
+            return [Number(t.thId), String(name)] as [number, string];
+          }),
+        );
+        const accountLabels = new Map<string, string>(
+          (accounts || []).map((a: any) => [String(a.id), `${a.code} - ${a.description}`] as [string, string]),
+        );
+
+        const pending = payables || [];
+
+        const suppliers: SupplierOption[] = [...new Set(pending.map((p) => Number(p.supplierId)))]
+          .map((id) => {
+            const name = thirdNames.get(id) || `Proveedor ${id}`;
+            return { id, name, label: `${id} — ${name}` };
+          })
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        const documents: DocumentOption[] = pending
+          .map((p) => ({
+            label: `${p.reference} · Prov. ${p.supplierId}`,
+            value: String(p.reference),
+            supplierId: Number(p.supplierId),
+            accountCode: String(p.payableAccountCode),
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        const accountCodes = [...new Set(pending.map((p) => String(p.payableAccountCode)))];
+        const accountsOptions: AccountTypeOption[] = accountCodes
+          .map((code) => ({
+            value: code,
+            label: accountLabels.get(code) || `Cuenta ${code}`,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        return { suppliers, documents, accounts: accountsOptions };
+      }),
+    );
   }
 
-  exportAgingReport(enterpriseId: string, filters: AgingReportFilter, format: 'excel' | 'pdf'): Observable<Blob> {
-    return this.getAgingReport(enterpriseId, filters).pipe(map(report => {
-      const rows = report.lines.map(line => [line.accountDescription, line.totalDue, line.current, line.days1to30,
-        line.days31to60, line.days61to90, line.days91to180].join(','));
-      return new Blob([['Documento,Total,Vigente,1-30,31-60,61-90,91+', ...rows].join('\n')], { type: 'text/csv;charset=utf-8' });
-    }));
+  getAccountTypes(enterpriseId: string): Observable<AccountTypeOption[]> {
+    return this.getFilterOptions(enterpriseId).pipe(map((o) => o.accounts));
+  }
+
+  getSuppliers(enterpriseId: string): Observable<SupplierOption[]> {
+    return this.getFilterOptions(enterpriseId).pipe(map((o) => o.suppliers));
+  }
+
+  exportAgingReport(enterpriseId: string, filters: AgingReportFilter): Observable<Blob> {
+    return this.getAgingReport(enterpriseId, filters).pipe(
+      map((report) => {
+        const header = [
+          'Factura',
+          'Proveedor',
+          'Cuenta',
+          'Vence',
+          'Dias vencidos',
+          'Total',
+          'Corriente',
+          '1-30',
+          '31-60',
+          '61-90',
+          '91+',
+        ].join(',');
+        const rows = report.lines.map((line) =>
+          [
+            line.reference,
+            line.supplierId,
+            `"${line.accountDescription}"`,
+            line.dueDate,
+            line.daysOverdue,
+            line.totalDue,
+            line.current,
+            line.days1to30,
+            line.days31to60,
+            line.days61to90,
+            line.days91Plus,
+          ].join(','),
+        );
+        return new Blob([[header, ...rows].join('\n')], {
+          type: 'text/csv;charset=utf-8;',
+        });
+      }),
+    );
+  }
+
+  private toLocalDateString(date: Date): string {
+    const d = date instanceof Date ? date : new Date(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 }

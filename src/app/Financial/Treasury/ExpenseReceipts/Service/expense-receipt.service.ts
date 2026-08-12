@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin, map } from 'rxjs';
+import { Observable, forkJoin, map, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { PaymentMethodsServiceService } from '../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
@@ -10,6 +11,7 @@ import { ExpenseReceiptResponse } from '../Model/ExpenseReceiptResponse';
 import { ExpenseReceiptCreateRequest } from '../Model/ExpenseReceiptCreateRequest';
 import { AccountingEntryLine } from '../Model/AccountingEntryLine';
 import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
+import { educationalDescription, voucherStatusLabel } from '../../Shared/treasury-status-labels';
 
 @Injectable({ providedIn: 'root' })
 export class ExpenseReceiptService {
@@ -63,21 +65,52 @@ export class ExpenseReceiptService {
       expirationDate: new Date(item.dueDate),
       pendingValue: item.availableAmount,
       amountToPay: item.availableAmount,
+      payableAccountId: item.payableAccountId,
+      payableAccountCode: item.payableAccountCode,
     }))));
   }
 
   getAllExpenseReceipts(): Observable<ExpenseReceiptView[]> {
-    return this.api.vouchers(this.enterpriseId()).pipe(map(page => page.content.map(voucher => ({
-      id: voucher.id,
-      receiptCode: voucher.voucherNumber,
-      issueDate: new Date(voucher.issueDate),
-      thirdPartyId: voucher.details[0]?.supplierId ?? 0,
-      supplierName: voucher.details.length > 1 ? `${new Set(voucher.details.map(d => d.supplierId)).size} proveedores` : `Proveedor ${voucher.details[0]?.supplierId ?? ''}`,
-      status: voucher.status === 'VOIDED' ? 'Anulado' as const : 'Activo' as const,
-      totalAmount: voucher.total,
-    }))));
-  }
+    const enterpriseId = this.enterpriseId();
+    return forkJoin({
+      vouchers: this.api.vouchers(enterpriseId),
+      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(
+        catchError(() => of({ content: [] } as any)),
+      ),
+    }).pipe(
+      map(({ vouchers, thirds }) => {
+        const thirdNames = new Map<number, string>(
+          (thirds?.content || []).map((t: any) => {
+            const name =
+              (t.socialReason as string) ||
+              [t.names, t.lastNames].filter(Boolean).join(' ') ||
+              `Proveedor ${t.thId}`;
+            return [Number(t.thId), String(name)] as [number, string];
+          }),
+        );
 
+        return (vouchers.content || []).map((voucher) => {
+          const supplierIds = [...new Set((voucher.details || []).map((d) => d.supplierId))];
+          const thirdPartyId = supplierIds[0] ?? 0;
+          const supplierName =
+            supplierIds.length > 1
+              ? `${supplierIds.length} proveedores`
+              : thirdNames.get(thirdPartyId) || `Proveedor ${thirdPartyId || ''}`;
+
+          return {
+            id: voucher.id,
+            receiptCode: voucher.voucherNumber,
+            issueDate: new Date(voucher.issueDate),
+            thirdPartyId,
+            supplierName,
+            status: voucherStatusLabel(voucher.status),
+            statusKey: voucher.status,
+            totalAmount: voucher.total,
+          };
+        });
+      }),
+    );
+  }
   getExpenseReceiptById(id: number): Observable<ExpenseReceiptDetailsView> {
     return this.api.voucher(id, this.enterpriseId()).pipe(map(voucher => ({
       id: voucher.id,
@@ -86,9 +119,10 @@ export class ExpenseReceiptService {
       thirdPartyId: voucher.details[0]?.supplierId ?? 0,
       supplierName: `Proveedor ${voucher.details[0]?.supplierId ?? ''}`,
       paymentMethodName: `Método ${voucher.paymentMethodId}`,
-      status: voucher.status === 'VOIDED' ? 'Anulado' as const : 'Activo' as const,
+      status: voucherStatusLabel(voucher.status),
+      statusKey: voucher.status,
       totalAmount: voucher.total,
-      observations: voucher.observations ?? '',
+      observations: educationalDescription(voucher.observations, ''),
       isDirectExpense: false,
       details: voucher.details.map(detail => ({
         invoiceId: detail.invoiceId,
@@ -105,6 +139,7 @@ export class ExpenseReceiptService {
       enterpriseId: request.enterpriseId,
       issueDate: new Date().toISOString().slice(0, 10),
       paymentMethodId: request.paymentMethodId,
+      bankAccountId: request.bankAccountId ?? undefined,
       observations: request.observations,
       details: request.details.map(detail => ({ supplierId: request.thirdPartyId, invoiceId: detail.invoiceId, amount: detail.amountPaid })),
     }).pipe(map(voucher => ({
