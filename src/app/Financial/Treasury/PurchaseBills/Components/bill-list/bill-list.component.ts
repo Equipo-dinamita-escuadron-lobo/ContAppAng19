@@ -162,7 +162,8 @@ export class BillListComponent implements OnInit {
 
   loadBills(): void {
     this.loading = true;
-    const enterpriseId = this.localStorageMethods.getIdEnterprise() || 'test-enterprise';
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) return;
 
     this.purchaseBillService.getAllPurchaseBills(enterpriseId).subscribe({
       next: (bills) => {

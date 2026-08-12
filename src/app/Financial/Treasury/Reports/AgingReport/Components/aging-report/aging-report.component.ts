@@ -69,7 +69,9 @@ export class AgingReportComponent implements OnInit {
 
   initializeFilterForm(): void {
     this.filterForm = this.fb.group({
-      supplierName: ['Proveedor XYZ'],
+      supplierId: [null],
+      document: [''],
+      supplierName: [''],
       accountTypeStart: [null],
       accountTypeEnd: [null],
       cutoffDate: [new Date()],
@@ -78,8 +80,8 @@ export class AgingReportComponent implements OnInit {
   }
 
   loadAccountTypes(): void {
-    const enterpriseId =
-      this.localStorageMethods.getIdEnterprise() || 'test-enterprise';
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) return;
 
     this.agingReportService.getAccountTypes(enterpriseId).subscribe({
       next: (accountTypes) => {
@@ -101,15 +103,17 @@ export class AgingReportComponent implements OnInit {
     this.loading = true;
 
     const filters: AgingReportFilter = {
-      supplierName: this.filterForm.value.supplierName,
+      supplierId: this.filterForm.value.supplierId,
+      supplierName: this.filterForm.value.supplierId ? `Proveedor ${this.filterForm.value.supplierId}` : 'Todos',
+      document: this.filterForm.value.document,
       accountTypeStart: this.filterForm.value.accountTypeStart,
       accountTypeEnd: this.filterForm.value.accountTypeEnd,
       cutoffDate: this.filterForm.value.cutoffDate,
       includeDocuments: this.filterForm.value.includeDocuments,
     };
 
-    const enterpriseId =
-      this.localStorageMethods.getIdEnterprise() || 'test-enterprise';
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) return;
 
     this.agingReportService.getAgingReport(enterpriseId, filters).subscribe({
       next: (report) => {
@@ -135,6 +139,8 @@ export class AgingReportComponent implements OnInit {
 
   clearFilters(): void {
     this.filterForm.reset({
+      supplierId: null,
+      document: '',
       supplierName: '',
       accountTypeStart: null,
       accountTypeEnd: null,

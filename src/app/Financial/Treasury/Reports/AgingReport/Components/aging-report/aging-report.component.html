@@ -29,15 +29,21 @@
     >
       <!-- Supplier Filter -->
       <div class="flex flex-col gap-2">
-        <label for="supplierName" class="font-semibold text-[var(--color-primary)]">
+        <label for="supplierId" class="font-semibold text-[var(--color-primary)]">
           Proveedor
         </label>
         <input
           pInputText
-          id="supplierName"
-          formControlName="supplierName"
-          placeholder="Buscar proveedor..."
+          id="supplierId"
+          type="number"
+          formControlName="supplierId"
+          placeholder="ID del proveedor"
         />
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="document" class="font-semibold text-[var(--color-primary)]">Documento</label>
+        <input pInputText id="document" formControlName="document" placeholder="Numero o referencia" />
       </div>
 
       <!-- Account Type Start -->
@@ -46,7 +52,7 @@
           for="accountTypeStart"
           class="font-semibold text-[var(--color-primary)]"
         >
-          Tipo de cuenta inicial
+          Cuenta CxP
         </label>
         <p-dropdown
           id="accountTypeStart"
@@ -66,7 +72,7 @@
           for="accountTypeEnd"
           class="font-semibold text-[var(--color-primary)]"
         >
-          Tipo de cuenta final
+          Cuenta final (informativa)
         </label>
         <p-dropdown
           id="accountTypeEnd"

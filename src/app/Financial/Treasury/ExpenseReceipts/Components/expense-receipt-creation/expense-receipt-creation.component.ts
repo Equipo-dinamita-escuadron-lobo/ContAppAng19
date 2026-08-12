@@ -23,6 +23,7 @@ import { PaymentMethod } from '../../../../../GeneralMasters/PaymentMethods/mode
 import { ExpenseReceiptService } from '../../Service/expense-receipt.service';
 import { PurchaseInvoice } from '../../Model/Models';
 import { ExpenseReceiptCreateRequest } from '../../Model/ExpenseReceiptCreateRequest';
+import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 
 // Modelos adicionales para el frontend
 interface DropdownOption {
@@ -103,7 +104,8 @@ export class ExpenseReceiptCreationComponent {
     private router: Router,
     private route: ActivatedRoute,
     private paymentMethodService: PaymentMethodsServiceService,
-    private expenseReceiptService: ExpenseReceiptService
+    private expenseReceiptService: ExpenseReceiptService,
+    private chartAccountService: ChartAccountService
   ) { }
 
   ngOnInit(): void {
@@ -164,37 +166,32 @@ export class ExpenseReceiptCreationComponent {
 
   loadDropdownOptions(): void {
     // Cargar métodos de pago (Transfer Account)
-    this.paymentMethodService.findAll(this.localStorageMethods.getIdEnterprise() || 'test', 0, 100)
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) {
+      this.messageService.add({ severity: 'error', summary: 'Empresa requerida', detail: 'Seleccione una empresa activa.' });
+      return;
+    }
+    this.paymentMethodService.findAll(enterpriseId, 0, 100)
       .subscribe({
         next: (page) => {
           this.paymentMethods = page.content;
 
           // Si no hay métodos de pago configurados, usar datos de respaldo
-          if(this.paymentMethods.length === 0){
-            this.paymentMethods = [
-              { id: 1, name: 'Caja', accountingAccount: '110505', accountingAccountId: 1, status: true, idEnterprise: '' },
-              { id: 2, name: 'Banco', accountingAccount: '111005', accountingAccountId: 2, status: true, idEnterprise: '' },
-              { id: 3, name: 'Tarjeta de Crédito', accountingAccount: '112005', accountingAccountId: 3, status: true, idEnterprise: '' }
-            ];
-          }
         },
         error: (error) => {
           console.error('Error al cargar métodos de pago:', error);
           // En caso de error, usar datos de respaldo
-          this.paymentMethods = [
-            { id: 1, name: 'Caja', accountingAccount: '110505', accountingAccountId: 1, status: true, idEnterprise: '' },
-            { id: 2, name: 'Banco', accountingAccount: '111005', accountingAccountId: 2, status: true, idEnterprise: '' },
-            { id: 3, name: 'Tarjeta de Crédito', accountingAccount: '112005', accountingAccountId: 3, status: true, idEnterprise: '' }
-          ];
+          this.paymentMethods = [];
         }
       });
 
     // Cargar cuentas por pagar (Post To)
-    this.payableAccounts = [
-      { id: 1, code: '220505', name: 'Proveedores Nacionales', fullName: '220505 - Proveedores Nacionales' },
-      { id: 2, code: '220510', name: 'Proveedores del Exterior', fullName: '220510 - Proveedores del Exterior' },
-      { id: 3, code: '220515', name: 'Cuentas por Pagar Diversas', fullName: '220515 - Cuentas por Pagar Diversas' }
-    ];
+    this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe(accounts => {
+      this.payableAccounts = accounts.filter(account => account.status !== false).map(account => ({
+        id: account.id, code: account.code, name: account.description,
+        fullName: `${account.code} - ${account.description}`
+      }));
+    });
 
     // Cargar cuentas auxiliares para gastos directos
     this.expenseReceiptService.getAuxiliaryAccounts().subscribe(data => {
@@ -210,7 +207,7 @@ export class ExpenseReceiptCreationComponent {
   prefillFormWithBillInfo(): void {
     if (!this.billPaymentInfo.billId) return;
 
-    // Set supplier (mock supplier object)
+    // Precarga opcional al navegar desde una obligación.
     const supplier = {
       id: 1, // This should be the actual supplier ID from the bill
       name: this.billPaymentInfo.supplierName || ''
@@ -261,38 +258,14 @@ export class ExpenseReceiptCreationComponent {
 
   // Cargar facturas del proveedor seleccionado
   loadInvoicesForSupplier(supplierId: number): void {
-    // Mock data de facturas contabilizadas (POSTED) o parcialmente pagadas del proveedor
-    const mockInvoices = [
-      {
-        id: 1,
-        billId: 'BILL-20250914-0001',
-        date: new Date('2025-09-14'),
-        total: 1190000,
-        paidAmount: 0,
-        pendingBalance: 1190000,
-        displayText: 'BILL-20250914-0001 - $1,190,000 (14/09/2025)'
-      },
-      {
-        id: 2,
-        billId: 'BILL-20250913-0002',
-        date: new Date('2025-09-13'),
-        total: 595000,
-        paidAmount: 200000,
-        pendingBalance: 395000,
-        displayText: 'BILL-20250913-0002 - $595,000 (13/09/2025)'
-      },
-      {
-        id: 3,
-        billId: 'BILL-20250912-0003',
-        date: new Date('2025-09-12'),
-        total: 850000,
-        paidAmount: 0,
-        pendingBalance: 850000,
-        displayText: 'BILL-20250912-0003 - $850,000 (12/09/2025)'
-      }
-    ];
-
-    this.availableInvoices = mockInvoices;
+    // Las obligaciones disponibles provienen de la réplica de Tesorería.
+    this.expenseReceiptService.getInvoicesBySupplier(supplierId).subscribe(invoices => {
+      this.availableInvoices = invoices.map(invoice => ({
+        id: invoice.id, billId: invoice.factCode, date: invoice.expirationDate,
+        total: invoice.pendingValue, paidAmount: 0, pendingBalance: invoice.pendingValue,
+        displayText: `${invoice.factCode} - ${this.formatCurrency(invoice.pendingValue)}`
+      }));
+    });
 
     // Limpiar selección anterior
     this.selectedInvoices = [];
@@ -372,7 +345,7 @@ export class ExpenseReceiptCreationComponent {
 
     const formValue = this.expenseReceiptForm.value;
     const supplier: Supplier = formValue.supplier;
-    const enterpriseId = "asdasdasfafa"; // TODO: Obtener del localStorage
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
 
     if (!enterpriseId) {
       this.messageService.add({

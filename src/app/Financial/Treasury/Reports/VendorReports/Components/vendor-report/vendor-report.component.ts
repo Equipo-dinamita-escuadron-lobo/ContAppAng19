@@ -68,7 +68,9 @@ export class VendorReportComponent implements OnInit {
 
     this.dateRangeForm = this.fb.group({
       startDate: [firstDayOfMonth, Validators.required],
-      endDate: [today, Validators.required]
+      endDate: [today, Validators.required],
+      invoice: [''],
+      status: ['']
     });
   }
 
@@ -102,7 +104,9 @@ export class VendorReportComponent implements OnInit {
     this.vendorReportService.getVendorReport(
       this.vendorId,
       formValue.startDate,
-      formValue.endDate
+      formValue.endDate,
+      formValue.invoice || undefined,
+      formValue.status === '' ? undefined : formValue.status === 'ACTIVE'
     ).subscribe({
       next: (report) => {
         this.vendorReport = report;

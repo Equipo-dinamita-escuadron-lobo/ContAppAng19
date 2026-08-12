@@ -1,235 +1,54 @@
 import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
-import { VendorReportSummary, VendorReport, VendorListFilter, VendorReportTransaction } from '../Models/VendorReport';
+import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
+import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
+import { TreasuryApiService } from '../../../Shared/treasury-api.service';
+import { VendorListFilter, VendorReport, VendorReportSummary } from '../Models/VendorReport';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class VendorReportService {
+  constructor(private readonly api: TreasuryApiService, private readonly storage: LocalStorageMethods) {}
+  private enterpriseId() { const id = this.storage.getIdEnterprise(); if (!id) throw new Error('No hay una empresa activa'); return id; }
 
-  constructor() { }
-
-  // Mock data para la lista de proveedores - Datos expandidos
-  private mockVendorSummaries: VendorReportSummary[] = [
-    {
-      id: 1,
-      name: 'Proveedor ABC S.A.S',
-      totalDebits: 12500000,
-      totalCredits: 15000000,
-      currentBalance: 2500000,
-      lastTransactionDate: new Date('2025-11-05'),
-      transactionCount: 12
-    },
-    {
-      id: 2,
-      name: 'Suministros XYZ Ltda',
-      totalDebits: 8200000,
-      totalCredits: 8500000,
-      currentBalance: 300000,
-      lastTransactionDate: new Date('2025-11-01'),
-      transactionCount: 8
-    },
-    {
-      id: 3,
-      name: 'Distribuciones DEF',
-      totalDebits: 15800000,
-      totalCredits: 16000000,
-      currentBalance: 200000,
-      lastTransactionDate: new Date('2025-10-28'),
-      transactionCount: 15
-    },
-    {
-      id: 4,
-      name: 'Servicios GHI',
-      totalDebits: 6500000,
-      totalCredits: 6500000,
-      currentBalance: 0,
-      lastTransactionDate: new Date('2025-10-20'),
-      transactionCount: 6
-    },
-    {
-      id: 5,
-      name: 'Materiales JKL',
-      totalDebits: 9800000,
-      totalCredits: 11000000,
-      currentBalance: 1200000,
-      lastTransactionDate: new Date('2025-10-15'),
-      transactionCount: 10
-    },
-    {
-      id: 6,
-      name: 'Equipos MNO',
-      totalDebits: 18700000,
-      totalCredits: 20000000,
-      currentBalance: 1300000,
-      lastTransactionDate: new Date('2025-10-05'),
-      transactionCount: 14
-    },
-    {
-      id: 7,
-      name: 'Tecnología PQR Ltda',
-      totalDebits: 5400000,
-      totalCredits: 5400000,
-      currentBalance: 0,
-      lastTransactionDate: new Date('2025-09-25'),
-      transactionCount: 5
-    },
-    {
-      id: 8,
-      name: 'Servicios Integrales STU',
-      totalDebits: 7600000,
-      totalCredits: 8200000,
-      currentBalance: 600000,
-      lastTransactionDate: new Date('2025-09-15'),
-      transactionCount: 9
-    },
-    {
-      id: 9,
-      name: 'Papelería VWX S.A.',
-      totalDebits: 3200000,
-      totalCredits: 3500000,
-      currentBalance: 300000,
-      lastTransactionDate: new Date('2025-08-30'),
-      transactionCount: 7
-    },
-    {
-      id: 10,
-      name: 'Construcciones YZ Ltda',
-      totalDebits: 22000000,
-      totalCredits: 24000000,
-      currentBalance: 2000000,
-      lastTransactionDate: new Date('2025-08-15'),
-      transactionCount: 18
-    }
-  ];
-
-  // Obtener lista de proveedores con filtros
   getVendorSummaries(filter?: VendorListFilter): Observable<VendorReportSummary[]> {
-    let filteredData = [...this.mockVendorSummaries];
-
-    if (filter) {
-      // Filtro por término de búsqueda
-      if (filter.searchTerm) {
-        const searchLower = filter.searchTerm.toLowerCase();
-        filteredData = filteredData.filter(vendor =>
-          vendor.name.toLowerCase().includes(searchLower)
-        );
-      }
-
-      // Filtro por balance
-      if (filter.balanceFrom !== undefined) {
-        filteredData = filteredData.filter(vendor => vendor.currentBalance >= filter.balanceFrom!);
-      }
-      if (filter.balanceTo !== undefined) {
-        filteredData = filteredData.filter(vendor => vendor.currentBalance <= filter.balanceTo!);
-      }
-
-      // Filtro por estado
-      if (filter.status === 'with_balance') {
-        filteredData = filteredData.filter(vendor => vendor.currentBalance > 0);
-      } else if (filter.status === 'no_balance') {
-        filteredData = filteredData.filter(vendor => vendor.currentBalance === 0);
-      }
-    }
-
-    return of(filteredData).pipe(delay(300));
+    return this.api.pending(this.enterpriseId()).pipe(switchMap(payables => {
+      const supplierIds = [...new Set(payables.map(item => item.supplierId))];
+      return supplierIds.length ? forkJoin(supplierIds.map(id => this.api.statement(this.enterpriseId(), id))) : of([]);
+    }), map(statements => (statements as any[]).map(statement => ({
+      id: statement.supplierId, name: `Proveedor ${statement.supplierId}`,
+      totalDebits: statement.paid, totalCredits: statement.invoiced, currentBalance: statement.pending,
+      lastTransactionDate: new Date(Math.max(...statement.invoices.map((invoice: any) => new Date(invoice.issueDate).getTime()))),
+      transactionCount: statement.invoices.length + statement.vouchers.length,
+    })).filter(item => !filter?.searchTerm || item.name.toLowerCase().includes(filter.searchTerm.toLowerCase()))
+      .filter(item => filter?.balanceFrom == null || item.currentBalance >= filter.balanceFrom)
+      .filter(item => filter?.balanceTo == null || item.currentBalance <= filter.balanceTo)
+      .filter(item => filter?.status !== 'with_balance' || item.currentBalance > 0)
+      .filter(item => filter?.status !== 'no_balance' || item.currentBalance === 0)));
   }
 
-  // Obtener reporte detallado de un proveedor específico
-  getVendorReport(vendorId: number, startDate: Date, endDate: Date): Observable<VendorReport> {
-    const vendor = this.mockVendorSummaries.find(v => v.id === vendorId);
-
-    if (!vendor) {
-      throw new Error(`Proveedor con ID ${vendorId} no encontrado`);
-    }
-
-    // Mock data basado en la imagen proporcionada
-    const mockTransactions: VendorReportTransaction[] = [
-      {
-        date: new Date('2025-09-13'),
-        dueDate: new Date('2025-09-13'),
-        reference: '232323',
-        type: 'Bill',
-        description: '',
-        debits: 0,
-        credits: 668888.00,
-        balance: 668888.00
-      },
-      {
-        date: new Date('2025-09-13'),
-        dueDate: new Date('2025-09-13'),
-        reference: '',
-        type: 'Payment',
-        description: '',
-        debits: 200000.00,
-        credits: 0,
-        balance: -131112.00
-      },
-      {
-        date: new Date('2025-09-13'),
-        dueDate: new Date('2025-09-13'),
-        reference: '0002',
-        type: 'Bill',
-        description: '',
-        debits: 0,
-        credits: 200000.00,
-        balance: 68888.00
-      },
-      {
-        date: new Date('2025-09-13'),
-        dueDate: new Date('2025-09-13'),
-        reference: '',
-        type: 'Payment',
-        description: '',
-        debits: 28888.00,
-        credits: 0,
-        balance: 40000.00
-      }
-    ];
-
-    const mockReport: VendorReport = {
-      vendor: {
-        id: vendor.id,
-        name: vendor.name
-      },
-      dateRange: {
-        startDate: startDate,
-        endDate: endDate
-      },
-      transactions: mockTransactions,
-      periodTotals: {
-        totalDebits: 228888.00,
-        totalCredits: 268888.00,
-        netBalance: 40000.00
-      },
-      totalDue: 40000.00,
-      agingReport: {
-        prePaid: 0.00,
-        current: 0.00,
-        days0to30: 40000.00,
-        days31to60: 0.00,
-        days61to90: 0.00,
-        days91Plus: 0.00,
-        total: 40000.00
-      }
-    };
-
-    return of(mockReport).pipe(delay(500));
+  getVendorReport(vendorId: number, startDate: Date, endDate: Date, invoice?: string, active?: boolean): Observable<VendorReport> {
+    return this.api.statement(this.enterpriseId(), vendorId, startDate.toISOString().slice(0,10), endDate.toISOString().slice(0,10), invoice, active).pipe(map(statement => {
+      const bills = statement.invoices.map(invoice => ({ date: new Date(invoice.issueDate), dueDate: new Date(invoice.dueDate),
+        reference: invoice.reference, documentNumber: invoice.reference, type: 'Bill' as const, description: 'Factura de compra',
+        debits: 0, credits: invoice.originalAmount, balance: invoice.pendingAmount }));
+      const payments = statement.vouchers.flatMap(voucher => voucher.details.filter(detail => detail.supplierId === vendorId).map(detail => ({
+        date: new Date(voucher.issueDate), reference: detail.invoiceReference, expenseReceiptNumber: voucher.voucherNumber,
+        type: 'Payment' as const, description: voucher.observations ?? '', debits: detail.amountPaid, credits: 0,
+        balance: detail.remainingBalance,
+      })));
+      const transactions = [...bills, ...payments].filter(row => row.date >= startDate && row.date <= endDate)
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
+      return { vendor: { id: vendorId, name: `Proveedor ${vendorId}` }, dateRange: { startDate, endDate }, transactions,
+        periodTotals: { totalDebits: payments.reduce((s, p) => s + p.debits, 0), totalCredits: bills.reduce((s, b) => s + b.credits, 0), netBalance: statement.pending },
+        totalDue: statement.pending, agingReport: { prePaid: 0, current: statement.pending, days0to30: 0, days31to60: 0, days61to90: 0, days91Plus: 0, total: statement.pending } };
+    }));
   }
 
-  // Exportar reporte a PDF (mock)
-  exportToPdf(vendorId: number, startDate: Date, endDate: Date): Observable<Blob> {
-    // En implementación real, esto llamaría a un endpoint que genere el PDF
-    const mockPdfContent = `Reporte de Proveedor ${vendorId} - ${startDate.toLocaleDateString()} a ${endDate.toLocaleDateString()}`;
-    const blob = new Blob([mockPdfContent], { type: 'application/pdf' });
-    return of(blob).pipe(delay(1000));
-  }
-
-  // Exportar reporte a Excel (mock)
-  exportToExcel(vendorId: number, startDate: Date, endDate: Date): Observable<Blob> {
-    // En implementación real, esto llamaría a un endpoint que genere el Excel
-    const mockExcelContent = `Reporte Excel de Proveedor ${vendorId}`;
-    const blob = new Blob([mockExcelContent], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    return of(blob).pipe(delay(800));
+  exportToPdf(vendorId: number, startDate: Date, endDate: Date) { return this.export(vendorId, startDate, endDate); }
+  exportToExcel(vendorId: number, startDate: Date, endDate: Date) { return this.export(vendorId, startDate, endDate); }
+  private export(vendorId: number, startDate: Date, endDate: Date): Observable<Blob> {
+    return this.getVendorReport(vendorId, startDate, endDate).pipe(map(report => new Blob([
+      ['Fecha,Documento,Tipo,Débitos,Créditos,Saldo', ...report.transactions.map(row =>
+        [row.date.toISOString().slice(0, 10), row.reference, row.type, row.debits, row.credits, row.balance].join(','))].join('\n')
+    ], { type: 'text/csv;charset=utf-8' })));
   }
 }

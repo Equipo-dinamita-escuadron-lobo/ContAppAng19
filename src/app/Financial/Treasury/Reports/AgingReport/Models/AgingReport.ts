@@ -5,6 +5,7 @@ export interface AgingReportFilter {
   accountTypeEnd?: string;
   cutoffDate?: Date;
   includeDocuments?: boolean;
+  document?: string;
 }
 
 export interface AgingReportLine {

@@ -1,0 +1,54 @@
+<section class="treasury-shell">
+  <header><h1>Operaciones de Tesoreria</h1><button type="button" (click)="reload()">Actualizar</button></header>
+  <p class="error" *ngIf="error">{{ error }}</p>
+  <div class="form-row">
+    <label>Numero de comprobante<input [(ngModel)]="voucherNumberFilter"></label>
+    <label>Estado<select [(ngModel)]="voucherStatusFilter"><option value="">Todos</option><option value="DRAFT">Borrador</option><option value="POSTING">Contabilizando</option><option value="POSTED">Contabilizado</option><option value="FAILED">Fallido</option><option value="VOIDING">Anulando</option><option value="VOIDED">Anulado</option><option value="VOID_FAILED">Anulacion fallida</option></select></label>
+    <button type="button" (click)="reload()">Filtrar comprobantes</button>
+  </div>
+  <fieldset [disabled]="busy">
+    <legend>Obligaciones pendientes</legend>
+    <table><thead><tr><th></th><th>Proveedor</th><th>Factura</th><th>Vence</th><th>Disponible</th><th>Aplicar</th><th></th></tr></thead>
+      <tbody><tr *ngFor="let payable of payables">
+        <td><input type="checkbox" [checked]="selected.has(payable.id)" (change)="toggle(payable.id, $any($event.target).checked)"></td>
+        <td>{{ payable.supplierId }}</td><td>{{ payable.reference }}</td><td>{{ payable.dueDate }}</td>
+        <td>{{ payable.availableAmount | currency:'COP':'symbol':'1.0-2' }}</td>
+        <td><input type="number" min="0.01" [max]="payable.availableAmount" [(ngModel)]="amounts[payable.id]"></td>
+        <td><button type="button" (click)="changeDueDate(payable)">Cambiar vencimiento</button></td>
+      </tr></tbody>
+    </table>
+  </fieldset>
+  <div class="form-row">
+    <label>Metodo<select [(ngModel)]="paymentMethodId" (ngModelChange)="paymentMethodChanged()"><option [ngValue]="undefined">Seleccione</option><option *ngFor="let method of methods" [ngValue]="method.id">{{ method.name }}</option></select></label>
+    <label *ngIf="requiresBankAccount">Cuenta bancaria<select [(ngModel)]="bankAccountId"><option [ngValue]="undefined">Seleccione</option><option *ngFor="let bank of banks" [ngValue]="bank.id">{{ bank.bank?.name || 'Banco' }} - {{ bank.accountNumber }}</option></select></label>
+    <label>Fecha programada<input type="date" [(ngModel)]="executionDate"></label>
+    <label>Observaciones<input [(ngModel)]="observations"></label>
+    <button type="button" [disabled]="busy" (click)="createVoucher()">{{ editingVoucherId ? 'Guardar borrador' : 'Crear borrador' }}</button>
+    <button type="button" [disabled]="busy" (click)="schedule()">Programar pago</button>
+  </div>
+  <div class="form-row">
+    <label>Cuenta contrapartida<select [(ngModel)]="counterpartAccountId"><option *ngFor="let account of accounts" [ngValue]="account.id">{{ account.code }} - {{ account.description }}</option></select></label>
+    <label>Motivo de baja<input [(ngModel)]="writeOffReason"></label><button type="button" (click)="writeOff()">Crear baja</button>
+  </div>
+  <h2>Comprobantes</h2>
+  <table><thead><tr><th>Numero</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Asiento</th><th>Acciones</th></tr></thead><tbody>
+    <tr *ngFor="let voucher of vouchers"><td>{{ voucher.voucherNumber }}</td><td>{{ voucher.issueDate }}</td><td>{{ voucher.status }}</td>
+      <td>{{ voucher.total | currency:'COP' }}</td><td>{{ voucher.accountingEntryId || 'Pendiente' }}</td><td>
+        <button *ngIf="voucher.status === 'DRAFT' || voucher.status === 'FAILED'" (click)="post(voucher)">{{ voucher.status === 'FAILED' ? 'Reintentar' : 'Contabilizar' }}</button>
+        <button *ngIf="voucher.status === 'DRAFT'" (click)="edit(voucher)">Editar</button>
+        <button *ngIf="voucher.status === 'DRAFT'" (click)="remove(voucher)">Eliminar</button>
+        <button *ngIf="voucher.status === 'POSTED' || voucher.status === 'VOID_FAILED'" (click)="void(voucher)">{{ voucher.status === 'VOID_FAILED' ? 'Reintentar anulacion' : 'Anular' }}</button>
+        <button *ngIf="voucher.accountingEntryId" (click)="showAccounting(voucher)">Ver asiento</button>
+      </td></tr></tbody></table>
+  <pre *ngIf="accountingEntry">{{ accountingEntry | json }}</pre>
+  <h2>Programaciones</h2>
+  <table><thead><tr><th>Fecha</th><th>Estado</th><th>Total</th><th>Reintentos</th><th>Comprobante</th><th></th></tr></thead><tbody>
+    <tr *ngFor="let item of schedules"><td>{{ item.executionDate }}</td><td>{{ item.status }}</td><td>{{ item.total | currency:'COP' }}</td>
+      <td>{{ item.retryCount }}</td><td>{{ item.voucherId || '-' }}</td><td><button *ngIf="item.status === 'SCHEDULED'" (click)="cancel(item)">Cancelar</button>
+      <button *ngIf="item.status === 'FAILED'" (click)="retry(item)">Reintentar</button></td></tr></tbody></table>
+  <h2>Bajas de CxP</h2>
+  <table><thead><tr><th>ID</th><th>Estado</th><th>Total</th><th>Motivo</th><th></th></tr></thead><tbody><tr *ngFor="let item of writeOffs">
+    <td>{{ item.id }}</td><td>{{ item.status }}</td><td>{{ item.total | currency:'COP' }}</td><td>{{ item.reason }}</td><td>
+      <button *ngIf="item.status === 'DRAFT' || item.status === 'FAILED'" (click)="confirmWriteOff(item)">{{ item.status === 'FAILED' ? 'Reintentar' : 'Confirmar' }}</button>
+      <button *ngIf="item.status === 'POSTED' || item.status === 'VOID_FAILED'" (click)="voidWriteOff(item)">{{ item.status === 'VOID_FAILED' ? 'Reintentar anulacion' : 'Anular' }}</button></td></tr></tbody></table>
+</section>

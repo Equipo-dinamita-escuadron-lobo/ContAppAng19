@@ -1,0 +1,57 @@
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { AgingLine, Page, Payable, PaymentSchedule, PaymentVoucher, SupplierStatement, VoucherRequest, VoucherStatus, WriteOffRequest } from './treasury-api.models';
+
+@Injectable({ providedIn: 'root' })
+export class TreasuryApiService {
+  private readonly base = `${environment.API_URL}treasury`;
+  constructor(private readonly http: HttpClient) {}
+
+  vouchers(enterpriseId: string, filter: Record<string, string | number | undefined> = {}): Observable<Page<PaymentVoucher>> {
+    let params = new HttpParams().set('enterpriseId', enterpriseId);
+    Object.entries(filter).forEach(([key, value]) => { if (value !== undefined && value !== '') params = params.set(key, value); });
+    return this.http.get<Page<PaymentVoucher>>(`${this.base}/payment-vouchers`, { params });
+  }
+  voucher(id: number, enterpriseId: string) { return this.http.get<PaymentVoucher>(`${this.base}/payment-vouchers/${id}`, { params: { enterpriseId } }); }
+  createVoucher(request: VoucherRequest) { return this.http.post<PaymentVoucher>(`${this.base}/payment-vouchers`, request); }
+  updateVoucher(id: number, request: VoucherRequest) { return this.http.put<PaymentVoucher>(`${this.base}/payment-vouchers/${id}`, request); }
+  deleteVoucher(id: number, enterpriseId: string) { return this.http.delete<void>(`${this.base}/payment-vouchers/${id}`, { params: { enterpriseId } }); }
+  postVoucher(id: number, enterpriseId: string, key: string = crypto.randomUUID()) {
+    return this.http.post<PaymentVoucher>(`${this.base}/payment-vouchers/${id}/post`, null,
+      { params: { enterpriseId }, headers: new HttpHeaders().set('Idempotency-Key', key) });
+  }
+  voidVoucher(id: number, enterpriseId: string, reason: string) {
+    return this.http.post<PaymentVoucher>(`${this.base}/payment-vouchers/${id}/void`, { reason }, { params: { enterpriseId } });
+  }
+  pending(enterpriseId: string, supplierId?: number) {
+    let params = new HttpParams().set('enterpriseId', enterpriseId);
+    if (supplierId != null) params = params.set('supplierId', supplierId);
+    return this.http.get<Payable[]>(`${this.base}/payables/pending`, { params });
+  }
+  changeDueDate(id: number, enterpriseId: string, dueDate: string, reason: string) {
+    return this.http.patch<Payable>(`${this.base}/payables/${id}/due-date`, { dueDate, reason }, { params: { enterpriseId } });
+  }
+  schedules(enterpriseId: string) { return this.http.get<PaymentSchedule[]>(`${this.base}/payment-schedules`, { params: { enterpriseId } }); }
+  createSchedule(request: VoucherRequest & { executionDate: string }) { return this.http.post<PaymentSchedule>(`${this.base}/payment-schedules`, request); }
+  updateSchedule(id: number, request: VoucherRequest & { executionDate: string }) { return this.http.put<PaymentSchedule>(`${this.base}/payment-schedules/${id}`, request); }
+  deleteSchedule(id: number) { return this.http.delete<void>(`${this.base}/payment-schedules/${id}`); }
+  cancelSchedule(id: number) { return this.http.post<PaymentSchedule>(`${this.base}/payment-schedules/${id}/cancel`, null); }
+  retrySchedule(id: number) { return this.http.post<PaymentSchedule>(`${this.base}/payment-schedules/${id}/retry`, null); }
+  statement(enterpriseId: string, supplierId?: number, from?: string, to?: string, invoice?: string, active?: boolean) { let params = new HttpParams().set('enterpriseId', enterpriseId); if(supplierId!=null)params=params.set('supplierId',supplierId);if(from)params=params.set('from',from);if(to)params=params.set('to',to);if(invoice)params=params.set('invoice',invoice);if(active!=null)params=params.set('active',active);return this.http.get<SupplierStatement>(`${this.base}/reports/statement`, { params }); }
+  aging(enterpriseId: string, cutoff: string, supplierId?: number, accountCode?: string, document?: string) {
+    let params = new HttpParams().set('enterpriseId', enterpriseId).set('cutoff', cutoff);
+    if (supplierId != null) params = params.set('supplierId', supplierId);
+    if (accountCode) params = params.set('accountCode', accountCode);
+    if (document) params = params.set('document', document);
+    return this.http.get<AgingLine[]>(`${this.base}/reports/aging`, { params });
+  }
+  writeOffs(enterpriseId: string) { return this.http.get<unknown[]>(`${this.base}/payable-write-offs`, { params: { enterpriseId } }); }
+  accountingEntry(sourceDocumentId: number) {
+    return this.http.get<any>(`${environment.API_URL}accountCatalogue/accounting/entries/by-source/${sourceDocumentId}/PAYMENT_VOUCHER`);
+  }
+  createWriteOff(request: WriteOffRequest) { return this.http.post<unknown>(`${this.base}/payable-write-offs`, request); }
+  confirmWriteOff(id: number) { return this.http.post<unknown>(`${this.base}/payable-write-offs/${id}/confirm`, null); }
+  voidWriteOff(id: number) { return this.http.post<unknown>(`${this.base}/payable-write-offs/${id}/void`, null); }
+}

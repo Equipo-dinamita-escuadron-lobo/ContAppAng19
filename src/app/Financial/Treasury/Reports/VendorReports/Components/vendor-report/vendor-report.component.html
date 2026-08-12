@@ -25,7 +25,7 @@
     <!-- SELECTOR DE RANGO DE FECHAS -->
     <p-card header="Seleccionar Período" styleClass="mb-6">
         <form [formGroup]="dateRangeForm">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                 <div class="flex flex-col gap-2">
                     <label for="startDate" class="font-semibold text-sm text-[var(--color-primary)]">
                         Fecha Inicial
@@ -54,6 +54,16 @@
                         styleClass="w-full"
                         (onSelect)="onDateRangeChange()">
                     </p-calendar>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="invoice" class="font-semibold text-sm text-[var(--color-primary)]">Factura</label>
+                    <input id="invoice" formControlName="invoice" placeholder="Numero o referencia" class="p-2 border rounded" />
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label for="status" class="font-semibold text-sm text-[var(--color-primary)]">Estado</label>
+                    <select id="status" formControlName="status" class="p-2 border rounded"><option value="">Todos</option><option value="ACTIVE">Activa</option><option value="VOIDED">Anulada</option></select>
                 </div>
 
                 <div class="flex gap-2">

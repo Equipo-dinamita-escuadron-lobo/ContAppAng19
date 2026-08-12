@@ -36,7 +36,8 @@ export class PaymentMethodsEditComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
-      accountingAccount: [null, []]
+      accountingAccount: [null, []],
+      requiresBankAccount: [false]
     });
   }
 
@@ -68,13 +69,15 @@ export class PaymentMethodsEditComponent implements OnInit {
 
         this.form.patchValue({
           name: paymentMethod.name,
-          accountingAccount: accountId
+          accountingAccount: accountId,
+          requiresBankAccount: paymentMethod.requiresBankAccount
         });
 
         // Guardar valores iniciales para comparar cambios
         this.initialValue = {
           name: paymentMethod.name,
-          accountingAccount: accountId
+          accountingAccount: accountId,
+          requiresBankAccount: paymentMethod.requiresBankAccount
         };
       },
       error: (error) => {
@@ -121,9 +124,11 @@ export class PaymentMethodsEditComponent implements OnInit {
   hasChanges(): boolean {
     const currentName = this.form.get('name')?.value;
     const currentAccountingAccount = this.form.get('accountingAccount')?.value;
+    const currentRequiresBankAccount = this.form.get('requiresBankAccount')?.value;
 
     return this.initialValue.name !== currentName ||
-           this.initialValue.accountingAccount !== currentAccountingAccount;
+           this.initialValue.accountingAccount !== currentAccountingAccount ||
+           this.initialValue.requiresBankAccount !== currentRequiresBankAccount;
   }
 
   onSubmit() {
@@ -140,7 +145,8 @@ export class PaymentMethodsEditComponent implements OnInit {
       id: this.id,
       idEnterprise: enterpriseId,
       name: formValues.name,
-      accountingAccountId: formValues.accountingAccount
+      accountingAccountId: formValues.accountingAccount,
+      requiresBankAccount: Boolean(formValues.requiresBankAccount)
     };
 
     this.service.update(payload as any).subscribe({
