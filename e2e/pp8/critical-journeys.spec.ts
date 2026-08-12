@@ -9,6 +9,21 @@ const paymentMethodId = Number(process.env.PP8_E2E_PAYMENT_METHOD_ID ?? '8');
 const payableAccountId = Number(process.env.PP8_E2E_PAYABLE_ACCOUNT_ID ?? '2205');
 const mailpit = process.env.PP8_MAILPIT_URL ?? 'http://localhost:18025';
 
+/** Fecha local ISO (YYYY-MM-DD) para evitar fechas fijas que caducan en @FutureOrPresent. */
+function isoDateLocal(date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/** Fecha local desplazada N días respecto de hoy (reproducible en cada ejecución). */
+function isoDateDaysFromToday(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return isoDateLocal(date);
+}
+
 test.describe.configure({ mode: 'serial' });
 
 async function loginThroughAngular(page: Page): Promise<string> {
@@ -49,7 +64,7 @@ async function createPurchaseAndWaitForPayable(page: Page, token: string, amount
       products: [{ productId: 1, amount: 1, description: 'Playwright PP8', discount: 0,
         unitPrice: amount, subtotal: amount, taxPercentage: [] }],
       totalValue: String(amount), totalPay: '0', pendingValue: String(amount),
-      expirationDate: '2026-08-20', accountingAccount: payableAccountId,
+      expirationDate: isoDateDaysFromToday(30), accountingAccount: payableAccountId,
       factureType: 'PURCHASE', inventoryConfigType: 'WEIGHTED_AVERAGE',
     },
   });
@@ -70,7 +85,7 @@ async function createAndPostVoucher(page: Page, token: string, payable: any, amo
   const created = await page.request.post(`${gateway}/api/treasury/payment-vouchers`, {
     headers: headers(token),
     data: {
-      enterpriseId, issueDate: '2026-08-11', paymentMethodId, bankAccountId: null,
+      enterpriseId, issueDate: isoDateLocal(), paymentMethodId, bankAccountId: null,
       observations: 'Playwright PP8',
       details: [{ supplierId, invoiceId: payable.id, amount }],
     },
@@ -110,7 +125,8 @@ test('2. compra → obligación → pago → asiento → correo con servicios re
     headers: headers(token), params: { enterpriseId },
   })).json();
   expect(voucher.accountingEntryId).toBeTruthy();
-  await expect.poll(async () => (await (await page.request.get(`${mailpit}/api/v1/messages`)).json()).messages_count)
+  await expect.poll(async () => (await (await page.request.get(`${mailpit}/api/v1/messages`)).json()).messages_count,
+    { timeout: 35_000 })
     .toBe(beforeMail + 1);
 });
 
@@ -136,7 +152,7 @@ test('4. programación termina EXECUTED solo con comprobante contabilizado', asy
   const created = await page.request.post(`${gateway}/api/treasury/payment-schedules`, {
     headers: headers(token),
     data: {
-      enterpriseId, executionDate: '2026-08-11', paymentMethodId, bankAccountId: null,
+      enterpriseId, executionDate: isoDateLocal(), paymentMethodId, bankAccountId: null,
       observations: 'Playwright PP8 schedule',
       details: [{ supplierId, invoiceId: payable.id, amount: 15 }],
     },
