@@ -16,7 +16,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { Third } from '../../../../GeneralMasters/ThirdParties/models/Third';
-import { ThirdType } from '../../../../GeneralMasters/ThirdParties/models/ThirdType';
+import { eThirdType } from '../../../../GeneralMasters/ThirdParties/models/eThirdType';
 import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ProductToSale } from '../../../SaleInvoice/models/ProductToSale';
@@ -90,9 +90,9 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
 
   loadSuppliers(): void {
     const entId = this.localStorageMethods.getIdEnterprise();
-    this.thirdService.getThirdList(entId).subscribe({
-      next: (data: Third[]) => {
-        this.allSuppliers = (data || []).filter((third) => this.isSupplier(third));
+    this.thirdService.getThirdsByType(entId.toString(), eThirdType.Proveedor).subscribe({
+      next: (data) => {
+        this.allSuppliers = data.content || [];
       },
       error: () => {
         this.messageService.add({
@@ -340,12 +340,6 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
 
   private stripTime(date: Date): Date {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  }
-
-  private isSupplier(third: Third): boolean {
-    return (third.thirdTypes || []).some((type: ThirdType) =>
-      String(type.thirdTypeName || '').toLowerCase().includes('proveedor'),
-    );
   }
 
   private loadUnitOfMeasureAbbreviations(): void {

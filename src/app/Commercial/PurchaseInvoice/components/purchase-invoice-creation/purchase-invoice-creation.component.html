@@ -1,69 +1,92 @@
-<div class="flex w-full h-full font-titillium bg-gray-50 md:bg-transparent">
+<div class="purchase-page flex w-full min-h-full font-titillium bg-gray-50">
   <p-toast></p-toast>
   <p-confirmDialog></p-confirmDialog>
 
-  <div class="m-2 md:m-10 w-full font-sm bg-white rounded-2xl md:rounded-3xl p-4 md:p-10">
-    <div class="grid grid-cols-1 md:grid-cols-2 md:justify-between items-center mb-8">
-      <div class="items-center mb-6 md:mb-0">
+  <div class="purchase-shell flex-1 min-w-0 m-2 md:m-6 font-sm bg-white rounded-2xl p-4 md:p-8">
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-5 mb-8">
+      <div>
         <h1 class="font-family-titillium font-bold text-2xl md:text-3xl/41 text-primary border-b-4 border-secondary inline-block pb-1">
           Creación de Factura de Compra
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-2 hidden sm:block">
+        <p class="font-family-sans font-normal text-sm mt-2 text-gray-600">
           Registre la compra al proveedor. La obligación se sincronizará automáticamente con Tesorería.
         </p>
-      </div>
-      <div class="flex justify-start md:justify-end">
-        <div class="flex flex-wrap gap-2 sm:gap-3 w-full justify-evenly md:w-auto">
-          <p-button label="Guardar" icon="pi pi-save" (click)="saveInvoice()"
-            [disabled]="lstProducts.length === 0 || !supplier" [loading]="saving"></p-button>
-          <p-button label="Cancelar" icon="pi pi-times" styleClass="p-button-danger p-button-outlined" (click)="cancel()"></p-button>
+        <div class="automation-note mt-3">
+          <i class="pi pi-check-circle"></i>
+          <span>La cuenta por pagar y el código de factura se asignan automáticamente.</span>
         </div>
       </div>
-    </div>
-
-    <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 text-sm mb-8 mt-10">
-      <div class="flex flex-col md:col-span-1">
-        <label for="supplierSearch" class="font-normal text-primary mb-1">Proveedor *</label>
-        <p-autoComplete id="supplierSearch" [(ngModel)]="supplier" [suggestions]="filteredSuppliers" size="small"
-          (completeMethod)="searchSupplier($event)" (onFocus)="searchSupplier({ query: '' })"
-          (onSelect)="onSupplierSelect()" [dropdown]="true" optionLabel="displayName" [forceSelection]="true"
-          placeholder="Busca o selecciona un proveedor..." styleClass="w-full">
-          <ng-template let-supplier pTemplate="item">
-            <div class="flex flex-col">
-              <span class="font-semibold">{{ supplier.displayName }}</span>
-              <small>{{ supplier.typeId?.typeId }} {{ supplier.idNumber }}</small>
-            </div>
-          </ng-template>
-        </p-autoComplete>
-      </div>
-
-      <div class="flex flex-col">
-        <label class="font-normal text-primary mb-1">Fecha de emisión</label>
-        <p-datepicker [(ngModel)]="currentDate" [disabled]="true" dateFormat="dd/mm/yy" styleClass="w-full" size="small"></p-datepicker>
-      </div>
-
-      <div class="flex flex-col">
-        <label for="paymentTermDays" class="font-normal text-primary mb-1">Plazo de pago (días)</label>
-        <p-inputNumber id="paymentTermDays" [(ngModel)]="paymentTermDays" [min]="0" (onInput)="onPaymentTermChange()"
-          styleClass="w-full" size="small"></p-inputNumber>
-      </div>
-
-      <div class="flex flex-col">
-        <label for="dueDate" class="font-normal text-primary mb-1">Fecha de vencimiento</label>
-        <p-datepicker id="dueDate" [(ngModel)]="dueDate" (onSelect)="onDueDateChange()" dateFormat="dd/mm/yy" size="small"
-          placeholder="Opcional: se calcula con el plazo" [showIcon]="true" iconDisplay="input" styleClass="w-full"></p-datepicker>
-      </div>
-
-      <div class="flex flex-col md:col-span-2">
-        <label for="observations" class="font-normal text-primary mb-1">Observaciones</label>
-        <input pInputText id="observations" [(ngModel)]="observations" placeholder="Observaciones opcionales" class="w-full" />
+      <div class="flex flex-wrap gap-2 lg:justify-end shrink-0">
+        <p-button label="Guardar factura" icon="pi pi-save" (click)="saveInvoice()"
+          [disabled]="lstProducts.length === 0 || !supplier" [loading]="saving"></p-button>
+        <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true"
+          (click)="cancel()"></p-button>
       </div>
     </div>
 
-    <div class="p-0 sm:p-2 text-sm mt-10">
+    <section class="form-section">
+      <div class="section-heading">
+        <i class="pi pi-file-edit"></i>
+        <div>
+          <h2>Datos de la compra</h2>
+          <p>Seleccione el tercero y defina las condiciones de pago.</p>
+        </div>
+      </div>
+
+      <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-6 text-sm">
+        <div class="flex flex-col">
+          <label for="supplierSearch" class="field-label">Proveedor <span aria-hidden="true">*</span></label>
+          <p-autoComplete id="supplierSearch" [(ngModel)]="supplier" [suggestions]="filteredSuppliers" size="small"
+            (completeMethod)="searchSupplier($event)" (onFocus)="searchSupplier({ query: '' })"
+            (onSelect)="onSupplierSelect()" [dropdown]="true" optionLabel="displayName" [forceSelection]="true"
+            placeholder="Busque por nombre o NIT..." styleClass="w-full">
+            <ng-template let-supplier pTemplate="item">
+              <div class="flex flex-col py-1">
+                <span class="font-semibold">{{ supplier.displayName }}</span>
+                <small class="text-gray-500">{{ supplier.typeId?.typeId || 'Identificación' }} {{ supplier.idNumber }}</small>
+              </div>
+            </ng-template>
+          </p-autoComplete>
+          <small class="field-help">Se muestran los proveedores activos de la empresa.</small>
+        </div>
+
+        <div class="flex flex-col">
+          <label class="field-label">Fecha de emisión</label>
+          <p-datepicker [(ngModel)]="currentDate" [disabled]="true" dateFormat="dd/mm/yy"
+            styleClass="w-full" size="small"></p-datepicker>
+        </div>
+
+        <div class="flex flex-col">
+          <label for="paymentTermDays" class="field-label">Plazo de pago (días)</label>
+          <p-inputNumber id="paymentTermDays" [(ngModel)]="paymentTermDays" [min]="0"
+            (onInput)="onPaymentTermChange()" styleClass="w-full" size="small"></p-inputNumber>
+        </div>
+
+        <div class="flex flex-col">
+          <label for="dueDate" class="field-label">Fecha de vencimiento</label>
+          <p-datepicker id="dueDate" [(ngModel)]="dueDate" (onSelect)="onDueDateChange()" dateFormat="dd/mm/yy"
+            size="small" placeholder="Se calcula con el plazo" [showIcon]="true" iconDisplay="input"
+            styleClass="w-full"></p-datepicker>
+        </div>
+
+        <div class="flex flex-col md:col-span-2">
+          <label for="observations" class="field-label">Observaciones</label>
+          <input pInputText id="observations" [(ngModel)]="observations"
+            placeholder="Información adicional para esta compra (opcional)" class="w-full" />
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section mt-6">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-        <h3 class="font-bold text-lg text-primary">Detalle de la compra</h3>
-        <p-button class="w-full sm:w-auto" label="Seleccionar productos" icon="pi pi-list" (click)="selectProducts()"
+        <div class="section-heading compact">
+          <i class="pi pi-shopping-cart"></i>
+          <div>
+            <h2>Detalle de la compra</h2>
+            <p>Agregue los productos incluidos en la factura.</p>
+          </div>
+        </div>
+        <p-button class="w-full sm:w-auto" label="Agregar productos" icon="pi pi-plus" (click)="selectProducts()"
           [disabled]="!supplier" pTooltip="Primero seleccione un proveedor" tooltipPosition="top"></p-button>
       </div>
 
@@ -116,27 +139,33 @@
           </ng-template>
         </p-table>
       </div>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-10 bg-neutral-50 p-4 rounded-lg">
-      <div>
-        <label class="block mb-2 font-semibold">Subtotal</label>
-        <p-inputNumber [(ngModel)]="subTotal" mode="currency" currency="COP" locale="es-CO" [readonly]="true" styleClass="w-full"></p-inputNumber>
+      <div class="empty-products" *ngIf="lstProducts.length === 0">
+        <i class="pi pi-shopping-cart"></i>
+        <strong>Aún no hay productos</strong>
+        <span>Seleccione un proveedor y luego agregue los productos de la compra.</span>
       </div>
-      <div>
-        <label class="block mb-2 font-semibold">Impuestos</label>
-        <p-inputNumber [(ngModel)]="taxTotal" mode="currency" currency="COP" locale="es-CO" [readonly]="true" styleClass="w-full"></p-inputNumber>
+    </section>
+
+    <section class="summary-panel mt-6">
+      <div class="summary-card">
+        <span>Subtotal</span>
+        <strong>{{ subTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
       </div>
-      <div>
-        <label class="block mb-2 font-semibold">Abono inicial</label>
+      <div class="summary-card">
+        <span>Impuestos</span>
+        <strong>{{ taxTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
+      </div>
+      <div class="summary-card editable">
+        <label for="initialPayment">Abono inicial</label>
         <p-inputNumber [(ngModel)]="initialPayment" mode="currency" currency="COP" locale="es-CO" [min]="0"
-          (onInput)="calculateTotals()" styleClass="w-full"></p-inputNumber>
+          inputId="initialPayment" (onInput)="calculateTotals()" styleClass="w-full"></p-inputNumber>
       </div>
-      <div>
-        <label class="block mb-2 font-semibold">Total / Pendiente</label>
-        <p-inputNumber [(ngModel)]="total" mode="currency" currency="COP" locale="es-CO" [readonly]="true" styleClass="w-full mb-2"></p-inputNumber>
-        <p-inputNumber [(ngModel)]="pendingTotal" mode="currency" currency="COP" locale="es-CO" [readonly]="true" styleClass="w-full"></p-inputNumber>
+      <div class="summary-card total-card">
+        <span>Total factura</span>
+        <strong>{{ total | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
+        <small>Pendiente: {{ pendingTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</small>
       </div>
-    </div>
+    </section>
   </div>
 </div>
