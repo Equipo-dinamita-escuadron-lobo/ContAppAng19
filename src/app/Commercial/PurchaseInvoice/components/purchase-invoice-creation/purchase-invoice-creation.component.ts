@@ -343,11 +343,12 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
   }
 
   private loadUnitOfMeasureAbbreviations(): void {
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
     this.lstProducts.forEach((prod) => {
       if (!prod.unitOfMeasureId) {
         return;
       }
-      this.unitMeasureService.getUnitOfMeasuresId(String(prod.unitOfMeasureId)).subscribe({
+      this.unitMeasureService.getUnitOfMeasuresId(String(prod.unitOfMeasureId), enterpriseId).subscribe({
         next: (response: { abbreviation: string }) => {
           prod.unitOfMeasure = response.abbreviation;
         },
