@@ -278,6 +278,7 @@
           <td>{{ voucher.issueDate }}</td>
           <td>
             <p-tag [value]="statusLabel(voucher.status)" [severity]="getStatusSeverity(voucher.status)"></p-tag>
+            <small *ngIf="voucher.failureReason" class="block text-red-600 mt-1">{{ voucher.failureReason }}</small>
           </td>
           <td class="text-right font-semibold">{{ voucher.total | currency:'COP' }}</td>
           <td>{{ voucher.accountingEntryId || 'Pendiente' }}</td>
@@ -288,6 +289,8 @@
                 [label]="voucher.status === 'FAILED' ? 'Reintentar' : 'Contabilizar'"
                 icon="pi pi-check"
                 size="small"
+                [loading]="postingVoucherId === voucher.id"
+                [disabled]="busy && postingVoucherId !== voucher.id"
                 (onClick)="post(voucher)">
               </p-button>
               <p-button
