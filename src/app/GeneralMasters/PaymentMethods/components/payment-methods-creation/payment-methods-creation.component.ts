@@ -8,6 +8,7 @@ import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { PaymentMethodsServiceService } from '../../services/payment-methods-service.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
+import { AccountCataloguePresentationService } from '../../../AccountCatalogue/services/account-catalogue-presentation.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
 import { AccountingAccountOption } from '../../models/PaymentMethods';
 
@@ -28,7 +29,8 @@ export class PaymentMethodsCreationComponent {
     private readonly router: Router,
     private readonly messageService: MessageService,
     private readonly service: PaymentMethodsServiceService,
-    private readonly chartAccountService: ChartAccountService
+    private readonly chartAccountService: ChartAccountService,
+    private readonly accountPresentation: AccountCataloguePresentationService
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -45,12 +47,12 @@ export class PaymentMethodsCreationComponent {
       // Cargar cuentas auxiliares activas para el dropdown
       this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
         next: (accounts: Account[]) => {
-          this.accountingAccountsOptions = accounts
-            .filter((account: Account) => account.id !== undefined)
+          this.accountingAccountsOptions = this.accountPresentation
+            .filterActiveAuxiliaryAccounts(accounts)
             .map((account: Account) => ({
-              label: `${account.code} - ${account.description}`,
-              value: account.id!, // Usar ID como value
-              code: account.code // Mantener código para referencia
+              label: this.accountPresentation.formatAccountingAccountLabel(account),
+              value: account.id!,
+              code: account.code,
             }));
         },
         error: (error: any) => {
@@ -87,9 +89,14 @@ export class PaymentMethodsCreationComponent {
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
     const selectedAccountId = this.form.value.accountingAccount;
-
-    // Obtener la opción seleccionada por ID
-    const selectedOption = this.accountingAccountsOptions.find(option => option.value === selectedAccountId);
+    if (!this.accountingAccountsOptions.some((option) => option.value === selectedAccountId)) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Cuenta no válida',
+        detail: 'Seleccione una cuenta contable activa del catálogo.',
+      });
+      return;
+    }
 
     const payload = {
       idEnterprise: enterpriseId,

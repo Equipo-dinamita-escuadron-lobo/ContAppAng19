@@ -34,7 +34,7 @@ export class AgingReportService {
     }).pipe(
       map(({ items, accounts, thirds }) => {
         const accountMap = new Map<string, string>(
-          (accounts || []).map((a: any) => [String(a.id), `${a.code} - ${a.description}`] as [string, string]),
+          (accounts || []).map((a: any) => [String(a.code), `${a.code} - ${a.description}`] as [string, string]),
         );
         const thirdMap = new Map<number, string>(
           (thirds?.content || []).map((t: any) => {
@@ -123,7 +123,7 @@ export class AgingReportService {
           }),
         );
         const accountLabels = new Map<string, string>(
-          (accounts || []).map((a: any) => [String(a.id), `${a.code} - ${a.description}`] as [string, string]),
+          (accounts || []).map((a: any) => [String(a.code), `${a.code} - ${a.description}`] as [string, string]),
         );
 
         const pending = payables || [];
@@ -136,12 +136,15 @@ export class AgingReportService {
           .sort((a, b) => a.label.localeCompare(b.label));
 
         const documents: DocumentOption[] = pending
-          .map((p) => ({
-            label: `${p.reference} · Prov. ${p.supplierId}`,
-            value: String(p.reference),
-            supplierId: Number(p.supplierId),
-            accountCode: String(p.payableAccountCode),
-          }))
+          .map((p) => {
+            const supplierName = thirdNames.get(Number(p.supplierId)) || `Proveedor ${p.supplierId}`;
+            return {
+              label: `${p.reference} · ${supplierName}`,
+              value: String(p.reference),
+              supplierId: Number(p.supplierId),
+              accountCode: String(p.payableAccountCode),
+            };
+          })
           .sort((a, b) => a.label.localeCompare(b.label));
 
         const accountCodes = [...new Set(pending.map((p) => String(p.payableAccountCode)))];
@@ -173,7 +176,7 @@ export class AgingReportService {
           'Proveedor',
           'Cuenta',
           'Vence',
-          'Dias vencidos',
+          'Días vencidos',
           'Total',
           'Corriente',
           '1-30',

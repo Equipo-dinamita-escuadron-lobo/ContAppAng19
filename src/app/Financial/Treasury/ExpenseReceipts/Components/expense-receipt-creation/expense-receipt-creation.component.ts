@@ -25,6 +25,14 @@ import { PurchaseInvoice } from '../../Model/Models';
 import { ExpenseReceiptCreateRequest } from '../../Model/ExpenseReceiptCreateRequest';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { BankAccountsService, BankAccount } from '../../../../../GeneralMasters/BankAccounts/services/bank-accounts.service';
+import { forkJoin } from 'rxjs';
+import {
+  buildActiveAccountIdSet,
+  filterSelectablePaymentMethods,
+} from '../../../Shared/treasury-account.integration';
+import { translatePaymentMethodName } from '../../../Shared/treasury-status-labels';
+import { ContextualHelpComponent } from '../../../../../Shared/Components/contextual-help/contextual-help.component';
+import { TREASURY_HELP } from '../../../Shared/treasury-help-content';
 
 // Modelos adicionales para el frontend
 interface DropdownOption {
@@ -57,6 +65,7 @@ interface Supplier {
     MessagesModule,
     FormsModule,
     CardModule,
+    ContextualHelpComponent,
   ],
   templateUrl: './expense-receipt-creation.component.html',
   styleUrl: './expense-receipt-creation.component.css',
@@ -74,6 +83,11 @@ export class ExpenseReceiptCreationComponent {
   receiptTypeOptions: DropdownOption[] = [];
   auxiliaryAccounts: DropdownOption[] = [];
   requiresBankAccount = false;
+  readonly help = TREASURY_HELP.makePayment;
+  readonly supplierEmptyMessage = 'No hay proveedores con facturas pendientes';
+  readonly supplierFilterEmptyMessage = 'No se encontraron proveedores que coincidan con la búsqueda';
+  supplierSearchQuery = '';
+  allSuppliersCount = 0;
 
   // Para Autocomplete de Proveedor
   suppliers: Supplier[] = [];
@@ -118,6 +132,9 @@ export class ExpenseReceiptCreationComponent {
   ngOnInit(): void {
     this.initializeForm();
     this.loadDropdownOptions();
+    this.expenseReceiptService.getSuppliers('').subscribe((suppliers) => {
+      this.allSuppliersCount = suppliers.length;
+    });
     this.updateTotalAmount();
     this.subscribeToFormChanges();
 
@@ -181,13 +198,20 @@ export class ExpenseReceiptCreationComponent {
       return;
     }
 
-    // Métodos de pago reales de la empresa (solo activos)
-    this.paymentMethodService.findAllActive(enterpriseId).subscribe({
-      next: (page) => {
-        this.paymentMethods = (page.content || []).filter(m => m.status !== false);
-        this.paymentMethodOptions = this.paymentMethods.map(method => ({
+    // Métodos de pago con cuenta contable activa en catálogo
+    forkJoin({
+      methods: this.paymentMethodService.findAllActive(enterpriseId),
+      accounts: this.chartAccountService.getListAuxiliaryAccounts(enterpriseId),
+    }).subscribe({
+      next: ({ methods, accounts }) => {
+        const activeAccountIds = buildActiveAccountIdSet(accounts);
+        this.paymentMethods = filterSelectablePaymentMethods(
+          (methods.content || []).filter((method) => method.status !== false),
+          activeAccountIds,
+        );
+        this.paymentMethodOptions = this.paymentMethods.map((method) => ({
           id: method.id!,
-          label: `${method.name} (${method.accountingAccount})`,
+          label: `${translatePaymentMethodName(method.name)} (${method.accountingAccount})`,
           requiresBankAccount: Boolean(method.requiresBankAccount),
         }));
       },
@@ -200,7 +224,7 @@ export class ExpenseReceiptCreationComponent {
           summary: 'Métodos de pago',
           detail: 'No se pudieron cargar los métodos de pago de la empresa.',
         });
-      }
+      },
     });
 
     // Cuentas bancarias reales (para Cheque / Transferencia)
@@ -324,9 +348,20 @@ export class ExpenseReceiptCreationComponent {
 
   // Autocompletado de proveedores
   searchSupplier(event: any): void {
-    this.expenseReceiptService.getSuppliers(event.query).subscribe(data => {
+    this.supplierSearchQuery = String(event.query || '').trim();
+    this.expenseReceiptService.getSuppliers(this.supplierSearchQuery).subscribe((data) => {
       this.filteredSuppliers = data;
+      if (!this.supplierSearchQuery) {
+        this.allSuppliersCount = data.length;
+      }
     });
+  }
+
+  get supplierAutocompleteEmptyMessage(): string {
+    if (this.allSuppliersCount === 0) {
+      return this.supplierEmptyMessage;
+    }
+    return this.supplierFilterEmptyMessage;
   }
 
   formatCurrency(amount: number): string {
@@ -417,12 +452,14 @@ export class ExpenseReceiptCreationComponent {
   }
 
   isFormValidForSubmission(): boolean {
-    // Validar que se haya seleccionado al menos una factura
     if (this.selectedInvoices.length === 0) {
       return false;
     }
 
-    // Validar los campos del formulario
+    if (!this.requiresBankAccount && this.expenseReceiptForm.get('bankAccountId')?.value) {
+      return false;
+    }
+
     const basicValidation = this.expenseReceiptForm.get('supplier')?.valid &&
                            this.expenseReceiptForm.get('postToAccount')?.valid &&
                            this.expenseReceiptForm.get('transferAccount')?.valid &&
@@ -451,12 +488,17 @@ export class ExpenseReceiptCreationComponent {
     }
 
     if (!this.isFormValidForSubmission()) {
+      const bankValue = this.expenseReceiptForm.get('bankAccountId')?.value;
+      let detail = 'Por favor, complete todos los campos requeridos.';
+      if (this.requiresBankAccount && !bankValue) {
+        detail = 'El método de pago exige una cuenta bancaria.';
+      } else if (!this.requiresBankAccount && bankValue) {
+        detail = 'El método seleccionado no admite cuenta bancaria.';
+      }
       this.messageService.add({
         severity: 'error',
         summary: 'Error de Validación',
-        detail: this.requiresBankAccount && !this.expenseReceiptForm.get('bankAccountId')?.value
-          ? 'El método de pago exige una cuenta bancaria.'
-          : 'Por favor, complete todos los campos requeridos.'
+        detail,
       });
       return;
     }
@@ -469,7 +511,7 @@ export class ExpenseReceiptCreationComponent {
       this.messageService.add({
         severity: 'error',
         summary: 'Error de Configuración',
-        detail: 'No se encontró el ID de la empresa. Por favor, inicie sesión de nuevo.'
+        detail: 'No se encontró el identificador de la empresa. Por favor, inicie sesión de nuevo.'
       });
       return;
     }

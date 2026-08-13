@@ -3,15 +3,33 @@
     <!-- Page Header -->
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">Reportes de Proveedores</h1>
+            <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2 inline-block">Reportes de Proveedores</h1>
+            <app-contextual-help
+                class="ml-2 inline-flex align-middle"
+                [title]="help.title"
+                [summary]="help.summary"
+                [helpCenterSlug]="help.slug">
+            </app-contextual-help>
             <p class="text-gray-600">Consulte y analice el estado de cuentas de todos sus proveedores</p>
         </div>
         <div class="flex gap-2">
             <p-button
-                label="Exportar"
-                icon="pi pi-download"
-                severity="secondary"
-                (onClick)="onExportData()">
+                label="Exportar PDF"
+                icon="pi pi-file-pdf"
+                severity="danger"
+                [outlined]="true"
+                [loading]="exportingPdf"
+                [disabled]="!filteredVendors.length"
+                (onClick)="exportToPdf()">
+            </p-button>
+            <p-button
+                label="Exportar CSV"
+                icon="pi pi-file-excel"
+                severity="success"
+                [outlined]="true"
+                [loading]="exportingCsv"
+                [disabled]="!filteredVendors.length"
+                (onClick)="exportToCsv()">
             </p-button>
         </div>
     </div>
@@ -215,12 +233,8 @@
                         <div class="flex flex-col items-center gap-4">
                             <i class="pi pi-inbox text-4xl text-gray-400"></i>
                             <div>
-                                <p class="text-lg font-semibold text-gray-600 mb-2">No se encontraron proveedores</p>
-                                <p class="text-gray-500">
-                                    {{ filteredVendors.length === 0 && filteredVendors.length < vendors.length
-                                        ? 'Intente ajustar los filtros de búsqueda'
-                                        : 'No hay proveedores registrados en el sistema' }}
-                                </p>
+                                <p class="text-lg font-semibold text-gray-600 mb-2">{{ getEmptyTitle() }}</p>
+                                <p class="text-gray-500" *ngIf="getEmptySubtitle()">{{ getEmptySubtitle() }}</p>
                             </div>
                         </div>
                     </td>

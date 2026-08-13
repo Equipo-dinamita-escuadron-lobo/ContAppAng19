@@ -1,21 +1,37 @@
 <div class="container-fluid p-4">
   <div class="flex justify-between items-center mb-6">
     <div>
-      <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">
+      <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2 inline-block">
         Vencimiento por edades
       </h1>
+      <app-contextual-help
+        class="ml-2 inline-flex align-middle"
+        [title]="help.title"
+        [summary]="help.summary"
+        [helpCenterSlug]="help.slug">
+      </app-contextual-help>
       <p class="text-gray-600">
         Obligaciones de proveedores con saldo pendiente, agrupadas por días de mora a la fecha de corte
       </p>
     </div>
     <div class="flex gap-2">
       <p-button
-        label="Exportar CSV"
-        icon="pi pi-download"
-        severity="secondary"
-        [loading]="exporting"
+        label="Exportar PDF"
+        icon="pi pi-file-pdf"
+        severity="danger"
+        [outlined]="true"
+        [loading]="exportingPdf"
         [disabled]="!reportData?.lines?.length"
-        (onClick)="onExportData()">
+        (onClick)="exportToPdf()">
+      </p-button>
+      <p-button
+        label="Exportar CSV"
+        icon="pi pi-file-excel"
+        severity="success"
+        [outlined]="true"
+        [loading]="exportingCsv"
+        [disabled]="!reportData?.lines?.length"
+        (onClick)="exportToCsv()">
       </p-button>
     </div>
   </div>
@@ -201,8 +217,8 @@
         <tr>
           <td [attr.colspan]="filterForm.get('includeDocuments')?.value ? 11 : 6" class="text-center py-8">
             <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
-            <p class="text-lg font-semibold text-gray-600 mb-1">No hay obligaciones pendientes</p>
-            <p class="text-gray-500">Ajuste filtros o cree una factura de compra con saldo pendiente</p>
+            <p class="text-lg font-semibold text-gray-600 mb-1">{{ emptyFiltersMessage }}</p>
+            <p class="text-gray-500">Ajuste los filtros o genere el reporte con otros criterios</p>
           </td>
         </tr>
       </ng-template>

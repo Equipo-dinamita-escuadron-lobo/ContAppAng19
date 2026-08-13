@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -12,18 +13,32 @@ import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
 import { PaymentMethodsServiceService } from '../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
 import { ChartAccountService } from '../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { BankAccountsService } from '../../../GeneralMasters/BankAccounts/services/bank-accounts.service';
+import { ThirdService } from '../../../GeneralMasters/ThirdParties/Services/third.service';
 import { TreasuryApiService } from '../Shared/treasury-api.service';
 import { Payable, PaymentSchedule, PaymentVoucher } from '../Shared/treasury-api.models';
 import {
   accountingEntryStatusLabel,
+  exportErrorDetail,
+  exportSuccessDetail,
   scheduleStatusLabel,
+  translatePaymentMethodName,
   voucherStatusFilterOptions,
   voucherStatusLabel,
 } from '../Shared/treasury-status-labels';
+import { TreasuryExportService } from '../Shared/treasury-export.service';
+import {
+  buildActiveAccountIdSet,
+  filterSelectablePaymentMethods,
+} from '../Shared/treasury-account.integration';
+import { buildThirdPartyNameMap, resolveSupplierName } from '../Shared/treasury-third-party.integration';
+import { ContextualHelpComponent } from '../../../Shared/Components/contextual-help/contextual-help.component';
+import { TREASURY_HELP } from '../Shared/treasury-help-content';
 
 @Component({
   selector: 'app-treasury-operations',
@@ -40,10 +55,13 @@ import {
     MessageModule,
     TableModule,
     TagModule,
-    TooltipModule
+    TooltipModule,
+    ToastModule,
+    ContextualHelpComponent,
   ],
   templateUrl: './treasury-operations.component.html',
-  styleUrl: './treasury-operations.component.css'
+  styleUrl: './treasury-operations.component.css',
+  providers: [MessageService],
 })
 export class TreasuryOperationsComponent implements OnInit {
   payables: Payable[] = [];
@@ -51,6 +69,7 @@ export class TreasuryOperationsComponent implements OnInit {
   schedules: PaymentSchedule[] = [];
   writeOffs: any[] = [];
   methods: any[] = [];
+  methodOptions: { id: number; label: string }[] = [];
   banks: any[] = [];
   accounts: any[] = [];
   bankOptions: { id: number; label: string }[] = [];
@@ -72,6 +91,10 @@ export class TreasuryOperationsComponent implements OnInit {
   accountingMovements: { account: string; description: string; debit: number; credit: number }[] = [];
   accountingDebitTotal = 0;
   accountingCreditTotal = 0;
+  exportingPdf = false;
+  exportingCsv = false;
+  readonly help = TREASURY_HELP.operations;
+  private supplierNames = new Map<number, string>();
 
   readonly voucherStatusOptions = voucherStatusFilterOptions();
 
@@ -87,7 +110,10 @@ export class TreasuryOperationsComponent implements OnInit {
     private readonly storage: LocalStorageMethods,
     private readonly paymentMethods: PaymentMethodsServiceService,
     private readonly chart: ChartAccountService,
-    private readonly bankAccounts: BankAccountsService
+    private readonly bankAccounts: BankAccountsService,
+    private readonly thirds: ThirdService,
+    private readonly exportService: TreasuryExportService,
+    private readonly messageService: MessageService,
   ) {
     this.enterpriseId = this.storage.getIdEnterprise();
   }
@@ -111,14 +137,17 @@ export class TreasuryOperationsComponent implements OnInit {
       writeOffs: this.api.writeOffs(this.enterpriseId),
       methods: this.paymentMethods.findAllActive(this.enterpriseId),
       banks: this.bankAccounts.findAllActive(this.enterpriseId),
-      accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId)
+      accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId),
+      thirds: this.thirds.getThirdParties(this.enterpriseId, 0, 1000).pipe(
+        catchError(() => of({ content: [] } as any)),
+      ),
     }).subscribe({
       next: data => {
         this.payables = data.payables;
+        this.supplierNames = buildThirdPartyNameMap(data.thirds?.content || []);
         this.vouchers = data.vouchers.content;
         this.schedules = data.schedules;
         this.writeOffs = data.writeOffs;
-        this.methods = data.methods.content;
         this.banks = data.banks.content;
         this.bankOptions = this.banks.map((bank: any) => ({
           id: bank.id,
@@ -128,6 +157,20 @@ export class TreasuryOperationsComponent implements OnInit {
         this.accountOptions = this.accounts.map((account: any) => ({
           id: account.id,
           label: `${account.code} - ${account.description}`
+        }));
+        const activeAccountIds = buildActiveAccountIdSet(data.accounts);
+        this.methods = filterSelectablePaymentMethods(
+          data.methods.content,
+          activeAccountIds,
+          this.paymentMethodId ?? null,
+        );
+        if (this.paymentMethodId && !this.methods.some((method) => method.id === this.paymentMethodId)) {
+          const preserved = data.methods.content.find((method: any) => method.id === this.paymentMethodId);
+          if (preserved) this.methods = [preserved, ...this.methods];
+        }
+        this.methodOptions = this.methods.map((method) => ({
+          id: method.id,
+          label: translatePaymentMethodName(method.name),
         }));
         this.payables.forEach(p => this.amounts[p.id] ??= p.availableAmount);
         this.busy = false;
@@ -183,15 +226,15 @@ export class TreasuryOperationsComponent implements OnInit {
 
   private paymentSelectionValid(): boolean {
     if (!this.paymentMethodId) {
-      this.error = 'Seleccione un metodo de pago activo.';
+      this.error = 'Seleccione un método de pago activo.';
       return false;
     }
     if (this.requiresBankAccount && !this.bankAccountId) {
-      this.error = 'El metodo seleccionado exige una cuenta bancaria.';
+      this.error = 'El método seleccionado exige una cuenta bancaria.';
       return false;
     }
     if (!this.requiresBankAccount && this.bankAccountId) {
-      this.error = 'El metodo seleccionado no admite cuenta bancaria.';
+      this.error = 'El método seleccionado no admite cuenta bancaria.';
       return false;
     }
     return true;
@@ -323,5 +366,107 @@ export class TreasuryOperationsComponent implements OnInit {
         this.busy = false;
       }
     });
+  }
+
+  get hasExportData(): boolean {
+    return (
+      this.payables.length > 0 ||
+      this.vouchers.length > 0 ||
+      this.schedules.length > 0 ||
+      this.writeOffs.length > 0
+    );
+  }
+
+  exportToCsv(): void {
+    this.runExport('csv');
+  }
+
+  exportToPdf(): void {
+    this.runExport('pdf');
+  }
+
+  private runExport(format: 'csv' | 'pdf'): void {
+    if (!this.hasExportData) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin datos',
+        detail: 'No hay información de operaciones para exportar.',
+      });
+      return;
+    }
+
+    const sections = this.buildExportSections();
+    const filename = this.exportService.datedFilename('operaciones-tesoreria', format);
+    const loadingFlag = format === 'csv' ? 'exportingCsv' : 'exportingPdf';
+    this[loadingFlag] = true;
+
+    try {
+      if (format === 'csv') {
+        this.exportService.downloadCsvSections(filename, sections);
+      } else {
+        this.exportService.downloadPdfSections('Operaciones de Tesorería', filename, sections);
+      }
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Exportado',
+        detail: exportSuccessDetail('operaciones', format),
+      });
+    } catch (error) {
+      console.error(`Error al exportar ${format}:`, error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: exportErrorDetail(format),
+      });
+    } finally {
+      this[loadingFlag] = false;
+    }
+  }
+
+  private buildExportSections() {
+    return [
+      {
+        title: 'Obligaciones pendientes',
+        headers: ['Proveedor', 'Factura', 'Vence', 'Disponible'],
+        rows: this.payables.map((item) => [
+          resolveSupplierName(this.supplierNames, item.supplierId),
+          item.reference,
+          item.dueDate,
+          item.availableAmount,
+        ]),
+      },
+      {
+        title: 'Comprobantes',
+        headers: ['Número', 'Fecha', 'Estado', 'Total', 'Asiento'],
+        rows: this.vouchers.map((item) => [
+          item.voucherNumber,
+          item.issueDate,
+          this.statusLabel(item.status),
+          item.total,
+          item.accountingEntryId || 'Pendiente',
+        ]),
+      },
+      {
+        title: 'Programaciones',
+        headers: ['Fecha', 'Estado', 'Total', 'Reintentos', 'Comprobante'],
+        rows: this.schedules.map((item) => [
+          item.executionDate,
+          this.scheduleLabel(item.status),
+          item.total,
+          item.retryCount,
+          item.voucherId || '-',
+        ]),
+      },
+      {
+        title: 'Bajas de CxP',
+        headers: ['N.º', 'Estado', 'Total', 'Motivo'],
+        rows: this.writeOffs.map((item) => [
+          item.id,
+          this.writeOffLabel(item.status),
+          item.total,
+          item.reason || '-',
+        ]),
+      },
+    ];
   }
 }

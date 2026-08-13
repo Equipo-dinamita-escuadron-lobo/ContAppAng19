@@ -25,14 +25,29 @@ export class PurchaseBillService {
   }
 
   getSuppliers(query = ''): Observable<Supplier[]> {
-    return this.api.pending(this.enterpriseId()).pipe(
-      map((items) =>
-        [...new Set(items.map((item) => item.supplierId))]
+    return forkJoin({
+      payables: this.api.pending(this.enterpriseId()),
+      thirds: this.thirds.getThirdParties(this.enterpriseId(), 0, 1000).pipe(
+        catchError(() => of({ content: [] } as any)),
+      ),
+    }).pipe(
+      map(({ payables, thirds }) => {
+        const thirdNames = new Map<number, string>(
+          (thirds?.content || []).map((t: any) => {
+            const name =
+              (t.socialReason as string) ||
+              [t.names, t.lastNames].filter(Boolean).join(' ') ||
+              `Proveedor ${t.thId}`;
+            return [Number(t.thId), String(name)] as [number, string];
+          }),
+        );
+
+        return [...new Set(payables.map((item) => item.supplierId))]
           .map((id) => {
-            const payable = items.find((item) => item.supplierId === id)!;
+            const payable = payables.find((item) => item.supplierId === id)!;
             return {
               id,
-              name: `Proveedor ${id}`,
+              name: thirdNames.get(id) || `Proveedor ${id}`,
               accountsPayableAccount: {
                 id: payable.payableAccountId,
                 code: payable.payableAccountCode,
@@ -40,8 +55,8 @@ export class PurchaseBillService {
               },
             };
           })
-          .filter((item) => item.name.toLowerCase().includes(query.toLowerCase())),
-      ),
+          .filter((item) => item.name.toLowerCase().includes(query.toLowerCase()));
+      }),
     );
   }
 
@@ -94,7 +109,7 @@ export class PurchaseBillService {
             status === 'PAID'
               ? 'Pagada'
               : status === 'PARTIALLY_PAID'
-                ? 'Pago parcial'
+                ? 'Abono parcial'
                 : 'Pendiente de pago';
 
           return {

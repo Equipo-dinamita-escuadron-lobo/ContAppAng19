@@ -20,6 +20,14 @@ import { PurchaseBillService } from '../../Services/purchase-bill.service';
 import { BillFilterOption, PurchaseBillListView } from '../../Models/PurchaseBill';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { TreasuryExportService } from '../../../Shared/treasury-export.service';
+import {
+  exportErrorDetail,
+  exportSuccessDetail,
+  reportEmptyFiltersMessage,
+} from '../../../Shared/treasury-status-labels';
+import { ContextualHelpComponent } from '../../../../../Shared/Components/contextual-help/contextual-help.component';
+import { TREASURY_HELP } from '../../../Shared/treasury-help-content';
 
 interface StatusOption {
   label: string;
@@ -51,6 +59,7 @@ interface CutoffDateOption {
     ToastModule,
     ConfirmDialogModule,
     DialogModule,
+    ContextualHelpComponent,
   ],
   templateUrl: './bill-list.component.html',
   styleUrls: ['./bill-list.component.css'],
@@ -71,7 +80,7 @@ export class BillListComponent implements OnInit {
   statusOptions: StatusOption[] = [
     { label: 'Todos los estados', value: '' },
     { label: 'Pendiente de pago', value: 'POSTED' },
-    { label: 'Pago parcial', value: 'PARTIALLY_PAID' },
+    { label: 'Abono parcial', value: 'PARTIALLY_PAID' },
     { label: 'Pagada', value: 'PAID' },
   ];
 
@@ -90,6 +99,10 @@ export class BillListComponent implements OnInit {
   loading = false;
   detailVisible = false;
   selectedBill: PurchaseBillListView | null = null;
+  exportingPdf = false;
+  exportingCsv = false;
+  readonly emptyFiltersMessage = reportEmptyFiltersMessage();
+  readonly help = TREASURY_HELP.paymentSchedule;
 
   constructor(
     private fb: FormBuilder,
@@ -97,6 +110,7 @@ export class BillListComponent implements OnInit {
     private purchaseBillService: PurchaseBillService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
+    private exportService: TreasuryExportService,
   ) {}
 
   ngOnInit(): void {
@@ -199,7 +213,7 @@ export class BillListComponent implements OnInit {
     this.allBillIdOptions = bills
       .map((b) => ({
         value: b.billId,
-        label: `${b.billId} · Prov. ${b.supplierId}`,
+        label: `${b.billId} · Proveedor ${b.supplierId}`,
         supplierId: b.supplierId,
       }))
       .sort((a, b) => String(a.label).localeCompare(String(b.label)));
@@ -398,42 +412,65 @@ export class BillListComponent implements OnInit {
     }).format(new Date(date));
   }
 
-  onExportData(): void {
+  exportToCsv(): void {
+    this.runExport('csv');
+  }
+
+  exportToPdf(): void {
+    this.runExport('pdf');
+  }
+
+  private runExport(format: 'csv' | 'pdf'): void {
     if (!this.filteredBills.length) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Sin datos',
-        detail: 'No hay facturas para exportar con los filtros actuales.',
+        detail: this.emptyFiltersMessage,
       });
       return;
     }
 
-    const header = ['Factura', 'Fecha', 'Proveedor', 'Total', 'Saldo', 'Estado'].join(',');
-    const rows = this.filteredBills.map((b) =>
-      [
-        b.billId,
-        this.formatDate(b.dateOpened),
-        `"${b.supplierName}"`,
-        b.total,
-        b.pendingBalance ?? '',
-        b.statusDisplay,
-      ].join(','),
-    );
-    const blob = new Blob([[header, ...rows].join('\n')], {
-      type: 'text/csv;charset=utf-8;',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `programacion-pagos-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const headers = ['Factura', 'Fecha', 'Proveedor', 'Total', 'Pagado', 'Saldo', 'Estado'];
+    const rows = this.filteredBills.map((bill) => [
+      bill.billId,
+      this.formatDate(bill.dateOpened),
+      bill.supplierName,
+      bill.total,
+      bill.paidAmount ?? 0,
+      bill.pendingBalance ?? 0,
+      bill.statusDisplay,
+    ]);
+    const options = {
+      title: 'Programación de pagos de factura',
+      subtitle: `${rows.length} obligación(es) exportada(s)`,
+      filename: this.exportService.datedFilename('programacion-pagos', format),
+      headers,
+      rows,
+    };
 
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Exportado',
-      detail: 'Se descargó el CSV de programaciones.',
-    });
+    const loadingFlag = format === 'csv' ? 'exportingCsv' : 'exportingPdf';
+    this[loadingFlag] = true;
+    try {
+      if (format === 'csv') {
+        this.exportService.downloadCsv(options);
+      } else {
+        this.exportService.downloadPdf(options);
+      }
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Exportado',
+        detail: exportSuccessDetail('programación de pagos', format),
+      });
+    } catch (error) {
+      console.error(`Error al exportar ${format}:`, error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: exportErrorDetail(format),
+      });
+    } finally {
+      this[loadingFlag] = false;
+    }
   }
 
   getPartialCount(): number {

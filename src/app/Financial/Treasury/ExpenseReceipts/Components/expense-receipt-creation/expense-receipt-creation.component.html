@@ -6,6 +6,12 @@
         <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
             Efectuar Pago
         </h1>
+        <app-contextual-help
+            class="ml-3 inline-flex align-middle"
+            [title]="help.title"
+            [summary]="help.summary"
+            [helpCenterSlug]="help.slug">
+        </app-contextual-help>
         <p class="mt-2 text-base text-gray-600">
             Seleccione el proveedor y las facturas a pagar. Esto generará un Comprobante de Egreso (documento contable de pago).
         </p>
@@ -29,6 +35,7 @@
                         field="name"
                         placeholder="Buscar proveedor..."
                         [dropdown]="true"
+                        [emptyMessage]="supplierAutocompleteEmptyMessage"
                         (onSelect)="onSupplierSelect($event)"
                         [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('supplier')?.invalid && expenseReceiptForm.get('supplier')?.touched}">
                     </p-autoComplete>
@@ -152,7 +159,7 @@
                         [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('postToAccount')?.invalid && expenseReceiptForm.get('postToAccount')?.touched}">
                     </p-dropdown>
                     @if (expenseReceiptForm.get('postToAccount')?.touched && expenseReceiptForm.get('postToAccount')?.invalid) {
-                        <small class="p-error error-message">La cuenta Post To es requerida.</small>
+                        <small class="p-error error-message">La cuenta por pagar es requerida.</small>
                     }
                     <small class="text-gray-500">Solo cuentas de proveedores / pasivo corriente (CxP)</small>
                 </div>

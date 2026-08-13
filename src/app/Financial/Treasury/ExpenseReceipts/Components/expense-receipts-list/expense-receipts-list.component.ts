@@ -15,7 +15,10 @@ import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { ExpenseReceiptService } from '../../Service/expense-receipt.service';
 import { DropdownOption, ExpenseReceiptView, ReceiptFilterOption } from '../../Model/Models';
-import { voucherStatusFilterOptions } from '../../../Shared/treasury-status-labels';
+import { exportErrorDetail, exportSuccessDetail, reportEmptyFiltersMessage, voucherStatusFilterOptions } from '../../../Shared/treasury-status-labels';
+import { ContextualHelpComponent } from '../../../../../Shared/Components/contextual-help/contextual-help.component';
+import { TREASURY_HELP } from '../../../Shared/treasury-help-content';
+import { TreasuryExportService } from '../../../Shared/treasury-export.service';
 
 @Component({
   selector: 'app-expense-receipts-list',
@@ -34,6 +37,7 @@ import { voucherStatusFilterOptions } from '../../../Shared/treasury-status-labe
     CardModule,
     ToastModule,
     TagModule,
+    ContextualHelpComponent,
   ],
   templateUrl: './expense-receipts-list.component.html',
   styleUrls: ['./expense-receipts-list.component.css'],
@@ -50,12 +54,17 @@ export class ExpenseReceiptsListComponent implements OnInit {
   allReceiptCodeOptions: ReceiptFilterOption[] = [];
 
   statusOptions: DropdownOption[] = voucherStatusFilterOptions();
+  readonly emptyFiltersMessage = reportEmptyFiltersMessage();
+  readonly help = TREASURY_HELP.expenseReceipts;
+  exportingPdf = false;
+  exportingCsv = false;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private expenseReceiptService: ExpenseReceiptService,
     private messageService: MessageService,
+    private exportService: TreasuryExportService,
   ) {}
 
   ngOnInit(): void {
@@ -219,13 +228,13 @@ export class ExpenseReceiptsListComponent implements OnInit {
       case 'pagado':
       case 'completado':
         return 'success';
-      case 'sin contabilizar':
+      case 'borrador':
       case 'contabilizando':
       case 'pendiente':
         return 'warning';
       case 'anulado':
-      case 'no se pudo contabilizar':
-      case 'no se pudo anular':
+      case 'fallido':
+      case 'anulación fallida':
       case 'anulando':
       case 'cancelado':
         return 'danger';
@@ -271,40 +280,62 @@ export class ExpenseReceiptsListComponent implements OnInit {
     }).format(new Date(date));
   }
 
-  onExportData(): void {
+  exportToCsv(): void {
+    this.runExport('csv');
+  }
+
+  exportToPdf(): void {
+    this.runExport('pdf');
+  }
+
+  private runExport(format: 'csv' | 'pdf'): void {
     if (!this.filteredReceipts.length) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Sin datos',
-        detail: 'No hay comprobantes para exportar con los filtros actuales.',
+        detail: this.emptyFiltersMessage,
       });
       return;
     }
 
-    const header = ['Código', 'Fecha', 'Proveedor', 'Total', 'Estado'].join(',');
-    const rows = this.filteredReceipts.map((r) =>
-      [
-        r.receiptCode,
-        this.formatDate(r.issueDate),
-        `"${r.supplierName}"`,
-        r.totalAmount,
-        r.status,
-      ].join(','),
-    );
-    const blob = new Blob([[header, ...rows].join('\n')], {
-      type: 'text/csv;charset=utf-8;',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `comprobantes-egreso-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const headers = ['Código', 'Fecha', 'Proveedor', 'Total', 'Estado'];
+    const rows = this.filteredReceipts.map((receipt) => [
+      receipt.receiptCode,
+      this.formatDate(receipt.issueDate),
+      receipt.supplierName,
+      receipt.totalAmount,
+      receipt.status,
+    ]);
+    const options = {
+      title: 'Comprobantes de egreso',
+      subtitle: `${rows.length} comprobante(s) exportado(s)`,
+      filename: this.exportService.datedFilename('comprobantes-egreso', format),
+      headers,
+      rows,
+    };
 
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Exportado',
-      detail: 'Se descargó el CSV de comprobantes.',
-    });
+    const loadingFlag = format === 'csv' ? 'exportingCsv' : 'exportingPdf';
+    this[loadingFlag] = true;
+    try {
+      if (format === 'csv') {
+        this.exportService.downloadCsv(options);
+      } else {
+        this.exportService.downloadPdf(options);
+      }
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Exportado',
+        detail: exportSuccessDetail('comprobantes', format),
+      });
+    } catch (error) {
+      console.error(`Error al exportar ${format}:`, error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: exportErrorDetail(format),
+      });
+    } finally {
+      this[loadingFlag] = false;
+    }
   }
 }
