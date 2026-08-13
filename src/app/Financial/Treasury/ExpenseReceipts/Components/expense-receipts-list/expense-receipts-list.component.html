@@ -1,16 +1,33 @@
 <div class="container-fluid p-4">
   <div class="flex justify-between items-center mb-6">
     <div>
-      <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">Comprobantes de Egreso</h1>
+      <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2 inline-block">Comprobantes de Egreso</h1>
+      <app-contextual-help
+        class="ml-2 inline-flex align-middle"
+        [title]="help.title"
+        [summary]="help.summary"
+        [helpCenterSlug]="help.slug">
+      </app-contextual-help>
       <p class="text-gray-600">Consulte y gestione los pagos realizados a proveedores</p>
     </div>
     <div class="flex gap-2">
       <p-button
-        label="Exportar CSV"
-        icon="pi pi-download"
-        severity="secondary"
+        label="Exportar PDF"
+        icon="pi pi-file-pdf"
+        severity="danger"
+        [outlined]="true"
+        [loading]="exportingPdf"
         [disabled]="!filteredReceipts.length"
-        (onClick)="onExportData()">
+        (onClick)="exportToPdf()">
+      </p-button>
+      <p-button
+        label="Exportar CSV"
+        icon="pi pi-file-excel"
+        severity="success"
+        [outlined]="true"
+        [loading]="exportingCsv"
+        [disabled]="!filteredReceipts.length"
+        (onClick)="exportToCsv()">
       </p-button>
       <p-button
         label="Efectuar Pago"
@@ -235,7 +252,7 @@
                 <p class="text-lg font-semibold text-gray-600 mb-2">No se encontraron comprobantes</p>
                 <p class="text-gray-500">
                   {{ allReceipts.length > 0
-                    ? 'Intente ajustar los filtros de búsqueda'
+                    ? emptyFiltersMessage
                     : 'Comience creando su primer comprobante de egreso' }}
                 </p>
               </div>

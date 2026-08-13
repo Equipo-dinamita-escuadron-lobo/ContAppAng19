@@ -43,7 +43,7 @@ export class ExpenseReceiptDetailsComponent {
       const receiptId = +idParam; // El '+' convierte el string a número
       this.loadReceiptDetails(receiptId);
     } else {
-      this.errorMessage = 'No se proporcionó un ID de comprobante.';
+      this.errorMessage = 'No se proporcionó el identificador del comprobante.';
     }
   }
 

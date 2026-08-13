@@ -368,7 +368,7 @@ export class VendorReportService {
       { wch: 14 },
     ];
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Estado cuenta');
+    XLSX.utils.book_append_sheet(wb, ws, 'Estado de cuenta');
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     return new Blob([wbout], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

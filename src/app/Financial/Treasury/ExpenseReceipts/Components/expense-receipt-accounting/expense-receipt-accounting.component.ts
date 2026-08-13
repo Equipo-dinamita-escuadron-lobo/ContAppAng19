@@ -46,7 +46,7 @@ export class ExpenseReceiptAccountingComponent implements OnInit {
       this.receiptId = +idParam;
       this.loadAccountingEntries(this.receiptId);
     } else {
-      this.errorMessage = 'No se proporcionó un ID de comprobante.';
+      this.errorMessage = 'No se proporcionó el identificador del comprobante.';
     }
   }
 

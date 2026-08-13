@@ -21,6 +21,14 @@ import {
   DocumentOption,
 } from '../../Models/AgingReport';
 import { LocalStorageMethods } from '../../../../../../Shared/Methods/local-storage.method';
+import { TreasuryExportService } from '../../../../Shared/treasury-export.service';
+import {
+  exportErrorDetail,
+  exportSuccessDetail,
+  reportEmptyFiltersMessage,
+} from '../../../../Shared/treasury-status-labels';
+import { ContextualHelpComponent } from '../../../../../../Shared/Components/contextual-help/contextual-help.component';
+import { TREASURY_HELP } from '../../../../Shared/treasury-help-content';
 
 @Component({
   selector: 'app-aging-report',
@@ -36,6 +44,7 @@ import { LocalStorageMethods } from '../../../../../../Shared/Methods/local-stor
     CardModule,
     ToastModule,
     InputSwitchModule,
+    ContextualHelpComponent,
   ],
   templateUrl: './aging-report.component.html',
   styleUrls: ['./aging-report.component.css'],
@@ -51,12 +60,16 @@ export class AgingReportComponent implements OnInit {
   documentOptions: DocumentOption[] = [];
   allDocuments: DocumentOption[] = [];
   loading = false;
-  exporting = false;
+  exportingPdf = false;
+  exportingCsv = false;
+  readonly emptyFiltersMessage = reportEmptyFiltersMessage();
+  readonly help = TREASURY_HELP.agingReport;
 
   constructor(
     private fb: FormBuilder,
     private agingReportService: AgingReportService,
     private messageService: MessageService,
+    private exportService: TreasuryExportService,
   ) {}
 
   ngOnInit(): void {
@@ -159,7 +172,7 @@ export class AgingReportComponent implements OnInit {
           summary: report.lines.length ? 'Reporte generado' : 'Sin resultados',
           detail: report.lines.length
             ? `Se encontraron ${report.lines.length} obligación(es) pendientes.`
-            : 'No hay obligaciones pendientes con esos filtros.',
+            : this.emptyFiltersMessage,
         });
       },
       error: (error) => {
@@ -186,9 +199,16 @@ export class AgingReportComponent implements OnInit {
     this.onGenerateReport();
   }
 
-  onExportData(): void {
-    const enterpriseId = this.localStorageMethods.getIdEnterprise();
-    if (!enterpriseId || !this.reportData) {
+  exportToCsv(): void {
+    this.runExport('csv');
+  }
+
+  exportToPdf(): void {
+    this.runExport('pdf');
+  }
+
+  private runExport(format: 'csv' | 'pdf'): void {
+    if (!this.reportData?.lines?.length) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Genere un reporte',
@@ -197,42 +217,66 @@ export class AgingReportComponent implements OnInit {
       return;
     }
 
-    this.exporting = true;
-    const supplierId = this.filterForm.value.supplierId;
-    const supplier = this.supplierOptions.find((s) => s.id === supplierId);
-    const filters: AgingReportFilter = {
-      supplierId,
-      supplierName: supplier?.name,
-      document: this.filterForm.value.document || undefined,
-      accountCode: this.filterForm.value.accountCode,
-      cutoffDate: this.filterForm.value.cutoffDate,
-      includeDocuments: this.filterForm.value.includeDocuments,
+    const headers = [
+      'Factura',
+      'Proveedor',
+      'Cuenta',
+      'Vence',
+      'Días vencidos',
+      'Total',
+      'Corriente',
+      '1-30',
+      '31-60',
+      '61-90',
+      '91+',
+    ];
+    const rows = this.reportData.lines.map((line) => [
+      line.reference,
+      this.supplierName(line.supplierId),
+      line.accountDescription,
+      this.formatDate(line.dueDate),
+      line.daysOverdue,
+      line.totalDue,
+      line.current,
+      line.days1to30,
+      line.days31to60,
+      line.days61to90,
+      line.days91Plus,
+    ]);
+    const subtitle = `Corte: ${this.formatDate(this.reportData.reportDate)} · ${this.reportData.supplierName}`;
+    const filename = this.exportService.datedFilename('vencimiento-edades', format);
+    const options = {
+      title: 'Vencimiento por edades',
+      subtitle,
+      filename,
+      headers,
+      rows,
+      orientation: 'landscape' as const,
     };
 
-    this.agingReportService.exportAgingReport(enterpriseId, filters).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `vencimiento-edades-${this.formatDate(this.reportData!.reportDate).replace(/\//g, '-')}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        this.exporting = false;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Exportado',
-          detail: 'Se descargó el CSV del reporte.',
-        });
-      },
-      error: () => {
-        this.exporting = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo exportar el reporte.',
-        });
-      },
-    });
+    const loadingFlag = format === 'csv' ? 'exportingCsv' : 'exportingPdf';
+    this[loadingFlag] = true;
+    try {
+      if (format === 'csv') {
+        this.exportService.downloadCsv(options);
+      } else {
+        this.exportService.downloadPdf(options);
+      }
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Exportado',
+        detail: exportSuccessDetail('antigüedad de saldos', format),
+      });
+    } catch (error) {
+      console.error(`Error al exportar ${format}:`, error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: exportErrorDetail(format),
+      });
+    } finally {
+      this[loadingFlag] = false;
+    }
   }
 
   formatCurrency(amount: number): string {

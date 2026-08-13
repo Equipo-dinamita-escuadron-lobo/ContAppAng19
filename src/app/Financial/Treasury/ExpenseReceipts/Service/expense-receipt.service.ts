@@ -11,7 +11,8 @@ import { ExpenseReceiptResponse } from '../Model/ExpenseReceiptResponse';
 import { ExpenseReceiptCreateRequest } from '../Model/ExpenseReceiptCreateRequest';
 import { AccountingEntryLine } from '../Model/AccountingEntryLine';
 import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
-import { educationalDescription, voucherStatusLabel } from '../../Shared/treasury-status-labels';
+import { educationalDescription, translatePaymentMethodName, voucherStatusLabel } from '../../Shared/treasury-status-labels';
+import { buildThirdPartyNameMap, resolveSupplierName } from '../../Shared/treasury-third-party.integration';
 
 @Injectable({ providedIn: 'root' })
 export class ExpenseReceiptService {
@@ -44,14 +45,32 @@ export class ExpenseReceiptService {
   }
 
   getSuppliers(query = ''): Observable<Supplier[]> {
-    return forkJoin({ payables: this.api.pending(this.enterpriseId()), thirds: this.thirds.getThirdParties(this.enterpriseId(), 0, 1000) }).pipe(map(({ payables, thirds }) => {
-      const ids = [...new Set(payables.map(item => item.supplierId))];
-      return ids.map(id => { const third = thirds.content.find(item => item.thId === id); return ({ id, name: third?.socialReason || [third?.names, third?.lastNames].filter(Boolean).join(' ') || `Proveedor ${id}`, accountsPayableAccount: {
-        id: payables.find(item => item.supplierId === id)!.payableAccountId,
-        code: payables.find(item => item.supplierId === id)!.payableAccountCode,
-        name: payables.find(item => item.supplierId === id)!.payableAccountCode,
-      }}); }).filter(supplier => supplier.name.toLowerCase().includes(query.toLowerCase()));
-    }));
+    const enterpriseId = this.enterpriseId();
+    return forkJoin({
+      payables: this.api.pending(enterpriseId),
+      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(
+        catchError(() => of({ content: [] } as any)),
+      ),
+    }).pipe(
+      map(({ payables, thirds }) => {
+        const thirdNames = buildThirdPartyNameMap(thirds?.content || []);
+        const ids = [...new Set(payables.map((item) => item.supplierId))];
+        return ids
+          .map((id) => {
+            const payable = payables.find((item) => item.supplierId === id)!;
+            return {
+              id,
+              name: resolveSupplierName(thirdNames, id),
+              accountsPayableAccount: {
+                id: payable.payableAccountId,
+                code: payable.payableAccountCode,
+                name: payable.payableAccountCode,
+              },
+            };
+          })
+          .filter((supplier) => supplier.name.toLowerCase().includes(query.toLowerCase()));
+      }),
+    );
   }
 
   getSupplierById(id: number): Observable<Supplier | undefined> {
@@ -112,26 +131,38 @@ export class ExpenseReceiptService {
     );
   }
   getExpenseReceiptById(id: number): Observable<ExpenseReceiptDetailsView> {
-    return this.api.voucher(id, this.enterpriseId()).pipe(map(voucher => ({
-      id: voucher.id,
-      receiptCode: voucher.voucherNumber,
-      issueDate: new Date(voucher.issueDate),
-      thirdPartyId: voucher.details[0]?.supplierId ?? 0,
-      supplierName: `Proveedor ${voucher.details[0]?.supplierId ?? ''}`,
-      paymentMethodName: `Método ${voucher.paymentMethodId}`,
-      status: voucherStatusLabel(voucher.status),
-      statusKey: voucher.status,
-      totalAmount: voucher.total,
-      observations: educationalDescription(voucher.observations, ''),
-      isDirectExpense: false,
-      details: voucher.details.map(detail => ({
-        invoiceId: detail.invoiceId,
-        amountPaid: detail.amountPaid,
-        invoiceCode: detail.invoiceReference,
-        accountingAccount: detail.payableAccountId,
-      })),
-      accountingEntry: undefined,
-    })));
+    const enterpriseId = this.enterpriseId();
+    return forkJoin({
+      voucher: this.api.voucher(id, enterpriseId),
+      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(catchError(() => of({ content: [] } as any))),
+      methods: this.paymentMethods.findAll(this.enterpriseId(), 0, 100).pipe(catchError(() => of({ content: [] } as any))),
+    }).pipe(
+      map(({ voucher, thirds, methods }) => {
+        const thirdNames = buildThirdPartyNameMap(thirds?.content || []);
+        const supplierId = voucher.details[0]?.supplierId ?? 0;
+        const method = (methods.content || []).find((item: any) => item.id === voucher.paymentMethodId);
+        return {
+          id: voucher.id,
+          receiptCode: voucher.voucherNumber,
+          issueDate: new Date(voucher.issueDate),
+          thirdPartyId: supplierId,
+          supplierName: resolveSupplierName(thirdNames, supplierId),
+          paymentMethodName: translatePaymentMethodName(method?.name) || `Método ${voucher.paymentMethodId}`,
+          status: voucherStatusLabel(voucher.status),
+          statusKey: voucher.status,
+          totalAmount: voucher.total,
+          observations: educationalDescription(voucher.observations, ''),
+          isDirectExpense: false,
+          details: voucher.details.map((detail) => ({
+            invoiceId: detail.invoiceId,
+            amountPaid: detail.amountPaid,
+            invoiceCode: detail.invoiceReference,
+            accountingAccount: detail.payableAccountId,
+          })),
+          accountingEntry: undefined,
+        };
+      }),
+    );
   }
 
   createExpenseReceipt(request: ExpenseReceiptCreateRequest): Observable<ExpenseReceiptResponse> {

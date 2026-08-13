@@ -1,16 +1,33 @@
 <div class="container-fluid p-4">
   <div class="flex justify-between items-center mb-6">
     <div>
-      <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">Programación Pagos de Factura</h1>
+      <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2 inline-block">Programación Pagos de Factura</h1>
+      <app-contextual-help
+        class="ml-2 inline-flex align-middle"
+        [title]="help.title"
+        [summary]="help.summary"
+        [helpCenterSlug]="help.slug">
+      </app-contextual-help>
       <p class="text-gray-600">Organiza y controla los pagos pendientes a proveedores</p>
     </div>
     <div class="flex gap-2">
       <p-button
-        label="Exportar CSV"
-        icon="pi pi-download"
-        severity="secondary"
+        label="Exportar PDF"
+        icon="pi pi-file-pdf"
+        severity="danger"
+        [outlined]="true"
+        [loading]="exportingPdf"
         [disabled]="!filteredBills.length"
-        (onClick)="onExportData()">
+        (onClick)="exportToPdf()">
+      </p-button>
+      <p-button
+        label="Exportar CSV"
+        icon="pi pi-file-excel"
+        severity="success"
+        [outlined]="true"
+        [loading]="exportingCsv"
+        [disabled]="!filteredBills.length"
+        (onClick)="exportToCsv()">
       </p-button>
     </div>
   </div>
@@ -253,7 +270,7 @@
                 <p class="text-lg font-semibold text-gray-600 mb-2">No se encontraron programaciones</p>
                 <p class="text-gray-500">
                   {{ filteredBills.length === 0 && allBills.length > 0
-                    ? 'Intente ajustar los filtros de búsqueda'
+                    ? emptyFiltersMessage
                     : 'No hay obligaciones pendientes actualmente' }}
                 </p>
               </div>
@@ -288,7 +305,7 @@
       <div class="text-center">
         <i class="pi pi-clock text-3xl text-orange-500 mb-2"></i>
         <h3 class="text-2xl font-bold text-gray-800">{{ getPartialCount() }}</h3>
-        <p class="text-gray-600">Pago parcial</p>
+        <p class="text-gray-600">Abono parcial</p>
       </div>
     </p-card>
 

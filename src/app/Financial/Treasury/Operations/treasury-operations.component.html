@@ -1,10 +1,35 @@
 <div class="container-fluid p-4">
+  <p-toast></p-toast>
   <div class="flex justify-between items-center mb-6">
     <div>
-      <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2">Operaciones de Tesorería</h1>
+      <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2 inline-block">Operaciones de Tesorería</h1>
+      <app-contextual-help
+        class="ml-2 inline-flex align-middle"
+        [title]="help.title"
+        [summary]="help.summary"
+        [helpCenterSlug]="help.slug">
+      </app-contextual-help>
       <p class="text-gray-600">Gestione obligaciones pendientes, borradores de pago, programaciones y bajas de CxP</p>
     </div>
     <div class="flex gap-2">
+      <p-button
+        label="Exportar PDF"
+        icon="pi pi-file-pdf"
+        severity="danger"
+        [outlined]="true"
+        [loading]="exportingPdf"
+        [disabled]="!hasExportData || busy"
+        (onClick)="exportToPdf()">
+      </p-button>
+      <p-button
+        label="Exportar CSV"
+        icon="pi pi-file-excel"
+        severity="success"
+        [outlined]="true"
+        [loading]="exportingCsv"
+        [disabled]="!hasExportData || busy"
+        (onClick)="exportToCsv()">
+      </p-button>
       <p-button
         label="Actualizar"
         icon="pi pi-refresh"
@@ -144,8 +169,8 @@
         <p-dropdown
           id="paymentMethod"
           [(ngModel)]="paymentMethodId"
-          [options]="methods"
-          optionLabel="name"
+          [options]="methodOptions"
+          optionLabel="label"
           optionValue="id"
           placeholder="Seleccione"
           [showClear]="true"
@@ -429,7 +454,7 @@
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} bajas">
       <ng-template pTemplate="header">
         <tr>
-          <th>ID</th>
+          <th>N.º</th>
           <th>Estado</th>
           <th class="text-right">Total</th>
           <th>Motivo</th>

@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { saveAs } from 'file-saver';
 
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -19,7 +18,13 @@ import { InputTextModule } from 'primeng/inputtext';
 import { VendorReportService } from '../../Services/vendor-report.service';
 import { VendorReport } from '../../Models/VendorReport';
 import { MessageService } from 'primeng/api';
-import { transactionTypeLabel } from '../../../../Shared/treasury-status-labels';
+import {
+  exportErrorDetail,
+  exportSuccessDetail,
+  reportEmptyFiltersMessage,
+  transactionTypeLabel,
+} from '../../../../Shared/treasury-status-labels';
+import { TreasuryExportService } from '../../../../Shared/treasury-export.service';
 
 interface FilterOption {
   label: string;
@@ -53,7 +58,8 @@ export class VendorReportComponent implements OnInit {
   vendorReport: VendorReport | null = null;
   loading = false;
   exportingPdf = false;
-  exportingExcel = false;
+  exportingCsv = false;
+  readonly emptyFiltersMessage = reportEmptyFiltersMessage();
   vendorId = 0;
   vendorName = '';
 
@@ -81,6 +87,7 @@ export class VendorReportComponent implements OnInit {
     private router: Router,
     private vendorReportService: VendorReportService,
     private messageService: MessageService,
+    private exportService: TreasuryExportService,
   ) {}
 
   ngOnInit(): void {
@@ -221,45 +228,78 @@ export class VendorReportComponent implements OnInit {
     if (!this.vendorReport) return;
     this.exportingPdf = true;
     try {
-      const blob = this.vendorReportService.exportToPdf(this.vendorReport);
-      saveAs(blob, this.exportFileName('pdf'));
+      this.exportService.triggerBrowserDownload(
+        this.vendorReportService.exportToPdf(this.vendorReport),
+        this.exportFileName('pdf'),
+      );
       this.messageService.add({
         severity: 'success',
-        summary: 'PDF exportado',
-        detail: 'El estado de cuenta se descargó en PDF',
+        summary: 'Exportado',
+        detail: exportSuccessDetail('estado de cuenta', 'pdf'),
       });
     } catch (error) {
       console.error('Error al exportar PDF:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo exportar el reporte a PDF',
+        detail: exportErrorDetail('pdf'),
       });
     } finally {
       this.exportingPdf = false;
     }
   }
 
-  exportToExcel(): void {
+  exportToCsv(): void {
     if (!this.vendorReport) return;
-    this.exportingExcel = true;
+    this.exportingCsv = true;
     try {
-      const blob = this.vendorReportService.exportToExcel(this.vendorReport);
-      saveAs(blob, this.exportFileName('xlsx'));
+      const headers = [
+        'Fecha',
+        'Vence',
+        'Referencia',
+        'Documento',
+        'Comp. egreso',
+        'Tipo',
+        'Descripción',
+        'Débitos',
+        'Créditos',
+        'Saldo',
+      ];
+      const rows = this.vendorReport.transactions.map((transaction) => [
+        this.formatDate(transaction.date),
+        transaction.dueDate ? this.formatDate(transaction.dueDate) : '-',
+        transaction.reference || '-',
+        transaction.documentNumber || '-',
+        transaction.expenseReceiptNumber || '-',
+        transaction.type === 'Bill' ? 'Factura' : 'Pago',
+        transaction.description || '-',
+        transaction.debits || 0,
+        transaction.credits || 0,
+        transaction.balance || 0,
+      ]);
+
+      this.exportService.downloadCsv({
+        title: 'Estado de cuenta por proveedor',
+        subtitle: `${this.vendorReport.vendor.name} · ${this.formatDate(this.vendorReport.dateRange.startDate)} — ${this.formatDate(this.vendorReport.dateRange.endDate)}`,
+        filename: this.exportFileName('csv'),
+        headers,
+        rows,
+      });
+
       this.messageService.add({
         severity: 'success',
-        summary: 'Excel exportado',
-        detail: 'El estado de cuenta se descargó en Excel',
+        summary: 'Exportado',
+        detail: exportSuccessDetail('estado de cuenta', 'csv'),
       });
     } catch (error) {
-      console.error('Error al exportar Excel:', error);
+      console.error('Error al exportar CSV:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo exportar el reporte a Excel',
+        detail: exportErrorDetail('csv'),
       });
     } finally {
-      this.exportingExcel = false;
+      this.exportingCsv = false;
     }
   }
 
@@ -290,5 +330,9 @@ export class VendorReportComponent implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount || 0);
+  }
+
+  formatDate(date: Date | string): string {
+    return this.exportService.formatDate(date);
   }
 }

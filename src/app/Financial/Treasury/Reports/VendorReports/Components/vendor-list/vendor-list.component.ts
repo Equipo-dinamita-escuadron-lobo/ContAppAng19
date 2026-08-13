@@ -19,6 +19,10 @@ import { TooltipModule } from 'primeng/tooltip';
 import { VendorReportService } from '../../Services/vendor-report.service';
 import { VendorReportSummary, VendorListFilter } from '../../Models/VendorReport';
 import { MessageService } from 'primeng/api';
+import { TreasuryExportService } from '../../../../Shared/treasury-export.service';
+import { exportErrorDetail, exportSuccessDetail, reportEmptyFiltersMessage } from '../../../../Shared/treasury-status-labels';
+import { ContextualHelpComponent } from '../../../../../../Shared/Components/contextual-help/contextual-help.component';
+import { TREASURY_HELP } from '../../../../Shared/treasury-help-content';
 
 @Component({
   selector: 'app-vendor-list',
@@ -36,7 +40,8 @@ import { MessageService } from 'primeng/api';
     CardModule,
     ToastModule,
     TagModule,
-    TooltipModule
+    TooltipModule,
+    ContextualHelpComponent,
   ],
   templateUrl: './vendor-list.component.html',
   styleUrls: ['./vendor-list.component.css'],
@@ -49,18 +54,22 @@ export class VendorListComponent implements OnInit {
   loading: boolean = false;
 
   filterForm!: FormGroup;
+  exportingPdf = false;
+  exportingCsv = false;
 
   statusOptions = [
     { label: 'Todos los proveedores', value: 'all' },
     { label: 'Con saldo pendiente', value: 'with_balance' },
     { label: 'Sin saldo pendiente', value: 'no_balance' }
   ];
+  readonly help = TREASURY_HELP.vendorReports;
 
   constructor(
     private fb: FormBuilder,
     private vendorReportService: VendorReportService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private exportService: TreasuryExportService,
   ) {}
 
   ngOnInit(): void {
@@ -150,6 +159,32 @@ export class VendorListComponent implements OnInit {
     return this.filteredVendors.reduce((sum, vendor) => sum + vendor.currentBalance, 0);
   }
 
+  hasActiveFilters(): boolean {
+    const filter = this.filterForm.value;
+    return !!(
+      filter.searchTerm?.trim()
+      || filter.dateFrom
+      || filter.dateTo
+      || filter.balanceFrom != null
+      || filter.balanceTo != null
+      || (filter.status && filter.status !== 'all')
+    );
+  }
+
+  getEmptyTitle(): string {
+    if (this.vendors.length === 0) {
+      return 'No hay proveedores con facturas pendientes';
+    }
+    if (this.hasActiveFilters()) {
+      return 'No se encontraron proveedores que coincidan con la búsqueda';
+    }
+    return 'No hay proveedores con facturas pendientes';
+  }
+
+  getEmptySubtitle(): string {
+    return this.hasActiveFilters() ? 'Intente ajustar los filtros de búsqueda' : '';
+  }
+
   // Utility methods for consistent formatting
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-CO', {
@@ -168,12 +203,73 @@ export class VendorListComponent implements OnInit {
     }).format(new Date(date));
   }
 
-  // Export functionality
-  onExportData(): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Funcionalidad Pendiente',
-      detail: 'La exportación de datos será implementada próximamente.'
-    });
+  exportToCsv(): void {
+    this.runExport('csv');
+  }
+
+  exportToPdf(): void {
+    this.runExport('pdf');
+  }
+
+  private runExport(format: 'csv' | 'pdf'): void {
+    if (!this.filteredVendors.length) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin datos',
+        detail: reportEmptyFiltersMessage(),
+      });
+      return;
+    }
+
+    const headers = [
+      'Proveedor',
+      'Transacciones',
+      'Débitos',
+      'Créditos',
+      'Saldo',
+      'Última transacción',
+      'Estado',
+    ];
+    const rows = this.filteredVendors.map((vendor) => [
+      vendor.name,
+      vendor.transactionCount,
+      vendor.totalDebits,
+      vendor.totalCredits,
+      vendor.currentBalance,
+      this.formatDate(vendor.lastTransactionDate),
+      this.getBalanceTagText(vendor.currentBalance),
+    ]);
+    const options = {
+      title: 'Reportes de proveedores',
+      subtitle: `${rows.length} proveedor(es) exportado(s)`,
+      filename: this.exportService.datedFilename('reportes-proveedores', format),
+      headers,
+      rows,
+      orientation: 'landscape' as const,
+    };
+
+    const loadingFlag = format === 'csv' ? 'exportingCsv' : 'exportingPdf';
+    this[loadingFlag] = true;
+    try {
+      if (format === 'csv') {
+        this.exportService.downloadCsv(options);
+      } else {
+        this.exportService.downloadPdf(options);
+      }
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Exportado',
+        detail: exportSuccessDetail('proveedores', format),
+      });
+    } catch (error) {
+      console.error(`Error al exportar ${format}:`, error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: exportErrorDetail(format),
+      });
+    } finally {
+      this[loadingFlag] = false;
+    }
   }
 }
