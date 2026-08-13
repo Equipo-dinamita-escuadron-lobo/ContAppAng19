@@ -16,6 +16,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { Third } from '../../../../GeneralMasters/ThirdParties/models/Third';
+import { eThirdType } from '../../../../GeneralMasters/ThirdParties/models/eThirdType';
 import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ProductToSale } from '../../../SaleInvoice/models/ProductToSale';
@@ -89,7 +90,7 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
 
   loadSuppliers(): void {
     const entId = this.localStorageMethods.getIdEnterprise();
-    this.thirdService.getActiveThirds(entId.toString()).subscribe({
+    this.thirdService.getThirdsByType(entId.toString(), eThirdType.Proveedor).subscribe({
       next: (data) => {
         this.allSuppliers = data.content || [];
       },

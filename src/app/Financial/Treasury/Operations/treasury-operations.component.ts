@@ -102,6 +102,7 @@ export class TreasuryOperationsComponent implements OnInit {
   scheduleLabel = scheduleStatusLabel;
   writeOffLabel = voucherStatusLabel;
   accountingStatusLabel = accountingEntryStatusLabel;
+  supplierName = (supplierId: number) => resolveSupplierName(this.supplierNames, supplierId);
 
   private readonly enterpriseId: string;
 

@@ -4,6 +4,7 @@ const gateway = process.env.PP8_GATEWAY_URL ?? 'http://localhost:8080';
 const username = process.env.PP8_E2E_USERNAME;
 const password = process.env.PP8_E2E_PASSWORD;
 const enterpriseId = process.env.PP8_E2E_ENTERPRISE_ID ?? 'enterprise-e2e';
+const supplierTypeName = 'Proveedor';
 
 test('factura de compra selecciona un tercero activo y envía su thId', async ({ page }) => {
   if (!username || !password) {
@@ -13,7 +14,11 @@ test('factura de compra selecciona un tercero activo y envía su thId', async ({
   await page.goto('/login');
   await page.locator('#username').fill(username!);
   await page.locator('#password').fill(password!);
+  const tokenResponse = page.waitForResponse((response) =>
+    response.url().includes('/api/keycloak/token/') && response.request().method() === 'POST',
+  );
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  expect((await tokenResponse).status()).toBe(200);
   await page.waitForURL(/#\/enterprise\/list/, { timeout: 20_000 });
   const token = await page.evaluate(() => localStorage.getItem('token'));
   expect(token).toBeTruthy();
@@ -21,17 +26,17 @@ test('factura de compra selecciona un tercero activo y envía su thId', async ({
     id: enterprise, name: 'PP8 E2E', nit: 'E2E', logo: '', inventoryConfigType: 'WEIGHTED_AVERAGE',
   })), enterpriseId);
 
-  const activeThirdsResponse = await page.request.get(`${gateway}/api/thirds/findAllActive`, {
+  const suppliersResponse = await page.request.get(`${gateway}/api/thirds/by-type`, {
     headers: { Authorization: `Bearer ${token}` },
-    params: { entId: enterpriseId },
+    params: { entId: enterpriseId, thirdTypeName: supplierTypeName },
   });
-  expect(activeThirdsResponse.ok()).toBe(true);
-  const activeThirds = (await activeThirdsResponse.json()).content;
-  expect(activeThirds.length).toBeGreaterThan(0);
-  const expectedThird = activeThirds[0];
+  expect(suppliersResponse.ok()).toBe(true);
+  const suppliers = (await suppliersResponse.json()).content;
+  expect(suppliers.length).toBeGreaterThan(0);
+  const expectedThird = suppliers[0];
 
   const supplierLoad = page.waitForResponse((response) =>
-    response.url().includes('/api/thirds/findAllActive') && response.request().method() === 'GET',
+    response.url().includes('/api/thirds/by-type') && response.request().method() === 'GET',
   );
   await page.goto('/#/commercial/purchase-invoice');
   expect((await supplierLoad).status()).toBe(200);
@@ -52,7 +57,7 @@ test('factura de compra selecciona un tercero activo y envía su thId', async ({
         content: [{
           id: 501, code: 'E2E-501', name: 'Producto E2E', description: 'Producto para validar payload',
           quantity: 10, unitOfMeasureId: null, categoryId: null, enterpriseId, cost: 100,
-          state: true, reference: 'E2E-501',
+          state: true, reference: 'E2E-501', taxPercentage: 0,
         }],
         page: { size: 1, number: 0, totalElements: 1, totalPages: 1 },
       }),
@@ -61,8 +66,12 @@ test('factura de compra selecciona un tercero activo y envía su thId', async ({
   await page.getByRole('button', { name: 'Agregar productos' }).click();
   const productDialog = page.locator('.p-dialog');
   await expect(productDialog).toBeVisible();
-  await productDialog.getByRole('checkbox').first().click();
-  await productDialog.getByRole('button', { name: 'Confirmar Selección' }).click();
+  await expect(productDialog.getByText('E2E-501')).toBeVisible({ timeout: 10_000 });
+  const productRow = productDialog.locator('tbody tr').filter({ hasText: 'E2E-501' });
+  await productRow.getByRole('checkbox').click();
+  const confirmSelection = productDialog.getByRole('button', { name: 'Confirmar Selección' });
+  await expect(confirmSelection).toBeEnabled();
+  await confirmSelection.click();
   await expect(productDialog).toBeHidden({ timeout: 10_000 });
   await expect(page.getByText('Producto E2E')).toBeVisible();
 

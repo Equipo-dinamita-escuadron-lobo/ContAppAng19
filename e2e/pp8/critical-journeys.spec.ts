@@ -6,6 +6,7 @@ const password = process.env.PP8_E2E_PASSWORD;
 const enterpriseId = process.env.PP8_E2E_ENTERPRISE_ID ?? 'enterprise-e2e';
 const paymentMethodId = Number(process.env.PP8_E2E_PAYMENT_METHOD_ID ?? '8');
 const mailpit = process.env.PP8_MAILPIT_URL ?? 'http://localhost:18025';
+const supplierTypeName = 'Proveedor';
 let supplierId: number;
 
 /** Fecha local ISO (YYYY-MM-DD) para evitar fechas fijas que caducan en @FutureOrPresent. */
@@ -48,14 +49,14 @@ async function loginThroughAngular(page: Page): Promise<string> {
     id: enterprise, name: 'PP8 E2E', nit: 'E2E', logo: '', inventoryConfigType: 'WEIGHTED_AVERAGE',
   })), enterpriseId);
   const token = (await page.evaluate(() => localStorage.getItem('token'))) as string;
-  const activeThirds = await page.request.get(`${gateway}/api/thirds/findAllActive`, {
+  const suppliersResponse = await page.request.get(`${gateway}/api/thirds/by-type`, {
     headers: headers(token),
-    params: { entId: enterpriseId },
+    params: { entId: enterpriseId, thirdTypeName: supplierTypeName },
   });
-  expect(activeThirds.ok()).toBe(true);
-  const thirds = (await activeThirds.json()).content;
-  expect(thirds.length).toBeGreaterThan(0);
-  supplierId = Number(thirds[0].thId);
+  expect(suppliersResponse.ok()).toBe(true);
+  const suppliers = (await suppliersResponse.json()).content;
+  expect(suppliers.length).toBeGreaterThan(0);
+  supplierId = Number(suppliers[0].thId);
   return token;
 }
 
@@ -129,6 +130,19 @@ test('2. compra → obligación → pago → asiento → correo con servicios re
   const token = await loginThroughAngular(page);
   const beforeMail = (await (await page.request.get(`${mailpit}/api/v1/messages`)).json()).messages_count;
   const { payable } = await createPurchaseAndWaitForPayable(page, token);
+  const suppliers = await page.request.get(`${gateway}/api/thirds/by-type`, {
+    headers: headers(token),
+    params: { entId: enterpriseId, thirdTypeName: supplierTypeName },
+  });
+  expect(suppliers.ok()).toBe(true);
+  const supplier = (await suppliers.json()).content.find((item: any) => Number(item.thId) === supplierId);
+  expect(supplier).toBeTruthy();
+  const supplierLabel = supplier.socialReason
+    || [supplier.names, supplier.lastNames].filter(Boolean).join(' ')
+    || `Proveedor ${supplierId}`;
+  await page.goto('/#/financial/treasury/operations');
+  await expect(page.getByRole('heading', { name: /Operaciones de Tesorer[ií]a/i })).toBeVisible();
+  await expect(page.locator('.p-datatable').first().getByText(supplierLabel, { exact: false }).first()).toBeVisible();
   const voucherId = await createAndPostVoucher(page, token, payable, 40);
   const voucher = await (await page.request.get(`${gateway}/api/treasury/payment-vouchers/${voucherId}`, {
     headers: headers(token), params: { enterpriseId },
