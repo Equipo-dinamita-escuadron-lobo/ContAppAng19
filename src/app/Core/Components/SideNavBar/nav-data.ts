@@ -134,8 +134,14 @@ export const navbarData: INavbarData[] = [
       {
         routeLink: 'financial/treasury',
         icon: 'money_bag',
+        roles: ['Estudiante', 'Profesor', 'Administrador'],
         label: 'Tesorería',
         items: [
+          {
+            routeLink: 'financial/treasury/operations',
+            icon: 'payments',
+            label: 'Operaciones de Tesorería',
+          },
           {
             routeLink: 'financial/treasury/purchase-bills',
             icon: 'description',

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
-// PrimeNG Modules
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -15,10 +14,10 @@ import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
 
-// Services and Models
 import { PurchaseBillService } from '../../Services/purchase-bill.service';
-import { PurchaseBillListView } from '../../Models/PurchaseBill';
+import { BillFilterOption, PurchaseBillListView } from '../../Models/PurchaseBill';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { MessageService, ConfirmationService } from 'primeng/api';
 
@@ -30,7 +29,7 @@ interface StatusOption {
 interface CutoffDateOption {
   label: string;
   value: string;
-  days?: number; // Para calcular rangos predefinidos
+  days?: number;
 }
 
 @Component({
@@ -50,32 +49,32 @@ interface CutoffDateOption {
     TagModule,
     CardModule,
     ToastModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    DialogModule,
   ],
   templateUrl: './bill-list.component.html',
   styleUrls: ['./bill-list.component.css'],
-  providers: [MessageService, ConfirmationService]
+  providers: [MessageService, ConfirmationService],
 })
 export class BillListComponent implements OnInit {
   localStorageMethods = new LocalStorageMethods();
 
-  // Data
   allBills: PurchaseBillListView[] = [];
   filteredBills: PurchaseBillListView[] = [];
 
-  // Filter form
   filterForm!: FormGroup;
 
-  // Filter options
+  billIdOptions: BillFilterOption[] = [];
+  allBillIdOptions: BillFilterOption[] = [];
+  supplierOptions: BillFilterOption[] = [];
+
   statusOptions: StatusOption[] = [
-    { label: 'Todos', value: '' },
-    { label: 'Borrador', value: 'DRAFT' },
-    { label: 'Contabilizada', value: 'POSTED' },
+    { label: 'Todos los estados', value: '' },
+    { label: 'Pendiente de pago', value: 'POSTED' },
+    { label: 'Pago parcial', value: 'PARTIALLY_PAID' },
     { label: 'Pagada', value: 'PAID' },
-    { label: 'Cancelada', value: 'CANCELLED' }
   ];
 
-  // Opciones de Fecha de Corte (solo para facturas contabilizadas)
   cutoffDateOptions: CutoffDateOption[] = [
     { label: 'Todos', value: '' },
     { label: 'Últimos 7 días', value: 'LAST_7_DAYS', days: 7 },
@@ -84,21 +83,20 @@ export class BillListComponent implements OnInit {
     { label: 'Últimos 3 meses', value: 'LAST_3_MONTHS', days: 90 },
     { label: 'Últimos 6 meses', value: 'LAST_6_MONTHS', days: 180 },
     { label: 'Último año', value: 'LAST_YEAR', days: 365 },
-    { label: 'Rango personalizado', value: 'CUSTOM' }
+    { label: 'Rango personalizado', value: 'CUSTOM' },
   ];
 
-  // Control de visibilidad del selector de fecha de corte
-  showCutoffDateSelector: boolean = false;
-
-  // Loading state
-  loading: boolean = false;
+  showCutoffDateSelector = false;
+  loading = false;
+  detailVisible = false;
+  selectedBill: PurchaseBillListView | null = null;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private purchaseBillService: PurchaseBillService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
   ) {}
 
   ngOnInit(): void {
@@ -109,52 +107,49 @@ export class BillListComponent implements OnInit {
 
   initializeFilterForm(): void {
     this.filterForm = this.fb.group({
-      billId: [''],
-      supplierName: [''],
+      billId: [null],
+      supplierId: [null],
       dateFrom: [null],
       dateTo: [null],
       status: [''],
-      cutoffDateRange: [''], // Fecha de corte para facturas contabilizadas
+      cutoffDateRange: [''],
       minAmount: [null],
-      maxAmount: [null]
+      maxAmount: [null],
     });
   }
 
   setupFilterSubscriptions(): void {
-    // Suscribirse a cambios en el estado para mostrar/ocultar fecha de corte
     this.filterForm.get('status')?.valueChanges.subscribe((status) => {
-      this.showCutoffDateSelector = status === 'POSTED';
+      this.showCutoffDateSelector = status === 'POSTED' || status === 'PARTIALLY_PAID';
 
-      // Si no es contabilizada, limpiar el campo de fecha de corte
       if (!this.showCutoffDateSelector) {
-        this.filterForm.patchValue({
-          cutoffDateRange: '',
-          dateFrom: null,
-          dateTo: null
-        }, { emitEvent: false });
+        this.filterForm.patchValue(
+          {
+            cutoffDateRange: '',
+            dateFrom: null,
+            dateTo: null,
+          },
+          { emitEvent: false },
+        );
       }
     });
 
-    // Suscribirse a cambios en fecha de corte para calcular rangos
     this.filterForm.get('cutoffDateRange')?.valueChanges.subscribe((range) => {
       if (range && range !== 'CUSTOM') {
         this.applyCutoffDateRange(range);
-      } else if (range === 'CUSTOM') {
-        // Limpiar las fechas para que el usuario pueda seleccionar manualmente
-        this.filterForm.patchValue({
-          dateFrom: null,
-          dateTo: null
-        }, { emitEvent: false });
-      } else if (range === '') {
-        // Si selecciona "Todos", limpiar las fechas
-        this.filterForm.patchValue({
-          dateFrom: null,
-          dateTo: null
-        }, { emitEvent: false });
+      } else if (range === 'CUSTOM' || range === '') {
+        this.filterForm.patchValue(
+          {
+            dateFrom: null,
+            dateTo: null,
+          },
+          { emitEvent: false },
+        );
       }
     });
 
-    // Aplicar filtros cuando cambien los valores
+    this.filterForm.get('supplierId')?.valueChanges.subscribe(() => this.onSupplierFilterChange());
+
     this.filterForm.valueChanges.subscribe(() => {
       this.applyFilters();
     });
@@ -162,12 +157,23 @@ export class BillListComponent implements OnInit {
 
   loadBills(): void {
     this.loading = true;
-    const enterpriseId = this.localStorageMethods.getIdEnterprise() || 'test-enterprise';
+    const enterpriseId = this.localStorageMethods.getIdEnterprise();
+    if (!enterpriseId) {
+      this.loading = false;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Empresa requerida',
+        detail: 'Seleccione una empresa activa para ver las facturas.',
+      });
+      return;
+    }
 
     this.purchaseBillService.getAllPurchaseBills(enterpriseId).subscribe({
       next: (bills) => {
         this.allBills = bills;
+        this.buildFilterOptions(bills);
         this.filteredBills = [...bills];
+        this.applyFilters();
         this.loading = false;
       },
       error: (error) => {
@@ -175,45 +181,76 @@ export class BillListComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'No se pudieron cargar las facturas. Intente nuevamente.'
+          detail: 'No se pudieron cargar las facturas. Intente nuevamente.',
         });
         this.loading = false;
-      }
+      },
     });
+  }
+
+  buildFilterOptions(bills: PurchaseBillListView[]): void {
+    this.supplierOptions = [...new Set(bills.map((b) => b.supplierId))]
+      .map((id) => {
+        const name = bills.find((b) => b.supplierId === id)?.supplierName || `Proveedor ${id}`;
+        return { value: id, label: `${id} — ${name}` };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    this.allBillIdOptions = bills
+      .map((b) => ({
+        value: b.billId,
+        label: `${b.billId} · Prov. ${b.supplierId}`,
+        supplierId: b.supplierId,
+      }))
+      .sort((a, b) => String(a.label).localeCompare(String(b.label)));
+
+    this.billIdOptions = [...this.allBillIdOptions];
+  }
+
+  onSupplierFilterChange(): void {
+    const supplierId = this.filterForm.value.supplierId;
+    this.billIdOptions =
+      supplierId == null
+        ? [...this.allBillIdOptions]
+        : this.allBillIdOptions.filter((opt) => opt.supplierId === Number(supplierId));
+
+    const selectedBill = this.filterForm.value.billId;
+    if (selectedBill && !this.billIdOptions.some((b) => b.value === selectedBill)) {
+      this.filterForm.patchValue({ billId: null }, { emitEvent: false });
+    }
   }
 
   applyFilters(): void {
     const filters = this.filterForm.value;
 
-    this.filteredBills = this.allBills.filter(bill => {
-      // Filtrar por número de factura
-      if (filters.billId && !bill.billId.toLowerCase().includes(filters.billId.toLowerCase())) {
+    this.filteredBills = this.allBills.filter((bill) => {
+      if (filters.billId && bill.billId !== filters.billId) {
         return false;
       }
 
-      // Filter by Supplier Name
-      if (filters.supplierName && !bill.supplierName.toLowerCase().includes(filters.supplierName.toLowerCase())) {
+      if (filters.supplierId != null && bill.supplierId !== Number(filters.supplierId)) {
         return false;
       }
 
-      // Filter by Date Range
-      if (filters.dateFrom && bill.dateOpened < filters.dateFrom) {
-        return false;
+      if (filters.dateFrom) {
+        const from = new Date(filters.dateFrom);
+        from.setHours(0, 0, 0, 0);
+        if (new Date(bill.dateOpened) < from) return false;
       }
-      if (filters.dateTo && bill.dateOpened > filters.dateTo) {
-        return false;
+      if (filters.dateTo) {
+        const to = new Date(filters.dateTo);
+        to.setHours(23, 59, 59, 999);
+        if (new Date(bill.dateOpened) > to) return false;
       }
 
-      // Filter by Status
       if (filters.status && bill.status !== filters.status) {
         return false;
       }
 
-      // Filter by Amount Range
-      if (filters.minAmount && bill.total < filters.minAmount) {
+      if (filters.minAmount != null && bill.total < filters.minAmount) {
         return false;
       }
-      if (filters.maxAmount && bill.total > filters.maxAmount) {
+      if (filters.maxAmount != null && bill.total > filters.maxAmount) {
         return false;
       }
 
@@ -222,47 +259,59 @@ export class BillListComponent implements OnInit {
   }
 
   applyCutoffDateRange(rangeValue: string): void {
-    const option = this.cutoffDateOptions.find(opt => opt.value === rangeValue);
+    const option = this.cutoffDateOptions.find((opt) => opt.value === rangeValue);
 
-    if (option && option.days) {
+    if (option?.days) {
       const today = new Date();
-      today.setHours(23, 59, 59, 999); // Fin del día de hoy
+      today.setHours(23, 59, 59, 999);
 
       const startDate = new Date();
       startDate.setDate(today.getDate() - option.days);
-      startDate.setHours(0, 0, 0, 0); // Inicio del día
+      startDate.setHours(0, 0, 0, 0);
 
-      this.filterForm.patchValue({
-        dateFrom: startDate,
-        dateTo: today
-      }, { emitEvent: false }); // No emitir evento para evitar loop infinito
+      this.filterForm.patchValue(
+        {
+          dateFrom: startDate,
+          dateTo: today,
+        },
+        { emitEvent: false },
+      );
 
-      // Aplicar filtros manualmente
       this.applyFilters();
     }
   }
 
   clearFilters(): void {
-    this.filterForm.reset();
+    this.filterForm.reset({
+      billId: null,
+      supplierId: null,
+      dateFrom: null,
+      dateTo: null,
+      status: '',
+      cutoffDateRange: '',
+      minAmount: null,
+      maxAmount: null,
+    });
     this.showCutoffDateSelector = false;
+    this.billIdOptions = [...this.allBillIdOptions];
     this.filteredBills = [...this.allBills];
   }
 
-  // Navigation methods
   onCreateBill(): void {
     this.router.navigate(['/financial/treasury/purchase-bills/create']);
   }
 
   onViewBill(bill: PurchaseBillListView): void {
-    this.router.navigate(['/financial/treasury/purchase-bills', bill.id]);
+    this.selectedBill = bill;
+    this.detailVisible = true;
   }
 
   onEditBill(bill: PurchaseBillListView): void {
-    if (bill.status === 'POSTED' || bill.status === 'PAID') {
+    if (bill.status === 'POSTED' || bill.status === 'PAID' || bill.status === 'PARTIALLY_PAID') {
       this.messageService.add({
         severity: 'warn',
         summary: 'Acción No Permitida',
-        detail: 'No se puede editar una factura que ya ha sido contabilizada o pagada.'
+        detail: 'No se puede editar una obligación sincronizada desde Facturación.',
       });
       return;
     }
@@ -271,11 +320,11 @@ export class BillListComponent implements OnInit {
   }
 
   onDeleteBill(bill: PurchaseBillListView): void {
-    if (bill.status === 'POSTED' || bill.status === 'PAID') {
+    if (bill.status === 'POSTED' || bill.status === 'PAID' || bill.status === 'PARTIALLY_PAID') {
       this.messageService.add({
         severity: 'warn',
         summary: 'Acción No Permitida',
-        detail: 'No se puede eliminar una factura que ya ha sido contabilizada o pagada.'
+        detail: 'Las obligaciones sincronizadas no se eliminan desde Tesorería.',
       });
       return;
     }
@@ -290,38 +339,44 @@ export class BillListComponent implements OnInit {
             this.messageService.add({
               severity: 'success',
               summary: 'Éxito',
-              detail: 'Factura eliminada correctamente.'
+              detail: 'Factura eliminada correctamente.',
             });
-            this.loadBills(); // Reload the list
+            this.loadBills();
           },
           error: (error) => {
             console.error('Error al eliminar factura:', error);
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: 'No se pudo eliminar la factura. Intente nuevamente.'
+              detail: error?.message || 'No se pudo eliminar la factura.',
             });
-          }
+          },
         });
-      }
+      },
     });
   }
 
   onPayBill(bill: PurchaseBillListView): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Funcionalidad en desarrollo',
-      detail: `La programación de pago para la factura ${bill.billId} estará disponible próximamente.`
+    this.router.navigate(['/financial/treasury/expense-receipts/creation'], {
+      queryParams: {
+        billId: bill.id,
+        billCode: bill.billId,
+        supplierId: bill.supplierId,
+        supplierName: bill.supplierName,
+        totalAmount: bill.total,
+        paidAmount: bill.paidAmount ?? 0,
+        pendingBalance: bill.pendingBalance ?? bill.total,
+      },
     });
   }
 
-  // Utility methods
   getStatusSeverity(status: string): 'success' | 'info' | 'warning' | 'danger' {
     const severityMap: { [key: string]: 'success' | 'info' | 'warning' | 'danger' } = {
-      'DRAFT': 'info',
-      'POSTED': 'success',
-      'PAID': 'success',
-      'CANCELLED': 'danger'
+      DRAFT: 'info',
+      POSTED: 'warning',
+      PARTIALLY_PAID: 'info',
+      PAID: 'success',
+      CANCELLED: 'danger',
     };
     return severityMap[status] || 'info';
   }
@@ -331,43 +386,73 @@ export class BillListComponent implements OnInit {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
   }
 
   formatDate(date: Date): string {
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: '2-digit',
-      day: '2-digit'
+      day: '2-digit',
     }).format(new Date(date));
   }
 
-  // Export functionality (could be implemented later)
   onExportData(): void {
+    if (!this.filteredBills.length) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin datos',
+        detail: 'No hay facturas para exportar con los filtros actuales.',
+      });
+      return;
+    }
+
+    const header = ['Factura', 'Fecha', 'Proveedor', 'Total', 'Saldo', 'Estado'].join(',');
+    const rows = this.filteredBills.map((b) =>
+      [
+        b.billId,
+        this.formatDate(b.dateOpened),
+        `"${b.supplierName}"`,
+        b.total,
+        b.pendingBalance ?? '',
+        b.statusDisplay,
+      ].join(','),
+    );
+    const blob = new Blob([[header, ...rows].join('\n')], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `programacion-pagos-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
     this.messageService.add({
-      severity: 'info',
-      summary: 'Funcionalidad Pendiente',
-      detail: 'La exportación de datos será implementada próximamente.'
+      severity: 'success',
+      summary: 'Exportado',
+      detail: 'Se descargó el CSV de programaciones.',
     });
   }
 
-  // Statistics methods for summary cards
-  getDraftCount(): number {
-    return this.allBills.filter(bill => bill.status === 'DRAFT').length;
+  getPartialCount(): number {
+    return this.allBills.filter((bill) => bill.status === 'PARTIALLY_PAID').length;
   }
 
   getPostedCount(): number {
-    return this.allBills.filter(bill => bill.status === 'POSTED').length;
+    return this.allBills.filter(
+      (bill) => bill.status === 'POSTED' || bill.status === 'PARTIALLY_PAID',
+    ).length;
   }
 
   getPaidCount(): number {
-    return this.allBills.filter(bill => bill.status === 'PAID').length;
+    return this.allBills.filter((bill) => bill.status === 'PAID').length;
   }
 
   getCutoffDateLabel(): string {
     const rangeValue = this.filterForm.get('cutoffDateRange')?.value;
-    const option = this.cutoffDateOptions.find(opt => opt.value === rangeValue);
+    const option = this.cutoffDateOptions.find((opt) => opt.value === rangeValue);
     return option ? option.label : 'Rango personalizado';
   }
 

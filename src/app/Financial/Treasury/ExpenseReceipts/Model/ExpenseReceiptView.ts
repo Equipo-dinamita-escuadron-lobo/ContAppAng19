@@ -16,7 +16,8 @@ export interface ExpenseReceiptDetailsView {
     thirdPartyId: number; // Aunque no se muestra, es útil tenerlo
     supplierName: string;
     paymentMethodName: string;
-    status: 'Activo' | 'Anulado';
+    status: string;
+    statusKey?: string;
     totalAmount: number;
     observations: string;
     isDirectExpense: boolean;

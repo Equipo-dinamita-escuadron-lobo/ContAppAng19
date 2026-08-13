@@ -1,263 +1,167 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { delay, forkJoin, map, Observable, of, switchMap } from 'rxjs';
-import { Supplier, DropdownOption, PurchaseInvoice, ExpenseReceiptView } from '../Model/Models';
-import { ExpenseReceipt } from '../Model/ExpenseReceipt';
-import { ExpenseReceiptDetailsView } from '../Model/ExpenseReceiptView';
-import { PaymentMethod } from '../../../../GeneralMasters/PaymentMethods/models/PaymentMethods';
+import { Observable, forkJoin, map, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { PaymentMethodsServiceService } from '../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
+import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
-import { AccountingEntryLine } from '../Model/AccountingEntryLine';
-import { environment } from '../../../../../environments/environment';
+import { TreasuryApiService } from '../../Shared/treasury-api.service';
+import { DropdownOption, ExpenseReceiptView, PurchaseInvoice, Supplier } from '../Model/Models';
+import { ExpenseReceiptDetailsView } from '../Model/ExpenseReceiptView';
 import { ExpenseReceiptResponse } from '../Model/ExpenseReceiptResponse';
 import { ExpenseReceiptCreateRequest } from '../Model/ExpenseReceiptCreateRequest';
-import { VoidExpenseReceiptRequest } from '../Model/VoidExpenseReceiptRequest';
+import { AccountingEntryLine } from '../Model/AccountingEntryLine';
+import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
+import { educationalDescription, voucherStatusLabel } from '../../Shared/treasury-status-labels';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ExpenseReceiptService {
-  private apiUrl = environment.API_URL + 'expense-payments';
-
-  private paymentMethodsCache: PaymentMethod[] = [];
-
-  private mockSuppliersDB: Supplier[] = [
-    { id: 1, name: 'Proveedor ABC S.A.S', accountsPayableAccount: { id: 1, code: '220505', name: 'Proveedores Nacionales' } },
-    { id: 2, name: 'Suministros XYZ Ltda', accountsPayableAccount: { id: 1, code: '220505', name: 'Proveedores Nacionales' } },
-    { id: 3, name: 'Distribuciones DEF', accountsPayableAccount: { id: 1, code: '220505', name: 'Proveedores Nacionales' } },
-    { id: 4, name: 'Servicios GHI', accountsPayableAccount: { id: 1, code: '220505', name: 'Proveedores Nacionales' } },
-    { id: 5, name: 'Materiales JKL', accountsPayableAccount: { id: 1, code: '220505', name: 'Proveedores Nacionales' } },
-    { id: 6, name: 'Equipos MNO', accountsPayableAccount: { id: 1, code: '220505', name: 'Proveedores Nacionales' } }
-  ];
-
-  private mockPurchaseInvoicesDB: PurchaseInvoice[] = [
-    { id: 1, factCode: 'FC-P-10000', expirationDate: new Date('2025-06-20'), pendingValue: 1200000 },
-    { id: 2, factCode: 'FC-P-10001', expirationDate: new Date('2025-07-15'), pendingValue: 500000 },
-    { id: 3, factCode: 'FC-P-10002', expirationDate: new Date('2025-08-10'), pendingValue: 750000 },
-  ];
-
   constructor(
-    private http: HttpClient,
-    private paymentMethodsService: PaymentMethodsServiceService,
-    private localStorageMethods: LocalStorageMethods) { }
+    private readonly api: TreasuryApiService,
+    private readonly paymentMethods: PaymentMethodsServiceService,
+    private readonly accounts: ChartAccountService,
+    private readonly thirds: ThirdService,
+    private readonly storage: LocalStorageMethods,
+  ) {}
 
-
-  private getPaymentMethods(): Observable<PaymentMethod[]> {
-    if (this.paymentMethodsCache.length > 0) {
-      return of(this.paymentMethodsCache);
-    }
-
-    const enterpriseId = this.localStorageMethods.getIdEnterprise();
-    if (!enterpriseId) {
-      console.error("No se encontró ID de la empresa en LocalStorage.");
-      return of([]);
-    }
-
-    return this.paymentMethodsService.findAll(enterpriseId, 0, 100).pipe(
-      map(page => {
-        this.paymentMethodsCache = page.content;
-        return this.paymentMethodsCache;
-      })
-    );
+  private enterpriseId(): string {
+    const id = this.storage.getIdEnterprise();
+    if (!id) throw new Error('No hay una empresa activa');
+    return id;
   }
 
   getReceiptTypes(): Observable<DropdownOption[]> {
-    const data: DropdownOption[] = [
-      { label: 'CE-1 - Comprobante de Egreso Caja', value: 'CE-1' },
-      { label: 'CE-2 - Comprobante de Egreso Bancario', value: 'CE-2' },
-    ];
-    return of(data);
-    // TODO: Cuando conectes al backend:
-    // return this.http.get<DropdownOption[]>(`${this.apiUrl}/types`);
+    return this.paymentMethods.findAll(this.enterpriseId(), 0, 100).pipe(
+      map(page => page.content.map(method => ({ label: method.name, value: method.id })))
+    );
   }
 
   getAuxiliaryAccounts(): Observable<DropdownOption[]> {
-    const data: DropdownOption[] = [
-      { label: '511030 - Gastos de administración', value: 511030 },
-      { label: '520505 - Gastos de ventas', value: 520505 },
-      { label: '530505 - Gastos no operacionales', value: 530505 },
-    ];
-    return of(data);
-    // TODO: Cuando conectes al backend:
-    // return this.http.get<DropdownOption[]>(`${this.apiUrl}/auxiliary-accounts`);
-  }
-
-  getSuppliers(query: string): Observable<Supplier[]> {
-    const filteredSuppliers = this.mockSuppliersDB.filter(supplier =>
-      supplier.name.toLowerCase().includes(query.toLowerCase())
+    return this.accounts.getListAuxiliaryAccounts(this.enterpriseId()).pipe(
+      map(items => items.filter(item => item.status !== false).map(item => ({
+        label: `${item.code} - ${item.description}`, value: item.id
+      })))
     );
-    return of(filteredSuppliers);
   }
 
-  public getSupplierById(id: number): Observable<Supplier | undefined> {
-    const supplier = this.mockSuppliersDB.find(s => s.id === id);
-    return of(supplier);
+  getSuppliers(query = ''): Observable<Supplier[]> {
+    return forkJoin({ payables: this.api.pending(this.enterpriseId()), thirds: this.thirds.getThirdParties(this.enterpriseId(), 0, 1000) }).pipe(map(({ payables, thirds }) => {
+      const ids = [...new Set(payables.map(item => item.supplierId))];
+      return ids.map(id => { const third = thirds.content.find(item => item.thId === id); return ({ id, name: third?.socialReason || [third?.names, third?.lastNames].filter(Boolean).join(' ') || `Proveedor ${id}`, accountsPayableAccount: {
+        id: payables.find(item => item.supplierId === id)!.payableAccountId,
+        code: payables.find(item => item.supplierId === id)!.payableAccountCode,
+        name: payables.find(item => item.supplierId === id)!.payableAccountCode,
+      }}); }).filter(supplier => supplier.name.toLowerCase().includes(query.toLowerCase()));
+    }));
+  }
+
+  getSupplierById(id: number): Observable<Supplier | undefined> {
+    return this.getSuppliers().pipe(map(items => items.find(item => item.id === id)));
   }
 
   getInvoicesBySupplier(supplierId: number): Observable<PurchaseInvoice[]> {
-    // 1. Hacemos la llamada HTTP a la nueva URL.
-    return this.http.get<PurchaseInvoice[]>(`${this.apiUrl}/pending/supplier/${supplierId}`).pipe(
-      // 2. (Opcional pero recomendado) Transformamos los datos recibidos.
-      map(invoicesFromApi => {
-        // La API envía las fechas como strings (ej: "2023-10-27").
-        // Es una buena práctica convertirlas a objetos Date de JS para que
-        // componentes como p-calendar funcionen correctamente.
-        return invoicesFromApi.map(invoice => ({
-          ...invoice,
-          dueDate: new Date(invoice.expirationDate) // Convertimos el string de fecha a un objeto Date
-        }));
-      })
-    );
+    return this.api.pending(this.enterpriseId(), supplierId).pipe(map(items => items.map(item => ({
+      id: item.id,
+      factCode: item.reference,
+      expirationDate: new Date(item.dueDate),
+      pendingValue: item.availableAmount,
+      amountToPay: item.availableAmount,
+      payableAccountId: item.payableAccountId,
+      payableAccountCode: item.payableAccountCode,
+    }))));
   }
 
-
-  // --- MÉTODOS PARA EL CRUD DE RECIBOS DE GASTOS ---
   getAllExpenseReceipts(): Observable<ExpenseReceiptView[]> {
-    const enterpriseId = "asdasdasfafa";
-    if (!enterpriseId) {
-      console.error("ID de empresa no encontrado. No se pueden cargar los recibos de gastos.");
-      return of([]);
-    }
+    const enterpriseId = this.enterpriseId();
+    return forkJoin({
+      vouchers: this.api.vouchers(enterpriseId),
+      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(
+        catchError(() => of({ content: [] } as any)),
+      ),
+    }).pipe(
+      map(({ vouchers, thirds }) => {
+        const thirdNames = new Map<number, string>(
+          (thirds?.content || []).map((t: any) => {
+            const name =
+              (t.socialReason as string) ||
+              [t.names, t.lastNames].filter(Boolean).join(' ') ||
+              `Proveedor ${t.thId}`;
+            return [Number(t.thId), String(name)] as [number, string];
+          }),
+        );
 
-    return this.http.get<ExpenseReceiptResponse[]>(`${this.apiUrl}/by-enterprise/${enterpriseId}`).pipe(
-      map(apiReceipts => {
-
-        if (!apiReceipts) {
-          return [];
-        }
-
-        // 4. Transformar cada `ExpenseReceiptResponse` (de la API) en un `ExpenseReceiptView` (para la UI)
-        return apiReceipts.map(receiptFromApi => {
-
-          const supplier = this.mockSuppliersDB.find(s => s.id === receiptFromApi.thirdPartyId);
+        return (vouchers.content || []).map((voucher) => {
+          const supplierIds = [...new Set((voucher.details || []).map((d) => d.supplierId))];
+          const thirdPartyId = supplierIds[0] ?? 0;
+          const supplierName =
+            supplierIds.length > 1
+              ? `${supplierIds.length} proveedores`
+              : thirdNames.get(thirdPartyId) || `Proveedor ${thirdPartyId || ''}`;
 
           return {
-            id: receiptFromApi.id,
-            receiptCode: receiptFromApi.receiptCode,
-            issueDate: new Date(receiptFromApi.issueDate),
-            thirdPartyId: receiptFromApi.thirdPartyId,
-            supplierName: supplier ? supplier.name : `ID: ${receiptFromApi.thirdPartyId}`,
-            status: receiptFromApi.status === 'FINALIZED' ? 'Activo' : 'Anulado',
-            totalAmount: receiptFromApi.totalAmount
+            id: voucher.id,
+            receiptCode: voucher.voucherNumber,
+            issueDate: new Date(voucher.issueDate),
+            thirdPartyId,
+            supplierName,
+            status: voucherStatusLabel(voucher.status),
+            statusKey: voucher.status,
+            totalAmount: voucher.total,
           };
         });
-      })
+      }),
     );
   }
-
-  getExpenseReceiptById(id: number): Observable<ExpenseReceiptDetailsView | undefined> {
-    return this.http.get<ExpenseReceiptResponse>(`${this.apiUrl}/${id}`).pipe(
-      switchMap(receiptFromApi => {
-
-        // 1. Buscar el supplier y el método de pago en paralelo
-        const supplier$ = this.getSupplierById(receiptFromApi.thirdPartyId);
-        const paymentMethods$ = this.getPaymentMethods();
-
-        return forkJoin([supplier$, paymentMethods$]).pipe(
-          map(([supplier, paymentMethods]) => {
-
-            const paymentMethod = paymentMethods.find(p => p.id === receiptFromApi.paymentMethodId);
-
-            // 3. Determinar si es un gasto directo (sin facturas asociadas)
-            const isDirectExpense = !receiptFromApi.details || receiptFromApi.details.length === 0;
-
-            // 4. Construir el objeto `ExpenseReceiptDetailsView`
-            const receiptDetailsView: ExpenseReceiptDetailsView = {
-              id: receiptFromApi.id,
-              receiptCode: receiptFromApi.receiptCode,
-              issueDate: new Date(receiptFromApi.issueDate),
-              thirdPartyId: receiptFromApi.thirdPartyId,
-              supplierName: supplier ? supplier.name : `ID: ${receiptFromApi.thirdPartyId}`,
-              paymentMethodName: paymentMethod ? paymentMethod.name : `ID: ${receiptFromApi.paymentMethodId}`,
-              status: receiptFromApi.status === 'FINALIZED' ? 'Activo' : 'Anulado',
-              totalAmount: receiptFromApi.totalAmount,
-              observations: receiptFromApi.observations,
-              isDirectExpense: isDirectExpense,
-              details: receiptFromApi.details.map(detail => ({
-                invoiceId: detail.invoiceId,
-                amountPaid: detail.amountPaid,
-                invoiceCode: detail.invoiceCode,
-                accountingAccount: detail.accountingAccount
-              })),
-              // Generar el asiento contable
-              accountingEntry: this._generateAccountingEntry({ 
-                id: receiptFromApi.id,
-                totalAmount: receiptFromApi.totalAmount,
-                thirdPartyId: receiptFromApi.thirdPartyId,
-                paymentMethodId: receiptFromApi.paymentMethodId,
-                details: receiptFromApi.details?.map(d => ({ invoiceId: d.invoiceId, amountPaid: d.amountPaid }))
-              }, paymentMethods)
-
-            };
-
-            return receiptDetailsView;
-          })
-        );
-      })
-    );
+  getExpenseReceiptById(id: number): Observable<ExpenseReceiptDetailsView> {
+    return this.api.voucher(id, this.enterpriseId()).pipe(map(voucher => ({
+      id: voucher.id,
+      receiptCode: voucher.voucherNumber,
+      issueDate: new Date(voucher.issueDate),
+      thirdPartyId: voucher.details[0]?.supplierId ?? 0,
+      supplierName: `Proveedor ${voucher.details[0]?.supplierId ?? ''}`,
+      paymentMethodName: `Método ${voucher.paymentMethodId}`,
+      status: voucherStatusLabel(voucher.status),
+      statusKey: voucher.status,
+      totalAmount: voucher.total,
+      observations: educationalDescription(voucher.observations, ''),
+      isDirectExpense: false,
+      details: voucher.details.map(detail => ({
+        invoiceId: detail.invoiceId,
+        amountPaid: detail.amountPaid,
+        invoiceCode: detail.invoiceReference,
+        accountingAccount: detail.payableAccountId,
+      })),
+      accountingEntry: undefined,
+    })));
   }
 
-  createExpenseReceipt(receiptData: ExpenseReceiptCreateRequest): Observable<ExpenseReceiptResponse> {
-    return this.http.post<ExpenseReceiptResponse>(`${this.apiUrl}/`, receiptData);
+  createExpenseReceipt(request: ExpenseReceiptCreateRequest): Observable<ExpenseReceiptResponse> {
+    return this.api.createVoucher({
+      enterpriseId: request.enterpriseId,
+      issueDate: new Date().toISOString().slice(0, 10),
+      paymentMethodId: request.paymentMethodId,
+      bankAccountId: request.bankAccountId ?? undefined,
+      observations: request.observations,
+      details: request.details.map(detail => ({ supplierId: request.thirdPartyId, invoiceId: detail.invoiceId, amount: detail.amountPaid })),
+    }).pipe(map(voucher => ({
+      id: voucher.id, receiptCode: voucher.voucherNumber,
+      thirdPartyId: voucher.details[0]?.supplierId ?? request.thirdPartyId,
+      paymentMethodId: voucher.paymentMethodId, status: voucher.status,
+      issueDate: voucher.issueDate, totalAmount: voucher.total,
+      observations: voucher.observations ?? '',
+      details: voucher.details.map(detail => ({ invoiceId: detail.invoiceId, amountPaid: detail.amountPaid,
+        invoiceCode: detail.invoiceReference, accountingAccount: detail.payableAccountId })),
+    })));
   }
 
   voidExpenseReceipt(receiptId: number, reason: string): Observable<ExpenseReceiptResponse> {
-    const requestBody: VoidExpenseReceiptRequest = { reason };
-    return this.http.put<ExpenseReceiptResponse>(`${this.apiUrl}/${receiptId}/void`, requestBody);
-}
+    return this.api.voidVoucher(receiptId, this.enterpriseId(), reason) as unknown as Observable<ExpenseReceiptResponse>;
+  }
 
-  private _generateAccountingEntry(receipt: ExpenseReceipt, paymentMethods: PaymentMethod[]): AccountingEntryLine[] {
-    const entry: AccountingEntryLine[] = [];
-    const total = receipt.totalAmount || 0;
-    const thirdPartyId = receipt.thirdPartyId || 0;
-    const supplier = this.mockSuppliersDB.find(s => s.id === thirdPartyId);
-
-    // LÍNEA DEL CRÉDITO (salida de dinero)
-    const paymentMethod = paymentMethods.find(p => p.id === receipt.paymentMethodId);
-    if (!paymentMethod || !paymentMethod.accountingAccount) {
-      console.error("Método de pago o su cuenta contable no encontrados.");
-      return [];
-    }
-    entry.push({
-      accountCode: paymentMethod.accountingAccount,
-      accountName: paymentMethod.name,
-      thirdPartyId: 0, // Los métodos de pago normalmente no tienen tercero asociado
-      debit: 0,
-      credit: total,
-      description: `Pago a proveedor - ${receipt.receiptCode || 'N/A'}`
-    });
-
-    // LÍNEAS DEL DÉBITO
-    if (receipt.details && receipt.details.length > 0) {
-      // Pago de facturas específicas - debitar cuentas por pagar
-      receipt.details.forEach(detail => {
-        if (supplier && supplier.accountsPayableAccount) {
-          entry.push({
-            accountCode: supplier.accountsPayableAccount.code,
-            accountName: supplier.accountsPayableAccount.name,
-            thirdPartyId: thirdPartyId,
-            debit: detail.amountPaid,
-            credit: 0,
-            description: `Pago factura ${detail.invoiceId}`,
-            associatedInvoice: {
-              invoiceNumber: `FC-${detail.invoiceId}`,
-              amountCredited: detail.amountPaid
-            }
-          });
-        }
-      });
-    } else {
-      // Gasto directo - debitar cuenta de gastos
-      entry.push({
-        accountCode: "511030", // Cuenta de gastos por defecto
-        accountName: "Gastos de administración",
-        thirdPartyId: thirdPartyId,
-        debit: total,
-        credit: 0,
-        description: `Gasto directo - ${receipt.receiptCode || 'N/A'}`
-      });
-    }
-
-    return entry;
+  getAccountingEntry(receiptId: number): Observable<AccountingEntryLine[]> {
+    return this.api.accountingEntry(receiptId).pipe(map(response => (response.data?.movements ?? []).map((movement: any) => ({
+      accountCode: String(movement.account), accountName: `Cuenta ${movement.account}`,
+      thirdPartyId: movement.thirdPartyId ?? 0, debit: Number(movement.debit ?? 0), credit: Number(movement.credit ?? 0),
+      description: movement.description ?? response.data.description,
+    }))));
   }
 }

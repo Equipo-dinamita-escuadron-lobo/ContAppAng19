@@ -56,7 +56,10 @@ export class ExpenseReceiptAccountingComponent implements OnInit {
         if (receipt) {
           this.receiptCode = receipt.receiptCode;
           this.issueDate = receipt.issueDate;
-          this.accountingEntries = receipt.accountingEntry || [];
+          this.expenseReceiptService.getAccountingEntry(id).subscribe({
+            next: entries => this.accountingEntries = entries,
+            error: () => this.errorMessage = 'El asiento aún no está disponible o fue rechazado.'
+          });
         }
       },
       error: (err) => {

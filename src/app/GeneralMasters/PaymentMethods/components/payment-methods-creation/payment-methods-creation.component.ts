@@ -32,7 +32,8 @@ export class PaymentMethodsCreationComponent {
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
-      accountingAccount: [null, [Validators.required]]
+      accountingAccount: [null, [Validators.required]],
+      requiresBankAccount: [false]
     });
   }
 
@@ -94,7 +95,8 @@ export class PaymentMethodsCreationComponent {
       idEnterprise: enterpriseId,
       name: this.form.value.name,
       accountingAccountId: selectedAccountId,
-      status: true // Por defecto activo
+      status: true,
+      requiresBankAccount: Boolean(this.form.value.requiresBankAccount)
     };
 
     this.service.create(payload as any).subscribe({
