@@ -4,9 +4,9 @@ const gateway = process.env.PP8_GATEWAY_URL ?? 'http://localhost:8080';
 const username = process.env.PP8_E2E_USERNAME;
 const password = process.env.PP8_E2E_PASSWORD;
 const enterpriseId = process.env.PP8_E2E_ENTERPRISE_ID ?? 'enterprise-e2e';
-const supplierId = Number(process.env.PP8_E2E_SUPPLIER_ID ?? '77');
 const paymentMethodId = Number(process.env.PP8_E2E_PAYMENT_METHOD_ID ?? '8');
 const mailpit = process.env.PP8_MAILPIT_URL ?? 'http://localhost:18025';
+let supplierId: number;
 
 /** Fecha local ISO (YYYY-MM-DD) para evitar fechas fijas que caducan en @FutureOrPresent. */
 function isoDateLocal(date = new Date()): string {
@@ -47,7 +47,16 @@ async function loginThroughAngular(page: Page): Promise<string> {
   await page.evaluate((enterprise) => localStorage.setItem('entData', JSON.stringify({
     id: enterprise, name: 'PP8 E2E', nit: 'E2E', logo: '', inventoryConfigType: 'WEIGHTED_AVERAGE',
   })), enterpriseId);
-  return (await page.evaluate(() => localStorage.getItem('token'))) as string;
+  const token = (await page.evaluate(() => localStorage.getItem('token'))) as string;
+  const activeThirds = await page.request.get(`${gateway}/api/thirds/findAllActive`, {
+    headers: headers(token),
+    params: { entId: enterpriseId },
+  });
+  expect(activeThirds.ok()).toBe(true);
+  const thirds = (await activeThirds.json()).content;
+  expect(thirds.length).toBeGreaterThan(0);
+  supplierId = Number(thirds[0].thId);
+  return token;
 }
 
 function headers(token: string) {
