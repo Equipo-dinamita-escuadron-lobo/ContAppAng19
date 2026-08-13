@@ -243,17 +243,20 @@ export class ExpenseReceiptCreationComponent {
       }
     });
 
-    // Solo cuentas de CxP (pasivo corriente / proveedores), no todo el catálogo
-    this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe(accounts => {
-      this.payableAccounts = accounts
-        .filter(account => account.status !== false)
-        .filter(account => this.isPayableAccount(account))
-        .map(account => ({
-          id: account.id,
-          code: account.code,
-          name: account.description,
-          fullName: `${account.code} - ${account.description}`
-        }));
+    // Las CxP disponibles son las que realmente están asociadas a obligaciones pendientes.
+    this.expenseReceiptService.getPayableAccounts().subscribe({
+      next: accounts => {
+        this.payableAccounts = accounts;
+      },
+      error: (error) => {
+        console.error('Error al cargar cuentas por pagar:', error);
+        this.payableAccounts = [];
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Cuentas por pagar',
+          detail: 'No se pudieron cargar las cuentas de las facturas pendientes.',
+        });
+      },
     });
 
     // Cargar cuentas auxiliares para gastos directos
@@ -275,15 +278,6 @@ export class ExpenseReceiptCreationComponent {
       bankCtrl?.setValue(null);
     }
     bankCtrl?.updateValueAndValidity();
-  }
-
-  /** Cuentas válidas para CxP: pasivo corriente o código PUC de proveedores (22...). */
-  private isPayableAccount(account: { code?: string; classification?: string; nature?: string }): boolean {
-    const code = String(account.code || '');
-    const classification = String(account.classification || '').toLowerCase();
-    if (code.startsWith('22')) return true;
-    if (classification.includes('pasivo corriente')) return true;
-    return false;
   }
 
   subscribeToFormChanges(): void {
