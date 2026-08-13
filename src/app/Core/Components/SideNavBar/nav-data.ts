@@ -256,7 +256,7 @@ export const navbarData: INavbarData[] = [
         label: 'Factura de Venta',
       },
       {
-        routeLink: 'TO DO',
+        routeLink: 'commercial/purchase-invoice',
         icon: 'receipt_long',
         label: 'Factura de Compra',
       },

@@ -40,6 +40,16 @@ export const COMMERCIAL_ROUTES: Routes = [
       ),
   },
   {
+    path: 'purchase-invoice',
+    data: {
+      breadcrumb: 'Factura de Compra',
+    },
+    loadComponent: () =>
+      import('../Commercial/PurchaseInvoice/components/purchase-invoice-creation/purchase-invoice-creation.component').then(
+        (m) => m.PurchaseInvoiceCreationComponent
+      ),
+  },
+  {
     path: 'invoice-template',
     data: {
       breadcrumb: 'Plantilla de Factura',
