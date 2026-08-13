@@ -6,7 +6,6 @@ const password = process.env.PP8_E2E_PASSWORD;
 const enterpriseId = process.env.PP8_E2E_ENTERPRISE_ID ?? 'enterprise-e2e';
 const supplierId = Number(process.env.PP8_E2E_SUPPLIER_ID ?? '77');
 const paymentMethodId = Number(process.env.PP8_E2E_PAYMENT_METHOD_ID ?? '8');
-const payableAccountId = Number(process.env.PP8_E2E_PAYABLE_ACCOUNT_ID ?? '2205');
 const mailpit = process.env.PP8_MAILPIT_URL ?? 'http://localhost:18025';
 
 /** Fecha local ISO (YYYY-MM-DD) para evitar fechas fijas que caducan en @FutureOrPresent. */
@@ -64,7 +63,6 @@ async function createPurchaseAndWaitForPayable(page: Page, token: string, amount
       products: [{ productId: 1, amount: 1, description: 'Playwright PP8', discount: 0,
         unitPrice: amount, subtotal: amount, taxPercentage: [] }],
       totalValue: String(amount), totalPay: '0', pendingValue: String(amount),
-      expirationDate: isoDateDaysFromToday(30), accountingAccount: payableAccountId,
       factureType: 'PURCHASE', inventoryConfigType: 'WEIGHTED_AVERAGE',
     },
   });
@@ -78,6 +76,8 @@ async function createPurchaseAndWaitForPayable(page: Page, token: string, amount
     payable = (await pending.json()).find((item: any) => item.reference === String(factCode));
     return Boolean(payable);
   }).toBe(true);
+  expect(payable.payableAccountId).toBeTruthy();
+  expect(payable.payableAccountCode).toBeTruthy();
   return { payable, factCode };
 }
 
