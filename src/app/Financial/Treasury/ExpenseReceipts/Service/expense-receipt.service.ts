@@ -89,6 +89,27 @@ export class ExpenseReceiptService {
     }))));
   }
 
+  getPayableAccounts(): Observable<{ id: number; code: string; name: string; fullName: string }[]> {
+    return this.api.pending(this.enterpriseId()).pipe(
+      map(items => {
+        const accounts = new Map<number, { id: number; code: string; name: string; fullName: string }>();
+        items.forEach(item => {
+          if (!item.payableAccountId) {
+            return;
+          }
+          const code = item.payableAccountCode || String(item.payableAccountId);
+          accounts.set(item.payableAccountId, {
+            id: item.payableAccountId,
+            code,
+            name: 'Cuenta por pagar',
+            fullName: `${code} - Cuenta por pagar`,
+          });
+        });
+        return [...accounts.values()].sort((left, right) => left.code.localeCompare(right.code));
+      }),
+    );
+  }
+
   getAllExpenseReceipts(): Observable<ExpenseReceiptView[]> {
     const enterpriseId = this.enterpriseId();
     return forkJoin({
