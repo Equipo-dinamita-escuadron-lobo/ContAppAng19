@@ -1,9 +1,33 @@
-import { NEVER } from 'rxjs';
+import { fakeAsync, tick } from '@angular/core/testing';
+import { NEVER, of, TimeoutError } from 'rxjs';
 import { TreasuryOperationsComponent } from './treasury-operations.component';
 
 describe('TreasuryOperationsComponent PP8', () => {
   function component() {
-    const api = { createVoucher: jasmine.createSpy('createVoucher').and.returnValue(NEVER) };
+    const api = {
+      createVoucher: jasmine.createSpy('createVoucher').and.returnValue(NEVER),
+      postVoucher: jasmine.createSpy('postVoucher').and.returnValue(of({
+        id: 9,
+        voucherNumber: 'CE-9',
+        status: 'POSTING',
+        enterpriseId: 'enterprise-a',
+        paymentMethodId: 1,
+        total: 25,
+        version: 0,
+        details: [],
+      })),
+      voucher: jasmine.createSpy('voucher').and.returnValue(of({
+        id: 9,
+        voucherNumber: 'CE-9',
+        status: 'POSTED',
+        accountingEntryId: 100,
+        enterpriseId: 'enterprise-a',
+        paymentMethodId: 1,
+        total: 25,
+        version: 1,
+        details: [],
+      })),
+    };
     const storage = { getIdEnterprise: () => 'enterprise-a' };
     const exportService = {
       datedFilename: (_prefix: string, ext: string) => `test.${ext}`,
@@ -84,4 +108,60 @@ describe('TreasuryOperationsComponent PP8', () => {
     value.exportToCsv();
     expect(exportService.downloadCsvSections).toHaveBeenCalled();
   });
+
+  it('posts a draft voucher and shows success when accounting completes', fakeAsync(() => {
+    const { value, api } = component();
+    const messageService = (value as any).messageService;
+    spyOn(value, 'reload');
+
+    value.post({
+      id: 9,
+      voucherNumber: 'CE-9',
+      issueDate: '2026-08-13',
+      status: 'DRAFT',
+      total: 25,
+      paymentMethodId: 1,
+      enterpriseId: 'enterprise-a',
+      version: 0,
+      details: [],
+    });
+
+    tick();
+
+    expect(api.postVoucher).toHaveBeenCalledWith(9, 'enterprise-a');
+    expect(api.voucher).toHaveBeenCalledWith(9, 'enterprise-a');
+    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      severity: 'success',
+      summary: 'Contabilizado',
+    }));
+    expect(value.reload).toHaveBeenCalled();
+    expect(value.busy).toBeFalse();
+    expect(value.postingVoucherId).toBeUndefined();
+  }));
+
+  it('shows timeout feedback when posting hangs', fakeAsync(() => {
+    const { value, api } = component();
+    const messageService = (value as any).messageService;
+    api.postVoucher.and.returnValue(NEVER);
+
+    value.post({
+      id: 9,
+      voucherNumber: 'CE-9',
+      issueDate: '2026-08-13',
+      status: 'DRAFT',
+      total: 25,
+      paymentMethodId: 1,
+      enterpriseId: 'enterprise-a',
+      version: 0,
+      details: [],
+    });
+
+    tick(20_001);
+
+    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      severity: 'warn',
+      summary: 'Respuesta demorada',
+    }));
+    expect(value.busy).toBeFalse();
+  }));
 });

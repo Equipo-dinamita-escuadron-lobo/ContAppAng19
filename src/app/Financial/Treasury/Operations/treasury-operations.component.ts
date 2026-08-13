@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin, of, timer, TimeoutError } from 'rxjs';
+import { catchError, finalize, switchMap, take, takeWhile, timeout } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -64,6 +64,10 @@ import { TREASURY_HELP } from '../Shared/treasury-help-content';
   providers: [MessageService],
 })
 export class TreasuryOperationsComponent implements OnInit {
+  private static readonly OPERATION_TIMEOUT_MS = 20_000;
+  private static readonly POST_POLL_INTERVAL_MS = 2_000;
+  private static readonly POST_POLL_MAX_ATTEMPTS = 15;
+
   payables: Payable[] = [];
   vouchers: PaymentVoucher[] = [];
   schedules: PaymentSchedule[] = [];
@@ -84,6 +88,7 @@ export class TreasuryOperationsComponent implements OnInit {
   counterpartAccountId?: number;
   writeOffReason = '';
   busy = false;
+  postingVoucherId?: number;
   error = '';
   voucherNumberFilter = '';
   voucherStatusFilter = '';
@@ -310,7 +315,62 @@ export class TreasuryOperationsComponent implements OnInit {
     }));
   }
 
-  post(voucher: PaymentVoucher) { this.run(this.api.postVoucher(voucher.id, this.enterpriseId)); }
+  post(voucher: PaymentVoucher) {
+    if (!this.enterpriseId) {
+      this.error = 'Seleccione una empresa activa.';
+      return;
+    }
+
+    this.postingVoucherId = voucher.id;
+    this.busy = true;
+    this.error = '';
+
+    this.api.postVoucher(voucher.id, this.enterpriseId).pipe(
+      timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
+      switchMap((posted) => this.waitForAccounting(posted.id)),
+      finalize(() => {
+        this.busy = false;
+        this.postingVoucherId = undefined;
+      }),
+    ).subscribe({
+      next: (updated) => {
+        if (updated.status === 'POSTED') {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Contabilizado',
+            detail: `El comprobante ${updated.voucherNumber} quedó contabilizado.`,
+            life: 6000,
+          });
+        } else if (updated.status === 'FAILED') {
+          this.error = updated.failureReason || 'No se pudo contabilizar el comprobante.';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Contabilización fallida',
+            detail: this.error,
+            life: 8000,
+          });
+        } else {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Contabilización en proceso',
+            detail: `El comprobante ${updated.voucherNumber} sigue en estado ${this.statusLabel(updated.status)}. Actualice en unos segundos.`,
+            life: 8000,
+          });
+        }
+        this.reload();
+      },
+      error: (err) => this.handleOperationError(err, 'contabilizar el comprobante'),
+    });
+  }
+
+  private waitForAccounting(voucherId: number) {
+    return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
+      take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
+      switchMap(() => this.api.voucher(voucherId, this.enterpriseId)),
+      takeWhile((voucher) => voucher.status === 'POSTING', true),
+    );
+  }
+
   remove(voucher: PaymentVoucher) { this.run(this.api.deleteVoucher(voucher.id, this.enterpriseId)); }
   void(voucher: PaymentVoucher) {
     const reason = window.prompt('Motivo de anulación');
@@ -356,16 +416,31 @@ export class TreasuryOperationsComponent implements OnInit {
   private run(request: any) {
     this.busy = true;
     this.error = '';
-    request.subscribe({
+    request.pipe(
+      timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
+      finalize(() => {
+        this.busy = false;
+      }),
+    ).subscribe({
       next: () => {
         this.selected.clear();
         this.editingVoucherId = undefined;
         this.reload();
       },
-      error: (err: any) => {
-        this.error = err?.error?.message ?? 'La operación fue rechazada.';
-        this.busy = false;
-      }
+      error: (err: any) => this.handleOperationError(err, 'completar la operación'),
+    });
+  }
+
+  private handleOperationError(err: unknown, action: string): void {
+    const timedOut = err instanceof TimeoutError;
+    this.error = timedOut
+      ? 'El servidor tardó demasiado en responder. Verifique el listado antes de reintentar.'
+      : (err as any)?.error?.message ?? `No se pudo ${action}.`;
+    this.messageService.add({
+      severity: timedOut ? 'warn' : 'error',
+      summary: timedOut ? 'Respuesta demorada' : 'Error',
+      detail: this.error,
+      life: 8000,
     });
   }
 
