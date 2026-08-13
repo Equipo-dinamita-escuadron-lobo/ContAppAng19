@@ -113,11 +113,11 @@
               </td>
               <td>
                 <p-inputNumber [(ngModel)]="prod.amount" mode="decimal" size="small" [showButtons]="true" [min]="1"
-                  (onInput)="calculateLine(prod)" inputStyleClass="w-full"></p-inputNumber>
+                  (ngModelChange)="calculateLine(prod)" inputStyleClass="w-full"></p-inputNumber>
               </td>
               <td>
                 <p-inputNumber [(ngModel)]="prod.cost" mode="currency" size="small" currency="COP" locale="es-CO"
-                  (onInput)="calculateLine(prod)" inputStyleClass="w-full"></p-inputNumber>
+                  (ngModelChange)="calculateLine(prod)" inputStyleClass="w-full"></p-inputNumber>
               </td>
               <td>
                 <div class="flex gap-2">
@@ -129,7 +129,7 @@
               </td>
               <td>
                 <p-inputNumber [(ngModel)]="prod.IVA" size="small" suffix="%" [min]="0" [max]="100"
-                  (onInput)="calculateLine(prod)" inputStyleClass="w-full"></p-inputNumber>
+                  (ngModelChange)="calculateLine(prod)" inputStyleClass="w-full"></p-inputNumber>
               </td>
               <td class="text-right">{{ lineSubtotal(prod) | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</td>
               <td>
@@ -145,26 +145,26 @@
         <strong>Aún no hay productos</strong>
         <span>Seleccione un proveedor y luego agregue los productos de la compra.</span>
       </div>
-    </section>
 
-    <section class="summary-panel mt-6">
-      <div class="summary-card">
-        <span>Subtotal</span>
-        <strong>{{ subTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
-      </div>
-      <div class="summary-card">
-        <span>Impuestos</span>
-        <strong>{{ taxTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
-      </div>
-      <div class="summary-card editable">
-        <label for="initialPayment">Abono inicial</label>
-        <p-inputNumber [(ngModel)]="initialPayment" mode="currency" currency="COP" locale="es-CO" [min]="0"
-          inputId="initialPayment" (onInput)="calculateTotals()" styleClass="w-full"></p-inputNumber>
-      </div>
-      <div class="summary-card total-card">
-        <span>Total factura</span>
-        <strong>{{ total | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
-        <small>Pendiente: {{ pendingTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</small>
+      <div class="summary-panel mt-6" *ngIf="lstProducts.length > 0">
+        <div class="summary-card">
+          <span>Subtotal</span>
+          <strong>{{ subTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
+        </div>
+        <div class="summary-card">
+          <span>Impuestos</span>
+          <strong>{{ taxTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
+        </div>
+        <div class="summary-card editable">
+          <label for="initialPayment">Abono inicial</label>
+          <p-inputNumber [(ngModel)]="initialPayment" mode="currency" currency="COP" locale="es-CO" [min]="0"
+            inputId="initialPayment" (ngModelChange)="calculateTotals()" styleClass="w-full"></p-inputNumber>
+        </div>
+        <div class="summary-card total-card">
+          <span>Total factura</span>
+          <strong>{{ total | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
+          <small>Pendiente: {{ pendingTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</small>
+        </div>
       </div>
     </section>
   </div>

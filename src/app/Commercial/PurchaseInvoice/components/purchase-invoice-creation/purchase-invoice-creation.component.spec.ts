@@ -1,7 +1,61 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { NEVER } from 'rxjs';
-
 import { PurchaseInvoiceCreationComponent } from './purchase-invoice-creation.component';
+
+describe('PurchaseInvoiceCreationComponent totals', () => {
+  function component(): PurchaseInvoiceCreationComponent {
+    return new PurchaseInvoiceCreationComponent(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    );
+  }
+
+  it('calculates subtotal, taxes, total and pending balance', () => {
+    const value = component();
+    value.lstProducts = [
+      {
+        cost: 100_000,
+        amount: 2,
+        IVA: 19,
+        IvaValor: 19_000,
+        descuentos: [10, 0],
+      } as any,
+    ];
+    value.initialPayment = 50_000;
+
+    value.calculateTotals();
+
+    expect(value.subTotal).toBe(180_000);
+    expect(value.taxTotal).toBe(38_000);
+    expect(value.total).toBe(218_000);
+    expect(value.pendingTotal).toBe(168_000);
+  });
+
+  it('recalculates line and invoice totals after editing a product', () => {
+    const value = component();
+    const product = {
+      cost: 25_000,
+      amount: 3,
+      IVA: 19,
+      IvaValor: 0,
+      totalValue: 0,
+      descuentos: [0, 0],
+    } as any;
+    value.lstProducts = [product];
+
+    value.calculateLine(product);
+
+    expect(product.totalValue).toBe(75_000);
+    expect(value.subTotal).toBe(75_000);
+    expect(value.total).toBe(89_250);
+    expect(value.pendingTotal).toBe(89_250);
+  });
+});
 
 describe('PurchaseInvoiceCreationComponent save state', () => {
   it('releases the loading button when the server does not respond', fakeAsync(() => {
