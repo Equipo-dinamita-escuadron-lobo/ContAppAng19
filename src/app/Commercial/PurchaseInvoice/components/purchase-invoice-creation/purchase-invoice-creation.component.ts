@@ -14,7 +14,7 @@ import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { Subscription } from 'rxjs';
+import { finalize, Subscription, timeout, TimeoutError } from 'rxjs';
 import { Third } from '../../../../GeneralMasters/ThirdParties/models/Third';
 import { eThirdType } from '../../../../GeneralMasters/ThirdParties/models/eThirdType';
 import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
@@ -47,6 +47,8 @@ import { PurchaseInvoiceService } from '../../services/purchase-invoice.service'
   styleUrl: './purchase-invoice-creation.component.css',
 })
 export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
+  private static readonly SAVE_TIMEOUT_MS = 20_000;
+
   private readonly localStorageMethods = new LocalStorageMethods();
   private ref?: DynamicDialogRef;
   private dialogSubscription?: Subscription;
@@ -254,9 +256,13 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
     };
 
     this.saving = true;
-    this.purchaseInvoiceService.createPurchaseInvoice(payload).subscribe({
-      next: () => {
+    this.purchaseInvoiceService.createPurchaseInvoice(payload).pipe(
+      timeout(PurchaseInvoiceCreationComponent.SAVE_TIMEOUT_MS),
+      finalize(() => {
         this.saving = false;
+      }),
+    ).subscribe({
+      next: () => {
         this.messageService.add({
           severity: 'success',
           summary: 'Factura creada',
@@ -265,12 +271,14 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
         });
         this.resetForm();
       },
-      error: () => {
-        this.saving = false;
+      error: (error) => {
+        const timedOut = error instanceof TimeoutError;
         this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'No se pudo crear la factura de compra',
+          severity: timedOut ? 'warn' : 'error',
+          summary: timedOut ? 'Respuesta demorada' : 'Error',
+          detail: timedOut
+            ? 'El servidor tardó demasiado en responder. Verifique el listado antes de intentar guardar nuevamente.'
+            : 'No se pudo crear la factura de compra',
         });
       },
     });
