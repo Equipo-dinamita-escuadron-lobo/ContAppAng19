@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, Observable, of, Subject, timer, TimeoutError } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, finalize, map, switchMap, take, takeUntil, takeWhile, timeout } from 'rxjs/operators';
+import { forkJoin, Observable, of, Subject, throwError, timer, TimeoutError } from 'rxjs';
+import { catchError, debounceTime, defaultIfEmpty, distinctUntilChanged, filter, finalize, map, scan, switchMap, take, takeUntil, takeWhile, timeout } from 'rxjs/operators';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -25,7 +25,7 @@ import { ChartAccountService } from '../../../GeneralMasters/AccountCatalogue/se
 import { BankAccountsService } from '../../../GeneralMasters/BankAccounts/services/bank-accounts.service';
 import { ThirdService } from '../../../GeneralMasters/ThirdParties/Services/third.service';
 import { TreasuryApiService } from '../Shared/treasury-api.service';
-import { Payable, PayableWriteOff, PaymentSchedule, PaymentVoucher } from '../Shared/treasury-api.models';
+import { Payable, PayableWriteOff, PaymentSchedule, PaymentVoucher, VoucherStatus } from '../Shared/treasury-api.models';
 import {
   accountingEntryStatusLabel,
   accountingSourceDocumentTypeLabel,
@@ -111,9 +111,9 @@ import { Supplier } from '../ExpenseReceipts/Model/Models';
   providers: [MessageService],
 })
 export class TreasuryOperationsComponent implements OnInit, OnDestroy {
-  private static readonly OPERATION_TIMEOUT_MS = 20_000;
+  private static readonly OPERATION_TIMEOUT_MS = 45_000;
   private static readonly POST_POLL_INTERVAL_MS = 2_000;
-  private static readonly POST_POLL_MAX_ATTEMPTS = 15;
+  private static readonly POST_POLL_MAX_ATTEMPTS = 20;
   private static readonly VOUCHER_FILTER_DEBOUNCE_MS = 300;
   private readonly destroy$ = new Subject<void>();
   private readonly voucherNumberFilter$ = new Subject<string>();
@@ -794,6 +794,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     if (!this.validatePaymentAction(this.dialogLines, this.dialogPaymentMethodId, this.dialogBankAccountId)) {
       return;
     }
+    const idempotencyKey = crypto.randomUUID();
     this.busy = true;
     this.error = '';
     this.api.createVoucher({
@@ -804,9 +805,12 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       observations: this.dialogObservations,
       details: this.getDialogDetails(),
     }).pipe(
-      switchMap((voucher) => this.api.postVoucher(voucher.id, this.enterpriseId)),
-      switchMap((posted) => this.waitForAccounting(posted.id)),
       timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
+      switchMap((voucher) =>
+        this.postVoucherWithRetry(voucher.id, idempotencyKey).pipe(
+          switchMap((posted) => this.waitForVoucherSettlement(posted)),
+        ),
+      ),
       finalize(() => {
         this.busy = false;
       }),
@@ -838,7 +842,10 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         }
         this.reload();
       },
-      error: (err) => this.handleOperationError(err, 'registrar el pago'),
+      error: (err) => {
+        this.handleOperationError(err, 'registrar el pago');
+        this.reload();
+      },
     });
   }
 
@@ -1077,14 +1084,6 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     return true;
   }
 
-  private waitForAccounting(voucherId: number) {
-    return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
-      take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
-      switchMap(() => this.api.voucher(voucherId, this.enterpriseId)),
-      takeWhile((voucher) => voucher.status === 'POSTING', true),
-    );
-  }
-
   post(voucher: PaymentVoucher) {
     if (!this.enterpriseId) {
       this.error = 'Seleccione una empresa activa.';
@@ -1095,9 +1094,8 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     this.busy = true;
     this.error = '';
 
-    this.api.postVoucher(voucher.id, this.enterpriseId).pipe(
-      timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
-      switchMap((posted) => this.waitForAccounting(posted.id)),
+    this.postVoucherWithRetry(voucher.id, crypto.randomUUID()).pipe(
+      switchMap((posted) => this.waitForVoucherSettlement(posted)),
       finalize(() => {
         this.busy = false;
         this.postingVoucherId = undefined;
@@ -1129,7 +1127,10 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         }
         this.reload();
       },
-      error: (err) => this.handleOperationError(err, 'contabilizar el comprobante'),
+      error: (err) => {
+        this.handleOperationError(err, 'contabilizar el comprobante');
+        this.reload();
+      },
     });
   }
 
@@ -1194,7 +1195,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     this.error = '';
     this.api.confirmWriteOff(item.id).pipe(
       timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
-      switchMap((confirmed) => this.waitForWriteOffPosting(confirmed.id ?? item.id)),
+      switchMap((confirmed) => this.waitForWriteOffSettlement(confirmed, 'POSTING')),
       switchMap((updated) => forkJoin({
         payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
         writeOffs: this.api.writeOffs(this.enterpriseId).pipe(catchError(() => of(this.writeOffs))),
@@ -1266,13 +1267,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     this.error = '';
     this.api.voidWriteOff(item.id).pipe(
       timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
-      switchMap((voided) => {
-        const writeOffId = voided.id ?? item.id;
-        if (voided.status === 'VOIDING') {
-          return this.waitForWriteOffVoiding(writeOffId);
-        }
-        return of(voided);
-      }),
+      switchMap((voided) => this.waitForWriteOffSettlement(voided, 'VOIDING')),
       switchMap((updated) => forkJoin({
         payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
         writeOffs: this.api.writeOffs(this.enterpriseId).pipe(catchError(() => of(this.writeOffs))),
@@ -1317,20 +1312,85 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     return detail?.invoiceId != null ? Number(detail.invoiceId) : undefined;
   }
 
-  private waitForWriteOffPosting(writeOffId: number) {
-    return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
-      take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
-      switchMap(() => this.api.writeOff(writeOffId)),
-      takeWhile((writeOff) => writeOff.status === 'POSTING', true),
+  private postVoucherWithRetry(voucherId: number, idempotencyKey: string): Observable<PaymentVoucher> {
+    const post = () => this.api.postVoucher(voucherId, this.enterpriseId, idempotencyKey).pipe(
+      timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
+    );
+    return post().pipe(
+      catchError((err) => {
+        if (!this.isTransientHttpError(err)) {
+          return throwError(() => err);
+        }
+        return post();
+      }),
     );
   }
 
-  private waitForWriteOffVoiding(writeOffId: number) {
+  private waitForVoucherSettlement(voucher: PaymentVoucher): Observable<PaymentVoucher> {
+    if (voucher.status !== 'POSTING') {
+      return of(voucher);
+    }
+    return this.pollVoucherUntilStatusChanges(voucher.id, 'POSTING').pipe(
+      defaultIfEmpty(voucher),
+    );
+  }
+
+  private waitForWriteOffSettlement(
+    writeOff: PayableWriteOff,
+    pendingStatus: VoucherStatus,
+  ): Observable<PayableWriteOff> {
+    if (writeOff.status !== pendingStatus) {
+      return of(writeOff);
+    }
+    const writeOffId = writeOff.id;
+    if (!writeOffId) {
+      return of(writeOff);
+    }
+    return this.pollWriteOffUntilStatusChanges(writeOffId, pendingStatus).pipe(
+      defaultIfEmpty(writeOff),
+    );
+  }
+
+  private pollVoucherUntilStatusChanges(
+    voucherId: number,
+    pendingStatus: VoucherStatus,
+  ): Observable<PaymentVoucher> {
     return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
       take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
-      switchMap(() => this.api.writeOff(writeOffId)),
-      takeWhile((writeOff) => writeOff.status === 'VOIDING', true),
+      switchMap(() =>
+        this.api.voucher(voucherId, this.enterpriseId).pipe(
+          catchError(() => of(null)),
+        ),
+      ),
+      scan((last, current) => current ?? last, null as PaymentVoucher | null),
+      filter((voucher): voucher is PaymentVoucher => voucher != null),
+      takeWhile((voucher) => voucher.status === pendingStatus, true),
     );
+  }
+
+  private pollWriteOffUntilStatusChanges(
+    writeOffId: number,
+    pendingStatus: VoucherStatus,
+  ): Observable<PayableWriteOff> {
+    return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
+      take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
+      switchMap(() =>
+        this.api.writeOff(writeOffId).pipe(
+          catchError(() => of(null)),
+        ),
+      ),
+      scan((last, current) => current ?? last, null as PayableWriteOff | null),
+      filter((writeOff): writeOff is PayableWriteOff => writeOff != null),
+      takeWhile((writeOff) => writeOff.status === pendingStatus, true),
+    );
+  }
+
+  private isTransientHttpError(err: unknown): boolean {
+    if (err instanceof TimeoutError) {
+      return true;
+    }
+    const status = (err as { status?: number })?.status;
+    return status === 0 || status === 502 || status === 503 || status === 504;
   }
 
   private resolveAccountCode(account: { code?: string; codeAccount?: string }): string {
