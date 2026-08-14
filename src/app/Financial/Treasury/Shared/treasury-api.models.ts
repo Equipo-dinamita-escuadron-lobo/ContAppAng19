@@ -1,5 +1,6 @@
 export type VoucherStatus = 'DRAFT' | 'POSTING' | 'POSTED' | 'FAILED' | 'VOIDING' | 'VOIDED' | 'VOID_FAILED';
 export type ScheduleStatus = 'SCHEDULED' | 'PROCESSING' | 'WAITING_ACCOUNTING' | 'EXECUTED' | 'FAILED' | 'CANCELED';
+export type WriteOffStatus = 'DRAFT' | 'POSTING' | 'POSTED' | 'FAILED' | 'VOIDING' | 'VOIDED' | 'VOID_FAILED';
 
 export interface VoucherDetailRequest { supplierId: number; invoiceId: number; amount: number; }
 export interface VoucherRequest {
@@ -51,4 +52,16 @@ export interface SupplierStatement {
 export interface WriteOffRequest {
   enterpriseId: string; reason: string; counterpartAccountId: number;
   counterpartAccountCode: string; details: VoucherDetailRequest[];
+}
+export interface PayableWriteOff {
+  id: number;
+  enterpriseId?: string;
+  reason?: string;
+  counterpartAccountId?: number;
+  counterpartAccountCode?: string;
+  total: number;
+  status: WriteOffStatus | string;
+  accountingEntryId?: number;
+  version?: number;
+  details?: { id?: number; supplierId: number; invoiceId: number; amount: number }[];
 }

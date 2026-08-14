@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, Observable, of, Subject, timer, TimeoutError } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, take, takeUntil, takeWhile, timeout } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, finalize, map, switchMap, take, takeUntil, takeWhile, timeout } from 'rxjs/operators';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -25,7 +25,7 @@ import { ChartAccountService } from '../../../GeneralMasters/AccountCatalogue/se
 import { BankAccountsService } from '../../../GeneralMasters/BankAccounts/services/bank-accounts.service';
 import { ThirdService } from '../../../GeneralMasters/ThirdParties/Services/third.service';
 import { TreasuryApiService } from '../Shared/treasury-api.service';
-import { Payable, PaymentSchedule, PaymentVoucher } from '../Shared/treasury-api.models';
+import { Payable, PayableWriteOff, PaymentSchedule, PaymentVoucher } from '../Shared/treasury-api.models';
 import {
   accountingEntryStatusLabel,
   accountingSourceDocumentTypeLabel,
@@ -68,8 +68,18 @@ import {
   WRITE_OFF_COUNTERPART_REQUIRED_MESSAGE,
   WRITE_OFF_CREATE_SUCCESS_MESSAGE,
   WRITE_OFF_NO_AVAILABLE_BALANCE_MESSAGE,
+  WRITE_OFF_PENDING_BLOCK_MESSAGE,
+  WRITE_OFF_POST_FAILED_MESSAGE,
+  WRITE_OFF_POSTED_PARTIAL_MESSAGE,
+  WRITE_OFF_POSTED_TOTAL_MESSAGE,
   WRITE_OFF_REASON_REQUIRED_MESSAGE,
+  WRITE_OFF_DISCARD_SUCCESS_MESSAGE,
+  WRITE_OFF_DISCARD_TOOLTIP,
+  WRITE_OFF_VOID_TOOLTIP,
+  WRITE_OFF_VOIDED_MESSAGE,
+  WRITE_OFF_VOID_FAILED_MESSAGE,
 } from '../Shared/treasury-writeoff-messages';
+import { hasActiveWriteOffForInvoice } from '../Shared/treasury-writeoff-availability';
 import { ExpenseReceiptService } from '../ExpenseReceipts/Service/expense-receipt.service';
 import { Supplier } from '../ExpenseReceipts/Model/Models';
 
@@ -108,11 +118,13 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly voucherNumberFilter$ = new Subject<string>();
 
+  @ViewChild('writeOffsSection') writeOffsSection?: ElementRef<HTMLElement>;
+
   payables: Payable[] = [];
   vouchers: PaymentVoucher[] = [];
   allVouchers: PaymentVoucher[] = [];
   schedules: PaymentSchedule[] = [];
-  writeOffs: any[] = [];
+  writeOffs: PayableWriteOff[] = [];
   methods: any[] = [];
   methodOptions: { id: number; label: string }[] = [];
   allPaymentMethodsCount = 0;
@@ -126,6 +138,8 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   ];
   minExecutionDate!: Date;
   writeOffDialogVisible = false;
+  writeOffDiscardDialogVisible = false;
+  writeOffDiscardTarget?: PayableWriteOff;
   writeOffTarget?: Payable;
   writeOffAmount?: number;
   writeOffCounterpartAccountId?: number;
@@ -166,6 +180,8 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   accountingCreditTotal = 0;
   busy = false;
   error = '';
+  readonly writeOffDiscardTooltip = WRITE_OFF_DISCARD_TOOLTIP;
+  readonly writeOffVoidTooltip = WRITE_OFF_VOID_TOOLTIP;
   exportingPdf = false;
   exportingCsv = false;
   dueDateDialogVisible = false;
@@ -322,13 +338,13 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     this.busy = true;
     this.error = '';
     forkJoin({
-      payables: this.api.pending(this.enterpriseId),
-      vouchers: this.api.vouchers(this.enterpriseId, { size: 1000 }),
-      schedules: this.api.schedules(this.enterpriseId),
-      writeOffs: this.api.writeOffs(this.enterpriseId),
-      methods: this.paymentMethods.findAllActive(this.enterpriseId),
-      banks: this.bankAccounts.findAllActive(this.enterpriseId),
-      accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId),
+      payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
+      vouchers: this.api.vouchers(this.enterpriseId, { size: 1000 }).pipe(catchError(() => of({ content: this.allVouchers } as any))),
+      schedules: this.api.schedules(this.enterpriseId).pipe(catchError(() => of(this.schedules))),
+      writeOffs: this.api.writeOffs(this.enterpriseId).pipe(catchError(() => of(this.writeOffs))),
+      methods: this.paymentMethods.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
+      banks: this.bankAccounts.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
+      accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
       thirds: this.thirds.getThirdParties(this.enterpriseId, 0, 1000).pipe(
         catchError(() => of({ content: [] } as any)),
       ),
@@ -339,7 +355,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         this.allVouchers = data.vouchers.content;
         this.applyVoucherFilters();
         this.schedules = data.schedules;
-        this.writeOffs = data.writeOffs;
+        this.writeOffs = this.normalizeWriteOffList(data.writeOffs);
         this.banks = data.banks.content;
         this.bankOptions = this.banks.map((bank: any) => ({
           id: bank.id,
@@ -406,8 +422,24 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     }
   }
 
+  hasActiveWriteOffForPayable(payable: Payable): boolean {
+    return hasActiveWriteOffForInvoice(this.writeOffs, payable.id);
+  }
+
   canWriteOffPayable(payable: Payable): boolean {
-    return payable.active && Number(payable.availableAmount) > 0;
+    return payable.active
+      && Number(payable.availableAmount) > 0
+      && !this.hasActiveWriteOffForPayable(payable);
+  }
+
+  writeOffPayableTooltip(payable: Payable): string | undefined {
+    if (!payable.active || Number(payable.availableAmount) <= 0) {
+      return WRITE_OFF_NO_AVAILABLE_BALANCE_MESSAGE;
+    }
+    if (this.hasActiveWriteOffForPayable(payable)) {
+      return WRITE_OFF_PENDING_BLOCK_MESSAGE;
+    }
+    return undefined;
   }
 
   payableAccountLabel(payable: Payable): string {
@@ -421,7 +453,16 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   }
 
   openWriteOffDialog(payable: Payable) {
-    if (!this.canWriteOffPayable(payable)) {
+    if (this.hasActiveWriteOffForPayable(payable)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Baja pendiente',
+        detail: WRITE_OFF_PENDING_BLOCK_MESSAGE,
+        life: 6000,
+      });
+      return;
+    }
+    if (!payable.active || Number(payable.availableAmount) <= 0) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Sin saldo',
@@ -488,6 +529,16 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       });
       return;
     }
+    const accountCode = this.resolveAccountCode(account);
+    if (!accountCode) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cuenta contrapartida',
+        detail: 'La cuenta seleccionada no tiene código contable válido.',
+        life: 5000,
+      });
+      return;
+    }
     const reason = (this.writeOffReason ?? '').trim();
     if (!reason) {
       this.messageService.add({
@@ -504,15 +555,17 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         enterpriseId: this.enterpriseId,
         reason,
         counterpartAccountId: account.id,
-        counterpartAccountCode: account.code,
+        counterpartAccountCode: accountCode,
         details: [{
           supplierId: payable.supplierId,
           invoiceId: payable.id,
           amount,
         }],
       }),
-      () => {
+      (created) => {
+        this.upsertWriteOff(created);
         this.cancelWriteOffDialog();
+        this.scrollToWriteOffsSection();
         return {
           summary: 'Baja de CxP',
           detail: WRITE_OFF_CREATE_SUCCESS_MESSAGE,
@@ -1134,14 +1187,194 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
 
   cancel(schedule: PaymentSchedule) { this.run(this.api.cancelSchedule(schedule.id)); }
   retry(schedule: PaymentSchedule) { this.run(this.api.retrySchedule(schedule.id)); }
-  confirmWriteOff(item: any) {
-    this.run(this.api.confirmWriteOff(item.id), () => ({
-      summary: 'Baja contabilizada',
-      detail: 'La baja de CxP fue enviada a contabilización.',
-      life: 6000,
+
+  confirmWriteOff(item: PayableWriteOff) {
+    const invoiceId = this.writeOffInvoiceId(item);
+    this.busy = true;
+    this.error = '';
+    this.api.confirmWriteOff(item.id).pipe(
+      timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
+      switchMap((confirmed) => this.waitForWriteOffPosting(confirmed.id ?? item.id)),
+      switchMap((updated) => forkJoin({
+        payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
+        writeOffs: this.api.writeOffs(this.enterpriseId).pipe(catchError(() => of(this.writeOffs))),
+      }).pipe(map((data) => ({ updated, ...data })))),
+      finalize(() => {
+        this.busy = false;
+      }),
+    ).subscribe({
+      next: ({ updated, payables, writeOffs }) => {
+        this.payables = payables;
+        this.writeOffs = this.normalizeWriteOffList(writeOffs);
+        if (updated.status === 'POSTED') {
+          const stillPending = invoiceId != null
+            ? payables.some((payable) => payable.id === invoiceId)
+            : true;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Baja contabilizada',
+            detail: stillPending ? WRITE_OFF_POSTED_PARTIAL_MESSAGE : WRITE_OFF_POSTED_TOTAL_MESSAGE,
+            life: 8000,
+          });
+        } else if (updated.status === 'FAILED') {
+          this.error = WRITE_OFF_POST_FAILED_MESSAGE;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Contabilización fallida',
+            detail: WRITE_OFF_POST_FAILED_MESSAGE,
+            life: 8000,
+          });
+        } else {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Contabilización en proceso',
+            detail: `La baja sigue en estado ${this.writeOffLabel(updated.status)}. Actualice en unos segundos.`,
+            life: 8000,
+          });
+        }
+      },
+      error: (err: unknown) => this.handleOperationError(err, 'contabilizar la baja de CxP'),
+    });
+  }
+
+  discardDraftWriteOff(item: PayableWriteOff) {
+    this.writeOffDiscardTarget = item;
+    this.writeOffDiscardDialogVisible = true;
+  }
+
+  cancelDiscardWriteOffDialog() {
+    this.writeOffDiscardDialogVisible = false;
+    this.writeOffDiscardTarget = undefined;
+  }
+
+  confirmDiscardWriteOff() {
+    const item = this.writeOffDiscardTarget;
+    if (!item?.id) {
+      return;
+    }
+    this.writeOffDiscardDialogVisible = false;
+    this.writeOffDiscardTarget = undefined;
+    this.run(this.api.discardWriteOff(item.id), () => ({
+      summary: 'Borrador descartado',
+      detail: WRITE_OFF_DISCARD_SUCCESS_MESSAGE,
+      life: 8000,
     }));
   }
-  voidWriteOff(item: any) { this.run(this.api.voidWriteOff(item.id)); }
+
+  voidWriteOff(item: PayableWriteOff) {
+    this.busy = true;
+    this.error = '';
+    this.api.voidWriteOff(item.id).pipe(
+      timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
+      switchMap((voided) => {
+        const writeOffId = voided.id ?? item.id;
+        if (voided.status === 'VOIDING') {
+          return this.waitForWriteOffVoiding(writeOffId);
+        }
+        return of(voided);
+      }),
+      switchMap((updated) => forkJoin({
+        payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
+        writeOffs: this.api.writeOffs(this.enterpriseId).pipe(catchError(() => of(this.writeOffs))),
+      }).pipe(map((data) => ({ updated, ...data })))),
+      finalize(() => {
+        this.busy = false;
+      }),
+    ).subscribe({
+      next: ({ updated, payables, writeOffs }) => {
+        this.payables = payables;
+        this.writeOffs = this.normalizeWriteOffList(writeOffs);
+        if (updated.status === 'VOIDED') {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Baja anulada',
+            detail: WRITE_OFF_VOIDED_MESSAGE,
+            life: 8000,
+          });
+        } else if (updated.status === 'VOID_FAILED') {
+          this.error = WRITE_OFF_VOID_FAILED_MESSAGE;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Anulación fallida',
+            detail: WRITE_OFF_VOID_FAILED_MESSAGE,
+            life: 8000,
+          });
+        } else {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Anulación en proceso',
+            detail: `La baja sigue en estado ${this.writeOffLabel(updated.status)}. Actualice en unos segundos.`,
+            life: 8000,
+          });
+        }
+      },
+      error: (err: unknown) => this.handleOperationError(err, 'anular la baja de CxP'),
+    });
+  }
+
+  private writeOffInvoiceId(item: PayableWriteOff): number | undefined {
+    const detail = item.details?.[0];
+    return detail?.invoiceId != null ? Number(detail.invoiceId) : undefined;
+  }
+
+  private waitForWriteOffPosting(writeOffId: number) {
+    return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
+      take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
+      switchMap(() => this.api.writeOff(writeOffId)),
+      takeWhile((writeOff) => writeOff.status === 'POSTING', true),
+    );
+  }
+
+  private waitForWriteOffVoiding(writeOffId: number) {
+    return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
+      take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
+      switchMap(() => this.api.writeOff(writeOffId)),
+      takeWhile((writeOff) => writeOff.status === 'VOIDING', true),
+    );
+  }
+
+  private resolveAccountCode(account: { code?: string; codeAccount?: string }): string {
+    return String(account.code ?? account.codeAccount ?? '').trim();
+  }
+
+  private normalizeWriteOff(raw: PayableWriteOff | Record<string, unknown>): PayableWriteOff {
+    const record = raw as Record<string, unknown>;
+    const rawStatus = record['status'];
+    const status = typeof rawStatus === 'string' ? rawStatus : 'DRAFT';
+    return {
+      ...(raw as PayableWriteOff),
+      id: Number(record['id']),
+      total: Number(record['total'] ?? 0),
+      status,
+    };
+  }
+
+  private normalizeWriteOffList(items: PayableWriteOff[]): PayableWriteOff[] {
+    return (items ?? []).map((item) => this.normalizeWriteOff(item));
+  }
+
+  private upsertWriteOff(raw: PayableWriteOff): void {
+    if (!raw?.id) {
+      return;
+    }
+    const item = this.normalizeWriteOff(raw);
+    const index = this.writeOffs.findIndex((entry) => entry.id === item.id);
+    if (index >= 0) {
+      this.writeOffs = [
+        ...this.writeOffs.slice(0, index),
+        item,
+        ...this.writeOffs.slice(index + 1),
+      ];
+      return;
+    }
+    this.writeOffs = [item, ...this.writeOffs];
+  }
+
+  private scrollToWriteOffsSection(): void {
+    setTimeout(() => {
+      this.writeOffsSection?.nativeElement?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  }
 
   openDueDateDialog(payable: Payable) {
     this.dueDateTarget = payable;
@@ -1235,11 +1468,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     this.error = '';
     request.pipe(
       timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
-      finalize(() => {
-        this.busy = false;
-      }),
-    ).subscribe({
-      next: (result: any) => {
+      switchMap((result: any) => {
         if (onSuccess) {
           const message = onSuccess(result);
           this.messageService.add({
@@ -1249,10 +1478,63 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
             life: message.life ?? 6000,
           });
         }
-        this.reload();
-      },
+        return this.api.writeOffs(this.enterpriseId).pipe(
+          catchError(() => of(this.writeOffs)),
+          switchMap((writeOffs) => {
+            this.writeOffs = this.normalizeWriteOffList(writeOffs);
+            return this.reloadCoreData();
+          }),
+        );
+      }),
+      finalize(() => {
+        this.busy = false;
+      }),
+    ).subscribe({
+      next: () => undefined,
       error: (err: unknown) => this.handleOperationError(err, 'completar la operación'),
     });
+  }
+
+  private reloadCoreData(): Observable<void> {
+    return forkJoin({
+      payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
+      vouchers: this.api.vouchers(this.enterpriseId, { size: 1000 }).pipe(catchError(() => of({ content: this.allVouchers } as any))),
+      schedules: this.api.schedules(this.enterpriseId).pipe(catchError(() => of(this.schedules))),
+      methods: this.paymentMethods.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
+      banks: this.bankAccounts.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
+      accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
+      thirds: this.thirds.getThirdParties(this.enterpriseId, 0, 1000).pipe(catchError(() => of({ content: [] } as any))),
+    }).pipe(
+      switchMap((data) => {
+        this.payables = data.payables;
+        this.supplierNames = buildThirdPartyNameMap(data.thirds?.content || []);
+        this.allVouchers = data.vouchers.content;
+        this.applyVoucherFilters();
+        this.schedules = data.schedules;
+        this.banks = data.banks.content;
+        this.bankOptions = this.banks.map((bank: any) => ({
+          id: bank.id,
+          label: `${bank.bank?.name || 'Banco'} - ${bank.accountNumber}`,
+        }));
+        this.accounts = data.accounts.filter((a: any) => a.status !== false);
+        this.accountOptions = this.accounts.map((account: any) => ({
+          id: account.id,
+          label: `${account.code} - ${account.description}`,
+        }));
+        const activeAccountIds = buildActiveAccountIdSet(data.accounts);
+        this.allPaymentMethodsCount = data.methods.content?.length ?? 0;
+        this.methods = filterSelectablePaymentMethods(
+          data.methods.content,
+          activeAccountIds,
+          null,
+        );
+        this.methodOptions = this.methods.map((method) => ({
+          id: method.id,
+          label: translatePaymentMethodName(method.name),
+        }));
+        return of(undefined);
+      }),
+    );
   }
 
   private handleOperationError(err: unknown, action: string): void {
