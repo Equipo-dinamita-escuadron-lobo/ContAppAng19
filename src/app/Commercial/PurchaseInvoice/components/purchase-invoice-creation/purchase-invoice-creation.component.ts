@@ -347,7 +347,7 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
           summary: timedOut ? 'Respuesta demorada' : 'Error',
           detail: timedOut
             ? 'El servidor tardó demasiado en responder. Verifique el listado antes de intentar guardar nuevamente.'
-            : 'No se pudo crear la factura de compra',
+            : this.purchaseSaveErrorDetail(error),
         });
       },
     });
@@ -355,6 +355,14 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
 
   cancel(): void {
     this.router.navigate(['/enterprise/list']);
+  }
+
+  private purchaseSaveErrorDetail(error: unknown): string {
+    const apiMessage = (error as { error?: { message?: string } })?.error?.message;
+    if (apiMessage?.trim()) {
+      return apiMessage.trim();
+    }
+    return 'No se pudo crear la factura de compra';
   }
 
   onPaymentTermChange(): void {
