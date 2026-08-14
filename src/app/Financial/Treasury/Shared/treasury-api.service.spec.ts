@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TreasuryApiService } from './treasury-api.service';
+import { createTreasuryIdempotencyKey, TreasuryApiService } from './treasury-api.service';
 
 describe('TreasuryApiService PP8', () => {
   let service: TreasuryApiService;
@@ -40,6 +40,20 @@ describe('TreasuryApiService PP8', () => {
     service.postVoucher(10, 'enterprise-a', 'stable-key').subscribe();
     const request = http.expectOne(req => req.url.endsWith('/payment-vouchers/10/post'));
     expect(request.request.headers.get('Idempotency-Key')).toBe('stable-key');
+    request.flush({});
+  });
+
+  it('generates an idempotency key when randomUUID is unavailable', () => {
+    const key = createTreasuryIdempotencyKey(null);
+
+    expect(key).toMatch(/^treasury-\d+-[a-z0-9]+$/);
+  });
+
+  it('posts a voucher with an automatically generated idempotency key', () => {
+    service.postVoucher(11, 'enterprise-a').subscribe();
+    const request = http.expectOne(req => req.url.endsWith('/payment-vouchers/11/post'));
+
+    expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
     request.flush({});
   });
 });

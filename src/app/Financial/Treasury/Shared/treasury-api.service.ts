@@ -4,6 +4,15 @@ import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AgingLine, Page, Payable, PayableWriteOff, PaymentSchedule, PaymentVoucher, ScheduleRequest, SupplierStatement, VoucherRequest, VoucherStatus, WriteOffRequest } from './treasury-api.models';
 
+export function createTreasuryIdempotencyKey(
+  randomUuid: (() => string) | null =
+    typeof globalThis.crypto?.randomUUID === 'function'
+      ? globalThis.crypto.randomUUID.bind(globalThis.crypto)
+      : null,
+): string {
+  return randomUuid?.() ?? `treasury-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TreasuryApiService {
   private readonly base = `${environment.API_URL}treasury`;
@@ -18,9 +27,10 @@ export class TreasuryApiService {
   createVoucher(request: VoucherRequest) { return this.http.post<PaymentVoucher>(`${this.base}/payment-vouchers`, request); }
   updateVoucher(id: number, request: VoucherRequest) { return this.http.put<PaymentVoucher>(`${this.base}/payment-vouchers/${id}`, request); }
   deleteVoucher(id: number, enterpriseId: string) { return this.http.delete<void>(`${this.base}/payment-vouchers/${id}`, { params: { enterpriseId } }); }
-  postVoucher(id: number, enterpriseId: string, key: string = crypto.randomUUID()) {
+  postVoucher(id: number, enterpriseId: string, key?: string) {
+    const idempotencyKey = key || createTreasuryIdempotencyKey();
     return this.http.post<PaymentVoucher>(`${this.base}/payment-vouchers/${id}/post`, null,
-      { params: { enterpriseId }, headers: new HttpHeaders().set('Idempotency-Key', key) });
+      { params: { enterpriseId }, headers: new HttpHeaders().set('Idempotency-Key', idempotencyKey) });
   }
   voidVoucher(id: number, enterpriseId: string, reason: string) {
     return this.http.post<PaymentVoucher>(`${this.base}/payment-vouchers/${id}/void`, { reason }, { params: { enterpriseId } });
