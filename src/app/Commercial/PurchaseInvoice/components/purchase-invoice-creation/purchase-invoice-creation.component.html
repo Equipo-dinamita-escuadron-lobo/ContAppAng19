@@ -58,15 +58,17 @@
 
         <div class="flex flex-col">
           <label for="paymentTermDays" class="field-label">Plazo de pago (días)</label>
-          <p-inputNumber id="paymentTermDays" [(ngModel)]="paymentTermDays" [min]="0"
-            (onInput)="onPaymentTermChange()" styleClass="w-full" size="small"></p-inputNumber>
+          <p-inputNumber id="paymentTermDays" [(ngModel)]="paymentTermDays" [min]="1"
+            (ngModelChange)="onPaymentTermChange()" styleClass="w-full" size="small"></p-inputNumber>
+          <small class="field-help">Se sincroniza con la fecha de vencimiento.</small>
         </div>
 
         <div class="flex flex-col">
           <label for="dueDate" class="field-label">Fecha de vencimiento</label>
-          <p-datepicker id="dueDate" [(ngModel)]="dueDate" (onSelect)="onDueDateChange()" dateFormat="dd/mm/yy"
-            size="small" placeholder="Se calcula con el plazo" [showIcon]="true" iconDisplay="input"
-            styleClass="w-full"></p-datepicker>
+          <p-datepicker id="dueDate" [(ngModel)]="dueDate" (ngModelChange)="onDueDateChange($event)"
+            dateFormat="dd/mm/yy" size="small" placeholder="Seleccione o use el plazo" [showIcon]="true"
+            [minDate]="minDueDate" styleClass="w-full"></p-datepicker>
+          <small class="field-help">Debe ser posterior a la emisión. Al cambiarla, se actualiza el plazo.</small>
         </div>
 
         <div class="flex flex-col md:col-span-2">
@@ -112,8 +114,10 @@
                 <small class="text-gray-500">{{ prod.description }}</small>
               </td>
               <td>
-                <p-inputNumber [(ngModel)]="prod.amount" mode="decimal" size="small" [showButtons]="true" [min]="1"
-                  (ngModelChange)="calculateLine(prod)" inputStyleClass="w-full"></p-inputNumber>
+                <p-inputNumber [(ngModel)]="prod.amount" mode="decimal" size="small" [showButtons]="true"
+                  [min]="maxQuantityFor(prod) > 0 ? 1 : 0" [max]="maxQuantityFor(prod)"
+                  (ngModelChange)="onQuantityChange(prod)" inputStyleClass="w-full"></p-inputNumber>
+                <small class="field-help">Disponible: {{ maxQuantityFor(prod) }}</small>
               </td>
               <td>
                 <p-inputNumber [(ngModel)]="prod.cost" mode="currency" size="small" currency="COP" locale="es-CO"
@@ -122,16 +126,16 @@
               <td>
                 <div class="flex gap-2">
                   <p-inputNumber [(ngModel)]="prod.descuentos[0]" size="small" suffix="%" [min]="0" [max]="100"
-                    (onInput)="switchDescuento('porc', prod)" inputStyleClass="w-full"></p-inputNumber>
+                    (ngModelChange)="switchDescuento('porc', prod)" inputStyleClass="w-full"></p-inputNumber>
                   <p-inputNumber [(ngModel)]="prod.descuentos[1]" size="small" mode="currency" currency="COP" locale="es-CO"
-                    (onInput)="switchDescuento('val', prod)" inputStyleClass="w-full"></p-inputNumber>
+                    (ngModelChange)="switchDescuento('val', prod)" inputStyleClass="w-full"></p-inputNumber>
                 </div>
               </td>
               <td>
                 <p-inputNumber [(ngModel)]="prod.IVA" size="small" suffix="%" [min]="0" [max]="100"
                   (ngModelChange)="calculateLine(prod)" inputStyleClass="w-full"></p-inputNumber>
               </td>
-              <td class="text-right">{{ lineSubtotal(prod) | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</td>
+              <td class="text-right">{{ formatCop(lineSubtotal(prod)) }}</td>
               <td>
                 <p-button icon="pi pi-trash" severity="danger" [text]="true" (onClick)="deleteProduct(i)"></p-button>
               </td>
@@ -149,21 +153,23 @@
       <div class="summary-panel mt-6" *ngIf="lstProducts.length > 0">
         <div class="summary-card">
           <span>Subtotal</span>
-          <strong>{{ subTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
+          <strong>{{ formatCop(subTotal) }}</strong>
         </div>
         <div class="summary-card">
           <span>Impuestos</span>
-          <strong>{{ taxTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
+          <strong>{{ formatCop(taxTotal) }}</strong>
         </div>
         <div class="summary-card editable">
           <label for="initialPayment">Abono inicial</label>
-          <p-inputNumber [(ngModel)]="initialPayment" mode="currency" currency="COP" locale="es-CO" [min]="0"
-            inputId="initialPayment" (ngModelChange)="calculateTotals()" styleClass="w-full"></p-inputNumber>
+          <p-inputNumber [(ngModel)]="initialPayment" mode="currency" currency="COP" locale="es-CO"
+            [min]="0" [max]="maxInitialPayment()" inputId="initialPayment"
+            (ngModelChange)="onInitialPaymentChange()" styleClass="w-full"></p-inputNumber>
+          <small class="field-help">Opcional (0 = todo pendiente). Mín. {{ formatCop(minInitialPayment()) }} si registra abono. No use el total completo.</small>
         </div>
         <div class="summary-card total-card">
           <span>Total factura</span>
-          <strong>{{ total | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</strong>
-          <small>Pendiente: {{ pendingTotal | currency:'COP':'symbol-narrow':'1.0-0':'es-CO' }}</small>
+          <strong>{{ formatCop(total) }}</strong>
+          <small>Pendiente: {{ formatCop(pendingTotal) }}</small>
         </div>
       </div>
     </section>

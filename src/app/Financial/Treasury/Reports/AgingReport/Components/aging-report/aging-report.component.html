@@ -37,7 +37,7 @@
   </div>
 
   <p-card header="Filtros" class="mb-4">
-    <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
         <label for="supplierId" class="font-semibold text-[var(--color-primary)]">Proveedor</label>
         <p-dropdown
@@ -55,39 +55,6 @@
       </div>
 
       <div class="flex flex-col gap-2">
-        <label for="document" class="font-semibold text-[var(--color-primary)]">Documento / factura</label>
-        <p-dropdown
-          id="document"
-          formControlName="document"
-          [options]="documentOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Todas las facturas pendientes"
-          [showClear]="true"
-          [filter]="true"
-          filterBy="label"
-          styleClass="w-full">
-        </p-dropdown>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="accountCode" class="font-semibold text-[var(--color-primary)]">Cuenta CxP</label>
-        <p-dropdown
-          id="accountCode"
-          formControlName="accountCode"
-          [options]="accountTypeOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Todas las CxP con saldo"
-          [showClear]="true"
-          [filter]="true"
-          filterBy="label"
-          styleClass="w-full">
-        </p-dropdown>
-        <small class="text-gray-500">Solo cuentas usadas en obligaciones pendientes</small>
-      </div>
-
-      <div class="flex flex-col gap-2">
         <label for="cutoffDate" class="font-semibold text-[var(--color-primary)]">
           Fecha de corte <span class="text-red-500">*</span>
         </label>
@@ -96,7 +63,7 @@
           formControlName="cutoffDate"
           dateFormat="dd/mm/yy"
           [showIcon]="true"
-          placeholder="dd/mm/yyyy"
+          placeholder="dd/mm/aaaa"
           styleClass="w-full">
         </p-calendar>
         <small class="text-gray-500">Fecha contra la que se calculan los días de mora</small>
@@ -112,7 +79,7 @@
         </div>
       </div>
 
-      <div class="flex flex-col gap-2 md:col-span-2 lg:col-span-3">
+      <div class="flex flex-col gap-2 md:col-span-2">
         <div class="flex gap-2 justify-end">
           <p-button
             label="Generar reporte"

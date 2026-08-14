@@ -36,6 +36,11 @@ const ACCOUNTING_ENTRY_LABELS: Record<string, string> = {
   VOIDED: 'Anulado',
 };
 
+const ACCOUNTING_SOURCE_TYPE_LABELS: Record<string, string> = {
+  PAYMENT_VOUCHER: 'Comprobante de egreso',
+  PAYABLE_WRITEOFF: 'Baja de cuenta por pagar',
+};
+
 const PAYMENT_METHOD_NAME_LABELS: Record<string, string> = {
   CASH: 'Efectivo',
   TRANSFER: 'Transferencia bancaria',
@@ -71,6 +76,16 @@ export function transactionTypeLabel(type?: string | null): string {
 export function accountingEntryStatusLabel(status?: string | null): string {
   if (!status) return '-';
   return ACCOUNTING_ENTRY_LABELS[status] ?? 'Desconocido';
+}
+
+export function accountingSourceDocumentTypeLabel(type?: string | null): string {
+  if (!type) return '-';
+  return ACCOUNTING_SOURCE_TYPE_LABELS[type] ?? type;
+}
+
+export function scheduleStatusFilterOptions(includeAll = true) {
+  const options = Object.entries(SCHEDULE_LABELS).map(([value, label]) => ({ label, value }));
+  return includeAll ? [{ label: 'Todos los estados', value: '' }, ...options] : options;
 }
 
 export function voucherStatusFilterOptions(includeAll = true) {

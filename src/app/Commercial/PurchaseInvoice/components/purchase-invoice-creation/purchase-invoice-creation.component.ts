@@ -48,6 +48,7 @@ import { PurchaseInvoiceService } from '../../services/purchase-invoice.service'
 })
 export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
   private static readonly SAVE_TIMEOUT_MS = 20_000;
+  private static readonly MIN_INITIAL_PAYMENT_COP = 50;
 
   private readonly localStorageMethods = new LocalStorageMethods();
   private ref?: DynamicDialogRef;
@@ -55,6 +56,7 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
 
   currentDate = new Date();
   dueDate?: Date;
+  minDueDate!: Date;
   paymentTermDays = 30;
   initialPayment = 0;
   observations = '';
@@ -71,6 +73,8 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
   pendingTotal = 0;
   impuestoCheck = true;
 
+  private syncingPaymentSchedule = false;
+
   constructor(
     private readonly thirdService: ThirdService,
     private readonly unitMeasureService: UnitOfMeasureService,
@@ -82,6 +86,8 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.minDueDate = this.addDays(this.stripTime(this.currentDate), 1);
+    this.syncDueDateFromPaymentTerm();
     this.loadSuppliers();
   }
 
@@ -161,47 +167,83 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
       if (!result?.length) {
         return;
       }
-      this.lstProducts = result.map((prod) => ({
-        id: prod.id,
-        name: prod.name,
-        description: prod.description,
-        cost: prod.cost,
-        displayPrice: String(prod.cost),
-        taxPercentage: prod.taxPercentage,
-        unitOfMeasureId: prod.unitOfMeasureId,
-        IVA: prod.taxPercentage || 0,
-        IvaValor: 0,
-        amount: 1,
-        totalValue: 0,
-        descuentos: [0, 0] as [number, number],
-        displayDescuentos: '0',
-      })) as ProductToSale[];
-      this.lstProducts.forEach((prod) => {
-        prod.IVA = prod.taxPercentage;
-        prod.IvaValor = (prod.cost * prod.IVA) / 100;
+      this.lstProducts = result.map((prod) => {
+        const maxQuantity = this.toAmount(prod.quantity, 0);
+        const initialAmount = maxQuantity > 0 ? Math.min(1, maxQuantity) : 0;
+        return this.normalizeProductLine({
+          id: prod.id,
+          name: prod.name,
+          description: prod.description,
+          cost: prod.cost,
+          displayPrice: String(prod.cost ?? 0),
+          taxPercentage: prod.taxPercentage,
+          unitOfMeasureId: prod.unitOfMeasureId,
+          minQuantity: 1,
+          maxQuantity,
+          IVA: prod.taxPercentage ?? 0,
+          IvaValor: 0,
+          amount: initialAmount,
+          totalValue: 0,
+          descuentos: [0, 0] as [number, number],
+          displayDescuentos: '0',
+        } as ProductToSale);
       });
+      this.lstProducts.forEach((prod) => this.calculateLine(prod));
       this.loadUnitOfMeasureAbbreviations();
-      this.calculateTotals();
     });
   }
 
   calculateTotals(): void {
-    this.subTotal = this.lstProducts.reduce((acc, prod) => acc + this.computeLineSubtotal(prod), 0);
+    this.subTotal = this.sumLineValues((prod) => this.computeLineSubtotal(prod));
     this.taxTotal = this.impuestoCheck
-      ? this.lstProducts.reduce((acc, prod) => acc + (prod.IvaValor || 0) * (prod.amount || 0), 0)
+      ? this.sumLineValues((prod) => this.computeLineTax(prod))
       : 0;
     this.total = this.subTotal + this.taxTotal;
-    this.pendingTotal = Math.max(this.total - (this.initialPayment || 0), 0);
+    this.enforceInitialPaymentLimit(false);
+    this.pendingTotal = Math.max(this.total - this.toAmount(this.initialPayment), 0);
+  }
+
+  onInitialPaymentChange(): void {
+    this.enforceInitialPaymentLimit(true);
+    this.calculateTotals();
+  }
+
+  maxInitialPayment(): number {
+    return Math.max(this.toAmount(this.total), 0);
+  }
+
+  minInitialPayment(): number {
+    return this.canRegisterPartialInitialPayment() ? PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP : 0;
   }
 
   calculateLine(prod: ProductToSale): void {
-    prod.totalValue = this.lineSubtotal(prod);
-    prod.IvaValor = this.impuestoCheck ? (prod.cost * (prod.IVA || 0)) / 100 : 0;
+    this.enforceQuantityLimit(prod, true);
+    this.normalizeProductLine(prod);
+    prod.totalValue = this.computeLineSubtotal(prod);
+    prod.IvaValor = this.computeLineTax(prod);
     this.calculateTotals();
+  }
+
+  onQuantityChange(prod: ProductToSale): void {
+    this.calculateLine(prod);
   }
 
   lineSubtotal(prod: ProductToSale): number {
     return this.computeLineSubtotal(prod);
+  }
+
+  maxQuantityFor(prod: ProductToSale): number {
+    return Math.max(this.toAmount(prod.maxQuantity), 0);
+  }
+
+  formatCop(value: number | null | undefined): string {
+    const amount = this.toAmount(value);
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   }
 
   switchDescuento(type: 'porc' | 'val', prod: ProductToSale): void {
@@ -230,8 +272,35 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
       this.messageService.add({ severity: 'warn', summary: 'Productos requeridos', detail: 'Agregue al menos un producto' });
       return;
     }
-    if (this.initialPayment > this.total) {
-      this.messageService.add({ severity: 'warn', summary: 'Abono inválido', detail: 'El abono no puede superar el total' });
+    const invalidQuantity = this.lstProducts.find((prod) => {
+      const max = this.maxQuantityFor(prod);
+      const amount = this.toAmount(prod.amount);
+      return max <= 0 || amount <= 0 || amount > max;
+    });
+    if (invalidQuantity) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cantidad inválida',
+        detail: `El producto "${invalidQuantity.name}" no puede superar el inventario disponible (${this.maxQuantityFor(invalidQuantity)}).`,
+      });
+      return;
+    }
+    const paymentError = this.validateInitialPayment();
+    if (paymentError) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Abono inválido',
+        detail: paymentError,
+      });
+      return;
+    }
+    const dueDateError = this.validateDueDate();
+    if (dueDateError) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Vencimiento inválido',
+        detail: dueDateError,
+      });
       return;
     }
 
@@ -289,20 +358,43 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
   }
 
   onPaymentTermChange(): void {
-    if (this.paymentTermDays < 0) {
-      this.paymentTermDays = 0;
-    }
-    if (this.dueDate) {
-      this.dueDate = this.addDays(this.currentDate, this.paymentTermDays);
-    }
-  }
-
-  onDueDateChange(): void {
-    if (!this.dueDate) {
+    if (this.syncingPaymentSchedule) {
       return;
     }
-    const diffMs = this.dueDate.getTime() - this.stripTime(this.currentDate).getTime();
-    this.paymentTermDays = Math.max(Math.round(diffMs / (1000 * 60 * 60 * 24)), 0);
+    this.syncingPaymentSchedule = true;
+    this.paymentTermDays = Math.max(this.toAmount(this.paymentTermDays, 1), 1);
+    this.dueDate = this.addDays(this.stripTime(this.currentDate), this.paymentTermDays);
+    this.releasePaymentScheduleSync();
+  }
+
+  onDueDateChange(selectedDate: Date | null): void {
+    if (this.syncingPaymentSchedule || !selectedDate) {
+      return;
+    }
+    this.syncingPaymentSchedule = true;
+    const previousDay = this.dueDate ? this.stripTime(this.dueDate).getTime() : null;
+    this.dueDate = selectedDate;
+    this.enforceDueDateLimit(previousDay !== this.stripTime(this.dueDate).getTime());
+    this.paymentTermDays = this.daysBetweenEmissionAndDue(this.dueDate);
+    this.releasePaymentScheduleSync();
+  }
+
+  private syncDueDateFromPaymentTerm(): void {
+    this.paymentTermDays = Math.max(this.toAmount(this.paymentTermDays, 30), 1);
+    this.dueDate = this.addDays(this.stripTime(this.currentDate), this.paymentTermDays);
+  }
+
+  private daysBetweenEmissionAndDue(due: Date): number {
+    const emission = this.stripTime(this.currentDate);
+    const dueDay = this.stripTime(due);
+    const diffMs = dueDay.getTime() - emission.getTime();
+    return Math.max(Math.round(diffMs / (1000 * 60 * 60 * 24)), 1);
+  }
+
+  private releasePaymentScheduleSync(): void {
+    setTimeout(() => {
+      this.syncingPaymentSchedule = false;
+    });
   }
 
   private buildProductLines(): PurchaseInvoiceProductLine[] {
@@ -329,15 +421,214 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
   }
 
   private computeLineSubtotal(prod: ProductToSale): number {
-    const base = (prod.cost || 0) * (prod.amount || 0);
-    const discountPerc = prod.descuentos?.[0] || 0;
-    const discountVal = prod.descuentos?.[1] || 0;
-    return base - base * (discountPerc / 100) - discountVal;
+    const unitCost = this.toAmount(prod.cost);
+    const quantity = this.toAmount(prod.amount, 1);
+    const base = unitCost * quantity;
+    const discountPerc = this.toAmount(prod.descuentos?.[0]);
+    const discountVal = this.toAmount(prod.descuentos?.[1]);
+    return Math.max(base - base * (discountPerc / 100) - discountVal, 0);
+  }
+
+  private computeLineTax(prod: ProductToSale): number {
+    if (!this.impuestoCheck) {
+      return 0;
+    }
+    const lineSubtotal = this.computeLineSubtotal(prod);
+    const taxRate = this.toAmount(prod.IVA);
+    return lineSubtotal * (taxRate / 100);
+  }
+
+  private normalizeProductLine(prod: ProductToSale): ProductToSale {
+    prod.maxQuantity = this.toAmount(prod.maxQuantity, 0);
+    prod.minQuantity = Math.max(this.toAmount(prod.minQuantity, 1), 1);
+    prod.amount = this.toAmount(prod.amount, prod.maxQuantity > 0 ? 1 : 0);
+    this.enforceQuantityLimit(prod, false);
+    prod.cost = this.toAmount(prod.cost);
+    prod.IVA = this.toAmount(prod.IVA ?? prod.taxPercentage);
+    if (!prod.descuentos || prod.descuentos.length < 2) {
+      prod.descuentos = [0, 0];
+    }
+    prod.descuentos[0] = this.toAmount(prod.descuentos[0]);
+    prod.descuentos[1] = this.toAmount(prod.descuentos[1]);
+    return prod;
+  }
+
+  private enforceQuantityLimit(prod: ProductToSale, notify: boolean): void {
+    const max = this.maxQuantityFor(prod);
+    const current = this.toAmount(prod.amount);
+    if (max <= 0 && current > 0) {
+      prod.amount = 0;
+      if (notify) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Sin inventario',
+          detail: `El producto "${prod.name}" no tiene existencias disponibles.`,
+        });
+      }
+      return;
+    }
+    if (current > max) {
+      prod.amount = max;
+      if (notify) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Cantidad inválida',
+          detail: `La cantidad de "${prod.name}" no puede superar el inventario disponible (${max}).`,
+        });
+      }
+    }
+  }
+
+  private canRegisterPartialInitialPayment(): boolean {
+    return this.toAmount(this.total) >= PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP;
+  }
+
+  private validateDueDate(): string | null {
+    const due = this.dueDate ?? this.addDays(this.currentDate, Math.max(this.paymentTermDays, 1));
+    if (this.stripTime(due).getTime() < this.minDueDate.getTime()) {
+      return 'La fecha de vencimiento debe ser posterior a hoy (no puede ser hoy ni anterior).';
+    }
+    return null;
+  }
+
+  private enforceDueDateLimit(notify: boolean): void {
+    if (!this.dueDate) {
+      return;
+    }
+    const min = this.minDueDate;
+    if (this.stripTime(this.dueDate).getTime() < min.getTime()) {
+      this.dueDate = new Date(min);
+      if (notify) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Vencimiento inválido',
+          detail: 'La fecha de vencimiento debe ser posterior a hoy.',
+        });
+      }
+    }
+  }
+
+  private validateInitialPayment(): string | null {
+    const total = this.toAmount(this.total);
+    const payment = this.toAmount(this.initialPayment);
+
+    if (payment <= 0) {
+      return null;
+    }
+
+    if (payment > total) {
+      return `El abono no puede superar el total de la factura (${this.formatCop(total)}).`;
+    }
+
+    if (!this.canRegisterPartialInitialPayment()) {
+      return `El total es menor a ${this.formatCop(PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP)}; deje el abono en 0 y pague en Tesorería si corresponde.`;
+    }
+
+    if (payment < PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP) {
+      return `El abono mínimo es ${this.formatCop(PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP)}.`;
+    }
+
+    if (payment >= total) {
+      return 'Si pagó el total de la factura, deje el abono en 0 y registre el pago en Tesorería (Comprobante de egreso). El abono inicial es solo para pagos parciales.';
+    }
+
+    return null;
+  }
+
+  private enforceInitialPaymentLimit(notify: boolean): void {
+    const total = this.toAmount(this.total);
+    let payment = this.toAmount(this.initialPayment);
+
+    if (payment <= 0) {
+      this.initialPayment = 0;
+      return;
+    }
+
+    if (!this.canRegisterPartialInitialPayment()) {
+      this.initialPayment = 0;
+      if (notify) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Abono no permitido',
+          detail: `El total es menor a ${this.formatCop(PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP)}. Deje el abono en 0.`,
+        });
+      }
+      return;
+    }
+
+    const maxPartial = total - 1;
+    if (maxPartial < PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP) {
+      this.initialPayment = 0;
+      if (notify) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Abono no permitido',
+          detail: 'No hay un abono parcial válido para este total. Deje el abono en 0.',
+        });
+      }
+      return;
+    }
+
+    if (payment > total) {
+      payment = total;
+      if (notify) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Abono inválido',
+          detail: `El abono no puede superar el total (${this.formatCop(total)}).`,
+        });
+      }
+    }
+
+    if (payment >= total) {
+      payment = maxPartial;
+      if (notify) {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Pago total en Tesorería',
+          detail: 'El abono inicial es parcial. Para pagar el total, deje el abono en 0 y use Comprobante de egreso en Tesorería.',
+          life: 6000,
+        });
+      }
+    }
+
+    if (payment < PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP) {
+      payment = PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP;
+      if (notify) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Abono mínimo',
+          detail: `El abono mínimo es ${this.formatCop(PurchaseInvoiceCreationComponent.MIN_INITIAL_PAYMENT_COP)}.`,
+        });
+      }
+    }
+
+    if (payment > maxPartial) {
+      payment = maxPartial;
+    }
+
+    this.initialPayment = payment;
+  }
+
+  private toAmount(value: unknown, fallback = 0): number {
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : fallback;
+    }
+    if (typeof value === 'string') {
+      const normalized = value.replace(/[^\d,-]/g, '').replace(',', '.');
+      const parsed = Number(normalized);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    return fallback;
+  }
+
+  private sumLineValues(selector: (prod: ProductToSale) => number): number {
+    return this.lstProducts.reduce((acc, prod) => acc + this.toAmount(selector(prod)), 0);
   }
 
   private resolveDueDate(): string | undefined {
-    const due = this.dueDate ?? this.addDays(this.currentDate, this.paymentTermDays || 30);
-    return due.toISOString().split('T')[0];
+    const due = this.dueDate ?? this.addDays(this.currentDate, Math.max(this.paymentTermDays, 1));
+    return this.stripTime(due).toISOString().split('T')[0];
   }
 
   private addDays(date: Date, days: number): Date {
@@ -370,7 +661,8 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
     this.initialPayment = 0;
     this.observations = '';
     this.paymentTermDays = 30;
-    this.dueDate = undefined;
+    this.minDueDate = this.addDays(this.stripTime(this.currentDate), 1);
+    this.syncDueDateFromPaymentTerm();
     this.calculateTotals();
   }
 }

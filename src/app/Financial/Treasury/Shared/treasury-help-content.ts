@@ -3,15 +3,16 @@ export const TREASURY_HELP = {
   operations: {
     title: 'Operaciones de Tesorería',
     summary:
-      'Consolida obligaciones por pagar, comprobantes de egreso, programaciones y bajas de CxP. ' +
-      'Los métodos de pago activos se vinculan a cuentas contables del catálogo; si un método exige cuenta bancaria, debe seleccionarse antes de pagar.',
+      'Gestione las obligaciones pendientes con proveedores. Desde aquí puede efectuar pagos, programarlos o registrar bajas de cuentas por pagar.\n\n' +
+      'Pagar: registra el pago total o parcial de una obligación pendiente.\n' +
+      'Programar: agenda el pago de una obligación para una fecha determinada.\n' +
+      'Baja CxP: reduce total o parcialmente una obligación sin realizar un pago, utilizando una cuenta contrapartida.',
     slug: 'tesoreria',
   },
   expenseReceipts: {
-    title: 'Comprobantes de egreso',
+    title: 'Comprobantes de Egreso',
     summary:
-      'Registro de pagos a proveedores. Solo aparecen proveedores con facturas pendientes (CxP). ' +
-      'Un abono parcial reduce el saldo; la anulación revierte el comprobante contabilizado.',
+      'Consulte y gestione los comprobantes generados por pagos a proveedores. Puede revisar su estado, consultar el asiento contable, anular cuando corresponda y exportar la información.',
     slug: 'tesoreria',
   },
   makePayment: {
@@ -22,10 +23,10 @@ export const TREASURY_HELP = {
     slug: 'tesoreria',
   },
   paymentSchedule: {
-    title: 'Programación de pagos',
+    title: 'Programación de Pagos',
     summary:
-      'Consulta obligaciones sincronizadas desde Facturación con saldo pendiente. ' +
-      'Permite filtrar por proveedor, estado y vencimiento para planificar pagos.',
+      'Consulte y gestione los pagos de facturas que fueron programados previamente desde Operaciones de Tesorería. ' +
+      'Puede cancelar programaciones pendientes o reintentar las fallidas.',
     slug: 'tesoreria',
   },
   agingReport: {

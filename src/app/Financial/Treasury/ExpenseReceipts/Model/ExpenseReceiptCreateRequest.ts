@@ -8,6 +8,5 @@ export interface ExpenseReceiptCreateRequest {
     observations: string,
     enterpriseId: string,
     totalAmount: number,
-    details: ExpenseReceiptDetail[],
-    ledgerAccountId: number
+    details: ExpenseReceiptDetail[];
 }

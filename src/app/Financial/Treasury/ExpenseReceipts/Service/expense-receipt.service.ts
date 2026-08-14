@@ -11,8 +11,14 @@ import { ExpenseReceiptResponse } from '../Model/ExpenseReceiptResponse';
 import { ExpenseReceiptCreateRequest } from '../Model/ExpenseReceiptCreateRequest';
 import { AccountingEntryLine } from '../Model/AccountingEntryLine';
 import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
-import { educationalDescription, translatePaymentMethodName, voucherStatusLabel } from '../../Shared/treasury-status-labels';
+import { educationalDescription, translatePaymentMethodName, voucherStatusLabel, accountingSourceDocumentTypeLabel } from '../../Shared/treasury-status-labels';
 import { buildThirdPartyNameMap, resolveSupplierName } from '../../Shared/treasury-third-party.integration';
+import {
+  AccountingEntryView,
+  buildAccountCatalogueLookup,
+  buildAccountingEntryView,
+  mapAccountingMovementsForView,
+} from '../../Shared/treasury-accounting-display';
 
 @Injectable({ providedIn: 'root' })
 export class ExpenseReceiptService {
@@ -146,6 +152,7 @@ export class ExpenseReceiptService {
             status: voucherStatusLabel(voucher.status),
             statusKey: voucher.status,
             totalAmount: voucher.total,
+            accountingEntryId: voucher.accountingEntryId,
           };
         });
       }),
@@ -210,10 +217,54 @@ export class ExpenseReceiptService {
   }
 
   getAccountingEntry(receiptId: number): Observable<AccountingEntryLine[]> {
-    return this.api.accountingEntry(receiptId).pipe(map(response => (response.data?.movements ?? []).map((movement: any) => ({
-      accountCode: String(movement.account), accountName: `Cuenta ${movement.account}`,
-      thirdPartyId: movement.thirdPartyId ?? 0, debit: Number(movement.debit ?? 0), credit: Number(movement.credit ?? 0),
-      description: movement.description ?? response.data.description,
-    }))));
+    return this.getAccountingEntryView(receiptId).pipe(
+      map((view) => view.movements.map((movement) => ({
+        accountCode: movement.accountCode,
+        accountName: movement.accountName,
+        thirdPartyId: movement.thirdPartyId ?? 0,
+        debit: movement.debit,
+        credit: movement.credit,
+        description: movement.detail,
+      }))),
+    );
+  }
+
+  getAccountingEntryView(
+    receiptId: number,
+    headerContext: { voucherNumber?: string; supplierLabel?: string } = {},
+  ): Observable<AccountingEntryView> {
+    const enterpriseId = this.enterpriseId();
+    return forkJoin({
+      entry: this.api.accountingEntry(receiptId),
+      accounts: this.accounts.getListAuxiliaryAccounts(enterpriseId),
+      voucher: this.api.voucher(receiptId, enterpriseId),
+      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(
+        catchError(() => of({ content: [] } as any)),
+      ),
+    }).pipe(
+      map(({ entry, accounts, voucher, thirds }) => {
+        const entryData = (entry as any)?.data ?? entry;
+        const lookup = buildAccountCatalogueLookup(
+          accounts.filter((account) => account.status !== false),
+        );
+        const movements = mapAccountingMovementsForView(entryData?.movements ?? [], lookup);
+        const thirdNames = buildThirdPartyNameMap(thirds?.content || []);
+        const supplierIds = [...new Set((voucher.details || []).map((detail) => detail.supplierId))];
+        const supplierLabel = headerContext.supplierLabel
+          ?? (supplierIds.length > 1
+            ? supplierIds.map((id) => resolveSupplierName(thirdNames, id)).join(', ')
+            : resolveSupplierName(thirdNames, supplierIds[0] ?? 0));
+
+        return buildAccountingEntryView(
+          entryData as Record<string, unknown>,
+          movements,
+          {
+            documentTypeLabel: accountingSourceDocumentTypeLabel('PAYMENT_VOUCHER'),
+            voucherNumber: headerContext.voucherNumber ?? voucher.voucherNumber,
+            supplierLabel,
+          },
+        );
+      }),
+    );
   }
 }

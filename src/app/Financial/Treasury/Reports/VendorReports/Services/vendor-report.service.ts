@@ -6,9 +6,14 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { ThirdService } from '../../../../../GeneralMasters/ThirdParties/Services/third.service';
+import { Third } from '../../../../../GeneralMasters/ThirdParties/models/Third';
+import { ePersonType } from '../../../../../GeneralMasters/ThirdParties/models/ePersonType';
+import { eThirdType } from '../../../../../GeneralMasters/ThirdParties/models/eThirdType';
 import { TreasuryApiService } from '../../../Shared/treasury-api.service';
 import { educationalDescription } from '../../../Shared/treasury-status-labels';
 import { VendorListFilter, VendorReport, VendorReportSummary } from '../Models/VendorReport';
+
+export type VendorSupplierOption = Third & { displayName: string };
 
 @Injectable({ providedIn: 'root' })
 export class VendorReportService {
@@ -24,35 +29,47 @@ export class VendorReportService {
     return id;
   }
 
+  getProveedores(): Observable<VendorSupplierOption[]> {
+    return this.thirds.getThirdsByType(this.enterpriseId(), eThirdType.Proveedor).pipe(
+      map((page) => (page.content || []).map((third) => this.toSupplierOption(third))),
+      catchError(() => of([])),
+    );
+  }
+
   getVendorSummaries(filter?: VendorListFilter): Observable<VendorReportSummary[]> {
     const enterpriseId = this.enterpriseId();
-    return forkJoin({
-      payables: this.api.pending(enterpriseId),
-      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(
-        catchError(() => of({ content: [] } as any)),
-      ),
-    }).pipe(
-      switchMap(({ payables, thirds }) => {
-        const thirdNames = new Map<number, string>(
-          (thirds?.content || []).map((t: any) => {
-            const name =
-              (t.socialReason as string) ||
-              [t.names, t.lastNames].filter(Boolean).join(' ') ||
-              `Proveedor ${t.thId}`;
-            return [Number(t.thId), String(name)] as [number, string];
-          }),
+    const from = filter?.dateFrom ? this.toIsoDate(filter.dateFrom) : undefined;
+    const to = filter?.dateTo ? this.toIsoDate(filter.dateTo) : undefined;
+
+    return this.getProveedores().pipe(
+      switchMap((suppliers) => {
+        const selectedId = filter?.supplierId;
+        const targetSuppliers =
+          selectedId != null
+            ? suppliers.filter((supplier) => Number(supplier.thId) === selectedId)
+            : suppliers;
+
+        if (!targetSuppliers.length) {
+          return of([]);
+        }
+
+        const nameById = new Map(
+          targetSuppliers.map((supplier) => [Number(supplier.thId), supplier.displayName]),
         );
-        const supplierIds = [...new Set((payables || []).map((item) => item.supplierId))];
-        if (!supplierIds.length) return of([]);
 
         return forkJoin(
-          supplierIds.map((id) => this.api.statement(enterpriseId, id)),
+          targetSuppliers.map((supplier) =>
+            this.api.statement(enterpriseId, Number(supplier.thId), from, to).pipe(
+              catchError(() => of(null)),
+            ),
+          ),
         ).pipe(
           map((statements) =>
             (statements as any[])
+              .filter(Boolean)
               .map((statement) => ({
                 id: statement.supplierId,
-                name: thirdNames.get(statement.supplierId) || `Proveedor ${statement.supplierId}`,
+                name: nameById.get(statement.supplierId) || `Proveedor ${statement.supplierId}`,
                 totalDebits: statement.paid,
                 totalCredits: statement.invoiced,
                 currentBalance: statement.pending,
@@ -61,29 +78,15 @@ export class VendorReportService {
                     ...(statement.invoices || []).map((invoice: any) =>
                       new Date(invoice.issueDate).getTime(),
                     ),
+                    ...(statement.vouchers || []).map((voucher: any) =>
+                      new Date(voucher.issueDate).getTime(),
+                    ),
                     0,
                   ),
                 ),
                 transactionCount:
                   (statement.invoices?.length || 0) + (statement.vouchers?.length || 0),
-              }))
-              .filter(
-                (item) =>
-                  !filter?.searchTerm ||
-                  item.name.toLowerCase().includes(filter.searchTerm.toLowerCase()),
-              )
-              .filter(
-                (item) => filter?.balanceFrom == null || item.currentBalance >= filter.balanceFrom,
-              )
-              .filter(
-                (item) => filter?.balanceTo == null || item.currentBalance <= filter.balanceTo,
-              )
-              .filter(
-                (item) => filter?.status !== 'with_balance' || item.currentBalance > 0,
-              )
-              .filter(
-                (item) => filter?.status !== 'no_balance' || item.currentBalance === 0,
-              ),
+              })),
           ),
         );
       }),
@@ -390,5 +393,27 @@ export class VendorReportService {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount || 0);
+  }
+
+  private toIsoDate(value: Date): string {
+    const date = new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private toSupplierOption(third: Third): VendorSupplierOption {
+    return {
+      ...third,
+      displayName: this.thirdDisplayName(third),
+    };
+  }
+
+  private thirdDisplayName(third: Third): string {
+    if (third.personType === ePersonType.natural) {
+      return `${third.names || ''} ${third.lastNames || ''}`.trim() || `Proveedor ${third.thId}`;
+    }
+    return third.socialReason || `Proveedor ${third.thId}`;
   }
 }

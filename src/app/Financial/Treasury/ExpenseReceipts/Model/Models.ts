@@ -39,6 +39,7 @@ export interface ExpenseReceiptView {
     /** Estado crudo del voucher (DRAFT, POSTED, VOIDED, …) */
     statusKey?: string;
     totalAmount: number;
+    accountingEntryId?: number;
 }
 
 export interface ReceiptFilterOption {
