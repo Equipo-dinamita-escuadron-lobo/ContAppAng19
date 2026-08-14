@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, Observable, of, Subject, timer, TimeoutError } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, finalize, map, switchMap, take, takeUntil, takeWhile, timeout } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, filter, finalize, map, switchMap, take, takeUntil, takeWhile, timeout } from 'rxjs/operators';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -804,9 +804,13 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       observations: this.dialogObservations,
       details: this.getDialogDetails(),
     }).pipe(
-      switchMap((voucher) => this.api.postVoucher(voucher.id, this.enterpriseId)),
-      switchMap((posted) => this.waitForAccounting(posted.id)),
       timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
+      switchMap((voucher) =>
+        this.api.postVoucher(voucher.id, this.enterpriseId).pipe(
+          timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
+        ),
+      ),
+      switchMap((posted) => this.waitForAccounting(posted.id)),
       finalize(() => {
         this.busy = false;
       }),
@@ -838,7 +842,10 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         }
         this.reload();
       },
-      error: (err) => this.handleOperationError(err, 'registrar el pago'),
+      error: (err) => {
+        this.handleOperationError(err, 'registrar el pago');
+        this.reload();
+      },
     });
   }
 
@@ -1080,7 +1087,12 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   private waitForAccounting(voucherId: number) {
     return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
       take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
-      switchMap(() => this.api.voucher(voucherId, this.enterpriseId)),
+      switchMap(() =>
+        this.api.voucher(voucherId, this.enterpriseId).pipe(
+          catchError(() => of(null)),
+        ),
+      ),
+      filter((voucher): voucher is PaymentVoucher => voucher != null),
       takeWhile((voucher) => voucher.status === 'POSTING', true),
     );
   }
@@ -1129,7 +1141,10 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         }
         this.reload();
       },
-      error: (err) => this.handleOperationError(err, 'contabilizar el comprobante'),
+      error: (err) => {
+        this.handleOperationError(err, 'contabilizar el comprobante');
+        this.reload();
+      },
     });
   }
 
