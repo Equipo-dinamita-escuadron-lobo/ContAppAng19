@@ -1,8 +1,8 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { AgingLine, Page, Payable, PaymentSchedule, PaymentVoucher, ScheduleRequest, SupplierStatement, VoucherRequest, VoucherStatus, WriteOffRequest } from './treasury-api.models';
+import { AgingLine, Page, Payable, PayableWriteOff, PaymentSchedule, PaymentVoucher, ScheduleRequest, SupplierStatement, VoucherRequest, VoucherStatus, WriteOffRequest } from './treasury-api.models';
 
 @Injectable({ providedIn: 'root' })
 export class TreasuryApiService {
@@ -47,11 +47,32 @@ export class TreasuryApiService {
     if (document) params = params.set('document', document);
     return this.http.get<AgingLine[]>(`${this.base}/reports/aging`, { params });
   }
-  writeOffs(enterpriseId: string) { return this.http.get<unknown[]>(`${this.base}/payable-write-offs`, { params: { enterpriseId } }); }
+  writeOffs(enterpriseId: string) {
+    return this.http.get<PayableWriteOff[]>(`${this.base}/payable-write-offs`, { params: { enterpriseId } });
+  }
+  writeOff(id: number) {
+    return this.http.get<PayableWriteOff>(`${this.base}/payable-write-offs/${id}`);
+  }
   accountingEntry(sourceDocumentId: number) {
     return this.http.get<any>(`${environment.API_URL}accountCatalogue/accounting/entries/by-source/${sourceDocumentId}/PAYMENT_VOUCHER`);
   }
-  createWriteOff(request: WriteOffRequest) { return this.http.post<unknown>(`${this.base}/payable-write-offs`, request); }
-  confirmWriteOff(id: number) { return this.http.post<unknown>(`${this.base}/payable-write-offs/${id}/confirm`, null); }
-  voidWriteOff(id: number) { return this.http.post<unknown>(`${this.base}/payable-write-offs/${id}/void`, null); }
+  createWriteOff(request: WriteOffRequest) {
+    return this.http.post<PayableWriteOff>(`${this.base}/payable-write-offs`, request);
+  }
+  confirmWriteOff(id: number) {
+    return this.http.post<PayableWriteOff>(`${this.base}/payable-write-offs/${id}/confirm`, null);
+  }
+  discardWriteOff(id: number) {
+    return this.http.post<PayableWriteOff>(`${this.base}/payable-write-offs/${id}/discard`, null).pipe(
+      catchError((err: HttpErrorResponse) => {
+        if (err.status === 404) {
+          return this.http.post<PayableWriteOff>(`${this.base}/payable-write-offs/${id}/void`, null);
+        }
+        return throwError(() => err);
+      }),
+    );
+  }
+  voidWriteOff(id: number) {
+    return this.http.post<PayableWriteOff>(`${this.base}/payable-write-offs/${id}/void`, null);
+  }
 }

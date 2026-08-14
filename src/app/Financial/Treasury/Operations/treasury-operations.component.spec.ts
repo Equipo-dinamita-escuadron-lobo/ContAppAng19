@@ -7,7 +7,14 @@ import {
   WRITE_OFF_COUNTERPART_REQUIRED_MESSAGE,
   WRITE_OFF_CREATE_SUCCESS_MESSAGE,
   WRITE_OFF_NO_AVAILABLE_BALANCE_MESSAGE,
+  WRITE_OFF_PENDING_BLOCK_MESSAGE,
+  WRITE_OFF_POST_FAILED_MESSAGE,
+  WRITE_OFF_POSTED_PARTIAL_MESSAGE,
+  WRITE_OFF_POSTED_TOTAL_MESSAGE,
   WRITE_OFF_REASON_REQUIRED_MESSAGE,
+  WRITE_OFF_DISCARD_SUCCESS_MESSAGE,
+  WRITE_OFF_VOIDED_MESSAGE,
+  WRITE_OFF_VOID_FAILED_MESSAGE,
 } from '../Shared/treasury-writeoff-messages';
 
 describe('TreasuryOperationsComponent PP8', () => {
@@ -17,12 +24,14 @@ describe('TreasuryOperationsComponent PP8', () => {
       createSchedule: jasmine.createSpy('createSchedule').and.returnValue(NEVER),
       createWriteOff: jasmine.createSpy('createWriteOff').and.returnValue(NEVER),
       confirmWriteOff: jasmine.createSpy('confirmWriteOff').and.returnValue(NEVER),
+      discardWriteOff: jasmine.createSpy('discardWriteOff').and.returnValue(NEVER),
       voidWriteOff: jasmine.createSpy('voidWriteOff').and.returnValue(NEVER),
       changeDueDate: jasmine.createSpy('changeDueDate').and.returnValue(of({})),
       pending: jasmine.createSpy('pending').and.returnValue(of([])),
       vouchers: jasmine.createSpy('vouchers').and.returnValue(of({ content: [] })),
       schedules: jasmine.createSpy('schedules').and.returnValue(of([])),
       writeOffs: jasmine.createSpy('writeOffs').and.returnValue(of([])),
+      writeOff: jasmine.createSpy('writeOff').and.returnValue(of({ id: 1, status: 'POSTED', total: 100 })),
     };
     const storage = { getIdEnterprise: () => 'enterprise-a' };
     const exportService = {
@@ -282,6 +291,96 @@ describe('TreasuryOperationsComponent PP8', () => {
     expect(value.canWriteOffPayable(zeroBalance)).toBeFalse();
   });
 
+  it('disables write-off when obligation has active DRAFT write-off', () => {
+    const { value } = component();
+    const target = payable({ id: 11, availableAmount: 279, pendingAmount: 279 });
+    value.writeOffs = [{
+      id: 4,
+      status: 'DRAFT',
+      total: 100,
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    }];
+    expect(value.canWriteOffPayable(target)).toBeFalse();
+    expect(value.writeOffPayableTooltip(target)).toBe(WRITE_OFF_PENDING_BLOCK_MESSAGE);
+  });
+
+  it('disables write-off when obligation has POSTING write-off', () => {
+    const { value } = component();
+    const target = payable({ id: 11, availableAmount: 279, pendingAmount: 279 });
+    value.writeOffs = [{
+      id: 5,
+      status: 'POSTING',
+      total: 100,
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    }];
+    expect(value.canWriteOffPayable(target)).toBeFalse();
+  });
+
+  it('re-enables write-off after VOIDED draft on same obligation', () => {
+    const { value } = component();
+    const target = payable({ id: 11, availableAmount: 279, pendingAmount: 279 });
+    value.writeOffs = [{
+      id: 6,
+      status: 'VOIDED',
+      total: 100,
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    }];
+    expect(value.canWriteOffPayable(target)).toBeTrue();
+  });
+
+  it('re-enables write-off after POSTED partial write-off when balance remains', () => {
+    const { value } = component();
+    const target = payable({ id: 11, availableAmount: 179, pendingAmount: 179 });
+    value.writeOffs = [{
+      id: 7,
+      status: 'POSTED',
+      total: 100,
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    }];
+    expect(value.canWriteOffPayable(target)).toBeTrue();
+  });
+
+  it('re-enables write-off after FAILED write-off when balance available', () => {
+    const { value } = component();
+    const target = payable({ id: 11, availableAmount: 279, pendingAmount: 279 });
+    value.writeOffs = [{
+      id: 8,
+      status: 'FAILED',
+      total: 100,
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    }];
+    expect(value.canWriteOffPayable(target)).toBeTrue();
+  });
+
+  it('blocks opening dialog when active write-off exists', () => {
+    const { value } = component();
+    const messageService = (value as any).messageService;
+    const target = payable({ id: 11, availableAmount: 279 });
+    value.writeOffs = [{
+      id: 9,
+      status: 'DRAFT',
+      total: 100,
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    }];
+    value.openWriteOffDialog(target);
+    expect(value.writeOffDialogVisible).toBeFalse();
+    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: WRITE_OFF_PENDING_BLOCK_MESSAGE,
+    }));
+  });
+
+  it('keeps write-off disabled after reload when DRAFT exists', () => {
+    const { value } = component();
+    const target = payable({ id: 11, availableAmount: 279 });
+    value.writeOffs = [{
+      id: 10,
+      status: 'DRAFT',
+      total: 100,
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    }];
+    expect(value.canWriteOffPayable(target)).toBeFalse();
+  });
+
   it('opens write-off dialog with obligation context and readonly labels', () => {
     const { value } = component();
     const target = payable({ availableAmount: 500, pendingAmount: 500, originalAmount: 500 });
@@ -412,10 +511,10 @@ describe('TreasuryOperationsComponent PP8', () => {
     expect(payload.details[0].payableAccountCode).toBeUndefined();
   });
 
-  it('shows success message and reloads write-offs after creation', () => {
+  it('shows success message and reloads write-offs after creation', fakeAsync(() => {
     const { value, api } = component();
     const messageService = (value as any).messageService;
-    api.createWriteOff.and.returnValue(of({ id: 12, status: 'DRAFT', total: 100 }));
+    api.createWriteOff.and.returnValue(of({ id: 12, status: 'DRAFT', total: 100, reason: 'Motivo' }));
     api.writeOffs.and.returnValue(of([{ id: 12, status: 'DRAFT', total: 100, reason: 'Motivo' }]));
     const target = payable();
     value.openWriteOffDialog(target);
@@ -423,10 +522,162 @@ describe('TreasuryOperationsComponent PP8', () => {
     value.writeOffCounterpartAccountId = 4295;
     value.writeOffReason = 'Motivo';
     value.confirmWriteOffFromDialog();
+    tick();
     expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
       detail: WRITE_OFF_CREATE_SUCCESS_MESSAGE,
     }));
     expect(api.writeOffs).toHaveBeenCalledWith('enterprise-a');
+    expect(value.writeOffs.some((item) => item.id === 12)).toBeTrue();
+  }));
+
+  it('keeps payable visible after creating DRAFT write-off reload', fakeAsync(() => {
+    const { value, api } = component();
+    const target = payable({ availableAmount: 279, pendingAmount: 279 });
+    value.payables = [target];
+    api.createWriteOff.and.returnValue(of({ id: 13, status: 'DRAFT', total: 100 }));
+    api.writeOffs.and.returnValue(of([{ id: 13, status: 'DRAFT', total: 100 }]));
+    api.pending.and.returnValue(of([target]));
+    value.openWriteOffDialog(target);
+    value.writeOffAmount = 100;
+    value.writeOffCounterpartAccountId = 4295;
+    value.writeOffReason = 'Parcial';
+    value.confirmWriteOffFromDialog();
+    tick();
+    expect(value.payables.some((item) => item.id === target.id)).toBeTrue();
+    expect(value.payables[0].availableAmount).toBe(279);
+  }));
+
+  it('shows partial success message when obligation remains after posting write-off', fakeAsync(() => {
+    const { value, api } = component();
+    const messageService = (value as any).messageService;
+    const target = payable({ id: 11, availableAmount: 179, pendingAmount: 179 });
+    api.confirmWriteOff.and.returnValue(of({ id: 20, status: 'POSTING', total: 100, details: [{ invoiceId: 11, supplierId: 7, amount: 100 }] }));
+    api.writeOff.and.returnValue(of({ id: 20, status: 'POSTED', total: 100, details: [{ invoiceId: 11, supplierId: 7, amount: 100 }] }));
+    api.pending.and.returnValue(of([target]));
+    api.writeOffs.and.returnValue(of([{ id: 20, status: 'POSTED', total: 100 }]));
+    value.confirmWriteOff({ id: 20, status: 'DRAFT', total: 100, details: [{ invoiceId: 11, supplierId: 7, amount: 100 }] });
+    tick();
+    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: WRITE_OFF_POSTED_PARTIAL_MESSAGE,
+    }));
+    expect(value.payables.some((item) => item.id === 11)).toBeTrue();
+  }));
+
+  it('shows total success message and removes payable when balance reaches zero', fakeAsync(() => {
+    const { value, api } = component();
+    const messageService = (value as any).messageService;
+    const target = payable({ id: 11, availableAmount: 179, pendingAmount: 179 });
+    value.payables = [target];
+    api.confirmWriteOff.and.returnValue(of({ id: 21, status: 'POSTING', total: 179, details: [{ invoiceId: 11, supplierId: 7, amount: 179 }] }));
+    api.writeOff.and.returnValue(of({ id: 21, status: 'POSTED', total: 179, details: [{ invoiceId: 11, supplierId: 7, amount: 179 }] }));
+    api.pending.and.returnValue(of([]));
+    api.writeOffs.and.returnValue(of([{ id: 21, status: 'POSTED', total: 179 }]));
+    value.confirmWriteOff({ id: 21, status: 'DRAFT', total: 179, details: [{ invoiceId: 11, supplierId: 7, amount: 179 }] });
+    tick();
+    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: WRITE_OFF_POSTED_TOTAL_MESSAGE,
+    }));
+    expect(value.payables.length).toBe(0);
+  }));
+
+  it('shows failure message when write-off posting is rejected', fakeAsync(() => {
+    const { value, api } = component();
+    const messageService = (value as any).messageService;
+    const target = payable();
+    value.payables = [target];
+    api.confirmWriteOff.and.returnValue(of({ id: 22, status: 'POSTING', total: 100, details: [{ invoiceId: 11, supplierId: 7, amount: 100 }] }));
+    api.writeOff.and.returnValue(of({ id: 22, status: 'FAILED', total: 100, details: [{ invoiceId: 11, supplierId: 7, amount: 100 }] }));
+    api.pending.and.returnValue(of([target]));
+    api.writeOffs.and.returnValue(of([{ id: 22, status: 'FAILED', total: 100 }]));
+    value.confirmWriteOff({ id: 22, status: 'DRAFT', total: 100, details: [{ invoiceId: 11, supplierId: 7, amount: 100 }] });
+    tick();
+    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: WRITE_OFF_POST_FAILED_MESSAGE,
+    }));
+    expect(value.payables[0].availableAmount).toBe(500);
+  }));
+
+  it('discard draft shows modal and discards without changing payables', fakeAsync(() => {
+    const { value, api } = component();
+    const messageService = (value as any).messageService;
+    const target = payable();
+    value.payables = [target];
+    const draft = { id: 23, status: 'DRAFT', total: 100 };
+    api.discardWriteOff.and.returnValue(of({ id: 23, status: 'VOIDED', total: 100 }));
+    api.writeOffs.and.returnValue(of([{ id: 23, status: 'VOIDED', total: 100 }]));
+    api.pending.and.returnValue(of([target]));
+    value.discardDraftWriteOff(draft);
+    expect(value.writeOffDiscardDialogVisible).toBeTrue();
+    value.confirmDiscardWriteOff();
+    tick();
+    expect(api.discardWriteOff).toHaveBeenCalledWith(23);
+    expect(api.voidWriteOff).not.toHaveBeenCalled();
+    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: WRITE_OFF_DISCARD_SUCCESS_MESSAGE,
+    }));
+    expect(value.payables[0].availableAmount).toBe(500);
+  }));
+
+  it('cancel discard modal does not call API', () => {
+    const { value, api } = component();
+    value.discardDraftWriteOff({ id: 23, status: 'DRAFT', total: 100 });
+    expect(value.writeOffDiscardDialogVisible).toBeTrue();
+    value.cancelDiscardWriteOffDialog();
+    expect(value.writeOffDiscardDialogVisible).toBeFalse();
+    expect(api.discardWriteOff).not.toHaveBeenCalled();
+    expect(api.voidWriteOff).not.toHaveBeenCalled();
+  });
+
+  it('voidWriteOff polls until VOIDED and refreshes list without page reload', fakeAsync(() => {
+    const { value, api } = component();
+    const messageService = (value as any).messageService;
+    api.voidWriteOff.and.returnValue(of({ id: 30, status: 'VOIDING', total: 100 }));
+    api.writeOff.and.returnValues(
+      of({ id: 30, status: 'VOIDING', total: 100 }),
+      of({ id: 30, status: 'VOIDED', total: 100 }),
+    );
+    api.writeOffs.and.returnValue(of([{ id: 30, status: 'VOIDED', total: 100 }]));
+    api.pending.and.returnValue(of([]));
+    value.voidWriteOff({ id: 30, status: 'POSTED', total: 100 });
+    tick(2000);
+    tick(2000);
+    expect(api.voidWriteOff).toHaveBeenCalledWith(30);
+    expect(api.discardWriteOff).not.toHaveBeenCalled();
+    expect(value.writeOffs[0].status).toBe('VOIDED');
+    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: WRITE_OFF_VOIDED_MESSAGE,
+    }));
+  }));
+
+  it('re-enables write-off button after discarding draft write-off', fakeAsync(() => {
+    const { value, api } = component();
+    const target = payable({ id: 11, availableAmount: 279, pendingAmount: 279 });
+    value.payables = [target];
+    value.writeOffs = [{
+      id: 31,
+      status: 'DRAFT',
+      total: 100,
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    }];
+    expect(value.canWriteOffPayable(target)).toBeFalse();
+    const draft = {
+      id: 31,
+      status: 'DRAFT',
+      total: 100,
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    };
+    api.discardWriteOff.and.returnValue(of({ id: 31, status: 'VOIDED', total: 100 }));
+    api.writeOffs.and.returnValue(of([{ id: 31, status: 'VOIDED', total: 100 }]));
+    api.pending.and.returnValue(of([target]));
+    value.discardDraftWriteOff(draft);
+    value.confirmDiscardWriteOff();
+    tick();
+    expect(value.canWriteOffPayable(target)).toBeTrue();
+  }));
+
+  it('disables write-off action when available balance is zero', () => {
+    const { value } = component();
+    expect(value.canWriteOffPayable(payable({ availableAmount: 0, pendingAmount: 0 }))).toBeFalse();
   });
 
   it('shows accounting entry code from API in voucher table label', () => {

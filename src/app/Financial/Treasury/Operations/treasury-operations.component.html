@@ -121,7 +121,7 @@
                   severity="danger"
                   [outlined]="true"
                   [disabled]="!canWriteOffPayable(payable)"
-                  [pTooltip]="!canWriteOffPayable(payable) ? 'La obligación no tiene saldo disponible para dar de baja.' : undefined"
+                  [pTooltip]="writeOffPayableTooltip(payable)"
                   tooltipPosition="top"
                   (onClick)="openWriteOffDialog(payable)">
                 </p-button>
@@ -441,7 +441,7 @@
     </p-table>
   </p-card>
 
-  <p-card header="Bajas de CxP">
+  <p-card header="Bajas de CxP" #writeOffsSection>
     <p-table
       [value]="writeOffs"
       [loading]="busy"
@@ -478,12 +478,25 @@
                 (onClick)="confirmWriteOff(item)">
               </p-button>
               <p-button
+                *ngIf="item.status === 'DRAFT'"
+                label="Descartar borrador"
+                icon="pi pi-trash"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                [pTooltip]="writeOffDiscardTooltip"
+                tooltipPosition="top"
+                (onClick)="discardDraftWriteOff(item)">
+              </p-button>
+              <p-button
                 *ngIf="item.status === 'POSTED' || item.status === 'VOID_FAILED'"
                 [label]="item.status === 'VOID_FAILED' ? 'Reintentar anulación' : 'Anular'"
                 icon="pi pi-times"
                 size="small"
                 severity="danger"
                 [outlined]="true"
+                [pTooltip]="writeOffVoidTooltip"
+                tooltipPosition="top"
                 (onClick)="voidWriteOff(item)">
               </p-button>
             </div>
@@ -953,6 +966,48 @@
         [loading]="busy"
         [disabled]="busy"
         (onClick)="confirmWriteOffFromDialog()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  header="Descartar borrador"
+  [(visible)]="writeOffDiscardDialogVisible"
+  [modal]="true"
+  [style]="{ width: 'min(440px, 95vw)' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cancelDiscardWriteOffDialog()">
+  <div class="flex flex-col gap-3" *ngIf="writeOffDiscardTarget">
+    <p class="text-sm text-gray-700 m-0">
+      ¿Desea descartar esta baja de CxP? La obligación no será modificada.
+    </p>
+    <div class="rounded border border-gray-200 bg-gray-50 p-3 text-sm">
+      <div class="flex justify-between gap-2">
+        <span class="text-gray-500">Monto</span>
+        <span class="font-semibold">{{ writeOffDiscardTarget.total | currency:'COP' }}</span>
+      </div>
+      <div class="flex justify-between gap-2 mt-2" *ngIf="writeOffDiscardTarget.reason">
+        <span class="text-gray-500">Motivo</span>
+        <span class="text-right">{{ writeOffDiscardTarget.reason }}</span>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-end">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="cancelDiscardWriteOffDialog()">
+      </p-button>
+      <p-button
+        label="Descartar borrador"
+        icon="pi pi-trash"
+        severity="danger"
+        [disabled]="busy"
+        (onClick)="confirmDiscardWriteOff()">
       </p-button>
     </div>
   </ng-template>
