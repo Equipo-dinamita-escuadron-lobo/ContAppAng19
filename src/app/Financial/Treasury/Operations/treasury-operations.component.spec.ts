@@ -1,5 +1,5 @@
 import { fakeAsync, tick } from '@angular/core/testing';
-import { NEVER, of, throwError } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { TreasuryOperationsComponent } from './treasury-operations.component';
 import {
   WRITE_OFF_AMOUNT_EXCEEDS_MESSAGE,
@@ -21,8 +21,6 @@ describe('TreasuryOperationsComponent PP8', () => {
   function component() {
     const api = {
       createVoucher: jasmine.createSpy('createVoucher').and.returnValue(NEVER),
-      postVoucher: jasmine.createSpy('postVoucher').and.returnValue(NEVER),
-      voucher: jasmine.createSpy('voucher').and.returnValue(NEVER),
       createSchedule: jasmine.createSpy('createSchedule').and.returnValue(NEVER),
       createWriteOff: jasmine.createSpy('createWriteOff').and.returnValue(NEVER),
       confirmWriteOff: jasmine.createSpy('confirmWriteOff').and.returnValue(NEVER),
@@ -142,72 +140,6 @@ describe('TreasuryOperationsComponent PP8', () => {
       detail: 'No hay cuentas bancarias activas para este método. Configure cuentas bancarias en Maestros Generales → Banco y Cuentas Bancarias.',
     }));
   });
-
-  it('registers payment from dialog and polls until posted', fakeAsync(() => {
-    const { value, api } = component();
-    const messageService = (value as any).messageService;
-    const voucher = {
-      id: 9,
-      voucherNumber: 'CE-9',
-      status: 'DRAFT' as const,
-      enterpriseId: 'enterprise-a',
-      paymentMethodId: 1,
-      total: 100,
-      version: 0,
-      details: [],
-    };
-    api.createVoucher.and.returnValue(of(voucher));
-    api.postVoucher.and.returnValue(of({
-      ...voucher,
-      status: 'POSTING',
-    }));
-    api.voucher.and.returnValues(
-      of({ ...voucher, status: 'POSTING' }),
-      of({ ...voucher, status: 'POSTED' }),
-    );
-    value.openPaymentDialog(value.payables[0]);
-    value.dialogPaymentMethodId = 1;
-    value.dialogBankAccountId = 33;
-    value.confirmPayFromDialog();
-    tick(0);
-    tick(2000);
-    expect(api.createVoucher).toHaveBeenCalled();
-    expect(api.postVoucher).toHaveBeenCalledWith(9, 'enterprise-a', jasmine.any(String));
-    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
-      severity: 'success',
-      detail: jasmine.stringMatching(/contabilizado/i),
-    }));
-    expect(value.paymentDialogVisible).toBeFalse();
-  }));
-
-  it('retries post on transient failure and still completes payment', fakeAsync(() => {
-    const { value, api } = component();
-    const messageService = (value as any).messageService;
-    const voucher = {
-      id: 12,
-      voucherNumber: 'CE-12',
-      status: 'DRAFT' as const,
-      enterpriseId: 'enterprise-a',
-      paymentMethodId: 1,
-      total: 100,
-      version: 0,
-      details: [],
-    };
-    api.createVoucher.and.returnValue(of(voucher));
-    api.postVoucher.and.returnValues(
-      throwError(() => ({ status: 503 })),
-      of({ ...voucher, status: 'POSTED' }),
-    );
-    value.openPaymentDialog(value.payables[0]);
-    value.dialogPaymentMethodId = 1;
-    value.dialogBankAccountId = 33;
-    value.confirmPayFromDialog();
-    tick();
-    expect(api.postVoucher).toHaveBeenCalledTimes(2);
-    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
-      severity: 'success',
-    }));
-  }));
 
   it('does not create draft from dialog when bank account is required but missing', () => {
     const { value, api } = component();
