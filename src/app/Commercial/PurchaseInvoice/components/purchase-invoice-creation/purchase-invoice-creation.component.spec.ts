@@ -167,4 +167,12 @@ describe('PurchaseInvoiceCreationComponent save state', () => {
       summary: 'Respuesta demorada',
     }));
   }));
+
+  it('shows API message when purchase save fails', () => {
+    const component = Object.create(PurchaseInvoiceCreationComponent.prototype) as any;
+    expect(component.purchaseSaveErrorDetail({
+      error: { message: 'La empresa aún no tiene un catálogo de cuentas válido.' },
+    })).toBe('La empresa aún no tiene un catálogo de cuentas válido.');
+    expect(component.purchaseSaveErrorDetail({})).toBe('No se pudo crear la factura de compra');
+  });
 });
