@@ -8,7 +8,7 @@
         [summary]="help.summary"
         [helpCenterSlug]="help.slug">
       </app-contextual-help>
-      <p class="text-gray-600">Consulte y gestione los pagos realizados a proveedores</p>
+      <p class="text-gray-600">Consulte y gestione comprobantes generados por pagos a proveedores</p>
     </div>
     <div class="flex gap-2">
       <p-button
@@ -29,115 +29,79 @@
         [disabled]="!filteredReceipts.length"
         (onClick)="exportToCsv()">
       </p-button>
-      <p-button
-        label="Efectuar Pago"
-        icon="pi pi-plus"
-        (onClick)="goToCreateReceipt()">
-      </p-button>
     </div>
   </div>
 
   <p-card header="Filtros" class="mb-4">
-    <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="flex flex-col gap-2">
-        <label for="supplierId" class="font-semibold text-[var(--color-primary)]">Proveedor</label>
-        <p-dropdown
-          id="supplierId"
-          formControlName="supplierId"
-          [options]="supplierOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Todos los proveedores"
-          [showClear]="true"
-          [filter]="true"
-          filterBy="label"
-          styleClass="w-full">
-        </p-dropdown>
+    <form [formGroup]="filterForm" class="flex flex-col gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="flex flex-col gap-2">
+          <label for="supplierId" class="font-semibold text-[var(--color-primary)]">Proveedor</label>
+          <p-dropdown
+            id="supplierId"
+            formControlName="supplierId"
+            [options]="supplierOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los proveedores"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="label"
+            styleClass="w-full">
+          </p-dropdown>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="status" class="font-semibold text-[var(--color-primary)]">Estado</label>
+          <p-dropdown
+            id="status"
+            formControlName="status"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los estados"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-dropdown>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="startDate" class="font-semibold text-[var(--color-primary)]">Desde</label>
+          <p-calendar
+            id="startDate"
+            formControlName="startDate"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            placeholder="Fecha desde"
+            styleClass="w-full">
+          </p-calendar>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="endDate" class="font-semibold text-[var(--color-primary)]">Hasta</label>
+          <p-calendar
+            id="endDate"
+            formControlName="endDate"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            placeholder="Fecha hasta"
+            styleClass="w-full">
+          </p-calendar>
+        </div>
       </div>
 
-      <div class="flex flex-col gap-2">
-        <label for="receiptCode" class="font-semibold text-[var(--color-primary)]">Código comprobante</label>
-        <p-dropdown
-          id="receiptCode"
-          formControlName="receiptCode"
-          [options]="receiptCodeOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Todos los comprobantes"
-          [showClear]="true"
-          [filter]="true"
-          filterBy="label"
-          styleClass="w-full">
-        </p-dropdown>
-        <small class="text-gray-500">Solo códigos existentes en la empresa</small>
-      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+        <div class="flex flex-col gap-2">
+          <label for="receiptCode" class="font-semibold text-[var(--color-primary)]">Código de comprobante</label>
+          <input
+            pInputText
+            id="receiptCode"
+            formControlName="receiptCode"
+            placeholder="Buscar por código..."
+            class="w-full" />
+        </div>
 
-      <div class="flex flex-col gap-2">
-        <label for="status" class="font-semibold text-[var(--color-primary)]">Estado</label>
-        <p-dropdown
-          id="status"
-          formControlName="status"
-          [options]="statusOptions"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Todos los estados"
-          [showClear]="true"
-          styleClass="w-full">
-        </p-dropdown>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="startDate" class="font-semibold text-[var(--color-primary)]">Desde</label>
-        <p-calendar
-          id="startDate"
-          formControlName="startDate"
-          dateFormat="dd/mm/yy"
-          [showIcon]="true"
-          placeholder="Fecha desde"
-          styleClass="w-full">
-        </p-calendar>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="endDate" class="font-semibold text-[var(--color-primary)]">Hasta</label>
-        <p-calendar
-          id="endDate"
-          formControlName="endDate"
-          dateFormat="dd/mm/yy"
-          [showIcon]="true"
-          placeholder="Fecha hasta"
-          styleClass="w-full">
-        </p-calendar>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="minAmount" class="font-semibold text-[var(--color-primary)]">Monto mínimo</label>
-        <p-inputNumber
-          id="minAmount"
-          formControlName="minAmount"
-          mode="currency"
-          currency="COP"
-          locale="es-CO"
-          placeholder="0"
-          styleClass="w-full">
-        </p-inputNumber>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="maxAmount" class="font-semibold text-[var(--color-primary)]">Monto máximo</label>
-        <p-inputNumber
-          id="maxAmount"
-          formControlName="maxAmount"
-          mode="currency"
-          currency="COP"
-          locale="es-CO"
-          placeholder="Sin límite"
-          styleClass="w-full">
-        </p-inputNumber>
-      </div>
-
-      <div class="flex flex-col gap-2 md:col-span-2 lg:col-span-4">
-        <div class="flex gap-2 justify-end">
+        <div class="flex justify-end">
           <p-button
             label="Limpiar filtros"
             icon="pi pi-filter-slash"
@@ -222,12 +186,13 @@
                 (onClick)="viewReceiptDetails(receipt)">
               </p-button>
               <p-button
-                icon="pi pi-print"
+                *ngIf="receipt.accountingEntryId || receipt.statusKey === 'POSTED'"
+                icon="pi pi-book"
                 size="small"
-                severity="secondary"
+                severity="help"
                 [text]="true"
-                pTooltip="Imprimir comprobante"
-                (onClick)="printReceipt(receipt)">
+                pTooltip="Ver asiento"
+                (onClick)="showAccounting(receipt)">
               </p-button>
               <p-button
                 icon="pi pi-times"
@@ -253,15 +218,9 @@
                 <p class="text-gray-500">
                   {{ allReceipts.length > 0
                     ? emptyFiltersMessage
-                    : 'Comience creando su primer comprobante de egreso' }}
+                    : 'Los comprobantes se generan al efectuar pagos desde Operaciones de Tesorería.' }}
                 </p>
               </div>
-              <p-button
-                *ngIf="allReceipts.length === 0"
-                label="Efectuar Primer Pago"
-                icon="pi pi-plus"
-                (onClick)="goToCreateReceipt()">
-              </p-button>
             </div>
           </td>
         </tr>
@@ -278,6 +237,67 @@
         </tr>
       </ng-template>
     </p-table>
+  </p-card>
+
+  <p-card *ngIf="accountingEntry" header="Asiento contable" class="mb-4">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex flex-wrap gap-4 text-sm text-gray-700">
+        <span *ngIf="accountingEntryHeader.documentTypeLabel"><strong>Origen:</strong> {{ accountingEntryHeader.documentTypeLabel }}</span>
+        <span *ngIf="accountingEntryHeader.voucherNumber"><strong>Comprobante:</strong> {{ accountingEntryHeader.voucherNumber }}</span>
+        <span *ngIf="accountingEntryHeader.supplierLabel"><strong>Proveedor:</strong> {{ accountingEntryHeader.supplierLabel }}</span>
+        <span *ngIf="accountingEntryHeader.entryCode"><strong>Asiento:</strong> {{ accountingEntryHeader.entryCode }}</span>
+        <span *ngIf="accountingEntryHeader.entryDate"><strong>Fecha:</strong> {{ accountingEntryHeader.entryDate }}</span>
+        <span *ngIf="accountingEntryHeader.entryStatus"><strong>Estado:</strong> {{ accountingStatusLabel(accountingEntryHeader.entryStatus) }}</span>
+      </div>
+      <p-button
+        label="Cerrar"
+        icon="pi pi-times"
+        size="small"
+        severity="secondary"
+        [text]="true"
+        (onClick)="clearAccountingView()">
+      </p-button>
+    </div>
+    <p-message
+      *ngIf="accountingMovements.length && !accountingIsBalanced"
+      severity="warn"
+      text="El asiento no está balanceado: el total débito difiere del total crédito."
+      styleClass="mb-3 w-full">
+    </p-message>
+    <p-table
+      [value]="accountingMovements"
+      [loading]="loadingAccounting"
+      styleClass="p-datatable-sm p-datatable-striped"
+      *ngIf="accountingMovements.length">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Código cuenta</th>
+          <th>Cuenta</th>
+          <th>Detalle</th>
+          <th class="text-right">Débito</th>
+          <th class="text-right">Crédito</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td class="font-mono">{{ row.accountCode }}</td>
+          <td>{{ row.accountName }}</td>
+          <td>{{ row.detail }}</td>
+          <td class="text-right">{{ row.debit | currency:'COP':'symbol':'1.0-2' }}</td>
+          <td class="text-right">{{ row.credit | currency:'COP':'symbol':'1.0-2' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="footer">
+        <tr>
+          <td colspan="3" class="font-semibold text-right">Totales</td>
+          <td class="text-right font-semibold">{{ accountingDebitTotal | currency:'COP':'symbol':'1.0-2' }}</td>
+          <td class="text-right font-semibold">{{ accountingCreditTotal | currency:'COP':'symbol':'1.0-2' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+    <p *ngIf="!loadingAccounting && !accountingMovements.length" class="text-gray-600">
+      El asiento no trae movimientos para mostrar.
+    </p>
   </p-card>
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">

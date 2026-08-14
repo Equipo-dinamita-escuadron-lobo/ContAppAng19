@@ -31,9 +31,81 @@ describe('PurchaseInvoiceCreationComponent totals', () => {
     value.calculateTotals();
 
     expect(value.subTotal).toBe(180_000);
-    expect(value.taxTotal).toBe(38_000);
-    expect(value.total).toBe(218_000);
-    expect(value.pendingTotal).toBe(168_000);
+    expect(value.taxTotal).toBe(34_200);
+    expect(value.total).toBe(214_200);
+    expect(value.pendingTotal).toBe(164_200);
+  });
+
+  it('caps initial payment above total and enforces minimum partial payment', () => {
+    const value = component();
+    value.lstProducts = [
+      {
+        cost: 100,
+        amount: 1,
+        IVA: 0,
+        descuentos: [0, 0],
+      } as any,
+    ];
+    value.calculateTotals();
+
+    value.initialPayment = 250;
+    value.onInitialPaymentChange();
+    expect(value.initialPayment).toBe(99);
+    expect(value.pendingTotal).toBe(1);
+
+    value.initialPayment = 10;
+    value.onInitialPaymentChange();
+    expect(value.initialPayment).toBe(50);
+    expect(value.pendingTotal).toBe(50);
+  });
+
+  it('rejects full initial payment on save', () => {
+    const value = component();
+    value.supplier = { thId: 1 } as any;
+    value.lstProducts = [{
+      id: 1,
+      name: 'Producto',
+      amount: 1,
+      cost: 100,
+      IVA: 0,
+      descuentos: [0, 0],
+      maxQuantity: 10,
+    } as any];
+    value.calculateTotals();
+    value.initialPayment = 100;
+
+    const error = (value as any).validateInitialPayment();
+    expect(error).toContain('Tesorería');
+  });
+
+  it('does not allow due dates on or before emission date', () => {
+    const value = component();
+    value.currentDate = new Date('2026-08-13T12:00:00');
+    value.minDueDate = new Date('2026-08-14T00:00:00');
+    value.dueDate = new Date('2026-08-13T12:00:00');
+
+    value.onDueDateChange(value.dueDate);
+
+    expect(value.dueDate?.toISOString().slice(0, 10)).toBe('2026-08-14');
+    expect(value.paymentTermDays).toBe(1);
+  });
+
+  it('keeps payment term and due date in sync', () => {
+    const value = component();
+    value.currentDate = new Date('2026-08-13T12:00:00');
+    value.minDueDate = new Date('2026-08-14T00:00:00');
+    value.paymentTermDays = 30;
+    value.onPaymentTermChange();
+
+    expect(value.paymentTermDays).toBe(30);
+    expect(value.dueDate?.toISOString().slice(0, 10)).toBe('2026-09-12');
+
+    value.paymentTermDays = 10;
+    value.onPaymentTermChange();
+    expect(value.dueDate?.toISOString().slice(0, 10)).toBe('2026-08-23');
+
+    value.onDueDateChange(new Date('2026-08-20T12:00:00'));
+    expect(value.paymentTermDays).toBe(7);
   });
 
   it('recalculates line and invoice totals after editing a product', () => {

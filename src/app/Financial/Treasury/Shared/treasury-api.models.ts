@@ -6,6 +6,10 @@ export interface VoucherRequest {
   enterpriseId: string; issueDate: string; paymentMethodId: number; bankAccountId?: number;
   observations?: string; details: VoucherDetailRequest[];
 }
+export interface ScheduleRequest {
+  enterpriseId: string; executionDate: string; paymentMethodId: number; bankAccountId?: number;
+  observations?: string; details: VoucherDetailRequest[];
+}
 export interface VoucherDetail {
   id: number; supplierId: number; invoiceId: number; invoiceReference: string;
   payableAccountId: number; payableAccountCode: string; previousBalance: number;
@@ -14,7 +18,7 @@ export interface VoucherDetail {
 export interface PaymentVoucher {
   id: number; voucherNumber: string; enterpriseId: string; issueDate: string;
   status: VoucherStatus; paymentMethodId: number; bankAccountId?: number; total: number;
-  observations?: string; accountingEntryId?: number; failureReason?: string; voidReason?: string;
+  observations?: string; accountingEntryId?: number; accountingEntryCode?: string; failureReason?: string; voidReason?: string;
   version: number; details: VoucherDetail[];
 }
 export interface Payable {
@@ -24,10 +28,16 @@ export interface Payable {
   payableAccountId: number; payableAccountCode: string; active: boolean; version: number;
 }
 export interface Page<T> { content: T[]; totalElements: number; totalPages: number; number: number; size: number; }
+export interface ScheduleDetail {
+  id?: number;
+  supplierId: number;
+  invoiceId: number;
+  amount: number;
+}
 export interface PaymentSchedule {
   id: number; enterpriseId: string; executionDate: string; status: ScheduleStatus;
-  paymentMethodId: number; bankAccountId?: number; total: number; observations?: string;
-  retryCount: number; voucherId?: number; failureReason?: string; details: unknown[];
+  paymentMethodId: number; bankAccountId?: number; total?: number; observations?: string;
+  retryCount: number; voucherId?: number; failureReason?: string; details: ScheduleDetail[];
 }
 export interface AgingLine {
   supplierId: number; invoiceId: number; reference: string; accountCode: string; dueDate: string;

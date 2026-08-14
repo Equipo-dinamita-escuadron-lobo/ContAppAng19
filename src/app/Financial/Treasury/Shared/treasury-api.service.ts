@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { AgingLine, Page, Payable, PaymentSchedule, PaymentVoucher, SupplierStatement, VoucherRequest, VoucherStatus, WriteOffRequest } from './treasury-api.models';
+import { AgingLine, Page, Payable, PaymentSchedule, PaymentVoucher, ScheduleRequest, SupplierStatement, VoucherRequest, VoucherStatus, WriteOffRequest } from './treasury-api.models';
 
 @Injectable({ providedIn: 'root' })
 export class TreasuryApiService {
@@ -34,8 +34,8 @@ export class TreasuryApiService {
     return this.http.patch<Payable>(`${this.base}/payables/${id}/due-date`, { dueDate, reason }, { params: { enterpriseId } });
   }
   schedules(enterpriseId: string) { return this.http.get<PaymentSchedule[]>(`${this.base}/payment-schedules`, { params: { enterpriseId } }); }
-  createSchedule(request: VoucherRequest & { executionDate: string }) { return this.http.post<PaymentSchedule>(`${this.base}/payment-schedules`, request); }
-  updateSchedule(id: number, request: VoucherRequest & { executionDate: string }) { return this.http.put<PaymentSchedule>(`${this.base}/payment-schedules/${id}`, request); }
+  createSchedule(request: ScheduleRequest) { return this.http.post<PaymentSchedule>(`${this.base}/payment-schedules`, request); }
+  updateSchedule(id: number, request: ScheduleRequest) { return this.http.put<PaymentSchedule>(`${this.base}/payment-schedules/${id}`, request); }
   deleteSchedule(id: number) { return this.http.delete<void>(`${this.base}/payment-schedules/${id}`); }
   cancelSchedule(id: number) { return this.http.post<PaymentSchedule>(`${this.base}/payment-schedules/${id}/cancel`, null); }
   retrySchedule(id: number) { return this.http.post<PaymentSchedule>(`${this.base}/payment-schedules/${id}/retry`, null); }

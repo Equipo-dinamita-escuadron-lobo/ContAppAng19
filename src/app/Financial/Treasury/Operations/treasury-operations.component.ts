@@ -1,17 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, of, timer, TimeoutError } from 'rxjs';
-import { catchError, finalize, switchMap, take, takeWhile, timeout } from 'rxjs/operators';
+import { forkJoin, Observable, of, Subject, timer, TimeoutError } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, take, takeUntil, takeWhile, timeout } from 'rxjs/operators';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { CheckboxModule } from 'primeng/checkbox';
+import { DatePickerModule } from 'primeng/datepicker';
+import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -24,6 +28,7 @@ import { TreasuryApiService } from '../Shared/treasury-api.service';
 import { Payable, PaymentSchedule, PaymentVoucher } from '../Shared/treasury-api.models';
 import {
   accountingEntryStatusLabel,
+  accountingSourceDocumentTypeLabel,
   exportErrorDetail,
   exportSuccessDetail,
   scheduleStatusLabel,
@@ -36,9 +41,37 @@ import {
   buildActiveAccountIdSet,
   filterSelectablePaymentMethods,
 } from '../Shared/treasury-account.integration';
+import {
+  scheduleInvoicesLabel,
+  scheduleMethodLabel,
+  scheduleSuppliersLabel,
+  scheduleTotal,
+} from '../Shared/treasury-schedule-display';
 import { buildThirdPartyNameMap, resolveSupplierName } from '../Shared/treasury-third-party.integration';
+import {
+  AccountingEntryViewHeader,
+  AccountingMovementViewRow,
+  accountingTotalsBalanced,
+  buildAccountCatalogueLookup,
+  buildAccountingEntryView,
+  mapAccountingMovementsForView,
+} from '../Shared/treasury-accounting-display';
 import { ContextualHelpComponent } from '../../../Shared/Components/contextual-help/contextual-help.component';
 import { TREASURY_HELP } from '../Shared/treasury-help-content';
+import {
+  NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
+  NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE,
+} from '../Shared/treasury-payment-messages';
+import {
+  WRITE_OFF_AMOUNT_EXCEEDS_MESSAGE,
+  WRITE_OFF_AMOUNT_INVALID_MESSAGE,
+  WRITE_OFF_COUNTERPART_REQUIRED_MESSAGE,
+  WRITE_OFF_CREATE_SUCCESS_MESSAGE,
+  WRITE_OFF_NO_AVAILABLE_BALANCE_MESSAGE,
+  WRITE_OFF_REASON_REQUIRED_MESSAGE,
+} from '../Shared/treasury-writeoff-messages';
+import { ExpenseReceiptService } from '../ExpenseReceipts/Service/expense-receipt.service';
+import { Supplier } from '../ExpenseReceipts/Model/Models';
 
 @Component({
   selector: 'app-treasury-operations',
@@ -48,28 +81,36 @@ import { TREASURY_HELP } from '../Shared/treasury-help-content';
     FormsModule,
     ButtonModule,
     CardModule,
-    CheckboxModule,
+    DatePickerModule,
+    DialogModule,
     DropdownModule,
     InputNumberModule,
     InputTextModule,
+    InputTextarea,
     MessageModule,
     TableModule,
     TagModule,
+    SelectButtonModule,
     TooltipModule,
     ToastModule,
     ContextualHelpComponent,
+    AutoCompleteModule,
   ],
   templateUrl: './treasury-operations.component.html',
   styleUrl: './treasury-operations.component.css',
   providers: [MessageService],
 })
-export class TreasuryOperationsComponent implements OnInit {
+export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   private static readonly OPERATION_TIMEOUT_MS = 20_000;
   private static readonly POST_POLL_INTERVAL_MS = 2_000;
   private static readonly POST_POLL_MAX_ATTEMPTS = 15;
+  private static readonly VOUCHER_FILTER_DEBOUNCE_MS = 300;
+  private readonly destroy$ = new Subject<void>();
+  private readonly voucherNumberFilter$ = new Subject<string>();
 
   payables: Payable[] = [];
   vouchers: PaymentVoucher[] = [];
+  allVouchers: PaymentVoucher[] = [];
   schedules: PaymentSchedule[] = [];
   writeOffs: any[] = [];
   methods: any[] = [];
@@ -78,32 +119,71 @@ export class TreasuryOperationsComponent implements OnInit {
   accounts: any[] = [];
   bankOptions: { id: number; label: string }[] = [];
   accountOptions: { id: number; label: string }[] = [];
-  selected = new Set<number>();
-  amounts: Record<number, number> = {};
-  paymentMethodId?: number;
-  bankAccountId?: number;
-  executionDate = '';
-  observations = '';
-  editingVoucherId?: number;
-  counterpartAccountId?: number;
+  readonly paymentAmountOptions = [
+    { label: 'Total', value: 'full' as const },
+    { label: 'Parcial', value: 'partial' as const },
+  ];
+  minExecutionDate!: Date;
+  writeOffDialogVisible = false;
+  writeOffTarget?: Payable;
+  writeOffAmount?: number;
+  writeOffCounterpartAccountId?: number;
   writeOffReason = '';
-  busy = false;
+  paymentDialogVisible = false;
+  dialogLines: {
+    invoiceId: number;
+    supplierId: number;
+    reference: string;
+    amount: number;
+    maxAmount: number;
+    paymentMode: 'full' | 'partial';
+    payableAccountId?: number;
+    payableAccountCode?: string;
+  }[] = [];
+  dialogPaymentMethodId?: number;
+  dialogBankAccountId?: number;
+  dialogObservations = '';
+  scheduleDialogVisible = false;
+  scheduleLines: TreasuryOperationsComponent['dialogLines'] = [];
+  schedulePaymentMethodId?: number;
+  scheduleBankAccountId?: number;
+  scheduleExecutionDate?: Date;
+  scheduleObservations = '';
+  editingVoucherId?: number;
   postingVoucherId?: number;
-  error = '';
   voucherNumberFilter = '';
   voucherStatusFilter = '';
+  voucherSupplierFilter: Supplier | null = null;
+  voucherDateFrom?: Date;
+  voucherDateTo?: Date;
+  filteredVoucherSuppliers: Supplier[] = [];
+  voucherTableFirst = 0;
   accountingEntry: any = null;
-  accountingMovements: { account: string; description: string; debit: number; credit: number }[] = [];
+  accountingEntryHeader: AccountingEntryViewHeader = {};
+  accountingMovements: AccountingMovementViewRow[] = [];
   accountingDebitTotal = 0;
   accountingCreditTotal = 0;
+  busy = false;
+  error = '';
   exportingPdf = false;
   exportingCsv = false;
+  dueDateDialogVisible = false;
+  dueDateTarget?: Payable;
+  newDueDate?: Date;
+  dueDateReason = '';
+  minDueDate!: Date;
   readonly help = TREASURY_HELP.operations;
+  readonly noActivePaymentMethodsMessage = NO_ACTIVE_PAYMENT_METHODS_MESSAGE;
+  readonly noAvailableBankAccountsMessage = NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE;
+  readonly voucherStatusOptions = voucherStatusFilterOptions();
   private supplierNames = new Map<number, string>();
 
-  readonly voucherStatusOptions = voucherStatusFilterOptions();
-
   statusLabel = voucherStatusLabel;
+
+  voucherAccountingEntryLabel(voucher: PaymentVoucher): string {
+    const code = voucher.accountingEntryCode?.trim();
+    return code ? code : '—';
+  }
   scheduleLabel = scheduleStatusLabel;
   writeOffLabel = voucherStatusLabel;
   accountingStatusLabel = accountingEntryStatusLabel;
@@ -120,11 +200,119 @@ export class TreasuryOperationsComponent implements OnInit {
     private readonly thirds: ThirdService,
     private readonly exportService: TreasuryExportService,
     private readonly messageService: MessageService,
+    private readonly expenseReceiptService: ExpenseReceiptService,
   ) {
     this.enterpriseId = this.storage.getIdEnterprise();
   }
 
-  ngOnInit() { this.reload(); }
+  ngOnInit() {
+    const today = this.stripTime(new Date());
+    this.minDueDate = this.addDays(today, 1);
+    this.minExecutionDate = today;
+    this.setupVoucherFilterSubscriptions();
+    this.reload();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private setupVoucherFilterSubscriptions(): void {
+    this.voucherNumberFilter$
+      .pipe(
+        debounceTime(TreasuryOperationsComponent.VOUCHER_FILTER_DEBOUNCE_MS),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$),
+      )
+      .subscribe(() => {
+        this.resetVoucherTablePage();
+        this.applyVoucherFilters();
+      });
+  }
+
+  onVoucherNumberFilterChange(value: string): void {
+    this.voucherNumberFilter = value ?? '';
+    this.voucherNumberFilter$.next(this.voucherNumberFilter);
+  }
+
+  onVoucherStatusFilterChange(): void {
+    this.resetVoucherTablePage();
+    this.applyVoucherFilters();
+  }
+
+  onVoucherSupplierFilterChange(): void {
+    this.resetVoucherTablePage();
+    this.applyVoucherFilters();
+  }
+
+  onVoucherDateFilterChange(): void {
+    this.resetVoucherTablePage();
+    this.applyVoucherFilters();
+  }
+
+  searchVoucherSupplier(event: { query?: string }): void {
+    const query = String(event.query ?? '').trim().toLowerCase();
+    this.expenseReceiptService.getSuppliers(query).subscribe((suppliers) => {
+      this.filteredVoucherSuppliers = query
+        ? suppliers.filter((supplier) => supplier.name.toLowerCase().startsWith(query))
+        : suppliers;
+    });
+  }
+
+  clearVoucherFilters(): void {
+    this.voucherNumberFilter = '';
+    this.voucherStatusFilter = '';
+    this.voucherSupplierFilter = null;
+    this.voucherDateFrom = undefined;
+    this.voucherDateTo = undefined;
+    this.filteredVoucherSuppliers = [];
+    this.resetVoucherTablePage();
+    this.applyVoucherFilters();
+  }
+
+  onVoucherTablePage(event: { first?: number }): void {
+    this.voucherTableFirst = event.first ?? 0;
+  }
+
+  private resetVoucherTablePage(): void {
+    this.voucherTableFirst = 0;
+  }
+
+  applyVoucherFilters(): void {
+    const numberQuery = this.voucherNumberFilter.trim().toLowerCase();
+    const status = this.voucherStatusFilter;
+    const supplierId = this.voucherSupplierFilter?.id;
+
+    this.vouchers = this.allVouchers.filter((voucher) => {
+      if (numberQuery && !voucher.voucherNumber?.toLowerCase().includes(numberQuery)) {
+        return false;
+      }
+      if (status && voucher.status !== status) {
+        return false;
+      }
+      if (supplierId != null) {
+        const supplierIds = [...new Set((voucher.details ?? []).map((detail) => detail.supplierId))];
+        if (!supplierIds.includes(supplierId)) {
+          return false;
+        }
+      }
+      if (this.voucherDateFrom) {
+        const from = this.stripTime(this.voucherDateFrom);
+        if (new Date(voucher.issueDate) < from) {
+          return false;
+        }
+      }
+      if (this.voucherDateTo) {
+        const to = this.stripTime(this.voucherDateTo);
+        to.setHours(23, 59, 59, 999);
+        if (new Date(voucher.issueDate) > to) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
 
   reload() {
     if (!this.enterpriseId) {
@@ -135,10 +323,7 @@ export class TreasuryOperationsComponent implements OnInit {
     this.error = '';
     forkJoin({
       payables: this.api.pending(this.enterpriseId),
-      vouchers: this.api.vouchers(this.enterpriseId, {
-        voucherNumber: this.voucherNumberFilter,
-        status: this.voucherStatusFilter
-      }),
+      vouchers: this.api.vouchers(this.enterpriseId, { size: 1000 }),
       schedules: this.api.schedules(this.enterpriseId),
       writeOffs: this.api.writeOffs(this.enterpriseId),
       methods: this.paymentMethods.findAllActive(this.enterpriseId),
@@ -151,7 +336,8 @@ export class TreasuryOperationsComponent implements OnInit {
       next: data => {
         this.payables = data.payables;
         this.supplierNames = buildThirdPartyNameMap(data.thirds?.content || []);
-        this.vouchers = data.vouchers.content;
+        this.allVouchers = data.vouchers.content;
+        this.applyVoucherFilters();
         this.schedules = data.schedules;
         this.writeOffs = data.writeOffs;
         this.banks = data.banks.content;
@@ -168,17 +354,12 @@ export class TreasuryOperationsComponent implements OnInit {
         this.methods = filterSelectablePaymentMethods(
           data.methods.content,
           activeAccountIds,
-          this.paymentMethodId ?? null,
+          null,
         );
-        if (this.paymentMethodId && !this.methods.some((method) => method.id === this.paymentMethodId)) {
-          const preserved = data.methods.content.find((method: any) => method.id === this.paymentMethodId);
-          if (preserved) this.methods = [preserved, ...this.methods];
-        }
         this.methodOptions = this.methods.map((method) => ({
           id: method.id,
           label: translatePaymentMethodName(method.name),
         }));
-        this.payables.forEach(p => this.amounts[p.id] ??= p.availableAmount);
         this.busy = false;
       },
       error: err => {
@@ -188,8 +369,20 @@ export class TreasuryOperationsComponent implements OnInit {
     });
   }
 
-  toggle(id: number, checked: boolean) {
-    checked ? this.selected.add(id) : this.selected.delete(id);
+  setDialogLinePaymentMode(line: TreasuryOperationsComponent['dialogLines'][number], mode: 'full' | 'partial') {
+    line.paymentMode = mode;
+    if (mode === 'full') {
+      line.amount = line.maxAmount;
+    }
+  }
+
+  onDialogLineAmountChange(line: TreasuryOperationsComponent['dialogLines'][number]) {
+    if (Number(line.amount) >= line.maxAmount) {
+      line.paymentMode = 'full';
+      line.amount = line.maxAmount;
+    } else {
+      line.paymentMode = 'partial';
+    }
   }
 
   getStatusSeverity(status: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' {
@@ -212,107 +405,626 @@ export class TreasuryOperationsComponent implements OnInit {
     }
   }
 
-  private details() {
-    return this.payables
-      .filter(p => this.selected.has(p.id))
-      .map(p => ({ supplierId: p.supplierId, invoiceId: p.id, amount: Number(this.amounts[p.id]) }));
+  canWriteOffPayable(payable: Payable): boolean {
+    return payable.active && Number(payable.availableAmount) > 0;
   }
 
-  get selectedMethod(): any {
-    return this.methods.find(method => method.id === Number(this.paymentMethodId));
-  }
-
-  get requiresBankAccount(): boolean {
-    return Boolean(this.selectedMethod?.requiresBankAccount);
-  }
-
-  paymentMethodChanged() {
-    if (!this.requiresBankAccount) this.bankAccountId = undefined;
-  }
-
-  private paymentSelectionValid(): boolean {
-    if (!this.paymentMethodId) {
-      this.error = 'Seleccione un método de pago activo.';
-      return false;
+  payableAccountLabel(payable: Payable): string {
+    const account = this.accounts.find(
+      (item) => item.id === payable.payableAccountId || item.code === payable.payableAccountCode,
+    );
+    if (account) {
+      return `${account.code} - ${account.description}`;
     }
-    if (this.requiresBankAccount && !this.bankAccountId) {
-      this.error = 'El método seleccionado exige una cuenta bancaria.';
-      return false;
-    }
-    if (!this.requiresBankAccount && this.bankAccountId) {
-      this.error = 'El método seleccionado no admite cuenta bancaria.';
-      return false;
-    }
-    return true;
+    return payable.payableAccountCode ?? '—';
   }
 
-  createVoucher() {
-    if (!this.paymentSelectionValid() || !this.details().length) return;
-    if (!this.amountsWithinAvailable()) return;
-    const paymentMethodId = this.paymentMethodId!;
-    const request = {
-      enterpriseId: this.enterpriseId,
-      issueDate: new Date().toISOString().slice(0, 10),
-      paymentMethodId,
-      bankAccountId: this.bankAccountId,
-      observations: this.observations,
-      details: this.details()
+  openWriteOffDialog(payable: Payable) {
+    if (!this.canWriteOffPayable(payable)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin saldo',
+        detail: WRITE_OFF_NO_AVAILABLE_BALANCE_MESSAGE,
+        life: 6000,
+      });
+      return;
+    }
+    this.writeOffTarget = payable;
+    this.writeOffAmount = Number(payable.availableAmount);
+    this.writeOffCounterpartAccountId = undefined;
+    this.writeOffReason = '';
+    this.writeOffDialogVisible = true;
+  }
+
+  cancelWriteOffDialog() {
+    this.writeOffDialogVisible = false;
+    this.writeOffTarget = undefined;
+    this.writeOffAmount = undefined;
+    this.writeOffCounterpartAccountId = undefined;
+    this.writeOffReason = '';
+  }
+
+  confirmWriteOffFromDialog() {
+    if (!this.writeOffTarget) {
+      return;
+    }
+    if (!this.canWriteOffPayable(this.writeOffTarget)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin saldo',
+        detail: WRITE_OFF_NO_AVAILABLE_BALANCE_MESSAGE,
+        life: 6000,
+      });
+      return;
+    }
+    const amount = Number(this.writeOffAmount ?? 0);
+    const maxAmount = Number(this.writeOffTarget.availableAmount);
+    if (amount <= 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Monto inválido',
+        detail: WRITE_OFF_AMOUNT_INVALID_MESSAGE,
+        life: 5000,
+      });
+      return;
+    }
+    if (amount > maxAmount) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Monto excedido',
+        detail: WRITE_OFF_AMOUNT_EXCEEDS_MESSAGE,
+        life: 6000,
+      });
+      return;
+    }
+    const account = this.accounts.find((item) => item.id === Number(this.writeOffCounterpartAccountId));
+    if (!account) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cuenta contrapartida',
+        detail: WRITE_OFF_COUNTERPART_REQUIRED_MESSAGE,
+        life: 5000,
+      });
+      return;
+    }
+    const reason = (this.writeOffReason ?? '').trim();
+    if (!reason) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Motivo requerido',
+        detail: WRITE_OFF_REASON_REQUIRED_MESSAGE,
+        life: 5000,
+      });
+      return;
+    }
+    const payable = this.writeOffTarget;
+    this.run(
+      this.api.createWriteOff({
+        enterpriseId: this.enterpriseId,
+        reason,
+        counterpartAccountId: account.id,
+        counterpartAccountCode: account.code,
+        details: [{
+          supplierId: payable.supplierId,
+          invoiceId: payable.id,
+          amount,
+        }],
+      }),
+      () => {
+        this.cancelWriteOffDialog();
+        return {
+          summary: 'Baja de CxP',
+          detail: WRITE_OFF_CREATE_SUCCESS_MESSAGE,
+          life: 8000,
+        };
+      },
+    );
+  }
+
+  get dialogSelectedMethod(): any {
+    return this.methods.find((method) => method.id === Number(this.dialogPaymentMethodId));
+  }
+
+  get dialogRequiresBankAccount(): boolean {
+    return Boolean(this.dialogSelectedMethod?.requiresBankAccount);
+  }
+
+  get paymentDialogHeader(): string {
+    return this.editingVoucherId ? 'Editar borrador' : 'Registrar pago';
+  }
+
+  get isEditingVoucher(): boolean {
+    return this.editingVoucherId != null;
+  }
+
+  get dialogPaymentTotal(): number {
+    return this.dialogLines.reduce((sum, line) => sum + Number(line.amount ?? 0), 0);
+  }
+
+  get dialogIsPartialPayment(): boolean {
+    return this.dialogLines.some((line) => line.paymentMode === 'partial');
+  }
+
+  get dialogPayButtonLabel(): string {
+    return this.dialogIsPartialPayment ? 'Pagar parcialmente' : 'Pagar total';
+  }
+
+  get dialogPaySuccessSummary(): string {
+    return this.dialogIsPartialPayment ? 'Pago parcial registrado' : 'Pago total registrado';
+  }
+
+  get scheduleSelectedMethod(): any {
+    return this.methods.find((method) => method.id === Number(this.schedulePaymentMethodId));
+  }
+
+  get scheduleRequiresBankAccount(): boolean {
+    return Boolean(this.scheduleSelectedMethod?.requiresBankAccount);
+  }
+
+  get noActivePaymentMethods(): boolean {
+    return this.methodOptions.length === 0;
+  }
+
+  get dialogBankAccountsUnavailable(): boolean {
+    return this.dialogRequiresBankAccount && this.bankOptions.length === 0;
+  }
+
+  get scheduleBankAccountsUnavailable(): boolean {
+    return this.scheduleRequiresBankAccount && this.bankOptions.length === 0;
+  }
+
+  get cannotConfirmPaymentDialog(): boolean {
+    return this.busy || this.noActivePaymentMethods || this.dialogBankAccountsUnavailable;
+  }
+
+  get cannotConfirmScheduleDialog(): boolean {
+    return this.busy || this.noActivePaymentMethods || this.scheduleBankAccountsUnavailable;
+  }
+
+  get scheduleDialogTotal(): number {
+    return this.scheduleLines.reduce((sum, line) => sum + Number(line.amount ?? 0), 0);
+  }
+
+  private buildPaymentLineFromPayable(payable: Payable): TreasuryOperationsComponent['dialogLines'][number] {
+    return {
+      invoiceId: payable.id,
+      supplierId: payable.supplierId,
+      reference: payable.reference,
+      amount: Number(payable.availableAmount),
+      maxAmount: Number(payable.availableAmount),
+      paymentMode: 'full',
+      payableAccountId: payable.payableAccountId,
+      payableAccountCode: payable.payableAccountCode,
     };
-    this.run(this.editingVoucherId
-      ? this.api.updateVoucher(this.editingVoucherId, request)
-      : this.api.createVoucher(request));
+  }
+
+  openPaymentDialog(payable: Payable) {
+    if (this.noActivePaymentMethods) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Métodos de pago',
+        detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
+        life: 6000,
+      });
+      return;
+    }
+    this.editingVoucherId = undefined;
+    this.dialogPaymentMethodId = undefined;
+    this.dialogBankAccountId = undefined;
+    this.dialogObservations = '';
+    this.dialogLines = [this.buildPaymentLineFromPayable(payable)];
+    this.paymentDialogVisible = true;
   }
 
   edit(voucher: PaymentVoucher) {
     this.editingVoucherId = voucher.id;
-    this.paymentMethodId = voucher.paymentMethodId;
-    this.bankAccountId = voucher.bankAccountId;
-    this.observations = voucher.observations ?? '';
-    this.selected.clear();
-    voucher.details.forEach(detail => {
-      this.selected.add(detail.invoiceId);
-      this.amounts[detail.invoiceId] = detail.amountPaid;
+    this.dialogPaymentMethodId = voucher.paymentMethodId;
+    this.dialogBankAccountId = voucher.bankAccountId;
+    this.dialogObservations = voucher.observations ?? '';
+    this.dialogLines = voucher.details.map((detail) => {
+      const payable = this.payables.find((item) => item.id === detail.invoiceId);
+      const maxAmount = payable
+        ? Number(payable.availableAmount) + Number(detail.amountPaid)
+        : Number(detail.amountPaid);
+      const amountPaid = Number(detail.amountPaid);
+      return {
+        invoiceId: detail.invoiceId,
+        supplierId: detail.supplierId,
+        reference: detail.invoiceReference,
+        amount: amountPaid,
+        maxAmount,
+        paymentMode: amountPaid >= maxAmount ? 'full' as const : 'partial' as const,
+        payableAccountId: detail.payableAccountId,
+        payableAccountCode: detail.payableAccountCode,
+      };
+    });
+    this.paymentDialogVisible = true;
+  }
+
+  openScheduleDialog(payable: Payable) {
+    if (this.noActivePaymentMethods) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Métodos de pago',
+        detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
+        life: 6000,
+      });
+      return;
+    }
+    this.schedulePaymentMethodId = undefined;
+    this.scheduleBankAccountId = undefined;
+    this.scheduleObservations = '';
+    this.scheduleExecutionDate = new Date(this.minExecutionDate);
+    this.scheduleLines = [this.buildPaymentLineFromPayable(payable)];
+    this.scheduleDialogVisible = true;
+  }
+
+  cancelScheduleDialog() {
+    this.scheduleDialogVisible = false;
+    this.scheduleLines = [];
+    this.schedulePaymentMethodId = undefined;
+    this.scheduleBankAccountId = undefined;
+    this.scheduleExecutionDate = undefined;
+    this.scheduleObservations = '';
+  }
+
+  schedulePaymentMethodChanged() {
+    if (!this.scheduleRequiresBankAccount) {
+      this.scheduleBankAccountId = undefined;
+    }
+  }
+
+  onScheduleExecutionDateChange(selectedDate: Date | null) {
+    if (!selectedDate) {
+      return;
+    }
+    if (this.stripTime(selectedDate).getTime() < this.minExecutionDate.getTime()) {
+      this.scheduleExecutionDate = new Date(this.minExecutionDate);
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Fecha inválida',
+        detail: 'La fecha programada no puede ser anterior a hoy.',
+        life: 4000,
+      });
+    }
+  }
+
+  cancelPaymentDialog() {
+    this.paymentDialogVisible = false;
+    this.editingVoucherId = undefined;
+    this.dialogLines = [];
+    this.dialogPaymentMethodId = undefined;
+    this.dialogBankAccountId = undefined;
+    this.dialogObservations = '';
+  }
+
+  dialogPaymentMethodChanged() {
+    if (!this.dialogRequiresBankAccount) {
+      this.dialogBankAccountId = undefined;
+    }
+  }
+
+  confirmCreateFromDialog() {
+    if (!this.validatePaymentAction(this.dialogLines, this.dialogPaymentMethodId, this.dialogBankAccountId)) {
+      return;
+    }
+    const request = {
+      enterpriseId: this.enterpriseId,
+      issueDate: new Date().toISOString().slice(0, 10),
+      paymentMethodId: this.dialogPaymentMethodId!,
+      bankAccountId: this.dialogBankAccountId,
+      observations: this.dialogObservations,
+      details: this.getDialogDetails(),
+    };
+    const request$ = this.editingVoucherId
+      ? this.api.updateVoucher(this.editingVoucherId, request)
+      : this.api.createVoucher(request);
+    this.run(
+      request$,
+      (result) => {
+        const wasEditing = this.editingVoucherId != null;
+        this.cancelPaymentDialog();
+        return {
+          summary: wasEditing ? 'Borrador actualizado' : 'Borrador creado',
+          detail: `Comprobante ${result.voucherNumber} en borrador.`,
+        };
+      },
+    );
+  }
+
+  confirmPayFromDialog() {
+    if (!this.validatePaymentAction(this.dialogLines, this.dialogPaymentMethodId, this.dialogBankAccountId)) {
+      return;
+    }
+    this.busy = true;
+    this.error = '';
+    this.api.createVoucher({
+      enterpriseId: this.enterpriseId,
+      issueDate: new Date().toISOString().slice(0, 10),
+      paymentMethodId: this.dialogPaymentMethodId!,
+      bankAccountId: this.dialogBankAccountId,
+      observations: this.dialogObservations,
+      details: this.getDialogDetails(),
+    }).pipe(
+      switchMap((voucher) => this.api.postVoucher(voucher.id, this.enterpriseId)),
+      switchMap((posted) => this.waitForAccounting(posted.id)),
+      timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
+      finalize(() => {
+        this.busy = false;
+      }),
+    ).subscribe({
+      next: (updated) => {
+        this.cancelPaymentDialog();
+        if (updated.status === 'POSTED') {
+          this.messageService.add({
+            severity: 'success',
+            summary: this.dialogPaySuccessSummary,
+            detail: `${this.dialogPayButtonLabel} registrado. Comprobante ${updated.voucherNumber} contabilizado.`,
+            life: 6000,
+          });
+        } else if (updated.status === 'FAILED') {
+          this.error = updated.failureReason || 'No se pudo contabilizar el pago.';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Pago fallido',
+            detail: this.error,
+            life: 8000,
+          });
+        } else {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Pago en proceso',
+            detail: `El comprobante ${updated.voucherNumber} sigue en estado ${this.statusLabel(updated.status)}. Actualice en unos segundos.`,
+            life: 8000,
+          });
+        }
+        this.reload();
+      },
+      error: (err) => this.handleOperationError(err, 'registrar el pago'),
     });
   }
 
-  schedule() {
-    if (!this.paymentSelectionValid() || !this.executionDate || !this.details().length) return;
-    if (!this.amountsWithinAvailable()) return;
-    const paymentMethodId = this.paymentMethodId!;
-    this.run(this.api.createSchedule({
-      enterpriseId: this.enterpriseId,
-      issueDate: new Date().toISOString().slice(0, 10),
-      executionDate: this.executionDate,
-      paymentMethodId,
-      bankAccountId: this.bankAccountId,
-      observations: this.observations,
-      details: this.details()
+  confirmScheduleFromDialog() {
+    if (!this.validatePaymentAction(
+      this.scheduleLines,
+      this.schedulePaymentMethodId,
+      this.scheduleBankAccountId,
+      { requireScheduleDate: true, executionDate: this.scheduleExecutionDate },
+    )) {
+      return;
+    }
+    this.run(
+      this.api.createSchedule({
+        enterpriseId: this.enterpriseId,
+        executionDate: this.formatIsoDate(this.scheduleExecutionDate!),
+        paymentMethodId: this.schedulePaymentMethodId!,
+        bankAccountId: this.scheduleBankAccountId,
+        observations: this.scheduleObservations,
+        details: this.getScheduleDetails(),
+      }),
+      (result) => {
+        const detail = this.buildScheduleSuccessDetail(result, this.scheduleLines);
+        this.cancelScheduleDialog();
+        return {
+          summary: 'Pago programado',
+          detail,
+          life: 8000,
+        };
+      },
+    );
+  }
+
+  private getDialogDetails() {
+    return this.dialogLines.map((line) => ({
+      supplierId: line.supplierId,
+      invoiceId: line.invoiceId,
+      amount: Number(line.amount),
     }));
   }
 
-  /** Evita enviar montos mayores al saldo disponible (el backend también rechaza). */
-  private amountsWithinAvailable(): boolean {
-    for (const payable of this.payables) {
-      if (!this.selected.has(payable.id)) continue;
-      const amount = Number(this.amounts[payable.id] ?? 0);
-      if (amount > Number(payable.availableAmount)) {
-        this.error = `El pago de la factura ${payable.reference} (${amount}) supera el saldo disponible (${payable.availableAmount}).`;
+  private getScheduleDetails() {
+    return this.scheduleLines.map((line) => ({
+      supplierId: line.supplierId,
+      invoiceId: line.invoiceId,
+      amount: Number(line.amount),
+    }));
+  }
+
+  scheduleTotal = scheduleTotal;
+
+  scheduleSuppliersLabel(item: PaymentSchedule): string {
+    return scheduleSuppliersLabel(item, this.supplierNames);
+  }
+
+  scheduleInvoicesLabel(item: PaymentSchedule): string {
+    return scheduleInvoicesLabel(item, this.payableReferenceMap(), this.formatMoney);
+  }
+
+  scheduleMethodLabel(item: PaymentSchedule): string {
+    return scheduleMethodLabel(item, this.methods);
+  }
+
+  private payableReferenceMap(): Map<number, string> {
+    return new Map(this.payables.map((payable) => [payable.id, payable.reference]));
+  }
+
+  scheduledAmountForPayable(payable: Payable): number {
+    return this.activeSchedules()
+      .flatMap((schedule) => schedule.details ?? [])
+      .filter((detail) => detail.invoiceId === payable.id)
+      .reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0);
+  }
+
+  scheduledLabelForPayable(payable: Payable): string | null {
+    const linked = this.activeSchedules().filter((schedule) =>
+      (schedule.details ?? []).some((detail) => detail.invoiceId === payable.id),
+    );
+    if (!linked.length) {
+      return null;
+    }
+    const amount = this.scheduledAmountForPayable(payable);
+    const dates = [...new Set(linked.map((schedule) => schedule.executionDate))].join(', ');
+    return `${this.formatMoney(amount)} · ${dates}`;
+  }
+
+  hasActiveFullSchedule(payable: Payable): boolean {
+    const scheduled = this.scheduledAmountForPayable(payable);
+    return scheduled > 0 && scheduled >= Number(payable.availableAmount);
+  }
+
+  payableReference(invoiceId: number): string {
+    const payable = this.payables.find((item) => item.id === invoiceId);
+    return payable?.reference ?? `ID ${invoiceId}`;
+  }
+
+  private activeSchedules(): PaymentSchedule[] {
+    return this.schedules.filter((schedule) => schedule.status === 'SCHEDULED');
+  }
+
+  private buildScheduleSuccessDetail(
+    result: PaymentSchedule,
+    lines: TreasuryOperationsComponent['scheduleLines'],
+  ): string {
+    const total = this.resolveScheduleTotal(result, lines);
+    const refs = lines.map((line) => line.reference).join(', ');
+    const supplier = lines.length ? this.supplierName(lines[0].supplierId) : '—';
+    const method = this.methods.find((item) => item.id === Number(result.paymentMethodId));
+    const methodLabel = method ? translatePaymentMethodName(method.name) : `#${result.paymentMethodId}`;
+    return [
+      `Programación #${result.id} registrada.`,
+      `Fecha: ${result.executionDate}.`,
+      `Proveedor: ${supplier}.`,
+      `Factura(s): ${refs || '—'}.`,
+      `Método: ${methodLabel}.`,
+      `Total: ${this.formatMoney(total)}.`,
+      'Estado: PROGRAMADO.',
+    ].join(' ');
+  }
+
+  private resolveScheduleTotal(
+    result: PaymentSchedule,
+    lines: TreasuryOperationsComponent['scheduleLines'],
+  ): number {
+    const apiTotal = result.total != null ? Number(result.total) : NaN;
+    if (!Number.isNaN(apiTotal) && apiTotal > 0) {
+      return apiTotal;
+    }
+    const detailsTotal = (result.details ?? []).reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0);
+    if (detailsTotal > 0) {
+      return detailsTotal;
+    }
+    return lines.reduce((sum, line) => sum + Number(line.amount ?? 0), 0);
+  }
+
+  private formatMoney(amount: number): string {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  }
+
+  private validatePaymentAction(
+    lines: TreasuryOperationsComponent['dialogLines'],
+    paymentMethodId?: number,
+    bankAccountId?: number,
+    options?: { requireScheduleDate?: boolean; executionDate?: Date },
+  ): boolean {
+    if (!lines.length) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin obligaciones',
+        detail: 'No hay obligaciones para procesar.',
+        life: 5000,
+      });
+      return false;
+    }
+    for (const line of lines) {
+      const amount = Number(line.amount ?? 0);
+      if (amount <= 0) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Monto inválido',
+          detail: `Indique un monto mayor a cero para ${line.reference}.`,
+          life: 5000,
+        });
         return false;
       }
+      if (amount > line.maxAmount) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Saldo insuficiente',
+          detail: `El monto para ${line.reference} supera el saldo disponible (${line.maxAmount}).`,
+          life: 6000,
+        });
+        return false;
+      }
+    }
+    if (this.methodOptions.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Métodos de pago',
+        detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
+        life: 6000,
+      });
+      return false;
+    }
+    const selectedMethod = this.methods.find((method) => method.id === Number(paymentMethodId));
+    if (!paymentMethodId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Método requerido',
+        detail: 'Seleccione un método de pago activo.',
+        life: 5000,
+      });
+      return false;
+    }
+    const requiresBankAccount = Boolean(selectedMethod?.requiresBankAccount);
+    if (requiresBankAccount && !bankAccountId) {
+      if (this.bankOptions.length === 0) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Cuenta bancaria',
+          detail: NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE,
+          life: 6000,
+        });
+        return false;
+      }
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cuenta bancaria requerida',
+        detail: 'El método seleccionado exige una cuenta bancaria.',
+        life: 5000,
+      });
+      return false;
+    }
+    if (!requiresBankAccount && bankAccountId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cuenta bancaria no permitida',
+        detail: 'El método seleccionado no admite cuenta bancaria.',
+        life: 5000,
+      });
+      return false;
+    }
+    if (options?.requireScheduleDate && !options.executionDate) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Fecha requerida',
+        detail: 'Seleccione la fecha programada del pago.',
+        life: 5000,
+      });
+      return false;
     }
     return true;
   }
 
-  writeOff() {
-    const account = this.accounts.find(a => a.id === Number(this.counterpartAccountId));
-    if (!account || !this.writeOffReason || !this.details().length) return;
-    this.run(this.api.createWriteOff({
-      enterpriseId: this.enterpriseId,
-      reason: this.writeOffReason,
-      counterpartAccountId: account.id,
-      counterpartAccountCode: account.code,
-      details: this.details()
-    }));
+  private waitForAccounting(voucherId: number) {
+    return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
+      take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
+      switchMap(() => this.api.voucher(voucherId, this.enterpriseId)),
+      takeWhile((voucher) => voucher.status === 'POSTING', true),
+    );
   }
 
   post(voucher: PaymentVoucher) {
@@ -363,57 +1075,157 @@ export class TreasuryOperationsComponent implements OnInit {
     });
   }
 
-  private waitForAccounting(voucherId: number) {
-    return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
-      take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
-      switchMap(() => this.api.voucher(voucherId, this.enterpriseId)),
-      takeWhile((voucher) => voucher.status === 'POSTING', true),
-    );
+  remove(voucher: PaymentVoucher) {
+    this.run(this.api.deleteVoucher(voucher.id, this.enterpriseId));
   }
 
-  remove(voucher: PaymentVoucher) { this.run(this.api.deleteVoucher(voucher.id, this.enterpriseId)); }
   void(voucher: PaymentVoucher) {
     const reason = window.prompt('Motivo de anulación');
-    if (reason) this.run(this.api.voidVoucher(voucher.id, this.enterpriseId, reason));
+    if (reason) {
+      this.run(this.api.voidVoucher(voucher.id, this.enterpriseId, reason));
+    }
   }
+
+  get accountingIsBalanced(): boolean {
+    return accountingTotalsBalanced(this.accountingDebitTotal, this.accountingCreditTotal);
+  }
+
   showAccounting(voucher: PaymentVoucher) {
     this.busy = true;
     this.accountingEntry = null;
+    this.accountingEntryHeader = {};
     this.accountingMovements = [];
     this.accountingDebitTotal = 0;
     this.accountingCreditTotal = 0;
+    const accountLookup = buildAccountCatalogueLookup(this.accounts);
+    const supplierIds = [...new Set(voucher.details.map((detail) => detail.supplierId))];
+    const supplierLabel = supplierIds.map((id) => this.supplierName(id)).join(', ');
+
     this.api.accountingEntry(voucher.id).subscribe({
-      next: value => {
+      next: (value) => {
         const entry = value?.data ?? value;
+        const view = buildAccountingEntryView(
+          entry as Record<string, unknown>,
+          mapAccountingMovementsForView(entry?.movements ?? entry?.details ?? [], accountLookup),
+          {
+            documentTypeLabel: accountingSourceDocumentTypeLabel('PAYMENT_VOUCHER'),
+            voucherNumber: voucher.voucherNumber,
+            supplierLabel,
+          },
+        );
         this.accountingEntry = entry;
-        const movements = entry?.movements ?? entry?.details ?? [];
-        this.accountingMovements = (movements as any[]).map((m: any) => ({
-          account: String(m.accountCode ?? m.account ?? m.accountId ?? ''),
-          description: String(m.description ?? ''),
-          debit: Number(m.debit ?? 0),
-          credit: Number(m.credit ?? 0),
-        }));
-        this.accountingDebitTotal = this.accountingMovements.reduce((s, m) => s + m.debit, 0);
-        this.accountingCreditTotal = this.accountingMovements.reduce((s, m) => s + m.credit, 0);
+        this.accountingEntryHeader = view.header;
+        this.accountingMovements = view.movements;
+        this.accountingDebitTotal = this.accountingMovements.reduce((sum, row) => sum + row.debit, 0);
+        this.accountingCreditTotal = this.accountingMovements.reduce((sum, row) => sum + row.credit, 0);
         this.busy = false;
       },
-      error: err => {
+      error: (err) => {
         this.error = err?.error?.message ?? 'No fue posible consultar el asiento.';
         this.busy = false;
-      }
+      },
     });
   }
+
   cancel(schedule: PaymentSchedule) { this.run(this.api.cancelSchedule(schedule.id)); }
   retry(schedule: PaymentSchedule) { this.run(this.api.retrySchedule(schedule.id)); }
-  confirmWriteOff(item: any) { this.run(this.api.confirmWriteOff(item.id)); }
+  confirmWriteOff(item: any) {
+    this.run(this.api.confirmWriteOff(item.id), () => ({
+      summary: 'Baja contabilizada',
+      detail: 'La baja de CxP fue enviada a contabilización.',
+      life: 6000,
+    }));
+  }
   voidWriteOff(item: any) { this.run(this.api.voidWriteOff(item.id)); }
-  changeDueDate(payable: Payable) {
-    const dueDate = window.prompt('Nuevo vencimiento (AAAA-MM-DD)', payable.dueDate);
-    const reason = dueDate && window.prompt('Motivo del cambio');
-    if (dueDate && reason) this.run(this.api.changeDueDate(payable.id, this.enterpriseId, dueDate, reason));
+
+  openDueDateDialog(payable: Payable) {
+    this.dueDateTarget = payable;
+    this.newDueDate = this.parseIsoDate(payable.dueDate);
+    this.dueDateReason = '';
+    this.minDueDate = this.addDays(this.stripTime(new Date()), 1);
+    if (this.newDueDate && this.stripTime(this.newDueDate).getTime() < this.minDueDate.getTime()) {
+      this.newDueDate = new Date(this.minDueDate);
+    }
+    this.dueDateDialogVisible = true;
   }
 
-  private run(request: any) {
+  cancelDueDateDialog() {
+    this.dueDateDialogVisible = false;
+    this.dueDateTarget = undefined;
+    this.newDueDate = undefined;
+    this.dueDateReason = '';
+  }
+
+  onDueDatePickerChange(selectedDate: Date | null) {
+    if (!selectedDate) {
+      return;
+    }
+    if (this.stripTime(selectedDate).getTime() < this.minDueDate.getTime()) {
+      this.newDueDate = new Date(this.minDueDate);
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Vencimiento inválido',
+        detail: 'La fecha debe ser posterior a hoy.',
+        life: 4000,
+      });
+    }
+  }
+
+  confirmDueDateChange() {
+    if (!this.dueDateTarget || !this.newDueDate) {
+      return;
+    }
+    const reason = this.dueDateReason.trim();
+    if (!reason) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Motivo requerido',
+        detail: 'Indique el motivo del cambio de vencimiento.',
+        life: 4000,
+      });
+      return;
+    }
+    if (this.stripTime(this.newDueDate).getTime() < this.minDueDate.getTime()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Vencimiento inválido',
+        detail: 'La fecha debe ser posterior a hoy.',
+        life: 4000,
+      });
+      return;
+    }
+    const payable = this.dueDateTarget;
+    const dueDate = this.formatIsoDate(this.newDueDate);
+    this.cancelDueDateDialog();
+    this.run(this.api.changeDueDate(payable.id, this.enterpriseId, dueDate, reason));
+  }
+
+  private parseIsoDate(value: string): Date {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  private formatIsoDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private stripTime(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  private addDays(date: Date, days: number): Date {
+    const copy = new Date(date);
+    copy.setDate(copy.getDate() + days);
+    return copy;
+  }
+
+  private run(
+    request: Observable<unknown>,
+    onSuccess?: (result: any) => { summary: string; detail: string; life?: number },
+  ) {
     this.busy = true;
     this.error = '';
     request.pipe(
@@ -422,12 +1234,19 @@ export class TreasuryOperationsComponent implements OnInit {
         this.busy = false;
       }),
     ).subscribe({
-      next: () => {
-        this.selected.clear();
-        this.editingVoucherId = undefined;
+      next: (result: any) => {
+        if (onSuccess) {
+          const message = onSuccess(result);
+          this.messageService.add({
+            severity: 'success',
+            summary: message.summary,
+            detail: message.detail,
+            life: message.life ?? 6000,
+          });
+        }
         this.reload();
       },
-      error: (err: any) => this.handleOperationError(err, 'completar la operación'),
+      error: (err: unknown) => this.handleOperationError(err, 'completar la operación'),
     });
   }
 
@@ -503,32 +1322,36 @@ export class TreasuryOperationsComponent implements OnInit {
     return [
       {
         title: 'Obligaciones pendientes',
-        headers: ['Proveedor', 'Factura', 'Vence', 'Disponible'],
+        headers: ['Proveedor', 'Factura', 'Vence', 'Disponible', 'En programación'],
         rows: this.payables.map((item) => [
           resolveSupplierName(this.supplierNames, item.supplierId),
           item.reference,
           item.dueDate,
           item.availableAmount,
+          this.scheduledLabelForPayable(item) ?? '-',
         ]),
       },
       {
-        title: 'Comprobantes',
-        headers: ['Número', 'Fecha', 'Estado', 'Total', 'Asiento'],
+        title: 'Comprobantes de pago',
+        headers: ['Número', 'Fecha', 'Estado', 'Total', 'Asiento contable'],
         rows: this.vouchers.map((item) => [
           item.voucherNumber,
           item.issueDate,
           this.statusLabel(item.status),
           item.total,
-          item.accountingEntryId || 'Pendiente',
+          this.voucherAccountingEntryLabel(item),
         ]),
       },
       {
-        title: 'Programaciones',
-        headers: ['Fecha', 'Estado', 'Total', 'Reintentos', 'Comprobante'],
+        title: 'Programaciones de pago',
+        headers: ['Fecha ejecución', 'Proveedor', 'Factura(s)', 'Método', 'Estado', 'Total', 'Reintentos', 'Comprobante'],
         rows: this.schedules.map((item) => [
           item.executionDate,
+          this.scheduleSuppliersLabel(item),
+          this.scheduleInvoicesLabel(item),
+          this.scheduleMethodLabel(item),
           this.scheduleLabel(item.status),
-          item.total,
+          this.scheduleTotal(item),
           item.retryCount,
           item.voucherId || '-',
         ]),

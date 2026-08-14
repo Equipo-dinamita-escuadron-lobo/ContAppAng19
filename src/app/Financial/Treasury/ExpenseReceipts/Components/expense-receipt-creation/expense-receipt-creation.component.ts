@@ -33,6 +33,10 @@ import {
 import { translatePaymentMethodName } from '../../../Shared/treasury-status-labels';
 import { ContextualHelpComponent } from '../../../../../Shared/Components/contextual-help/contextual-help.component';
 import { TREASURY_HELP } from '../../../Shared/treasury-help-content';
+import {
+  NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
+  NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE,
+} from '../../../Shared/treasury-payment-messages';
 
 // Modelos adicionales para el frontend
 interface DropdownOption {
@@ -84,6 +88,8 @@ export class ExpenseReceiptCreationComponent {
   auxiliaryAccounts: DropdownOption[] = [];
   requiresBankAccount = false;
   readonly help = TREASURY_HELP.makePayment;
+  readonly noActivePaymentMethodsMessage = NO_ACTIVE_PAYMENT_METHODS_MESSAGE;
+  readonly noAvailableBankAccountsMessage = NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE;
   readonly supplierEmptyMessage = 'No hay proveedores con facturas pendientes';
   readonly supplierFilterEmptyMessage = 'No se encontraron proveedores que coincidan con la búsqueda';
   supplierSearchQuery = '';
@@ -98,9 +104,6 @@ export class ExpenseReceiptCreationComponent {
 
   // Para selección múltiple de facturas
   selectedInvoices: any[] = [];
-
-  // Cuentas por pagar (Post To)
-  payableAccounts: any[] = [];
 
   // Detalles de la factura seleccionada
   selectedInvoiceDetails: any = null;
@@ -158,7 +161,6 @@ export class ExpenseReceiptCreationComponent {
   initializeForm(): void {
     this.expenseReceiptForm = this.fb.group({
       supplier: [null, Validators.required],
-      postToAccount: [null, Validators.required],
       transferAccount: [null, Validators.required],
       bankAccountId: [null],
       issueDate: [new Date(), Validators.required],
@@ -214,6 +216,14 @@ export class ExpenseReceiptCreationComponent {
           label: `${translatePaymentMethodName(method.name)} (${method.accountingAccount})`,
           requiresBankAccount: Boolean(method.requiresBankAccount),
         }));
+        if (this.paymentMethodOptions.length === 0) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Métodos de pago',
+            detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
+            life: 8000,
+          });
+        }
       },
       error: (error) => {
         console.error('Error al cargar métodos de pago:', error);
@@ -241,22 +251,6 @@ export class ExpenseReceiptCreationComponent {
         this.bankAccounts = [];
         this.bankAccountOptions = [];
       }
-    });
-
-    // Las CxP disponibles son las que realmente están asociadas a obligaciones pendientes.
-    this.expenseReceiptService.getPayableAccounts().subscribe({
-      next: accounts => {
-        this.payableAccounts = accounts;
-      },
-      error: (error) => {
-        console.error('Error al cargar cuentas por pagar:', error);
-        this.payableAccounts = [];
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Cuentas por pagar',
-          detail: 'No se pudieron cargar las cuentas de las facturas pendientes.',
-        });
-      },
     });
 
     // Cargar cuentas auxiliares para gastos directos
@@ -394,7 +388,7 @@ export class ExpenseReceiptCreationComponent {
     // Limpiar selección anterior
     this.selectedInvoices = [];
     this.selectedInvoiceDetails = null;
-    this.expenseReceiptForm.patchValue({ totalAmount: 0, postToAccount: null });
+    this.expenseReceiptForm.patchValue({ totalAmount: 0 });
   }
 
   // Calcular el total de las facturas seleccionadas
@@ -406,16 +400,6 @@ export class ExpenseReceiptCreationComponent {
   onInvoiceSelectionChange(): void {
     const totalSelected = this.calculateSelectedTotal();
     this.expenseReceiptForm.get('totalAmount')?.setValue(totalSelected);
-
-    // Prefijar la CxP de la(s) factura(s) seleccionada(s)
-    const accountIds = [...new Set(
-      this.selectedInvoices
-        .map(inv => inv.payableAccountId)
-        .filter((id): id is number => !!id)
-    )];
-    if (accountIds.length === 1) {
-      this.expenseReceiptForm.get('postToAccount')?.setValue(accountIds[0]);
-    }
   }
 
   // Obtener el nombre del método de pago seleccionado
@@ -450,12 +434,19 @@ export class ExpenseReceiptCreationComponent {
       return false;
     }
 
+    if (this.paymentMethodOptions.length === 0) {
+      return false;
+    }
+
     if (!this.requiresBankAccount && this.expenseReceiptForm.get('bankAccountId')?.value) {
       return false;
     }
 
+    if (this.requiresBankAccount && this.bankAccountOptions.length === 0) {
+      return false;
+    }
+
     const basicValidation = this.expenseReceiptForm.get('supplier')?.valid &&
-                           this.expenseReceiptForm.get('postToAccount')?.valid &&
                            this.expenseReceiptForm.get('transferAccount')?.valid &&
                            this.expenseReceiptForm.get('issueDate')?.valid &&
                            this.expenseReceiptForm.get('totalAmount')?.valid &&
@@ -466,6 +457,15 @@ export class ExpenseReceiptCreationComponent {
 
   onSubmit(): void {
     this.expenseReceiptForm.markAllAsTouched();
+
+    if (this.paymentMethodOptions.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Métodos de pago',
+        detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
+      });
+      return;
+    }
 
     // Validar selección de facturas
     if (this.selectedInvoices.length === 0) {
@@ -484,7 +484,9 @@ export class ExpenseReceiptCreationComponent {
     if (!this.isFormValidForSubmission()) {
       const bankValue = this.expenseReceiptForm.get('bankAccountId')?.value;
       let detail = 'Por favor, complete todos los campos requeridos.';
-      if (this.requiresBankAccount && !bankValue) {
+      if (this.requiresBankAccount && this.bankAccountOptions.length === 0) {
+        detail = NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE;
+      } else if (this.requiresBankAccount && !bankValue) {
         detail = 'El método de pago exige una cuenta bancaria.';
       } else if (!this.requiresBankAccount && bankValue) {
         detail = 'El método seleccionado no admite cuenta bancaria.';
@@ -526,7 +528,6 @@ export class ExpenseReceiptCreationComponent {
       enterpriseId: enterpriseId,
       totalAmount: formValue.totalAmount,
       details: paymentDetails,
-      ledgerAccountId: formValue.postToAccount
     };
 
     // Mostrar resumen antes de enviar

@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { CardModule } from 'primeng/card';
@@ -16,9 +15,7 @@ import { AgingReportService } from '../../Services/aging-report.service';
 import {
   AgingReportFilter,
   AgingReportResponse,
-  AccountTypeOption,
   SupplierOption,
-  DocumentOption,
 } from '../../Models/AgingReport';
 import { LocalStorageMethods } from '../../../../../../Shared/Methods/local-storage.method';
 import { TreasuryExportService } from '../../../../Shared/treasury-export.service';
@@ -38,7 +35,6 @@ import { TREASURY_HELP } from '../../../../Shared/treasury-help-content';
     ReactiveFormsModule,
     TableModule,
     ButtonModule,
-    InputTextModule,
     CalendarModule,
     DropdownModule,
     CardModule,
@@ -55,10 +51,7 @@ export class AgingReportComponent implements OnInit {
 
   filterForm!: FormGroup;
   reportData: AgingReportResponse | null = null;
-  accountTypeOptions: AccountTypeOption[] = [];
   supplierOptions: SupplierOption[] = [];
-  documentOptions: DocumentOption[] = [];
-  allDocuments: DocumentOption[] = [];
   loading = false;
   exportingPdf = false;
   exportingCsv = false;
@@ -75,14 +68,11 @@ export class AgingReportComponent implements OnInit {
   ngOnInit(): void {
     this.initializeFilterForm();
     this.loadFilterOptions();
-    this.filterForm.get('supplierId')?.valueChanges.subscribe(() => this.onSupplierFilterChange());
   }
 
   initializeFilterForm(): void {
     this.filterForm = this.fb.group({
       supplierId: [null],
-      document: [null],
-      accountCode: [null],
       cutoffDate: [new Date(), Validators.required],
       includeDocuments: [true],
     });
@@ -102,9 +92,6 @@ export class AgingReportComponent implements OnInit {
     this.agingReportService.getFilterOptions(enterpriseId).subscribe({
       next: (options) => {
         this.supplierOptions = options.suppliers;
-        this.allDocuments = options.documents;
-        this.documentOptions = options.documents;
-        this.accountTypeOptions = options.accounts;
         this.onGenerateReport();
       },
       error: () => {
@@ -115,18 +102,6 @@ export class AgingReportComponent implements OnInit {
         });
       },
     });
-  }
-
-  onSupplierFilterChange(): void {
-    const supplierId = this.filterForm.value.supplierId;
-    this.documentOptions = supplierId == null
-      ? this.allDocuments
-      : this.allDocuments.filter((d) => d.supplierId === Number(supplierId));
-
-    const selectedDoc = this.filterForm.value.document;
-    if (selectedDoc && !this.documentOptions.some((d) => d.value === selectedDoc)) {
-      this.filterForm.patchValue({ document: null }, { emitEvent: false });
-    }
   }
 
   onGenerateReport(): void {
@@ -157,8 +132,6 @@ export class AgingReportComponent implements OnInit {
     const filters: AgingReportFilter = {
       supplierId,
       supplierName: supplier?.name,
-      document: this.filterForm.value.document || undefined,
-      accountCode: this.filterForm.value.accountCode,
       cutoffDate: this.filterForm.value.cutoffDate,
       includeDocuments: this.filterForm.value.includeDocuments,
     };
@@ -190,12 +163,9 @@ export class AgingReportComponent implements OnInit {
   clearFilters(): void {
     this.filterForm.reset({
       supplierId: null,
-      document: null,
-      accountCode: null,
       cutoffDate: new Date(),
       includeDocuments: true,
     });
-    this.documentOptions = this.allDocuments;
     this.onGenerateReport();
   }
 

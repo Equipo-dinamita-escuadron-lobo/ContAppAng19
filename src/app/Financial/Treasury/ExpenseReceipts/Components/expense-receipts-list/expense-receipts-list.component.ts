@@ -6,16 +6,21 @@ import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
+import { MessageModule } from 'primeng/message';
 import { MessageService } from 'primeng/api';
 import { ExpenseReceiptService } from '../../Service/expense-receipt.service';
 import { DropdownOption, ExpenseReceiptView, ReceiptFilterOption } from '../../Model/Models';
-import { exportErrorDetail, exportSuccessDetail, reportEmptyFiltersMessage, voucherStatusFilterOptions } from '../../../Shared/treasury-status-labels';
+import { exportErrorDetail, exportSuccessDetail, reportEmptyFiltersMessage, voucherStatusFilterOptions, accountingEntryStatusLabel } from '../../../Shared/treasury-status-labels';
+import {
+  AccountingEntryViewHeader,
+  AccountingMovementViewRow,
+  accountingTotalsBalanced,
+} from '../../../Shared/treasury-accounting-display';
 import { ContextualHelpComponent } from '../../../../../Shared/Components/contextual-help/contextual-help.component';
 import { TREASURY_HELP } from '../../../Shared/treasury-help-content';
 import { TreasuryExportService } from '../../../Shared/treasury-export.service';
@@ -30,13 +35,13 @@ import { TreasuryExportService } from '../../../Shared/treasury-export.service';
     TableModule,
     ButtonModule,
     InputTextModule,
-    InputNumberModule,
     CalendarModule,
     DropdownModule,
     TooltipModule,
     CardModule,
     ToastModule,
     TagModule,
+    MessageModule,
     ContextualHelpComponent,
   ],
   templateUrl: './expense-receipts-list.component.html',
@@ -50,14 +55,21 @@ export class ExpenseReceiptsListComponent implements OnInit {
   loading = false;
 
   supplierOptions: ReceiptFilterOption[] = [];
-  receiptCodeOptions: ReceiptFilterOption[] = [];
-  allReceiptCodeOptions: ReceiptFilterOption[] = [];
 
   statusOptions: DropdownOption[] = voucherStatusFilterOptions();
   readonly emptyFiltersMessage = reportEmptyFiltersMessage();
   readonly help = TREASURY_HELP.expenseReceipts;
   exportingPdf = false;
   exportingCsv = false;
+  accountingEntry: any = null;
+  accountingEntryHeader: AccountingEntryViewHeader = {};
+  accountingMovements: AccountingMovementViewRow[] = [];
+  accountingDebitTotal = 0;
+  accountingCreditTotal = 0;
+  accountingReceiptCode = '';
+  loadingAccounting = false;
+
+  accountingStatusLabel = accountingEntryStatusLabel;
 
   constructor(
     private fb: FormBuilder,
@@ -76,17 +88,14 @@ export class ExpenseReceiptsListComponent implements OnInit {
   initializeForm(): void {
     this.filterForm = this.fb.group({
       supplierId: [null],
-      receiptCode: [null],
+      receiptCode: [''],
       startDate: [null],
       endDate: [null],
       status: [''],
-      minAmount: [null],
-      maxAmount: [null],
     });
   }
 
   setupFilterSubscriptions(): void {
-    this.filterForm.get('supplierId')?.valueChanges.subscribe(() => this.onSupplierFilterChange());
     this.filterForm.valueChanges.subscribe(() => this.applyFilters());
   }
 
@@ -118,29 +127,6 @@ export class ExpenseReceiptsListComponent implements OnInit {
         return { value: id, label: `${id} — ${name}` };
       })
       .sort((a, b) => a.label.localeCompare(b.label));
-
-    this.allReceiptCodeOptions = receipts
-      .map((r) => ({
-        value: r.receiptCode,
-        label: `${r.receiptCode} · ${r.supplierName}`,
-        supplierId: r.thirdPartyId,
-      }))
-      .sort((a, b) => String(a.label).localeCompare(String(b.label)));
-
-    this.receiptCodeOptions = [...this.allReceiptCodeOptions];
-  }
-
-  onSupplierFilterChange(): void {
-    const supplierId = this.filterForm.value.supplierId;
-    this.receiptCodeOptions =
-      supplierId == null
-        ? [...this.allReceiptCodeOptions]
-        : this.allReceiptCodeOptions.filter((opt) => opt.supplierId === Number(supplierId));
-
-    const selected = this.filterForm.value.receiptCode;
-    if (selected && !this.receiptCodeOptions.some((o) => o.value === selected)) {
-      this.filterForm.patchValue({ receiptCode: null }, { emitEvent: false });
-    }
   }
 
   applyFilters(): void {
@@ -151,8 +137,9 @@ export class ExpenseReceiptsListComponent implements OnInit {
       results = results.filter((r) => r.thirdPartyId === Number(filters.supplierId));
     }
 
-    if (filters.receiptCode) {
-      results = results.filter((r) => r.receiptCode === filters.receiptCode);
+    const receiptCodeTerm = String(filters.receiptCode ?? '').trim().toLowerCase();
+    if (receiptCodeTerm) {
+      results = results.filter((r) => String(r.receiptCode).toLowerCase().includes(receiptCodeTerm));
     }
 
     if (filters.status) {
@@ -171,37 +158,66 @@ export class ExpenseReceiptsListComponent implements OnInit {
       results = results.filter((r) => new Date(r.issueDate) <= endDate);
     }
 
-    if (filters.minAmount !== null && filters.minAmount !== undefined) {
-      results = results.filter((r) => r.totalAmount >= filters.minAmount);
-    }
-
-    if (filters.maxAmount !== null && filters.maxAmount !== undefined) {
-      results = results.filter((r) => r.totalAmount <= filters.maxAmount);
-    }
-
     this.filteredReceipts = results;
   }
 
   clearFilters(): void {
     this.filterForm.reset({
       supplierId: null,
-      receiptCode: null,
+      receiptCode: '',
       startDate: null,
       endDate: null,
       status: '',
-      minAmount: null,
-      maxAmount: null,
     });
-    this.receiptCodeOptions = [...this.allReceiptCodeOptions];
     this.filteredReceipts = [...this.allReceipts];
-  }
-
-  goToCreateReceipt(): void {
-    this.router.navigate(['/financial/treasury/expense-receipts/creation']);
   }
 
   viewReceiptDetails(receipt: ExpenseReceiptView): void {
     this.router.navigate(['/financial/treasury/expense-receipts/details', receipt.id]);
+  }
+
+  showAccounting(receipt: ExpenseReceiptView): void {
+    this.loadingAccounting = true;
+    this.accountingEntry = null;
+    this.accountingEntryHeader = {};
+    this.accountingMovements = [];
+    this.accountingDebitTotal = 0;
+    this.accountingCreditTotal = 0;
+    this.accountingReceiptCode = receipt.receiptCode;
+    this.expenseReceiptService.getAccountingEntryView(receipt.id, {
+      voucherNumber: receipt.receiptCode,
+      supplierLabel: receipt.supplierName,
+    }).subscribe({
+      next: (view) => {
+        this.accountingEntry = view.header;
+        this.accountingEntryHeader = view.header;
+        this.accountingMovements = view.movements;
+        this.accountingDebitTotal = this.accountingMovements.reduce((sum, row) => sum + row.debit, 0);
+        this.accountingCreditTotal = this.accountingMovements.reduce((sum, row) => sum + row.credit, 0);
+        this.loadingAccounting = false;
+      },
+      error: () => {
+        this.loadingAccounting = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Asiento no disponible',
+          detail: 'No fue posible consultar el asiento del comprobante.',
+        });
+      },
+    });
+  }
+
+  get accountingIsBalanced(): boolean {
+    return accountingTotalsBalanced(this.accountingDebitTotal, this.accountingCreditTotal);
+  }
+
+  clearAccountingView(): void {
+    this.accountingEntry = null;
+    this.accountingEntryHeader = {};
+    this.accountingMovements = [];
+    this.accountingDebitTotal = 0;
+    this.accountingCreditTotal = 0;
+    this.accountingReceiptCode = '';
   }
 
   getTotalReceipts(): number {
@@ -241,14 +257,6 @@ export class ExpenseReceiptsListComponent implements OnInit {
       default:
         return 'info';
     }
-  }
-
-  printReceipt(receipt: ExpenseReceiptView): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Imprimir',
-      detail: `Imprimiendo comprobante ${receipt.receiptCode}`,
-    });
   }
 
   cancelReceipt(receipt: ExpenseReceiptView): void {
