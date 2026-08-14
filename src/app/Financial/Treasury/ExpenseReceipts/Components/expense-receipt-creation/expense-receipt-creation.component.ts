@@ -34,8 +34,8 @@ import { translatePaymentMethodName } from '../../../Shared/treasury-status-labe
 import { ContextualHelpComponent } from '../../../../../Shared/Components/contextual-help/contextual-help.component';
 import { TREASURY_HELP } from '../../../Shared/treasury-help-content';
 import {
-  NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
   NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE,
+  paymentMethodsAvailabilityMessage,
 } from '../../../Shared/treasury-payment-messages';
 
 // Modelos adicionales para el frontend
@@ -82,18 +82,22 @@ export class ExpenseReceiptCreationComponent {
   receiptTypes: DropdownOption[] = [];
   paymentMethods: PaymentMethod[] = [];
   paymentMethodOptions: { id: number; label: string; requiresBankAccount: boolean }[] = [];
+  allPaymentMethodsCount = 0;
   bankAccounts: BankAccount[] = [];
   bankAccountOptions: { id: number; label: string }[] = [];
   receiptTypeOptions: DropdownOption[] = [];
   auxiliaryAccounts: DropdownOption[] = [];
   requiresBankAccount = false;
   readonly help = TREASURY_HELP.makePayment;
-  readonly noActivePaymentMethodsMessage = NO_ACTIVE_PAYMENT_METHODS_MESSAGE;
   readonly noAvailableBankAccountsMessage = NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE;
   readonly supplierEmptyMessage = 'No hay proveedores con facturas pendientes';
   readonly supplierFilterEmptyMessage = 'No se encontraron proveedores que coincidan con la búsqueda';
   supplierSearchQuery = '';
   allSuppliersCount = 0;
+
+  get paymentMethodsHelpMessage(): string {
+    return paymentMethodsAvailabilityMessage(this.allPaymentMethodsCount, this.paymentMethodOptions.length);
+  }
 
   // Para Autocomplete de Proveedor
   suppliers: Supplier[] = [];
@@ -207,8 +211,10 @@ export class ExpenseReceiptCreationComponent {
     }).subscribe({
       next: ({ methods, accounts }) => {
         const activeAccountIds = buildActiveAccountIdSet(accounts);
+        const configured = (methods.content || []).filter((method) => method.status !== false);
+        this.allPaymentMethodsCount = configured.length;
         this.paymentMethods = filterSelectablePaymentMethods(
-          (methods.content || []).filter((method) => method.status !== false),
+          configured,
           activeAccountIds,
         );
         this.paymentMethodOptions = this.paymentMethods.map((method) => ({
@@ -220,7 +226,7 @@ export class ExpenseReceiptCreationComponent {
           this.messageService.add({
             severity: 'warn',
             summary: 'Métodos de pago',
-            detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
+            detail: this.paymentMethodsHelpMessage,
             life: 8000,
           });
         }
@@ -462,7 +468,8 @@ export class ExpenseReceiptCreationComponent {
       this.messageService.add({
         severity: 'warn',
         summary: 'Métodos de pago',
-        detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
+        detail: this.paymentMethodsHelpMessage,
+        life: 8000,
       });
       return;
     }

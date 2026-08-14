@@ -98,12 +98,25 @@ describe('TreasuryOperationsComponent PP8', () => {
 
   it('blocks payment dialog when no active payment methods are available', () => {
     const { value } = component();
+    value.allPaymentMethodsCount = 0;
     value.methodOptions = [];
     const messageService = (value as any).messageService;
     value.openPaymentDialog(value.payables[0]);
     expect(value.paymentDialogVisible).toBeFalse();
     expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
       summary: 'Métodos de pago',
+      detail: jasmine.stringMatching(/Métodos de Pago/),
+    }));
+  });
+
+  it('explains inactive accounting accounts when payment methods are filtered out', () => {
+    const { value } = component();
+    value.allPaymentMethodsCount = 2;
+    value.methodOptions = [];
+    const messageService = (value as any).messageService;
+    value.openPaymentDialog(value.payables[0]);
+    expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: jasmine.stringMatching(/cuenta contable activa/),
     }));
   });
 
@@ -115,7 +128,7 @@ describe('TreasuryOperationsComponent PP8', () => {
     value.confirmPayFromDialog();
     const messageService = (value as any).messageService;
     expect(messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
-      detail: 'El método de pago seleccionado requiere una cuenta bancaria activa.',
+      detail: 'No hay cuentas bancarias activas para este método. Configure cuentas bancarias en Maestros Generales → Banco y Cuentas Bancarias.',
     }));
   });
 

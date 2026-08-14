@@ -42,6 +42,12 @@
   </div>
 
   <p-message *ngIf="error" severity="error" [text]="error" styleClass="mb-4 w-full"></p-message>
+  <p-message
+    *ngIf="noActivePaymentMethods && paymentMethodsHelpMessage"
+    severity="warn"
+    [text]="paymentMethodsHelpMessage"
+    styleClass="mb-4 w-full">
+  </p-message>
 
   <div class="treasury-sections">
   <fieldset [disabled]="busy" class="treasury-fieldset">
@@ -582,7 +588,7 @@
           (onChange)="dialogPaymentMethodChanged()">
         </p-dropdown>
         <p *ngIf="noActivePaymentMethods" class="text-orange-600 text-sm m-0">
-          {{ noActivePaymentMethodsMessage }}
+          {{ paymentMethodsHelpMessage }}
         </p>
       </div>
       <div class="flex flex-col gap-2" *ngIf="dialogRequiresBankAccount">
@@ -729,7 +735,7 @@
           (onChange)="schedulePaymentMethodChanged()">
         </p-dropdown>
         <p *ngIf="noActivePaymentMethods" class="text-orange-600 text-sm m-0">
-          {{ noActivePaymentMethodsMessage }}
+          {{ paymentMethodsHelpMessage }}
         </p>
       </div>
       <div class="flex flex-col gap-2" *ngIf="scheduleRequiresBankAccount">

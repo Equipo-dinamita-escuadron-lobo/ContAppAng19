@@ -59,8 +59,8 @@ import {
 import { ContextualHelpComponent } from '../../../Shared/Components/contextual-help/contextual-help.component';
 import { TREASURY_HELP } from '../Shared/treasury-help-content';
 import {
-  NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
   NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE,
+  paymentMethodsAvailabilityMessage,
 } from '../Shared/treasury-payment-messages';
 import {
   WRITE_OFF_AMOUNT_EXCEEDS_MESSAGE,
@@ -115,6 +115,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   writeOffs: any[] = [];
   methods: any[] = [];
   methodOptions: { id: number; label: string }[] = [];
+  allPaymentMethodsCount = 0;
   banks: any[] = [];
   accounts: any[] = [];
   bankOptions: { id: number; label: string }[] = [];
@@ -173,7 +174,6 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   dueDateReason = '';
   minDueDate!: Date;
   readonly help = TREASURY_HELP.operations;
-  readonly noActivePaymentMethodsMessage = NO_ACTIVE_PAYMENT_METHODS_MESSAGE;
   readonly noAvailableBankAccountsMessage = NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE;
   readonly voucherStatusOptions = voucherStatusFilterOptions();
   private supplierNames = new Map<number, string>();
@@ -351,6 +351,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
           label: `${account.code} - ${account.description}`
         }));
         const activeAccountIds = buildActiveAccountIdSet(data.accounts);
+        this.allPaymentMethodsCount = data.methods.content?.length ?? 0;
         this.methods = filterSelectablePaymentMethods(
           data.methods.content,
           activeAccountIds,
@@ -565,6 +566,10 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     return this.methodOptions.length === 0;
   }
 
+  get paymentMethodsHelpMessage(): string {
+    return paymentMethodsAvailabilityMessage(this.allPaymentMethodsCount, this.methodOptions.length);
+  }
+
   get dialogBankAccountsUnavailable(): boolean {
     return this.dialogRequiresBankAccount && this.bankOptions.length === 0;
   }
@@ -603,8 +608,8 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Métodos de pago',
-        detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
-        life: 6000,
+        detail: this.paymentMethodsHelpMessage,
+        life: 8000,
       });
       return;
     }
@@ -646,8 +651,8 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Métodos de pago',
-        detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
-        life: 6000,
+        detail: this.paymentMethodsHelpMessage,
+        life: 8000,
       });
       return;
     }
@@ -964,8 +969,8 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Métodos de pago',
-        detail: NO_ACTIVE_PAYMENT_METHODS_MESSAGE,
-        life: 6000,
+        detail: this.paymentMethodsHelpMessage,
+        life: 8000,
       });
       return false;
     }
