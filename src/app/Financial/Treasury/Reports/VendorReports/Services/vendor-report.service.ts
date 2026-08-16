@@ -275,7 +275,7 @@ export class VendorReportService {
           : []),
         ['Pagos del período', fmt(report.periodTotals.periodPayments)],
         ...(report.periodTotals.writeOffTotal > 0
-          ? [['Total bajas CxP', fmt(report.periodTotals.writeOffTotal)]]
+          ? [['Bajas CxP efectivas', fmt(report.periodTotals.writeOffTotal)]]
           : []),
         ['Facturas del período', fmt(report.periodTotals.totalCredits)],
         ['Saldo pendiente', fmt(report.totalDue)],
@@ -330,7 +330,7 @@ export class VendorReportService {
         : []),
       ['Pagos del período', report.periodTotals.periodPayments],
       ...(report.periodTotals.writeOffTotal > 0
-        ? [['Total bajas CxP', report.periodTotals.writeOffTotal]]
+        ? [['Bajas CxP efectivas', report.periodTotals.writeOffTotal]]
         : []),
       ['Facturas del período', report.periodTotals.totalCredits],
       ['Saldo pendiente', report.totalDue],
@@ -440,7 +440,9 @@ export class VendorReportService {
             date: new Date(writeOff.createdAt!),
             reference,
             type: 'WriteOff',
-            description: reason || 'Baja de cuenta por pagar',
+            description: isVoided
+              ? `${reason || 'Baja de cuenta por pagar'} (Anulada)`
+              : reason || 'Baja de cuenta por pagar',
             debits: amount,
             credits: 0,
             balance: 0,

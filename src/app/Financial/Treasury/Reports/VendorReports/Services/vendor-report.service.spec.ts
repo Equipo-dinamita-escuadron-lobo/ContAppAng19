@@ -245,4 +245,86 @@ describe('VendorReportService summaries', () => {
       done();
     });
   });
+
+  it('keeps invoice-only statement without write-off rows', (done) => {
+    const api = {
+      statement: jasmine.createSpy('statement').and.returnValue(of({
+        supplierId: 78,
+        openingBalance: 0,
+        invoiced: 357000,
+        paid: 0,
+        writeOffTotal: 0,
+        pending: 357000,
+        invoices: [{
+          issueDate: '2026-08-01',
+          dueDate: '2026-09-01',
+          reference: 'FC-357',
+          originalAmount: 357000,
+          pendingAmount: 357000,
+        }],
+        vouchers: [],
+        writeOffs: [],
+      })),
+    };
+    const thirds = { getThirdsByType: jasmine.createSpy('getThirdsByType') };
+    const storage = { getIdEnterprise: () => 'enterprise-a' };
+    const value = new VendorReportService(api as any, thirds as any, storage as any);
+    const start = new Date(2026, 7, 1);
+    const end = new Date(2026, 7, 31);
+
+    value.getVendorReport(78, start, end, undefined, undefined, 'Proveedor').subscribe((report) => {
+      expect(report.transactions.length).toBe(1);
+      expect(report.transactions[0].type).toBe('Bill');
+      expect(report.totalDue).toBe(357000);
+      expect(report.agingReport.total).toBe(357000);
+      expect(report.transactions.at(-1)?.balance).toBe(357000);
+      done();
+    });
+  });
+
+  it('reconciles posted write-off running balance with pending', (done) => {
+    const api = {
+      statement: jasmine.createSpy('statement').and.returnValue(of({
+        supplierId: 78,
+        openingBalance: 0,
+        invoiced: 357000,
+        paid: 0,
+        writeOffTotal: 100000,
+        pending: 257000,
+        invoices: [{
+          issueDate: '2026-08-01',
+          dueDate: '2026-09-01',
+          reference: 'FC-357',
+          originalAmount: 357000,
+          pendingAmount: 257000,
+        }],
+        vouchers: [],
+        writeOffs: [{
+          id: 5,
+          status: 'POSTED',
+          reason: 'Ajuste',
+          createdAt: '2026-08-10T12:00:00Z',
+          accountingEntryId: 12,
+          details: [{
+            supplierId: 78,
+            invoiceReference: 'FC-357',
+            amount: 100000,
+          }],
+        }],
+      })),
+    };
+    const thirds = { getThirdsByType: jasmine.createSpy('getThirdsByType') };
+    const storage = { getIdEnterprise: () => 'enterprise-a' };
+    const value = new VendorReportService(api as any, thirds as any, storage as any);
+    const start = new Date(2026, 7, 1);
+    const end = new Date(2026, 7, 31);
+
+    value.getVendorReport(78, start, end, undefined, undefined, 'Proveedor').subscribe((report) => {
+      const writeOff = report.transactions.find((row) => row.type === 'WriteOff');
+      expect(writeOff?.debits).toBe(100000);
+      expect(report.transactions.at(-1)?.balance).toBe(257000);
+      expect(report.totalDue).toBe(257000);
+      done();
+    });
+  });
 });
