@@ -152,14 +152,14 @@
                                                     <p-table [value]="detail.productLines!" styleClass="p-datatable-sm p-datatable-striped">
                                                         <ng-template pTemplate="header">
                                                             <tr>
-                                                                <th>Producto/servicio</th>
-                                                                <th>Descripción</th>
-                                                                <th class="text-right">Cantidad</th>
-                                                                <th class="text-right">Valor unitario</th>
-                                                                <th class="text-right">Subtotal</th>
-                                                                <th class="text-right">Impuestos</th>
-                                                                <th class="text-right">Descuento</th>
-                                                                <th class="text-right">Total línea</th>
+                                                                <th scope="col">Producto/servicio</th>
+                                                                <th scope="col">Descripción</th>
+                                                                <th scope="col" class="text-right">Cantidad</th>
+                                                                <th scope="col" class="text-right">Valor unitario</th>
+                                                                <th scope="col" class="text-right">Subtotal</th>
+                                                                <th scope="col" class="text-right">Impuestos</th>
+                                                                <th scope="col" class="text-right">Descuento</th>
+                                                                <th scope="col" class="text-right">Total línea</th>
                                                             </tr>
                                                         </ng-template>
                                                         <ng-template pTemplate="body" let-line>
@@ -282,11 +282,11 @@
                     styleClass="p-datatable-sm p-datatable-striped mt-4">
                     <ng-template pTemplate="header">
                         <tr>
-                            <th>Código cuenta</th>
-                            <th>Cuenta</th>
-                            <th>Detalle</th>
-                            <th class="text-right">Débito</th>
-                            <th class="text-right">Crédito</th>
+                            <th scope="col">Código cuenta</th>
+                            <th scope="col">Cuenta</th>
+                            <th scope="col">Detalle</th>
+                            <th scope="col" class="text-right">Débito</th>
+                            <th scope="col" class="text-right">Crédito</th>
                         </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-row>

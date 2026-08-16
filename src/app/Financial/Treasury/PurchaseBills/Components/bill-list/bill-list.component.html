@@ -123,15 +123,15 @@
 
       <ng-template pTemplate="header">
         <tr>
-          <th>Fecha ejecución</th>
-          <th>Proveedor</th>
-          <th>Factura(s)</th>
-          <th>Método</th>
-          <th>Estado</th>
-          <th class="text-right">Total</th>
-          <th>Reintentos</th>
-          <th>Comprobante</th>
-          <th style="min-width: 10rem">Acciones</th>
+          <th scope="col">Fecha ejecución</th>
+          <th scope="col">Proveedor</th>
+          <th scope="col">Factura(s)</th>
+          <th scope="col">Método</th>
+          <th scope="col">Estado</th>
+          <th scope="col" class="text-right">Total</th>
+          <th scope="col">Reintentos</th>
+          <th scope="col">Comprobante</th>
+          <th scope="col" style="min-width: 10rem">Acciones</th>
         </tr>
       </ng-template>
 
@@ -270,72 +270,10 @@
     [draggable]="false"
     [resizable]="false"
     (onHide)="cancelScheduleDetailDialog()">
-    <div class="flex flex-col gap-3 text-sm" *ngIf="scheduleDetailTarget as item">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <span class="text-gray-500">Programación</span>
-          <p class="font-mono font-semibold m-0">#{{ item.id }}</p>
-        </div>
-        <div>
-          <span class="text-gray-500">Fecha de creación</span>
-          <p class="font-semibold m-0">{{ formatTreasuryInstant(item.createdAt) }}</p>
-        </div>
-        <div>
-          <span class="text-gray-500">Fecha de ejecución</span>
-          <p class="font-semibold m-0">{{ formatDate(item.executionDate) }}</p>
-        </div>
-        <div>
-          <span class="text-gray-500">Tipo</span>
-          <p class="font-semibold m-0">{{ scheduleTypeLabel(item) }}</p>
-        </div>
-        <div>
-          <span class="text-gray-500">Proveedor</span>
-          <p class="font-semibold m-0">{{ suppliersLabel(item) }}</p>
-        </div>
-        <div>
-          <span class="text-gray-500">Método</span>
-          <p class="font-semibold m-0">{{ methodLabel(item) }}</p>
-        </div>
-        <div>
-          <span class="text-gray-500">Cuenta origen</span>
-          <p class="font-semibold m-0">{{ scheduleBankLabel(item) }}</p>
-        </div>
-        <div>
-          <span class="text-gray-500">Total</span>
-          <p class="font-semibold m-0">{{ formatCurrency(scheduleTotalFn(item)) }}</p>
-        </div>
-        <div>
-          <span class="text-gray-500">Estado</span>
-          <p class="m-0">
-            <p-tag [value]="scheduleLabel(item.status)" [severity]="getStatusSeverity(item.status)"></p-tag>
-          </p>
-        </div>
-        <div>
-          <span class="text-gray-500">Reintentos</span>
-          <p class="font-semibold m-0">{{ item.retryCount }}</p>
-        </div>
-        <div>
-          <span class="text-gray-500">Último intento</span>
-          <p class="font-semibold m-0">{{ formatTreasuryInstant(item.updatedAt) }}</p>
-        </div>
-        <div *ngIf="canViewScheduleVoucher(item)">
-          <span class="text-gray-500">Comprobante</span>
-          <p class="font-mono font-semibold text-blue-600 m-0">{{ scheduleVoucherLabel(item) }}</p>
-        </div>
-      </div>
-      <div>
-        <span class="text-gray-500">Factura(s)</span>
-        <p class="font-mono text-sm m-0 mt-1">{{ invoicesLabel(item) }}</p>
-      </div>
-      <div *ngIf="item.observations">
-        <span class="text-gray-500">Observaciones</span>
-        <p class="m-0 mt-1">{{ item.observations }}</p>
-      </div>
-      <div *ngIf="item.failureReason">
-        <span class="text-gray-500">Motivo del error</span>
-        <p class="m-0 mt-1 text-red-700">{{ item.failureReason }}</p>
-      </div>
-    </div>
+    <app-treasury-schedule-detail-panel
+      [item]="scheduleDetailTarget ?? null"
+      [view]="scheduleDetailView(scheduleDetailTarget)">
+    </app-treasury-schedule-detail-panel>
     <ng-template pTemplate="footer">
       <div class="flex gap-2 justify-end flex-wrap">
         <p-button

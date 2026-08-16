@@ -34,6 +34,7 @@ import { ThirdService } from '../../../../../GeneralMasters/ThirdParties/Service
 import { buildThirdPartyNameMap } from '../../../Shared/treasury-third-party.integration';
 import {
   formatTreasuryInstant,
+  buildTreasuryScheduleDetailView,
   scheduleInvoicesLabel,
   scheduleMethodLabel,
   scheduleSuppliersLabel,
@@ -41,6 +42,7 @@ import {
   scheduleTypeLabel,
   scheduleVoucherLabel,
 } from '../../../Shared/treasury-schedule-display';
+import { TreasuryScheduleDetailPanelComponent } from '../../../Shared/treasury-schedule-detail-panel.component';
 import { BankAccountsService } from '../../../../../GeneralMasters/BankAccounts/services/bank-accounts.service';
 
 interface SupplierFilterOption {
@@ -64,6 +66,7 @@ interface SupplierFilterOption {
     ToastModule,
     DialogModule,
     ContextualHelpComponent,
+    TreasuryScheduleDetailPanelComponent,
   ],
   templateUrl: './bill-list.component.html',
   styleUrls: ['./bill-list.component.css'],
@@ -270,6 +273,25 @@ export class BillListComponent implements OnInit {
       return '—';
     }
     return `${bank.bank?.name || 'Banco'} - ${bank.accountNumber}`;
+  }
+
+  scheduleDetailView(item?: PaymentSchedule) {
+    if (!item) {
+      return null;
+    }
+    return buildTreasuryScheduleDetailView(item, {
+      executionDate: this.formatDate(item.executionDate),
+      type: this.scheduleTypeLabel(item),
+      supplier: this.suppliersLabel(item),
+      method: this.methodLabel(item),
+      bank: this.scheduleBankLabel(item),
+      total: this.formatCurrency(this.scheduleTotalFn(item)),
+      statusLabel: this.scheduleLabel(item.status),
+      statusSeverity: this.getStatusSeverity(item.status),
+      invoices: this.invoicesLabel(item),
+      showVoucher: this.canViewScheduleVoucher(item),
+      voucher: this.scheduleVoucherLabel(item),
+    });
   }
 
   openScheduleVoucher(item: PaymentSchedule): void {

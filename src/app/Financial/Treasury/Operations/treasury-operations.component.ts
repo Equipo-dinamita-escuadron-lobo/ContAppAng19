@@ -43,6 +43,7 @@ import {
   filterSelectablePaymentMethods,
 } from '../Shared/treasury-account.integration';
 import {
+  buildTreasuryScheduleDetailView,
   formatTreasuryInstant,
   scheduleInvoicesLabel,
   scheduleMethodLabel,
@@ -51,6 +52,7 @@ import {
   scheduleTypeLabel,
   scheduleVoucherLabel,
 } from '../Shared/treasury-schedule-display';
+import { TreasuryScheduleDetailPanelComponent } from '../Shared/treasury-schedule-detail-panel.component';
 import { buildThirdPartyNameMap, resolveSupplierName } from '../Shared/treasury-third-party.integration';
 import {
   AccountingEntryViewHeader,
@@ -109,6 +111,7 @@ import { Supplier } from '../ExpenseReceipts/Model/Models';
     ToastModule,
     ContextualHelpComponent,
     AutoCompleteModule,
+    TreasuryScheduleDetailPanelComponent,
   ],
   templateUrl: './treasury-operations.component.html',
   styleUrl: './treasury-operations.component.css',
@@ -1159,6 +1162,26 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       return '—';
     }
     return `${bank.bank?.name || 'Banco'} - ${bank.accountNumber}`;
+  }
+
+  scheduleDetailView(item?: PaymentSchedule) {
+    if (!item) {
+      return null;
+    }
+    return buildTreasuryScheduleDetailView(item, {
+      executionDate: item.executionDate,
+      type: scheduleTypeLabel(item),
+      supplier: scheduleSuppliersLabel(item, this.supplierNames),
+      method: scheduleMethodLabel(item, this.methods),
+      bank: this.scheduleBankLabel(item),
+      total: this.scheduleTotal(item).toLocaleString('es-CO', { style: 'currency', currency: 'COP' }),
+      statusLabel: scheduleStatusLabel(item.status),
+      statusSeverity: this.getStatusSeverity(item.status),
+      invoices: scheduleInvoicesLabel(item, this.payableReferenceMap(), (amount) =>
+        amount.toLocaleString('es-CO', { style: 'currency', currency: 'COP' })),
+      showVoucher: this.canViewScheduleVoucher(item),
+      voucher: scheduleVoucherLabel(item, this.voucherNumberById()),
+    });
   }
 
   openScheduleVoucher(item: PaymentSchedule) {

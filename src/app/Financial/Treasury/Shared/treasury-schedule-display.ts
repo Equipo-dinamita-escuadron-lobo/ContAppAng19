@@ -86,3 +86,56 @@ export function scheduleVoucherLabel(
   }
   return '—';
 }
+
+export interface TreasuryScheduleDetailView {
+  createdAt: string;
+  executionDate: string;
+  type: string;
+  supplier: string;
+  method: string;
+  bank: string;
+  total: string;
+  statusLabel: string;
+  statusSeverity: 'success' | 'secondary' | 'info' | 'warn' | 'warning' | 'danger' | 'contrast' | undefined;
+  lastAttempt: string;
+  voucher?: string;
+  showVoucher: boolean;
+  invoices: string;
+  observations?: string;
+  failureReason?: string;
+}
+
+export function buildTreasuryScheduleDetailView(
+  item: PaymentSchedule,
+  options: {
+    executionDate: string;
+    type: string;
+    supplier: string;
+    method: string;
+    bank: string;
+    total: string;
+    statusLabel: string;
+    statusSeverity: TreasuryScheduleDetailView['statusSeverity'];
+    invoices: string;
+    showVoucher: boolean;
+    voucher?: string;
+  },
+): TreasuryScheduleDetailView {
+  return {
+    createdAt: formatTreasuryInstant(item.createdAt),
+    executionDate: options.executionDate,
+    type: options.type,
+    supplier: options.supplier,
+    method: options.method,
+    bank: options.bank,
+    total: options.total,
+    statusLabel: options.statusLabel,
+    statusSeverity: options.statusSeverity,
+    lastAttempt: formatTreasuryInstant(item.updatedAt),
+    voucher: options.voucher,
+    showVoucher: options.showVoucher,
+    invoices: options.invoices,
+    observations: item.observations ?? undefined,
+    failureReason: item.failureReason ?? undefined,
+  };
+}
