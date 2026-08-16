@@ -10,7 +10,8 @@ import { Third } from '../../../../../GeneralMasters/ThirdParties/models/Third';
 import { ePersonType } from '../../../../../GeneralMasters/ThirdParties/models/ePersonType';
 import { eThirdType } from '../../../../../GeneralMasters/ThirdParties/models/eThirdType';
 import { TreasuryApiService } from '../../../Shared/treasury-api.service';
-import { PayableWriteOff } from '../../../Shared/treasury-api.models';
+import { PayableWriteOff, PaymentVoucher } from '../../../Shared/treasury-api.models';
+import { resolveSupplierName } from '../../../Shared/treasury-third-party.integration';
 import { educationalDescription, transactionTypeLabel } from '../../../Shared/treasury-status-labels';
 import { VendorListFilter, VendorReport, VendorReportSummary, VendorReportTransaction } from '../Models/VendorReport';
 
@@ -113,17 +114,24 @@ export class VendorReportService {
     active?: boolean,
     vendorName?: string,
   ): Observable<VendorReport> {
-    return this.api
-      .statement(
-        this.enterpriseId(),
-        vendorId,
-        startDate.toISOString().slice(0, 10),
-        endDate.toISOString().slice(0, 10),
-        invoice,
-        active,
-      )
-      .pipe(
-        map((statement) => {
+    return this.getProveedores().pipe(
+      switchMap((suppliers) => {
+        const supplierNameMap = new Map(
+          suppliers.map((supplier) => [Number(supplier.thId), supplier.displayName] as const),
+        );
+        const resolvedName = resolveSupplierName(supplierNameMap, vendorId);
+
+        return this.api
+          .statement(
+            this.enterpriseId(),
+            vendorId,
+            startDate.toISOString().slice(0, 10),
+            endDate.toISOString().slice(0, 10),
+            invoice,
+            active,
+          )
+          .pipe(
+            map((statement) => {
           const openingBalance = Number(statement.openingBalance || 0);
           const writeOffTotal = Number(statement.writeOffTotal || 0);
           const totalCredits = Number(statement.invoiced || 0);
@@ -145,19 +153,11 @@ export class VendorReportService {
             balance: 0,
           }));
 
-          const payments: VendorReportTransaction[] = (statement.vouchers || []).flatMap((voucher: any) =>
-            (voucher.details || [])
-              .filter((detail: any) => detail.supplierId === vendorId)
-              .map((detail: any) => ({
-                date: new Date(voucher.issueDate),
-                reference: detail.invoiceReference,
-                expenseReceiptNumber: voucher.voucherNumber,
-                type: 'Payment' as const,
-                description: this.paymentDescription(voucher.observations, voucher.voucherNumber),
-                debits: Number(detail.amountPaid ?? detail.amount ?? 0),
-                credits: 0,
-                balance: 0,
-              })),
+          const paymentRows = this.buildPaymentTransactions(
+            statement.vouchers,
+            vendorId,
+            startIso,
+            endIso,
           );
 
           const writeOffRows = this.buildWriteOffTransactions(
@@ -170,14 +170,14 @@ export class VendorReportService {
           const transactions = this.applyRunningBalance(
             [
               ...bills.filter((row) => this.inIsoDateRange(row.date, startIso, endIso)),
-              ...payments.filter((row) => this.inIsoDateRange(row.date, startIso, endIso)),
+              ...paymentRows,
               ...writeOffRows,
             ].sort((a, b) => a.date.getTime() - b.date.getTime()),
             openingBalance,
           );
 
           return {
-            vendor: { id: vendorId, name: vendorName || `Proveedor ${vendorId}` },
+            vendor: { id: vendorId, name: resolvedName },
             dateRange: { startDate, endDate },
             transactions,
             periodTotals: {
@@ -199,8 +199,10 @@ export class VendorReportService {
               total: closingBalance,
             },
           };
-        }),
-      );
+            }),
+          );
+      }),
+    );
   }
 
   buildPdf(report: VendorReport): Blob {
@@ -249,7 +251,7 @@ export class VendorReportService {
         t.reference || '-',
         t.documentNumber || '-',
         t.expenseReceiptNumber || '-',
-        t.type === 'Bill' ? 'Factura' : t.type === 'Payment' ? 'Pago' : transactionTypeLabel(t.type),
+        t.type === 'Bill' ? 'Factura' : transactionTypeLabel(t.type),
         t.description || '-',
         t.debits > 0 ? fmt(t.debits) : '-',
         t.credits > 0 ? fmt(t.credits) : '-',
@@ -360,7 +362,7 @@ export class VendorReportService {
       t.reference || '',
       t.documentNumber || '',
       t.expenseReceiptNumber || '',
-      t.type === 'Bill' ? 'Factura' : t.type === 'Payment' ? 'Pago' : transactionTypeLabel(t.type),
+      t.type === 'Bill' ? 'Factura' : transactionTypeLabel(t.type),
       t.description || '',
       t.debits || 0,
       t.credits || 0,
@@ -414,6 +416,61 @@ export class VendorReportService {
     return this.buildExcel(report);
   }
 
+  private buildPaymentTransactions(
+    vouchers: PaymentVoucher[] | undefined,
+    vendorId: number,
+    startIso: string,
+    endIso: string,
+  ): VendorReportTransaction[] {
+    return (vouchers || []).flatMap((voucher) => {
+      const status = String(voucher.status || '');
+      const isVoided = status === 'VOIDED';
+      const issuedInPeriod = voucher.issueDate
+        ? this.inIsoDateRange(new Date(voucher.issueDate), startIso, endIso)
+        : false;
+
+      return (voucher.details || [])
+        .filter((detail) => Number(detail.supplierId) === vendorId)
+        .flatMap((detail) => {
+          const amount = Number(detail.amountPaid ?? detail.amount ?? 0);
+          const reference = detail.invoiceReference || '';
+          const description = this.paymentDescription(voucher.observations, voucher.voucherNumber);
+          const paymentInformational = !issuedInPeriod;
+          const paymentRow: VendorReportTransaction = {
+            date: new Date(voucher.issueDate),
+            reference,
+            expenseReceiptNumber: voucher.voucherNumber,
+            type: 'Payment',
+            description: isVoided ? `${description} (Anulado)` : description,
+            debits: amount,
+            credits: 0,
+            balance: 0,
+            voided: isVoided,
+            informational: paymentInformational,
+          };
+
+          if (!isVoided) {
+            return [paymentRow];
+          }
+
+          const reversalRow: VendorReportTransaction = {
+            date: new Date(voucher.updatedAt || voucher.issueDate),
+            reference,
+            expenseReceiptNumber: voucher.voucherNumber,
+            type: 'PaymentReversal',
+            description: `Reversión pago${voucher.voucherNumber ? ` comprobante ${voucher.voucherNumber}` : ''} (Anulado)`,
+            debits: 0,
+            credits: amount,
+            balance: 0,
+            voided: true,
+            informational: paymentInformational,
+          };
+
+          return [paymentRow, reversalRow];
+        });
+    });
+  }
+
   private buildWriteOffTransactions(
     writeOffs: PayableWriteOff[] | undefined,
     vendorId: number,
@@ -426,9 +483,6 @@ export class VendorReportService {
       const createdInPeriod = writeOff.createdAt
         ? this.inIsoDateRange(new Date(writeOff.createdAt), startIso, endIso)
         : false;
-      const voidedInPeriod = isVoided && writeOff.updatedAt
-        ? this.inIsoDateRange(new Date(writeOff.updatedAt), startIso, endIso)
-        : false;
       const reason = (writeOff.reason || '').trim();
 
       return (writeOff.details || [])
@@ -436,6 +490,7 @@ export class VendorReportService {
         .flatMap((detail) => {
           const amount = Number(detail.amount || 0);
           const reference = detail.invoiceReference || '';
+          const postedInformational = !createdInPeriod;
           const postedRow: VendorReportTransaction = {
             date: new Date(writeOff.createdAt!),
             reference,
@@ -447,11 +502,11 @@ export class VendorReportService {
             credits: 0,
             balance: 0,
             voided: isVoided,
-            informational: isVoided && !createdInPeriod,
+            informational: postedInformational,
           };
 
           if (!isVoided) {
-            return [{ ...postedRow, informational: !createdInPeriod }];
+            return [postedRow];
           }
 
           const reversalRow: VendorReportTransaction = {
@@ -463,7 +518,7 @@ export class VendorReportService {
             credits: amount,
             balance: 0,
             voided: true,
-            informational: !(createdInPeriod && voidedInPeriod),
+            informational: postedInformational,
           };
 
           return [postedRow, reversalRow];
