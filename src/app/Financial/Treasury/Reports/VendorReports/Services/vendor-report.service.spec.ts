@@ -47,6 +47,60 @@ describe('VendorReportService summaries', () => {
     });
   });
 
+  it('reconciles statement totals with detail movements', (done) => {
+    const api = {
+      statement: jasmine.createSpy('statement').and.returnValue(of({
+        supplierId: 78,
+        openingBalance: 22436,
+        invoiced: 97566,
+        paid: 115376,
+        writeOffTotal: 0,
+        pending: 4646,
+        invoices: [{
+          issueDate: '2026-08-05',
+          dueDate: '2026-09-05',
+          reference: 'FC-1',
+          originalAmount: 97566,
+          pendingAmount: 4646,
+        }],
+        vouchers: [{
+          issueDate: '2026-08-10',
+          voucherNumber: 'CE-001',
+          observations: '12',
+          details: [{
+            supplierId: 78,
+            invoiceReference: 'FC-OLD',
+            amountPaid: 115376,
+            remainingBalance: 0,
+          }],
+        }],
+        writeOffs: [],
+      })),
+    };
+    const thirds = { getThirdsByType: jasmine.createSpy('getThirdsByType') };
+    const storage = { getIdEnterprise: () => 'enterprise-a' };
+    const value = new VendorReportService(api as any, thirds as any, storage as any);
+    const start = new Date(2026, 7, 1);
+    const end = new Date(2026, 7, 31);
+
+    value.getVendorReport(78, start, end, undefined, undefined, 'Proveedor').subscribe((report) => {
+      expect(report.periodTotals.openingBalance).toBe(22436);
+      expect(report.periodTotals.totalCredits).toBe(97566);
+      expect(report.periodTotals.totalDebits).toBe(115376);
+      expect(report.totalDue).toBe(4646);
+      expect(report.transactions.find((row) => row.type === 'Payment')?.description)
+        .toBe('Pago comprobante CE-001');
+      const detailCredits = report.transactions.reduce((sum, row) => sum + row.credits, 0);
+      const detailDebits = report.transactions.reduce((sum, row) => sum + row.debits, 0);
+      expect(
+        report.periodTotals.openingBalance + detailCredits - detailDebits - report.periodTotals.writeOffTotal,
+      ).toBe(report.totalDue);
+      const lastBalance = report.transactions.at(-1)?.balance;
+      expect(lastBalance).toBe(report.totalDue);
+      done();
+    });
+  });
+
   it('passes supplier and date filters to statement API', (done) => {
     const { value, api } = service();
     const dateFrom = new Date(2026, 7, 1);

@@ -27,13 +27,21 @@ describe('BillListComponent schedules', () => {
       downloadCsv: jasmine.createSpy('downloadCsv'),
       downloadPdf: jasmine.createSpy('downloadPdf'),
     };
+    const bankAccounts = {
+      findAllActive: jasmine.createSpy('findAllActive').and.returnValue(of({ content: [] })),
+    };
+    const router = { navigate: jasmine.createSpy('navigate') };
+    const route = { snapshot: { queryParamMap: { get: () => null } }, queryParamMap: of({ get: () => null }) };
     const value = new BillListComponent(
       new FormBuilder(),
       api as any,
       paymentMethods as any,
       thirds as any,
+      bankAccounts as any,
       messageService as any,
       exportService as any,
+      router as any,
+      route as any,
     );
     value.ngOnInit();
     return { value, api, messageService };

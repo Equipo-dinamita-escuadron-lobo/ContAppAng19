@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin, map, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, forkJoin, map, of, timer } from 'rxjs';
+import { catchError, last, switchMap, take, takeWhile } from 'rxjs/operators';
 import { PaymentMethodsServiceService } from '../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
+import { BankAccountsService } from '../../../../GeneralMasters/BankAccounts/services/bank-accounts.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { TreasuryApiService } from '../../Shared/treasury-api.service';
 import { DropdownOption, ExpenseReceiptView, PurchaseInvoice, Supplier } from '../Model/Models';
@@ -11,14 +12,32 @@ import { ExpenseReceiptResponse } from '../Model/ExpenseReceiptResponse';
 import { ExpenseReceiptCreateRequest } from '../Model/ExpenseReceiptCreateRequest';
 import { AccountingEntryLine } from '../Model/AccountingEntryLine';
 import { ThirdService } from '../../../../GeneralMasters/ThirdParties/Services/third.service';
-import { educationalDescription, translatePaymentMethodName, voucherStatusLabel, accountingSourceDocumentTypeLabel } from '../../Shared/treasury-status-labels';
-import { buildThirdPartyNameMap, resolveSupplierName } from '../../Shared/treasury-third-party.integration';
+import { SteletonService } from '../../../../Commercial/InvoiceTemplate/services/steleton.service';
+import { PurchaseInvoiceProductLine } from '../../../../Commercial/PurchaseInvoice/models/purchase-invoice-payload';
+import {
+  accountingEntryStatusLabel,
+  educationalDescription,
+  translatePaymentMethodName,
+  voucherStatusLabel,
+  accountingSourceDocumentTypeLabel,
+} from '../../Shared/treasury-status-labels';
+import {
+  buildThirdPartyIdentificationMap,
+  buildThirdPartyNameMap,
+  resolveSupplierIdentification,
+  resolveSupplierName,
+} from '../../Shared/treasury-third-party.integration';
 import {
   AccountingEntryView,
   buildAccountCatalogueLookup,
   buildAccountingEntryView,
   mapAccountingMovementsForView,
 } from '../../Shared/treasury-accounting-display';
+import { PaymentVoucher, Payable, VoucherDetail } from '../../Shared/treasury-api.models';
+import {
+  PaidInvoiceLineView,
+  mapSkeletonProductsToLineViews,
+} from '../../Shared/treasury-purchase-invoice-lines';
 
 @Injectable({ providedIn: 'root' })
 export class ExpenseReceiptService {
@@ -26,8 +45,10 @@ export class ExpenseReceiptService {
     private readonly api: TreasuryApiService,
     private readonly paymentMethods: PaymentMethodsServiceService,
     private readonly accounts: ChartAccountService,
+    private readonly bankAccounts: BankAccountsService,
     private readonly thirds: ThirdService,
     private readonly storage: LocalStorageMethods,
+    private readonly skeleton: SteletonService,
   ) {}
 
   private enterpriseId(): string {
@@ -151,46 +172,233 @@ export class ExpenseReceiptService {
             supplierName,
             status: voucherStatusLabel(voucher.status),
             statusKey: voucher.status,
-            totalAmount: voucher.total,
+            totalAmount: Number(voucher.total ?? 0),
             accountingEntryId: voucher.accountingEntryId,
           };
         });
       }),
     );
   }
+
   getExpenseReceiptById(id: number): Observable<ExpenseReceiptDetailsView> {
     const enterpriseId = this.enterpriseId();
-    return forkJoin({
-      voucher: this.api.voucher(id, enterpriseId),
-      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(catchError(() => of({ content: [] } as any))),
-      methods: this.paymentMethods.findAll(this.enterpriseId(), 0, 100).pipe(catchError(() => of({ content: [] } as any))),
-    }).pipe(
-      map(({ voucher, thirds, methods }) => {
-        const thirdNames = buildThirdPartyNameMap(thirds?.content || []);
-        const supplierId = voucher.details[0]?.supplierId ?? 0;
+    return this.api.voucher(id, enterpriseId).pipe(
+      switchMap((voucher) => {
+        const supplierIds = [...new Set((voucher.details ?? []).map((detail) => detail.supplierId))];
+        return forkJoin({
+          voucher: of(voucher),
+          thirds: this.loadThirdPartyMaps(enterpriseId, supplierIds),
+          methods: this.paymentMethods.findAll(this.enterpriseId(), 0, 100).pipe(catchError(() => of({ content: [] } as any))),
+          banks: this.bankAccounts.findAllActive(enterpriseId).pipe(catchError(() => of({ content: [] } as any))),
+          schedules: this.api.schedules(enterpriseId).pipe(catchError(() => of([]))),
+          payables: forkJoin(
+            (voucher.details ?? []).map((detail) =>
+              this.api.payable(detail.invoiceId, enterpriseId).pipe(catchError(() => of(null))),
+            ),
+          ),
+          accounting: voucher.accountingEntryId
+            ? this.api.accountingEntry(id).pipe(catchError(() => of(null)))
+            : of(null),
+        });
+      }),
+      map(({ voucher, thirds, methods, banks, schedules, payables, accounting }) => {
+        const thirdNames = thirds.names;
+        const thirdIdentifications = thirds.identifications;
+        const supplierIds = [...new Set((voucher.details ?? []).map((detail) => detail.supplierId))];
+        const supplierId = supplierIds[0] ?? 0;
+        const supplierLabel = supplierIds.length > 1
+          ? supplierIds.map((sid) => resolveSupplierName(thirdNames, sid)).join(', ')
+          : resolveSupplierName(thirdNames, supplierId);
         const method = (methods.content || []).find((item: any) => item.id === voucher.paymentMethodId);
+        const bank = (banks.content || []).find((item: any) => item.id === voucher.bankAccountId);
+        const schedule = schedules.find((item) => item.voucherId === voucher.id);
+        const payableList = payables as Array<Payable | null>;
+        const amounts = this.computeVoucherAmounts(voucher, payableList);
+        const executionRaw = voucher.updatedAt ?? voucher.createdAt;
+        const entryData = (accounting as { data?: Record<string, unknown> } | null)?.data
+          ?? (accounting as Record<string, unknown> | null);
+        const accountingEntryCode = voucher.accountingEntryCode?.trim()
+          || (typeof entryData?.['code'] === 'string' ? entryData['code'] : undefined)
+          || (typeof entryData?.['entryCode'] === 'string' ? entryData['entryCode'] : undefined);
         return {
           id: voucher.id,
           receiptCode: voucher.voucherNumber,
           issueDate: new Date(voucher.issueDate),
+          executionDateTime: executionRaw ? new Date(executionRaw) : undefined,
           thirdPartyId: supplierId,
-          supplierName: resolveSupplierName(thirdNames, supplierId),
+          supplierName: supplierLabel,
+          supplierIdentification: supplierIds.length === 1
+            ? resolveSupplierIdentification(thirdIdentifications, supplierId)
+            : supplierIds.map((sid) => resolveSupplierIdentification(thirdIdentifications, sid)).join(', '),
           paymentMethodName: translatePaymentMethodName(method?.name) || `Método ${voucher.paymentMethodId}`,
+          paymentMethodRequiresBankAccount: Boolean(method?.requiresBankAccount),
+          bankAccountId: voucher.bankAccountId,
+          bankAccountLabel: bank
+            ? `${bank.bank?.name || 'Banco'} - ${bank.accountNumber}`
+            : undefined,
           status: voucherStatusLabel(voucher.status),
           statusKey: voucher.status,
-          totalAmount: voucher.total,
-          observations: educationalDescription(voucher.observations, ''),
+          grossAmount: amounts.grossAmount,
+          retentionsAmount: amounts.retentionsAmount,
+          netAmount: amounts.netAmount,
+          totalAmount: amounts.netAmount,
+          observations: educationalDescription(voucher.observations, 'Pago a proveedor'),
           isDirectExpense: false,
-          details: voucher.details.map((detail) => ({
-            invoiceId: detail.invoiceId,
-            amountPaid: detail.amountPaid,
-            invoiceCode: detail.invoiceReference,
-            accountingAccount: detail.payableAccountId,
-          })),
+          accountingEntryId: voucher.accountingEntryId,
+          accountingEntryCode,
+          accountingStatusLabel: this.accountingStatusForVoucher(voucher),
+          scheduleId: schedule?.id,
+          scheduleExecutionDate: schedule?.executionDate,
+          details: (voucher.details ?? []).map((detail, index) =>
+            this.mapVoucherDetail(detail, payableList[index]?.sourceInvoiceId, payableList[index]),
+          ),
           accountingEntry: undefined,
         };
       }),
     );
+  }
+
+  private loadThirdPartyMaps(
+    enterpriseId: string,
+    supplierIds: number[],
+  ): Observable<{ names: Map<number, string>; identifications: Map<number, string> }> {
+    return this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(
+      catchError(() => of({ content: [] } as any)),
+      switchMap((thirdsPage) => {
+        const names = buildThirdPartyNameMap(thirdsPage?.content || []);
+        const identifications = buildThirdPartyIdentificationMap(thirdsPage?.content || []);
+        const missing = supplierIds.filter((id) => id != null && !names.has(Number(id)));
+        if (!missing.length) {
+          return of({ names, identifications });
+        }
+        return forkJoin(
+          missing.map((id) =>
+            this.thirds.getThirdPartie(id, enterpriseId).pipe(catchError(() => of(null))),
+          ),
+        ).pipe(
+          map((extraThirds) => {
+            extraThirds.filter(Boolean).forEach((third) => {
+              const id = Number(third!.thId);
+              const label =
+                (third!.socialReason as string) ||
+                [third!.names, third!.lastNames].filter(Boolean).join(' ') ||
+                `Proveedor ${id}`;
+              names.set(id, String(label));
+              const base = third!.idNumber != null ? String(third!.idNumber) : '';
+              identifications.set(
+                id,
+                base
+                  ? `${base}${third!.verificationNumber != null ? `-${third!.verificationNumber}` : ''}`
+                  : '—',
+              );
+            });
+            return { names, identifications };
+          }),
+        );
+      }),
+    );
+  }
+
+  private accountingStatusForVoucher(voucher: PaymentVoucher): string {
+    if (!voucher.accountingEntryId) {
+      return voucherStatusLabel(voucher.status);
+    }
+    if (voucher.status === 'VOIDED') {
+      return accountingEntryStatusLabel('VOIDED');
+    }
+    return accountingEntryStatusLabel('ACTIVE') === 'Desconocido'
+      ? 'Contabilizado'
+      : accountingEntryStatusLabel('ACTIVE');
+  }
+
+  getPaidInvoiceProductLines(sourceInvoiceId: number): Observable<PaidInvoiceLineView[]> {
+    return this.skeleton.getFactureById(sourceInvoiceId).pipe(
+      map((facture) => mapSkeletonProductsToLineViews(this.normalizeSkeletonProducts(facture as {
+        products?: PurchaseInvoiceProductLine[] | Iterable<PurchaseInvoiceProductLine>;
+      }))),
+    );
+  }
+
+  private computeVoucherAmounts(
+    voucher: PaymentVoucher,
+    payables: Array<Payable | null> = [],
+  ): {
+    grossAmount: number;
+    retentionsAmount: number;
+    netAmount: number;
+  } {
+    const details = voucher.details ?? [];
+    let grossAmount = 0;
+    let retentionsAmount = 0;
+    let netAmount = 0;
+    details.forEach((detail, index) => {
+      const amountPaid = this.detailAmountPaid(detail);
+      let previousBalance = Number(detail.previousBalance ?? 0);
+      const remainingBalance = Number(detail.remainingBalance ?? 0);
+      const payable = payables[index];
+      if (previousBalance <= 0 && payable) {
+        previousBalance = Number(
+          payable.originalAmount ?? payable.pendingAmount ?? payable.availableAmount ?? amountPaid,
+        );
+      }
+      const invoiceValue = previousBalance > 0 ? previousBalance : amountPaid;
+      const retention = Math.max(0, invoiceValue - amountPaid - remainingBalance);
+      grossAmount += invoiceValue;
+      retentionsAmount += retention;
+      netAmount += amountPaid;
+    });
+    if (!details.length) {
+      netAmount = Number(voucher.total ?? 0);
+      grossAmount = netAmount;
+    } else if (netAmount <= 0 && voucher.total) {
+      netAmount = Number(voucher.total);
+      if (grossAmount <= 0) {
+        grossAmount = netAmount;
+      }
+    }
+    return { grossAmount, retentionsAmount, netAmount };
+  }
+
+  private detailAmountPaid(detail: VoucherDetail): number {
+    return Number(detail.amountPaid ?? detail.amount ?? 0);
+  }
+
+  private mapVoucherDetail(
+    detail: VoucherDetail,
+    sourceInvoiceId?: number,
+    payable?: Payable | null,
+  ) {
+    const amountPaid = this.detailAmountPaid(detail);
+    let previousBalance = Number(detail.previousBalance ?? 0);
+    const remainingBalance = Number(detail.remainingBalance ?? 0);
+    if (previousBalance <= 0 && payable) {
+      previousBalance = Number(
+        payable.originalAmount ?? payable.pendingAmount ?? payable.availableAmount ?? amountPaid,
+      );
+    }
+    const invoiceValue = previousBalance > 0 ? previousBalance : amountPaid;
+    const retentionsApplied = Math.max(0, invoiceValue - amountPaid - remainingBalance);
+    return {
+      invoiceId: detail.invoiceId,
+      sourceInvoiceId: sourceInvoiceId != null ? Number(sourceInvoiceId) : undefined,
+      amountPaid,
+      invoiceCode: detail.invoiceReference?.trim() || payable?.reference || String(detail.invoiceId),
+      invoiceValue,
+      retentionsApplied,
+      payableAccountCode: detail.payableAccountCode?.trim() || payable?.payableAccountCode || '—',
+      remainingBalance,
+    };
+  }
+
+  private normalizeSkeletonProducts(facture: { products?: PurchaseInvoiceProductLine[] | Iterable<PurchaseInvoiceProductLine> }): PurchaseInvoiceProductLine[] {
+    const products = facture?.products;
+    if (!products) {
+      return [];
+    }
+    if (Array.isArray(products)) {
+      return products;
+    }
+    return Array.from(products);
   }
 
   createExpenseReceipt(request: ExpenseReceiptCreateRequest): Observable<ExpenseReceiptResponse> {
@@ -213,7 +421,47 @@ export class ExpenseReceiptService {
   }
 
   voidExpenseReceipt(receiptId: number, reason: string): Observable<ExpenseReceiptResponse> {
-    return this.api.voidVoucher(receiptId, this.enterpriseId(), reason) as unknown as Observable<ExpenseReceiptResponse>;
+    const enterpriseId = this.enterpriseId();
+    return this.api.voidVoucher(receiptId, enterpriseId, reason).pipe(
+      switchMap((voucher) => this.waitForVoucherVoidCompletion(receiptId, enterpriseId, voucher)),
+      map((voucher) => this.mapVoidedVoucherResponse(voucher)),
+    );
+  }
+
+  private waitForVoucherVoidCompletion(
+    receiptId: number,
+    enterpriseId: string,
+    voucher: PaymentVoucher,
+  ): Observable<PaymentVoucher> {
+    if (voucher.status !== 'VOIDING') {
+      return of(voucher);
+    }
+    return timer(0, 2000).pipe(
+      take(15),
+      switchMap(() => this.api.voucher(receiptId, enterpriseId)),
+      takeWhile((item) => item.status === 'VOIDING', true),
+      last(null),
+      map((item) => item ?? voucher),
+    );
+  }
+
+  private mapVoidedVoucherResponse(voucher: PaymentVoucher): ExpenseReceiptResponse {
+    return {
+      id: voucher.id,
+      receiptCode: voucher.voucherNumber,
+      thirdPartyId: voucher.details?.[0]?.supplierId ?? 0,
+      paymentMethodId: voucher.paymentMethodId,
+      status: voucher.status,
+      issueDate: voucher.issueDate,
+      totalAmount: Number(voucher.total ?? 0),
+      observations: voucher.observations ?? '',
+      details: (voucher.details ?? []).map((detail) => ({
+        invoiceId: detail.invoiceId,
+        amountPaid: Number(detail.amountPaid ?? 0),
+        invoiceCode: detail.invoiceReference,
+        accountingAccount: detail.payableAccountId,
+      })),
+    };
   }
 
   getAccountingEntry(receiptId: number): Observable<AccountingEntryLine[]> {
@@ -262,6 +510,7 @@ export class ExpenseReceiptService {
             documentTypeLabel: accountingSourceDocumentTypeLabel('PAYMENT_VOUCHER'),
             voucherNumber: headerContext.voucherNumber ?? voucher.voucherNumber,
             supplierLabel,
+            entryCode: voucher.accountingEntryCode,
           },
         );
       }),

@@ -28,10 +28,12 @@ describe('TreasuryOperationsComponent PP8', () => {
       voidWriteOff: jasmine.createSpy('voidWriteOff').and.returnValue(NEVER),
       changeDueDate: jasmine.createSpy('changeDueDate').and.returnValue(of({})),
       pending: jasmine.createSpy('pending').and.returnValue(of([])),
+      payable: jasmine.createSpy('payable').and.returnValue(of(null)),
       vouchers: jasmine.createSpy('vouchers').and.returnValue(of({ content: [] })),
       schedules: jasmine.createSpy('schedules').and.returnValue(of([])),
       writeOffs: jasmine.createSpy('writeOffs').and.returnValue(of([])),
       writeOff: jasmine.createSpy('writeOff').and.returnValue(of({ id: 1, status: 'POSTED', total: 100 })),
+      accountingEntry: jasmine.createSpy('accountingEntry').and.returnValue(of({ code: 'AE-PWO-12', movements: [] })),
     };
     const storage = { getIdEnterprise: () => 'enterprise-a' };
     const exportService = {
@@ -47,6 +49,7 @@ describe('TreasuryOperationsComponent PP8', () => {
     const expenseReceiptService = {
       getSuppliers: jasmine.createSpy('getSuppliers').and.returnValue(of([])),
     };
+    const router = { navigate: jasmine.createSpy('navigate') };
     const value = new TreasuryOperationsComponent(
       api as any,
       storage as any,
@@ -57,6 +60,7 @@ describe('TreasuryOperationsComponent PP8', () => {
       exportService as any,
       messageService as any,
       expenseReceiptService as any,
+      router as any,
     );
     value.payables = [{
       id: 11, sourceInvoiceId: 50, reference: 'FC-50', enterpriseId: 'enterprise-a', supplierId: 7,
@@ -854,5 +858,123 @@ describe('TreasuryOperationsComponent PP8', () => {
     value.searchVoucherSupplier({ query: 'Pep' });
     expect(expenseReceiptService.getSuppliers).toHaveBeenCalledWith('pep');
     expect(value.filteredVoucherSuppliers).toEqual([sampleSupplier(7, 'PEPSI')]);
+  });
+
+  function sampleWriteOff(overrides: Partial<any> = {}) {
+    return {
+      id: 12,
+      enterpriseId: 'enterprise-a',
+      reason: 'Condonación',
+      counterpartAccountId: 4295,
+      counterpartAccountCode: '429501',
+      total: 87360,
+      status: 'POSTED' as const,
+      accountingEntryId: 37,
+      accountingEntryCode: 'AE-PWO-12',
+      createdAt: '2026-08-14T10:00:00Z',
+      version: 0,
+      details: [{
+        supplierId: 7,
+        invoiceId: 11,
+        invoiceReference: '678151694',
+        payableAccountId: 2205,
+        payableAccountCode: '220501',
+        amount: 87360,
+      }],
+      ...overrides,
+    };
+  }
+
+  it('formats write-off table labels from API and catalog data', () => {
+    const { value } = component();
+    const item = sampleWriteOff();
+    expect(value.writeOffNumberLabel(item)).toBe('12');
+    expect(value.writeOffDateLabel(item)).toBe('14/08/2026');
+    expect(value.writeOffSupplierLabel(item)).toBe('Proveedor Demo');
+    expect(value.writeOffInvoiceReference(item)).toBe('678151694');
+    expect(value.writeOffCounterpartLabel(item)).toBe('429501 - Ingresos diversos');
+    expect(value.writeOffAccountingEntryLabel(item)).toBe('AE-PWO-12');
+    expect(value.writeOffSupplierLabel(item)).not.toContain('7');
+    expect(value.writeOffInvoiceReference(item)).not.toContain('11');
+  });
+
+  it('falls back to payable reference when invoiceReference is missing', () => {
+    const { value } = component();
+    const item = sampleWriteOff({
+      details: [{ supplierId: 7, invoiceId: 11, amount: 100 }],
+    });
+    expect(value.writeOffInvoiceReference(item)).toBe('FC-50');
+  });
+
+  it('shows fallback supplier label when third is not in catalogue', () => {
+    const { value } = component();
+    const item = sampleWriteOff({
+      details: [{ supplierId: 99, invoiceId: 11, invoiceReference: '678151694', amount: 100 }],
+    });
+    expect(value.writeOffSupplierLabel(item)).toBe('Proveedor 99');
+  });
+
+  it('formats write-off balances from API detail fields', () => {
+    const { value } = component();
+    const item = sampleWriteOff({
+      details: [{
+        supplierId: 7,
+        invoiceId: 11,
+        invoiceReference: '678151694',
+        amount: 100,
+        originalAmount: 5000,
+        availableAmount: 3000,
+      }],
+    });
+    expect(value.writeOffOriginalBalanceLabel(item)).toBe('$ 5.000');
+    expect(value.writeOffAvailableBalanceLabel(item)).toBe('$ 3.000');
+  });
+
+  it('exposes write-off actions according to status', () => {
+    const { value } = component();
+    const draft = sampleWriteOff({ status: 'DRAFT', accountingEntryId: undefined, accountingEntryCode: undefined });
+    expect(value.canPostWriteOff(draft)).toBeTrue();
+    expect(value.canDiscardWriteOff(draft)).toBeTrue();
+    expect(value.canVoidWriteOff(draft)).toBeFalse();
+    expect(value.canShowWriteOffAccounting(draft)).toBeFalse();
+
+    const posted = sampleWriteOff({ status: 'POSTED' });
+    expect(value.canPostWriteOff(posted)).toBeFalse();
+    expect(value.canDiscardWriteOff(posted)).toBeFalse();
+    expect(value.canVoidWriteOff(posted)).toBeTrue();
+    expect(value.canShowWriteOffAccounting(posted)).toBeTrue();
+
+    const voided = sampleWriteOff({ status: 'VOIDED' });
+    expect(value.canVoidWriteOff(voided)).toBeFalse();
+    expect(value.canShowWriteOffAccounting(voided)).toBeTrue();
+  });
+
+  it('loads write-off accounting entry with PAYABLE_WRITEOFF source type', () => {
+    const { value, api } = component();
+    const item = sampleWriteOff();
+    value.showWriteOffAccounting(item);
+    expect(api.accountingEntry).toHaveBeenCalledWith(12, 'PAYABLE_WRITEOFF');
+  });
+
+  it('opens write-off detail dialog and refreshes detail from API', () => {
+    const { value, api } = component();
+    const item = sampleWriteOff({ status: 'DRAFT', accountingEntryId: undefined });
+    const refreshed = sampleWriteOff({
+      status: 'DRAFT',
+      accountingEntryId: undefined,
+      details: [{
+        supplierId: 7,
+        invoiceId: 11,
+        invoiceReference: '678151694',
+        amount: 87360,
+        originalAmount: 5000,
+        availableAmount: 3000,
+      }],
+    });
+    api.writeOff.and.returnValue(of(refreshed));
+    value.showWriteOffDetail(item);
+    expect(value.writeOffDetailDialogVisible).toBeTrue();
+    expect(api.writeOff).toHaveBeenCalledWith(12);
+    expect(value.writeOffDetailTarget?.details?.[0]?.originalAmount).toBe(5000);
   });
 });

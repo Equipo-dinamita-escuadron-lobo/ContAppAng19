@@ -40,10 +40,14 @@ export class TreasuryApiService {
     if (supplierId != null) params = params.set('supplierId', supplierId);
     return this.http.get<Payable[]>(`${this.base}/payables/pending`, { params });
   }
+  payable(id: number, enterpriseId: string) {
+    return this.http.get<Payable>(`${this.base}/payables/${id}`, { params: { enterpriseId } });
+  }
   changeDueDate(id: number, enterpriseId: string, dueDate: string, reason: string) {
     return this.http.patch<Payable>(`${this.base}/payables/${id}/due-date`, { dueDate, reason }, { params: { enterpriseId } });
   }
   schedules(enterpriseId: string) { return this.http.get<PaymentSchedule[]>(`${this.base}/payment-schedules`, { params: { enterpriseId } }); }
+  schedule(id: number) { return this.http.get<PaymentSchedule>(`${this.base}/payment-schedules/${id}`); }
   createSchedule(request: ScheduleRequest) { return this.http.post<PaymentSchedule>(`${this.base}/payment-schedules`, request); }
   updateSchedule(id: number, request: ScheduleRequest) { return this.http.put<PaymentSchedule>(`${this.base}/payment-schedules/${id}`, request); }
   deleteSchedule(id: number) { return this.http.delete<void>(`${this.base}/payment-schedules/${id}`); }
@@ -63,8 +67,8 @@ export class TreasuryApiService {
   writeOff(id: number) {
     return this.http.get<PayableWriteOff>(`${this.base}/payable-write-offs/${id}`);
   }
-  accountingEntry(sourceDocumentId: number) {
-    return this.http.get<any>(`${environment.API_URL}accountCatalogue/accounting/entries/by-source/${sourceDocumentId}/PAYMENT_VOUCHER`);
+  accountingEntry(sourceDocumentId: number, sourceType = 'PAYMENT_VOUCHER') {
+    return this.http.get<any>(`${environment.API_URL}accountCatalogue/accounting/entries/by-source/${sourceDocumentId}/${sourceType}`);
   }
   createWriteOff(request: WriteOffRequest) {
     return this.http.post<PayableWriteOff>(`${this.base}/payable-write-offs`, request);

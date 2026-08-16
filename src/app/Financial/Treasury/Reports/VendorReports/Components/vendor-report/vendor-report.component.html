@@ -151,7 +151,7 @@
           </p>
         </div>
         <div>
-          <p class="text-sm text-gray-600">Total débitos (pagos)</p>
+          <p class="text-sm text-gray-600">Pagos del período</p>
           <p class="font-mono font-semibold text-green-700">{{ formatCurrency(vendorReport.periodTotals.totalDebits) }}</p>
         </div>
         <div>
@@ -248,13 +248,21 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
       <p-card header="Totales del período" styleClass="bg-gray-50">
         <div class="space-y-3">
-          <div class="flex justify-between items-center">
-            <span>Total débitos (pagos):</span>
-            <span class="font-mono text-green-700 font-bold">{{ formatCurrency(vendorReport.periodTotals.totalDebits) }}</span>
+          <div class="flex justify-between items-center" *ngIf="vendorReport.periodTotals.openingBalance !== 0">
+            <span>Saldo inicial:</span>
+            <span class="font-mono font-bold">{{ formatCurrency(vendorReport.periodTotals.openingBalance) }}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span>Total créditos (facturas):</span>
+            <span>Facturas del período:</span>
             <span class="font-mono text-red-700 font-bold">{{ formatCurrency(vendorReport.periodTotals.totalCredits) }}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span>Pagos del período:</span>
+            <span class="font-mono text-green-700 font-bold">{{ formatCurrency(vendorReport.periodTotals.totalDebits - vendorReport.periodTotals.writeOffTotal) }}</span>
+          </div>
+          <div class="flex justify-between items-center" *ngIf="vendorReport.periodTotals.writeOffTotal > 0">
+            <span>Total bajas CxP:</span>
+            <span class="font-mono text-green-700 font-bold">{{ formatCurrency(vendorReport.periodTotals.writeOffTotal) }}</span>
           </div>
           <p-divider></p-divider>
           <div class="flex justify-between items-center">

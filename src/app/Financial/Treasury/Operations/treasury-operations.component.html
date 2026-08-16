@@ -405,17 +405,41 @@
           </td>
           <td class="text-right font-semibold">{{ scheduleTotal(item) | currency:'COP':'symbol':'1.0-2' }}</td>
           <td>{{ item.retryCount }}</td>
-          <td>{{ item.voucherId || '-' }}</td>
+          <td>
+            <button
+              *ngIf="canViewScheduleVoucher(item)"
+              type="button"
+              class="font-mono font-semibold text-blue-600 hover:underline bg-transparent border-0 p-0"
+              (click)="openScheduleVoucher(item)">
+              {{ scheduleVoucherLabel(item) }}
+            </button>
+            <span *ngIf="!canViewScheduleVoucher(item)">—</span>
+          </td>
           <td>
             <div class="action-buttons flex flex-wrap gap-1">
               <p-button
-                *ngIf="item.status === 'SCHEDULED'"
+                label="Ver detalle"
+                icon="pi pi-eye"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="showScheduleDetail(item)">
+              </p-button>
+              <p-button
+                *ngIf="canCancelSchedule(item)"
                 label="Cancelar"
                 icon="pi pi-ban"
                 size="small"
                 severity="secondary"
                 [outlined]="true"
                 (onClick)="cancel(item)">
+              </p-button>
+              <p-button
+                *ngIf="canViewScheduleVoucher(item)"
+                label="Ver comprobante"
+                icon="pi pi-file"
+                size="small"
+                (onClick)="openScheduleVoucher(item)">
               </p-button>
               <p-button
                 *ngIf="item.status === 'FAILED'"
@@ -454,31 +478,45 @@
       <ng-template pTemplate="header">
         <tr>
           <th>N.º</th>
-          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Proveedor</th>
+          <th>Factura / referencia</th>
           <th class="text-right">Total</th>
-          <th>Motivo</th>
-          <th style="min-width: 10rem">Acciones</th>
+          <th>Cuenta contrapartida</th>
+          <th>Estado</th>
+          <th style="min-width: 12rem">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-item>
         <tr>
-          <td class="font-mono">{{ item.id }}</td>
+          <td class="font-mono">{{ writeOffNumberLabel(item) }}</td>
+          <td>{{ writeOffDateLabel(item) }}</td>
+          <td>{{ writeOffSupplierLabel(item) }}</td>
+          <td class="font-mono text-blue-600">{{ writeOffInvoiceReference(item) }}</td>
+          <td class="text-right font-semibold">{{ item.total | currency:'COP' }}</td>
+          <td>{{ writeOffCounterpartLabel(item) }}</td>
           <td>
             <p-tag [value]="writeOffLabel(item.status)" [severity]="getStatusSeverity(item.status)"></p-tag>
           </td>
-          <td class="text-right font-semibold">{{ item.total | currency:'COP' }}</td>
-          <td>{{ item.reason }}</td>
           <td>
             <div class="action-buttons flex flex-wrap gap-1">
               <p-button
-                *ngIf="item.status === 'DRAFT' || item.status === 'FAILED'"
+                label="Ver detalle"
+                icon="pi pi-eye"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="showWriteOffDetail(item)">
+              </p-button>
+              <p-button
+                *ngIf="canPostWriteOff(item)"
                 [label]="item.status === 'FAILED' ? 'Reintentar' : 'Contabilizar'"
                 icon="pi pi-check"
                 size="small"
                 (onClick)="confirmWriteOff(item)">
               </p-button>
               <p-button
-                *ngIf="item.status === 'DRAFT'"
+                *ngIf="canDiscardWriteOff(item)"
                 label="Descartar borrador"
                 icon="pi pi-trash"
                 size="small"
@@ -489,7 +527,16 @@
                 (onClick)="discardDraftWriteOff(item)">
               </p-button>
               <p-button
-                *ngIf="item.status === 'POSTED' || item.status === 'VOID_FAILED'"
+                *ngIf="canShowWriteOffAccounting(item)"
+                label="Ver asiento"
+                icon="pi pi-book"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="showWriteOffAccounting(item)">
+              </p-button>
+              <p-button
+                *ngIf="canVoidWriteOff(item)"
                 [label]="item.status === 'VOID_FAILED' ? 'Reintentar anulación' : 'Anular'"
                 icon="pi pi-times"
                 size="small"
@@ -505,7 +552,7 @@
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="5" class="text-center py-8">
+          <td colspan="8" class="text-center py-8">
             <div class="flex flex-col items-center gap-3">
               <i class="pi pi-inbox text-4xl text-gray-400"></i>
               <p class="text-gray-600">No hay bajas de CxP</p>
@@ -1008,6 +1055,186 @@
         severity="danger"
         [disabled]="busy"
         (onClick)="confirmDiscardWriteOff()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  header="Detalle de baja de CxP"
+  [(visible)]="writeOffDetailDialogVisible"
+  [modal]="true"
+  [style]="{ width: 'min(520px, 95vw)' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cancelWriteOffDetailDialog()">
+  <div class="flex flex-col gap-3 text-sm" *ngIf="writeOffDetailTarget as item">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div>
+        <span class="text-gray-500">N.º</span>
+        <p class="font-mono font-semibold m-0">{{ writeOffNumberLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Fecha</span>
+        <p class="font-semibold m-0">{{ writeOffDateLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Proveedor</span>
+        <p class="font-semibold m-0">{{ writeOffSupplierLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Factura / referencia</span>
+        <p class="font-mono font-semibold text-blue-600 m-0">{{ writeOffInvoiceReference(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Saldo original</span>
+        <p class="font-semibold m-0">{{ writeOffOriginalBalanceLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Saldo disponible</span>
+        <p class="font-semibold m-0">{{ writeOffAvailableBalanceLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Monto de baja</span>
+        <p class="font-semibold m-0">{{ item.total | currency:'COP' }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Estado</span>
+        <p class="m-0">
+          <p-tag [value]="writeOffLabel(item.status)" [severity]="getStatusSeverity(item.status)"></p-tag>
+        </p>
+      </div>
+      <div>
+        <span class="text-gray-500">Cuenta CxP</span>
+        <p class="font-semibold m-0">{{ writeOffPayableAccountLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Cuenta contrapartida</span>
+        <p class="font-semibold m-0">{{ writeOffCounterpartLabel(item) }}</p>
+      </div>
+      <div *ngIf="canShowWriteOffAccounting(item)">
+        <span class="text-gray-500">Asiento</span>
+        <p class="font-semibold m-0">{{ writeOffAccountingEntryLabel(item) }}</p>
+      </div>
+    </div>
+    <div *ngIf="item.reason">
+      <span class="text-gray-500">Motivo</span>
+      <p class="m-0 mt-1">{{ item.reason }}</p>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-end">
+      <p-button
+        label="Cerrar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="cancelWriteOffDetailDialog()">
+      </p-button>
+      <p-button
+        *ngIf="writeOffDetailTarget && canShowWriteOffAccounting(writeOffDetailTarget)"
+        label="Ver asiento"
+        icon="pi pi-book"
+        (onClick)="showWriteOffAccounting(writeOffDetailTarget!)">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  header="Detalle de programación de pago"
+  [(visible)]="scheduleDetailDialogVisible"
+  [modal]="true"
+  [style]="{ width: 'min(560px, 95vw)' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cancelScheduleDetailDialog()">
+  <div class="flex flex-col gap-3 text-sm" *ngIf="scheduleDetailTarget as item">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div>
+        <span class="text-gray-500">Programación</span>
+        <p class="font-mono font-semibold m-0">#{{ item.id }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Fecha de creación</span>
+        <p class="font-semibold m-0">{{ formatTreasuryInstant(item.createdAt) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Fecha de ejecución</span>
+        <p class="font-semibold m-0">{{ item.executionDate }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Tipo</span>
+        <p class="font-semibold m-0">{{ scheduleTypeLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Proveedor</span>
+        <p class="font-semibold m-0">{{ scheduleSuppliersLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Método</span>
+        <p class="font-semibold m-0">{{ scheduleMethodLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Cuenta origen</span>
+        <p class="font-semibold m-0">{{ scheduleBankLabel(item) }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Total</span>
+        <p class="font-semibold m-0">{{ scheduleTotal(item) | currency:'COP' }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Estado</span>
+        <p class="m-0">
+          <p-tag [value]="scheduleLabel(item.status)" [severity]="getStatusSeverity(item.status)"></p-tag>
+        </p>
+      </div>
+      <div>
+        <span class="text-gray-500">Reintentos</span>
+        <p class="font-semibold m-0">{{ item.retryCount }}</p>
+      </div>
+      <div>
+        <span class="text-gray-500">Último intento</span>
+        <p class="font-semibold m-0">{{ formatTreasuryInstant(item.updatedAt) }}</p>
+      </div>
+      <div *ngIf="canViewScheduleVoucher(item)">
+        <span class="text-gray-500">Comprobante</span>
+        <p class="font-mono font-semibold text-blue-600 m-0">{{ scheduleVoucherLabel(item) }}</p>
+      </div>
+    </div>
+    <div>
+      <span class="text-gray-500">Factura(s)</span>
+      <p class="font-mono text-sm m-0 mt-1">{{ scheduleInvoicesLabel(item) }}</p>
+    </div>
+    <div *ngIf="item.observations">
+      <span class="text-gray-500">Observaciones</span>
+      <p class="m-0 mt-1">{{ item.observations }}</p>
+    </div>
+    <div *ngIf="item.failureReason">
+      <span class="text-gray-500">Motivo del error</span>
+      <p class="m-0 mt-1 text-red-700">{{ item.failureReason }}</p>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="flex gap-2 justify-end flex-wrap">
+      <p-button
+        label="Cerrar"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="cancelScheduleDetailDialog()">
+      </p-button>
+      <p-button
+        *ngIf="scheduleDetailTarget && canViewScheduleVoucher(scheduleDetailTarget)"
+        label="Ver comprobante"
+        icon="pi pi-file"
+        (onClick)="openScheduleVoucher(scheduleDetailTarget!)">
+      </p-button>
+      <p-button
+        *ngIf="scheduleDetailTarget && canCancelSchedule(scheduleDetailTarget)"
+        label="Cancelar"
+        icon="pi pi-ban"
+        severity="danger"
+        [outlined]="true"
+        (onClick)="cancel(scheduleDetailTarget!); cancelScheduleDetailDialog()">
       </p-button>
     </div>
   </ng-template>

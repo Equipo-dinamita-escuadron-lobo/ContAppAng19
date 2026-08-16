@@ -82,7 +82,41 @@ export class ExpenseReceiptsListComponent implements OnInit {
   ngOnInit(): void {
     this.initializeForm();
     this.setupFilterSubscriptions();
+    this.showVoidNavigationFeedback();
     this.loadReceipts();
+  }
+
+  private showVoidNavigationFeedback(): void {
+    const navigationState = this.router.lastSuccessfulNavigation?.extras?.state as {
+      voidReceiptFeedback?: {
+        severity: 'success' | 'warn' | 'error';
+        summary: string;
+        detail: string;
+      };
+    } | undefined;
+    const historyState = history.state as {
+      voidReceiptFeedback?: {
+        severity: 'success' | 'warn' | 'error';
+        summary: string;
+        detail: string;
+      };
+    };
+    const feedback = navigationState?.voidReceiptFeedback ?? historyState?.voidReceiptFeedback;
+    if (!feedback) {
+      return;
+    }
+    if (historyState?.voidReceiptFeedback) {
+      const { voidReceiptFeedback: _, ...rest } = history.state as Record<string, unknown>;
+      history.replaceState(rest, '');
+    }
+    setTimeout(() => {
+      this.messageService.add({
+        severity: feedback.severity,
+        summary: feedback.summary,
+        detail: feedback.detail,
+        life: 8000,
+      });
+    });
   }
 
   initializeForm(): void {

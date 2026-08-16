@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, Observable, of, Subject, timer, TimeoutError } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, filter, finalize, map, switchMap, take, takeUntil, takeWhile, timeout } from 'rxjs/operators';
@@ -42,10 +43,13 @@ import {
   filterSelectablePaymentMethods,
 } from '../Shared/treasury-account.integration';
 import {
+  formatTreasuryInstant,
   scheduleInvoicesLabel,
   scheduleMethodLabel,
   scheduleSuppliersLabel,
   scheduleTotal,
+  scheduleTypeLabel,
+  scheduleVoucherLabel,
 } from '../Shared/treasury-schedule-display';
 import { buildThirdPartyNameMap, resolveSupplierName } from '../Shared/treasury-third-party.integration';
 import {
@@ -139,7 +143,11 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   minExecutionDate!: Date;
   writeOffDialogVisible = false;
   writeOffDiscardDialogVisible = false;
+  writeOffDetailDialogVisible = false;
+  scheduleDetailDialogVisible = false;
   writeOffDiscardTarget?: PayableWriteOff;
+  writeOffDetailTarget?: PayableWriteOff;
+  scheduleDetailTarget?: PaymentSchedule;
   writeOffTarget?: Payable;
   writeOffAmount?: number;
   writeOffCounterpartAccountId?: number;
@@ -193,12 +201,217 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   readonly noAvailableBankAccountsMessage = NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE;
   readonly voucherStatusOptions = voucherStatusFilterOptions();
   private supplierNames = new Map<number, string>();
+  private payableByInvoiceId = new Map<number, Payable>();
 
   statusLabel = voucherStatusLabel;
 
   voucherAccountingEntryLabel(voucher: PaymentVoucher): string {
     const code = voucher.accountingEntryCode?.trim();
     return code ? code : '—';
+  }
+
+  writeOffNumberLabel(item: PayableWriteOff): string {
+    return String(item.id);
+  }
+
+  writeOffAccountingEntryLabel(item: PayableWriteOff): string {
+    const code = item.accountingEntryCode?.trim();
+    return code ? code : '—';
+  }
+
+  writeOffDateLabel(item: PayableWriteOff): string {
+    const raw = item.createdAt;
+    if (!raw) {
+      return '—';
+    }
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) {
+      return '—';
+    }
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+
+  writeOffSupplierLabel(item: PayableWriteOff): string {
+    const detail = item.details?.[0];
+    let supplierId = detail?.supplierId != null ? Number(detail.supplierId) : undefined;
+    if (supplierId == null) {
+      const payable = this.findPayableForWriteOff(item);
+      if (payable?.supplierId != null) {
+        supplierId = Number(payable.supplierId);
+      }
+    }
+    if (supplierId == null) {
+      return '—';
+    }
+    return resolveSupplierName(this.supplierNames, supplierId);
+  }
+
+  writeOffInvoiceReference(item: PayableWriteOff): string {
+    const details = item.details ?? [];
+    if (!details.length) {
+      return '—';
+    }
+    const refs = details.map((detail) => {
+      const fromApi = detail.invoiceReference?.trim();
+      if (fromApi) {
+        return fromApi;
+      }
+      const payable = this.payables.find((entry) => entry.id === detail.invoiceId);
+      if (payable?.reference?.trim()) {
+        return payable.reference.trim();
+      }
+      return null;
+    }).filter((value): value is string => Boolean(value));
+    if (!refs.length) {
+      return '—';
+    }
+    return [...new Set(refs)].join(', ');
+  }
+
+  writeOffCounterpartLabel(item: PayableWriteOff): string {
+    const id = item.counterpartAccountId;
+    const account = id != null
+      ? this.accounts.find((entry) => Number(entry.id) === Number(id))
+      : undefined;
+    if (account) {
+      const code = this.resolveAccountCode(account);
+      return `${code} - ${account.description}`;
+    }
+    const code = item.counterpartAccountCode?.trim();
+    if (code) {
+      const byCode = this.accounts.find(
+        (entry) => this.resolveAccountCode(entry) === code,
+      );
+      if (byCode) {
+        return `${this.resolveAccountCode(byCode)} - ${byCode.description}`;
+      }
+      return code;
+    }
+    return '—';
+  }
+
+  writeOffPayableAccountLabel(item: PayableWriteOff): string {
+    const detail = item.details?.[0];
+    if (!detail) {
+      return '—';
+    }
+    const account = this.accounts.find(
+      (entry) => entry.id === detail.payableAccountId
+        || this.resolveAccountCode(entry) === detail.payableAccountCode,
+    );
+    if (account) {
+      return `${this.resolveAccountCode(account)} - ${account.description}`;
+    }
+    return detail.payableAccountCode?.trim() ?? '—';
+  }
+
+  writeOffAvailableBalanceLabel(item: PayableWriteOff): string {
+    const detail = item.details?.[0];
+    if (detail?.availableAmount != null) {
+      return this.formatMoney(Number(detail.availableAmount));
+    }
+    const payable = this.findPayableForWriteOff(item);
+    if (payable?.availableAmount != null) {
+      return this.formatMoney(Number(payable.availableAmount));
+    }
+    return '—';
+  }
+
+  writeOffOriginalBalanceLabel(item: PayableWriteOff): string {
+    const detail = item.details?.[0];
+    if (detail?.originalAmount != null) {
+      return this.formatMoney(Number(detail.originalAmount));
+    }
+    const payable = this.findPayableForWriteOff(item);
+    if (payable?.originalAmount != null) {
+      return this.formatMoney(Number(payable.originalAmount));
+    }
+    return '—';
+  }
+
+  canPostWriteOff(item: PayableWriteOff): boolean {
+    return item.status === 'DRAFT' || item.status === 'FAILED';
+  }
+
+  canDiscardWriteOff(item: PayableWriteOff): boolean {
+    return item.status === 'DRAFT';
+  }
+
+  canVoidWriteOff(item: PayableWriteOff): boolean {
+    return item.status === 'POSTED' || item.status === 'VOID_FAILED';
+  }
+
+  canShowWriteOffAccounting(item: PayableWriteOff): boolean {
+    return item.accountingEntryId != null && item.status !== 'DRAFT';
+  }
+
+  showWriteOffDetail(item: PayableWriteOff) {
+    this.writeOffDetailTarget = item;
+    this.writeOffDetailDialogVisible = true;
+    if (!item.id) {
+      return;
+    }
+    this.api.writeOff(item.id).subscribe({
+      next: (fresh) => {
+        const normalized = this.normalizeWriteOff(fresh);
+        this.writeOffDetailTarget = normalized;
+        this.upsertWriteOff(fresh);
+        this.ensurePayablesForWriteOffs([normalized]).subscribe();
+      },
+    });
+  }
+
+  cancelWriteOffDetailDialog() {
+    this.writeOffDetailDialogVisible = false;
+    this.writeOffDetailTarget = undefined;
+  }
+
+  showWriteOffAccounting(item: PayableWriteOff) {
+    if (!item.accountingEntryId) {
+      return;
+    }
+    this.busy = true;
+    this.accountingEntry = null;
+    this.accountingEntryHeader = {};
+    this.accountingMovements = [];
+    this.accountingDebitTotal = 0;
+    this.accountingCreditTotal = 0;
+    const accountLookup = buildAccountCatalogueLookup(this.accounts);
+    const supplierIds = [...new Set((item.details ?? []).map((detail) => detail.supplierId))];
+    const supplierLabel = supplierIds
+      .map((id) => this.supplierNames.get(Number(id)) ?? '—')
+      .join(', ');
+
+    this.api.accountingEntry(item.id, 'PAYABLE_WRITEOFF').subscribe({
+      next: (value) => {
+        const entry = value?.data ?? value;
+        const view = buildAccountingEntryView(
+          entry as Record<string, unknown>,
+          mapAccountingMovementsForView(entry?.movements ?? entry?.details ?? [], accountLookup),
+          {
+            documentTypeLabel: accountingSourceDocumentTypeLabel('PAYABLE_WRITEOFF'),
+            voucherNumber: this.writeOffNumberLabel(item),
+            supplierLabel,
+            entryCode: this.writeOffAccountingEntryLabel(item) !== '—'
+              ? this.writeOffAccountingEntryLabel(item)
+              : undefined,
+          },
+        );
+        this.accountingEntry = entry;
+        this.accountingEntryHeader = view.header;
+        this.accountingMovements = view.movements;
+        this.accountingDebitTotal = this.accountingMovements.reduce((sum, row) => sum + row.debit, 0);
+        this.accountingCreditTotal = this.accountingMovements.reduce((sum, row) => sum + row.credit, 0);
+        this.busy = false;
+      },
+      error: (err) => {
+        this.error = err?.error?.message ?? 'No fue posible consultar el asiento.';
+        this.busy = false;
+      },
+    });
   }
   scheduleLabel = scheduleStatusLabel;
   writeOffLabel = voucherStatusLabel;
@@ -217,6 +430,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     private readonly exportService: TreasuryExportService,
     private readonly messageService: MessageService,
     private readonly expenseReceiptService: ExpenseReceiptService,
+    private readonly router: Router,
   ) {
     this.enterpriseId = this.storage.getIdEnterprise();
   }
@@ -356,6 +570,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         this.applyVoucherFilters();
         this.schedules = data.schedules;
         this.writeOffs = this.normalizeWriteOffList(data.writeOffs);
+        this.ensurePayablesForWriteOffs(this.writeOffs).subscribe();
         this.banks = data.banks.content;
         this.bankOptions = this.banks.map((bank: any) => ({
           id: bank.id,
@@ -406,6 +621,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     switch (status) {
       case 'POSTED':
       case 'SCHEDULED':
+      case 'EXECUTED':
         return 'success';
       case 'DRAFT':
       case 'POSTING':
@@ -909,6 +1125,57 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     return scheduleMethodLabel(item, this.methods);
   }
 
+  scheduleTypeLabel = scheduleTypeLabel;
+  formatTreasuryInstant = formatTreasuryInstant;
+
+  scheduleVoucherLabel(item: PaymentSchedule): string {
+    return scheduleVoucherLabel(item, this.voucherNumberById());
+  }
+
+  canCancelSchedule(item: PaymentSchedule): boolean {
+    return item.status === 'SCHEDULED';
+  }
+
+  canViewScheduleVoucher(item: PaymentSchedule): boolean {
+    return item.status === 'EXECUTED' && item.voucherId != null;
+  }
+
+  showScheduleDetail(item: PaymentSchedule) {
+    this.scheduleDetailTarget = item;
+    this.scheduleDetailDialogVisible = true;
+  }
+
+  cancelScheduleDetailDialog() {
+    this.scheduleDetailDialogVisible = false;
+    this.scheduleDetailTarget = undefined;
+  }
+
+  scheduleBankLabel(item: PaymentSchedule): string {
+    if (!item.bankAccountId) {
+      return '—';
+    }
+    const bank = this.banks.find((entry) => Number(entry.id) === Number(item.bankAccountId));
+    if (!bank) {
+      return '—';
+    }
+    return `${bank.bank?.name || 'Banco'} - ${bank.accountNumber}`;
+  }
+
+  openScheduleVoucher(item: PaymentSchedule) {
+    if (!item.voucherId) {
+      return;
+    }
+    this.router.navigate(['/financial/treasury/expense-receipts/details', item.voucherId]);
+  }
+
+  private voucherNumberById(): Map<number, string> {
+    return new Map(
+      this.allVouchers
+        .filter((voucher) => voucher.voucherNumber)
+        .map((voucher) => [voucher.id, voucher.voucherNumber]),
+    );
+  }
+
   private payableReferenceMap(): Map<number, string> {
     return new Map(this.payables.map((payable) => [payable.id, payable.reference]));
   }
@@ -1221,6 +1488,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       next: ({ updated, payables, writeOffs }) => {
         this.payables = payables;
         this.writeOffs = this.normalizeWriteOffList(writeOffs);
+        this.ensurePayablesForWriteOffs(this.writeOffs).subscribe();
         if (updated.status === 'POSTED') {
           const stillPending = invoiceId != null
             ? payables.some((payable) => payable.id === invoiceId)
@@ -1299,6 +1567,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       next: ({ updated, payables, writeOffs }) => {
         this.payables = payables;
         this.writeOffs = this.normalizeWriteOffList(writeOffs);
+        this.ensurePayablesForWriteOffs(this.writeOffs).subscribe();
         if (updated.status === 'VOIDED') {
           this.messageService.add({
             severity: 'success',
@@ -1332,6 +1601,48 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     return detail?.invoiceId != null ? Number(detail.invoiceId) : undefined;
   }
 
+  private findPayableForWriteOff(item: PayableWriteOff): Payable | undefined {
+    const invoiceId = this.writeOffInvoiceId(item);
+    if (invoiceId == null) {
+      return undefined;
+    }
+    const cached = this.payableByInvoiceId.get(invoiceId);
+    if (cached) {
+      return cached;
+    }
+    return this.payables.find((entry) => entry.id === invoiceId);
+  }
+
+  private ensurePayablesForWriteOffs(writeOffs: PayableWriteOff[]): Observable<void> {
+    const invoiceIds = [...new Set(
+      writeOffs.flatMap((writeOff) =>
+        (writeOff.details ?? [])
+          .map((detail) => detail.invoiceId)
+          .filter((invoiceId): invoiceId is number => invoiceId != null),
+      ),
+    )];
+    const missing = invoiceIds.filter((invoiceId) =>
+      !this.payables.some((payable) => payable.id === invoiceId)
+      && !this.payableByInvoiceId.has(invoiceId),
+    );
+    if (!missing.length) {
+      return of(void 0);
+    }
+    return forkJoin(
+      missing.map((invoiceId) =>
+        this.api.payable(invoiceId, this.enterpriseId).pipe(
+          catchError(() => of(null)),
+          map((payable) => {
+            if (payable) {
+              this.payableByInvoiceId.set(payable.id, payable);
+            }
+            return payable;
+          }),
+        ),
+      ),
+    ).pipe(map(() => void 0));
+  }
+
   private waitForWriteOffPosting(writeOffId: number) {
     return timer(0, TreasuryOperationsComponent.POST_POLL_INTERVAL_MS).pipe(
       take(TreasuryOperationsComponent.POST_POLL_MAX_ATTEMPTS),
@@ -1356,11 +1667,17 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     const record = raw as Record<string, unknown>;
     const rawStatus = record['status'];
     const status = typeof rawStatus === 'string' ? rawStatus : 'DRAFT';
+    const createdAt = typeof record['createdAt'] === 'string' ? record['createdAt'] : undefined;
+    const accountingEntryCode = typeof record['accountingEntryCode'] === 'string'
+      ? record['accountingEntryCode']
+      : undefined;
     return {
       ...(raw as PayableWriteOff),
       id: Number(record['id']),
       total: Number(record['total'] ?? 0),
       status,
+      createdAt,
+      accountingEntryCode,
     };
   }
 
@@ -1655,17 +1972,20 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
           this.scheduleLabel(item.status),
           this.scheduleTotal(item),
           item.retryCount,
-          item.voucherId || '-',
+          this.scheduleVoucherLabel(item),
         ]),
       },
       {
         title: 'Bajas de CxP',
-        headers: ['N.º', 'Estado', 'Total', 'Motivo'],
+        headers: ['N.º', 'Fecha', 'Proveedor', 'Factura / referencia', 'Total', 'Cuenta contrapartida', 'Estado'],
         rows: this.writeOffs.map((item) => [
-          item.id,
-          this.writeOffLabel(item.status),
+          this.writeOffNumberLabel(item),
+          this.writeOffDateLabel(item),
+          this.writeOffSupplierLabel(item),
+          this.writeOffInvoiceReference(item),
           item.total,
-          item.reason || '-',
+          this.writeOffCounterpartLabel(item),
+          this.writeOffLabel(item.status),
         ]),
       },
     ];

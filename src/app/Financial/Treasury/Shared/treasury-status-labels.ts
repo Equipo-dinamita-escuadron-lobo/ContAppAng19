@@ -29,6 +29,7 @@ const PAYABLE_LABELS: Record<string, string> = {
 const TRANSACTION_TYPE_LABELS: Record<string, string> = {
   Bill: 'Factura de compra',
   Payment: 'Pago a proveedor',
+  WriteOff: 'Baja CxP',
 };
 
 const ACCOUNTING_ENTRY_LABELS: Record<string, string> = {
@@ -145,6 +146,7 @@ const LAB_DESCRIPTION_PATTERNS: Array<{ test: RegExp; label: string }> = [
 export function educationalDescription(raw?: string | null, fallback = 'Pago a proveedor'): string {
   const text = (raw ?? '').trim();
   if (!text) return fallback;
+  if (/^\d+$/.test(text)) return fallback;
 
   for (const { test, label } of LAB_DESCRIPTION_PATTERNS) {
     if (test.test(text)) return label;

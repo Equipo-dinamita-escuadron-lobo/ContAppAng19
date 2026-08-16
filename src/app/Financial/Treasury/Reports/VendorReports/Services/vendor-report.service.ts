@@ -11,7 +11,7 @@ import { ePersonType } from '../../../../../GeneralMasters/ThirdParties/models/e
 import { eThirdType } from '../../../../../GeneralMasters/ThirdParties/models/eThirdType';
 import { TreasuryApiService } from '../../../Shared/treasury-api.service';
 import { educationalDescription } from '../../../Shared/treasury-status-labels';
-import { VendorListFilter, VendorReport, VendorReportSummary } from '../Models/VendorReport';
+import { VendorListFilter, VendorReport, VendorReportSummary, VendorReportTransaction } from '../Models/VendorReport';
 
 export type VendorSupplierOption = Third & { displayName: string };
 
@@ -123,7 +123,16 @@ export class VendorReportService {
       )
       .pipe(
         map((statement) => {
-          const bills = (statement.invoices || []).map((inv: any) => ({
+          const openingBalance = Number(statement.openingBalance || 0);
+          const writeOffTotal = Number(statement.writeOffTotal || 0);
+          const totalCredits = Number(statement.invoiced || 0);
+          const periodPayments = Number(statement.paid || 0);
+          const totalDebits = periodPayments + writeOffTotal;
+          const closingBalance = Number(statement.pending || 0);
+          const startIso = this.toIsoDate(startDate);
+          const endIso = this.toIsoDate(endDate);
+
+          const bills: VendorReportTransaction[] = (statement.invoices || []).map((inv: any) => ({
             date: new Date(inv.issueDate),
             dueDate: new Date(inv.dueDate),
             reference: inv.reference,
@@ -132,10 +141,10 @@ export class VendorReportService {
             description: 'Factura de compra',
             debits: 0,
             credits: Number(inv.originalAmount || 0),
-            balance: Number(inv.pendingAmount || 0),
+            balance: 0,
           }));
 
-          const payments = (statement.vouchers || []).flatMap((voucher: any) =>
+          const payments: VendorReportTransaction[] = (statement.vouchers || []).flatMap((voucher: any) =>
             (voucher.details || [])
               .filter((detail: any) => detail.supplierId === vendorId)
               .map((detail: any) => ({
@@ -143,44 +152,54 @@ export class VendorReportService {
                 reference: detail.invoiceReference,
                 expenseReceiptNumber: voucher.voucherNumber,
                 type: 'Payment' as const,
-                description: educationalDescription(voucher.observations, 'Pago a proveedor'),
-                debits: Number(detail.amountPaid || 0),
+                description: this.paymentDescription(voucher.observations, voucher.voucherNumber),
+                debits: Number(detail.amountPaid ?? detail.amount ?? 0),
                 credits: 0,
-                balance: Number(detail.remainingBalance || 0),
+                balance: 0,
               })),
           );
 
-          const start = new Date(startDate);
-          start.setHours(0, 0, 0, 0);
-          const end = new Date(endDate);
-          end.setHours(23, 59, 59, 999);
+          const writeOffRows: VendorReportTransaction[] = (statement.writeOffs || []).flatMap((writeOff: any) =>
+            (writeOff.details || [])
+              .filter((detail: any) => detail.supplierId === vendorId)
+              .map((detail: any) => ({
+                date: new Date(writeOff.createdAt),
+                reference: detail.invoiceReference || '',
+                type: 'WriteOff' as const,
+                description: (writeOff.reason || '').trim() || 'Baja de cuenta por pagar',
+                debits: Number(detail.amount || 0),
+                credits: 0,
+                balance: 0,
+              })),
+          );
 
-          const transactions = [...bills, ...payments]
-            .filter((row) => row.date >= start && row.date <= end)
-            .sort((a, b) => a.date.getTime() - b.date.getTime());
-
-          const totalDebits = payments.reduce((s, p) => s + p.debits, 0);
-          const totalCredits = bills.reduce((s, b) => s + b.credits, 0);
-          const pending = Number(statement.pending || 0);
+          const transactions = this.applyRunningBalance(
+            [...bills, ...payments, ...writeOffRows]
+              .filter((row) => this.inIsoDateRange(row.date, startIso, endIso))
+              .sort((a, b) => a.date.getTime() - b.date.getTime()),
+            openingBalance,
+          );
 
           return {
             vendor: { id: vendorId, name: vendorName || `Proveedor ${vendorId}` },
             dateRange: { startDate, endDate },
             transactions,
             periodTotals: {
+              openingBalance,
               totalDebits,
               totalCredits,
-              netBalance: pending,
+              writeOffTotal,
+              netBalance: closingBalance,
             },
-            totalDue: pending,
+            totalDue: closingBalance,
             agingReport: {
               prePaid: 0,
-              current: pending,
+              current: closingBalance,
               days0to30: 0,
               days31to60: 0,
               days61to90: 0,
               days91Plus: 0,
-              total: pending,
+              total: closingBalance,
             },
           };
         }),
@@ -233,7 +252,7 @@ export class VendorReportService {
         t.reference || '-',
         t.documentNumber || '-',
         t.expenseReceiptNumber || '-',
-        t.type === 'Bill' ? 'Factura' : 'Pago',
+        t.type === 'Bill' ? 'Factura' : t.type === 'Payment' ? 'Pago' : 'Baja CxP',
         t.description || '-',
         t.debits > 0 ? fmt(t.debits) : '-',
         t.credits > 0 ? fmt(t.credits) : '-',
@@ -254,8 +273,14 @@ export class VendorReportService {
       startY: finalY + 16,
       theme: 'plain',
       body: [
-        ['Total débitos (pagos)', fmt(report.periodTotals.totalDebits)],
-        ['Total créditos (facturas)', fmt(report.periodTotals.totalCredits)],
+        ...(report.periodTotals.openingBalance !== 0
+          ? [['Saldo inicial', fmt(report.periodTotals.openingBalance)]]
+          : []),
+        ['Pagos del período', fmt(report.periodTotals.totalDebits - report.periodTotals.writeOffTotal)],
+        ...(report.periodTotals.writeOffTotal > 0
+          ? [['Total bajas CxP', fmt(report.periodTotals.writeOffTotal)]]
+          : []),
+        ['Facturas del período', fmt(report.periodTotals.totalCredits)],
         ['Saldo pendiente', fmt(report.totalDue)],
       ],
       styles: { fontSize: 10 },
@@ -303,8 +328,14 @@ export class VendorReportService {
       ],
       ['Generado:', fmtDate(new Date())],
       [],
-      ['Total débitos (pagos)', report.periodTotals.totalDebits],
-      ['Total créditos (facturas)', report.periodTotals.totalCredits],
+      ...(report.periodTotals.openingBalance !== 0
+        ? [['Saldo inicial', report.periodTotals.openingBalance]]
+        : []),
+      ['Pagos del período', report.periodTotals.totalDebits - report.periodTotals.writeOffTotal],
+      ...(report.periodTotals.writeOffTotal > 0
+        ? [['Total bajas CxP', report.periodTotals.writeOffTotal]]
+        : []),
+      ['Facturas del período', report.periodTotals.totalCredits],
       ['Saldo pendiente', report.totalDue],
       [],
     ];
@@ -332,7 +363,7 @@ export class VendorReportService {
       t.reference || '',
       t.documentNumber || '',
       t.expenseReceiptNumber || '',
-      t.type === 'Bill' ? 'Factura' : 'Pago',
+      t.type === 'Bill' ? 'Factura' : t.type === 'Payment' ? 'Pago' : 'Baja CxP',
       t.description || '',
       t.debits || 0,
       t.credits || 0,
@@ -384,6 +415,30 @@ export class VendorReportService {
 
   exportToExcel(report: VendorReport): Blob {
     return this.buildExcel(report);
+  }
+
+  private paymentDescription(observations?: string | null, voucherNumber?: string | null): string {
+    const fallback = voucherNumber
+      ? `Pago comprobante ${voucherNumber}`
+      : 'Pago a proveedor';
+    return educationalDescription(observations, fallback);
+  }
+
+  private applyRunningBalance(
+    rows: VendorReportTransaction[],
+    openingBalance: number,
+  ): VendorReportTransaction[] {
+    let running = openingBalance;
+    return rows.map((row) => {
+      if (row.credits > 0) running += row.credits;
+      if (row.debits > 0) running -= row.debits;
+      return { ...row, balance: running };
+    });
+  }
+
+  private inIsoDateRange(date: Date, startIso: string, endIso: string): boolean {
+    const value = this.toIsoDate(date);
+    return value >= startIso && value <= endIso;
   }
 
   private formatMoney(amount: number): string {

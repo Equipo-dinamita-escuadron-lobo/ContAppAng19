@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -12,6 +13,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
+import { DialogModule } from 'primeng/dialog';
 
 import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage.method';
 import { MessageService } from 'primeng/api';
@@ -31,11 +33,15 @@ import { PaymentMethodsServiceService } from '../../../../../GeneralMasters/Paym
 import { ThirdService } from '../../../../../GeneralMasters/ThirdParties/Services/third.service';
 import { buildThirdPartyNameMap } from '../../../Shared/treasury-third-party.integration';
 import {
+  formatTreasuryInstant,
   scheduleInvoicesLabel,
   scheduleMethodLabel,
   scheduleSuppliersLabel,
   scheduleTotal,
+  scheduleTypeLabel,
+  scheduleVoucherLabel,
 } from '../../../Shared/treasury-schedule-display';
+import { BankAccountsService } from '../../../../../GeneralMasters/BankAccounts/services/bank-accounts.service';
 
 interface SupplierFilterOption {
   label: string;
@@ -56,6 +62,7 @@ interface SupplierFilterOption {
     TagModule,
     CardModule,
     ToastModule,
+    DialogModule,
     ContextualHelpComponent,
   ],
   templateUrl: './bill-list.component.html',
@@ -73,6 +80,11 @@ export class BillListComponent implements OnInit {
   supplierNames = new Map<number, string>();
   payableReferences = new Map<number, string>();
   methods: any[] = [];
+  banks: any[] = [];
+  scheduleDetailDialogVisible = false;
+  scheduleDetailTarget?: PaymentSchedule;
+  scheduleTypeLabel = scheduleTypeLabel;
+  formatTreasuryInstant = formatTreasuryInstant;
 
   loading = false;
   actionBusy = false;
@@ -88,8 +100,11 @@ export class BillListComponent implements OnInit {
     private readonly api: TreasuryApiService,
     private readonly paymentMethods: PaymentMethodsServiceService,
     private readonly thirds: ThirdService,
+    private readonly bankAccounts: BankAccountsService,
     private readonly messageService: MessageService,
     private readonly exportService: TreasuryExportService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -120,10 +135,12 @@ export class BillListComponent implements OnInit {
       methods: this.paymentMethods.findAllActive(enterpriseId),
       thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(catchError(() => of({ content: [] } as any))),
       payables: this.api.pending(enterpriseId),
+      banks: this.bankAccounts.findAllActive(enterpriseId).pipe(catchError(() => of({ content: [] } as any))),
     }).subscribe({
       next: (data) => {
         this.allSchedules = data.schedules ?? [];
         this.methods = data.methods?.content ?? [];
+        this.banks = data.banks?.content ?? [];
         this.supplierNames = buildThirdPartyNameMap(data.thirds?.content || []);
         this.payableReferences = new Map(
           (data.payables ?? []).map((payable: Payable) => [payable.id, payable.reference]),
@@ -132,6 +149,13 @@ export class BillListComponent implements OnInit {
         this.filteredSchedules = [...this.allSchedules];
         this.applyFilters();
         this.loading = false;
+        const scheduleId = Number(this.route.snapshot.queryParamMap.get('scheduleId'));
+        if (scheduleId) {
+          const schedule = this.allSchedules.find((item) => item.id === scheduleId);
+          if (schedule) {
+            this.showScheduleDetail(schedule);
+          }
+        }
       },
       error: (error) => {
         console.error('Error al cargar programaciones:', error);
@@ -213,6 +237,46 @@ export class BillListComponent implements OnInit {
 
   methodLabel(item: PaymentSchedule): string {
     return scheduleMethodLabel(item, this.methods);
+  }
+
+  scheduleVoucherLabel(item: PaymentSchedule): string {
+    return scheduleVoucherLabel(item);
+  }
+
+  canCancelSchedule(item: PaymentSchedule): boolean {
+    return item.status === 'SCHEDULED';
+  }
+
+  canViewScheduleVoucher(item: PaymentSchedule): boolean {
+    return item.status === 'EXECUTED' && item.voucherId != null;
+  }
+
+  showScheduleDetail(item: PaymentSchedule): void {
+    this.scheduleDetailTarget = item;
+    this.scheduleDetailDialogVisible = true;
+  }
+
+  cancelScheduleDetailDialog(): void {
+    this.scheduleDetailDialogVisible = false;
+    this.scheduleDetailTarget = undefined;
+  }
+
+  scheduleBankLabel(item: PaymentSchedule): string {
+    if (!item.bankAccountId) {
+      return '—';
+    }
+    const bank = this.banks.find((entry) => Number(entry.id) === Number(item.bankAccountId));
+    if (!bank) {
+      return '—';
+    }
+    return `${bank.bank?.name || 'Banco'} - ${bank.accountNumber}`;
+  }
+
+  openScheduleVoucher(item: PaymentSchedule): void {
+    if (!item.voucherId) {
+      return;
+    }
+    this.router.navigate(['/financial/treasury/expense-receipts/details', item.voucherId]);
   }
 
   cancelSchedule(schedule: PaymentSchedule): void {
@@ -312,7 +376,7 @@ export class BillListComponent implements OnInit {
       this.scheduleLabel(item.status),
       scheduleTotal(item),
       item.retryCount,
-      item.voucherId || '—',
+      this.scheduleVoucherLabel(item),
     ]);
     const options = {
       title: 'Programación de pagos',

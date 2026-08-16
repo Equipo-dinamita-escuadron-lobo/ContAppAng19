@@ -146,11 +146,28 @@
           </td>
           <td class="text-right font-semibold">{{ formatCurrency(scheduleTotalFn(item)) }}</td>
           <td>{{ item.retryCount }}</td>
-          <td>{{ item.voucherId || '—' }}</td>
+          <td>
+            <button
+              *ngIf="canViewScheduleVoucher(item)"
+              type="button"
+              class="font-mono font-semibold text-blue-600 hover:underline bg-transparent border-0 p-0"
+              (click)="openScheduleVoucher(item)">
+              {{ scheduleVoucherLabel(item) }}
+            </button>
+            <span *ngIf="!canViewScheduleVoucher(item)">—</span>
+          </td>
           <td>
             <div class="flex flex-wrap gap-1">
               <p-button
-                *ngIf="item.status === 'SCHEDULED'"
+                label="Ver detalle"
+                icon="pi pi-eye"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="showScheduleDetail(item)">
+              </p-button>
+              <p-button
+                *ngIf="canCancelSchedule(item)"
                 label="Cancelar"
                 icon="pi pi-ban"
                 size="small"
@@ -158,6 +175,14 @@
                 [outlined]="true"
                 [disabled]="actionBusy"
                 (onClick)="cancelSchedule(item)">
+              </p-button>
+              <p-button
+                *ngIf="canViewScheduleVoucher(item)"
+                label="Ver comprobante"
+                icon="pi pi-file"
+                size="small"
+                [disabled]="actionBusy"
+                (onClick)="openScheduleVoucher(item)">
               </p-button>
               <p-button
                 *ngIf="item.status === 'FAILED'"
@@ -236,6 +261,107 @@
       </div>
     </p-card>
   </div>
+
+  <p-dialog
+    header="Detalle de programación de pago"
+    [(visible)]="scheduleDetailDialogVisible"
+    [modal]="true"
+    [style]="{ width: 'min(560px, 95vw)' }"
+    [draggable]="false"
+    [resizable]="false"
+    (onHide)="cancelScheduleDetailDialog()">
+    <div class="flex flex-col gap-3 text-sm" *ngIf="scheduleDetailTarget as item">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <span class="text-gray-500">Programación</span>
+          <p class="font-mono font-semibold m-0">#{{ item.id }}</p>
+        </div>
+        <div>
+          <span class="text-gray-500">Fecha de creación</span>
+          <p class="font-semibold m-0">{{ formatTreasuryInstant(item.createdAt) }}</p>
+        </div>
+        <div>
+          <span class="text-gray-500">Fecha de ejecución</span>
+          <p class="font-semibold m-0">{{ formatDate(item.executionDate) }}</p>
+        </div>
+        <div>
+          <span class="text-gray-500">Tipo</span>
+          <p class="font-semibold m-0">{{ scheduleTypeLabel(item) }}</p>
+        </div>
+        <div>
+          <span class="text-gray-500">Proveedor</span>
+          <p class="font-semibold m-0">{{ suppliersLabel(item) }}</p>
+        </div>
+        <div>
+          <span class="text-gray-500">Método</span>
+          <p class="font-semibold m-0">{{ methodLabel(item) }}</p>
+        </div>
+        <div>
+          <span class="text-gray-500">Cuenta origen</span>
+          <p class="font-semibold m-0">{{ scheduleBankLabel(item) }}</p>
+        </div>
+        <div>
+          <span class="text-gray-500">Total</span>
+          <p class="font-semibold m-0">{{ formatCurrency(scheduleTotalFn(item)) }}</p>
+        </div>
+        <div>
+          <span class="text-gray-500">Estado</span>
+          <p class="m-0">
+            <p-tag [value]="scheduleLabel(item.status)" [severity]="getStatusSeverity(item.status)"></p-tag>
+          </p>
+        </div>
+        <div>
+          <span class="text-gray-500">Reintentos</span>
+          <p class="font-semibold m-0">{{ item.retryCount }}</p>
+        </div>
+        <div>
+          <span class="text-gray-500">Último intento</span>
+          <p class="font-semibold m-0">{{ formatTreasuryInstant(item.updatedAt) }}</p>
+        </div>
+        <div *ngIf="canViewScheduleVoucher(item)">
+          <span class="text-gray-500">Comprobante</span>
+          <p class="font-mono font-semibold text-blue-600 m-0">{{ scheduleVoucherLabel(item) }}</p>
+        </div>
+      </div>
+      <div>
+        <span class="text-gray-500">Factura(s)</span>
+        <p class="font-mono text-sm m-0 mt-1">{{ invoicesLabel(item) }}</p>
+      </div>
+      <div *ngIf="item.observations">
+        <span class="text-gray-500">Observaciones</span>
+        <p class="m-0 mt-1">{{ item.observations }}</p>
+      </div>
+      <div *ngIf="item.failureReason">
+        <span class="text-gray-500">Motivo del error</span>
+        <p class="m-0 mt-1 text-red-700">{{ item.failureReason }}</p>
+      </div>
+    </div>
+    <ng-template pTemplate="footer">
+      <div class="flex gap-2 justify-end flex-wrap">
+        <p-button
+          label="Cerrar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="cancelScheduleDetailDialog()">
+        </p-button>
+        <p-button
+          *ngIf="scheduleDetailTarget && canViewScheduleVoucher(scheduleDetailTarget)"
+          label="Ver comprobante"
+          icon="pi pi-file"
+          (onClick)="openScheduleVoucher(scheduleDetailTarget!)">
+        </p-button>
+        <p-button
+          *ngIf="scheduleDetailTarget && canCancelSchedule(scheduleDetailTarget)"
+          label="Cancelar"
+          icon="pi pi-ban"
+          severity="danger"
+          [outlined]="true"
+          [disabled]="actionBusy"
+          (onClick)="cancelSchedule(scheduleDetailTarget!); cancelScheduleDetailDialog()">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
 
   <p-toast></p-toast>
 </div>
