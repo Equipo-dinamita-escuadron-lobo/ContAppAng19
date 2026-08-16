@@ -110,4 +110,51 @@ describe('VendorReportService summaries', () => {
       done();
     });
   });
+
+  it('shows voided write-off history without affecting effective totals', (done) => {
+    const api = {
+      statement: jasmine.createSpy('statement').and.returnValue(of({
+        supplierId: 78,
+        openingBalance: 0,
+        invoiced: 357000,
+        paid: 0,
+        writeOffTotal: 0,
+        pending: 357000,
+        invoices: [{
+          issueDate: '2026-08-01',
+          dueDate: '2026-09-01',
+          reference: 'FC-357',
+          originalAmount: 357000,
+          pendingAmount: 357000,
+        }],
+        vouchers: [],
+        writeOffs: [{
+          id: 5,
+          status: 'VOIDED',
+          reason: 'Ajuste',
+          createdAt: '2026-08-10T12:00:00Z',
+          updatedAt: '2026-08-12T15:00:00Z',
+          details: [{
+            supplierId: 78,
+            invoiceReference: 'FC-357',
+            amount: 100000,
+          }],
+        }],
+      })),
+    };
+    const thirds = { getThirdsByType: jasmine.createSpy('getThirdsByType') };
+    const storage = { getIdEnterprise: () => 'enterprise-a' };
+    const value = new VendorReportService(api as any, thirds as any, storage as any);
+    const start = new Date(2026, 7, 1);
+    const end = new Date(2026, 7, 31);
+
+    value.getVendorReport(78, start, end, undefined, undefined, 'Proveedor').subscribe((report) => {
+      expect(report.periodTotals.writeOffTotal).toBe(0);
+      expect(report.totalDue).toBe(357000);
+      expect(report.transactions.some((row) => row.type === 'WriteOff' && row.voided)).toBeTrue();
+      expect(report.transactions.some((row) => row.type === 'WriteOffReversal')).toBeTrue();
+      expect(report.transactions.at(-1)?.balance).toBe(357000);
+      done();
+    });
+  });
 });

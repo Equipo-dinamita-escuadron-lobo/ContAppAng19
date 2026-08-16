@@ -30,6 +30,7 @@ const TRANSACTION_TYPE_LABELS: Record<string, string> = {
   Bill: 'Factura de compra',
   Payment: 'Pago a proveedor',
   WriteOff: 'Baja CxP',
+  WriteOffReversal: 'Reversión Baja CxP',
 };
 
 const ACCOUNTING_ENTRY_LABELS: Record<string, string> = {

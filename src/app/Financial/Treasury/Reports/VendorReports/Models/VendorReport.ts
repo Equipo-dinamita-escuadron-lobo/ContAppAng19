@@ -14,11 +14,13 @@ export interface VendorReportTransaction {
   reference: string;
   documentNumber?: string;
   expenseReceiptNumber?: string;
-  type: 'Bill' | 'Payment' | 'WriteOff';
+  type: 'Bill' | 'Payment' | 'WriteOff' | 'WriteOffReversal';
   description: string;
   debits: number;
   credits: number;
   balance: number;
+  voided?: boolean;
+  informational?: boolean;
 }
 
 export interface VendorReport {

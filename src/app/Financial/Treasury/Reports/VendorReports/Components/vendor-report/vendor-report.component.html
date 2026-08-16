@@ -188,7 +188,7 @@
         </ng-template>
 
         <ng-template pTemplate="body" let-transaction>
-          <tr>
+          <tr [class.opacity-70]="transaction.informational">
             <td>{{ transaction.date | date:'dd/MM/yyyy' }}</td>
             <td>
               <span *ngIf="transaction.dueDate">{{ transaction.dueDate | date:'dd/MM/yyyy' }}</span>
@@ -210,8 +210,8 @@
             </td>
             <td>
               <p-tag
-                [value]="getTransactionTypeTag(transaction.type).text"
-                [severity]="getTransactionTypeTag(transaction.type).severity"
+                [value]="getTransactionTypeTag(transaction.type, transaction.voided).text"
+                [severity]="getTransactionTypeTag(transaction.type, transaction.voided).severity"
                 styleClass="text-xs">
               </p-tag>
             </td>
