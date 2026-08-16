@@ -29,8 +29,10 @@ import {
 } from '../../Shared/treasury-third-party.integration';
 import {
   AccountingEntryView,
+  AccountCatalogueNode,
   buildAccountCatalogueLookup,
   buildAccountingEntryView,
+  flattenAccountCatalogueRefs,
   mapAccountingMovementsForView,
 } from '../../Shared/treasury-accounting-display';
 import { PaymentVoucher, Payable, VoucherDetail } from '../../Shared/treasury-api.models';
@@ -484,7 +486,7 @@ export class ExpenseReceiptService {
     const enterpriseId = this.enterpriseId();
     return forkJoin({
       entry: this.api.accountingEntry(receiptId),
-      accounts: this.accounts.getListAuxiliaryAccounts(enterpriseId),
+      accounts: this.accounts.getListAccounts(enterpriseId).pipe(catchError(() => of([]))),
       voucher: this.api.voucher(receiptId, enterpriseId),
       thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000).pipe(
         catchError(() => of({ content: [] } as any)),
@@ -493,7 +495,9 @@ export class ExpenseReceiptService {
       map(({ entry, accounts, voucher, thirds }) => {
         const entryData = (entry as any)?.data ?? entry;
         const lookup = buildAccountCatalogueLookup(
-          accounts.filter((account) => account.status !== false),
+          flattenAccountCatalogueRefs(accounts as AccountCatalogueNode[]).filter(
+            (account) => account.status !== false,
+          ),
         );
         const movements = mapAccountingMovementsForView(entryData?.movements ?? [], lookup);
         const thirdNames = buildThirdPartyNameMap(thirds?.content || []);
