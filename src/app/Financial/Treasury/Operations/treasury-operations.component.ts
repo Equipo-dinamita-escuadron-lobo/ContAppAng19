@@ -60,6 +60,7 @@ import {
   accountingTotalsBalanced,
   buildAccountCatalogueLookup,
   buildAccountingEntryView,
+  flattenAccountCatalogueRefs,
   mapAccountingMovementsForView,
 } from '../Shared/treasury-accounting-display';
 import { ContextualHelpComponent } from '../../../Shared/Components/contextual-help/contextual-help.component';
@@ -137,6 +138,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   allPaymentMethodsCount = 0;
   banks: any[] = [];
   accounts: any[] = [];
+  accountingAccountLookup = new Map<number, { code: string; description: string }>();
   bankOptions: { id: number; label: string }[] = [];
   accountOptions: { id: number; label: string }[] = [];
   readonly paymentAmountOptions = [
@@ -382,7 +384,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     this.accountingMovements = [];
     this.accountingDebitTotal = 0;
     this.accountingCreditTotal = 0;
-    const accountLookup = buildAccountCatalogueLookup(this.accounts);
+    const accountLookup = this.accountingAccountLookup;
     const supplierIds = [...new Set((item.details ?? []).map((detail) => detail.supplierId))];
     const supplierLabel = supplierIds
       .map((id) => this.supplierNames.get(Number(id)) ?? '—')
@@ -562,6 +564,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       methods: this.paymentMethods.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
       banks: this.bankAccounts.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
       accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
+      accountCatalogue: this.chart.getListAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
       thirds: this.thirds.getThirdParties(this.enterpriseId, 0, 1000).pipe(
         catchError(() => of({ content: [] } as any)),
       ),
@@ -580,6 +583,9 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
           label: `${bank.bank?.name || 'Banco'} - ${bank.accountNumber}`
         }));
         this.accounts = data.accounts.filter((a: any) => a.status !== false);
+        this.accountingAccountLookup = buildAccountCatalogueLookup(
+          flattenAccountCatalogueRefs(data.accountCatalogue || []).filter((a: any) => a.status !== false),
+        );
         this.accountOptions = this.accounts.map((account: any) => ({
           id: account.id,
           label: `${account.code} - ${account.description}`
@@ -1460,7 +1466,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     this.accountingMovements = [];
     this.accountingDebitTotal = 0;
     this.accountingCreditTotal = 0;
-    const accountLookup = buildAccountCatalogueLookup(this.accounts);
+    const accountLookup = this.accountingAccountLookup;
     const supplierIds = [...new Set(voucher.details.map((detail) => detail.supplierId))];
     const supplierLabel = supplierIds.map((id) => this.supplierName(id)).join(', ');
 
@@ -1858,6 +1864,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       methods: this.paymentMethods.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
       banks: this.bankAccounts.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
       accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
+      accountCatalogue: this.chart.getListAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
       thirds: this.thirds.getThirdParties(this.enterpriseId, 0, 1000).pipe(catchError(() => of({ content: [] } as any))),
     }).pipe(
       switchMap((data) => {
@@ -1872,6 +1879,9 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
           label: `${bank.bank?.name || 'Banco'} - ${bank.accountNumber}`,
         }));
         this.accounts = data.accounts.filter((a: any) => a.status !== false);
+        this.accountingAccountLookup = buildAccountCatalogueLookup(
+          flattenAccountCatalogueRefs(data.accountCatalogue || []).filter((a: any) => a.status !== false),
+        );
         this.accountOptions = this.accounts.map((account: any) => ({
           id: account.id,
           label: `${account.code} - ${account.description}`,

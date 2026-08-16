@@ -30,6 +30,31 @@ export interface AccountCatalogueRef {
   status?: boolean;
 }
 
+export interface AccountCatalogueNode extends AccountCatalogueRef {
+  children?: AccountCatalogueNode[];
+}
+
+export function flattenAccountCatalogueRefs(accounts: AccountCatalogueNode[]): AccountCatalogueRef[] {
+  const flat: AccountCatalogueRef[] = [];
+  const walk = (nodes: AccountCatalogueNode[]) => {
+    nodes.forEach((node) => {
+      if (node.id != null) {
+        flat.push({
+          id: node.id,
+          code: node.code,
+          description: node.description,
+          status: node.status,
+        });
+      }
+      if (node.children?.length) {
+        walk(node.children);
+      }
+    });
+  };
+  walk(accounts);
+  return flat;
+}
+
 export function buildAccountCatalogueLookup(accounts: AccountCatalogueRef[]): Map<number, { code: string; description: string }> {
   const lookup = new Map<number, { code: string; description: string }>();
   accounts.forEach((account) => {
@@ -87,13 +112,53 @@ export function resolveAccountFromLookup(
   };
 }
 
+function hasExplicitAccountLabel(code: string, name: string): boolean {
+  if (!code || !name) {
+    return false;
+  }
+  const normalizedName = name.trim();
+  return normalizedName !== '—' && normalizedName !== `Cuenta ${code}`;
+}
+
+export function resolveMovementAccountDisplay(
+  movement: Record<string, unknown>,
+  accountLookup: Map<number, { code: string; description: string }>,
+): { accountId?: number; accountCode: string; accountName: string } {
+  const accountIdRaw = movement['accountId'];
+  const accountId = accountIdRaw != null && accountIdRaw !== ''
+    ? Number(accountIdRaw)
+    : undefined;
+  if (accountId != null && !Number.isNaN(accountId) && accountLookup.has(accountId)) {
+    const account = accountLookup.get(accountId)!;
+    return {
+      accountId,
+      accountCode: account.code,
+      accountName: account.description,
+    };
+  }
+
+  const explicitCode = String(movement['accountCode'] ?? '').trim();
+  const explicitName = String(
+    movement['accountName'] ?? movement['accountDescription'] ?? movement['accountLabel'] ?? '',
+  ).trim();
+  if (hasExplicitAccountLabel(explicitCode, explicitName)) {
+    return {
+      accountId: accountId != null && !Number.isNaN(accountId) ? accountId : undefined,
+      accountCode: explicitCode,
+      accountName: explicitName,
+    };
+  }
+
+  const accountRef = accountId ?? movement['accountCode'] ?? movement['account'];
+  return resolveAccountFromLookup(accountRef, accountLookup);
+}
+
 export function mapAccountingMovementsForView(
   movements: unknown[],
   accountLookup: Map<number, { code: string; description: string }>,
 ): AccountingMovementViewRow[] {
   return (movements as Record<string, unknown>[]).map((movement) => {
-    const accountRef = movement['accountCode'] ?? movement['account'] ?? movement['accountId'];
-    const resolved = resolveAccountFromLookup(accountRef, accountLookup);
+    const resolved = resolveMovementAccountDisplay(movement, accountLookup);
     const thirdPartyRaw = movement['thirdPartyId'];
     const thirdPartyId = thirdPartyRaw != null ? Number(thirdPartyRaw) : undefined;
     return {
