@@ -101,6 +101,9 @@
                   label="Pagar"
                   icon="pi pi-wallet"
                   size="small"
+                  [disabled]="hasActivePaymentScheduleForPayable(payable)"
+                  [pTooltip]="activePaymentScheduleTooltip(payable)"
+                  tooltipPosition="top"
                   (onClick)="openPaymentDialog(payable)">
                 </p-button>
                 <p-button
@@ -109,8 +112,8 @@
                   size="small"
                   severity="secondary"
                   [outlined]="true"
-                  [disabled]="hasActiveFullSchedule(payable)"
-                  [pTooltip]="hasActiveFullSchedule(payable) ? 'Ya existe un pago programado por el saldo disponible. Cancele la programación para crear otra.' : undefined"
+                  [disabled]="hasActivePaymentScheduleForPayable(payable)"
+                  [pTooltip]="activePaymentScheduleTooltip(payable)"
                   tooltipPosition="top"
                   (onClick)="openScheduleDialog(payable)">
                 </p-button>

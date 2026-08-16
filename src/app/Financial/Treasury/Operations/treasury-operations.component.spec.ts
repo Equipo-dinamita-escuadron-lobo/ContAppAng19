@@ -156,6 +156,34 @@ describe('TreasuryOperationsComponent PP8', () => {
     expect((value as any).messageService.add).toHaveBeenCalled();
   });
 
+  it('blocks payment when selected method is no longer selectable', () => {
+    const { value, api } = component();
+    value.openPaymentDialog(value.payables[0]);
+    value.dialogLines[0].paymentMode = 'partial';
+    value.dialogLines[0].amount = 25;
+    value.dialogPaymentMethodId = 99;
+    value.dialogBankAccountId = 33;
+    value.confirmPayFromDialog();
+    expect(api.createVoucher).not.toHaveBeenCalled();
+    expect((value as any).messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: 'El método de pago seleccionado ya no está disponible.',
+    }));
+  });
+
+  it('blocks draft creation when selected method is no longer selectable', () => {
+    const { value, api } = component();
+    value.openPaymentDialog(value.payables[0]);
+    value.dialogLines[0].paymentMode = 'partial';
+    value.dialogLines[0].amount = 25;
+    value.dialogPaymentMethodId = 99;
+    value.dialogBankAccountId = 33;
+    value.confirmCreateFromDialog();
+    expect(api.createVoucher).not.toHaveBeenCalled();
+    expect((value as any).messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: 'El método de pago seleccionado ya no está disponible.',
+    }));
+  });
+
   it('creates draft from dialog when payment rules are satisfied', () => {
     const { value, api } = component();
     api.createVoucher.and.returnValue(of({
@@ -282,6 +310,28 @@ describe('TreasuryOperationsComponent PP8', () => {
     value.confirmScheduleFromDialog();
     expect(api.createSchedule).toHaveBeenCalled();
     expect(api.createVoucher).not.toHaveBeenCalled();
+  });
+
+  it('disables pay write-off and schedule actions when payable has active schedule', () => {
+    const { value, api } = component();
+    const target = payable({ id: 11, availableAmount: 100, pendingAmount: 100 });
+    value.schedules = [{
+      id: 1,
+      executionDate: '2026-08-20',
+      status: 'SCHEDULED',
+      total: 50,
+      retryCount: 0,
+      paymentMethodId: 1,
+      enterpriseId: 'enterprise-a',
+      details: [{ supplierId: 7, invoiceId: 11, amount: 50 }],
+    }];
+    expect(value.hasActivePaymentScheduleForPayable(target)).toBeTrue();
+    expect(value.canWriteOffPayable(target)).toBeFalse();
+    value.openPaymentDialog(target);
+    expect(value.paymentDialogVisible).toBeFalse();
+    value.openScheduleDialog(target);
+    expect(value.scheduleDialogVisible).toBeFalse();
+    expect(api.createSchedule).not.toHaveBeenCalled();
   });
 
   it('enables write-off action when payable has available balance', () => {
