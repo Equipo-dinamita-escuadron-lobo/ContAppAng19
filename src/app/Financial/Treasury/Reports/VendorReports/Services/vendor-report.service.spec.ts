@@ -157,4 +157,92 @@ describe('VendorReportService summaries', () => {
       done();
     });
   });
+
+  it('maps period payments from API paid without mixing write-offs', (done) => {
+    const api = {
+      statement: jasmine.createSpy('statement').and.returnValue(of({
+        supplierId: 78,
+        openingBalance: 0,
+        invoiced: 357000,
+        paid: 0,
+        writeOffTotal: 100000,
+        pending: 257000,
+        invoices: [{
+          issueDate: '2026-08-01',
+          dueDate: '2026-09-01',
+          reference: 'FC-357',
+          originalAmount: 357000,
+          pendingAmount: 257000,
+        }],
+        vouchers: [],
+        writeOffs: [{
+          id: 5,
+          status: 'POSTED',
+          reason: 'Ajuste',
+          createdAt: '2026-08-10T12:00:00Z',
+          details: [{
+            supplierId: 78,
+            invoiceReference: 'FC-357',
+            amount: 100000,
+          }],
+        }],
+      })),
+    };
+    const thirds = { getThirdsByType: jasmine.createSpy('getThirdsByType') };
+    const storage = { getIdEnterprise: () => 'enterprise-a' };
+    const value = new VendorReportService(api as any, thirds as any, storage as any);
+    const start = new Date(2026, 7, 1);
+    const end = new Date(2026, 7, 31);
+
+    value.getVendorReport(78, start, end, undefined, undefined, 'Proveedor').subscribe((report) => {
+      expect(report.periodTotals.periodPayments).toBe(0);
+      expect(report.periodTotals.writeOffTotal).toBe(100000);
+      expect(report.periodTotals.totalDebits).toBe(100000);
+      expect(report.totalDue).toBe(257000);
+      done();
+    });
+  });
+
+  it('keeps payments and write-offs separated when both exist', (done) => {
+    const api = {
+      statement: jasmine.createSpy('statement').and.returnValue(of({
+        supplierId: 78,
+        openingBalance: 0,
+        invoiced: 357000,
+        paid: 50000,
+        writeOffTotal: 100000,
+        pending: 207000,
+        invoices: [{
+          issueDate: '2026-08-01',
+          dueDate: '2026-09-01',
+          reference: 'FC-357',
+          originalAmount: 357000,
+          pendingAmount: 207000,
+        }],
+        vouchers: [{
+          issueDate: '2026-08-08',
+          voucherNumber: 'CE-001',
+          observations: 'Pago',
+          details: [{
+            supplierId: 78,
+            invoiceReference: 'FC-357',
+            amountPaid: 50000,
+          }],
+        }],
+        writeOffs: [],
+      })),
+    };
+    const thirds = { getThirdsByType: jasmine.createSpy('getThirdsByType') };
+    const storage = { getIdEnterprise: () => 'enterprise-a' };
+    const value = new VendorReportService(api as any, thirds as any, storage as any);
+    const start = new Date(2026, 7, 1);
+    const end = new Date(2026, 7, 31);
+
+    value.getVendorReport(78, start, end, undefined, undefined, 'Proveedor').subscribe((report) => {
+      expect(report.periodTotals.periodPayments).toBe(50000);
+      expect(report.periodTotals.writeOffTotal).toBe(100000);
+      expect(report.totalDue).toBe(207000);
+      done();
+    });
+  });
 });

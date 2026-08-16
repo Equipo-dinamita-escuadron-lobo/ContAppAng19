@@ -35,6 +35,7 @@ export interface VendorReport {
   transactions: VendorReportTransaction[];
   periodTotals: {
     openingBalance: number;
+    periodPayments: number;
     totalDebits: number;
     totalCredits: number;
     writeOffTotal: number;

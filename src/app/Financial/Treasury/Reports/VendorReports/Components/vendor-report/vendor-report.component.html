@@ -152,7 +152,7 @@
         </div>
         <div>
           <p class="text-sm text-gray-600">Pagos del período</p>
-          <p class="font-mono font-semibold text-green-700">{{ formatCurrency(vendorReport.periodTotals.totalDebits) }}</p>
+          <p class="font-mono font-semibold text-green-700">{{ formatCurrency(vendorReport.periodTotals.periodPayments) }}</p>
         </div>
         <div>
           <p class="text-sm text-gray-600">Saldo pendiente</p>
@@ -258,7 +258,7 @@
           </div>
           <div class="flex justify-between items-center">
             <span>Pagos del período:</span>
-            <span class="font-mono text-green-700 font-bold">{{ formatCurrency(vendorReport.periodTotals.totalDebits - vendorReport.periodTotals.writeOffTotal) }}</span>
+            <span class="font-mono text-green-700 font-bold">{{ formatCurrency(vendorReport.periodTotals.periodPayments) }}</span>
           </div>
           <div class="flex justify-between items-center" *ngIf="vendorReport.periodTotals.writeOffTotal > 0">
             <span>Total bajas CxP:</span>
