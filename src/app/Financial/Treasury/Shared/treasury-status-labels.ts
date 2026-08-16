@@ -29,6 +29,7 @@ const PAYABLE_LABELS: Record<string, string> = {
 const TRANSACTION_TYPE_LABELS: Record<string, string> = {
   Bill: 'Factura de compra',
   Payment: 'Pago a proveedor',
+  PaymentReversal: 'Reversión pago',
   WriteOff: 'Baja CxP',
   WriteOffReversal: 'Reversión Baja CxP',
 };

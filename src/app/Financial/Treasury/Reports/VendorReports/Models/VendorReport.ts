@@ -14,7 +14,7 @@ export interface VendorReportTransaction {
   reference: string;
   documentNumber?: string;
   expenseReceiptNumber?: string;
-  type: 'Bill' | 'Payment' | 'WriteOff' | 'WriteOffReversal';
+  type: 'Bill' | 'Payment' | 'PaymentReversal' | 'WriteOff' | 'WriteOffReversal';
   description: string;
   debits: number;
   credits: number;

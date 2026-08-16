@@ -188,6 +188,7 @@ export class VendorReportComponent implements OnInit {
       .subscribe({
         next: (report) => {
           this.vendorReport = report;
+          this.vendorName = report.vendor.name;
           this.loading = false;
           if (!this.invoiceOptions.length && report.transactions.length) {
             this.invoiceOptions = [...new Set(report.transactions.map((t) => t.reference).filter(Boolean))]
@@ -271,7 +272,7 @@ export class VendorReportComponent implements OnInit {
         transaction.reference || '-',
         transaction.documentNumber || '-',
         transaction.expenseReceiptNumber || '-',
-        transaction.type === 'Bill' ? 'Factura' : transaction.type === 'Payment' ? 'Pago' : 'Baja CxP',
+        transactionTypeLabel(transaction.type),
         transaction.description || '-',
         transaction.debits || 0,
         transaction.credits || 0,
@@ -316,14 +317,19 @@ export class VendorReportComponent implements OnInit {
     if (voided && type === 'WriteOff') {
       return { severity: 'danger', text: `${text} (Anulada)` };
     }
+    if (voided && type === 'Payment') {
+      return { severity: 'danger', text: `${text} (Anulado)` };
+    }
     const severity =
       type === 'Payment'
         ? 'success'
-        : type === 'WriteOffReversal'
+        : type === 'PaymentReversal'
           ? 'warn'
-          : type === 'WriteOff'
-            ? 'warning'
-            : 'info';
+          : type === 'WriteOffReversal'
+            ? 'warn'
+            : type === 'WriteOff'
+              ? 'warning'
+              : 'info';
     return { severity, text };
   }
 
