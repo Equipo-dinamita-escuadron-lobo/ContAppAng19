@@ -10,7 +10,8 @@ import { Third } from '../../../../../GeneralMasters/ThirdParties/models/Third';
 import { ePersonType } from '../../../../../GeneralMasters/ThirdParties/models/ePersonType';
 import { eThirdType } from '../../../../../GeneralMasters/ThirdParties/models/eThirdType';
 import { TreasuryApiService } from '../../../Shared/treasury-api.service';
-import { educationalDescription } from '../../../Shared/treasury-status-labels';
+import { PayableWriteOff } from '../../../Shared/treasury-api.models';
+import { educationalDescription, transactionTypeLabel } from '../../../Shared/treasury-status-labels';
 import { VendorListFilter, VendorReport, VendorReportSummary, VendorReportTransaction } from '../Models/VendorReport';
 
 export type VendorSupplierOption = Third & { displayName: string };
@@ -159,24 +160,19 @@ export class VendorReportService {
               })),
           );
 
-          const writeOffRows: VendorReportTransaction[] = (statement.writeOffs || []).flatMap((writeOff: any) =>
-            (writeOff.details || [])
-              .filter((detail: any) => detail.supplierId === vendorId)
-              .map((detail: any) => ({
-                date: new Date(writeOff.createdAt),
-                reference: detail.invoiceReference || '',
-                type: 'WriteOff' as const,
-                description: (writeOff.reason || '').trim() || 'Baja de cuenta por pagar',
-                debits: Number(detail.amount || 0),
-                credits: 0,
-                balance: 0,
-              })),
+          const writeOffRows = this.buildWriteOffTransactions(
+            statement.writeOffs,
+            vendorId,
+            startIso,
+            endIso,
           );
 
           const transactions = this.applyRunningBalance(
-            [...bills, ...payments, ...writeOffRows]
-              .filter((row) => this.inIsoDateRange(row.date, startIso, endIso))
-              .sort((a, b) => a.date.getTime() - b.date.getTime()),
+            [
+              ...bills.filter((row) => this.inIsoDateRange(row.date, startIso, endIso)),
+              ...payments.filter((row) => this.inIsoDateRange(row.date, startIso, endIso)),
+              ...writeOffRows,
+            ].sort((a, b) => a.date.getTime() - b.date.getTime()),
             openingBalance,
           );
 
@@ -252,7 +248,7 @@ export class VendorReportService {
         t.reference || '-',
         t.documentNumber || '-',
         t.expenseReceiptNumber || '-',
-        t.type === 'Bill' ? 'Factura' : t.type === 'Payment' ? 'Pago' : 'Baja CxP',
+        t.type === 'Bill' ? 'Factura' : t.type === 'Payment' ? 'Pago' : transactionTypeLabel(t.type),
         t.description || '-',
         t.debits > 0 ? fmt(t.debits) : '-',
         t.credits > 0 ? fmt(t.credits) : '-',
@@ -363,7 +359,7 @@ export class VendorReportService {
       t.reference || '',
       t.documentNumber || '',
       t.expenseReceiptNumber || '',
-      t.type === 'Bill' ? 'Factura' : t.type === 'Payment' ? 'Pago' : 'Baja CxP',
+      t.type === 'Bill' ? 'Factura' : t.type === 'Payment' ? 'Pago' : transactionTypeLabel(t.type),
       t.description || '',
       t.debits || 0,
       t.credits || 0,
@@ -417,6 +413,61 @@ export class VendorReportService {
     return this.buildExcel(report);
   }
 
+  private buildWriteOffTransactions(
+    writeOffs: PayableWriteOff[] | undefined,
+    vendorId: number,
+    startIso: string,
+    endIso: string,
+  ): VendorReportTransaction[] {
+    return (writeOffs || []).flatMap((writeOff) => {
+      const status = String(writeOff.status || '');
+      const isVoided = status === 'VOIDED';
+      const createdInPeriod = writeOff.createdAt
+        ? this.inIsoDateRange(new Date(writeOff.createdAt), startIso, endIso)
+        : false;
+      const voidedInPeriod = isVoided && writeOff.updatedAt
+        ? this.inIsoDateRange(new Date(writeOff.updatedAt), startIso, endIso)
+        : false;
+      const reason = (writeOff.reason || '').trim();
+
+      return (writeOff.details || [])
+        .filter((detail) => Number(detail.supplierId) === vendorId)
+        .flatMap((detail) => {
+          const amount = Number(detail.amount || 0);
+          const reference = detail.invoiceReference || '';
+          const postedRow: VendorReportTransaction = {
+            date: new Date(writeOff.createdAt!),
+            reference,
+            type: 'WriteOff',
+            description: reason || 'Baja de cuenta por pagar',
+            debits: amount,
+            credits: 0,
+            balance: 0,
+            voided: isVoided,
+            informational: isVoided && !createdInPeriod,
+          };
+
+          if (!isVoided) {
+            return [{ ...postedRow, informational: !createdInPeriod }];
+          }
+
+          const reversalRow: VendorReportTransaction = {
+            date: new Date(writeOff.updatedAt || writeOff.createdAt!),
+            reference,
+            type: 'WriteOffReversal',
+            description: `Reversión Baja CxP${reason ? `: ${reason}` : ''} (Anulada)`,
+            debits: 0,
+            credits: amount,
+            balance: 0,
+            voided: true,
+            informational: !(createdInPeriod && voidedInPeriod),
+          };
+
+          return [postedRow, reversalRow];
+        });
+    });
+  }
+
   private paymentDescription(observations?: string | null, voucherNumber?: string | null): string {
     const fallback = voucherNumber
       ? `Pago comprobante ${voucherNumber}`
@@ -430,8 +481,10 @@ export class VendorReportService {
   ): VendorReportTransaction[] {
     let running = openingBalance;
     return rows.map((row) => {
-      if (row.credits > 0) running += row.credits;
-      if (row.debits > 0) running -= row.debits;
+      if (!row.informational) {
+        if (row.credits > 0) running += row.credits;
+        if (row.debits > 0) running -= row.debits;
+      }
       return { ...row, balance: running };
     });
   }

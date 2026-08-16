@@ -87,6 +87,7 @@ export interface PayableWriteOff {
   accountingEntryId?: number;
   accountingEntryCode?: string;
   createdAt?: string;
+  updatedAt?: string;
   version?: number;
   details?: PayableWriteOffDetail[];
 }

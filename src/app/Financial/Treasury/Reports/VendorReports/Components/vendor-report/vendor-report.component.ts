@@ -16,7 +16,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 
 import { VendorReportService } from '../../Services/vendor-report.service';
-import { VendorReport } from '../../Models/VendorReport';
+import { VendorReport, VendorReportTransaction } from '../../Models/VendorReport';
 import { MessageService } from 'primeng/api';
 import {
   exportErrorDetail,
@@ -308,13 +308,22 @@ export class VendorReportComponent implements OnInit {
     return `estado_cuenta_${safeName}_${new Date().toISOString().slice(0, 10)}.${ext}`;
   }
 
-  getTransactionTypeTag(type: 'Bill' | 'Payment' | 'WriteOff'): {
-    severity: 'success' | 'info' | 'warning' | 'danger';
+  getTransactionTypeTag(type: VendorReportTransaction['type'], voided?: boolean): {
+    severity: 'success' | 'info' | 'warn' | 'warning' | 'danger' | 'secondary' | 'contrast';
     text: string;
   } {
     const text = transactionTypeLabel(type);
+    if (voided && type === 'WriteOff') {
+      return { severity: 'danger', text: `${text} (Anulada)` };
+    }
     const severity =
-      type === 'Payment' ? 'success' : type === 'WriteOff' ? 'warning' : 'info';
+      type === 'Payment'
+        ? 'success'
+        : type === 'WriteOffReversal'
+          ? 'warn'
+          : type === 'WriteOff'
+            ? 'warning'
+            : 'info';
     return { severity, text };
   }
 
