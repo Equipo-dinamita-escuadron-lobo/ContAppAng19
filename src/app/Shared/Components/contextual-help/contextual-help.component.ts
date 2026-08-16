@@ -12,8 +12,15 @@ import { HelpCenterService } from '../../services/help-center.service';
   standalone: true,
   imports: [CommonModule, PopoverModule],
   template: `
-    <span class="text-primary cursor-pointer inline-flex items-center" (click)="popover.toggle($event)">
-      <i class="pi pi-question-circle" [ngClass]="iconClass"></i>
+    <span
+      class="text-primary cursor-pointer inline-flex items-center"
+      role="button"
+      tabindex="0"
+      [attr.aria-label]="'Ayuda: ' + title"
+      (click)="popover.toggle($event)"
+      (keydown.enter)="popover.toggle($event); $event.preventDefault()"
+      (keydown.space)="popover.toggle($event); $event.preventDefault()">
+      <i class="pi pi-question-circle" [ngClass]="iconClass" aria-hidden="true"></i>
     </span>
     <p-popover #popover>
       <div class="p-4" style="max-width: 420px">

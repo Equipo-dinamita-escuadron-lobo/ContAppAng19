@@ -971,7 +971,16 @@
       </p-inputNumber>
     </div>
     <div class="flex flex-col gap-2">
-      <label for="writeOffCounterpartAccount" class="font-semibold text-[var(--color-primary)]">Cuenta contrapartida *</label>
+      <label for="writeOffCounterpartAccount" class="font-semibold text-[var(--color-primary)] inline-flex items-center gap-1">
+        Cuenta contrapartida *
+        <app-contextual-help
+          class="inline-flex align-middle"
+          iconClass="text-base"
+          [title]="writeOffCounterpartHelp.title"
+          [summary]="writeOffCounterpartHelp.summary"
+          [helpCenterSlug]="writeOffCounterpartHelp.slug">
+        </app-contextual-help>
+      </label>
       <p-dropdown
         inputId="writeOffCounterpartAccount"
         [(ngModel)]="writeOffCounterpartAccountId"
