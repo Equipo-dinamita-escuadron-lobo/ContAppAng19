@@ -37,6 +37,8 @@ export interface ScheduleDetail {
   supplierId: number;
   invoiceId: number;
   amount: number;
+  canceled?: boolean;
+  cancellationReason?: string;
 }
 export interface PaymentSchedule {
   id: number; enterpriseId: string; executionDate: string; status: ScheduleStatus;

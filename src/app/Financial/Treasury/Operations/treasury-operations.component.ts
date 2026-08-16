@@ -70,6 +70,9 @@ import {
   paymentMethodsAvailabilityMessage,
 } from '../Shared/treasury-payment-messages';
 import {
+  ACTIVE_PAYMENT_SCHEDULE_BLOCK_MESSAGE,
+} from '../Shared/treasury-schedule-messages';
+import {
   WRITE_OFF_AMOUNT_EXCEEDS_MESSAGE,
   WRITE_OFF_AMOUNT_INVALID_MESSAGE,
   WRITE_OFF_COUNTERPART_REQUIRED_MESSAGE,
@@ -655,12 +658,16 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   canWriteOffPayable(payable: Payable): boolean {
     return payable.active
       && Number(payable.availableAmount) > 0
-      && !this.hasActiveWriteOffForPayable(payable);
+      && !this.hasActiveWriteOffForPayable(payable)
+      && !this.hasActivePaymentScheduleForPayable(payable);
   }
 
   writeOffPayableTooltip(payable: Payable): string | undefined {
     if (!payable.active || Number(payable.availableAmount) <= 0) {
       return WRITE_OFF_NO_AVAILABLE_BALANCE_MESSAGE;
+    }
+    if (this.hasActivePaymentScheduleForPayable(payable)) {
+      return ACTIVE_PAYMENT_SCHEDULE_BLOCK_MESSAGE;
     }
     if (this.hasActiveWriteOffForPayable(payable)) {
       return WRITE_OFF_PENDING_BLOCK_MESSAGE;
@@ -679,6 +686,15 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   }
 
   openWriteOffDialog(payable: Payable) {
+    if (this.hasActivePaymentScheduleForPayable(payable)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Pago programado',
+        detail: ACTIVE_PAYMENT_SCHEDULE_BLOCK_MESSAGE,
+        life: 6000,
+      });
+      return;
+    }
     if (this.hasActiveWriteOffForPayable(payable)) {
       this.messageService.add({
         severity: 'warn',
@@ -883,6 +899,15 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   }
 
   openPaymentDialog(payable: Payable) {
+    if (this.hasActivePaymentScheduleForPayable(payable)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Pago programado',
+        detail: ACTIVE_PAYMENT_SCHEDULE_BLOCK_MESSAGE,
+        life: 6000,
+      });
+      return;
+    }
     if (this.noActivePaymentMethods) {
       this.messageService.add({
         severity: 'warn',
@@ -926,6 +951,15 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   }
 
   openScheduleDialog(payable: Payable) {
+    if (this.hasActivePaymentScheduleForPayable(payable)) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Pago programado',
+        detail: ACTIVE_PAYMENT_SCHEDULE_BLOCK_MESSAGE,
+        life: 6000,
+      });
+      return;
+    }
     if (this.noActivePaymentMethods) {
       this.messageService.add({
         severity: 'warn',
@@ -1211,15 +1245,15 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   }
 
   scheduledAmountForPayable(payable: Payable): number {
-    return this.activeSchedules()
+    return this.blockingSchedules()
       .flatMap((schedule) => schedule.details ?? [])
-      .filter((detail) => detail.invoiceId === payable.id)
+      .filter((detail) => detail.invoiceId === payable.id && !detail.canceled)
       .reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0);
   }
 
   scheduledLabelForPayable(payable: Payable): string | null {
-    const linked = this.activeSchedules().filter((schedule) =>
-      (schedule.details ?? []).some((detail) => detail.invoiceId === payable.id),
+    const linked = this.blockingSchedules().filter((schedule) =>
+      (schedule.details ?? []).some((detail) => detail.invoiceId === payable.id && !detail.canceled),
     );
     if (!linked.length) {
       return null;
@@ -1229,9 +1263,16 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     return `${this.formatMoney(amount)} · ${dates}`;
   }
 
-  hasActiveFullSchedule(payable: Payable): boolean {
-    const scheduled = this.scheduledAmountForPayable(payable);
-    return scheduled > 0 && scheduled >= Number(payable.availableAmount);
+  hasActivePaymentScheduleForPayable(payable: Payable): boolean {
+    return this.blockingSchedules().some((schedule) =>
+      (schedule.details ?? []).some((detail) => detail.invoiceId === payable.id && !detail.canceled),
+    );
+  }
+
+  activePaymentScheduleTooltip(payable: Payable): string | undefined {
+    return this.hasActivePaymentScheduleForPayable(payable)
+      ? ACTIVE_PAYMENT_SCHEDULE_BLOCK_MESSAGE
+      : undefined;
   }
 
   payableReference(invoiceId: number): string {
@@ -1239,8 +1280,8 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     return payable?.reference ?? `ID ${invoiceId}`;
   }
 
-  private activeSchedules(): PaymentSchedule[] {
-    return this.schedules.filter((schedule) => schedule.status === 'SCHEDULED');
+  private blockingSchedules(): PaymentSchedule[] {
+    return this.schedules.filter((schedule) => schedule.status === 'SCHEDULED' || schedule.status === 'FAILED');
   }
 
   private buildScheduleSuccessDetail(
@@ -1337,6 +1378,15 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         severity: 'warn',
         summary: 'Método requerido',
         detail: 'Seleccione un método de pago activo.',
+        life: 5000,
+      });
+      return false;
+    }
+    if (!selectedMethod) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Método de pago',
+        detail: 'El método de pago seleccionado ya no está disponible.',
         life: 5000,
       });
       return false;

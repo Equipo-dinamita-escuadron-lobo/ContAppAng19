@@ -2,11 +2,19 @@ import { PaymentSchedule } from './treasury-api.models';
 import { translatePaymentMethodName } from './treasury-status-labels';
 import { resolveSupplierName } from './treasury-third-party.integration';
 
+export function scheduleActiveDetails(item: PaymentSchedule) {
+  return (item.details ?? []).filter((detail) => !detail.canceled);
+}
+
 export function scheduleTotal(item: PaymentSchedule): number {
   if (item.total != null && !Number.isNaN(Number(item.total))) {
     return Number(item.total);
   }
   return (item.details ?? []).reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0);
+}
+
+export function scheduleActiveTotal(item: PaymentSchedule): number {
+  return scheduleActiveDetails(item).reduce((sum, detail) => sum + Number(detail.amount ?? 0), 0);
 }
 
 export function scheduleSuppliersLabel(
@@ -35,7 +43,8 @@ export function scheduleInvoicesLabel(
   return details
     .map((detail) => {
       const reference = payableReferenceById.get(detail.invoiceId) ?? `ID ${detail.invoiceId}`;
-      return `${reference} (${formatMoney(Number(detail.amount ?? 0))})`;
+      const canceledSuffix = detail.canceled ? ' · cancelado' : '';
+      return `${reference} (${formatMoney(Number(detail.amount ?? 0))})${canceledSuffix}`;
     })
     .join(', ');
 }
