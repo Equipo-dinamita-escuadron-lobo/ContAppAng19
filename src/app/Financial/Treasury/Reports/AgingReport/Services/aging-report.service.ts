@@ -4,6 +4,7 @@ import { catchError } from 'rxjs/operators';
 import { TreasuryApiService } from '../../../Shared/treasury-api.service';
 import { ChartAccountService } from '../../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
 import { ThirdService } from '../../../../../GeneralMasters/ThirdParties/Services/third.service';
+import { resolveSupplierFilterId } from '../../../Shared/treasury-third-party.integration';
 import {
   AgingReportFilter,
   AgingReportResponse,
@@ -23,7 +24,7 @@ export class AgingReportService {
 
   getAgingReport(enterpriseId: string, filters: AgingReportFilter): Observable<AgingReportResponse> {
     const cutoff = this.toLocalDateString(filters.cutoffDate ?? new Date());
-    const supplierId = filters.supplierId != null ? Number(filters.supplierId) : undefined;
+    const supplierId = resolveSupplierFilterId(filters.supplierId);
     const accountCode = filters.accountCode || undefined;
     const document = filters.document?.trim() || undefined;
 
@@ -46,7 +47,8 @@ export class AgingReportService {
           }),
         );
 
-        const lines = (items || []).map((item) => {
+        const lines = (items || [])
+          .map((item) => {
           const totalDue =
             Number(item.current || 0) +
             Number(item.days1to30 || 0) +
@@ -60,7 +62,7 @@ export class AgingReportService {
 
           return {
             id: item.invoiceId,
-            supplierId: item.supplierId,
+            supplierId: Number(item.supplierId),
             reference: item.reference,
             accountCode: String(item.accountCode),
             accountDescription: accountLabel,
@@ -73,7 +75,8 @@ export class AgingReportService {
             days61to90: Number(item.days61to90 || 0),
             days91Plus: Number(item.days91Plus || 0),
           };
-        });
+        })
+          .filter((line) => supplierId == null || line.supplierId === supplierId);
 
         const totals = lines.reduce(
           (sum, line) => ({
@@ -131,7 +134,7 @@ export class AgingReportService {
         const suppliers: SupplierOption[] = [...new Set(pending.map((p) => Number(p.supplierId)))]
           .map((id) => {
             const name = thirdNames.get(id) || `Proveedor ${id}`;
-            return { id, name, label: `${id} — ${name}` };
+            return { id, value: id, name, label: `${id} — ${name}` };
           })
           .sort((a, b) => a.label.localeCompare(b.label));
 

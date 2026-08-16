@@ -44,6 +44,7 @@ export interface AccountTypeOption {
 
 export interface SupplierOption {
   id: number;
+  value: number;
   name: string;
   label: string;
 }

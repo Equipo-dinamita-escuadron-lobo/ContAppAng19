@@ -45,11 +45,12 @@
           formControlName="supplierId"
           [options]="supplierOptions"
           optionLabel="label"
-          optionValue="id"
+          optionValue="value"
           placeholder="Todos los proveedores"
           [showClear]="true"
           [filter]="true"
           filterBy="label"
+          (onChange)="onGenerateReport()"
           styleClass="w-full">
         </p-dropdown>
       </div>

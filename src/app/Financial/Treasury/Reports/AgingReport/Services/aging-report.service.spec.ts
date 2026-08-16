@@ -101,6 +101,58 @@ describe('AgingReportService report lines', () => {
     });
   });
 
+  it('filters aging lines client-side when API returns mixed suppliers', (done) => {
+    const { service } = createService([
+      {
+        invoiceId: 1,
+        supplierId: 7,
+        reference: 'FC-100',
+        accountCode: '220501',
+        dueDate: '2026-08-01',
+        daysOverdue: 5,
+        current: 100,
+        days1to30: 0,
+        days31to60: 0,
+        days61to90: 0,
+        days91Plus: 0,
+      },
+      {
+        invoiceId: 2,
+        supplierId: 9,
+        reference: 'FC-200',
+        accountCode: '220501',
+        dueDate: '2026-08-02',
+        daysOverdue: 4,
+        current: 50,
+        days1to30: 0,
+        days31to60: 0,
+        days61to90: 0,
+        days91Plus: 0,
+      },
+    ]);
+
+    service.getAgingReport('ent-1', {
+      supplierId: 7,
+      cutoffDate: new Date(2026, 7, 13),
+    }).subscribe((report) => {
+      expect(report.lines.length).toBe(1);
+      expect(report.lines[0].supplierId).toBe(7);
+      expect(report.totals.totalDue).toBe(100);
+      done();
+    });
+  });
+
+  it('normalizes dropdown object values before requesting aging', (done) => {
+    const { service, api } = createService([]);
+    service.getAgingReport('ent-1', {
+      supplierId: { value: 7, label: '7 — Acme Ltda.' } as any,
+      cutoffDate: new Date(2026, 7, 13),
+    }).subscribe(() => {
+      expect(api.aging).toHaveBeenCalledWith('ent-1', '2026-08-13', 7, undefined, undefined);
+      done();
+    });
+  });
+
   it('uses cutoff date for report date and preserves days overdue from API', (done) => {
     const { service } = createService([
       {

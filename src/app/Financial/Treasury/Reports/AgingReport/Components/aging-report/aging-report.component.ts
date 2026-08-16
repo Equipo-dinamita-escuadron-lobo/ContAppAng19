@@ -26,6 +26,7 @@ import {
 } from '../../../../Shared/treasury-status-labels';
 import { ContextualHelpComponent } from '../../../../../../Shared/Components/contextual-help/contextual-help.component';
 import { TREASURY_HELP } from '../../../../Shared/treasury-help-content';
+import { resolveSupplierFilterId } from '../../../../Shared/treasury-third-party.integration';
 
 @Component({
   selector: 'app-aging-report',
@@ -126,8 +127,8 @@ export class AgingReportComponent implements OnInit {
     }
 
     this.loading = true;
-    const supplierId = this.filterForm.value.supplierId;
-    const supplier = this.supplierOptions.find((s) => s.id === supplierId);
+    const supplierId = resolveSupplierFilterId(this.filterForm.value.supplierId);
+    const supplier = this.supplierOptions.find((s) => s.value === supplierId);
 
     const filters: AgingReportFilter = {
       supplierId,
@@ -267,6 +268,7 @@ export class AgingReportComponent implements OnInit {
   }
 
   supplierName(supplierId: number): string {
-    return this.supplierOptions.find((s) => s.id === supplierId)?.name || `Proveedor ${supplierId}`;
+    return this.supplierOptions.find((s) => s.value === Number(supplierId))?.name
+      || `Proveedor ${supplierId}`;
   }
 }

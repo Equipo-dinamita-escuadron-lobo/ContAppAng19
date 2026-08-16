@@ -20,6 +20,22 @@ export function resolveSupplierName(map: Map<number, string>, supplierId: number
   return map.get(Number(supplierId)) || `Proveedor ${supplierId}`;
 }
 
+/** Normaliza el valor del filtro de proveedor (dropdown/autocomplete) a un id numérico. */
+export function resolveSupplierFilterId(raw: unknown): number | undefined {
+  if (raw == null || raw === '') {
+    return undefined;
+  }
+  if (typeof raw === 'object') {
+    const candidate =
+      (raw as { value?: unknown }).value ??
+      (raw as { id?: unknown }).id ??
+      (raw as { thId?: unknown }).thId;
+    return resolveSupplierFilterId(candidate);
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
 export function buildThirdPartyIdentificationMap(thirds: Array<{
   thId?: number;
   idNumber?: number;
