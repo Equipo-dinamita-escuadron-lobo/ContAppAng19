@@ -19,3 +19,27 @@ export function buildThirdPartyNameMap(thirds: Array<{
 export function resolveSupplierName(map: Map<number, string>, supplierId: number): string {
   return map.get(Number(supplierId)) || `Proveedor ${supplierId}`;
 }
+
+export function buildThirdPartyIdentificationMap(thirds: Array<{
+  thId?: number;
+  idNumber?: number;
+  verificationNumber?: number;
+}>): Map<number, string> {
+  return new Map(
+    (thirds || []).map((third) => {
+      const id = Number(third.thId);
+      const base = third.idNumber != null ? String(third.idNumber) : '';
+      const label = base
+        ? `${base}${third.verificationNumber != null ? `-${third.verificationNumber}` : ''}`
+        : '—';
+      return [id, label] as [number, string];
+    }),
+  );
+}
+
+export function resolveSupplierIdentification(
+  map: Map<number, string>,
+  supplierId: number,
+): string {
+  return map.get(Number(supplierId)) ?? '—';
+}

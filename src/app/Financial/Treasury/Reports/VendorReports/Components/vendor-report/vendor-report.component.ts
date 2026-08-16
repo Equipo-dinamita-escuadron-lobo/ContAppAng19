@@ -271,7 +271,7 @@ export class VendorReportComponent implements OnInit {
         transaction.reference || '-',
         transaction.documentNumber || '-',
         transaction.expenseReceiptNumber || '-',
-        transaction.type === 'Bill' ? 'Factura' : 'Pago',
+        transaction.type === 'Bill' ? 'Factura' : transaction.type === 'Payment' ? 'Pago' : 'Baja CxP',
         transaction.description || '-',
         transaction.debits || 0,
         transaction.credits || 0,
@@ -308,12 +308,13 @@ export class VendorReportComponent implements OnInit {
     return `estado_cuenta_${safeName}_${new Date().toISOString().slice(0, 10)}.${ext}`;
   }
 
-  getTransactionTypeTag(type: 'Bill' | 'Payment'): {
+  getTransactionTypeTag(type: 'Bill' | 'Payment' | 'WriteOff'): {
     severity: 'success' | 'info' | 'warning' | 'danger';
     text: string;
   } {
     const text = transactionTypeLabel(type);
-    const severity = type === 'Payment' ? 'success' : 'info';
+    const severity =
+      type === 'Payment' ? 'success' : type === 'WriteOff' ? 'warning' : 'info';
     return { severity, text };
   }
 

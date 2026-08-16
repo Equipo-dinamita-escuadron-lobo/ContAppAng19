@@ -14,7 +14,7 @@ export interface VendorReportTransaction {
   reference: string;
   documentNumber?: string;
   expenseReceiptNumber?: string;
-  type: 'Bill' | 'Payment';
+  type: 'Bill' | 'Payment' | 'WriteOff';
   description: string;
   debits: number;
   credits: number;
@@ -32,8 +32,10 @@ export interface VendorReport {
   };
   transactions: VendorReportTransaction[];
   periodTotals: {
+    openingBalance: number;
     totalDebits: number;
     totalCredits: number;
+    writeOffTotal: number;
     netBalance: number;
   };
   totalDue: number;

@@ -15,11 +15,14 @@ export interface VoucherDetail {
   id: number; supplierId: number; invoiceId: number; invoiceReference: string;
   payableAccountId: number; payableAccountCode: string; previousBalance: number;
   amountPaid: number; remainingBalance: number;
+  /** Alias legacy en algunas respuestas */
+  amount?: number;
 }
 export interface PaymentVoucher {
   id: number; voucherNumber: string; enterpriseId: string; issueDate: string;
   status: VoucherStatus; paymentMethodId: number; bankAccountId?: number; total: number;
   observations?: string; accountingEntryId?: number; accountingEntryCode?: string; failureReason?: string; voidReason?: string;
+  createdAt?: string; updatedAt?: string;
   version: number; details: VoucherDetail[];
 }
 export interface Payable {
@@ -38,7 +41,9 @@ export interface ScheduleDetail {
 export interface PaymentSchedule {
   id: number; enterpriseId: string; executionDate: string; status: ScheduleStatus;
   paymentMethodId: number; bankAccountId?: number; total?: number; observations?: string;
-  retryCount: number; voucherId?: number; failureReason?: string; details: ScheduleDetail[];
+  retryCount: number; voucherId?: number; voucherNumber?: string; failureReason?: string;
+  createdAt?: string; updatedAt?: string;
+  details: ScheduleDetail[];
 }
 export interface AgingLine {
   supplierId: number; invoiceId: number; reference: string; accountCode: string; dueDate: string;
@@ -46,12 +51,30 @@ export interface AgingLine {
   days61to90: number; days91Plus: number;
 }
 export interface SupplierStatement {
-  supplierId: number; invoiced: number; paid: number; pending: number;
-  invoices: Payable[]; vouchers: PaymentVoucher[];
+  supplierId: number;
+  invoiced: number;
+  paid: number;
+  pending: number;
+  openingBalance?: number;
+  writeOffTotal?: number;
+  invoices: Payable[];
+  vouchers: PaymentVoucher[];
+  writeOffs?: PayableWriteOff[];
 }
 export interface WriteOffRequest {
   enterpriseId: string; reason: string; counterpartAccountId: number;
   counterpartAccountCode: string; details: VoucherDetailRequest[];
+}
+export interface PayableWriteOffDetail {
+  id?: number;
+  supplierId: number;
+  invoiceId: number;
+  invoiceReference?: string;
+  payableAccountId?: number;
+  payableAccountCode?: string;
+  amount: number;
+  originalAmount?: number;
+  availableAmount?: number;
 }
 export interface PayableWriteOff {
   id: number;
@@ -62,6 +85,8 @@ export interface PayableWriteOff {
   total: number;
   status: WriteOffStatus | string;
   accountingEntryId?: number;
+  accountingEntryCode?: string;
+  createdAt?: string;
   version?: number;
-  details?: { id?: number; supplierId: number; invoiceId: number; amount: number }[];
+  details?: PayableWriteOffDetail[];
 }

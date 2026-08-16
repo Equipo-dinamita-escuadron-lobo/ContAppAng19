@@ -123,15 +123,15 @@
 
       <ng-template pTemplate="header">
         <tr>
-          <th>Fecha ejecución</th>
-          <th>Proveedor</th>
-          <th>Factura(s)</th>
-          <th>Método</th>
-          <th>Estado</th>
-          <th class="text-right">Total</th>
-          <th>Reintentos</th>
-          <th>Comprobante</th>
-          <th style="min-width: 10rem">Acciones</th>
+          <th scope="col">Fecha ejecución</th>
+          <th scope="col">Proveedor</th>
+          <th scope="col">Factura(s)</th>
+          <th scope="col">Método</th>
+          <th scope="col">Estado</th>
+          <th scope="col" class="text-right">Total</th>
+          <th scope="col">Reintentos</th>
+          <th scope="col">Comprobante</th>
+          <th scope="col" style="min-width: 10rem">Acciones</th>
         </tr>
       </ng-template>
 
@@ -146,11 +146,28 @@
           </td>
           <td class="text-right font-semibold">{{ formatCurrency(scheduleTotalFn(item)) }}</td>
           <td>{{ item.retryCount }}</td>
-          <td>{{ item.voucherId || '—' }}</td>
+          <td>
+            <button
+              *ngIf="canViewScheduleVoucher(item)"
+              type="button"
+              class="font-mono font-semibold text-blue-600 hover:underline bg-transparent border-0 p-0"
+              (click)="openScheduleVoucher(item)">
+              {{ scheduleVoucherLabel(item) }}
+            </button>
+            <span *ngIf="!canViewScheduleVoucher(item)">—</span>
+          </td>
           <td>
             <div class="flex flex-wrap gap-1">
               <p-button
-                *ngIf="item.status === 'SCHEDULED'"
+                label="Ver detalle"
+                icon="pi pi-eye"
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                (onClick)="showScheduleDetail(item)">
+              </p-button>
+              <p-button
+                *ngIf="canCancelSchedule(item)"
                 label="Cancelar"
                 icon="pi pi-ban"
                 size="small"
@@ -158,6 +175,14 @@
                 [outlined]="true"
                 [disabled]="actionBusy"
                 (onClick)="cancelSchedule(item)">
+              </p-button>
+              <p-button
+                *ngIf="canViewScheduleVoucher(item)"
+                label="Ver comprobante"
+                icon="pi pi-file"
+                size="small"
+                [disabled]="actionBusy"
+                (onClick)="openScheduleVoucher(item)">
               </p-button>
               <p-button
                 *ngIf="item.status === 'FAILED'"
@@ -236,6 +261,45 @@
       </div>
     </p-card>
   </div>
+
+  <p-dialog
+    header="Detalle de programación de pago"
+    [(visible)]="scheduleDetailDialogVisible"
+    [modal]="true"
+    [style]="{ width: 'min(560px, 95vw)' }"
+    [draggable]="false"
+    [resizable]="false"
+    (onHide)="cancelScheduleDetailDialog()">
+    <app-treasury-schedule-detail-panel
+      [item]="scheduleDetailTarget ?? null"
+      [view]="scheduleDetailView(scheduleDetailTarget)">
+    </app-treasury-schedule-detail-panel>
+    <ng-template pTemplate="footer">
+      <div class="flex gap-2 justify-end flex-wrap">
+        <p-button
+          label="Cerrar"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="cancelScheduleDetailDialog()">
+        </p-button>
+        <p-button
+          *ngIf="scheduleDetailTarget && canViewScheduleVoucher(scheduleDetailTarget)"
+          label="Ver comprobante"
+          icon="pi pi-file"
+          (onClick)="openScheduleVoucher(scheduleDetailTarget!)">
+        </p-button>
+        <p-button
+          *ngIf="scheduleDetailTarget && canCancelSchedule(scheduleDetailTarget)"
+          label="Cancelar"
+          icon="pi pi-ban"
+          severity="danger"
+          [outlined]="true"
+          [disabled]="actionBusy"
+          (onClick)="cancelSchedule(scheduleDetailTarget!); cancelScheduleDetailDialog()">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
 
   <p-toast></p-toast>
 </div>
