@@ -71,6 +71,7 @@ import {
 } from '../Shared/treasury-payment-messages';
 import {
   ACTIVE_PAYMENT_SCHEDULE_BLOCK_MESSAGE,
+  SCHEDULE_FUTURE_DATE_REQUIRED_MESSAGE,
 } from '../Shared/treasury-schedule-messages';
 import {
   WRITE_OFF_AMOUNT_EXCEEDS_MESSAGE,
@@ -447,7 +448,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   ngOnInit() {
     const today = this.stripTime(new Date());
     this.minDueDate = this.addDays(today, 1);
-    this.minExecutionDate = today;
+    this.minExecutionDate = this.addDays(today, 1);
     this.setupVoucherFilterSubscriptions();
     this.reload();
   }
@@ -996,13 +997,14 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     if (!selectedDate) {
       return;
     }
-    if (this.stripTime(selectedDate).getTime() < this.minExecutionDate.getTime()) {
+    const today = this.stripTime(new Date());
+    if (this.stripTime(selectedDate).getTime() <= today.getTime()) {
       this.scheduleExecutionDate = new Date(this.minExecutionDate);
       this.messageService.add({
         severity: 'warn',
         summary: 'Fecha inválida',
-        detail: 'La fecha programada no puede ser anterior a hoy.',
-        life: 4000,
+        detail: SCHEDULE_FUTURE_DATE_REQUIRED_MESSAGE,
+        life: 5000,
       });
     }
   }
@@ -1427,6 +1429,18 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         life: 5000,
       });
       return false;
+    }
+    if (options?.requireScheduleDate && options.executionDate) {
+      const today = this.stripTime(new Date());
+      if (this.stripTime(options.executionDate).getTime() <= today.getTime()) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Fecha inválida',
+          detail: SCHEDULE_FUTURE_DATE_REQUIRED_MESSAGE,
+          life: 5000,
+        });
+        return false;
+      }
     }
     return true;
   }

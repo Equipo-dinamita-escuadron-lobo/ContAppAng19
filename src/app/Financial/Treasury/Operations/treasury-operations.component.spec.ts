@@ -70,6 +70,7 @@ describe('TreasuryOperationsComponent PP8', () => {
     }];
     value.minExecutionDate = new Date();
     value.minExecutionDate.setHours(0, 0, 0, 0);
+    value.minExecutionDate.setDate(value.minExecutionDate.getDate() + 1);
     value.methods = [{ id: 1, requiresBankAccount: true, accountingAccountId: 10 }];
     value.methodOptions = [{ id: 1, label: 'Transferencia' }];
     value.bankOptions = [{ id: 33, label: 'Banco - 123' }];
@@ -310,6 +311,33 @@ describe('TreasuryOperationsComponent PP8', () => {
     value.confirmScheduleFromDialog();
     expect(api.createSchedule).toHaveBeenCalled();
     expect(api.createVoucher).not.toHaveBeenCalled();
+  });
+
+  it('rejects schedule submission when execution date is today', () => {
+    const { value, api } = component();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    value.openScheduleDialog(value.payables[0]);
+    value.scheduleLines[0].amount = 25;
+    value.schedulePaymentMethodId = 1;
+    value.scheduleBankAccountId = 33;
+    value.scheduleExecutionDate = today;
+    value.confirmScheduleFromDialog();
+    expect(api.createSchedule).not.toHaveBeenCalled();
+  });
+
+  it('rejects schedule submission when execution date is in the past', () => {
+    const { value, api } = component();
+    const yesterday = new Date();
+    yesterday.setHours(0, 0, 0, 0);
+    yesterday.setDate(yesterday.getDate() - 1);
+    value.openScheduleDialog(value.payables[0]);
+    value.scheduleLines[0].amount = 25;
+    value.schedulePaymentMethodId = 1;
+    value.scheduleBankAccountId = 33;
+    value.scheduleExecutionDate = yesterday;
+    value.confirmScheduleFromDialog();
+    expect(api.createSchedule).not.toHaveBeenCalled();
   });
 
   it('disables pay write-off and schedule actions when payable has active schedule', () => {
