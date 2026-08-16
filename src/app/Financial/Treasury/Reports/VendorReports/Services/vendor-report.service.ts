@@ -182,6 +182,7 @@ export class VendorReportService {
             transactions,
             periodTotals: {
               openingBalance,
+              periodPayments,
               totalDebits,
               totalCredits,
               writeOffTotal,
@@ -272,7 +273,7 @@ export class VendorReportService {
         ...(report.periodTotals.openingBalance !== 0
           ? [['Saldo inicial', fmt(report.periodTotals.openingBalance)]]
           : []),
-        ['Pagos del período', fmt(report.periodTotals.totalDebits - report.periodTotals.writeOffTotal)],
+        ['Pagos del período', fmt(report.periodTotals.periodPayments)],
         ...(report.periodTotals.writeOffTotal > 0
           ? [['Total bajas CxP', fmt(report.periodTotals.writeOffTotal)]]
           : []),
@@ -327,7 +328,7 @@ export class VendorReportService {
       ...(report.periodTotals.openingBalance !== 0
         ? [['Saldo inicial', report.periodTotals.openingBalance]]
         : []),
-      ['Pagos del período', report.periodTotals.totalDebits - report.periodTotals.writeOffTotal],
+      ['Pagos del período', report.periodTotals.periodPayments],
       ...(report.periodTotals.writeOffTotal > 0
         ? [['Total bajas CxP', report.periodTotals.writeOffTotal]]
         : []),
