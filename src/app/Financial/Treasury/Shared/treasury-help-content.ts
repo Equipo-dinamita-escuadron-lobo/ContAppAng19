@@ -43,6 +43,18 @@ export const TREASURY_HELP = {
       'El detalle muestra movimientos del período y antigüedad de saldos.',
     slug: 'tesoreria',
   },
+  writeOffCounterpartAccount: {
+    title: 'Cuenta contrapartida',
+    summary:
+      'Cuenta contable que explica el reconocimiento de la disminución de la deuda cuando esta no se cancela mediante un pago.\n\n' +
+      'En una Baja CxP se disminuye una obligación sin realizar un pago. La Cuenta por Pagar se debita para reducir la deuda y la cuenta contrapartida se acredita según el motivo contable de la baja.\n\n' +
+      'Ejemplo del asiento:\n' +
+      'CxP                  Débito   $40.000\n' +
+      'Cuenta contrapartida Crédito   $40.000\n\n' +
+      'La cuenta contrapartida debe seleccionarse de acuerdo con la razón contable de la baja y no representa automáticamente una cuenta bancaria o de caja.\n\n' +
+      'Ejemplo práctico: si una obligación de $100.000 se reduce en $40.000 mediante una Baja CxP, el saldo pendiente queda en $60.000 sin que exista salida de dinero.',
+    slug: 'tesoreria',
+  },
 } as const;
 
 export const ACCOUNT_CATALOGUE_HELP = {

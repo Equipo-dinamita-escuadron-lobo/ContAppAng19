@@ -203,6 +203,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   dueDateReason = '';
   minDueDate!: Date;
   readonly help = TREASURY_HELP.operations;
+  readonly writeOffCounterpartHelp = TREASURY_HELP.writeOffCounterpartAccount;
   readonly noAvailableBankAccountsMessage = NO_AVAILABLE_BANK_ACCOUNTS_MESSAGE;
   readonly voucherStatusOptions = voucherStatusFilterOptions();
   private supplierNames = new Map<number, string>();
