@@ -354,7 +354,7 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
   }
 
   cancel(): void {
-    this.router.navigate(['/enterprise/list']);
+    this.router.navigate(['/commercial/purchase-invoice']);
   }
 
   private purchaseSaveErrorDetail(error: unknown): string {

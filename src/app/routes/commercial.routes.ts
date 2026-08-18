@@ -40,13 +40,23 @@ export const COMMERCIAL_ROUTES: Routes = [
       ),
   },
   {
-    path: 'purchase-invoice',
+    path: 'purchase-invoice/new',
     data: {
-      breadcrumb: 'Factura de Compra',
+      breadcrumb: 'Nueva Factura de Compra',
     },
     loadComponent: () =>
       import('../Commercial/PurchaseInvoice/components/purchase-invoice-creation/purchase-invoice-creation.component').then(
         (m) => m.PurchaseInvoiceCreationComponent
+      ),
+  },
+  {
+    path: 'purchase-invoice',
+    data: {
+      breadcrumb: 'Facturas de Compra',
+    },
+    loadComponent: () =>
+      import('../Commercial/PurchaseInvoice/components/purchase-invoice-list/purchase-invoice-list.component').then(
+        (m) => m.PurchaseInvoiceListComponent
       ),
   },
   {
