@@ -124,7 +124,9 @@ export function resolveMovementAccountDisplay(
   movement: Record<string, unknown>,
   accountLookup: Map<number, { code: string; description: string }>,
 ): { accountId?: number; accountCode: string; accountName: string } {
-  const accountIdRaw = movement['accountId'];
+  // Accounting currently exposes the persisted internal account id as `account`.
+  // Prefer that authoritative reference (or `accountId`) over optional display labels.
+  const accountIdRaw = movement['accountId'] ?? movement['account'];
   const accountId = accountIdRaw != null && accountIdRaw !== ''
     ? Number(accountIdRaw)
     : undefined;
@@ -149,7 +151,7 @@ export function resolveMovementAccountDisplay(
     };
   }
 
-  const accountRef = accountId ?? movement['accountCode'] ?? movement['account'];
+  const accountRef = accountId ?? movement['accountCode'];
   return resolveAccountFromLookup(accountRef, accountLookup);
 }
 
