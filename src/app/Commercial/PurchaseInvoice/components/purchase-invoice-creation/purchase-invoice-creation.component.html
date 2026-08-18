@@ -19,7 +19,7 @@
       <div class="flex flex-wrap gap-2 lg:justify-end shrink-0">
         <p-button label="Guardar factura" icon="pi pi-save" (click)="saveInvoice()"
           [disabled]="lstProducts.length === 0 || !supplier" [loading]="saving"></p-button>
-        <p-button label="Volver al listado" icon="pi pi-arrow-left" severity="secondary" [outlined]="true"
+        <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true"
           (click)="cancel()"></p-button>
       </div>
     </div>
