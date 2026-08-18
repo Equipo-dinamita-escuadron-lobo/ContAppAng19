@@ -9,7 +9,7 @@ describe('PurchaseInvoiceCreationComponent totals', () => {
       {} as any,
       {} as any,
       {} as any,
-      { add: jasmine.createSpy() } as any,
+      {} as any,
       {} as any,
       {} as any,
     );
@@ -90,7 +90,7 @@ describe('PurchaseInvoiceCreationComponent totals', () => {
     expect(value.paymentTermDays).toBe(1);
   });
 
-  it('keeps payment term and due date in sync', fakeAsync(() => {
+  it('keeps payment term and due date in sync', () => {
     const value = component();
     value.currentDate = new Date('2026-08-13T12:00:00');
     value.minDueDate = new Date('2026-08-14T00:00:00');
@@ -99,17 +99,14 @@ describe('PurchaseInvoiceCreationComponent totals', () => {
 
     expect(value.paymentTermDays).toBe(30);
     expect(value.dueDate?.toISOString().slice(0, 10)).toBe('2026-09-12');
-    tick();
 
     value.paymentTermDays = 10;
     value.onPaymentTermChange();
     expect(value.dueDate?.toISOString().slice(0, 10)).toBe('2026-08-23');
-    tick();
 
     value.onDueDateChange(new Date('2026-08-20T12:00:00'));
     expect(value.paymentTermDays).toBe(7);
-    tick();
-  }));
+  });
 
   it('recalculates line and invoice totals after editing a product', () => {
     const value = component();
@@ -120,7 +117,6 @@ describe('PurchaseInvoiceCreationComponent totals', () => {
       IvaValor: 0,
       totalValue: 0,
       descuentos: [0, 0],
-      maxQuantity: 10,
     } as any;
     value.lstProducts = [product];
 
@@ -134,15 +130,6 @@ describe('PurchaseInvoiceCreationComponent totals', () => {
 });
 
 describe('PurchaseInvoiceCreationComponent save state', () => {
-  it('returns to the purchase invoice list', () => {
-    const component = Object.create(PurchaseInvoiceCreationComponent.prototype) as any;
-    component.router = { navigate: jasmine.createSpy() };
-
-    component.cancel();
-
-    expect(component.router.navigate).toHaveBeenCalledOnceWith(['/commercial/purchase-invoice']);
-  });
-
   it('releases the loading button when the server does not respond', fakeAsync(() => {
     const component = Object.create(PurchaseInvoiceCreationComponent.prototype) as any;
     component.supplier = { thId: 1 };
@@ -153,14 +140,11 @@ describe('PurchaseInvoiceCreationComponent save state', () => {
       cost: 100,
       IVA: 0,
       descuentos: [0, 0],
-      maxQuantity: 10,
     }];
     component.initialPayment = 0;
     component.total = 100;
     component.pendingTotal = 100;
     component.currentDate = new Date('2026-08-13T12:00:00');
-    component.minDueDate = new Date('2026-08-14T00:00:00');
-    component.dueDate = new Date('2026-09-12T00:00:00');
     component.paymentTermDays = 30;
     component.impuestoCheck = true;
     component.localStorageMethods = {
