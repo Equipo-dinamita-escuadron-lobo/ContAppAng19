@@ -261,19 +261,13 @@ export class ExpenseReceiptDetailsComponent implements OnInit {
     }
     this.expandedInvoiceIds.add(detail.invoiceId);
     this.productLineErrors.delete(detail.invoiceId);
-    if (!detail.sourceInvoiceId) {
-      this.productLineErrors.set(
-        detail.invoiceId,
-        'No se encontró la factura de origen en Facturación.',
-      );
-      return;
-    }
     if (detail.productLines) {
       return;
     }
     this.loadingProductLines.add(detail.invoiceId);
-    this.expenseReceiptService.getPaidInvoiceProductLines(detail.sourceInvoiceId).subscribe({
-      next: (lines) => {
+    this.expenseReceiptService.getPaidInvoiceProductLinesForObligation(detail.invoiceId).subscribe({
+      next: ({ sourceInvoiceId, lines }) => {
+        detail.sourceInvoiceId = sourceInvoiceId;
         detail.productLines = lines;
         this.loadingProductLines.delete(detail.invoiceId);
         if (!lines.length) {

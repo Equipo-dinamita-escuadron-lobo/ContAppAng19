@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin, map, of, timer } from 'rxjs';
+import { Observable, forkJoin, map, of, throwError, timer } from 'rxjs';
 import { catchError, last, switchMap, take, takeWhile } from 'rxjs/operators';
 import { PaymentMethodsServiceService } from '../../../../GeneralMasters/PaymentMethods/services/payment-methods-service.service';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
@@ -318,6 +318,22 @@ export class ExpenseReceiptService {
       map((facture) => mapSkeletonProductsToLineViews(this.normalizeSkeletonProducts(facture as {
         products?: PurchaseInvoiceProductLine[] | Iterable<PurchaseInvoiceProductLine>;
       }))),
+    );
+  }
+
+  getPaidInvoiceProductLinesForObligation(
+    obligationId: number,
+  ): Observable<{ sourceInvoiceId: number; lines: PaidInvoiceLineView[] }> {
+    return this.api.payable(obligationId, this.enterpriseId()).pipe(
+      switchMap((payable) => {
+        const sourceInvoiceId = Number(payable.sourceInvoiceId);
+        if (!Number.isInteger(sourceInvoiceId) || sourceInvoiceId <= 0) {
+          return throwError(() => new Error('La obligación no tiene una factura de origen válida.'));
+        }
+        return this.getPaidInvoiceProductLines(sourceInvoiceId).pipe(
+          map((lines) => ({ sourceInvoiceId, lines })),
+        );
+      }),
     );
   }
 

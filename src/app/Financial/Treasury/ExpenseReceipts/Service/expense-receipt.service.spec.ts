@@ -245,4 +245,33 @@ describe('ExpenseReceiptService payable accounts', () => {
     expect(lines[0].productLabel).toBe('Mantenimiento');
     expect(lines[0].lineTotal).toBe(95200);
   });
+
+  it('resolves the canonical billing invoice from the treasury obligation', async () => {
+    const api = {
+      payable: jasmine.createSpy().and.returnValue(of({
+        id: 11,
+        sourceInvoiceId: 501,
+      })),
+    };
+    const skeleton = {
+      getFactureById: jasmine.createSpy().and.returnValue(of({ products: [] })),
+    };
+    const storage = { getIdEnterprise: () => 'enterprise-a' };
+    const service = new ExpenseReceiptService(
+      api as any,
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+      storage as any,
+      skeleton as any,
+    );
+
+    const result = await firstValueFrom(service.getPaidInvoiceProductLinesForObligation(11));
+
+    expect(api.payable).toHaveBeenCalledWith(11, 'enterprise-a');
+    expect(skeleton.getFactureById).toHaveBeenCalledWith(501);
+    expect(skeleton.getFactureById).not.toHaveBeenCalledWith(11);
+    expect(result).toEqual({ sourceInvoiceId: 501, lines: [] });
+  });
 });
