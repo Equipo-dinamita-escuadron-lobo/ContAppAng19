@@ -1,4 +1,5 @@
 import {
+  buildAccountingEntryView,
   buildAccountCatalogueLookup,
   flattenAccountCatalogueRefs,
   mapAccountingMovementsForView,
@@ -43,6 +44,54 @@ describe('treasury-accounting-display', () => {
     expect(rows[0].accountName).toBe('Cuentas por pagar');
     expect(rows[1].accountCode).toBe('11050101');
     expect(rows[1].accountName).toBe('Banco menor');
+  });
+
+  it('maps the persisted Accounting API account field without treating its id as a code', () => {
+    const rows = mapAccountingMovementsForView([
+      { account: 21, description: 'Pago factura FC-501', debit: 100000, credit: 0 },
+      { account: 99, description: 'Salida de banco', debit: 0, credit: 100000 },
+    ], lookup);
+
+    expect(rows).toEqual([
+      jasmine.objectContaining({
+        accountId: 21,
+        accountCode: '2105',
+        accountName: 'Cuentas por pagar',
+        debit: 100000,
+        credit: 0,
+      }),
+      jasmine.objectContaining({
+        accountId: 99,
+        accountCode: '11050101',
+        accountName: 'Banco menor',
+        debit: 0,
+        credit: 100000,
+      }),
+    ]);
+  });
+
+  it('prefers the persisted account id over stale explicit labels', () => {
+    const resolved = resolveMovementAccountDisplay({
+      account: 21,
+      accountCode: '1105',
+      accountName: 'Caja',
+    }, lookup);
+
+    expect(resolved.accountCode).toBe('2105');
+    expect(resolved.accountName).toBe('Cuentas por pagar');
+  });
+
+  it('keeps historical movements and the voided status in the entry view', () => {
+    const movements = mapAccountingMovementsForView([
+      { account: 21, description: 'Baja de obligación 501', debit: 100000, credit: 0 },
+      { account: 99, description: 'Contrapartida', debit: 0, credit: 100000 },
+    ], lookup);
+    const view = buildAccountingEntryView({ code: 'AE-PWO-58', status: 'VOIDED' }, movements);
+
+    expect(view.header.entryStatus).toBe('VOIDED');
+    expect(view.movements.map((movement) => movement.accountCode)).toEqual(['2105', '11050101']);
+    expect(view.movements.reduce((total, movement) => total + movement.debit, 0)).toBe(100000);
+    expect(view.movements.reduce((total, movement) => total + movement.credit, 0)).toBe(100000);
   });
 
   it('flattens nested catalogue nodes for lookup', () => {

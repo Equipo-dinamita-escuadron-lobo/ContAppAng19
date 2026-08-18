@@ -63,23 +63,11 @@
                         <td class="font-mono">{{ entry.accountCode }}</td>
                         <td>{{ entry.accountName }}</td>
                         <td>{{ entry.detail }}</td>
-                        <td class="text-right">
-                            @if (entry.debit > 0) {
-                                <span class="text-red-600 font-semibold">
-                                    {{ entry.debit | currency:'COP':'symbol':'1.0-2':'es-CO' }}
-                                </span>
-                            } @else {
-                                <span class="text-gray-400">-</span>
-                            }
+                        <td class="text-right text-red-600 font-semibold">
+                            {{ entry.debit | currency:'COP':'code':'1.0-2':'es-CO' }}
                         </td>
-                        <td class="text-right">
-                            @if (entry.credit > 0) {
-                                <span class="text-green-600 font-semibold">
-                                    {{ entry.credit | currency:'COP':'symbol':'1.0-2':'es-CO' }}
-                                </span>
-                            } @else {
-                                <span class="text-gray-400">-</span>
-                            }
+                        <td class="text-right text-green-600 font-semibold">
+                            {{ entry.credit | currency:'COP':'code':'1.0-2':'es-CO' }}
                         </td>
                     </tr>
                 </ng-template>
@@ -87,10 +75,10 @@
                     <tr class="font-semibold bg-gray-50">
                         <td colspan="3" class="text-right">Totales</td>
                         <td class="text-right text-red-600">
-                            {{ getTotalDebit() | currency:'COP':'symbol':'1.0-2':'es-CO' }}
+                            {{ getTotalDebit() | currency:'COP':'code':'1.0-2':'es-CO' }}
                         </td>
                         <td class="text-right text-green-600">
-                            {{ getTotalCredit() | currency:'COP':'symbol':'1.0-2':'es-CO' }}
+                            {{ getTotalCredit() | currency:'COP':'code':'1.0-2':'es-CO' }}
                         </td>
                     </tr>
                 </ng-template>
