@@ -1,0 +1,109 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.purchase-page {
+  color: #1f2937;
+}
+
+.purchase-shell {
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
+}
+
+.invoice-list {
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  background: #fff;
+}
+
+.list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.list-heading h2 {
+  margin: 0;
+  color: #111a68;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.list-heading p {
+  margin: 0.15rem 0 0;
+  color: #64748b;
+  font-family: sans-serif;
+  font-size: 0.8rem;
+}
+
+.load-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.85rem;
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.load-error strong,
+.load-error span {
+  display: block;
+}
+
+.load-error span {
+  margin-top: 0.2rem;
+  font-size: 0.85rem;
+}
+
+.empty-state {
+  display: flex;
+  min-height: 13rem;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.empty-state .pi {
+  color: #94a3b8;
+  font-size: 2rem;
+}
+
+.empty-state strong {
+  color: #334155;
+  font-size: 1rem;
+}
+
+.empty-state span {
+  max-width: 30rem;
+  font-family: sans-serif;
+  font-size: 0.82rem;
+}
+
+:host ::ng-deep .p-datatable-table-container {
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .purchase-shell {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+
+  .load-error {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
