@@ -1,5 +1,5 @@
 import { fakeAsync, tick } from '@angular/core/testing';
-import { NEVER, of } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
 import { TreasuryOperationsComponent } from './treasury-operations.component';
 import {
   WRITE_OFF_AMOUNT_EXCEEDS_MESSAGE,
@@ -18,7 +18,7 @@ import {
 } from '../Shared/treasury-writeoff-messages';
 
 describe('TreasuryOperationsComponent PP8', () => {
-  function component() {
+  function component(enterpriseId = 'enterprise-a') {
     const api = {
       createVoucher: jasmine.createSpy('createVoucher').and.returnValue(NEVER),
       createSchedule: jasmine.createSpy('createSchedule').and.returnValue(NEVER),
@@ -35,17 +35,28 @@ describe('TreasuryOperationsComponent PP8', () => {
       writeOff: jasmine.createSpy('writeOff').and.returnValue(of({ id: 1, status: 'POSTED', total: 100 })),
       accountingEntry: jasmine.createSpy('accountingEntry').and.returnValue(of({ code: 'AE-PWO-12', movements: [] })),
     };
-    const storage = { getIdEnterprise: () => 'enterprise-a' };
+    const storage = {
+      getIdEnterprise: jasmine.createSpy('getIdEnterprise').and.returnValue(enterpriseId),
+    };
     const exportService = {
       datedFilename: (_prefix: string, ext: string) => `test.${ext}`,
       downloadCsvSections: jasmine.createSpy('downloadCsvSections'),
       downloadPdfSections: jasmine.createSpy('downloadPdfSections'),
     };
     const messageService = { add: jasmine.createSpy('add') };
-    const paymentMethods = { findAllActive: () => of({ content: [] }) };
-    const chart = { getListAuxiliaryAccounts: () => of([]) };
-    const bankAccountsService = { findAllActive: () => of({ content: [] }) };
-    const thirds = { getThirdParties: () => of({ content: [] }) };
+    const paymentMethods = {
+      findAllActive: jasmine.createSpy('findAllActive').and.returnValue(of({ content: [] })),
+    };
+    const chart = {
+      getListAuxiliaryAccounts: jasmine.createSpy('getListAuxiliaryAccounts').and.returnValue(of([])),
+      getListAccounts: jasmine.createSpy('getListAccounts').and.returnValue(of([])),
+    };
+    const bankAccountsService = {
+      findAllActive: jasmine.createSpy('findAllActive').and.returnValue(of({ content: [] })),
+    };
+    const thirds = {
+      getThirdParties: jasmine.createSpy('getThirdParties').and.returnValue(of({ content: [] })),
+    };
     const expenseReceiptService = {
       getSuppliers: jasmine.createSpy('getSuppliers').and.returnValue(of([])),
     };
@@ -84,7 +95,16 @@ describe('TreasuryOperationsComponent PP8', () => {
       label: `${account.code} - ${account.description}`,
     }));
     (value as any).supplierNames = new Map<number, string>([[7, 'Proveedor Demo']]);
-    return { value, api, expenseReceiptService };
+    return {
+      value,
+      api,
+      storage,
+      paymentMethods,
+      chart,
+      bankAccountsService,
+      thirds,
+      expenseReceiptService,
+    };
   }
 
   function payable(overrides: Partial<any> = {}) {
@@ -109,6 +129,98 @@ describe('TreasuryOperationsComponent PP8', () => {
       ...overrides,
     };
   }
+
+  it('loads Treasury data from successful API responses', () => {
+    const { value, api } = component();
+    const expectedPayable = payable({ id: 91 });
+    const expectedVoucher = { id: 12, voucherNumber: 'CE-12', status: 'DRAFT', details: [] };
+    api.pending.and.returnValue(of([expectedPayable]));
+    api.vouchers.and.returnValue(of({ content: [expectedVoucher] }));
+
+    value.reload();
+
+    expect(value.payables).toEqual([expectedPayable]);
+    expect(value.allVouchers).toEqual([expectedVoucher] as any);
+    expect(value.vouchers).toEqual([expectedVoucher] as any);
+    expect(value.loaded).toBeTrue();
+    expect(value.loading).toBeFalse();
+    expect(value.loadError).toBe('');
+  });
+
+  it('treats a successful empty response as a legitimate empty state', () => {
+    const { value } = component();
+
+    value.reload();
+
+    expect(value.payables).toEqual([]);
+    expect(value.vouchers).toEqual([]);
+    expect(value.schedules).toEqual([]);
+    expect(value.writeOffs).toEqual([]);
+    expect(value.loaded).toBeTrue();
+    expect(value.loadError).toBe('');
+  });
+
+  it('exposes a load error instead of presenting a first-load HTTP failure as empty data', () => {
+    const { value, api } = component();
+    value.payables = [];
+    api.pending.and.returnValue(throwError(() => ({ status: 500 })));
+
+    value.reload();
+
+    expect(value.loaded).toBeFalse();
+    expect(value.loading).toBeFalse();
+    expect(value.loadError).toBe('No fue posible cargar la información de Tesorería.');
+  });
+
+  it('keeps the last valid data when a later reload fails', () => {
+    const { value, api } = component();
+    const lastValidPayables = [payable({ id: 77 })];
+    api.pending.and.returnValue(of(lastValidPayables));
+    value.reload();
+    expect(value.loaded).toBeTrue();
+
+    api.pending.and.returnValue(throwError(() => ({ status: 500 })));
+    value.reload();
+
+    expect(value.payables).toEqual(lastValidPayables);
+    expect(value.loaded).toBeTrue();
+    expect(value.loadError).toBe('No fue posible cargar la información de Tesorería.');
+  });
+
+  it('reads the active enterprise again on every reload', () => {
+    const { value, api, storage } = component();
+    storage.getIdEnterprise.and.returnValues('enterprise-a', 'enterprise-b');
+
+    value.reload();
+    value.reload();
+
+    expect(api.pending.calls.allArgs()).toEqual([
+      ['enterprise-a'],
+      ['enterprise-b'],
+    ]);
+    expect(api.vouchers.calls.allArgs()).toEqual([
+      ['enterprise-a', { size: 1000 }],
+      ['enterprise-b', { size: 1000 }],
+    ]);
+  });
+
+  it('does not call Treasury APIs when there is no active enterprise', () => {
+    const { value, api, paymentMethods, chart, bankAccountsService, thirds } = component('');
+
+    value.reload();
+
+    expect(api.pending).not.toHaveBeenCalled();
+    expect(api.vouchers).not.toHaveBeenCalled();
+    expect(api.schedules).not.toHaveBeenCalled();
+    expect(api.writeOffs).not.toHaveBeenCalled();
+    expect(paymentMethods.findAllActive).not.toHaveBeenCalled();
+    expect(bankAccountsService.findAllActive).not.toHaveBeenCalled();
+    expect(chart.getListAuxiliaryAccounts).not.toHaveBeenCalled();
+    expect(chart.getListAccounts).not.toHaveBeenCalled();
+    expect(thirds.getThirdParties).not.toHaveBeenCalled();
+    expect(value.loaded).toBeFalse();
+    expect(value.loadError).toBe('Seleccione una empresa activa.');
+  });
 
   it('blocks payment dialog when no active payment methods are available', () => {
     const { value } = component();

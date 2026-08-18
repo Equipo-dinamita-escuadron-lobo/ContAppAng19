@@ -127,6 +127,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   private static readonly POST_POLL_INTERVAL_MS = 2_000;
   private static readonly POST_POLL_MAX_ATTEMPTS = 15;
   private static readonly VOUCHER_FILTER_DEBOUNCE_MS = 300;
+  private static readonly LOAD_ERROR_MESSAGE = 'No fue posible cargar la información de Tesorería.';
   private readonly destroy$ = new Subject<void>();
   private readonly voucherNumberFilter$ = new Subject<string>();
 
@@ -143,6 +144,9 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   banks: any[] = [];
   accounts: any[] = [];
   accountingAccountLookup = new Map<number, { code: string; description: string }>();
+  loading = false;
+  loaded = false;
+  loadError = '';
   bankOptions: { id: number; label: string }[] = [];
   accountOptions: { id: number; label: string }[] = [];
   readonly paymentAmountOptions = [
@@ -428,7 +432,11 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   accountingStatusLabel = accountingEntryStatusLabel;
   supplierName = (supplierId: number) => resolveSupplierName(this.supplierNames, supplierId);
 
-  private readonly enterpriseId: string;
+  private loadedEnterpriseId = '';
+
+  private get enterpriseId(): string {
+    return this.loadedEnterpriseId || this.storage.getIdEnterprise();
+  }
 
   constructor(
     private readonly api: TreasuryApiService,
@@ -441,9 +449,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     private readonly messageService: MessageService,
     private readonly expenseReceiptService: ExpenseReceiptService,
     private readonly router: Router,
-  ) {
-    this.enterpriseId = this.storage.getIdEnterprise();
-  }
+  ) {}
 
   ngOnInit() {
     const today = this.stripTime(new Date());
@@ -555,24 +561,33 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
   }
 
   reload() {
-    if (!this.enterpriseId) {
-      this.error = 'Seleccione una empresa activa.';
+    const enterpriseId = this.storage.getIdEnterprise();
+    this.error = '';
+    this.loadError = '';
+
+    if (!enterpriseId) {
+      this.loading = false;
+      this.loaded = false;
+      this.busy = false;
+      this.loadError = 'Seleccione una empresa activa.';
       return;
     }
+
+    if (this.loadedEnterpriseId && this.loadedEnterpriseId !== enterpriseId) {
+      this.loaded = false;
+    }
+    this.loading = true;
     this.busy = true;
-    this.error = '';
     forkJoin({
-      payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
-      vouchers: this.api.vouchers(this.enterpriseId, { size: 1000 }).pipe(catchError(() => of({ content: this.allVouchers } as any))),
-      schedules: this.api.schedules(this.enterpriseId).pipe(catchError(() => of(this.schedules))),
-      writeOffs: this.api.writeOffs(this.enterpriseId).pipe(catchError(() => of(this.writeOffs))),
-      methods: this.paymentMethods.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
-      banks: this.bankAccounts.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
-      accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
-      accountCatalogue: this.chart.getListAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
-      thirds: this.thirds.getThirdParties(this.enterpriseId, 0, 1000).pipe(
-        catchError(() => of({ content: [] } as any)),
-      ),
+      payables: this.api.pending(enterpriseId),
+      vouchers: this.api.vouchers(enterpriseId, { size: 1000 }),
+      schedules: this.api.schedules(enterpriseId),
+      writeOffs: this.api.writeOffs(enterpriseId),
+      methods: this.paymentMethods.findAllActive(enterpriseId),
+      banks: this.bankAccounts.findAllActive(enterpriseId),
+      accounts: this.chart.getListAuxiliaryAccounts(enterpriseId),
+      accountCatalogue: this.chart.getListAccounts(enterpriseId),
+      thirds: this.thirds.getThirdParties(enterpriseId, 0, 1000),
     }).subscribe({
       next: data => {
         this.payables = data.payables;
@@ -606,10 +621,14 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
           id: method.id,
           label: translatePaymentMethodName(method.name),
         }));
+        this.loadedEnterpriseId = enterpriseId;
+        this.loaded = true;
+        this.loading = false;
         this.busy = false;
       },
-      error: err => {
-        this.error = err?.error?.message ?? 'No fue posible cargar Tesorería.';
+      error: () => {
+        this.loadError = TreasuryOperationsComponent.LOAD_ERROR_MESSAGE;
+        this.loading = false;
         this.busy = false;
       }
     });
@@ -1572,8 +1591,12 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
       timeout(TreasuryOperationsComponent.OPERATION_TIMEOUT_MS),
       switchMap((confirmed) => this.waitForWriteOffPosting(confirmed.id ?? item.id)),
       switchMap((updated) => forkJoin({
-        payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
-        writeOffs: this.api.writeOffs(this.enterpriseId).pipe(catchError(() => of(this.writeOffs))),
+        payables: this.api.pending(this.enterpriseId).pipe(
+          catchError(() => this.preserveDataAfterRefreshError(this.payables)),
+        ),
+        writeOffs: this.api.writeOffs(this.enterpriseId).pipe(
+          catchError(() => this.preserveDataAfterRefreshError(this.writeOffs)),
+        ),
       }).pipe(map((data) => ({ updated, ...data })))),
       finalize(() => {
         this.busy = false;
@@ -1651,8 +1674,12 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         return of(voided);
       }),
       switchMap((updated) => forkJoin({
-        payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
-        writeOffs: this.api.writeOffs(this.enterpriseId).pipe(catchError(() => of(this.writeOffs))),
+        payables: this.api.pending(this.enterpriseId).pipe(
+          catchError(() => this.preserveDataAfterRefreshError(this.payables)),
+        ),
+        writeOffs: this.api.writeOffs(this.enterpriseId).pipe(
+          catchError(() => this.preserveDataAfterRefreshError(this.writeOffs)),
+        ),
       }).pipe(map((data) => ({ updated, ...data })))),
       finalize(() => {
         this.busy = false;
@@ -1905,7 +1932,7 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
           });
         }
         return this.api.writeOffs(this.enterpriseId).pipe(
-          catchError(() => of(this.writeOffs)),
+          catchError(() => this.preserveDataAfterRefreshError(this.writeOffs)),
           switchMap((writeOffs) => {
             this.writeOffs = this.normalizeWriteOffList(writeOffs);
             return this.reloadCoreData();
@@ -1923,14 +1950,14 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
 
   private reloadCoreData(): Observable<void> {
     return forkJoin({
-      payables: this.api.pending(this.enterpriseId).pipe(catchError(() => of(this.payables))),
-      vouchers: this.api.vouchers(this.enterpriseId, { size: 1000 }).pipe(catchError(() => of({ content: this.allVouchers } as any))),
-      schedules: this.api.schedules(this.enterpriseId).pipe(catchError(() => of(this.schedules))),
-      methods: this.paymentMethods.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
-      banks: this.bankAccounts.findAllActive(this.enterpriseId).pipe(catchError(() => of({ content: [] }))),
-      accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
-      accountCatalogue: this.chart.getListAccounts(this.enterpriseId).pipe(catchError(() => of([]))),
-      thirds: this.thirds.getThirdParties(this.enterpriseId, 0, 1000).pipe(catchError(() => of({ content: [] } as any))),
+      payables: this.api.pending(this.enterpriseId),
+      vouchers: this.api.vouchers(this.enterpriseId, { size: 1000 }),
+      schedules: this.api.schedules(this.enterpriseId),
+      methods: this.paymentMethods.findAllActive(this.enterpriseId),
+      banks: this.bankAccounts.findAllActive(this.enterpriseId),
+      accounts: this.chart.getListAuxiliaryAccounts(this.enterpriseId),
+      accountCatalogue: this.chart.getListAccounts(this.enterpriseId),
+      thirds: this.thirds.getThirdParties(this.enterpriseId, 0, 1000),
     }).pipe(
       switchMap((data) => {
         this.payables = data.payables;
@@ -1964,7 +1991,13 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
         }));
         return of(undefined);
       }),
+      catchError(() => this.preserveDataAfterRefreshError(undefined)),
     );
+  }
+
+  private preserveDataAfterRefreshError<T>(currentData: T): Observable<T> {
+    this.loadError = TreasuryOperationsComponent.LOAD_ERROR_MESSAGE;
+    return of(currentData);
   }
 
   private handleOperationError(err: unknown, action: string): void {

@@ -41,6 +41,17 @@
     </div>
   </div>
 
+  <div *ngIf="loadError" class="flex flex-wrap items-center gap-3 mb-4">
+    <p-message severity="error" [text]="loadError" styleClass="w-full"></p-message>
+    <p-button
+      label="Reintentar"
+      icon="pi pi-refresh"
+      severity="secondary"
+      [outlined]="true"
+      [loading]="loading"
+      (onClick)="reload()">
+    </p-button>
+  </div>
   <p-message *ngIf="error" severity="error" [text]="error" styleClass="mb-4 w-full"></p-message>
   <p-message
     *ngIf="noActivePaymentMethods && paymentMethodsHelpMessage"
@@ -49,7 +60,7 @@
     styleClass="mb-4 w-full">
   </p-message>
 
-  <div class="treasury-sections">
+  <div *ngIf="loaded" class="treasury-sections">
   <fieldset [disabled]="busy" class="treasury-fieldset">
     <p-card header="Obligaciones pendientes">
       <p-table
