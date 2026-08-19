@@ -182,7 +182,7 @@ export class VendorReportComponent implements OnInit {
         formValue.startDate,
         formValue.endDate,
         formValue.invoice || undefined,
-        formValue.status === '' ? undefined : formValue.status === 'ACTIVE',
+        this.documentActiveFilter(formValue.status),
         this.vendorName,
       )
       .subscribe({
@@ -219,6 +219,12 @@ export class VendorReportComponent implements OnInit {
       status: '',
     });
     this.loadVendorReport();
+  }
+
+  documentActiveFilter(status: string | null | undefined): boolean | undefined {
+    if (status === 'ACTIVE') return true;
+    if (status === 'VOIDED') return false;
+    return undefined;
   }
 
   goBack(): void {
@@ -314,6 +320,9 @@ export class VendorReportComponent implements OnInit {
     text: string;
   } {
     const text = transactionTypeLabel(type);
+    if (voided && type === 'Bill') {
+      return { severity: 'danger', text: 'Factura (Anulada)' };
+    }
     if (voided && type === 'WriteOff') {
       return { severity: 'danger', text: `${text} (Anulada)` };
     }

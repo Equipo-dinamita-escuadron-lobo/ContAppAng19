@@ -1580,7 +1580,12 @@ export class TreasuryOperationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  cancel(schedule: PaymentSchedule) { this.run(this.api.cancelSchedule(schedule.id)); }
+  deschedule(schedule: PaymentSchedule) {
+    this.run(this.api.cancelSchedule(schedule.id), () => ({
+      summary: 'Pago desprogramado',
+      detail: 'La programación pendiente fue eliminada correctamente.',
+    }));
+  }
   retry(schedule: PaymentSchedule) { this.run(this.api.retrySchedule(schedule.id)); }
 
   confirmWriteOff(item: PayableWriteOff) {

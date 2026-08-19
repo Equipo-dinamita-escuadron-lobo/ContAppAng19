@@ -81,7 +81,7 @@
             <th>Vence</th>
             <th class="text-right">Disponible</th>
             <th>En programación</th>
-            <th style="min-width: 14rem">Acciones</th>
+            <th style="min-width: 11rem">Acciones</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-payable>
@@ -107,44 +107,50 @@
               <span *ngIf="!scheduledLabelForPayable(payable)" class="text-gray-500">—</span>
             </td>
             <td>
-              <div class="flex flex-wrap gap-2 items-center">
+              <div class="action-buttons">
                 <p-button
-                  label="Pagar"
                   icon="pi pi-wallet"
+                  ariaLabel="Pagar"
+                  styleClass="treasury-icon-action"
                   size="small"
                   [disabled]="hasActivePaymentScheduleForPayable(payable)"
-                  [pTooltip]="activePaymentScheduleTooltip(payable)"
+                  [pTooltip]="activePaymentScheduleTooltip(payable) || 'Pagar'"
                   tooltipPosition="top"
                   (onClick)="openPaymentDialog(payable)">
                 </p-button>
                 <p-button
-                  label="Programar pago"
                   icon="pi pi-clock"
+                  ariaLabel="Programar pago"
+                  styleClass="treasury-icon-action"
                   size="small"
                   severity="secondary"
                   [outlined]="true"
                   [disabled]="hasActivePaymentScheduleForPayable(payable)"
-                  [pTooltip]="activePaymentScheduleTooltip(payable)"
+                  [pTooltip]="activePaymentScheduleTooltip(payable) || 'Programar pago'"
                   tooltipPosition="top"
                   (onClick)="openScheduleDialog(payable)">
                 </p-button>
                 <p-button
-                  label="Baja CxP"
                   icon="pi pi-minus-circle"
+                  ariaLabel="Registrar baja de CxP"
+                  styleClass="treasury-icon-action"
                   size="small"
                   severity="danger"
                   [outlined]="true"
                   [disabled]="!canWriteOffPayable(payable)"
-                  [pTooltip]="writeOffPayableTooltip(payable)"
+                  [pTooltip]="writeOffPayableTooltip(payable) || 'Registrar baja de CxP'"
                   tooltipPosition="top"
                   (onClick)="openWriteOffDialog(payable)">
                 </p-button>
                 <p-button
-                  label="Vencimiento"
                   icon="pi pi-calendar"
+                  ariaLabel="Cambiar vencimiento"
+                  styleClass="treasury-icon-action"
                   size="small"
                   severity="secondary"
                   [outlined]="true"
+                  pTooltip="Cambiar vencimiento"
+                  tooltipPosition="top"
                   (onClick)="openDueDateDialog(payable)">
                 </p-button>
               </div>
@@ -263,7 +269,7 @@
           <th>Estado</th>
           <th class="text-right">Total</th>
           <th>Asiento contable</th>
-          <th style="min-width: 14rem">Acciones</th>
+          <th style="min-width: 10rem">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-voucher>
@@ -277,11 +283,14 @@
           <td class="text-right font-semibold">{{ voucher.total | currency:'COP' }}</td>
           <td>{{ voucherAccountingEntryLabel(voucher) }}</td>
           <td>
-            <div class="action-buttons flex flex-wrap gap-1">
+            <div class="action-buttons">
               <p-button
                 *ngIf="voucher.status === 'DRAFT' || voucher.status === 'FAILED'"
-                [label]="voucher.status === 'FAILED' ? 'Reintentar' : 'Contabilizar'"
                 icon="pi pi-check"
+                [ariaLabel]="voucher.status === 'FAILED' ? 'Reintentar contabilización' : 'Contabilizar'"
+                styleClass="treasury-icon-action"
+                [pTooltip]="voucher.status === 'FAILED' ? 'Reintentar contabilización' : 'Contabilizar'"
+                tooltipPosition="top"
                 size="small"
                 [loading]="postingVoucherId === voucher.id"
                 [disabled]="busy && postingVoucherId !== voucher.id"
@@ -289,8 +298,11 @@
               </p-button>
               <p-button
                 *ngIf="voucher.status === 'DRAFT'"
-                label="Editar"
                 icon="pi pi-pencil"
+                ariaLabel="Editar comprobante"
+                styleClass="treasury-icon-action"
+                pTooltip="Editar comprobante"
+                tooltipPosition="top"
                 size="small"
                 severity="secondary"
                 [outlined]="true"
@@ -298,8 +310,11 @@
               </p-button>
               <p-button
                 *ngIf="voucher.status === 'DRAFT'"
-                label="Eliminar"
                 icon="pi pi-trash"
+                ariaLabel="Eliminar comprobante"
+                styleClass="treasury-icon-action"
+                pTooltip="Eliminar comprobante"
+                tooltipPosition="top"
                 size="small"
                 severity="danger"
                 [text]="true"
@@ -307,8 +322,11 @@
               </p-button>
               <p-button
                 *ngIf="voucher.status === 'POSTED' || voucher.status === 'VOID_FAILED'"
-                [label]="voucher.status === 'VOID_FAILED' ? 'Reintentar anulación' : 'Anular'"
                 icon="pi pi-times"
+                [ariaLabel]="voucher.status === 'VOID_FAILED' ? 'Reintentar anulación' : 'Anular comprobante'"
+                styleClass="treasury-icon-action"
+                [pTooltip]="voucher.status === 'VOID_FAILED' ? 'Reintentar anulación' : 'Anular comprobante'"
+                tooltipPosition="top"
                 size="small"
                 severity="danger"
                 [outlined]="true"
@@ -316,8 +334,11 @@
               </p-button>
               <p-button
                 *ngIf="voucher.accountingEntryId"
-                label="Ver asiento"
                 icon="pi pi-eye"
+                ariaLabel="Ver asiento contable"
+                styleClass="treasury-icon-action"
+                pTooltip="Ver asiento contable"
+                tooltipPosition="top"
                 size="small"
                 severity="info"
                 [text]="true"
@@ -405,7 +426,7 @@
           <th class="text-right">Total</th>
           <th>Reintentos</th>
           <th>Comprobante</th>
-          <th style="min-width: 10rem">Acciones</th>
+          <th style="min-width: 9rem">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-item>
@@ -430,10 +451,13 @@
             <span *ngIf="!canViewScheduleVoucher(item)">—</span>
           </td>
           <td>
-            <div class="action-buttons flex flex-wrap gap-1">
+            <div class="action-buttons">
               <p-button
-                label="Ver detalle"
                 icon="pi pi-eye"
+                ariaLabel="Ver detalle de programación"
+                styleClass="treasury-icon-action"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
                 size="small"
                 severity="secondary"
                 [outlined]="true"
@@ -441,24 +465,33 @@
               </p-button>
               <p-button
                 *ngIf="canCancelSchedule(item)"
-                label="Cancelar"
                 icon="pi pi-ban"
+                ariaLabel="Desprogramar pago"
+                styleClass="treasury-icon-action"
+                pTooltip="Desprogramar pago"
+                tooltipPosition="top"
                 size="small"
                 severity="secondary"
                 [outlined]="true"
-                (onClick)="cancel(item)">
+                (onClick)="deschedule(item)">
               </p-button>
               <p-button
                 *ngIf="canViewScheduleVoucher(item)"
-                label="Ver comprobante"
                 icon="pi pi-file"
+                ariaLabel="Ver comprobante"
+                styleClass="treasury-icon-action"
+                pTooltip="Ver comprobante"
+                tooltipPosition="top"
                 size="small"
                 (onClick)="openScheduleVoucher(item)">
               </p-button>
               <p-button
                 *ngIf="item.status === 'FAILED'"
-                label="Reintentar"
                 icon="pi pi-refresh"
+                ariaLabel="Reintentar programación"
+                styleClass="treasury-icon-action"
+                pTooltip="Reintentar programación"
+                tooltipPosition="top"
                 size="small"
                 (onClick)="retry(item)">
               </p-button>
@@ -498,7 +531,7 @@
           <th scope="col" class="text-right">Total</th>
           <th scope="col">Cuenta contrapartida</th>
           <th scope="col">Estado</th>
-          <th scope="col" style="min-width: 12rem">Acciones</th>
+          <th scope="col" style="min-width: 10rem">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-item>
@@ -513,10 +546,13 @@
             <p-tag [value]="writeOffLabel(item.status)" [severity]="getStatusSeverity(item.status)"></p-tag>
           </td>
           <td>
-            <div class="action-buttons flex flex-wrap gap-1">
+            <div class="action-buttons">
               <p-button
-                label="Ver detalle"
                 icon="pi pi-eye"
+                ariaLabel="Ver detalle de baja"
+                styleClass="treasury-icon-action"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
                 size="small"
                 severity="secondary"
                 [outlined]="true"
@@ -524,15 +560,19 @@
               </p-button>
               <p-button
                 *ngIf="canPostWriteOff(item)"
-                [label]="item.status === 'FAILED' ? 'Reintentar' : 'Contabilizar'"
                 icon="pi pi-check"
+                [ariaLabel]="item.status === 'FAILED' ? 'Reintentar contabilización' : 'Contabilizar baja'"
+                styleClass="treasury-icon-action"
+                [pTooltip]="item.status === 'FAILED' ? 'Reintentar contabilización' : 'Contabilizar baja'"
+                tooltipPosition="top"
                 size="small"
                 (onClick)="confirmWriteOff(item)">
               </p-button>
               <p-button
                 *ngIf="canDiscardWriteOff(item)"
-                label="Descartar borrador"
                 icon="pi pi-trash"
+                ariaLabel="Descartar borrador"
+                styleClass="treasury-icon-action"
                 size="small"
                 severity="secondary"
                 [outlined]="true"
@@ -542,8 +582,11 @@
               </p-button>
               <p-button
                 *ngIf="canShowWriteOffAccounting(item)"
-                label="Ver asiento"
                 icon="pi pi-book"
+                ariaLabel="Ver asiento contable"
+                styleClass="treasury-icon-action"
+                pTooltip="Ver asiento contable"
+                tooltipPosition="top"
                 size="small"
                 severity="secondary"
                 [outlined]="true"
@@ -551,8 +594,9 @@
               </p-button>
               <p-button
                 *ngIf="canVoidWriteOff(item)"
-                [label]="item.status === 'VOID_FAILED' ? 'Reintentar anulación' : 'Anular'"
                 icon="pi pi-times"
+                [ariaLabel]="item.status === 'VOID_FAILED' ? 'Reintentar anulación' : 'Anular baja'"
+                styleClass="treasury-icon-action"
                 size="small"
                 severity="danger"
                 [outlined]="true"
@@ -1191,11 +1235,11 @@
       </p-button>
       <p-button
         *ngIf="scheduleDetailTarget && canCancelSchedule(scheduleDetailTarget)"
-        label="Cancelar"
+        label="Desprogramar"
         icon="pi pi-ban"
         severity="danger"
         [outlined]="true"
-        (onClick)="cancel(scheduleDetailTarget!); cancelScheduleDetailDialog()">
+        (onClick)="deschedule(scheduleDetailTarget!); cancelScheduleDetailDialog()">
       </p-button>
     </div>
   </ng-template>

@@ -51,8 +51,9 @@
         </div>
 
         <div class="flex flex-col">
-          <label class="field-label">Fecha de emisión</label>
-          <p-datepicker [(ngModel)]="currentDate" [disabled]="true" dateFormat="dd/mm/yy"
+          <label for="issueDate" class="field-label">Fecha de emisión</label>
+          <p-datepicker inputId="issueDate" [(ngModel)]="currentDate"
+            (ngModelChange)="onIssueDateChange($event)" dateFormat="dd/mm/yy" [showIcon]="true"
             styleClass="w-full" size="small"></p-datepicker>
         </div>
 

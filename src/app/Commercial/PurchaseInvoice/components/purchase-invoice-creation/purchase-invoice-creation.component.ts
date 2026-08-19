@@ -319,6 +319,7 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
       totalValue: this.total.toFixed(2),
       totalPay: (this.initialPayment || 0).toFixed(2),
       pendingValue: this.pendingTotal.toFixed(2),
+      issueDate: this.resolveIssueDate(),
       expirationDate,
       factureType: 'PURCHASE',
       inventoryConfigType: this.localStorageMethods.getInventoryConfigType() as 'PEPS' | 'WEIGHTED_AVERAGE',
@@ -373,6 +374,15 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
     this.paymentTermDays = Math.max(this.toAmount(this.paymentTermDays, 1), 1);
     this.dueDate = this.addDays(this.stripTime(this.currentDate), this.paymentTermDays);
     this.releasePaymentScheduleSync();
+  }
+
+  onIssueDateChange(selectedDate: Date | null): void {
+    if (!selectedDate) {
+      return;
+    }
+    this.currentDate = selectedDate;
+    this.minDueDate = this.addDays(this.stripTime(this.currentDate), 1);
+    this.syncDueDateFromPaymentTerm();
   }
 
   onDueDateChange(selectedDate: Date | null): void {
@@ -494,7 +504,7 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
   private validateDueDate(): string | null {
     const due = this.dueDate ?? this.addDays(this.currentDate, Math.max(this.paymentTermDays, 1));
     if (this.stripTime(due).getTime() < this.minDueDate.getTime()) {
-      return 'La fecha de vencimiento debe ser posterior a hoy (no puede ser hoy ni anterior).';
+      return 'La fecha de vencimiento debe ser posterior a la fecha de emisión.';
     }
     return null;
   }
@@ -510,7 +520,7 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'warn',
           summary: 'Vencimiento inválido',
-          detail: 'La fecha de vencimiento debe ser posterior a hoy.',
+          detail: 'La fecha de vencimiento debe ser posterior a la fecha de emisión.',
         });
       }
     }
@@ -639,6 +649,18 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
     return this.stripTime(due).toISOString().split('T')[0];
   }
 
+  private resolveIssueDate(): string {
+    return this.formatLocalDate(this.currentDate);
+  }
+
+  private formatLocalDate(date: Date): string {
+    const normalized = this.stripTime(date);
+    const year = normalized.getFullYear();
+    const month = String(normalized.getMonth() + 1).padStart(2, '0');
+    const day = String(normalized.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   private addDays(date: Date, days: number): Date {
     const copy = new Date(date);
     copy.setDate(copy.getDate() + days);
@@ -668,6 +690,7 @@ export class PurchaseInvoiceCreationComponent implements OnInit, OnDestroy {
     this.lstProducts = [];
     this.initialPayment = 0;
     this.observations = '';
+    this.currentDate = new Date();
     this.paymentTermDays = 30;
     this.minDueDate = this.addDays(this.stripTime(this.currentDate), 1);
     this.syncDueDateFromPaymentTerm();
