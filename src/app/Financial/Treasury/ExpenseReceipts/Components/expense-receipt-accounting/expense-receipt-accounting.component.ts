@@ -104,4 +104,8 @@ export class ExpenseReceiptAccountingComponent implements OnInit {
   get accountingIsBalanced(): boolean {
     return accountingTotalsBalanced(this.getTotalDebit(), this.getTotalCredit());
   }
+
+  get accountingEntryIsVoided(): boolean {
+    return String(this.accountingEntryHeader.entryStatus || '').toUpperCase() === 'VOIDED';
+  }
 }

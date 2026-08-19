@@ -2,6 +2,7 @@ import { registerLocaleData } from '@angular/common';
 import localeEsCo from '@angular/common/locales/es-CO';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 
 import { ExpenseReceiptService } from '../../Service/expense-receipt.service';
@@ -53,6 +54,7 @@ describe('ExpenseReceiptAccountingComponent route view', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '21' } } } },
         { provide: Router, useValue: { navigate: jasmine.createSpy() } },
         { provide: ExpenseReceiptService, useValue: service },
+        provideNoopAnimations(),
       ],
     }).compileComponents();
 
@@ -90,5 +92,24 @@ describe('ExpenseReceiptAccountingComponent route view', () => {
     expect(component.getTotalDebit()).toBe(123000);
     expect(component.getTotalCredit()).toBe(123000);
     expect(component.accountingIsBalanced).toBeTrue();
+  });
+
+  it('labels a voided entry as reversed historical trace while preserving balanced movements', () => {
+    service.getAccountingEntryView.and.returnValue(of({
+      header: { entryCode: 'AE-PV-21', entryStatus: 'VOIDED' },
+      movements: [
+        { accountCode: '2205', accountName: 'Cuentas por pagar', detail: 'Pago factura FC-123', debit: 123000, credit: 0 },
+        { accountCode: '1105', accountName: 'Caja/Banco', detail: 'Pago factura FC-123', debit: 0, credit: 123000 },
+      ],
+    }));
+
+    fixture.componentInstance.loadAccountingEntries(21);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.accountingEntryIsVoided).toBeTrue();
+    expect(fixture.componentInstance.accountingIsBalanced).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('Movimientos históricos del asiento original');
+    expect(fixture.nativeElement.textContent).toContain('su efecto contable fue revertido');
+    expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(2);
   });
 });

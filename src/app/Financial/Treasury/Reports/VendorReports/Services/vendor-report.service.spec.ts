@@ -288,6 +288,46 @@ describe('VendorReportService summaries', () => {
     });
   });
 
+  it('passes the voided document filter and marks voided invoices explicitly', (done) => {
+    const api = {
+      statement: jasmine.createSpy('statement').and.returnValue(of({
+        supplierId: 78,
+        openingBalance: 0,
+        invoiced: 100000,
+        paid: 0,
+        writeOffTotal: 0,
+        pending: 100000,
+        invoices: [{
+          issueDate: '2026-08-01',
+          dueDate: '2026-09-01',
+          reference: 'FC-VOID',
+          originalAmount: 100000,
+          pendingAmount: 100000,
+          active: false,
+        }],
+        vouchers: [],
+        writeOffs: [],
+      })),
+    };
+    const thirds = emptyThirds();
+    const storage = { getIdEnterprise: () => 'enterprise-a' };
+    const value = new VendorReportService(api as any, thirds as any, storage as any);
+    const start = new Date(2026, 7, 1);
+    const end = new Date(2026, 7, 31);
+
+    value.getVendorReport(78, start, end, undefined, false, 'Proveedor').subscribe((report) => {
+      expect(api.statement).toHaveBeenCalledWith(
+        'enterprise-a', 78, '2026-08-01', '2026-08-31', undefined, false,
+      );
+      expect(report.transactions).toContain(jasmine.objectContaining({
+        type: 'Bill',
+        voided: true,
+        description: 'Factura de compra (Anulada)',
+      }));
+      done();
+    });
+  });
+
   it('shows voided payment history without affecting effective totals', (done) => {
     const api = {
       statement: jasmine.createSpy('statement').and.returnValue(of({

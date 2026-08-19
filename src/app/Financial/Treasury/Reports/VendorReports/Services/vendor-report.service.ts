@@ -142,15 +142,16 @@ export class VendorReportService {
           const endIso = this.toIsoDate(endDate);
 
           const bills: VendorReportTransaction[] = (statement.invoices || []).map((inv: any) => ({
-            date: new Date(inv.issueDate),
-            dueDate: new Date(inv.dueDate),
+            date: this.toReportDate(inv.issueDate),
+            dueDate: this.toReportDate(inv.dueDate),
             reference: inv.reference,
             documentNumber: inv.reference,
             type: 'Bill' as const,
-            description: 'Factura de compra',
+            description: inv.active === false ? 'Factura de compra (Anulada)' : 'Factura de compra',
             debits: 0,
             credits: Number(inv.originalAmount || 0),
             balance: 0,
+            voided: inv.active === false,
           }));
 
           const paymentRows = this.buildPaymentTransactions(
@@ -426,7 +427,7 @@ export class VendorReportService {
       const status = String(voucher.status || '');
       const isVoided = status === 'VOIDED';
       const issuedInPeriod = voucher.issueDate
-        ? this.inIsoDateRange(new Date(voucher.issueDate), startIso, endIso)
+        ? this.inIsoDateRange(this.toReportDate(voucher.issueDate), startIso, endIso)
         : false;
 
       return (voucher.details || [])
@@ -437,7 +438,7 @@ export class VendorReportService {
           const description = this.paymentDescription(voucher.observations, voucher.voucherNumber);
           const paymentInformational = !issuedInPeriod;
           const paymentRow: VendorReportTransaction = {
-            date: new Date(voucher.issueDate),
+            date: this.toReportDate(voucher.issueDate),
             reference,
             expenseReceiptNumber: voucher.voucherNumber,
             type: 'Payment',
@@ -481,7 +482,7 @@ export class VendorReportService {
       const status = String(writeOff.status || '');
       const isVoided = status === 'VOIDED';
       const createdInPeriod = writeOff.createdAt
-        ? this.inIsoDateRange(new Date(writeOff.createdAt), startIso, endIso)
+        ? this.inIsoDateRange(this.toReportDate(writeOff.createdAt), startIso, endIso)
         : false;
       const reason = (writeOff.reason || '').trim();
 
@@ -492,7 +493,7 @@ export class VendorReportService {
           const reference = detail.invoiceReference || '';
           const postedInformational = !createdInPeriod;
           const postedRow: VendorReportTransaction = {
-            date: new Date(writeOff.createdAt!),
+            date: this.toReportDate(writeOff.createdAt!),
             reference,
             type: 'WriteOff',
             description: isVoided
@@ -550,6 +551,14 @@ export class VendorReportService {
   private inIsoDateRange(date: Date, startIso: string, endIso: string): boolean {
     const value = this.toIsoDate(date);
     return value >= startIso && value <= endIso;
+  }
+
+  private toReportDate(value: Date | string): Date {
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [year, month, day] = value.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    return new Date(value);
   }
 
   private formatMoney(amount: number): string {

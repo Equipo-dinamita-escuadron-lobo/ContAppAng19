@@ -143,6 +143,14 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
+}
+
+.action-buttons ::ng-deep .treasury-icon-action {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  justify-content: center;
 }
 
 /* Pagination */
@@ -191,8 +199,9 @@
   }
 
   .action-buttons {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.625rem;
   }
 }
 

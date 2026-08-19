@@ -37,7 +37,17 @@
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 class="text-xl font-semibold text-[var(--color-primary)] mb-4">Asiento contable</h2>
+        <h2 class="text-xl font-semibold text-[var(--color-primary)] mb-4">
+            {{ accountingEntryIsVoided ? 'Movimientos históricos del asiento original' : 'Asiento contable' }}
+        </h2>
+
+        @if (accountingEntryIsVoided) {
+            <p-message
+                severity="warn"
+                text="Este comprobante está anulado. Los movimientos se conservan como trazabilidad histórica y su efecto contable fue revertido."
+                styleClass="mb-4 w-full">
+            </p-message>
+        }
 
         @if (accountingMovements.length && !accountingIsBalanced) {
             <p-message
@@ -73,7 +83,7 @@
                 </ng-template>
                 <ng-template pTemplate="summary">
                     <tr class="font-semibold bg-gray-50">
-                        <td colspan="3" class="text-right">Totales</td>
+                        <td colspan="3" class="text-right">{{ accountingEntryIsVoided ? 'Totales históricos' : 'Totales' }}</td>
                         <td class="text-right text-red-600">
                             {{ getTotalDebit() | currency:'COP':'code':'1.0-2':'es-CO' }}
                         </td>

@@ -16,6 +16,7 @@ export interface PurchaseInvoicePayload {
   totalValue: string;
   totalPay: string;
   pendingValue: string;
+  issueDate: string;
   expirationDate?: string;
   factureType: 'PURCHASE';
   inventoryConfigType: 'PEPS' | 'WEIGHTED_AVERAGE';

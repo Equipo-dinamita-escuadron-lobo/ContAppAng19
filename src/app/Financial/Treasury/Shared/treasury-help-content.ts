@@ -26,7 +26,7 @@ export const TREASURY_HELP = {
     title: 'Programación de Pagos',
     summary:
       'Consulte y gestione los pagos de facturas que fueron programados previamente desde Operaciones de Tesorería. ' +
-      'Puede cancelar programaciones pendientes o reintentar las fallidas.',
+      'Puede desprogramar pagos pendientes o reintentar las programaciones fallidas.',
     slug: 'tesoreria',
   },
   agingReport: {

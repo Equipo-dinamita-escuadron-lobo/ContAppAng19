@@ -31,6 +31,7 @@ describe('TreasuryOperationsComponent PP8', () => {
       payable: jasmine.createSpy('payable').and.returnValue(of(null)),
       vouchers: jasmine.createSpy('vouchers').and.returnValue(of({ content: [] })),
       schedules: jasmine.createSpy('schedules').and.returnValue(of([])),
+      cancelSchedule: jasmine.createSpy('cancelSchedule').and.returnValue(NEVER),
       writeOffs: jasmine.createSpy('writeOffs').and.returnValue(of([])),
       writeOff: jasmine.createSpy('writeOff').and.returnValue(of({ id: 1, status: 'POSTED', total: 100 })),
       accountingEntry: jasmine.createSpy('accountingEntry').and.returnValue(of({ code: 'AE-PWO-12', movements: [] })),
@@ -450,6 +451,47 @@ describe('TreasuryOperationsComponent PP8', () => {
     value.scheduleExecutionDate = yesterday;
     value.confirmScheduleFromDialog();
     expect(api.createSchedule).not.toHaveBeenCalled();
+  });
+
+  it('rejects a scheduled amount of zero before calling the API', () => {
+    const { value, api } = component();
+    value.openScheduleDialog(value.payables[0]);
+    value.scheduleLines[0].amount = 0;
+    value.schedulePaymentMethodId = 1;
+    value.scheduleBankAccountId = 33;
+    value.scheduleExecutionDate = new Date(value.minExecutionDate);
+
+    value.confirmScheduleFromDialog();
+
+    expect(api.createSchedule).not.toHaveBeenCalled();
+    expect((value as any).messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      summary: 'Monto inválido',
+    }));
+  });
+
+  it('rejects a scheduled amount above the available balance before calling the API', () => {
+    const { value, api } = component();
+    value.openScheduleDialog(value.payables[0]);
+    value.scheduleLines[0].amount = 100.01;
+    value.schedulePaymentMethodId = 1;
+    value.scheduleBankAccountId = 33;
+    value.scheduleExecutionDate = new Date(value.minExecutionDate);
+
+    value.confirmScheduleFromDialog();
+
+    expect(api.createSchedule).not.toHaveBeenCalled();
+    expect((value as any).messageService.add).toHaveBeenCalledWith(jasmine.objectContaining({
+      summary: 'Saldo insuficiente',
+    }));
+  });
+
+  it('uses deschedule terminology and calls the existing cancellation contract', () => {
+    const { value, api } = component();
+    const schedule = { id: 5 } as any;
+
+    value.deschedule(schedule);
+
+    expect(api.cancelSchedule).toHaveBeenCalledWith(5);
   });
 
   it('disables pay write-off and schedule actions when payable has active schedule', () => {
