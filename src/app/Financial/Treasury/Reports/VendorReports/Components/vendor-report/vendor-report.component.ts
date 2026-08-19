@@ -23,6 +23,7 @@ import {
   exportSuccessDetail,
   reportEmptyFiltersMessage,
   transactionTypeLabel,
+  voucherStatusLabel,
 } from '../../../../Shared/treasury-status-labels';
 import { TreasuryExportService } from '../../../../Shared/treasury-export.service';
 
@@ -56,6 +57,7 @@ interface FilterOption {
 })
 export class VendorReportComponent implements OnInit {
   vendorReport: VendorReport | null = null;
+  visibleTransactions: VendorReportTransaction[] = [];
   loading = false;
   exportingPdf = false;
   exportingCsv = false;
@@ -68,8 +70,8 @@ export class VendorReportComponent implements OnInit {
 
   statusOptions: FilterOption[] = [
     { label: 'Todos los documentos', value: '' },
-    { label: 'Solo vigentes', value: 'ACTIVE' },
-    { label: 'Solo anulados', value: 'VOIDED' },
+    { label: 'Contabilizado', value: 'POSTED' },
+    { label: 'Anulado', value: 'VOIDED' },
   ];
 
   periodOptions: { label: string; value: string; days?: number }[] = [
@@ -182,12 +184,14 @@ export class VendorReportComponent implements OnInit {
         formValue.startDate,
         formValue.endDate,
         formValue.invoice || undefined,
-        this.documentActiveFilter(formValue.status),
+        undefined,
         this.vendorName,
       )
       .subscribe({
         next: (report) => {
           this.vendorReport = report;
+          this.updateStatusOptions(report.transactions);
+          this.applyDocumentStatusFilter(formValue.status);
           this.vendorName = report.vendor.name;
           this.loading = false;
           if (!this.invoiceOptions.length && report.transactions.length) {
@@ -221,10 +225,26 @@ export class VendorReportComponent implements OnInit {
     this.loadVendorReport();
   }
 
-  documentActiveFilter(status: string | null | undefined): boolean | undefined {
-    if (status === 'ACTIVE') return true;
-    if (status === 'VOIDED') return false;
-    return undefined;
+  applyDocumentStatusFilter(status: string | null | undefined): void {
+    const transactions = this.vendorReport?.transactions || [];
+    this.visibleTransactions = status
+      ? transactions.filter((transaction) => transaction.documentStatus === status)
+      : [...transactions];
+  }
+
+  private updateStatusOptions(transactions: VendorReportTransaction[]): void {
+    const statuses = [...new Set([
+      'POSTED',
+      'VOIDED',
+      ...transactions.map((transaction) => transaction.documentStatus).filter(Boolean),
+    ])];
+    this.statusOptions = [
+      { label: 'Todos los documentos', value: '' },
+      ...statuses.map((status) => {
+        const translated = voucherStatusLabel(status);
+        return { label: translated === 'Desconocido' ? status : translated, value: status };
+      }),
+    ];
   }
 
   goBack(): void {

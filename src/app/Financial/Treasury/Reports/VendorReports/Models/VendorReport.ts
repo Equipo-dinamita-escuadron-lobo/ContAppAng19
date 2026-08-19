@@ -19,6 +19,7 @@ export interface VendorReportTransaction {
   debits: number;
   credits: number;
   balance: number;
+  documentStatus: string;
   voided?: boolean;
   informational?: boolean;
 }
