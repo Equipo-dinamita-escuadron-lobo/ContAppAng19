@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -26,6 +26,7 @@ import {
   voucherStatusLabel,
 } from '../../../../Shared/treasury-status-labels';
 import { TreasuryExportService } from '../../../../Shared/treasury-export.service';
+import { debounceTime, merge, Subject, takeUntil } from 'rxjs';
 
 interface FilterOption {
   label: string;
@@ -55,7 +56,7 @@ interface FilterOption {
   styleUrls: ['./vendor-report.component.css'],
   providers: [MessageService],
 })
-export class VendorReportComponent implements OnInit {
+export class VendorReportComponent implements OnInit, OnDestroy {
   vendorReport: VendorReport | null = null;
   visibleTransactions: VendorReportTransaction[] = [];
   loading = false;
@@ -67,6 +68,8 @@ export class VendorReportComponent implements OnInit {
 
   dateRangeForm!: FormGroup;
   invoiceOptions: FilterOption[] = [];
+  private readonly backendFilterChanges$ = new Subject<void>();
+  private readonly destroy$ = new Subject<void>();
 
   statusOptions: FilterOption[] = [
     { label: 'Todos los documentos', value: '' },
@@ -97,6 +100,11 @@ export class VendorReportComponent implements OnInit {
     this.getRouteParams();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   initializeDateRangeForm(): void {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -109,9 +117,31 @@ export class VendorReportComponent implements OnInit {
       status: [''],
     });
 
-    this.dateRangeForm.get('periodPreset')?.valueChanges.subscribe((preset) => {
-      if (preset) this.applyPeriodPreset(preset);
-    });
+    this.backendFilterChanges$
+      .pipe(debounceTime(400), takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.hasCompleteValidDateRange()) this.loadVendorReport();
+      });
+
+    this.dateRangeForm.get('periodPreset')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((preset) => {
+        if (!preset) return;
+        this.applyPeriodPreset(preset);
+        this.queueBackendReload();
+      });
+
+    merge(
+      this.dateRangeForm.get('startDate')!.valueChanges,
+      this.dateRangeForm.get('endDate')!.valueChanges,
+      this.dateRangeForm.get('invoice')!.valueChanges,
+    )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.queueBackendReload());
+
+    this.dateRangeForm.get('status')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((status) => this.applyDocumentStatusFilter(status));
   }
 
   getRouteParams(): void {
@@ -166,14 +196,7 @@ export class VendorReportComponent implements OnInit {
   }
 
   loadVendorReport(): void {
-    if (!this.dateRangeForm.valid || !this.vendorId) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Advertencia',
-        detail: 'Seleccione un rango de fechas válido',
-      });
-      return;
-    }
+    if (!this.hasCompleteValidDateRange() || !this.vendorId) return;
 
     const formValue = this.dateRangeForm.value;
     this.loading = true;
@@ -215,14 +238,18 @@ export class VendorReportComponent implements OnInit {
   clearFilters(): void {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    this.dateRangeForm.reset({
-      periodPreset: 'THIS_MONTH',
-      startDate: firstDayOfMonth,
-      endDate: today,
-      invoice: null,
-      status: '',
-    });
-    this.loadVendorReport();
+    this.dateRangeForm.reset(
+      {
+        periodPreset: 'THIS_MONTH',
+        startDate: firstDayOfMonth,
+        endDate: today,
+        invoice: null,
+        status: '',
+      },
+      { emitEvent: false },
+    );
+    this.applyDocumentStatusFilter('');
+    this.queueBackendReload();
   }
 
   applyDocumentStatusFilter(status: string | null | undefined): void {
@@ -252,11 +279,12 @@ export class VendorReportComponent implements OnInit {
   }
 
   exportToPdf(): void {
-    if (!this.vendorReport) return;
+    const report = this.currentReportForExport();
+    if (!report) return;
     this.exportingPdf = true;
     try {
       this.exportService.triggerBrowserDownload(
-        this.vendorReportService.exportToPdf(this.vendorReport),
+        this.vendorReportService.exportToPdf(report),
         this.exportFileName('pdf'),
       );
       this.messageService.add({
@@ -292,7 +320,7 @@ export class VendorReportComponent implements OnInit {
         'Créditos',
         'Saldo',
       ];
-      const rows = this.vendorReport.transactions.map((transaction) => [
+      const rows = this.visibleTransactions.map((transaction) => [
         this.formatDate(transaction.date),
         transaction.dueDate ? this.formatDate(transaction.dueDate) : '-',
         transaction.reference || '-',
@@ -333,6 +361,26 @@ export class VendorReportComponent implements OnInit {
   private exportFileName(ext: string): string {
     const safeName = this.vendorName.replace(/[^a-zA-Z0-9_-]/g, '_');
     return `estado_cuenta_${safeName}_${new Date().toISOString().slice(0, 10)}.${ext}`;
+  }
+
+  private queueBackendReload(): void {
+    this.backendFilterChanges$.next();
+  }
+
+  private hasCompleteValidDateRange(): boolean {
+    const startDate = this.dateRangeForm?.get('startDate')?.value;
+    const endDate = this.dateRangeForm?.get('endDate')?.value;
+    return startDate instanceof Date
+      && endDate instanceof Date
+      && !Number.isNaN(startDate.getTime())
+      && !Number.isNaN(endDate.getTime())
+      && startDate <= endDate;
+  }
+
+  private currentReportForExport(): VendorReport | null {
+    return this.vendorReport
+      ? { ...this.vendorReport, transactions: [...this.visibleTransactions] }
+      : null;
   }
 
   getTransactionTypeTag(type: VendorReportTransaction['type'], voided?: boolean): {

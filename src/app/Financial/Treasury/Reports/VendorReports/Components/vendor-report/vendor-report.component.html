@@ -88,17 +88,11 @@
           [showClear]="true"
           styleClass="w-full">
         </p-dropdown>
+        <small class="text-gray-500">Filtra facturas, comprobantes y bajas contabilizados o anulados.</small>
       </div>
 
       <div class="flex flex-col gap-2 md:col-span-2 lg:col-span-3">
         <div class="flex flex-wrap gap-2 justify-end mt-2">
-          <p-button
-            label="Generar reporte"
-            icon="pi pi-chart-bar"
-            severity="success"
-            [loading]="loading"
-            (onClick)="loadVendorReport()">
-          </p-button>
           <p-button
             label="Limpiar filtros"
             icon="pi pi-filter-slash"
@@ -294,6 +288,6 @@
   <div *ngIf="!loading && !vendorReport" class="text-center py-12">
     <i class="pi pi-info-circle text-6xl text-gray-400 mb-4"></i>
     <h3 class="text-xl font-semibold text-gray-600 mb-2">{{ emptyFiltersMessage }}</h3>
-    <p class="text-gray-500">Ajuste los filtros y pulse «Generar reporte»</p>
+    <p class="text-gray-500">Ajuste los filtros para actualizar el reporte automáticamente</p>
   </div>
 </div>
