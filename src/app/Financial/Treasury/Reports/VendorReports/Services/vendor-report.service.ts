@@ -151,6 +151,7 @@ export class VendorReportService {
             debits: 0,
             credits: Number(inv.originalAmount || 0),
             balance: 0,
+            documentStatus: inv.active === false ? 'VOIDED' : 'POSTED',
             voided: inv.active === false,
           }));
 
@@ -424,7 +425,7 @@ export class VendorReportService {
     endIso: string,
   ): VendorReportTransaction[] {
     return (vouchers || []).flatMap((voucher) => {
-      const status = String(voucher.status || '');
+      const status = String(voucher.status || '').toUpperCase();
       const isVoided = status === 'VOIDED';
       const issuedInPeriod = voucher.issueDate
         ? this.inIsoDateRange(this.toReportDate(voucher.issueDate), startIso, endIso)
@@ -446,6 +447,7 @@ export class VendorReportService {
             debits: amount,
             credits: 0,
             balance: 0,
+            documentStatus: status || 'POSTED',
             voided: isVoided,
             informational: paymentInformational,
           };
@@ -463,6 +465,7 @@ export class VendorReportService {
             debits: 0,
             credits: amount,
             balance: 0,
+            documentStatus: status || 'POSTED',
             voided: true,
             informational: paymentInformational,
           };
@@ -479,7 +482,7 @@ export class VendorReportService {
     endIso: string,
   ): VendorReportTransaction[] {
     return (writeOffs || []).flatMap((writeOff) => {
-      const status = String(writeOff.status || '');
+      const status = String(writeOff.status || '').toUpperCase();
       const isVoided = status === 'VOIDED';
       const createdInPeriod = writeOff.createdAt
         ? this.inIsoDateRange(this.toReportDate(writeOff.createdAt), startIso, endIso)
@@ -502,6 +505,7 @@ export class VendorReportService {
             debits: amount,
             credits: 0,
             balance: 0,
+            documentStatus: status || 'POSTED',
             voided: isVoided,
             informational: postedInformational,
           };
@@ -518,6 +522,7 @@ export class VendorReportService {
             debits: 0,
             credits: amount,
             balance: 0,
+            documentStatus: status || 'POSTED',
             voided: true,
             informational: postedInformational,
           };

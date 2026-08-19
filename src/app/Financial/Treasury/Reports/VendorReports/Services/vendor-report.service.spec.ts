@@ -321,6 +321,7 @@ describe('VendorReportService summaries', () => {
       );
       expect(report.transactions).toContain(jasmine.objectContaining({
         type: 'Bill',
+        documentStatus: 'VOIDED',
         voided: true,
         description: 'Factura de compra (Anulada)',
       }));
@@ -369,8 +370,12 @@ describe('VendorReportService summaries', () => {
     value.getVendorReport(78, start, end, undefined, undefined, 'Proveedor').subscribe((report) => {
       expect(report.periodTotals.periodPayments).toBe(0);
       expect(report.totalDue).toBe(357000);
-      expect(report.transactions.some((row) => row.type === 'Payment' && row.voided)).toBeTrue();
-      expect(report.transactions.some((row) => row.type === 'PaymentReversal')).toBeTrue();
+      expect(report.transactions.some((row) =>
+        row.type === 'Payment' && row.voided && row.documentStatus === 'VOIDED',
+      )).toBeTrue();
+      expect(report.transactions.some((row) =>
+        row.type === 'PaymentReversal' && row.documentStatus === 'VOIDED',
+      )).toBeTrue();
       expect(report.transactions.at(-1)?.balance).toBe(357000);
       expect(report.agingReport.total).toBe(357000);
       done();
@@ -417,6 +422,7 @@ describe('VendorReportService summaries', () => {
     value.getVendorReport(78, start, end, undefined, undefined, 'Proveedor').subscribe((report) => {
       const payment = report.transactions.find((row) => row.type === 'Payment');
       expect(payment?.debits).toBe(100000);
+      expect(payment?.documentStatus).toBe('POSTED');
       expect(report.periodTotals.periodPayments).toBe(100000);
       expect(report.transactions.at(-1)?.balance).toBe(257000);
       expect(report.totalDue).toBe(257000);

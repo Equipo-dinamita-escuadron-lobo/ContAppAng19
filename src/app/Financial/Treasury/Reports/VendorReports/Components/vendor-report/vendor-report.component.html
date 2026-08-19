@@ -165,11 +165,11 @@
 
     <p-card header="Detalle de transacciones">
       <p-table
-        [value]="vendorReport.transactions"
+        [value]="visibleTransactions"
         styleClass="p-datatable-sm p-datatable-striped"
         [scrollable]="true"
         scrollHeight="400px"
-        [paginator]="vendorReport.transactions.length > 10"
+        [paginator]="visibleTransactions.length > 10"
         [rows]="10">
 
         <ng-template pTemplate="header">
