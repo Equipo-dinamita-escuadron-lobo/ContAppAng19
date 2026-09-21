@@ -217,7 +217,7 @@ export const navbarData: INavbarData[] = [
     ],
   },
   {
-    routeLink: 'TO DO',
+    routeLink: '/commercial',
     icon: 'store',
     label: 'Comercial',
     items: [
