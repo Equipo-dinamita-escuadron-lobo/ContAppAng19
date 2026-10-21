@@ -61,6 +61,7 @@ export class CreateInvoiceComponent implements OnInit {
   allProducts: ProductList2[] = [];
   filteredProducts: ProductList2[] = [];
   selectedProduct: ProductList2 | undefined;
+  currentProductIndex: number = 0;
 
   invoiceTypes: InvoiceType[] = [
     { label: 'Factura de Compra', value: 'PURCHASE' },
@@ -356,17 +357,45 @@ export class CreateInvoiceComponent implements OnInit {
     return '';
   }
 
-  onProductSelect(event: ProductResponse) {
-    const productForm = this.factProducts.at(this.factProducts.length - 1);
+  onProductSelect(event: ProductResponse, index: number) {
+    // Verificar si el producto ya está seleccionado en otro índice
+    const isDuplicate = this.factProducts.controls.some((control, idx) => {
+      return idx !== index && control.get('productId')?.value === event.id;
+    });
+
+    if (isDuplicate) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Producto duplicado',
+        detail: 'Este producto ya ha sido agregado a la factura',
+        life: 3000
+      });
+
+      // Limpiar el campo
+      const productForm = this.factProducts.at(index);
+      productForm.get('productId')?.setValue('');
+      productForm.get('description')?.setValue('');
+      return;
+    }
+
+    const productForm = this.factProducts.at(index);
     productForm.get('productId')?.setValue(event.id);
     productForm.get('description')?.setValue(event.name);
   }
 
-  filterProducts(event: AutoCompleteCompleteEvent) {
+  filterProducts(event: AutoCompleteCompleteEvent, index: number) {
+    this.currentProductIndex = index;
     const query = event.query.toLowerCase();
+
+    // Obtener IDs de productos ya seleccionados (excluyendo el actual)
+    const selectedProductIds = this.factProducts.controls
+      .map((control, idx) => idx !== index ? control.get('productId')?.value : null)
+      .filter(id => id !== null && id !== '');
+
     this.filteredProducts = this.allProducts.filter(product => {
-      // La propiedad `name` es la que se usa para la búsqueda.
-      return product.name.toLowerCase().includes(query);
+      // Filtrar por búsqueda y excluir productos ya seleccionados
+      return product.name.toLowerCase().includes(query) &&
+             !selectedProductIds.includes(product.id);
     });
   }
 }

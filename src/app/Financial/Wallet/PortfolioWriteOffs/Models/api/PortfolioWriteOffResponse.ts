@@ -37,4 +37,5 @@ export interface InvoiceSummaryResponseDto {
     totalValue: number;
     pendingValue: number;
     expirationDate: string;
+    accountingAccount: string;
 }

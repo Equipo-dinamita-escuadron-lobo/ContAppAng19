@@ -14,7 +14,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { NoCommercialTag } from '../../Models/NoCommercialTag';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { Router } from '@angular/router';
-
+import { AuthService } from '../../../../Core/auth/services/auth.service';
 
 @Component({
   selector: 'app-list-tag',
@@ -28,62 +28,58 @@ import { Router } from '@angular/router';
     ConfirmDialogModule,
     TooltipModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
   ],
-  providers:[MessageService,ConfirmationService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './list-tag.component.html',
-  styleUrl: './list-tag.component.css'
+  styleUrl: './list-tag.component.css',
 })
 export class ListTagComponent implements OnInit {
-
-  tags:NoCommercialTag[]=[];
-  filteredTags:NoCommercialTag[]=[];
+  tags: NoCommercialTag[] = [];
+  filteredTags: NoCommercialTag[] = [];
   loading: boolean = false;
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
 
-  constructor(private router:Router,
-      private noCommercialTagService:NoCommercialTagService,
-      private messageService:MessageService,
-      private confirmationService:ConfirmationService
-    ){
+  constructor(
+    private router: Router,
+    private noCommercialTagService: NoCommercialTagService,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService,
+    private readonly authService: AuthService,
+  ) {}
 
-  }
-
-
-  ngOnInit():void{
-    this.entData=this.localStorageMethods.loadEnterpriseData();
+  ngOnInit(): void {
+    this.entData = this.localStorageMethods.loadEnterpriseData();
     this.loadTags(); // Agregar esta línea para cargar los tags
   }
 
-  loadTags():void{
-    if(this.entData?.id){
-      this.loading=true;
+  loadTags(): void {
+    if (this.entData?.id) {
+      this.loading = true;
       //cargar tags primero
       this.noCommercialTagService.getAllTags(this.entData.id).subscribe({
-        next:(tags) =>{
-          this.tags=tags.map((tag:any)=>({
+        next: (tags) => {
+          this.tags = tags.map((tag: any) => ({
             id: tag.id,
             title: tag.title,
-            description: tag.description
+            description: tag.description,
           }));
-          this.filteredTags=[...this.tags]
+          this.filteredTags = [...this.tags];
           this.loading = false;
         },
-        error:(error)=>{
+        error: (error) => {
           console.error('Error al cargar los tags:', error);
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail:'No se pudieron cargar las etiquetas'
+            detail: 'No se pudieron cargar las etiquetas',
           });
           this.loading = false;
-        }
+        },
       });
-
     }
   }
-
 
   /**
    * Navega al componente de creación de etiquetas
@@ -91,33 +87,42 @@ export class ListTagComponent implements OnInit {
   createTag(): void {
     console.log('Navegando a crear etiqueta...');
     console.log('Ruta actual:', this.router.url);
-    this.router.navigate(['/gen-masters/no-commercial-tags/create']).then(() => {
-      console.log('Navegación completada');
-    }).catch(error => {
-      console.error('Error en navegación:', error);
-    });
+    this.router
+      .navigate(['/gen-masters/no-commercial-tags/create'])
+      .then(() => {
+        console.log('Navegación completada');
+      })
+      .catch((error) => {
+        console.error('Error en navegación:', error);
+      });
   }
 
   /**
    * Navega al componente de edición de etiquetas
    */
-  editTag(tag:NoCommercialTag):void{
+  editTag(tag: NoCommercialTag): void {
     console.log('=== editTag() llamado ===');
     console.log('Tag a editar:', tag);
     console.log('Navegando a editar etiqueta:', tag);
-    this.router.navigate(['/gen-masters/no-commercial-tags/edit', tag.id],{state:{tagData:tag}}).then(() => {
-      console.log('Navegación a edición completada');
-    }).catch(error => {
-      console.error('Error en navegación a edición:', error);
-    });
+    this.router
+      .navigate(['/gen-masters/no-commercial-tags/edit', tag.id], {
+        state: { tagData: tag },
+      })
+      .then(() => {
+        console.log('Navegación a edición completada');
+      })
+      .catch((error) => {
+        console.error('Error en navegación a edición:', error);
+      });
   }
-
 
   /**
    * Confirma y elimina una etiqueta
    */
 
-  deleteTag(tag:NoCommercialTag):void{
+  deleteTag(tag: NoCommercialTag): void {
+    if (!this.authService.requireAnyPermission(['NCT#D'])) return;
+
     this.confirmationService.confirm({
       message: `¿Está seguro de que desea eliminar la etiqueta "${tag.description}"?`,
       header: 'Confirmar Eliminación',
@@ -127,29 +132,24 @@ export class ListTagComponent implements OnInit {
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
         this.noCommercialTagService.deleteTag(tag.id).subscribe({
-          next:()=>{
+          next: () => {
             this.messageService.add({
               severity: 'success',
               summary: 'Éxito',
-              detail: 'Etiqueta eliminada exitosamente'
+              detail: 'Etiqueta eliminada exitosamente',
             });
-            this.loadTags(); 
+            this.loadTags();
           },
-          error:(error)=>{
+          error: (error) => {
             console.error('Error al eliminar la etiqueta:', error);
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: 'No se pudo eliminar la etiqueta'
+              detail: 'No se pudo eliminar la etiqueta',
             });
-          }
+          },
         });
-      }
+      },
     });
   }
-
-
-
-
-
 }

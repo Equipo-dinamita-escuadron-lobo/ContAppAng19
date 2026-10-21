@@ -257,8 +257,9 @@
           </p-button>
           <p-button
             type="submit"
-            label="Registrar Ajuste"
-            [disabled]="!isFormValid()">
+            [label]="isSubmitting ? 'Procesando...' : 'Registrar Ajuste'"
+            [disabled]="!isFormValid()"
+            [loading]="isSubmitting">
           </p-button>
         </div>
       </form>

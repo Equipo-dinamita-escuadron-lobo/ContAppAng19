@@ -19,6 +19,7 @@ import { SideNavToggle } from './SideNavToggle.interface';
 import { INavbarData, fadeInOut } from './helper';
 import { Router } from '@angular/router';
 import { SublevelMenuComponent } from './sublevel-menu/sublevel-menu.component';
+import { AuthService } from '../../auth/services/auth.service';
 
 @Component({
   selector: 'app-side-nav-bar',
@@ -60,10 +61,26 @@ export class SideNavBarComponent implements OnInit {
     }
   }
 
-  constructor(public router: Router) {}
+  constructor(public router: Router, private auth: AuthService) {}
 
   ngOnInit(): void {
     this.screenWidth = window.innerWidth;
+    this.navData = this.filterNavByRoles(navbarData);
+  }
+
+  private filterNavByRoles(data: INavbarData[]): INavbarData[] {
+    return data
+      .map(item => ({
+        ...item,
+        items: item.items?.filter(sub =>
+          !sub.roles || sub.roles.length === 0 ||
+          sub.roles.some(r => this.auth.hasRole(r))
+        )
+      }))
+      .filter(item =>
+        !item.roles || item.roles.length === 0 ||
+        item.roles.some(r => this.auth.hasRole(r))
+      );
   }
 
   toggleOptions() {

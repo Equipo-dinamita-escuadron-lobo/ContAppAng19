@@ -195,12 +195,29 @@ export class ProductEditComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error al actualizar el producto:', err);
-        const errorMessage = err?.error?.message || 'Ha ocurrido un problema al actualizar el producto.';
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: errorMessage
-        });
+
+        // Verificar si el error específico de producto en uso
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'PRODUCT_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede editar el producto porque tiene movimientos contables'
+          });
+          // Redirigir inmediatamente a la lista de productos
+          this.router.navigate(['/gen-masters/inventory/products/list']);
+        } else {
+          const errorMessage = err?.error?.message || 'Ha ocurrido un problema al actualizar el producto.';
+          let summary = 'Error';
+          if (errorMessage.includes('Ya existe') || errorMessage.includes('duplicado') || errorMessage.includes('Duplicate')) {
+            summary = 'Registro Duplicado';
+          }
+          this.messageService.add({
+            severity: 'error',
+            summary: summary,
+            detail: errorMessage
+          });
+        }
       }
     });
   }

@@ -1,5 +1,4 @@
 <div class="flex w-full h-full font-titillium">
-  <p-toast></p-toast>
   <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
 
     <!-- Cabecera -->
@@ -23,7 +22,7 @@
 
         <div class="flex flex-col gap-2">
           <label for="prefix" class="label-required font-semibold text-primary">Prefijo</label>
-          <input pInputText pKeyFilter="alphanum" formControlName="prefix" placeholder="Ej: RC, CE" maxlength="10" class="w-full md:w-2/3" />
+          <input pInputText pKeyFilter="alphanum" formControlName="prefix" placeholder="Ej: RC, CE" maxlength="10" class="w-full md:w-1/4" />
           <small class="error-message" *ngIf="form.get('prefix')?.touched && form.get('prefix')?.invalid">Prefijo requerido (máx. 10)</small>
         </div>
 
@@ -35,7 +34,7 @@
 
         <div class="flex flex-col gap-2">
           <label for="documentClassId" class="label-required font-semibold text-primary">Clase</label>
-          <p-select [options]="classesOptions" formControlName="documentClassId" placeholder="Seleccione clase" [filter]="true" [showClear]="true" class="w-full md:w-2/3"></p-select>
+          <p-select [options]="classesOptions" formControlName="documentClassId" placeholder="Seleccione clase" [filter]="true" [showClear]="true" class="w-full md:w-1/2"></p-select>
           <small class="error-message" *ngIf="form.get('documentClassId')?.touched && form.get('documentClassId')?.invalid">Seleccione una clase</small>
         </div>
 

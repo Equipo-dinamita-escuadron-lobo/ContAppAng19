@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+﻿import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FinancialStatementsListComponent } from './financial-statements-list.component';
 
@@ -8,9 +8,8 @@ describe('FinancialStatementsListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FinancialStatementsListComponent]
-    })
-    .compileComponents();
+      imports: [FinancialStatementsListComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(FinancialStatementsListComponent);
     component = fixture.componentInstance;
@@ -21,3 +20,4 @@ describe('FinancialStatementsListComponent', () => {
     expect(component).toBeTruthy();
   });
 });
+

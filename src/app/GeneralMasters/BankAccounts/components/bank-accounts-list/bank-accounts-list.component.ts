@@ -3,9 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
-import { BankAccountsService, BankAccount } from '../../services/bank-accounts.service';
+import {
+  BankAccountsService,
+  BankAccount,
+} from '../../services/bank-accounts.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
 import { BankAccountsPresentationService } from '../../services/bank-accounts-presentation.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -18,10 +22,12 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
 
 // PrimeNG Services
 import { MessageService, ConfirmationService } from 'primeng/api';
-
+import { AuthService } from '../../../../Core/auth/services/auth.service';
 
 @Component({
   selector: 'app-bank-accounts-list',
@@ -38,21 +44,15 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     IconFieldModule,
     InputIconModule,
     TooltipModule,
-    TagModule
+    TagModule,
+    PopoverModule,
+    TableEmptyMessageComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './bank-accounts-list.component.html',
-  styleUrl: './bank-accounts-list.component.css'
+  styleUrl: './bank-accounts-list.component.css',
 })
 export class BankAccountsListComponent implements OnInit {
-  private readonly bankAccountsService = inject(BankAccountsService);
-  private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly router = inject(Router);
-  private readonly localStorageMethod = inject(LocalStorageMethods);
-  private readonly chartAccountService = inject(ChartAccountService);
-  public readonly bankAccountsPresentationService = inject(BankAccountsPresentationService);
-  
   private enterpriseId: string = '';
 
   loading = false;
@@ -68,9 +68,28 @@ export class BankAccountsListComponent implements OnInit {
   searchTerm = '';
   sortField: string | undefined;
   sortOrder: string | undefined;
+  helpCenterUrl: string;
+  canToggleState = false;
+
+  constructor(
+    private readonly bankAccountsService: BankAccountsService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly router: Router,
+    private readonly localStorageMethod: LocalStorageMethods,
+    private readonly chartAccountService: ChartAccountService,
+    public readonly bankAccountsPresentationService: BankAccountsPresentationService,
+    private readonly helpCenterService: HelpCenterService,
+    private readonly authService: AuthService,
+  ) {
+    this.helpCenterUrl =
+      this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.enterpriseId = this.localStorageMethod.getIdEnterprise();
+    const perms = this.authService.getCurrentUserPermissions();
+    this.canToggleState = perms.includes('BA#CS');
     if (this.enterpriseId) {
       this.loadAccountingAccounts();
       this.loadBankAccounts();
@@ -78,7 +97,7 @@ export class BankAccountsListComponent implements OnInit {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo obtener el ID de la empresa'
+        detail: 'No se pudo obtener el ID de la empresa',
       });
     }
   }
@@ -89,13 +108,16 @@ export class BankAccountsListComponent implements OnInit {
         this.accountingAccounts = this.flattenAccounts(accounts);
         for (const account of this.accountingAccounts) {
           if (account.id != null) {
-            this.accountingAccountsMap.set(account.id.toString(), `${account.code} - ${account.description}`);
+            this.accountingAccountsMap.set(
+              account.id.toString(),
+              `${account.code} - ${account.description}`,
+            );
           }
         }
       },
       error: () => {
         // Silenciar error, no es crítico
-      }
+      },
     });
   }
 
@@ -120,24 +142,32 @@ export class BankAccountsListComponent implements OnInit {
 
   private loadBankAccounts(): void {
     this.loading = true;
-    this.bankAccountsService.findAll(this.enterpriseId, this.currentPage, this.pageSize, this.sortField, this.sortOrder, this.searchTerm || undefined)
+    this.bankAccountsService
+      .findAll(
+        this.enterpriseId,
+        this.currentPage,
+        this.pageSize,
+        this.sortField,
+        this.sortOrder,
+        this.searchTerm || undefined,
+      )
       .subscribe({
         next: (response) => {
           this.bankAccounts = response.content;
-          this.totalRecords = response.page?.totalElements || response.totalElements || 0;
+          this.totalRecords =
+            response.page?.totalElements || response.totalElements || 0;
           this.loading = false;
         },
         error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: error.title || 'Error',
-            detail: error.message
+            detail: error.message,
           });
           this.loading = false;
-        }
+        },
       });
   }
-
 
   // Search Functionality
   onSearch(): void {
@@ -185,28 +215,30 @@ export class BankAccountsListComponent implements OnInit {
   toggleAccountStatus(account: BankAccount, newStatus: boolean): void {
     if (!account.id) return;
 
-    this.bankAccountsService.changeState(account.id, this.enterpriseId, newStatus)
+    this.bankAccountsService
+      .changeState(account.id, this.enterpriseId, newStatus)
       .subscribe({
         next: () => {
           account.status = newStatus;
           this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
-            detail: `Estado de la cuenta '${account.accountNumber}' cambiado correctamente`
+            detail: `Estado de la cuenta '${account.accountNumber}' cambiado correctamente`,
           });
         },
         error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: error.title || 'Error',
-            detail: error.message
+            detail: error.message,
           });
           account.status = !newStatus;
-        }
+        },
       });
   }
 
   confirmDelete(account: BankAccount): void {
+    if (!this.authService.requireAnyPermission(['BA#D'])) return;
     this.confirmationService.confirm({
       message: `¿Desea eliminar la cuenta bancaria "${account.accountNumber}"?`,
       header: 'Confirmar eliminación',
@@ -217,30 +249,60 @@ export class BankAccountsListComponent implements OnInit {
       rejectLabel: 'Cancelar',
       accept: () => {
         this.deleteBankAccount(account);
-      }
+      },
     });
   }
 
   private deleteBankAccount(account: BankAccount): void {
     if (!account.id) return;
+    if (!this.authService.requireAnyPermission(['BA#D'])) return;
 
-    this.bankAccountsService.delete(account.id, this.enterpriseId)
-      .subscribe({
-        next: () => {
+    this.bankAccountsService.delete(account.id, this.enterpriseId).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Cuenta bancaria eliminada correctamente',
+        });
+        this.loadBankAccounts();
+      },
+      error: (error) => {
+        // Verificar si es error específico de cuenta bancaria en uso
+        const errorCode = error?.error?.code || error?.code || '';
+        if (errorCode === 'BANK_ACCOUNT_IN_USE') {
           this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Cuenta bancaria eliminada correctamente'
+            severity: 'info',
+            summary: 'Información',
+            detail:
+              error?.error?.message ||
+              'No se puede eliminar la cuenta bancaria porque tiene movimientos contables',
+            life: 6000,
           });
-          this.loadBankAccounts();
-        },
-        error: (error) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: error.title || 'Error',
-            detail: error.message
-          });
+          return;
         }
-      });
+
+        // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+        const errorMessage = error?.error?.message || error?.message || '';
+        if (
+          errorMessage.includes('No se puede eliminar la cuenta bancaria') &&
+          errorMessage.includes('movimientos contables')
+        ) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: errorMessage,
+            life: 6000,
+          });
+          return;
+        }
+
+        // Para otros errores, mostrar mensaje genérico
+        this.messageService.add({
+          severity: 'error',
+          summary: error.title || 'Error',
+          detail: error.message,
+        });
+      },
+    });
   }
 }

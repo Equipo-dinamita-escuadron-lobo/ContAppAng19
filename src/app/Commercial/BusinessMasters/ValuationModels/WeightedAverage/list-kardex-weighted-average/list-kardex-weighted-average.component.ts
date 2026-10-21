@@ -14,8 +14,10 @@ import { LocalStorageMethods } from '../../../../../Shared/Methods/local-storage
 import { InventoryAdjustmentComponent } from '../inventory-adjustment/inventory-adjustment.component';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
+import { PopoverModule } from 'primeng/popover';
 import { MessageService } from 'primeng/api';
 import { ExcelExportService } from '../services/excel-export.service';
+import { environment } from '../../../../../../environments/environment';
 
 interface AutoCompleteCompleteEvent {
     originalEvent: Event;
@@ -34,7 +36,8 @@ interface AutoCompleteCompleteEvent {
     InputTextModule,
     InventoryAdjustmentComponent,
     ToastModule,
-    TooltipModule
+    TooltipModule,
+    PopoverModule
   ],
   providers: [MessageService],
   templateUrl: './list-kardex-weighted-average.component.html',
@@ -52,6 +55,7 @@ export class ListKardexWeightedAverageComponent {
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
   kardexList: KardexRow[] = [];
+  helpCenterUrl = `${environment.API_URL.replace('/api/', '')}/#/help-center-view/inventario-promedio-ponderado`;
 
   productId: number = 0;
   totalRecords = 0;
@@ -213,14 +217,14 @@ export class ListKardexWeightedAverageComponent {
   openInventoryAdjustment() {
     if (this.isInventoryAdjustmentEnabled()) {
       this.loading = true;
-      
+
       // Obtener el último registro real del backend
       this.kardexService.getLatestKardexByProductId(this.productId).subscribe({
         next: (response) => {
           if (response.data) {
             // Procesar el registro obtenido
             const item = response.data;
-            
+
             const balanceTotal = item.totalBalance;
 
             if (item.type === 'PURCHASE') {
@@ -259,14 +263,14 @@ export class ListKardexWeightedAverageComponent {
             // No hay registros previos
             this.lastKardexRecord = null;
           }
-          
+
           this.loading = false;
           this.showInventoryAdjustment = true;
         },
         error: (error) => {
           console.error('Error al obtener el último registro del kardex:', error);
           this.loading = false;
-          
+
           // Mostrar mensaje de error
           this.messageService.add({
             severity: 'error',

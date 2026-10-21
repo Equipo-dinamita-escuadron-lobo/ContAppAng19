@@ -1,14 +1,20 @@
 <!-- Contenedor Principal con la fuente Titillium -->
 <div class="flex w-full h-full font-titillium">
   <!-- Tarjeta de Contenido Principal, aplicando el estilo de la guía -->
-  <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
-
+  <div
+    class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10"
+  >
     <!-- 1. CABECERA: Título y Botón de Crear -->
     <div class="flex justify-between items-start mb-40">
       <!-- Título con el estilo de marca -->
       <div class="items-center">
-        <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Tipos</span> de Productos
+        <h1
+          class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1"
+        >
+          <span class="border-b-4 border-secondary-light inline-block pb-1"
+            >Tipos</span
+          >
+          de Productos
         </h1>
         <p class="font-family-sans font-normal text-sm mt-12">
           Gestione los tipos de producto utilizados en el sistema.
@@ -16,7 +22,7 @@
       </div>
 
       <!-- Botones de acción -->
-      <div class="flex gap-3">        
+      <div class="flex gap-3">
         <p-button
           label="Crear"
           icon="pi pi-plus"
@@ -102,7 +108,10 @@
           <td class="py-3">{{ productType.name }}</td>
           <td class="py-3">{{ productType.description }}</td>
           <td class="py-3 text-center">
-            <p-tag [value]="productType.state ? 'Activo' : 'Inactivo'" [severity]="productType.state ? 'success' : 'danger'">
+            <p-tag
+              [value]="productType.state ? 'Activo' : 'Inactivo'"
+              [severity]="productType.state ? 'success' : 'danger'"
+            >
             </p-tag>
           </td>
           <td class="py-3 text-center">
@@ -125,10 +134,11 @@
               <p-toggleSwitch
                 [(ngModel)]="productType.state"
                 (onChange)="changeProductTypeState(productType)"
+                [disabled]="!canToggleState"
                 [pTooltip]="productType.state ? 'Activo' : 'Inactivo'"
                 tooltipPosition="top"
                 styleClass="p-toggleSwitch-sm"
-                [style]="{'transform': 'scale(0.8)'}"
+                [style]="{ transform: 'scale(0.8)' }"
               ></p-toggleSwitch>
             </div>
           </td>
@@ -136,24 +146,12 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
-            No se encontraron tipos de productos.
-          </td>
-        </tr>
+        <app-table-empty-message
+          [loading]="loading"
+          [colspan]="4"
+        ></app-table-empty-message>
       </ng-template>
-
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <td colspan="4" class="text-center py-6 font-family-sans text-neutral-50">
-            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-            <p class="mt-2 text-primary">Cargando tipos de producto...</p>
-          </td>
-        </tr>
-      </ng-template>
-
     </p-table>
-
   </div>
 </div>
 

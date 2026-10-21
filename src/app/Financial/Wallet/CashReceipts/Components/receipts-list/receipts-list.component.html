@@ -3,7 +3,7 @@
     <div class="flex flex-wrap justify-between items-center gap-4 mb-10">
         <div>
             <h1
-                class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+                class="font-['Titillium_Web'] font-bold text-3xl text-primary border-b-4 border-secondary inline-block pb-1">
                 Comprobantes de Pago
             </h1>
             <p class="font-normal text-sm mt-2 text-black">
@@ -21,7 +21,7 @@
 
 
             <div class="flex flex-col gap-2">
-                <label for="client" class="font-semibold text-[var(--color-primary)]">Cliente</label>
+                <label for="client" class="font-semibold text-primary">Cliente</label>
                 <p-autoComplete id="client" formControlName="client" [suggestions]="clientSuggestions"
                     (completeMethod)="searchClient($event)" field="name" [dropdown]="true" [forceSelection]="true"
                     placeholder="Seleccione un cliente" [styleClass]="'w-full'" inputStyleClass="w-full">
@@ -34,20 +34,20 @@
             </div>
 
             <div class="flex flex-col gap-2">
-                <label for="startDate" class="font-semibold  text-[var(--color-primary)]">Fecha
+                <label for="startDate" class="font-semibold  text-primary">Fecha
                     inicio</label>
                 <p-calendar id="startDate" formControlName="startDate" dateFormat="dd/mm/yy" [showIcon]="true"
                     placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
             </div>
 
             <div class="flex flex-col gap-2">
-                <label for="endDate" class="font-semibold  text-[var(--color-primary)]">Fecha fin</label>
+                <label for="endDate" class="font-semibold  text-primary">Fecha fin</label>
                 <p-calendar id="endDate" formControlName="endDate" dateFormat="dd/mm/yy" [showIcon]="true"
                     placeholder="dd/mm/yyyy" [styleClass]="'w-full'"></p-calendar>
             </div>
 
             <div class="flex flex-col gap-2">
-                <label for="status" class="font-semibold  text-[var(--color-primary)]">Estado</label>
+                <label for="status" class="font-semibold  text-primary">Estado</label>
                 <p-dropdown id="status" formControlName="status" [options]="statusOptions" optionLabel="label"
                     optionValue="value" placeholder="Seleccione estado" [showClear]="true" [styleClass]="'w-full'">
                 </p-dropdown>

@@ -13,7 +13,7 @@
 }
 
 :host ::ng-deep .p-breadcrumb .p-breadcrumb-separator {
-  color: var(--color-secondary) !important;
+  color: var(--color-secondary-light) !important;
   font-weight: 300 !important;
   font-size: 14px !important;
 }

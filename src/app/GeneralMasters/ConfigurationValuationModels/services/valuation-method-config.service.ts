@@ -13,7 +13,16 @@ import {
   KardexBatchProcessingResult
 } from '../models/kardex-batch.model';
 
-const API_URL = environment.API_URL + 'kardex/batch/';
+
+/**
+ * URLs base para cada microservicio
+ */
+const MICROSERVICE_URLS = {
+  PEPS: environment.API_URL + 'kardex/peps/batch/',
+  WEIGHTED_AVERAGE: environment.API_URL + 'kardex/weighted-average/batch/'
+};
+
+
 
 /**
  * Servicio para la gestión de configuración de métodos de valuación
@@ -22,9 +31,18 @@ const API_URL = environment.API_URL + 'kardex/batch/';
   providedIn: 'root'
 })
 export class ValuationMethodConfigService {
-  private apiUrl = API_URL;
 
   constructor(private http: HttpClient) { }
+
+  
+  /**
+   * Obtiene la URL base del microservicio según el método de valuación
+   * @param valuationMethod Método de valuación (PEPS o WEIGHTED_AVERAGE)
+   * @returns URL base del microservicio correspondiente
+   */
+  private getMicroserviceUrl(valuationMethod: InventoryConfigType): string {
+    return MICROSERVICE_URLS[valuationMethod];
+  }
 
   /**
    * Aplica la configuración del método de valuación para una empresa
@@ -34,11 +52,15 @@ export class ValuationMethodConfigService {
    * @returns Observable con la respuesta del servidor
    */
   applyValuationMethodConfig(config: ValuationMethodConfig): Observable<ValuationMethodConfigResponse> {
-    const url = `${this.apiUrl}process-enterprise/${config.enterpriseId}`;
+    // Determinar qué microservicio usar según el método de valuación
+    const baseUrl = this.getMicroserviceUrl(config.valuationMethod);
+    const url = `${baseUrl}process-enterprise/${config.enterpriseId}`;
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'
     });
+
+    console.log(`Llamando a microservicio ${config.valuationMethod}:`, url);
 
     return this.http.post<KardexBatchResponse>(url, null, { headers }).pipe(
       map(response => {
@@ -54,7 +76,7 @@ export class ValuationMethodConfigService {
         };
       }),
       catchError(error => {
-        console.error('Error al aplicar configuración:', error);
+        console.error(`Error al aplicar configuración en ${config.valuationMethod}:`, error);
         return throwError(() => ({
           error: {
             message: error.error?.message || 'Error al procesar la solicitud',
@@ -99,14 +121,20 @@ export class ValuationMethodConfigService {
    * Este método es el que realmente ejecuta el procesamiento en el backend
    *
    * @param enterpriseId ID de la empresa
+   * @param valuationMethod Método de valuación a utilizar
    * @returns Observable con los resultados del procesamiento
    */
-  processBatchForEnterprise(enterpriseId: string): Observable<KardexBatchProcessingResult> {
-    const url = `${this.apiUrl}process-enterprise/${enterpriseId}`;
+  processBatchForEnterprise(
+    enterpriseId: string, 
+    valuationMethod: InventoryConfigType
+  ): Observable<KardexBatchProcessingResult> {
+    const baseUrl = this.getMicroserviceUrl(valuationMethod);
+    const url = `${baseUrl}process-enterprise/${enterpriseId}`;
+    
     return this.http.post<KardexBatchResponse>(url, null).pipe(
       map(response => response.data),
       catchError(error => {
-        console.error('Error al procesar batch:', error);
+        console.error(`Error al procesar batch en ${valuationMethod}:`, error);
         return throwError(() => error);
       })
     );

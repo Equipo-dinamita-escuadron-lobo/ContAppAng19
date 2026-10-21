@@ -78,7 +78,7 @@ export class PermissionCreateComponent implements OnInit {
         permsCtrl.disable({ emitEvent: false });
         this.assignForm.patchValue(
           { module: '', modulePermissions: [] },
-          { emitEvent: false }
+          { emitEvent: false },
         );
         this.modulePermissionsOptions = [];
         this.selectedPermissions.clear();
@@ -100,7 +100,7 @@ export class PermissionCreateComponent implements OnInit {
         permsCtrl.disable({ emitEvent: false });
         this.assignForm.patchValue(
           { modulePermissions: [] },
-          { emitEvent: false }
+          { emitEvent: false },
         );
       }
     });
@@ -114,10 +114,10 @@ export class PermissionCreateComponent implements OnInit {
           next: (rolesWithPerms) => {
             const normalize = (s: string) => (s ?? '').trim().toLowerCase();
             const rolesConPermisos = new Set(
-              rolesWithPerms.map((r) => normalize(r.role))
+              rolesWithPerms.map((r) => normalize(r.role)),
             );
             this.profiles = allProfiles.filter(
-              (p) => !rolesConPermisos.has(normalize(p.name))
+              (p) => !rolesConPermisos.has(normalize(p.name)),
             );
           },
           error: (err) => {
@@ -151,13 +151,13 @@ export class PermissionCreateComponent implements OnInit {
           .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
           .forEach((m) => {
             grouped[m].sort((a, b) =>
-              a.label.localeCompare(b.label, 'es', { sensitivity: 'base' })
+              a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }),
             );
             this.permissionsByModule.set(m, grouped[m]);
           });
 
         this.moduleOptions = Array.from(this.permissionsByModule.keys()).map(
-          (m) => ({ label: m, value: m })
+          (m) => ({ label: m, value: m }),
         );
       },
       error: (err) => console.error('Error cargando permisos', err),
@@ -175,11 +175,28 @@ export class PermissionCreateComponent implements OnInit {
 
   private findModuleForPermission(permissionName: string): string {
     const MODULES = [
-      'Unidad de Medida',
-      'Empresa',
-      'Tipo de Producto',
-      'Categoria',
-      'Producto',
+      'Unidades de Medida',
+      'Empresas',
+      'Tipos de Productos',
+      'Categorias',
+      'Productos',
+      'Terceros',
+      'Inventario PEPS',
+      'Catalogo de Cuentas',
+      'Bancos',
+      'Cuentas Bancarias',
+      'Recibos de Caja Cartera',
+      'Centros de Costo',
+      'Clases de Documentos',
+      'Tipos de Documentos',
+      'Centro de Ayuda',
+      'Metodos de Pago',
+      'Impuestos',
+      'Castigos de Cartera',
+      'Tipos de Identificacion',
+      'Etiquetas no Comerciales',
+      'Tipos de Terceros',
+      'Calendario Contable',
     ];
     const nPerm = this.normalize(permissionName);
     const sorted = [...MODULES].sort((a, b) => b.length - a.length);
@@ -230,7 +247,7 @@ export class PermissionCreateComponent implements OnInit {
       if (items.length) result.push({ module, items });
     }
     result.sort((a, b) =>
-      a.module.localeCompare(b.module, 'es', { sensitivity: 'base' })
+      a.module.localeCompare(b.module, 'es', { sensitivity: 'base' }),
     );
     return result;
   }

@@ -19,8 +19,10 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
+import { PopoverModule } from 'primeng/popover';
 
 import { InventoryAdjustmentComponent } from '../inventory-adjustment/inventory-adjustment.component';
+import { environment } from '../../../../../../environments/environment';
 
 interface AutoCompleteCompleteEvent {
   originalEvent: Event;
@@ -42,7 +44,8 @@ interface AutoCompleteCompleteEvent {
     ToastModule,
     TooltipModule,
     InputTextModule,
-    InventoryAdjustmentComponent
+    InventoryAdjustmentComponent,
+    PopoverModule
   ],
   providers: [MessageService],
   templateUrl: './list-kardex-peps.component.html',
@@ -60,7 +63,9 @@ export class ListKardexPepsComponent {
   localStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
   kardexList: KardexRow[] = [];
-  productId: number = 0;
+ // helpCenterUrl = 'http://contables.unicauca.edu.co/dev/#/help-center-view/inventario-peps';
+  helpCenterUrl= `${environment.API_URL.replace('/api/', '')}/#/help-center-view/inventario-peps`;
+ productId: number = 0;
   totalRecords = 0;
   first = 0;
   loading = false;
@@ -83,6 +88,7 @@ export class ListKardexPepsComponent {
       this.endDate = null;
     }
 
+    // Si hay producto y AMBAS fechas, recargar con filtro
     if (this.startDate && this.endDate && this.productId !== 0) {
       this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
     }
@@ -92,6 +98,8 @@ export class ListKardexPepsComponent {
     if (this.startDate && this.endDate && this.endDate < this.startDate) {
       this.startDate = null;
     }
+    
+    // Si hay producto y AMBAS fechas, recargar con filtro
     if (this.startDate && this.endDate && this.productId !== 0) {
       this.loadKardex({ first: 0, rows: 5, sortField: '', sortOrder: 1 });
     }
@@ -145,12 +153,11 @@ export class ListKardexPepsComponent {
 
   onProductSelect(event: any) {
     this.selectedProduct = event.value;
-    this.productId = event.value.id;
+    this.productId = event.value.productId;
     console.log('Producto seleccionado:', this.selectedProduct);
     
-    if (this.startDate && this.endDate) {
-      this.loadKardex({ first: 0, rows: 5 });
-    }
+    // Cargar kardex inmediatamente al seleccionar el producto
+    this.loadKardex({ first: 0, rows: 5 });
   }
 
   trackByIndex(index: number, item: any): number {
@@ -160,7 +167,8 @@ export class ListKardexPepsComponent {
   loadKardex(event: any) {
     this.loading = true;
 
-    if (this.productId === 0 || !this.startDate || !this.endDate) {
+    // Solo necesita que haya un producto seleccionado
+    if (this.productId === 0) {
       this.kardexList = [];
       this.totalRecords = 0;
       this.loading = false;
@@ -172,7 +180,11 @@ export class ListKardexPepsComponent {
     this.first = event.first;
     const sort = event.sortField ? `${event.sortField},${event.sortOrder === 1 ? 'asc' : 'desc'}` : 'date,asc';
 
-    this.kardexPepsService.getKardexByProduct(this.productId, page, size, sort, this.startDate, this.endDate)
+    // Si hay fechas, las envía; si no, envía null (el backend trae todo)
+    const startDateToSend = this.startDate || null;
+    const endDateToSend = this.endDate || null;
+
+    this.kardexPepsService.getKardexByProduct(this.productId, page, size, sort, startDateToSend, endDateToSend)
       .subscribe({
         next: (res) => {
           const pageData = res.data;

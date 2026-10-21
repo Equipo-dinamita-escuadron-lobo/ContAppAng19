@@ -4,9 +4,30 @@
         <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
             <span class="border-b-4 border-secondary">Inventario</span> con PEPS
         </h1>
-        <span class="ml-10 text-primary cursor-help">
-            <i class="pi pi-question-circle"></i>
+        <span class="ml-10 text-primary cursor-pointer"
+              (click)="op.toggle($event)">
+            <i class="pi pi-question-circle text-xl"></i>
         </span>
+        <p-popover #op>
+            <div class="p-4" style="max-width: 400px;">
+                <h3 class="font-bold text-lg mb-3 text-primary">Inventario con PEPS</h3>
+                <p class="text-sm mb-3 text-primary">
+                    PEPS (Primero en Entrar, Primero en Salir) o FIFO (First In, First Out) es un método de 
+                    valoración de inventarios que asume que las primeras unidades compradas son las primeras en venderse.
+                </p>
+                <p class="text-sm mb-3 text-primary">
+                    Este método es útil cuando se trabaja con productos perecederos o cuando se desea reflejar 
+                    el flujo físico real de las mercancías en el inventario.
+                </p>
+                <a
+                    [href]="helpCenterUrl"
+                    target="_blank"
+                    class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+                    Abrir centro de ayuda para más información.
+                    <i class="pi pi-external-link text-xs"> </i>
+                </a>
+            </div>
+        </p-popover>
     </div>
     <!---Fila 1 productos + Fechas-->
     <div class="flex flex-wrap gap-4 mt-16">

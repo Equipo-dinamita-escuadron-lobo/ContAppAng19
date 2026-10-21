@@ -1,0 +1,97 @@
+<button
+  type="button"
+  pButton
+  icon="pi pi-bell"
+  class="p-button-text p-button-rounded notification-bell__trigger"
+  pTooltip="Notificaciones"
+  (click)="op.toggle($event)"
+>
+  <span
+    *ngIf="totalUnread() > 0"
+    class="notification-bell__badge"
+  >{{ totalUnread() }}</span>
+</button>
+
+<p-overlayPanel #op [style]="{ width: '380px' }" [dismissable]="true">
+  <div class="flex justify-between items-center mb-2 gap-2">
+    <strong class="text-primary">Notificaciones</strong>
+    <div class="flex gap-1">
+      <button
+        *ngIf="store.unreadCount() > 0"
+        type="button"
+        pButton
+        label="Marcar leídas"
+        class="p-button-text p-button-sm"
+        (click)="onMarkAllRead()"
+      ></button>
+      <button
+        *ngIf="store.notifications().length > 0"
+        type="button"
+        pButton
+        icon="pi pi-trash"
+        pTooltip="Eliminar leídas"
+        class="p-button-text p-button-sm p-button-rounded"
+        (click)="onDeleteAllRead()"
+      ></button>
+    </div>
+  </div>
+
+  <div
+    *ngIf="
+      store.notifications().length === 0 && externalNotifications.length === 0
+    "
+    class="p-4 text-center text-gray-500"
+  >
+    <i class="pi pi-check-circle text-2xl text-green-500 mb-2 block"></i>
+    <p class="text-sm m-0">No tienes notificaciones nuevas.</p>
+  </div>
+
+  <ul class="list-none p-0 m-0 notification-bell__list">
+    <li
+      *ngFor="let alert of externalNotifications"
+      class="notification-bell__item"
+      [ngClass]="severityClass(alert.severity)"
+      [class.notification-bell__item--unread]="alert.read !== true"
+      (click)="onExternalClick(alert); op.hide()"
+    >
+      <div class="flex justify-between items-start gap-2">
+        <span class="notification-bell__title">{{ alert.title }}</span>
+        <i [class]="severityIcon(alert)"></i>
+      </div>
+      <p class="notification-bell__message" [innerHTML]="alert.message"></p>
+      <div *ngIf="alert.date" class="text-right">
+        <small class="notification-bell__date">
+          {{ alert.date | date: "medium" }}
+        </small>
+      </div>
+    </li>
+
+    <li
+      *ngFor="let n of store.notifications()"
+      class="notification-bell__item notification-bell__item--info"
+      [class.notification-bell__item--unread]="!n.read"
+      (click)="onClick(n); op.hide()"
+    >
+      <div class="flex justify-between items-start gap-2">
+        <span class="notification-bell__title">{{ n.title }}</span>
+        <div class="flex items-center gap-1">
+          <i class="pi pi-bell"></i>
+          <button
+            type="button"
+            pButton
+            icon="pi pi-times"
+            pTooltip="Eliminar"
+            class="p-button-text p-button-sm p-button-rounded notification-bell__delete"
+            (click)="onDelete($event, n)"
+          ></button>
+        </div>
+      </div>
+      <p class="notification-bell__message">{{ n.message }}</p>
+      <div *ngIf="n.createdAt" class="text-right">
+        <small class="notification-bell__date">
+          {{ n.createdAt | date: "medium" }}
+        </small>
+      </div>
+    </li>
+  </ul>
+</p-overlayPanel>

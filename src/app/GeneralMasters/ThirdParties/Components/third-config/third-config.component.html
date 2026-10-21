@@ -88,7 +88,7 @@
                     class="w-full mb-6"
                     maxlength="10"
                     (keydown.escape)="cancelAddTypeId()">
-                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('code')?.touched && typeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
+                  <small class="error-message absolute left-0 -bottom-13" *ngIf="typeIdForm.get('code')?.touched && typeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
                 </div>
                 <div class="relative">
                   <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
@@ -98,7 +98,7 @@
                     placeholder="Ej: Cédula de Ciudadanía"
                     class="w-full mb-6"
                     (keydown.escape)="cancelAddTypeId()">
-                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('name')?.touched && typeIdForm.get('name')?.invalid">Nombre requerido</small>
+                  <small class="error-message absolute left-0 -bottom-13" *ngIf="typeIdForm.get('name')?.touched && typeIdForm.get('name')?.invalid">Nombre requerido</small>
                 </div>
                 <div class="relative">
                   <label class="font-semibold text-primary block mb-2 label-required">Clasificación</label>
@@ -120,7 +120,7 @@
                       <label for="legal_entity" class="ml-2 text-sm">Persona Jurídica</label>
                     </div>
                   </div>
-                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="typeIdForm.get('classification')?.touched && typeIdForm.get('classification')?.invalid">Clasificación requerida</small>
+                  <small class="error-message absolute left-0 -bottom-13" *ngIf="typeIdForm.get('classification')?.touched && typeIdForm.get('classification')?.invalid">Clasificación requerida</small>
                 </div>
                 <div class="flex flex-col justify-center h-full">
                   <div class="flex gap-2 justify-center">
@@ -157,7 +157,7 @@
                     class="w-full mb-6"
                     maxlength="10"
                     (keydown.escape)="cancelEditTypeId()">
-                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('code')?.touched && editTypeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
+                  <small class="error-message absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('code')?.touched && editTypeIdForm.get('code')?.invalid">Código requerido (2-10 caracteres)</small>
                 </div>
                 <div class="relative">
                   <label class="font-semibold text-primary block mb-2 label-required">Nombre</label>
@@ -167,7 +167,7 @@
                     placeholder="Ej: Cédula de Ciudadanía"
                     class="w-full mb-6"
                     (keydown.escape)="cancelEditTypeId()">
-                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('name')?.touched && editTypeIdForm.get('name')?.invalid">Nombre requerido</small>
+                  <small class="error-message absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('name')?.touched && editTypeIdForm.get('name')?.invalid">Nombre requerido</small>
                 </div>
                 <div class="relative">
                   <label class="font-semibold text-primary block mb-2 label-required">Clasificación</label>
@@ -189,7 +189,7 @@
                       <label for="edit_legal_entity" class="ml-2 text-sm">Persona Jurídica</label>
                     </div>
                   </div>
-                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('classification')?.touched && editTypeIdForm.get('classification')?.invalid">Clasificación requerida</small>
+                  <small class="error-message absolute left-0 -bottom-13" *ngIf="editTypeIdForm.get('classification')?.touched && editTypeIdForm.get('classification')?.invalid">Clasificación requerida</small>
                 </div>
                 <div class="flex flex-col justify-center h-full">
                   <div class="flex gap-2 justify-center">
@@ -211,7 +211,7 @@
           </div>
 
           <!-- Tabla de Tipos de Identificación -->
-          <p-table #typeIdTable [value]="typesId" [loading]="loadingTypeIds" [lazy]="true" (onLazyLoad)="loadTypeIdsLazy($event)"
+          <p-table #typeIdTable [value]="typesId" [lazy]="true" (onLazyLoad)="loadTypeIdsLazy($event)"
             [paginator]="true" [rows]="currentSizeTypeIds" [totalRecords]="totalRecordsTypeIds"
             [rowsPerPageOptions]="[5, 10, 20]"
             styleClass="p-datatable-striped font-family-sans"
@@ -279,22 +279,7 @@
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="5" class="text-center py-6 font-family-sans text-neutral-50">
-                  No se encontraron tipos de identificación.
-                </td>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="loadingbody">
-              <tr>
-                <td colspan="5" class="text-center py-8">
-                  <div class="flex flex-col items-center gap-3">
-                    <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
-                    <p class="text-gray-500">Cargando tipos de identificación...</p>
-                  </div>
-                </td>
-              </tr>
+              <app-table-empty-message [loading]="loadingTypeIds" [colspan]="5"></app-table-empty-message>
             </ng-template>
           </p-table>
         </p-tabpanel>
@@ -348,8 +333,8 @@
                     class="w-full mb-6"
                     maxlength="100"
                     (keydown.escape)="cancelAddThirdType()">
-                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('required')">Nombre requerido</small>
-                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('pattern')">Solo se permiten letras y espacios</small>
+                  <small class="error-message absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('required')">Nombre requerido</small>
+                  <small class="error-message absolute left-0 -bottom-13" *ngIf="thirdTypeForm.get('name')?.touched && thirdTypeForm.get('name')?.hasError('pattern')">Solo se permiten letras y espacios</small>
                 </div>
                 <div class="flex flex-col justify-center h-full">
                   <div class="flex gap-2 justify-center">
@@ -386,7 +371,7 @@
                     class="w-full mb-6"
                     maxlength="100"
                     (keydown.escape)="cancelEditThirdType()">
-                  <small class="text-red-500 absolute left-0 -bottom-13" *ngIf="editThirdTypeForm.get('name')?.touched && editThirdTypeForm.get('name')?.invalid">Nombre requerido</small>
+                  <small class="error-message absolute left-0 -bottom-13" *ngIf="editThirdTypeForm.get('name')?.touched && editThirdTypeForm.get('name')?.invalid">Nombre requerido</small>
                 </div>
                 <div class="flex flex-col justify-center h-full">
                   <div class="flex gap-2 justify-center">
@@ -408,7 +393,7 @@
           </div>
 
           <!-- Tabla de Tipos de Tercero -->
-          <p-table #thirdTypeTable [value]="thirdTypes" [loading]="loadingThirdTypes" [lazy]="true" (onLazyLoad)="loadThirdTypesLazy($event)"
+          <p-table #thirdTypeTable [value]="thirdTypes" [lazy]="true" (onLazyLoad)="loadThirdTypesLazy($event)"
             [paginator]="true" [rows]="currentSizeThirdTypes" [totalRecords]="totalRecordsThirdTypes"
             [rowsPerPageOptions]="[5, 10, 20]"
             styleClass="p-datatable-striped font-family-sans"
@@ -466,22 +451,7 @@
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="3" class="text-center py-6 font-family-sans text-neutral-50">
-                  No se encontraron tipos de tercero.
-                </td>
-              </tr>
-            </ng-template>
-
-            <ng-template pTemplate="loadingbody">
-              <tr>
-                <td colspan="3" class="text-center py-8">
-                  <div class="flex flex-col items-center gap-3">
-                    <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
-                    <p class="text-gray-500">Cargando tipos de tercero...</p>
-                  </div>
-                </td>
-              </tr>
+              <app-table-empty-message [loading]="loadingThirdTypes" [colspan]="3"></app-table-empty-message>
             </ng-template>
           </p-table>
         </p-tabpanel>

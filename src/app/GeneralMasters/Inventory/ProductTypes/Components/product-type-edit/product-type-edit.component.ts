@@ -114,16 +114,28 @@ export class ProductTypeEditComponent implements OnInit {
           this.router.navigate(['/gen-masters/inventory/product-types/list']);
         },
         error: (error) => {
-          const message = error.error?.message || 'Ha ocurrido un error al actualizar el tipo de producto. Por favor, inténtelo de nuevo.';
-          let summary = 'Error';
-          if (message.includes('Ya existe')) {
-            summary = 'Registro Duplicado';
+          // Verificar si el error específico de tipo de producto en uso
+          const errorCode = error?.error?.code || error?.code || '';
+          if (errorCode === 'PRODUCT_TYPE_IN_USE') {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Información',
+              detail: error?.error?.message || 'El tipo de producto no se puede editar porque contiene productos con movimientos contables'
+            });
+            // Redirigir inmediatamente a la lista de tipos de producto
+            this.router.navigate(['/gen-masters/inventory/product-types/list']);
+          } else {
+            const message = error.error?.message || 'Ha ocurrido un error al actualizar el tipo de producto. Por favor, inténtelo de nuevo.';
+            let summary = 'Error';
+            if (message.includes('Ya existe')) {
+              summary = 'Registro Duplicado';
+            }
+            this.messageService.add({
+              severity: 'error',
+              summary: summary,
+              detail: message
+            });
           }
-          this.messageService.add({
-            severity: 'error',
-            summary: summary,
-            detail: message
-          });
         }
       });
     } else {

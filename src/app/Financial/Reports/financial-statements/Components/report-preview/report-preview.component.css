@@ -1,0 +1,9 @@
+﻿.report-container {
+  background-color: #ffffff;
+  font-size: 11px;
+  transition: all 0.3s ease-in-out;
+}
+
+.report-container.excel-preview {
+  width: 140%;
+}

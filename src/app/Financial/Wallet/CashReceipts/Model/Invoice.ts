@@ -9,7 +9,7 @@ export interface Invoice {
     expirationDate: Date;
     pendingValue: number;
     thirdId: number;
-    
+    clientName?: string; // Nombre del cliente, opcionalmente cargado desde el servicio de terceros.
     // Propiedades opcionales añadidas por el frontend para la interacción del usuario.
     selectedForPayment?: boolean; 
     amountToPay?: number; 

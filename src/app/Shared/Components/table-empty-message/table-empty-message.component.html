@@ -1,0 +1,13 @@
+<tr>
+  <td [attr.colspan]="colspan" class="py-8 font-family-sans text-center" style="white-space: nowrap;">
+    <ng-container *ngIf="loading; else noData">
+      <div class="flex flex-col items-center gap-3">
+        <i class="pi pi-spin pi-spinner text-primary"></i>
+        <p class="text-primary font-semibold">Cargando...</p>
+      </div>
+    </ng-container>
+    <ng-template #noData>
+      <span class="text-neutral-50">No se encontraron resultados.</span>
+    </ng-template>
+  </td>
+</tr>

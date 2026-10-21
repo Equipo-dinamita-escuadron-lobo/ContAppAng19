@@ -6,12 +6,12 @@
     <div>
       <div class="flex items-center gap-3 mb-3">
         <span
-          class="material-symbols-outlined text-[var(--color-primary)] text-3xl md:text-4xl"
+          class="material-symbols-outlined text-primary text-3xl md:text-4xl"
         >
           {{ auxiliaryBookInfo.icon }}
         </span>
         <h1
-          class="text-xl md:text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] underline-offset-4"
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
         >
           {{ auxiliaryBookInfo.name }}
         </h1>
@@ -22,24 +22,29 @@
     </div>
 
     <!-- Derecha: Botón Exportar -->
-    <div *ngIf="isReportGenerated" class="flex items-start">
+    <div
+      *ngIf="isReportGenerated && auxiliaryBookInfo !== null && dataTable && dataTable.length > 0"
+      class="flex items-start"
+    >
       <p-button
         styleClass="p-button-secondary"
         icon="pi pi-file-export"
         label="Exportar"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
       />
     </div>
   </div>
 
   <!-- Filtros -->
-  <h3 class="text-sm font-semibold text-[var(--color-primary)] mb-3">
+  <h3 class="text-sm font-semibold text-primary mb-3">
     Criterios para la Generación:
   </h3>
   <div class="p-4 bg-white rounded-lg shadow-sm">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
       <!-- 2. Rango -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+        <h4 class="text-xs font-bold text-primary mb-2">
           <p-checkbox
             [(ngModel)]="isRangeOptionSelected"
             [binary]="true"
@@ -77,7 +82,7 @@
 
       <!-- 3. Tipo de documento -->
       <div class="col-span-1 lg:border-r lg:border-gray-300 lg:pr-4">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
+        <h4 class="text-xs font-bold text-primary mb-2">
           <p-checkbox
             [(ngModel)]="isDocumentTypeOptionSelected"
             [binary]="true"
@@ -99,8 +104,8 @@
 
       <!-- 4. Fecha de Corte (sin línea a la derecha) -->
       <div class="col-span-1">
-        <h4 class="text-xs font-bold text-[var(--color-primary)] mb-2">
-          Periodo <span class="text-[var(--color-secondary)]"> *</span>
+        <h4 class="text-xs font-bold text-primary mb-2">
+          Periodo <span class="text-error"> *</span>
         </h4>
         <p-datepicker
           [(ngModel)]="datePeriod"
@@ -173,13 +178,58 @@
       </ng-template>
 
       <!-- Body -->
-      <ng-template pTemplate="body" let-accountInfo>
+      <ng-template pTemplate="body" let-row>
         <tr>
-          <td>{{ accountInfo.accountCode }}</td>
-          <td>{{ accountInfo.accountDescription }}</td>
-          <td>{{ accountInfo.description }}</td>
-          <td [ngClass]="{ 'text-red-500': accountInfo.value < 0 }">
-            {{ accountInfo.value | currency : "COP $" : "symbol" : "1.0-0" }}
+          <td>
+            {{ row.voucherType?.trim() ? row.voucherType : "NO DISPONIBLE" }}
+          </td>
+          <td>{{ row.date }}</td>
+          <td>
+            {{ row.state?.trim() ? row.state : "NO DISPONIBLE" }}
+          </td>
+          <td>
+            {{
+              row.thirdPartyId?.trim()
+                ? row.thirdPartyId
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td>
+            {{
+              row.thirdPartyName?.trim()
+                ? row.thirdPartyName
+                : "NO DISPONIBLE"
+            }}
+          </td>
+          <td>{{ row.account?.accountCode }}</td>
+          <td>{{ row.account?.accountDescription }}</td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(row.initialBalance, row.account?.nature)
+              "
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="formatMoneyAligned(row.debitMovement)"
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="formatMoneyAligned(row.creditMovement)"
+            ></div>
+          </td>
+          <td class="p-2">
+            <div
+              class="money-cell"
+              [innerHTML]="
+                formatMoneyAligned(row.netMovement, row.account?.nature)
+              "
+            ></div>
           </td>
         </tr>
       </ng-template>

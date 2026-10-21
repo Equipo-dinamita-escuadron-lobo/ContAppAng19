@@ -5,14 +5,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { ButtonModule } from 'primeng/button';
-import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ClassesOfDocumentsServiceService } from '../../services/classes-of-documents-service.service';
 
 @Component({
   selector: 'app-classes-of-documents-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule],
   templateUrl: './classes-of-documents-edit.component.html',
   styleUrl: './classes-of-documents-edit.component.css'
 })
@@ -70,6 +69,16 @@ export class ClassesOfDocumentsEditComponent {
         this.goBack();
       },
       error: (err) => {
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'DOCUMENT_CLASS_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede editar la clase de documento porque tiene tipos con movimientos contables'
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
         if (err?.status === 409) {
           const msg: string = err?.error?.message || err?.error?.detail || '';
           const m1 = msg.match(/nombre\s+'([^']+)'/i);

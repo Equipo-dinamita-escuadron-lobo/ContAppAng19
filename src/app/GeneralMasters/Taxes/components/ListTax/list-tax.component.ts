@@ -18,6 +18,10 @@ import { TaxService } from '../../services/tax.service';
 import { TaxValidationMessagesService } from '../../services/tax-validation-messages.service';
 import { LocalStorageMethods } from '../../../../Shared/Methods/local-storage.method';
 import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue/services/chart-account.service';
+import { PopoverModule } from 'primeng/popover';
+import { HelpCenterService } from '../../../../Shared/services/help-center.service';
+import { TableEmptyMessageComponent } from '../../../../Shared/Components/table-empty-message/table-empty-message.component';
+import { AuthService } from '../../../../Core/auth/services/auth.service';
 
 @Component({
   selector: 'app-list-tax',
@@ -34,21 +38,14 @@ import { ChartAccountService } from '../../../../GeneralMasters/AccountCatalogue
     InputIconModule,
     ToggleSwitchModule,
     TagModule,
+    PopoverModule,
+    TableEmptyMessageComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './list-tax.component.html',
   styleUrl: './list-tax.component.css',
 })
 export class ListTaxComponent implements OnInit {
-  private readonly router = inject(Router);
-  private readonly taxService = inject(TaxService);
-  private readonly messageService = inject(MessageService);
-  private readonly confirmationService = inject(ConfirmationService);
-  private readonly chartAccountService = inject(ChartAccountService);
-  public readonly taxValidationMessagesService = inject(
-    TaxValidationMessagesService,
-  );
-
   taxes: TaxList[] = [];
   totalRecords: number = 0;
   currentPage: number = 0;
@@ -60,10 +57,28 @@ export class ListTaxComponent implements OnInit {
   localStorageMethods: LocalStorageMethods = new LocalStorageMethods();
   entData: any | null = null;
   accounts: any[] = [];
+  helpCenterUrl: string;
+  canToggleState = false;
+
+  constructor(
+    private readonly router: Router,
+    private readonly taxService: TaxService,
+    private readonly messageService: MessageService,
+    private readonly confirmationService: ConfirmationService,
+    private readonly chartAccountService: ChartAccountService,
+    public readonly taxValidationMessagesService: TaxValidationMessagesService,
+    private readonly helpCenterService: HelpCenterService,
+    private readonly authService: AuthService,
+  ) {
+    this.helpCenterUrl =
+      this.helpCenterService.getHelpCenterUrl('configuracion');
+  }
 
   ngOnInit(): void {
     this.entData = this.localStorageMethods.loadEnterpriseData();
     this.loadAccountNames();
+    const perms = this.authService.getCurrentUserPermissions();
+    this.canToggleState = perms.includes('T#CS');
   }
 
   /**
@@ -185,7 +200,7 @@ export class ListTaxComponent implements OnInit {
 
           this.loading = false;
         },
-        error: () => {
+        error: (error) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
@@ -208,7 +223,6 @@ export class ListTaxComponent implements OnInit {
     }
 
     this.loading = true;
-
     this.taxService
       .findAll(
         enterpriseId,
@@ -246,7 +260,7 @@ export class ListTaxComponent implements OnInit {
 
           this.loading = false;
         },
-        error: () => {
+        error: (error) => {
           this.loading = false;
           this.messageService.add({
             severity: 'error',
@@ -303,6 +317,7 @@ export class ListTaxComponent implements OnInit {
    * Confirma y elimina un impuesto
    */
   deleteTax(tax: TaxList): void {
+    if (!this.authService.requireAnyPermission(['T#D'])) return;
     this.confirmationService.confirm({
       message: `¿Está seguro de que desea eliminar el impuesto "${tax.description}"?`,
       header: 'Confirmar Eliminación',
@@ -324,12 +339,42 @@ export class ListTaxComponent implements OnInit {
             this.reloadCurrentPage(); // Recargar la página actual
           },
           error: (error) => {
-            const errorMessage =
+            // Verificar si es error específico de impuesto en uso
+            const errorCode = error?.error?.code || error?.code || '';
+            if (errorCode === 'TAX_IN_USE') {
+              this.messageService.add({
+                severity: 'info',
+                summary: 'Información',
+                detail:
+                  error?.error?.message ||
+                  'No se puede eliminar el impuesto porque tiene movimientos contables',
+                life: 6000,
+              });
+              return;
+            }
+
+            // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+            const errorMessage = error?.error?.message || error?.message || '';
+            if (
+              errorMessage.includes('No se puede eliminar el impuesto') &&
+              errorMessage.includes('movimientos contables')
+            ) {
+              this.messageService.add({
+                severity: 'info',
+                summary: 'Información',
+                detail: errorMessage,
+                life: 6000,
+              });
+              return;
+            }
+
+            // Para otros errores, mostrar mensaje genérico
+            const finalErrorMessage =
               error?.error?.message || 'No se pudo eliminar el impuesto';
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: errorMessage,
+              detail: finalErrorMessage,
             });
           },
         });
@@ -341,10 +386,29 @@ export class ListTaxComponent implements OnInit {
    * Cambia el estado de un impuesto
    */
   changeTaxState(taxId: number, tax: TaxList): void {
-    this.messageService.add({
-      severity: 'warn',
-      summary: 'Sin soporte',
-      detail: 'El cambio de estado aún no está implementado en el backend.',
+    const enterpriseId = this.getEnterpriseId();
+    if (!taxId || !enterpriseId) return;
+
+    const newStatus = !tax.status;
+
+    this.taxService.changeState(taxId, enterpriseId, newStatus).subscribe({
+      next: () => {
+        tax.status = newStatus;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: `Impuesto "${tax.code}" cambiado correctamente`,
+        });
+      },
+      error: (error) => {
+        const errorMessage =
+          error?.error?.message || 'No se pudo cambiar el estado del impuesto.';
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: errorMessage,
+        });
+      },
     });
   }
   /**

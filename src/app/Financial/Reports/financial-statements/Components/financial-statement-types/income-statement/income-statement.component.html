@@ -1,0 +1,211 @@
+﻿<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <div class="mb-6 flex justify-between items-start gap-4">
+    <div>
+      <div class="flex items-center gap-3 mb-3">
+        <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
+          {{ financialStatementInfo.icon }}
+        </span>
+        <h1
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
+        >
+          {{ financialStatementInfo.name }}
+        </h1>
+      </div>
+      <p class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl">
+        {{ financialStatementInfo.description }}
+      </p>
+    </div>
+
+    <div *ngIf="isReportGenerated" class="flex items-start">
+      <p-button
+        styleClass="p-button-secondary"
+        icon="pi pi-file-export"
+        label="Exportar"
+        [disabled]="isGeneratingReport"
+        (click)="showExportDialog()"
+        (keydown.enter)="showExportDialog()"
+      ></p-button>
+    </div>
+  </div>
+
+  <h3 class="text-sm font-semibold text-primary mb-3">
+    Criterios para la Generacion:
+  </h3>
+
+  <div class="p-4 bg-white rounded-lg shadow-sm">
+    <div class="criteria-grid">
+      <div class="criteria-card level-card">
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <h4 class="criteria-title mb-0">Nivel</h4>
+          <p-button
+            *ngIf="criteria.criteriaType"
+            label="Limpiar"
+            icon="pi pi-times"
+            styleClass="p-button-text p-button-sm"
+            (click)="clearLevelSelection()"
+            type="button"
+          ></p-button>
+        </div>
+        <div class="level-options-grid">
+          <div class="level-option" *ngFor="let level of levels">
+            <p-radioButton
+              [inputId]="'income-level-' + level.value"
+              name="incomeStatementCriteriaType"
+              [value]="level.value"
+              [(ngModel)]="criteria.criteriaType"
+              (ngModelChange)="onLevelChange()"
+            ></p-radioButton>
+            <label
+              class="text-sm cursor-pointer"
+              [for]="'income-level-' + level.value"
+            >
+              {{ level.label }}
+            </label>
+          </div>
+        </div>
+        <small class="mt-2 block text-gray-500">
+          Si no seleccionas un nivel, se usará la estructura predeterminada.
+        </small>
+      </div>
+
+      <div class="criteria-card">
+        <h4 class="criteria-title">Periodo Actual</h4>
+        <div class="criteria-fields two-columns">
+          <div class="criteria-field">
+            <label>Fecha Inicial *</label>
+            <p-datepicker
+              [(ngModel)]="currentPeriod.startDate"
+              (ngModelChange)="syncCurrentPeriodWithDateRange()"
+              dateFormat="dd/mm/yy"
+              placeholder="Desde"
+              [showIcon]="true"
+              styleClass="w-full text-xs"
+            ></p-datepicker>
+          </div>
+
+          <div class="criteria-field">
+            <label>Fecha Final *</label>
+            <p-datepicker
+              [(ngModel)]="currentPeriod.endDate"
+              (ngModelChange)="syncCurrentPeriodWithDateRange()"
+              dateFormat="dd/mm/yy"
+              placeholder="Hasta"
+              [showIcon]="true"
+              styleClass="w-full text-xs"
+            ></p-datepicker>
+          </div>
+        </div>
+      </div>
+
+      <div class="criteria-card">
+        <h4 class="criteria-title">Periodo Anterior</h4>
+        <div class="criteria-fields two-columns">
+          <div class="criteria-field">
+            <label>Fecha Inicial *</label>
+            <p-datepicker
+              [(ngModel)]="previousPeriod.startDate"
+              (ngModelChange)="onPreviousPeriodChange()"
+              dateFormat="dd/mm/yy"
+              placeholder="Desde"
+              [showIcon]="true"
+              styleClass="w-full text-xs"
+            ></p-datepicker>
+          </div>
+
+          <div class="criteria-field">
+            <label>Fecha Final *</label>
+            <p-datepicker
+              [(ngModel)]="previousPeriod.endDate"
+              (ngModelChange)="onPreviousPeriodChange()"
+              dateFormat="dd/mm/yy"
+              placeholder="Hasta"
+              [showIcon]="true"
+              styleClass="w-full text-xs"
+            ></p-datepicker>
+          </div>
+        </div>
+      </div>
+
+      <div class="criteria-card generate-card">
+        <button
+          pButton
+          type="button"
+          label="Generar Reporte"
+          [loading]="isGeneratingReport"
+          (keydown.enter)="generateReport()"
+          (click)="generateReport()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-10 bg-white rounded-lg shadow-sm report-table-shell">
+    <p-table
+      [value]="dataTable"
+      showGridlines
+      [resizableColumns]="true"
+      [scrollable]="true"
+      [responsiveLayout]="'scroll'"
+      [loading]="isGeneratingReport"
+      styleClass="p-datatable-header fs-report-table"
+    >
+      <ng-template pTemplate="header">
+        <ng-container *ngIf="headerConfig?.length; else simpleHeader">
+          <tr *ngFor="let headerRow of headerConfig">
+            <th
+              pResizableColumn
+              *ngFor="let col of headerRow"
+              class="report-header-cell"
+              [class.text-left]="col.field === 'lineDescription'"
+              [class.text-center]="col.field !== 'lineDescription'"
+              [attr.colspan]="col.colspan"
+              [attr.rowspan]="col.rowspan"
+            >
+              {{ col.header }}
+            </th>
+          </tr>
+        </ng-container>
+
+        <ng-template #simpleHeader>
+          <tr>
+            <th pResizableColumn *ngFor="let col of tableColumns">{{ col.header }}</th>
+          </tr>
+        </ng-template>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr [ngClass]="getRowClass(row)">
+          <td
+            *ngFor="let col of tableColumns"
+            [class]="col.type === 'number' ? 'p-2' : ''"
+            [class.percentage-cell]="isPercentageColumn(col.field)"
+          >
+            <ng-container *ngIf="col.type === 'number'; else plainValue">
+              <span class="compact-number">{{
+                formatMoneyCompact(getNestedNumberValue(row, col.field))
+              }}</span>
+            </ng-container>
+            <ng-template #plainValue>
+              {{ getNestedTextValue(row, col.field) }}
+            </ng-template>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr style="height: 200px">
+          <td [attr.colspan]="tableColumns.length">
+            <div class="flex flex-col items-center justify-center h-full">
+              <p class="text-md text-gray-600 max-w-md text-center">
+                NO HAY INFORMACION PARA MOSTRAR
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+
+

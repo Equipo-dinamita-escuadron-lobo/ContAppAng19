@@ -109,7 +109,7 @@ export class BillCreationComponent implements OnInit {
   }
 
   loadInitialData(): void {
-    // Cargar siguiente Bill ID
+    // Cargar siguiente número de factura
     this.purchaseBillService.getNextBillId().subscribe(billId => {
       this.billHeaderForm.patchValue({ billId });
     });
@@ -266,7 +266,7 @@ export class BillCreationComponent implements OnInit {
       taxes: this.taxes,
       total: this.total,
       notes: headerData.notes,
-      enterpriseId: this.localStorageMethods.getIdEnterprise() || 'test-enterprise',
+      enterpriseId: this.localStorageMethods.getIdEnterprise(),
       lineItems: lineItemsData.map((item: any) => ({
         date: item.date,
         description: item.description,

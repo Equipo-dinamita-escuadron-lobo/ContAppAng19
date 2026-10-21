@@ -83,7 +83,7 @@ export const navbarData: INavbarData[] = [
       {
         routeLink: '/gen-masters/no-commercial-tags/list',
         icon: 'label',
-        label:'Etiquetas no comerciales'
+        label: 'Etiquetas no comerciales'
       },
       {
         routeLink: '/gen-masters/help-center/list',
@@ -134,23 +134,34 @@ export const navbarData: INavbarData[] = [
       {
         routeLink: 'financial/treasury',
         icon: 'money_bag',
+        roles: ['Estudiante', 'Profesor', 'Administrador'],
         label: 'Tesorería',
         items: [
           {
+            routeLink: 'financial/treasury/operations',
+            icon: 'payments',
+            label: 'Operaciones de Tesorería',
+          },
+          {
             routeLink: 'financial/treasury/purchase-bills',
             icon: 'description',
-            label: 'Facturas de Compra',
+            label: 'Programación Ordenes de Pago',
           },
-            {
-              routeLink: 'financial/treasury/expense-receipts',
-              icon: 'receipt_long',
-              label: 'Comprobantes de Egreso',
-            },
-            {
-              routeLink: 'financial/treasury/reports/vendors',
-              icon: 'analytics',
-              label: 'Reportes de Proveedores',
-            },
+          {
+            routeLink: 'financial/treasury/expense-receipts',
+            icon: 'receipt_long',
+            label: 'Comprobantes de Egreso',
+          },
+          {
+            routeLink: 'financial/treasury/reports/vendors',
+            icon: 'analytics',
+            label: 'Reportes de Proveedores',
+          },
+          {
+            routeLink: 'financial/treasury/reports/aging-report',
+            icon: 'schedule',
+            label: 'Vencimiento por edades',
+          },
         ],
       },
       {
@@ -179,79 +190,125 @@ export const navbarData: INavbarData[] = [
             label: 'Facturas pendientes',
           },
           {
+            routeLink: '/financial/wallet/invoices/expiring',
+            icon: 'schedule',
+            label: 'Facturas por Vencer',
+          },
+          {
             routeLink: '/financial/wallet/reports',
             icon: 'analytics',
             label: 'Reportes',
-          },
+            items: [
+              {
+                routeLink: '/financial/wallet/reports/client-portfolio',
+                icon: 'assessment',
+                label: 'Cartera por Cliente',
+              },
+              {
+                routeLink: '/financial/wallet/reports/aging-portfolio',
+                icon: 'timeline', // Un ícono que sugiere "edades" o "línea de tiempo"
+                label: 'Vencimiento por Edades',
+              },
+            ],
 
+          },
         ],
       },
     ],
   },
-     {
-     routeLink: 'TO DO',
-     icon: 'store',
-     label: 'Comercial',
-     items: [
-       {
-         routeLink: 'business-masters',
-         icon: 'construction',
-         label: 'Maestros Comerciales',
-         items: [
-           {
-             routeLink: 'TO DO',
-             icon: 'decimal_increase',
-             label: 'Modelos de Valoracion',
-             items: [
-               {
-                 routeLink: '/commercial/business-masters/kardex',
-                 icon: '',
-                 label: 'Inventario con Promedio Ponderado',
-               },
-               {
+  {
+    routeLink: '/commercial',
+    icon: 'store',
+    label: 'Comercial',
+    items: [
+      {
+        routeLink: 'business-masters',
+        icon: 'construction',
+        label: 'Maestros Comerciales',
+        items: [
+          {
+            routeLink: 'TO DO',
+            icon: 'decimal_increase',
+            label: 'Modelos de Valoracion',
+            items: [
+              {
+                routeLink: '/commercial/business-masters/kardex',
+                icon: '',
+                label: 'Inventario con Promedio Ponderado',
+              },
+              {
                 routeLink: '/commercial/business-masters/peps',
-                 icon: '',
-                 label: 'Inventario PEPS',
-               },
-             ],
-           },
-           {
-             routeLink: 'TO DO',
-             icon: 'analytics',
-             label: 'Reportes',
-           },
-         ],
-       },
-       {
-         routeLink: 'commercial/sale-invoice',
-         icon: 'order_approve',
-         label: 'Factura de Venta',
-       },
-       {
-         routeLink: 'TO DO',
-         icon: 'receipt_long',
-         label: 'Factura de Compra',
-       },
-       {
-         routeLink: '/commercial/invoice-template',
-         icon: 'description',
-         label: 'Plantilla de Factura',
-       },
-       {
-         routeLink: '/commercial/return-template',
-         icon: 'replay',
-         label: 'Devoluciones',
-       },
-       {
-        routeLink:'/commercial/non-commercial-template',
-        icon:'',
-        label:'Movimiento de Inventario No Comercial'
-       },
-       {
-         routeLink: 'TO DO',
-         icon: 'analytics',
-         label: 'Reportes',
-       },
-     ],
-   },
+                icon: '',
+                label: 'Inventario PEPS',
+              },
+            ],
+          },
+          {
+            routeLink: 'TO DO',
+            icon: 'analytics',
+            label: 'Reportes',
+          },
+        ],
+      },
+      {
+        routeLink: 'commercial/sale-invoice',
+        icon: 'order_approve',
+        label: 'Factura de Venta',
+      },
+      {
+        routeLink: 'commercial/purchase-invoice',
+        icon: 'receipt_long',
+        label: 'Factura de Compra',
+      },
+      {
+        routeLink: '/commercial/invoice-template',
+        icon: 'description',
+        label: 'Plantilla de Factura',
+      },
+      {
+        routeLink: '/commercial/return-template',
+        icon: 'replay',
+        label: 'Devoluciones',
+      },
+      {
+        routeLink: '/commercial/non-commercial-template',
+        icon: '',
+        label: 'Movimiento de Inventario No Comercial'
+      },
+      {
+        routeLink: 'TO DO',
+        icon: 'analytics',
+        label: 'Reportes',
+      },
+    ],
+  },
+  {
+    routeLink: '/audit',
+    icon: 'search',
+    label: 'Auditoría',
+    items: [
+      {
+        routeLink: '/audit/system',
+        icon: 'admin_panel_settings',
+        label: 'Configuración',
+        roles: ['Administrador'],
+      },
+      {
+        routeLink: '/audit/sessions',
+        icon: 'schedule',
+        label: 'Sesiones',
+        roles: ['Administrador','Profesor'],
+      },
+      {
+        routeLink: '/audit/operations',
+        icon: 'settings',
+        label: 'Operaciones',
+      },
+      {
+        routeLink: '/audit/documents',
+        icon: 'description',
+        label: 'Documentos Contables',
+      },
+    ],
+  },
 ];

@@ -21,14 +21,8 @@ import { DialogModule } from 'primeng/dialog';
 import { AuxiliaryBooksServiceService } from '../../Services/auxiliary-books-service.service';
 // Components
 import { AuxiliaryBooksSchedulingComponent } from '../auxiliary-books-scheduling/auxiliary-books-scheduling.component';
-
-interface AuxiliaryBookHistory {
-  id: number;
-  bookName: string;
-  generationDate: Date;
-  user: string;
-  status: 'Generando' | 'Completado' | 'Error';
-}
+import { EnterpriseService } from '../../../../../GeneralMasters/Enterprise/services/enterprise.service';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 @Component({
   selector: 'app-auxiliary-books-historial',
@@ -47,42 +41,62 @@ interface AuxiliaryBookHistory {
     TooltipModule,
     RippleModule,
     DialogModule,
-    AuxiliaryBooksSchedulingComponent, // Asegúrate de que esta línea esté presente
   ],
-  providers: [MessageService, ConfirmationService],
+  providers: [MessageService, ConfirmationService, DialogService],
   templateUrl: './auxiliary-books-historial.component.html',
   styleUrls: ['./auxiliary-books-historial.component.css'],
 })
 export class AuxiliaryBooksHistorialComponent implements OnInit {
   @ViewChild('dt') dt!: Table;
+  refDialog: DynamicDialogRef | undefined;
 
-  history: AuxiliaryBookHistory[] = [];
+  history: any[] = [];
+  isLoading = false; // Estado de carga
 
-  // Control del modal de programación
-  displaySchedulingModal = false;
-  selectedHistoryItem: AuxiliaryBookHistory | null = null;
+  selectedHistoryItem: any | null = null;
 
   // Paginación
   totalRecords = 0;
   rows = 10;
   first = 0;
-  sortField = 'generationDate';
+  sortField = 'auxiliaryBook.createdAt';
   sortOrder: 'asc' | 'desc' = 'desc';
   searchValue = '';
 
+  private enterpriseId: string | null = null;
+
   constructor(
     private auxiliaryBookService: AuxiliaryBooksServiceService,
+    protected enterpriseService: EnterpriseService,
     private router: Router,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    protected dialogService: DialogService,
   ) {}
 
   ngOnInit(): void {
-    // Se llama a loadHistory() para cargar los datos iniciales.
+    this.enterpriseId = 'bf4d475f-5d02-4551-b7f0-49a5c426ac0d';
+    //this.enterpriseService.getSelectedEnterprise()?.id ?? null;
+
+    if (!this.enterpriseId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Empresa no seleccionada',
+        detail:
+          'Selecciona una empresa para ver el historial de libros auxiliares.',
+      });
+      return;
+    }
+
     this.loadHistory();
   }
 
   loadHistory(event?: any): void {
+    if (!this.enterpriseId) {
+      return;
+    }
+
+    this.isLoading = true;
+
     // Si el evento existe (paginación, orden), actualizamos los valores
     if (event) {
       this.first = event.first;
@@ -94,36 +108,82 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
       }
     }
 
-    // Simulación de llamada a servicio
-    // Reemplazar con: this.auxiliaryBookService.getHistory(...)
-    setTimeout(() => {
-      const mockData: AuxiliaryBookHistory[] = [
-        {
-          id: 1,
-          bookName: 'Libro Diario',
-          generationDate: new Date(),
-          user: 'admin@contapp.com',
-          status: 'Completado',
-        },
-        {
-          id: 2,
-          bookName: 'Libro Mayor',
-          generationDate: new Date(Date.now() - 3600000),
-          user: 'auditor@contapp.com',
-          status: 'Generando',
-        },
-        {
-          id: 3,
-          bookName: 'Libro de Inventarios y Balances',
-          generationDate: new Date(Date.now() - 86400000),
-          user: 'admin@contapp.com',
-          status: 'Error',
-        },
-      ];
+    const pageable = {
+      page: this.first / this.rows,
+      size: this.rows,
+      sort: `${this.sortField},${this.sortOrder}`,
+    };
 
-      this.history = mockData;
-      this.totalRecords = mockData.length;
-    }, 1000);
+    // --- Llamada real al servicio ---
+    this.auxiliaryBookService
+      .getHistoryByEnterprise(this.enterpriseId, pageable)
+      .subscribe({
+        next: (response) => {
+          if (response && response.data && response.data.content) {
+            const pageData = response.data;
+
+            // APLICAR ESTE CAMBIO
+            this.history = pageData.content.map((item: any) => ({
+              id: Number(item.id),
+              publicId: item.auxiliaryBook.publicId,
+              bookName: item.auxiliaryBook.type,
+              generationDate: new Date(item.auxiliaryBook.createdAt),
+              user: item.auxiliaryBook.userId,
+              status: item.state,
+              type: item.auxiliaryBook.type,
+              createdAt: item.auxiliaryBook.createdAt,
+              userId: item.auxiliaryBook.userId,
+              state: item.state,
+              criteria: item.auxiliaryBook.criteria ?? null,
+              deliveryWay:
+                item.deliveryWay ?? item.auxiliaryBook.deliveryWay ?? null,
+              frequency: item.frequency ?? item.auxiliaryBook.frequency ?? null,
+              scheduleDate:
+                item.scheduleDate ??
+                item.nextExecutionAt ??
+                item.eventAt ??
+                null,
+              startAt:
+                item.startAt ??
+                item.scheduleDate ??
+                item.nextExecutionAt ??
+                item.eventAt ??
+                item.auxiliaryBook.startAt ??
+                null,
+              endAt: item.endAt ?? item.auxiliaryBook.endAt ?? null,
+              weekday: item.weekday ?? item.auxiliaryBook.weekday ?? null,
+              monthDay: item.monthDay ?? item.auxiliaryBook.monthDay ?? null,
+              email: item.email ?? item.auxiliaryBook.email ?? null,
+              scheduleId:
+                item.scheduleId ?? item.auxiliaryBook.scheduleId ?? null,
+            }));
+
+            // Esto debería funcionar si 'totalElements' está en 'response.data'
+            this.totalRecords = pageData.totalElements;
+          } else {
+            // Manejar respuesta inesperada
+            this.history = [];
+            this.totalRecords = 0;
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Atención',
+              detail: 'La respuesta del servidor no tuvo el formato esperado.',
+            });
+          }
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Error al cargar el historial:', err);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo cargar el historial. Intente de nuevo.',
+          });
+          this.history = [];
+          this.totalRecords = 0;
+          this.isLoading = false;
+        },
+      });
   }
 
   applyGlobalFilter(event: Event): void {
@@ -143,55 +203,68 @@ export class AuxiliaryBooksHistorialComponent implements OnInit {
   }
 
   getStatusSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    switch (status) {
-      case 'Completado':
-        return 'success';
-      case 'Generando':
-        return 'info';
-      case 'Error':
-        return 'danger';
-      default:
-        return 'warning';
+    const normalizedStatus = String(status ?? '').toUpperCase();
+
+    if (
+      normalizedStatus.includes('COMPLET') ||
+      normalizedStatus.includes('SUCCESS')
+    ) {
+      return 'success';
     }
-  }
 
-  confirmDelete(item: AuxiliaryBookHistory): void {
-    this.confirmationService.confirm({
-      message: `¿Estás seguro de que deseas eliminar el registro del libro "${item.bookName}"?`,
-      header: 'Confirmar Eliminación',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, eliminar',
-      rejectLabel: 'Cancelar',
-      accept: () => {
-        // Lógica para eliminar el registro
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Eliminado',
-          detail: 'El registro ha sido eliminado.',
-        });
-        // Volver a cargar la tabla
-        this.loadHistory();
-      },
-    });
-  }
+    if (
+      normalizedStatus.includes('ERROR') ||
+      normalizedStatus.includes('FAIL')
+    ) {
+      return 'danger';
+    }
 
-  /**
-   * Muestra el modal para programar un reporte.
-   * @param item El registro del historial a programar.
-   */
-  showSchedulingModal(item: AuxiliaryBookHistory): void {
-    this.selectedHistoryItem = item;
-    this.displaySchedulingModal = true;
+    if (
+      normalizedStatus.includes('GENER') ||
+      normalizedStatus.includes('PENDING') ||
+      normalizedStatus.includes('SCHEDULE') ||
+      normalizedStatus.includes('PROCESS')
+    ) {
+      return 'info';
+    }
+
+    return 'warning';
   }
 
   /**
    * Navega a la página de detalles de un registro del historial.
    * @param item El registro del historial a visualizar.
    */
-  showDetails(item: AuxiliaryBookHistory): void {
+  showDetails(item: any): void {
     this.router.navigate([
       '/financial/reports/auxiliary-books/historial/details', // Esta ruta ahora es correcta
-      item.id,
+      item.publicId,
     ]);
+  }
+
+  showSchedulingDialog(item: any) {
+    this.selectedHistoryItem = item;
+    const enterpriseData = this.enterpriseService.getSelectedEnterprise();
+
+    this.refDialog = this.dialogService.open(
+      AuxiliaryBooksSchedulingComponent,
+      {
+        data: {
+          ...this.selectedHistoryItem,
+          enterpriseData,
+        },
+        modal: true,
+        width: '72rem',
+        breakpoints: {
+          '1200px': '85vw',
+          '768px': '95vw',
+        },
+      },
+    );
+
+    this.refDialog.onClose.subscribe(() => {
+      this.selectedHistoryItem = null;
+      this.loadHistory();
+    });
   }
 }

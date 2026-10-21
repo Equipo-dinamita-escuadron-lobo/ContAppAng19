@@ -34,7 +34,7 @@ export class ThirdTemplateComponent implements OnInit {
   
   /** Datos de entrada para el componente */
   @Input() inputData: any = {
-    title: 'Plantilla de Importación de Terceros'
+    title: 'Plantilla de Importación'
   };
   
   /** Evento emitido al cerrar el modal */

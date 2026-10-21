@@ -5,7 +5,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { ButtonModule } from 'primeng/button';
-import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { DocumentTypesServiceService } from '../../services/document-types-service.service';
@@ -14,7 +13,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
 @Component({
   selector: 'app-document-types-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, SelectModule],
   templateUrl: './document-types-edit.component.html',
   styleUrl: './document-types-edit.component.css'
 })
@@ -106,6 +105,16 @@ export class DocumentTypesEditComponent implements OnInit {
         this.goBack();
       },
       error: (err) => {
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'DOCUMENT_TYPE_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede editar el tipo de documento porque tiene movimientos contables'
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
         if (err?.status === 409) {
           const msg: string = err?.error?.message || err?.error?.detail || '';
           const prefixMatch = msg.match(/prefijo\s+'([^']+)'/i) || msg.match(/prefijo\s*[:=]\s*([A-Za-z0-9]+)/i);

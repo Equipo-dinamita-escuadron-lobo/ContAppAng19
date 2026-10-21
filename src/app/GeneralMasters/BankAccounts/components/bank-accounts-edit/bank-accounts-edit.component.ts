@@ -16,7 +16,7 @@ import { BankAccountsService } from '../../services/bank-accounts.service';
 @Component({
   selector: 'app-bank-accounts-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, SelectModule],
   templateUrl: './bank-accounts-edit.component.html',
   styleUrl: './bank-accounts-edit.component.css'
 })
@@ -200,6 +200,31 @@ export class BankAccountsEditComponent implements OnInit {
         this.goBack();
       },
       error: (error) => {
+        // Verificar si es error específico de cuenta bancaria en uso
+        const errorCode = error?.error?.code || error?.code || '';
+        if (errorCode === 'BANK_ACCOUNT_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: error?.error?.message || 'No se puede editar la cuenta bancaria porque tiene movimientos contables'
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
+
+        // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+        const errorMessage = error?.error?.message || error?.message || '';
+        if (errorMessage.includes('No se puede editar la cuenta bancaria') && errorMessage.includes('movimientos contables')) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: errorMessage
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
+
+        // Para otros errores, mostrar mensaje genérico
         this.messageService.add({
           severity: 'error',
           summary: error.title || 'Error',

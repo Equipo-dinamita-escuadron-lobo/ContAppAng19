@@ -4,19 +4,19 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
-import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { PaymentMethodsServiceService } from '../../services/payment-methods-service.service';
 import { ChartAccountService } from '../../../AccountCatalogue/services/chart-account.service';
+import { AccountCataloguePresentationService } from '../../../AccountCatalogue/services/account-catalogue-presentation.service';
 import { Account } from '../../../AccountCatalogue/models/ChartAccount';
 import { AccountingAccountOption, PaymentMethod } from '../../models/PaymentMethods';
 
 @Component({
   selector: 'app-payment-methods-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, Toast, SelectModule, TooltipModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, SelectModule, TooltipModule],
   templateUrl: './payment-methods-edit.component.html',
   styleUrl: './payment-methods-edit.component.css'
 })
@@ -24,6 +24,7 @@ export class PaymentMethodsEditComponent implements OnInit {
   form: FormGroup;
   id!: number;
   accountingAccountsOptions: AccountingAccountOption[] = [];
+  private allAuxiliaryAccounts: Account[] = [];
   initialValue: any = {};
   isEditMode: boolean = true; // Siempre es true en este componente de edición
 
@@ -33,11 +34,13 @@ export class PaymentMethodsEditComponent implements OnInit {
     private readonly router: Router,
     private readonly messageService: MessageService,
     private readonly service: PaymentMethodsServiceService,
-    private readonly chartAccountService: ChartAccountService
+    private readonly chartAccountService: ChartAccountService,
+    private readonly accountPresentation: AccountCataloguePresentationService
   ) {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
-      accountingAccount: [null, []]
+      accountingAccount: [null, []],
+      requiresBankAccount: [false]
     });
   }
 
@@ -69,13 +72,17 @@ export class PaymentMethodsEditComponent implements OnInit {
 
         this.form.patchValue({
           name: paymentMethod.name,
-          accountingAccount: accountId
+          accountingAccount: accountId,
+          requiresBankAccount: paymentMethod.requiresBankAccount
         });
+
+        this.refreshAccountingAccountOptions(accountId);
 
         // Guardar valores iniciales para comparar cambios
         this.initialValue = {
           name: paymentMethod.name,
-          accountingAccount: accountId
+          accountingAccount: accountId,
+          requiresBankAccount: paymentMethod.requiresBankAccount
         };
       },
       error: (error) => {
@@ -91,15 +98,9 @@ export class PaymentMethodsEditComponent implements OnInit {
   private loadAccountingAccounts(enterpriseId: string, callback?: () => void): void {
     this.chartAccountService.getListAuxiliaryAccounts(enterpriseId).subscribe({
       next: (accounts: Account[]) => {
-        this.accountingAccountsOptions = accounts
-          .filter((account: Account) => account.id !== undefined)
-          .map((account: Account) => ({
-            label: `${account.code} - ${account.description}`,
-            value: account.id!, // Usar ID como value
-            code: account.code // Mantener código para referencia
-          }));
+        this.allAuxiliaryAccounts = accounts;
+        this.refreshAccountingAccountOptions();
 
-        // Ejecutar callback si se proporciona
         if (callback) {
           callback();
         }
@@ -115,6 +116,17 @@ export class PaymentMethodsEditComponent implements OnInit {
     });
   }
 
+  private refreshAccountingAccountOptions(preserveAccountId?: number | null): void {
+    const preserveId = preserveAccountId ?? this.form.get('accountingAccount')?.value ?? null;
+    this.accountingAccountsOptions = this.accountPresentation
+      .filterSelectableAuxiliaryAccounts(this.allAuxiliaryAccounts, preserveId)
+      .map((account: Account) => ({
+        label: this.accountPresentation.formatAccountingAccountLabel(account, account.status === false),
+        value: account.id!,
+        code: account.code,
+      }));
+  }
+
   goBack() {
     this.router.navigate(['/gen-masters/payment-methods/list']);
   }
@@ -122,9 +134,11 @@ export class PaymentMethodsEditComponent implements OnInit {
   hasChanges(): boolean {
     const currentName = this.form.get('name')?.value;
     const currentAccountingAccount = this.form.get('accountingAccount')?.value;
+    const currentRequiresBankAccount = this.form.get('requiresBankAccount')?.value;
 
     return this.initialValue.name !== currentName ||
-           this.initialValue.accountingAccount !== currentAccountingAccount;
+           this.initialValue.accountingAccount !== currentAccountingAccount ||
+           this.initialValue.requiresBankAccount !== currentRequiresBankAccount;
   }
 
   onSubmit() {
@@ -136,12 +150,25 @@ export class PaymentMethodsEditComponent implements OnInit {
     const entData = localStorage.getItem('entData');
     const enterpriseId = entData ? JSON.parse(entData).id : '';
     const formValues = this.form.value;
+    const selectedAccount = this.allAuxiliaryAccounts.find((account) => account.id === formValues.accountingAccount);
+    if (
+      selectedAccount?.status === false &&
+      formValues.accountingAccount !== this.initialValue.accountingAccount
+    ) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Cuenta no válida',
+        detail: 'No puede asignar una cuenta contable inactiva a un método de pago.',
+      });
+      return;
+    }
 
     const payload = {
       id: this.id,
       idEnterprise: enterpriseId,
       name: formValues.name,
-      accountingAccountId: formValues.accountingAccount
+      accountingAccountId: formValues.accountingAccount,
+      requiresBankAccount: Boolean(formValues.requiresBankAccount)
     };
 
     this.service.update(payload as any).subscribe({
@@ -154,6 +181,30 @@ export class PaymentMethodsEditComponent implements OnInit {
         this.goBack();
       },
       error: (err) => {
+        // Verificar si es error específico de método de pago en uso
+        const errorCode = err?.error?.code || err?.code || '';
+        if (errorCode === 'PAYMENT_METHOD_IN_USE') {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: err?.error?.message || 'No se puede editar el método de pago porque tiene movimientos contables'
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
+
+        // Verificar si el mensaje de error contiene la cadena específica de movimientos contables
+        const errorMessage = err?.error?.message || err?.message || '';
+        if (errorMessage.includes('No se puede editar el método de pago') && errorMessage.includes('movimientos contables')) {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Información',
+            detail: errorMessage
+          });
+          this.goBack(); // Navegar de vuelta a la lista
+          return;
+        }
+
         if (err?.status === 409) {
           const msg: string = err?.error?.message || err?.error?.detail || '';
           const nameMatch = msg.match(/nombre\s+'([^']+)'/i) || msg.match(/nombre\s*[:=]\s*([A-Za-zÀ-ÿ0-9\s]+)/i);
@@ -161,7 +212,7 @@ export class PaymentMethodsEditComponent implements OnInit {
             const n = (nameMatch[1] || nameMatch[0])?.toString().replace(/^[^']*'|'/g,'');
             this.messageService.add({
               severity: 'error',
-              summary: 'Nombre ya existente',
+              summary: 'Registro Duplicado',
               detail: `El método de pago "${n}" ya existe.`
             });
             return;

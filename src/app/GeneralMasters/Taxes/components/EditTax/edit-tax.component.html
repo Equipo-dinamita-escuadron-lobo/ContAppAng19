@@ -1,5 +1,4 @@
 <div class="flex w-full h-full font-titillium">
-  <p-toast></p-toast>
   <div class="m-4 md:m-10 w-full font-medium bg-white rounded-2xl md:rounded-3xl p-6 md:p-10">
 
     <!-- Cabecera -->
@@ -28,7 +27,7 @@
             id="code"
             formControlName="code"
             placeholder="Ej: IVA"
-            class="w-full md:w-2/3"
+            class="w-full md:w-1/2"
             maxlength="10"
           />
           <small class="error-message" *ngIf="editForm.get('code')?.touched && editForm.get('code')?.invalid">El código es requerido</small>
@@ -59,9 +58,9 @@
             [max]="100"
             suffix="%"
             placeholder="0.00%"
-            class="w-full md:w-2/3"
+            class="w-full md:w-1/2"
           ></p-inputNumber>
-          <small class="error-message" *ngIf="editForm.get('interest')?.touched && editForm.get('interest')?.invalid">El porcentaje es requerido y debe ser mayor o igual a 0</small>
+          <small class="error-message" *ngIf="editForm.get('interest')?.touched && editForm.get('interest')?.invalid">El porcentaje es requerido</small>
         </div>
 
         <div class="flex flex-col gap-2">

@@ -1,91 +1,178 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 // PrimeNG
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { TimelineModule } from 'primeng/timeline';
-
-// Interfaces
-interface AuxiliaryBookHistory {
-  id: number;
-  bookName: string;
-  generationDate: Date;
-  user: string;
-  status: 'Generando' | 'Completado' | 'Error';
-}
-
-interface LogEvent {
-  status: string;
-  date: Date;
-  icon: string;
-  color: string;
-  description: string;
-}
+import { ButtonModule } from 'primeng/button';
+import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { AuxiliaryBooksServiceService } from '../../../../Services/auxiliary-books-service.service';
+import { AuxiliaryBooksSchedulingComponent } from '../../../auxiliary-books-scheduling/auxiliary-books-scheduling.component';
+import { EnterpriseService } from '../../../../../../../GeneralMasters/Enterprise/services/enterprise.service';
 
 @Component({
   selector: 'app-auxiliary-books-details',
   standalone: true,
-  imports: [CommonModule, CardModule, TagModule, TimelineModule],
+  imports: [CommonModule, CardModule, TagModule, TimelineModule, ButtonModule],
+  providers: [DialogService],
   templateUrl: './auxiliary-books-details.component.html',
   styleUrls: ['./auxiliary-books-details.component.css'],
 })
 export class AuxiliaryBooksDetailsComponent implements OnInit {
-  bookDetails: AuxiliaryBookHistory | null = null;
-  logs: LogEvent[] = [];
+  bookDetails: any = null;
+  logs: any[] = [];
+  refDialog: DynamicDialogRef | undefined;
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private auxiliaryBookService: AuxiliaryBooksServiceService,
+    private dialogService: DialogService,
+    private enterpriseService: EnterpriseService,
+  ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
+    const id = this.route.snapshot.paramMap.get('publicId');
+
     if (id) {
-      this.loadBookDetails(+id);
+      this.loadBookDetails(id);
     }
   }
 
-  loadBookDetails(id: number): void {
-    // Simulación de llamada a un servicio para obtener los detalles
-    const mockData: AuxiliaryBookHistory = {
-      id: id,
-      bookName: 'Libro Diario',
-      generationDate: new Date(),
-      user: 'admin@contapp.com',
-      status: 'Completado',
-    };
-    this.bookDetails = mockData;
-
-    // Simulación de logs
-    this.logs = [
-      {
-        status: 'Solicitud Recibida',
-        date: new Date(Date.now() - 5 * 60000),
-        icon: 'pi pi-inbox',
-        color: '#9C27B0',
-        description: 'Se recibió la solicitud para generar el reporte.',
+  loadBookDetails(publicId: string): void {
+    this.auxiliaryBookService.getLogsByPublicId(publicId).subscribe({
+      next: (response) => {
+        this.bookDetails = response?.data?.[0]?.auxiliaryBook ?? null;
+        this.logs = response?.data ?? [];
       },
-      {
-        status: 'Generando Reporte',
-        date: new Date(Date.now() - 4 * 60000),
-        icon: 'pi pi-cog',
-        color: '#673AB7',
-        description: 'El sistema comenzó a procesar los datos para el reporte.',
+      error: (err) => {
+        console.error('Error al cargar los detalles del libro auxiliar', err);
+        this.bookDetails = null;
+        this.logs = [];
       },
-      {
-        status: 'Reporte Completado',
-        date: new Date(),
-        icon: 'pi pi-check',
-        color: '#4CAF50',
-        description:
-          'El reporte se generó exitosamente y está listo para descargar.',
-      },
-    ];
+    });
   }
 
-  getStatusSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    if (status === 'Completado') return 'success';
-    if (status === 'Generando') return 'info';
-    if (status === 'Error') return 'danger';
+  goToHistory(): void {
+    this.router.navigate(['/financial/reports/auxiliary-books/historial']);
+  }
+
+  showSchedulingDialog(): void {
+    if (!this.bookDetails) {
+      return;
+    }
+
+    this.refDialog = this.dialogService.open(AuxiliaryBooksSchedulingComponent, {
+      data: this.buildSchedulingDialogData(),
+      modal: true,
+      width: '72rem',
+      breakpoints: {
+        '1200px': '85vw',
+        '768px': '95vw',
+      },
+    });
+  }
+
+  getLastLogStatus(): string {
+    if (this.logs && this.logs.length > 0) {
+      return this.logs[this.logs.length - 1].etypeEvent ?? 'PENDING';
+    }
+
+    return 'PENDING';
+  }
+
+  getStatusLabel(status: string | null | undefined): string {
+    const normalized = String(status ?? '').toUpperCase();
+    const map: { [key: string]: string } = {
+      SUCCESS: 'Éxito',
+      COMPLETED: 'Completado',
+      GENERATING: 'Generando',
+      PENDING: 'Pendiente',
+      PROCESSING: 'Procesando',
+      ERROR: 'Error',
+      FAILED: 'Fallido',
+      EXPORTED: 'Exportado',
+      REGISTERED: 'Registrado',
+    };
+    return map[normalized] ?? (status ?? 'Sin estado');
+  }
+
+  getStatusIcon(status: string | null | undefined): string {
+    const normalized = String(status ?? '').toUpperCase();
+    if (normalized.includes('SUCCESS') || normalized.includes('COMPLET')) {
+      return 'pi pi-check';
+    }
+    if (
+      normalized.includes('GENERATING') ||
+      normalized.includes('PENDING') ||
+      normalized.includes('PROCESS')
+    ) {
+      return 'pi pi-spin pi-cog';
+    }
+    if (normalized.includes('ERROR') || normalized.includes('FAIL')) {
+      return 'pi pi-times';
+    }
+    if (normalized.includes('EXPORT')) {
+      return 'pi pi-download';
+    }
+    if (normalized.includes('REGISTER')) {
+      return 'pi pi-bookmark';
+    }
+    return 'pi pi-info-circle';
+  }
+
+  getMarkerClass(status: string | null | undefined): string {
+    const severity = this.getStatusSeverity(status);
+    return `log-marker log-marker--${severity}`;
+  }
+
+  getCardClass(status: string | null | undefined): string {
+    const severity = this.getStatusSeverity(status);
+    return `log-card log-card--${severity}`;
+  }
+
+  getStatusSeverity(
+    status: string | null | undefined
+  ): 'success' | 'warning' | 'danger' | 'info' {
+    const normalizedStatus = String(status ?? '').toUpperCase();
+
+    if (
+      normalizedStatus.includes('SUCCESS') ||
+      normalizedStatus.includes('COMPLET')
+    ) {
+      return 'success';
+    }
+
+    if (
+      normalizedStatus.includes('GENERATING') ||
+      normalizedStatus.includes('PENDING') ||
+      normalizedStatus.includes('PROCESS')
+    ) {
+      return 'info';
+    }
+
+    if (
+      normalizedStatus.includes('ERROR') ||
+      normalizedStatus.includes('FAIL')
+    ) {
+      return 'danger';
+    }
+
     return 'warning';
+  }
+
+  private buildSchedulingDialogData() {
+    return {
+      publicId: this.bookDetails?.publicId ?? '',
+      bookName: this.bookDetails?.type ?? 'Libro Auxiliar General',
+      type: this.bookDetails?.type ?? null,
+      criteria: this.bookDetails?.criteria ?? null,
+      generationDate: this.bookDetails?.createdAt ?? null,
+      user: this.bookDetails?.userId ?? 'Sistema',
+      status: this.getLastLogStatus(),
+      enterpriseData: this.enterpriseService.getSelectedEnterprise(),
+    };
   }
 }

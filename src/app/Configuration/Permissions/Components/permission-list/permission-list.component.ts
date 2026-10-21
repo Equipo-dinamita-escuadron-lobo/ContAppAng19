@@ -84,7 +84,7 @@ export class PermissionListComponent implements OnInit {
           .filter((r) => (r.groupedPermissions?.length ?? 0) > 0)
           .map((r) => ({ label: r.role, value: r.role }))
           .sort((a, b) =>
-            a.label.localeCompare(b.label, 'es', { sensitivity: 'base' })
+            a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }),
           );
 
         this.loading = false;
@@ -113,7 +113,7 @@ export class PermissionListComponent implements OnInit {
     // Ordenar permisos dentro de cada módulo
     Object.keys(grouped).forEach((m) => {
       grouped[m].sort((a, b) =>
-        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
+        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
       );
     });
 
@@ -125,15 +125,32 @@ export class PermissionListComponent implements OnInit {
 
   private findModuleForPermission(permissionName: string): string {
     const modules = [
-      'Unidad de Medida',
-      'Empresa',
-      'Tipo de Producto',
-      'Categoria',
-      'Producto',
+      'Unidades de Medida',
+      'Empresas',
+      'Tipos de Productos',
+      'Categorias',
+      'Productos',
+      'Terceros',
+      'Inventario PEPS',
+      'Catalogo de Cuentas',
+      'Bancos',
+      'Cuentas Bancarias',
+      'Recibos de Caja Cartera',
+      'Centros de Costo',
+      'Clases de Documentos',
+      'Tipos de Documentos',
+      'Centro de Ayuda',
+      'Metodos de Pago',
+      'Impuestos',
+      'Castigos de Cartera',
+      'Tipos de Identificacion',
+      'Etiquetas no Comerciales',
+      'Tipos de Terceros',
+      'Calendario Contable',
     ];
 
     const match = modules.find((m) =>
-      permissionName.toLowerCase().includes(m.toLowerCase())
+      permissionName.toLowerCase().includes(m.toLowerCase()),
     );
     if (match) return match;
 
@@ -154,7 +171,7 @@ export class PermissionListComponent implements OnInit {
     }
 
     const role = this.rolesWithPermissions.find(
-      (r) => r.role === this.selectedRoleName
+      (r) => r.role === this.selectedRoleName,
     );
     const modules: string[] = (role?.groupedPermissions?.map((g) => g.module) ??
       []) as string[];
@@ -175,10 +192,10 @@ export class PermissionListComponent implements OnInit {
     }
 
     const role = this.rolesWithPermissions.find(
-      (r) => r.role === this.selectedRoleName
+      (r) => r.role === this.selectedRoleName,
     );
     const group = role?.groupedPermissions?.find(
-      (g) => g.module === this.selectedModule
+      (g) => g.module === this.selectedModule,
     );
     this.displayedPermissions = group?.permissions ?? [];
   }
@@ -209,7 +226,7 @@ export class PermissionListComponent implements OnInit {
     }
 
     const role = this.rolesWithPermissions.find(
-      (r) => r.role === this.selectedRoleName
+      (r) => r.role === this.selectedRoleName,
     );
 
     if (!role || !(role.groupedPermissions?.length > 0)) {
@@ -341,7 +358,7 @@ export class PermissionListComponent implements OnInit {
         doc.text(
           pageText,
           pageWidth - 40 - doc.getTextWidth(pageText),
-          pageHeight - 20
+          pageHeight - 20,
         );
       },
 

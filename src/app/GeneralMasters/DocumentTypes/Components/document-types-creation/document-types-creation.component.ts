@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { ButtonModule } from 'primeng/button';
-import { Toast } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { DocumentTypesServiceService } from '../../services/document-types-service.service';
@@ -14,7 +13,7 @@ import { ClassesOfDocumentsServiceService } from '../../services/classes-of-docu
 @Component({
   selector: 'app-document-types-creation',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, Toast, SelectModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, KeyFilterModule, ButtonModule, SelectModule],
   templateUrl: './document-types-creation.component.html',
   styleUrl: './document-types-creation.component.css'
 })
