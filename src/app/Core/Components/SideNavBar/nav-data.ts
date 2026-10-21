@@ -283,6 +283,11 @@ export const navbarData: INavbarData[] = [
     ],
   },
   {
+    routeLink: '/billing',
+    icon: 'receipt_long',
+    label: 'Facturación',
+  },
+  {
     routeLink: '/audit',
     icon: 'search',
     label: 'Auditoría',
