@@ -1,4 +1,4 @@
-import { Location } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { Component, DestroyRef, HostListener, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -18,9 +18,13 @@ import {
   SaleInvoice,
   SaleInvoiceLine,
 } from '../../models/billing-sale-invoice.model';
+import { ReturnAvailabilityLine, SaleReturn } from '../../models/billing-sale-return.model';
 import { CopCentsPipe } from '../../pipes/cop-cents.pipe';
 import { BillingProductCatalog } from '../../services/billing-product-catalog';
 import { BillingSaleInvoiceApi } from '../../services/billing-sale-invoice.api';
+import { BillingSaleReturnApi } from '../../services/billing-sale-return.api';
+import { SaleReturnPreviewComponent } from '../sale-return-preview/sale-return-preview.component';
+import { calcReturnTotals, deriveReturnState, returnOrdinals } from '../../utils/sale-return';
 import { buildReturnQuery } from '../../utils/return-trail';
 import { calcTotals, centsToPesos, lineSubtotalCents, pesosToCents } from '../../utils/money';
 import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-status-badge.component';
@@ -42,6 +46,7 @@ const todayIso = (): string => {
     FormsModule,
     ButtonModule,
     ConfirmDialogModule,
+    DatePipe,
     SharedModule,
     DialogModule,
     DropdownModule,
@@ -50,6 +55,7 @@ const todayIso = (): string => {
     CopCentsPipe,
     BillingStatusBadgeComponent,
     SaleInvoicePreviewComponent,
+    SaleReturnPreviewComponent,
   ],
   providers: [ConfirmationService],
   templateUrl: './sale-invoice-form.component.html',
@@ -57,6 +63,7 @@ const todayIso = (): string => {
 export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
   private readonly api = inject(BillingSaleInvoiceApi);
   private readonly catalog = inject(BillingProductCatalog);
+  private readonly returnApi = inject(BillingSaleReturnApi);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
@@ -90,6 +97,15 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
   selectedClient = computed(() => this.clients().find((c) => c.id === this.clientId()) ?? null);
   clientName = computed(() => this.clients().find((c) => c.id === this.clientId())?.name ?? '—');
 
+  // Devoluciones de esta factura (solo se cargan cuando ya no es borrador)
+  returns = signal<SaleReturn[]>([]);
+  availability = signal<ReturnAvailabilityLine[]>([]);
+  // El botón "Devolución" solo aparece en una EMITIDA con algo aún devolvible
+  canReturn = computed(() => this.status() === 'EMITIDA' && this.availability().some((a) => a.available > 0));
+  returnOrdinalMap = computed(() => returnOrdinals(this.returns()));
+  previewReturn = signal<SaleReturn | null>(null);
+  returnState = computed(() => deriveReturnState(this.lines(), this.returns()));
+
   // Para habilitar luego la edición de más campos de la línea, basta agregar aquí el campo
   // y su input en la plantilla (hoy solo el precio unitario es editable).
   readonly editableLineFields = ['precioUnitario'] as const;
@@ -119,6 +135,7 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
         next: (invoice) => {
           this.applyInvoice(invoice);
           this.loading.set(false);
+          if (invoice.status !== 'BORRADOR') this.loadReturns(invoice);
         },
         error: () => {
           this.toast('error', 'Factura no encontrada', 'No existe la factura solicitada.');
@@ -130,6 +147,40 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Al salir de la pantalla se persiste lo pendiente (el mock escribe de forma síncrona)
     if (this.dirty && this.editable()) this.persist().catch(() => undefined);
+  }
+
+  // --- devoluciones ---
+
+  private loadReturns(invoice: SaleInvoice): void {
+    this.returnApi
+      .listByInvoice(invoice.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((list) => this.returns.set(list));
+    if (invoice.status !== 'EMITIDA') return; // solo una factura emitida se puede devolver
+    this.returnApi
+      .getAvailability(invoice.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((a) => this.availability.set(a));
+  }
+
+  newReturn(): void {
+    this.router.navigate(['/billing/sale', this.invoiceId(), 'return', 'new']);
+  }
+
+  openReturn(saleReturn: SaleReturn): void {
+    this.router.navigate(['/billing/return', saleReturn.id]);
+  }
+
+  ordinalOf(saleReturn: SaleReturn): number | null {
+    return this.returnOrdinalMap().get(saleReturn.id) ?? null;
+  }
+
+  openReturnPreview(saleReturn: SaleReturn): void {
+    this.previewReturn.set(saleReturn);
+  }
+
+  returnTotal(saleReturn: SaleReturn): number {
+    return calcReturnTotals(saleReturn.lines).totalCents;
   }
 
   // --- catálogo de productos ---
@@ -284,6 +335,7 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
       await this.persist(); // asegura que lo último editado quede guardado antes de emitir
       const emitted = await firstValueFrom(this.api.emit(this.invoiceId()!));
       this.applyInvoice(emitted);
+      this.loadReturns(emitted); // habilita el botón "Devolución"
       this.toast('success', 'Factura emitida', `Se asignó el número ${emitted.number}.`);
     } catch (e) {
       this.toast('error', 'No se pudo emitir', this.errorMessage(e));

@@ -9,6 +9,7 @@ import {
 } from '../models/billing-sale-invoice.model';
 import { BillingProductCatalog } from './billing-product-catalog';
 import { BillingSaleInvoiceApi } from './billing-sale-invoice.api';
+import { hasEmittedReturns } from './sale-return-store';
 
 const INVOICES_KEY = 'billing_sale_invoices';
 const SEQUENCE_KEY = 'billing_sale_invoice_seq';
@@ -146,6 +147,10 @@ export class MockBillingSaleInvoiceApi extends BillingSaleInvoiceApi {
       const invoice = this.findOrThrow(all, id);
       if (invoice.status !== 'EMITIDA') throw new Error('Solo se pueden anular facturas emitidas.');
       if (!reason?.trim()) throw new Error('El motivo de anulación es obligatorio.');
+      // Una factura con devoluciones emitidas no se anula hasta anular primero esas devoluciones
+      if (hasEmittedReturns(id)) {
+        throw new Error('No se puede anular: la factura tiene devoluciones emitidas. Anula primero las devoluciones.');
+      }
 
       const now = new Date().toISOString();
       invoice.status = 'ANULADA';

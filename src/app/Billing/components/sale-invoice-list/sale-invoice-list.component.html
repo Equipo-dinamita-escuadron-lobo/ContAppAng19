@@ -33,12 +33,12 @@
       <p-table [value]="filtered()" [loading]="loading()" [tableStyle]="{ 'min-width': '55rem' }" styleClass="p-datatable-striped">
         <ng-template pTemplate="header">
           <tr>
-            <th style="width: 9rem">Número</th>
-            <th>Cliente</th>
-            <th style="width: 9rem">Fecha</th>
-            <th style="width: 9rem">Estado</th>
-            <th style="width: 11rem" class="text-right">Total</th>
-            <th style="width: 10rem"></th>
+            <th scope="col" style="width: 9rem">Número</th>
+            <th scope="col">Cliente</th>
+            <th scope="col" style="width: 9rem">Fecha</th>
+            <th scope="col" style="width: 9rem">Estado</th>
+            <th scope="col" style="width: 11rem" class="text-right">Total</th>
+            <th scope="col" style="width: 10rem"></th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-invoice>

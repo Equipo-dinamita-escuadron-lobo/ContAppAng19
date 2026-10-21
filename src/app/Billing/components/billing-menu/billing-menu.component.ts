@@ -39,7 +39,13 @@ export class BillingMenuComponent {
       title: 'Ver facturas',
       icon: 'receipt_long',
       route: '/billing/list',
-      position: 'col-start-2 col-span-2 row-start-3',
+      position: 'col-start-1 col-span-2 row-start-3',
+    },
+    {
+      title: 'Facturas con devolución',
+      icon: 'assignment_return',
+      route: '/billing/returns',
+      position: 'col-start-3 col-span-2 row-start-3',
     },
   ];
 

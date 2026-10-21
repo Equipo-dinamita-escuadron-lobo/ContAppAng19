@@ -3,13 +3,18 @@ import { BillingProductCatalog } from '../Billing/services/billing-product-catal
 import { MockBillingProductCatalog } from '../Billing/services/mock-billing-product-catalog';
 import { BillingSaleInvoiceApi } from '../Billing/services/billing-sale-invoice.api';
 import { MockBillingSaleInvoiceApi } from '../Billing/services/mock-billing-sale-invoice.api';
+import { BillingSaleReturnApi } from '../Billing/services/billing-sale-return.api';
+import { MockBillingSaleReturnApi } from '../Billing/services/mock-billing-sale-return.api';
 
 export const BILLING_ROUTES: Routes = [
   {
     path: '',
+    // Sin esto la ruta vacía hereda el breadcrumb 'Facturación' de app.routes.ts y se duplica
+    data: { breadcrumb: null },
     // Para pasar a HTTP: cambiar `useClass` por la implementación real (única línea a tocar)
     providers: [
       { provide: BillingSaleInvoiceApi, useClass: MockBillingSaleInvoiceApi },
+      { provide: BillingSaleReturnApi, useClass: MockBillingSaleReturnApi },
       // Catálogo con datos quemados. Para usar los productos reales: InventoryBillingProductCatalog
       { provide: BillingProductCatalog, useClass: MockBillingProductCatalog },
     ],
@@ -52,6 +57,30 @@ export const BILLING_ROUTES: Routes = [
         loadComponent: () =>
           import('../Billing/components/sale-invoice-form/sale-invoice-form.component').then(
             (m) => m.SaleInvoiceFormComponent,
+          ),
+      },
+      {
+        path: 'sale/:invoiceId/return/new',
+        data: { breadcrumb: 'Nueva Devolución', title: 'Nueva devolución' },
+        loadComponent: () =>
+          import('../Billing/components/sale-return-form/sale-return-form.component').then(
+            (m) => m.SaleReturnFormComponent,
+          ),
+      },
+      {
+        path: 'return/:id',
+        data: { breadcrumb: 'Devolución', title: 'Devolución' },
+        loadComponent: () =>
+          import('../Billing/components/sale-return-form/sale-return-form.component').then(
+            (m) => m.SaleReturnFormComponent,
+          ),
+      },
+      {
+        path: 'returns',
+        data: { breadcrumb: 'Facturas con Devolución', title: 'Facturas con devolución' },
+        loadComponent: () =>
+          import('../Billing/components/sale-return-list/sale-return-list.component').then(
+            (m) => m.SaleReturnListComponent,
           ),
       },
       {

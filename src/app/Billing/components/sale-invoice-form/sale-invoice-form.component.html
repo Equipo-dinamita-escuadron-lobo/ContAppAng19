@@ -29,12 +29,30 @@
     />
   </p-dialog>
 
+  <!-- Vista de una devolución (solo lectura) -->
+  <p-dialog
+    header="Vista devolución"
+    [visible]="!!previewReturn()"
+    (visibleChange)="!$event && previewReturn.set(null)"
+    [modal]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [style]="{ width: '56rem', 'max-width': '95vw' }"
+    [contentStyle]="{ 'max-height': '75vh', 'overflow-y': 'auto', background: '#f3f4f6' }"
+  >
+    @if (previewReturn(); as pr) {
+      <app-sale-return-preview [saleReturn]="pr" [ordinal]="ordinalOf(pr)" />
+    }
+  </p-dialog>
+
   <div class="m-10 w-full font-medium bg-white rounded-3xl p-10">
     <!-- Título + acciones -->
     <div class="flex flex-wrap items-center justify-between gap-16 mb-12">
       <div>
         <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
-          <span class="border-b-4 border-secondary-light inline-block pb-1">Nueva Factura Venta</span>
+          <span class="border-b-4 border-secondary-light inline-block pb-1">{{
+            editable() ? 'Nueva Factura Venta' : 'Factura de Venta'
+          }}</span>
         </h1>
         <p class="font-family-sans font-normal text-sm mt-12">
           @if (editable()) {
@@ -61,6 +79,14 @@
           styleClass="p-button-outlined"
           (click)="previewVisible.set(true)"
         ></p-button>
+        @if (canReturn()) {
+          <p-button
+            label="Devolución"
+            icon="pi pi-replay"
+            styleClass="p-button-outlined"
+            (click)="newReturn()"
+          ></p-button>
+        }
         @if (editable()) {
           <p-button label="Emitir" icon="pi pi-check" [disabled]="busy()" (click)="confirmEmit()"></p-button>
           <p-button
@@ -94,6 +120,12 @@
           <span class="font-normal text-primary mb-4">Estado:</span>
           <div class="flex items-center gap-12">
             <app-billing-status-badge [status]="status()" />
+            @if (returnState() !== 'SIN_DEVOLUCION') {
+              <span
+                class="inline-block px-12 py-4 rounded-full text-xs font-semibold font-family-sans bg-amber-100 text-amber-800"
+                >{{ returnState() === 'TOTAL' ? 'Devuelta totalmente' : 'Devuelta parcialmente' }}</span
+              >
+            }
             @if (editable()) {
               <span class="text-xs text-gray-500 font-family-sans flex items-center gap-4">
                 @switch (saveState()) {
@@ -154,7 +186,7 @@
               (ngModelChange)="onDateChange($event)"
             />
           } @else {
-            <span class="font-semibold">{{ date() }}</span>
+            <span class="font-semibold">{{ date() | date: 'dd/MM/yyyy' }}</span>
           }
         </div>
 
@@ -211,15 +243,15 @@
           <p-table [value]="lines()" [tableStyle]="{ 'min-width': '60rem' }" styleClass="p-datatable-striped">
             <ng-template pTemplate="header">
               <tr>
-                <th style="width: 3rem">#</th>
-                <th style="min-width: 14rem">Producto</th>
-                <th style="width: 9rem">Cant.</th>
-                <th style="width: 10rem" class="text-right">Precio catálogo</th>
-                <th style="width: 13rem">Precio unitario</th>
-                <th style="width: 6rem" class="text-right">IVA %</th>
-                <th style="width: 10rem" class="text-right">Subtotal</th>
+                <th scope="col" style="width: 3rem">#</th>
+                <th scope="col" style="min-width: 14rem">Producto</th>
+                <th scope="col" style="width: 9rem">Cant.</th>
+                <th scope="col" style="width: 10rem" class="text-right">Precio catálogo</th>
+                <th scope="col" style="width: 13rem">Precio unitario</th>
+                <th scope="col" style="width: 6rem" class="text-right">IVA %</th>
+                <th scope="col" style="width: 10rem" class="text-right">Subtotal</th>
                 @if (editable()) {
-                  <th style="width: 4rem"></th>
+                  <th scope="col" style="width: 4rem"></th>
                 }
               </tr>
             </ng-template>
@@ -328,6 +360,64 @@
           </div>
         </div>
       </div>
+
+      <!-- Devoluciones de esta factura (solo cuando ya no es borrador) -->
+      @if (!editable()) {
+        <div class="text-sm mt-24">
+          <h3 class="font-bold text-lg text-primary mb-12">Devoluciones</h3>
+          <div class="overflow-x-auto">
+            <p-table [value]="returns()" [tableStyle]="{ 'min-width': '50rem' }" styleClass="p-datatable-striped">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 9rem">Número</th>
+                  <th style="width: 9rem">Fecha</th>
+                  <th>Motivo</th>
+                  <th style="width: 10rem" class="text-right">Total</th>
+                  <th style="width: 9rem">Estado</th>
+                  <th style="width: 8rem"></th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-ret>
+                <tr>
+                  <td>
+                    @if (ordinalOf(ret); as n) {
+                      <p class="font-bold">Devolución {{ n }}</p>
+                      <p class="text-xs text-gray-500">{{ ret.number }}</p>
+                    } @else {
+                      <p class="font-bold">Borrador</p>
+                    }
+                  </td>
+                  <td>{{ ret.date | date: 'dd/MM/yyyy' }}</td>
+                  <td>{{ ret.reason || '—' }}</td>
+                  <td class="text-right font-semibold">{{ returnTotal(ret) | copCents }}</td>
+                  <td><app-billing-status-badge [status]="ret.status" /></td>
+                  <td>
+                    <div class="flex justify-end gap-8">
+                      <p-button
+                        label="Vista"
+                        icon="pi pi-eye"
+                        styleClass="p-button-outlined"
+                        (click)="openReturnPreview(ret)"
+                      ></p-button>
+                      <p-button
+                        [label]="ret.status === 'BORRADOR' ? 'Continuar' : 'Detalle'"
+                        [icon]="ret.status === 'BORRADOR' ? 'pi pi-pencil' : 'pi pi-file'"
+                        styleClass="p-button-text"
+                        (click)="openReturn(ret)"
+                      ></p-button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="6" class="text-center p-20">Esta factura no tiene devoluciones</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+      }
     }
   </div>
 </div>
