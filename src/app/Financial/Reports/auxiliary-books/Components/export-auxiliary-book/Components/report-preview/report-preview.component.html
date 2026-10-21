@@ -1,0 +1,190 @@
+<!-- Contenido del archivo report-preview.component.html -->
+<!-- Contenedor principal con fondo gris para enmarcar el reporte -->
+<div class="bg-gray-200 p-4 rounded-md">
+  <!-- La "hoja" del reporte con fondo blanco y sombra -->
+  <div
+    class="report-container bg-white p-6 shadow-lg"
+    *ngIf="styles"
+    [ngStyle]="{ 'font-family': styles.font, 'font-size.px': styles.fontSize }"
+  >
+    <!-- =============================================================== -->
+    <!-- 1. Encabezado del Reporte (Estructura de 3 columnas)           -->
+    <!-- =============================================================== -->
+    <header class="flex justify-between items-center mb-4 pb-4 border-b">
+      <!-- Columna Izquierda (Ancho 25%) -->
+      <div class="w-1/4">
+        <ng-container [ngSwitch]="styles.align">
+          <!-- Caso Izquierda: Muestra el logo y el título -->
+          <div *ngSwitchCase="'left'" class="flex items-center gap-4">
+            <!-- ✅ CORREGIDO: Contenedor con ancho fijo para un logo más grande -->
+            <div class="w-4/5 flex-shrink-0">
+              <img
+                [src]="enterpriseData?.logo"
+                alt="Logo"
+                class="w-full h-auto object-contain"
+              />
+            </div>
+            <!-- ✅ CORREGIDO: Se usan h1/h2 para estructura y se ajustan estilos -->
+            <div>
+              <!-- ✅ CORREGIDO: Se eliminan clases de tamaño fijo y se usan relativas -->
+              <h1 class="font-bold text-[1.2em] leading-tight">
+                {{ enterpriseData?.name }}
+              </h1>
+              <h2 class="font-semibold uppercase text-[0.9em] text-gray-600">
+                {{ reportTitle }}
+              </h2>
+            </div>
+          </div>
+          <!-- Caso Centro: Muestra solo el logo -->
+          <div *ngSwitchCase="'center'" class="w-4/5">
+            <img
+              [src]="enterpriseData?.logo"
+              alt="Logo"
+              class="w-full h-auto object-contain"
+            />
+          </div>
+          <!-- ✅ NUEVO: Cuando la alineación es derecha, la fecha se muestra a la izquierda. -->
+          <div *ngSwitchCase="'right'" class="text-gray-600 text-left">
+            <p class="font-semibold">Generado en:</p>
+            <p>{{ generationDate | date : "HH:mm dd/MM/yyyy" }}</p>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Columna Central (Ancho 50%) - Usada solo para centrar el título -->
+      <div class="w-1/2 text-center">
+        <ng-container *ngIf="styles.align === 'center'">
+          <!-- ✅ CORREGIDO: Se usan h1/h2 para estructura y se ajustan estilos -->
+          <div>
+            <h1 class="font-bold text-[1.5em] leading-tight">
+              {{ enterpriseData?.name }}
+            </h1>
+            <h2 class="font-semibold uppercase text-[1.1em] text-gray-600">
+              {{ reportTitle }}
+            </h2>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Columna Derecha (Ancho 25%) -->
+      <div class="w-1/4 flex justify-end">
+        <!-- ✅ CORREGIDO: La fecha solo aparece aquí si la alineación NO es derecha. -->
+        <ng-container *ngIf="styles.align !== 'right'">
+          <div class="text-gray-600 text-right">
+            <p class="font-semibold">Generado en:</p>
+            <p>{{ generationDate | date : "HH:mm dd/MM/yyyy" }}</p>
+          </div>
+        </ng-container>
+        <!-- El switch ahora solo controla el logo y el título para la alineación derecha -->
+        <!-- ✅ CORREGIDO: Se añade el [ngSwitch] que faltaba para que el *ngSwitchCase funcione. -->
+        <ng-container [ngSwitch]="styles.align">
+          <!-- ✅ CORREGIDO: Se elimina ml-4 y se ajusta el layout para evitar desbordamiento -->
+          <div
+            *ngSwitchCase="'right'"
+            class="flex items-center justify-end gap-2"
+          >
+            <!-- ✅ CORREGIDO: Se mueve el logo al principio para evitar el desbordamiento. -->
+            <div class="w-4/5 flex-shrink-0">
+              <img
+                [src]="enterpriseData?.logo"
+                alt="Logo"
+                class="w-full h-auto object-contain"
+              />
+            </div>
+            <div class="text-right">
+              <h1 class="font-bold text-[1.2em] leading-tight">
+                {{ enterpriseData?.name }}
+              </h1>
+              <h2 class="font-semibold uppercase text-[0.9em] text-gray-600">
+                {{ reportTitle }}
+              </h2>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </header>
+
+    <!-- =============================================================== -->
+    <!-- 2. Criterios Utilizados (Estructura de 2 columnas)              -->
+    <!-- =============================================================== -->
+    <section class="mb-6" *ngIf="criteria.length > 0">
+      <h4 class="font-bold mb-2 text-gray-800">Criterios Utilizados:</h4>
+      <div class="grid grid-cols-2 gap-x-8">
+        <!-- ✅ CORREGIDO: Usa el getter para la columna izquierda -->
+        <div>
+          <div *ngFor="let item of leftCriteria" class="flex justify-between">
+            <span class="font-semibold text-gray-900">{{ item.key }}:</span>
+            <span class="text-gray-700">{{ item.value }}</span>
+          </div>
+        </div>
+
+        <!-- ✅ CORREGIDO: Usa el getter para la columna derecha -->
+        <div>
+          <div *ngFor="let item of rightCriteria" class="flex justify-between">
+            <span class="font-semibold text-gray-900">{{ item.key }}:</span>
+            <span class="text-gray-700">{{ item.value }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- 3. Tabla de Datos Dinámica (Sin cambios en su lógica)           -->
+    <!-- =============================================================== -->
+    <table class="w-full border-collapse">
+      <thead [ngStyle]="{ 'background-color': styles.color }">
+        <tr *ngFor="let headerRow of headerConfig; let i = index">
+          <th
+            *ngFor="let col of headerRow"
+            class="p-2 font-semibold border border-gray-400"
+            [attr.colspan]="col.colspan"
+            [attr.rowspan]="col.rowspan"
+            [ngStyle]="{ color: getHeaderTextColor(styles.color) }"
+          >
+            {{ col.header }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of previewData" class="bg-gray-100">
+          <td
+            *ngFor="let col of flatColumns"
+            class="p-2 border border-gray-300"
+            [class.text-right]="col.type === 'number'"
+          >
+            <ng-container *ngIf="col.type === 'number'; else textValue">
+              {{ getNestedValue(row, col.field!) | number : "1.2-2" }}
+            </ng-container>
+            <ng-template #textValue>
+              {{ getNestedValue(row, col.field!) }}
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+      <!-- ✅ NUEVO: Footer de la tabla para mostrar los totales -->
+      <tfoot *ngIf="previewData.length > 0 && hasTotals">
+        <tr class="font-bold bg-gray-100 border-t-2 border-gray-400">
+          <td
+            class="p-2 border border-gray-300 text-right"
+            [attr.colspan]="totalColspan"
+          >
+            TOTAL:
+          </td>
+          <!-- Itera sobre las columnas numéricas para mostrar los totales correspondientes -->
+          <td
+            *ngIf="totals.totalDebit !== undefined"
+            class="p-2 border border-gray-300 text-right"
+          >
+            {{ totals.totalDebit | number : "1.2-2" }}
+          </td>
+          <td
+            *ngIf="totals.totalCredit !== undefined"
+            class="p-2 border border-gray-300 text-right"
+          >
+            {{ totals.totalCredit | number : "1.2-2" }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

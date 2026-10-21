@@ -1,0 +1,126 @@
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+// PrimeNG Imports
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { RadioButtonModule } from 'primeng/radiobutton';
+
+interface OptionalField {
+  label: string;
+  value: string;
+  selected: boolean;
+}
+
+export interface ExportParams {
+  statusFilter: boolean | null;
+  optionalFields: string[];
+}
+
+@Component({
+  selector: 'app-third-export',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    DialogModule,
+    ButtonModule,
+    CheckboxModule,
+    RadioButtonModule
+  ],
+  templateUrl: './third-export.component.html',
+  styleUrl: './third-export.component.css'
+})
+export class ThirdExportComponent implements OnInit {
+  /** Control de visibilidad del modal */
+  @Input() visible: boolean = false;
+  
+  /** Evento emitido al cerrar el modal */
+  @Output() close = new EventEmitter<void>();
+  
+  /** Evento emitido cuando se inicia la exportación con los parámetros seleccionados */
+  @Output() startExportWithParams = new EventEmitter<ExportParams>();
+  
+  /** Campos obligatorios */
+  requiredFields: string[] = [
+    'Tipo persona',
+    'Tipos de tercero',
+    'Nombre, Apellido / Razón social',
+    'Tipo ID',
+    'Número de identificación',
+    'Dígito de verificación (DV)',
+    'Dirección',
+    'Teléfono',
+    'Correo'
+  ];
+
+  /** Campos opcionales con checkbox */
+  optionalFields: OptionalField[] = [
+    { label: 'Género', value: 'GENDER', selected: false },
+    { label: 'País', value: 'COUNTRY', selected: false },
+    { label: 'Departamento', value: 'STATE', selected: false },
+    { label: 'Ciudad', value: 'CITY', selected: false }
+  ];
+
+  /** Filtro de estado */
+  statusFilter: boolean | null = null;
+
+  /** Opciones de estado */
+  statusOptions = [
+    { label: 'Todos', value: null },
+    { label: 'Activos', value: true },
+    { label: 'Inactivos', value: false }
+  ];
+
+  /**
+   * Constructor del componente
+   */
+  constructor() { }
+
+  ngOnInit(): void {
+    // Inicialización si es necesaria
+  }
+
+  /**
+   * Cierra el modal y emite el evento de cierre
+   */
+  closeModal(): void {
+    this.visible = false;
+    this.close.emit();
+  }
+
+  /**
+   * Maneja el evento de visibilidad del diálogo
+   */
+  onHide(): void {
+    this.closeModal();
+  }
+
+  /**
+   * Obtiene los campos opcionales seleccionados
+   * @returns Array con los valores de los campos opcionales seleccionados
+   */
+  private getSelectedOptionalFields(): string[] {
+    return this.optionalFields
+      .filter(field => field.selected)
+      .map(field => field.value);
+  }
+
+  /**
+   * Inicia el proceso de exportación emitiendo los parámetros seleccionados
+   */
+  startExport(): void {
+    const selectedFields = this.getSelectedOptionalFields();
+    
+    // Emitir los parámetros seleccionados al componente padre
+    this.startExportWithParams.emit({
+      statusFilter: this.statusFilter,
+      optionalFields: selectedFields
+    });
+    
+    // Cerrar el modal
+    this.closeModal();
+  }
+}

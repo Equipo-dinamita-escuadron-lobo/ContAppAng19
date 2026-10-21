@@ -1,0 +1,42 @@
+/* Estilos personalizados para el componente de ajuste de inventario */
+
+.input-base {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.error-message {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+}
+
+/* Estilos para los campos deshabilitados */
+.p-disabled .p-inputnumber-input {
+  background-color: #f9fafb;
+  color: #6b7280;
+}
+
+/* Estilos para la vista previa */
+.preview-section {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .md\\:col-span-2 {
+    grid-column: span 1;
+  }
+}

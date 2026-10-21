@@ -1,37 +1,176 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { UserService } from '../../Services/user.service';
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  FormGroup,
+  FormBuilder,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { MessageModule } from 'primeng/message';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { UserService } from '../../Services/user.service';
 
 @Component({
   selector: 'app-user-create',
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ButtonModule,
+    InputTextModule,
+    MultiSelectModule,
+    MessageModule,
+    ToastModule,
+  ],
+  providers: [MessageService],
   templateUrl: './user-create.component.html',
   styleUrl: './user-create.component.css',
-  imports: [ReactiveFormsModule]
 })
-export class UserCreateComponent {
+export class UserCreateComponent implements OnInit {
+  private readonly router = inject(Router);
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly messageService = inject(MessageService);
+  private readonly userService = inject(UserService);
+
   userForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private userService: UserService, private router: Router) {
-    this.userForm = this.fb.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
+  // Regex que permite solo letras (con acentos), ñ/Ñ y espacios
+  private static readonly ONLY_LETTERS_REGEX = /^[a-zA-ZÀ-ÿ\u00f1\u00d1 ]+$/;
+
+  // Opciones para roles
+  roleOptions: { label: string; value: string }[] = [];
+
+  constructor() {
+    this.userForm = this.formBuilder.group({
+      firstName: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(UserCreateComponent.ONLY_LETTERS_REGEX),
+        ],
+      ],
+      lastName: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(UserCreateComponent.ONLY_LETTERS_REGEX),
+        ],
+      ],
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       roles: [[], Validators.required],
     });
   }
 
-  onSubmit() {
+  ngOnInit(): void {
+    this.loadRoles();
+  }
+
+  private loadRoles(): void {
+    this.userService.getRoles().subscribe({
+      next: (roles) => {
+        this.roleOptions = roles.map(role => ({
+          label: role.charAt(0).toUpperCase() + role.slice(1),
+          value: role
+        }));
+      },
+      error: (error) => {
+        console.error('Error al cargar roles:', error);
+        // Valores por defecto
+        this.roleOptions = [
+          { label: 'Administrador', value: 'administrador' },
+          { label: 'Estudiante', value: 'estudiante' },
+          { label: 'Profesor', value: 'profesor' },
+        ];
+      }
+    });
+  }
+
+  onSubmit(): void {
     if (this.userForm.valid) {
-      this.userService.createUser(this.userForm.value).subscribe({
-        next: (user) => {
-          this.router.navigate(['/configuration/users/list']);
+      const formValue = this.userForm.value;
+
+      // Validar si ya existe el email antes de crear
+      this.userService.findByEmail(formValue.email).subscribe({
+        next: (existingUsers) => {
+          if (existingUsers && existingUsers.length > 0) {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Ya existe un usuario con este correo electrónico.',
+            });
+          } else {
+            // Si no existe, lo creamos
+            const userData = {
+              ...formValue,
+              roles: formValue.roles, // Ya es array
+            };
+
+            this.userService.createUser(userData).subscribe({
+              next: () => {
+                this.messageService.add({
+                  severity: 'success',
+                  summary: 'Éxito',
+                  detail: 'Usuario creado exitosamente!',
+                  life: 3000,
+                });
+                setTimeout(() => {
+                  this.goBack();
+                }, 3000);
+              },
+              error: (error) => {
+                console.error('Error al crear el usuario:', error);
+                this.messageService.add({
+                  severity: 'error',
+                  summary: 'Error',
+                  detail: 'No se pudo crear el usuario.',
+                });
+              },
+            });
+          }
         },
-        error: (err) => {
-          alert('Error al crear usuario');
-        }
+        error: (error) => {
+          console.error('Error verificando email de usuario:', error);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo verificar el correo electrónico del usuario.',
+          });
+        },
       });
+    } else {
+      this.markFormGroupTouched();
     }
+  }
+
+  private markFormGroupTouched(): void {
+    Object.keys(this.userForm.controls).forEach((key) => {
+      const control = this.userForm.get(key);
+      control?.markAsTouched();
+    });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/configuration/users/list']);
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.userForm.get(fieldName);
+    if (field?.errors && field.touched) {
+      if (field.errors['required']) {
+        return `El campo ${fieldName} es requerido`;
+      }
+      if (field.errors['pattern']) {
+        return `El campo ${fieldName} solo debe contener letras y espacios`;
+      }
+      if (field.errors['email']) {
+        return `El campo ${fieldName} debe ser un email válido`;
+      }
+    }
+    return '';
   }
 }

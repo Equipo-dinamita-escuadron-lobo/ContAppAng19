@@ -1,0 +1,384 @@
+/* Aging Report Styles */
+
+.container-fluid {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header styles */
+.page-header {
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* Card customizations */
+::ng-deep .p-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+::ng-deep .p-card-header {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  font-weight: 600;
+  border-radius: 10px 10px 0 0;
+  padding: 1.25rem;
+}
+
+::ng-deep .p-card-body {
+  padding: 1.5rem;
+}
+
+/* Form styling */
+::ng-deep .p-inputtext,
+::ng-deep .p-dropdown,
+::ng-deep .p-calendar .p-inputtext {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+::ng-deep .p-inputtext:focus,
+::ng-deep .p-dropdown:focus,
+::ng-deep .p-calendar .p-inputtext:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Input Switch Styling */
+::ng-deep .p-inputswitch {
+  width: 3rem;
+  height: 1.75rem;
+}
+
+::ng-deep .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+  background: var(--color-primary);
+}
+
+::ng-deep .p-inputswitch .p-inputswitch-slider {
+  background: #cbd5e1;
+  border-radius: 30px;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+::ng-deep .p-inputswitch .p-inputswitch-slider:before {
+  background: white;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: -0.625rem;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+/* Table styling */
+::ng-deep .p-datatable {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 1rem;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr {
+  transition: all 0.2s ease;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #e0e7ff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.95rem;
+}
+
+/* Footer row styling */
+::ng-deep .p-datatable .p-datatable-tfoot > tr {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-top: 3px solid var(--color-primary);
+}
+
+::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
+  padding: 1.25rem 1rem;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+}
+
+/* Button customizations */
+::ng-deep .p-button {
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  color: #475569;
+  border: 2px solid #cbd5e1;
+}
+
+::ng-deep .p-button:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+::ng-deep .p-button.p-button-success {
+  background: white;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+::ng-deep .p-button.p-button-success:hover:not(:disabled) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+::ng-deep .p-button.p-button-secondary {
+  background: white;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+::ng-deep .p-button.p-button-secondary:hover:not(:disabled) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+/* Filter actions */
+.filter-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Statistics cards */
+::ng-deep .p-card {
+  transition: box-shadow 0.3s ease;
+}
+
+::ng-deep .p-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stats-icon {
+  transition: all 0.3s ease;
+}
+
+/* Report info box */
+.report-info {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 2px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Empty state styling */
+.empty-state {
+  padding: 3rem;
+  text-align: center;
+}
+
+.empty-state i {
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+/* Loading state */
+.loading-state {
+  padding: 3rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Color coding for aging periods */
+.text-green-600 {
+  color: #059669;
+}
+
+.text-orange-600 {
+  color: #ea580c;
+}
+
+.text-red-600 {
+  color: #dc2626;
+}
+
+.text-red-800 {
+  color: #991b1b;
+}
+
+.text-blue-600 {
+  color: #2563eb;
+}
+
+.text-gray-500 {
+  color: #6b7280;
+}
+
+/* Totals row emphasis */
+.bg-blue-50 {
+  background-color: #eff6ff !important;
+}
+
+.text-blue-700 {
+  color: #1d4ed8;
+}
+
+.text-green-700 {
+  color: #15803d;
+}
+
+.text-orange-700 {
+  color: #c2410c;
+}
+
+.text-red-700 {
+  color: #b91c1c;
+}
+
+.text-red-900 {
+  color: #7f1d1d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container-fluid {
+    padding: 1rem;
+  }
+
+  ::ng-deep .p-datatable {
+    font-size: 0.85rem;
+  }
+
+  ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  ::ng-deep .p-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .stats-card h3 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Custom scrollbar */
+::ng-deep .p-datatable .p-datatable-scrollable-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::ng-deep .p-datatable .p-datatable-scrollable-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::ng-deep .p-datatable .p-datatable-scrollable-body::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+::ng-deep .p-datatable .p-datatable-scrollable-body::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+/* Toast customization */
+::ng-deep .p-toast .p-toast-message {
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Animation for rows */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.table-row {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Dropdown customization */
+::ng-deep .p-dropdown-panel {
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+::ng-deep .p-dropdown-panel .p-dropdown-items .p-dropdown-item:hover {
+  background: #e0e7ff;
+  color: var(--color-primary);
+}
+
+/* Calendar customization */
+::ng-deep .p-datepicker {
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+::ng-deep .p-datepicker .p-datepicker-header {
+  background: var(--color-primary);
+  color: white;
+  border-radius: 10px 10px 0 0;
+}
+
+::ng-deep .p-datepicker table td > span.p-highlight {
+  background: var(--color-primary);
+  color: white;
+}
+
+::ng-deep .p-datepicker table td > span:hover {
+  background: rgba(59, 130, 246, 0.1);
+}

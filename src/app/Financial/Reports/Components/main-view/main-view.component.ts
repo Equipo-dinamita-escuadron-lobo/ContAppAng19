@@ -12,21 +12,24 @@ export class MainViewComponent {
   reports = [
     {
       name: 'Estados Financieros',
-      route: '/financial/reports/financial-statements',
+      route: '/financial/reports/financial-statements/list',
       type: 'Estados',
-      amount: 4,
+      amount: 3,
       icon: 'docs',
     },
     {
       name: 'Libros Auxiliares',
       route: '/financial/reports/auxiliary-books/list',
       type: 'Libros',
-      amount: 7,
+      amount: 6,
       icon: 'book_5',
     },
   ];
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+  ) {}
 
   goTo(route: string): void {
     this.router.navigate([route], { relativeTo: this.route });

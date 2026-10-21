@@ -1,0 +1,277 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20">
+    <p-toast></p-toast>
+    
+    <h1 class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4">
+        Crear Evento No Comercial
+    </h1>
+    <p class="mb-6 text-lg text-gray-700">
+        Complete la información necesaria para crear un evento No Comercial.
+    </p>
+
+    <div class="mt-6">
+        <form [formGroup]="nonCommercialForm" (ngSubmit)="onSubmit()" class="mt-4">
+            <div class="w-full">
+                <!-- Tipo de Evento no Comercial -->
+                <div class="mb-6">
+                    <label for="eventType" class="block mb-2 font-semibold">
+                        Tipo de Evento no Comercial <span class="text-red-500">*</span>
+                    </label>
+                    <p-select
+                        id="eventType"
+                        formControlName="eventType"
+                        [options]="eventTypes"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Salida no Comercial"
+                        class="w-full"
+                        (onChange)="onEventTypeChange($event)">
+                    </p-select>
+
+                    @if (nonCommercialForm.get('eventType')?.touched && nonCommercialForm.get('eventType')?.invalid) {
+                        <p-message
+                            severity="error"
+                            text="El tipo de evento es requerido">
+                        </p-message>
+                    }
+                </div>
+
+                <!-- Primera fila: Código No Comercial y ID Tercero -->
+                <div class="flex gap-4 mb-4">
+                    <div class="w-1/2">
+                        <label for="factCode" class="block mb-2 font-semibold">
+                            Código No Comercial <span class="text-red-500">*</span>
+                        </label>
+                        <p-inputNumber
+                            id="factCode"
+                            formControlName="factCode"
+                            placeholder="5713"
+                            class="w-full"
+                            [useGrouping]="false"
+                            [readonly]="true">
+                        </p-inputNumber>
+
+                        @if (nonCommercialForm.get('factCode')?.touched && nonCommercialForm.get('factCode')?.invalid) {
+                            <p-message
+                                severity="error"
+                                text="El código no comercial es requerido">
+                            </p-message>
+                        }
+                    </div>
+
+                    <div class="w-1/2">
+                        <label for="thId" class="block mb-2 font-semibold">
+                            ID Tercero <span class="text-red-500">*</span>
+                        </label>
+                        <p-inputNumber
+                            id="thId"
+                            formControlName="thId"
+                            placeholder="1"
+                            class="w-full"
+                            [useGrouping]="false">
+                        </p-inputNumber>
+
+                        @if (nonCommercialForm.get('thId')?.touched && nonCommercialForm.get('thId')?.invalid) {
+                            <p-message
+                                severity="error"
+                                text="El ID del tercero es requerido">
+                            </p-message>
+                        }
+                    </div>
+                </div>
+
+                <!-- Segunda fila: Cuenta Contable -->
+                <div class="flex gap-4 mb-4">
+                    <div class="w-1/2">
+                        <label for="accountingAccount" class="block mb-2 font-semibold">
+                            Cuenta Contable <span class="text-red-500">*</span>
+                        </label>
+                        <p-inputNumber
+                            id="accountingAccount"
+                            formControlName="accountingAccount"
+                            placeholder="5"
+                            class="w-full"
+                            [useGrouping]="false">
+                        </p-inputNumber>
+
+                        @if (nonCommercialForm.get('accountingAccount')?.touched && nonCommercialForm.get('accountingAccount')?.invalid) {
+                            <p-message
+                                severity="error"
+                                text="La cuenta contable es requerida">
+                            </p-message>
+                        }
+                    </div>
+                    <div class="w-1/2">
+                        <label for="tagTitle" class="block mb-2 font-semibold">
+                            Etiqueta No Comercial <span class="text-red-500">*</span>
+                        </label>
+                        <p-select
+                            id="tagTitle"
+                            formControlName="tagTitle"
+                            [options]="allTags"
+                            optionLabel="title"
+                            optionValue="title"
+                            placeholder="Seleccione una etiqueta"
+                            class="w-full"
+                            (onChange)="onTagChange($event)">
+                        </p-select>
+
+                        @if (nonCommercialForm.get('tagTitle')?.touched && nonCommercialForm.get('tagTitle')?.invalid) {
+                            <p-message
+                                severity="error"
+                                text="La etiqueta es requerida">
+                            </p-message>
+                        }
+                    </div>
+
+
+                </div>
+
+                <!-- Sección de Productos -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-[var(--color-primary)]">Productos</h3>
+                        <p-button
+                            type="button"
+                            label="Agregar Producto"
+                            icon="pi pi-plus"
+                            (onClick)="addProduct()">
+                        </p-button>
+                    </div>
+
+                    <div formArrayName="factProducts">
+                        @for (product of getProductControls(); track $index) {
+                            <div [formGroupName]="$index" class="border border-gray-300 rounded-lg p-4 mb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-semibold">Producto {{ $index + 1 }}</h4>
+                                    @if (getProductControls().length > 1) {
+                                        <p-button
+                                            type="button"
+                                            icon="pi pi-trash"
+                                            severity="danger"
+                                            size="small"
+                                            (onClick)="removeProduct($index)">
+                                        </p-button>
+                                    }
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <!-- ID Producto -->
+                                    <div>
+                                        <label class="block mb-2 font-semibold">
+                                            ID Producto <span class="text-red-500">*</span>
+                                        </label>
+                                        <p-autocomplete
+                                            formControlName="productId"
+                                            [suggestions]="filteredProducts"
+                                            (completeMethod)="filterProducts($event)"
+                                            (onSelect)="onProductSelect($event.value)"
+                                            field="name"
+                                            [dropdown]="true"
+                                            [virtualScroll]="true"
+                                            [virtualScrollItemSize]="44"
+                                            placeholder="Escribe para buscar productos..."
+                                            styleClass="w-full"
+                                            inputId="product-ac-{{$index}}">
+                                        </p-autocomplete>
+                                    </div>
+
+                                    <!-- Descripción -->
+                                    <div>
+                                        <label class="block mb-2 font-semibold">
+                                            Descripción <span class="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            pInputText
+                                            formControlName="description"
+                                            placeholder="Descripción del producto"
+                                            class="w-full"
+                                            readonly>
+                                    </div>
+
+                                    <!-- Cantidad -->
+                                    <div>
+                                        <label class="block mb-2 font-semibold">
+                                            Cantidad <span class="text-red-500">*</span>
+                                        </label>
+                                        <p-inputNumber
+                                            formControlName="amount"
+                                            placeholder="5"
+                                            class="w-full"
+                                            [min]="1"
+                                            [useGrouping]="false">
+                                        </p-inputNumber>
+                                    </div>
+
+                                    <!-- Precio Unitario -->
+                                    <div>
+                                        <label class="block mb-2 font-semibold">
+                                            Precio Unitario <span class="text-red-500">*</span>
+                                        </label>
+                                        <p-inputNumber
+                                            formControlName="unitPrice"
+                                            placeholder="12.00"
+                                            class="w-full"
+                                            mode="currency"
+                                            currency="COP"
+                                            locale="es-CO">
+                                        </p-inputNumber>
+                                    </div>
+
+
+                                    <!-- Subtotal -->
+                                    <div>
+                                        <label class="block mb-2 font-semibold">
+                                            Subtotal
+                                        </label>
+                                        <p-inputNumber
+                                            formControlName="subtotal"
+                                            placeholder="57.00"
+                                            class="w-full"
+                                            mode="currency"
+                                            currency="COP"
+                                            locale="es-CO"
+                                            [readonly]="true">
+                                        </p-inputNumber>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Totales -->
+                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                    <h3 class="text-lg font-semibold mb-4">Totales</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block mb-2 font-semibold">Valor Total</label>
+                            <p-inputNumber
+                                formControlName="totalValue"
+                                mode="currency"
+                                currency="COP"
+                                locale="es-CO"
+                                class="w-full"
+                                [readonly]="true">
+                            </p-inputNumber>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="flex justify-center gap-4 mt-12">
+                    <p-button
+                        type="button"
+                        label="Cancelar"
+                        severity="secondary"
+                        (onClick)="cancelForm()">
+                    </p-button>
+                    <p-button
+                        type="submit"
+                        label="Crear"
+                        [disabled]="nonCommercialForm.invalid">
+                    </p-button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

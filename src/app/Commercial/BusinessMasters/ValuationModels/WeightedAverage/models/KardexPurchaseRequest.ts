@@ -1,6 +1,7 @@
 export interface KardexPurchaseRequest {
   quantity: number;
-  unitPrice: string;
+  unitPrice: number;
   details: string;
-  idProduct: number;
+  productId: number;
+  date?: string; // Fecha opcional en formato ISO 8601
 }

@@ -12,25 +12,28 @@ import { filter } from 'rxjs';
 })
 export class BreadCrumbComponent implements OnInit {
   static readonly ROUTE_DATA_BREADCRUMB = 'breadcrumb';
-  readonly home = { icon: 'pi pi-home', url: 'home' };
   menuItems: MenuItem[] = [];
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {}
 
   ngOnInit(): void {
+    this.menuItems = this.createBreadcrumbs(this.activatedRoute.root);
+    this.menuItems.unshift({ label: 'Home', routerLink: '/home' });
+    
+    // Actualizar breadcrumbs en cada navegación
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(
-        () =>
-          (this.menuItems = this.createBreadcrumbs(this.activatedRoute.root))
-      );
+      .subscribe(() => {
+        this.menuItems = this.createBreadcrumbs(this.activatedRoute.root);
+        this.menuItems.unshift({ label: 'Home', routerLink: '/home' });
+      });
   }
 
   private createBreadcrumbs(
     route: ActivatedRoute,
     url: string = '',
     breadcrumbs: MenuItem[] = []
-  ): any {
+  ): MenuItem[] {
     const children: ActivatedRoute[] = route.children;
 
     if (children.length === 0) {
@@ -48,11 +51,13 @@ export class BreadCrumbComponent implements OnInit {
       const label =
         child.snapshot.data[BreadCrumbComponent.ROUTE_DATA_BREADCRUMB];
       if (!this.isNullOrUndefined(label)) {
-        breadcrumbs.push({ label, url });
+        breadcrumbs.push({ label, routerLink: url });
       }
 
       return this.createBreadcrumbs(child, url, breadcrumbs);
     }
+    
+    return breadcrumbs;
   }
 
   private isNullOrUndefined(value: any) {

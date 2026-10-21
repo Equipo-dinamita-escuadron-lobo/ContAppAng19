@@ -1,0 +1,182 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20">
+    <p-toast></p-toast>
+    <h1
+     class="text-3xl font-bold text-primary underline decoration-secondary mt-6 mb-4"
+    >
+        Crear Devolución
+    </h1>
+    <p class="mb-6 text-lg text-gray-700">
+        Busque y seleccione la factura para procesar la devolución.
+    </p>
+
+    <!-- Información de Configuración -->
+    <div class="mb-6 p-4 border-l-4 rounded" style="background-color: var(--color-notification-info-container); border-color: var(--color-notification-info-border);">
+        <div class="flex items-center">
+            <i class="pi pi-info-circle text-xl mr-3" style="color: var(--color-notification-info-title);"></i>
+            <div>
+                <p class="font-semibold" style="color: var(--color-notification-info-title);">Configuración de Inventario</p>
+                <p style="color: var(--color-notification-info-text);">Método de valuación: <strong>{{ getInventoryConfigTypeName() }}</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6">
+        <form [formGroup]="returnForm" (ngSubmit)="onSubmit()" class="mt-4">
+            <div class="w-full max-w-6xl mx-auto">
+                <!-- Búsqueda de Factura -->
+                <div class="mb-6">
+                    <label for="factCode" class="block mb-2 font-semibold">
+                        Buscar Factura <span class="text-secondary">*</span>
+                    </label>
+                    <p-autocomplete
+                        id="factCode"
+                        formControlName="factCode"
+                        [suggestions]="filteredFactures"
+                        (completeMethod)="filterFactures($event)"
+                        (onSelect)="onFactureSelect($event)"
+                        field="factCode"
+                        [dropdown]="true"
+                        placeholder="Escriba el código de factura..."
+                        styleClass="w-full"
+                        inputId="facture-ac">
+                        <ng-template let-facture pTemplate="item">
+                            <div class="flex flex-col">
+                                <span class="font-semibold">Factura #{{ facture.factCode }}</span>
+                                <span class="text-sm text-gray-600">{{ translateFactureType(facture.factureType) }} - {{ facture.createdAt | date:'short' }}</span>
+                            </div>
+                        </ng-template>
+                    </p-autocomplete>
+
+                    @if (returnForm.get('factCode')?.touched && returnForm.get('factCode')?.invalid) {
+                        <p-message
+                            severity="error"
+                            text="Debe seleccionar una factura"
+                        ></p-message>
+                    }
+                </div>
+
+                <!-- Información de la factura seleccionada -->
+                @if (selectedFacture) {
+                    <p-card class="mb-6">
+                        <ng-template pTemplate="header">
+                            <div class="p-4 border-b" style="background-color: var(--color-notification-info-container); border-color: var(--color-notification-info-border);">
+                                <h3 class="font-semibold text-lg" style="color: var(--color-notification-info-title);">Información de la Factura</h3>
+                            </div>
+                        </ng-template>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                            <div>
+                                <label class="font-semibold" style="color: var(--color-neutral-30);">Código:</label>
+                                <p class="text-lg">{{ selectedFacture.factCode }}</p>
+                            </div>
+                            <div>
+                                <label class="font-semibold" style="color: var(--color-neutral-30);">Tipo:</label>
+                                <p class="text-lg">{{ getFactureTypeName() }}</p>
+                            </div>
+                            <div>
+                                <label class="font-semibold" style="color: var(--color-neutral-30);">Fecha Creación:</label>
+                                <p class="text-lg">{{ selectedFacture.createdAt | date:'short' }}</p>
+                            </div>
+                            <div>
+                                <label class="font-semibold" style="color: var(--color-neutral-30);">Valor Total:</label>
+                                <p class="text-lg">{{ selectedFacture.totalValue | currency:'$' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de productos -->
+                        @if (factureProducts.length > 0) {
+                            <div class="mt-4">
+                                <h4 class="font-semibold mb-3" style="color: var(--color-neutral-25);">Productos de la Factura</h4>
+                                <p-table [value]="factureProducts" styleClass="p-datatable-sm">
+                                    <ng-template pTemplate="header">
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th class="text-center">Cantidad Original</th>
+                                            <th class="text-center">Ya Devuelto</th>
+                                            <th class="text-center">Disponible</th>
+                                            <th class="text-center">Precio Unit.</th>
+                                            <th class="text-center">Cantidad a Devolver</th>
+                                            <th class="text-center">Acciones</th>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template pTemplate="body" let-product>
+                                        <tr>
+                                            <td>{{ product.description }}</td>
+                                            <td class="text-center">{{ product.amount }}</td>
+                                            <td class="text-center">
+                                                <span [ngClass]="product.returnedQuantity > 0 ? 'font-semibold' : ''"
+                                                      [style.color]="product.returnedQuantity > 0 ? 'var(--color-complementary-orange)' : 'var(--color-neutral-50)'">
+                                                    {{ product.returnedQuantity }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span [ngClass]="product.maxReturnQuantity > 0 ? 'font-semibold' : 'font-semibold'"
+                                                      [style.color]="product.maxReturnQuantity > 0 ? 'var(--color-complementary-green)' : 'var(--color-error)'">
+                                                    {{ product.maxReturnQuantity }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">{{ product.unitPrice | currency:'$' }}</td>
+                                            <td class="text-center">
+                                                <p-inputNumber
+                                                    [(ngModel)]="product.quantityToReturn"
+                                                    [ngModelOptions]="{standalone: true}"
+                                                    [min]="0"
+                                                    [max]="product.maxReturnQuantity"
+                                                    [disabled]="product.maxReturnQuantity === 0"
+                                                    [showButtons]="true"
+                                                    buttonLayout="horizontal"
+                                                    incrementButtonIcon="pi pi-plus"
+                                                    decrementButtonIcon="pi pi-minus"
+                                                    styleClass="w-32">
+                                                </p-inputNumber>
+                                            </td>
+                                            <td class="text-center">
+                                                <p-button
+                                                    type="button"
+                                                    label="Todo"
+                                                    size="small"
+                                                    [disabled]="product.maxReturnQuantity === 0"
+                                                    (onClick)="selectAllQuantity(product)">
+                                                </p-button>
+                                            </td>
+                                        </tr>
+                                    </ng-template>
+                                    <ng-template pTemplate="emptymessage">
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4">No hay productos en esta factura</td>
+                                        </tr>
+                                    </ng-template>
+                                </p-table>
+
+                                <!-- Resumen de productos seleccionados -->
+                                @if (getSelectedProductsCount() > 0) {
+                                    <div class="mt-4 p-4 border rounded-lg" style="background-color: var(--color-notification-success-container); border-color: var(--color-notification-success-border);">
+                                        <p class="font-semibold" style="color: var(--color-notification-success-title);">
+                                            <i class="pi pi-check-circle mr-2"></i>
+                                            {{ getSelectedProductsCount() }} producto(s) seleccionado(s) para devolver
+                                        </p>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </p-card>
+                }
+
+                <!-- Botones de acción -->
+                <div class="flex justify-center gap-4 mt-8">
+                    <p-button
+                        type="button"
+                        label="Cancelar"
+                        severity="secondary"
+                        (onClick)="cancelForm()">
+                    </p-button>
+                    <p-button
+                        type="submit"
+                        label="Crear Devolución"
+                        [disabled]="returnForm.invalid || !selectedFacture || getSelectedProductsCount() === 0">
+                    </p-button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

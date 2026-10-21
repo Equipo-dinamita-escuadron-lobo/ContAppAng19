@@ -4,17 +4,36 @@
     <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block pb-1">
       <span class="border-b-4 border-secondary">Inventario</span> con promedio ponderado
     </h1>
-    <span class="ml-10 text-primary cursor-help"
-          pTooltip="Información sobre el cálculo del promedio ponderado."
-          tooltipPosition="top">
-      <i class="pi pi-question-circle"></i>
+    <span class="ml-10 text-primary cursor-pointer"
+          (click)="op.toggle($event)">
+      <i class="pi pi-question-circle text-xl"></i>
     </span>
+    <p-popover #op>
+      <div class="p-4" style="max-width: 400px;">
+        <h3 class="font-bold text-lg mb-3 text-primary">Inventario con Promedio Ponderado</h3>
+        <p class="text-sm mb-3 text-primary">
+          El método de promedio ponderado calcula el costo promedio de las unidades disponibles
+          dividiendo el costo total de las mercancías disponibles entre el número total de unidades disponibles.
+        </p>
+        <p class="text-sm mb-3 text-primary">
+          Este método es útil cuando los precios de compra varían frecuentemente y se desea
+          mantener un valor promedio equilibrado del inventario.
+        </p>
+        <a
+          [href]="helpCenterUrl"
+          target="_blank"
+          class="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1">
+          Abrir centro de ayuda para más información.
+          <i class="pi pi-external-link text-xs"> </i>
+        </a>
+      </div>
+    </p-popover>
   </div>
 
   <!-- Fila 1: Producto + Fechas -->
   <div class="flex flex-wrap gap-4 mt-16">
     <!-- Producto -->
-    <div class="flex-1 min-w-[200px]">
+    <div class="flex-1 min-w-200">
       <label for="producto" class="block text-primary  text-sm mb-1">Producto</label>
       <p-autocomplete
         [(ngModel)]="selectedProduct"
@@ -32,7 +51,7 @@
     </div>
 
     <!-- Fecha de inicio -->
-    <div class="flex-1 min-w-[200px]">
+    <div class="flex-1 min-w-200">
       <label for="fechaInicio" class="block text-primary text-sm mb-1">Fecha de inicio</label>
       <p-datePicker
         [(ngModel)]="startDate"
@@ -40,11 +59,15 @@
         inputId="fechaInicio"
         dateFormat="dd/mm/yy"
         styleClass="w-full"
+        (onSelect)="onStartDateChange()"
       ></p-datePicker>
+      @if (!startDate && endDate) {
+        <small style="color: var(--color-error-35);">Debe ingresar la fecha de inicio</small>
+      }
     </div>
 
-    <!-- Fecha de finalización alinear a la derecha el componente el textoi al principo -->
-    <div class="flex-1 min-w-[200px]">
+    <!-- Fecha de finalización -->
+    <div class="flex-1 min-w-200">
       <label for="fechaFin" class="block text-primary text-sm mb-1 ">Fecha de finalización</label>
       <p-datePicker
         [(ngModel)]="endDate"
@@ -52,7 +75,12 @@
         inputId="fechaFin"
         dateFormat="dd/mm/yy"
         styleClass="w-full"
+        [minDate]="startDate"
+        (onSelect)="onEndDateChange()"
       ></p-datePicker>
+      @if (startDate && !endDate) {
+        <small style="color: var(--color-error-35);">Debe ingresar la fecha de finalización</small>
+      }
     </div>
   </div>
 
@@ -68,23 +96,35 @@
           <label class="font-normal text-primary mb-1">Presentación:</label>
           <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.presentation" />
       </div>
-      <div class="flex flex-col mr-4">
-          <label class="font-normal text-primary mb-1">Responsable:</label>
-          <input type="text" pInputText [disabled]="true" [value]="selectedProduct?.manager" />
-      </div>
     </div>
 
-    <!-- Botón -->
-    <div class="min-w-[220px] flex justify-end mt-16">
+    <!-- Botones -->
+    <div class="min-w-220 flex justify-end gap-4 mt-16">
+      <!-- Botón Exportar -->
+      <p-button
+        label="Exportar Excel"
+        icon="pi pi-download"
+        [disabled]="!isInventoryAdjustmentEnabled()"
+        (onClick)="exportToExcel()"
+        [loading]="exportLoading"
+        [pTooltip]="!isInventoryAdjustmentEnabled() ? 'Debe seleccionar un producto para exportar los datos' : ''"
+        tooltipPosition="top">
+      </p-button>
+
+      <!-- Botón Ajuste de inventario -->
       <p-button
         label="Ajuste de inventario"
         icon="pi pi-sliders-h"
-      ></p-button>
+        [disabled]="!isInventoryAdjustmentEnabled()"
+        (onClick)="openInventoryAdjustment()"
+        [pTooltip]="!isInventoryAdjustmentEnabled() ? 'Debe seleccionar un producto para realizar ajustes de inventario' : ''"
+        tooltipPosition="top">
+      </p-button>
     </div>
   </div>
 
    <!-- Tabla de inventario -->
-   <div class="w-full overflow-x-auto mt-16">
+   <div class="mt-16">
     <p-table
       [value]="kardexList"
       [paginator]="true"
@@ -151,4 +191,16 @@
       </ng-template>
     </p-table>
   </div>
+
+  <!-- Toast para mensajes -->
+  <p-toast></p-toast>
+
+  <!-- Componente de ajuste de inventario -->
+  <app-inventory-adjustment
+    [visible]="showInventoryAdjustment"
+    [productData]="selectedProduct || null"
+    [lastKardexRecord]="lastKardexRecord"
+    (adjustmentCompleted)="onAdjustmentCompleted()"
+    (dialogClosed)="onAdjustmentDialogClosed()">
+  </app-inventory-adjustment>
 </div>

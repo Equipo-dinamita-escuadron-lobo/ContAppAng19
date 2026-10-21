@@ -1,0 +1,138 @@
+:host ::ng-deep button.notification-bell__trigger {
+  position: relative;
+  background-color: #ffffff !important;
+  color: var(--color-primary, #000066) !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+:host ::ng-deep button.notification-bell__trigger .pi,
+:host ::ng-deep button.notification-bell__trigger .p-button-icon,
+:host ::ng-deep button.notification-bell__trigger > i,
+:host ::ng-deep button.notification-bell__trigger > span {
+  color: var(--color-primary, #000066) !important;
+  transition: color 0.2s ease;
+}
+
+:host ::ng-deep button.notification-bell__trigger:hover,
+:host ::ng-deep button.notification-bell__trigger:focus,
+:host ::ng-deep button.notification-bell__trigger:focus-visible {
+  background-color: var(--color-primary, #000066) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 102, 0.2);
+}
+
+:host ::ng-deep button.notification-bell__trigger:hover .pi,
+:host ::ng-deep button.notification-bell__trigger:hover .p-button-icon,
+:host ::ng-deep button.notification-bell__trigger:hover > i,
+:host ::ng-deep button.notification-bell__trigger:hover > span,
+:host ::ng-deep button.notification-bell__trigger:focus .pi,
+:host ::ng-deep button.notification-bell__trigger:focus .p-button-icon,
+:host ::ng-deep button.notification-bell__trigger:focus-visible .pi,
+:host ::ng-deep button.notification-bell__trigger:focus-visible .p-button-icon {
+  color: #ffffff !important;
+}
+
+.notification-bell__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--color-secondary-light, #db141c);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 10px;
+  line-height: 1;
+  padding: 2px 6px;
+  font-weight: 700;
+  border: 2px solid #ffffff;
+}
+
+.notification-bell__list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.notification-bell__item {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid var(--surface-border, #e5e7eb);
+  border-left: 4px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.notification-bell__item:last-child {
+  border-bottom: none;
+}
+
+.notification-bell__item:hover {
+  background: var(--surface-hover, #f6f6f6);
+}
+
+.notification-bell__item--unread .notification-bell__title {
+  font-weight: 700;
+}
+
+.notification-bell__item--danger {
+  border-left-color: var(--color-secondary-light, #db141c);
+  background: rgba(219, 20, 28, 0.04);
+}
+
+.notification-bell__item--danger:hover {
+  background: rgba(219, 20, 28, 0.09);
+}
+
+.notification-bell__item--danger .notification-bell__title,
+.notification-bell__item--danger > div > i {
+  color: var(--color-secondary-light, #db141c);
+}
+
+.notification-bell__item--warning {
+  border-left-color: var(--color-complementary-gold, #f8ae15);
+  background: rgba(248, 174, 21, 0.05);
+}
+
+.notification-bell__item--warning .notification-bell__title,
+.notification-bell__item--warning > div > i {
+  color: #b45309;
+}
+
+.notification-bell__item--success {
+  border-left-color: var(--color-complementary-green, #249337);
+  background: rgba(36, 147, 55, 0.05);
+}
+
+.notification-bell__item--success .notification-bell__title,
+.notification-bell__item--success > div > i {
+  color: var(--color-complementary-green, #249337);
+}
+
+.notification-bell__item--info {
+  border-left-color: var(--color-primary, #000066);
+}
+
+.notification-bell__item--info .notification-bell__title,
+.notification-bell__item--info > div > i {
+  color: var(--color-primary, #000066);
+}
+
+.notification-bell__title {
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.notification-bell__message {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #4b5563;
+  line-height: 1.35;
+}
+
+.notification-bell__date {
+  color: #9ca3af;
+  font-size: 0.7rem;
+}

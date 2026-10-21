@@ -1,18 +1,17 @@
 import { inject } from '@angular/core';
-import { CanActivateFn } from '@angular/router';
+import { CanActivateFn, CanActivateChildFn, Router } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
-import { UserRole } from '../auth/models/user-profile';
-import { Router } from '@angular/router';
 
-
-export const hasRoleGuard = (roles: UserRole[]): CanActivateFn => {
+export const hasRoleGuard = (): CanActivateFn => {
   return (route, state) => {
     const authService = inject(AuthService);
     const router = inject(Router);
-    if(authService.isAuthenticated()){
-      const user = authService.getCurrentUserRoles();
-      const hasRole = roles.some(role => user.includes(role));
-      if (hasRole) {
+
+    if (authService.isAuthenticated()) {
+      const roles: string[] = authService.getCurrentUserRoles(); // string[]
+      const isAdmin = roles.includes('Administrador');
+
+      if (isAdmin) {
         return true;
       } else {
         authService.logout();
@@ -20,9 +19,11 @@ export const hasRoleGuard = (roles: UserRole[]): CanActivateFn => {
         return false;
       }
     }
+
     router.navigate(['/login']);
     return false;
   };
-
 };
 
+export const hasRoleChildGuard: CanActivateChildFn = (route, state) =>
+  hasRoleGuard()(route, state);

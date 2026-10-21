@@ -1,0 +1,94 @@
+<div class="w-full p-6">
+  <p-toast></p-toast>
+
+  <!-- Encabezado -->
+  <div class="mb-6">
+    <h2 class="font-['Titillium_Web'] font-bold text-3xl text-primary mb-2">
+      Sincronización de Productos
+    </h2>
+    <p class="text-neutral-40 mb-4">
+      Sincroniza los productos de tu empresa con los diferentes módulos del sistema
+    </p>
+
+    @if (enterpriseId) {
+      <div class="flex items-center gap-2 mb-4">
+        <i class="pi pi-building text-primary"></i>
+        <span class="text-sm font-medium">ID Empresa: <strong>{{ enterpriseId }}</strong></span>
+      </div>
+    }
+
+    <!-- Botón para sincronizar todo -->
+    <div class="mb-6">
+      <p-button
+        label="Sincronizar Todos los Módulos"
+        icon="pi pi-refresh"
+        severity="success"
+        [disabled]="isAnySyncing() || !enterpriseId"
+        [loading]="isAnySyncing()"
+        (onClick)="syncAll()">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Lista de opciones de sincronización -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+    @for (option of syncOptions; track option.id) {
+      <div class="border rounded-lg p-6 hover:shadow-lg transition-shadow flex flex-col h-full"
+           style="background-color: var(--color-neutral-95); border-color: var(--color-neutral-80);">
+
+        <!-- Icono y título -->
+        <div class="flex items-start gap-4 mb-4">
+          <div class="flex items-center justify-center w-12 h-12 rounded-full"
+               style="background-color: var(--color-primary); color: white;">
+            <i [class]="option.icon + ' text-xl'"></i>
+          </div>
+
+          <div class="flex-1">
+            <h3 class="font-semibold text-lg mb-2" style="color: var(--color-primary);">
+              {{ option.title }}
+            </h3>
+            <p class="text-sm text-neutral-40 mb-3 min-h-12">
+              {{ option.description }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Última sincronización -->
+        <div class="mb-4 text-xs text-neutral-40 mt-auto">
+          <i class="pi pi-clock mr-2"></i>
+          {{ getLastSyncText(option.lastSync) }}
+        </div>
+
+        <!-- Botón de sincronización -->
+        <p-button
+          [label]="option.loading ? 'Sincronizando...' : 'Sincronizar'"
+          icon="pi pi-sync"
+          styleClass="w-full"
+          severity="primary"
+          [disabled]="option.loading || !enterpriseId"
+          [loading]="option.loading"
+          (onClick)="syncProducts(option)">
+        </p-button>
+      </div>
+    }
+  </div>
+
+  <!-- Información adicional -->
+  <div class="mt-8 p-4 rounded-lg border"
+       style="background-color: var(--color-notification-info-container); border-color: var(--color-notification-info-border);">
+    <div class="flex items-start gap-3">
+      <i class="pi pi-info-circle text-xl" style="color: var(--color-notification-info-title);"></i>
+      <div>
+        <h4 class="font-semibold mb-2" style="color: var(--color-notification-info-title);">
+          Información sobre la Sincronización
+        </h4>
+        <ul class="list-disc list-inside space-y-1 text-sm" style="color: var(--color-notification-info-title);">
+          <li>La sincronización actualiza los productos desde el módulo de gestión de productos</li>
+          <li>Es recomendable sincronizar después de crear o modificar productos</li>
+          <li>Cada módulo mantiene su propia base de datos de productos</li>
+          <li>La sincronización puede tardar unos segundos dependiendo de la cantidad de productos</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

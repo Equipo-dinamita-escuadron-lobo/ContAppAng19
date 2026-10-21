@@ -1,0 +1,177 @@
+/* Estilos del calendario mensual */
+
+.month-calendar {
+  background: var(--color-primary-100);
+  border: 1px solid var(--color-neutral-80);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  min-height: 320px;
+}
+
+.month-calendar:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Header del mes */
+.month-header {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.month-title {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-family: var(--font-family-sans);
+}
+
+/* Días de la semana - Grid de 7 columnas */
+.weekdays-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.weekday {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-neutral-50);
+  text-align: center;
+  padding: 4px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-family-titillium);
+}
+
+.weekday.weekend {
+  color: var(--color-complementary-orange);
+  font-weight: 600;
+}
+
+/* Grid de días - Grid de 7x6 (42 días totales) */
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 4px;
+  min-height: 240px;
+  background-color: var(--color-neutral-95);
+  padding: 4px;
+}
+
+.calendar-day {
+  font-size: 14px;
+  text-align: center;
+  padding: 8px 4px;
+  cursor: default;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  background-color: transparent;
+  position: relative;
+  font-family: var(--font-family-titillium);
+}
+
+.calendar-day.other-month {
+  color: var(--color-neutral-70);
+  background-color: var(--color-neutral-90);
+}
+
+.calendar-day.clickable {
+  cursor: pointer;
+}
+
+.calendar-day.clickable:hover {
+  background-color: var(--color-neutral-95);
+}
+
+.calendar-day.open {
+  background-color: var(--color-notification-success-container);
+  color: var(--color-complementary-green);
+  font-weight: 600;
+}
+
+.calendar-day.closed {
+  background-color: var(--color-notification-error-container);
+  color: var(--color-complementary-red);
+  font-weight: 600;
+}
+
+/* El día actual debe mantener su indicador visual pero permitir cambio de estado */
+.calendar-day.today {
+  /* Sin color de fondo para permitir cambio de estado */
+  background-color: transparent;
+  color: var(--color-primary);
+  font-weight: 700;
+  position: relative;
+  border: 2px solid var(--color-primary);
+  border-radius: 6px;
+}
+
+/* Prioridad para el estado del día sobre el indicador de "hoy" */
+.calendar-day.today.open {
+  background-color: var(--color-notification-success-container);
+  color: var(--color-complementary-green);
+  font-weight: 600;
+  border: 2px solid var(--color-complementary-green);
+}
+
+.calendar-day.today.closed {
+  background-color: var(--color-notification-error-container);
+  color: var(--color-complementary-red);
+  font-weight: 600;
+  border: 2px solid var(--color-complementary-red);
+}
+
+/* Indicador sutil para el día actual */
+.today-indicator {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}
+
+/* Indicador para días festivos */
+.holiday-indicator {
+  position: absolute;
+  top: 2px;
+  right: 50%;
+  transform: translateX(50%);
+  width: 5px;
+  height: 5px;
+  background-color: var(--color-complementary-orange);
+  border-radius: 50%;
+}
+
+/* Estados del mes */
+.month-status {
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* Estilos específicos para los estados del mes */
+:host ::ng-deep .p-button.p-button-sm {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  border-radius: 20px !important;
+}
+
+/* Botón secondary para estados del mes */
+:host ::ng-deep .p-button.p-button-secondary {
+  background-color: var(--color-button-secondary) !important;
+  border-color: var(--color-button-secondary) !important;
+  color: var(--color-primary) !important;
+  border: 1px solid var(--color-button-primary) !important;
+}
+
+:host ::ng-deep .p-button.p-button-secondary:hover {
+  background-color: var(--color-button-secondary-hover) !important;
+}

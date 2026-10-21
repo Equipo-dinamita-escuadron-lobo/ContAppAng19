@@ -1,0 +1,96 @@
+<!-- Contenido completo del archivo -->
+<div class="w-full h-full p-4 md:p-10 font-sans">
+    <!-- Encabezado con botón de regreso -->
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-8">
+        <div>
+            <h1
+                class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+                Detalle de Cartera
+            </h1>
+            <p class="font-normal text-sm mt-2 text-black">
+                Facturas pendientes del cliente: <span class="font-semibold">{{ clientName }}</span>
+            </p>
+        </div>
+        <div>
+            <p-button label="Regresar a la lista" icon="pi pi-arrow-left" styleClass="p-button-secondary"
+                (onClick)="goBack()"></p-button>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Resumen -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-30 mb-30" > <!-- Aumentamos el espacio aquí -->
+        <!-- Saldo Total Pendiente -->
+        <div class="p-5 bg-white shadow-md  text-center rounded-lg border-b-4 border-[var(--color-secondary)]"> <!-- Cambiado de border-l-4 a border-b-4 -->
+            <p class="text-sm font-semibold text-gray-500">SALDO TOTAL PENDIENTE</p>
+            <p class="text-3xl font-bold text-[var(--color-primary)] mt-1">{{ totalPending |
+                currency:'$':'symbol':'1.0-0' }}</p>
+        </div>
+        <!-- Total Vencido -->
+        <div class="p-5 bg-white shadow-md text-center rounded-lg border-b-4 border-[var(--color-error)]"> <!-- Cambiado de border-l-4 a border-b-4 -->
+            <p class="text-sm font-semibold text-gray-500">TOTAL VENCIDO</p>
+            <p class="text-3xl font-bold text-[var(--color-primary)] mt-1">{{ totalOverdue |
+                currency:'$':'symbol':'1.0-0' }}</p>
+        </div>
+        <!-- Total por Vencer -->
+        <div class="p-5 bg-white shadow-md text-center rounded-lg border-b-4 border-[var(--color-complementary-green)]"> <!-- Cambiado de border-l-4 a border-b-4 -->
+            <p class="text-sm font-semibold text-gray-500">TOTAL POR VENCER</p>
+            <p class="text-3xl font-bold text-[var(--color-primary)] mt-1">{{ totalDueTo | currency:'$':'symbol':'1.0-0'
+                }}</p>
+        </div>
+    </div>
+
+    <!-- Tabla de Facturas -->
+    <p-table [value]="invoices" [paginator]="true" [rows]="5" [tableStyle]="{'min-width': '50rem'}"
+        styleClass="p-datatable-striped" [loading]="isLoading">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Factura</th>
+                <th>Fecha Creación</th>
+                <th>Fecha Vencimiento</th>
+                <th class="text-right">Valor Total</th>
+                <th class="text-right">Valor Cobrado</th>
+                <th class="text-right">Saldo Pendiente</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Días en mora</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-invoice>
+            <tr>
+                <td>{{ invoice.factCode }}</td>
+                <td>{{ invoice.creationDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ invoice.expirationDate | date:'dd/MM/yyyy' }}</td>
+                <td class="text-right">{{ invoice.totalValue | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-right">{{ invoice.totalPay | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-right font-semibold">{{ invoice.pendingValue | currency:'$':'symbol':'1.0-0' }}</td>
+                <td class="text-center">
+                    <!-- Usamos el nuevo campo para determinar el estado -->
+                    <p-tag [value]="invoice.daysInArrears > 0 ? 'Vencida' : 'Por Vencer'"
+                        [severity]="invoice.daysInArrears > 0 ? 'danger' : 'success'"></p-tag>
+                </td>
+                <td class="text-center">
+                    <!-- Mostramos los días solo si está vencida -->
+                    <span *ngIf="invoice.daysInArrears > 0" class="font-semibold text-red-600">
+                        {{ invoice.daysInArrears }}
+                    </span>
+                    <span *ngIf="invoice.daysInArrears <= 0" class="text-gray-400">-</span>
+                </td>
+                <td class="text-center">
+                    <p-button icon="pi pi-eye" styleClass="p-button-rounded p-button-text" pTooltip="Ver Recibos"
+                        (onClick)="viewReceipts(invoice.id)"></p-button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="empty">
+            <tr>
+                <td colspan="7" class="text-center py-8">
+                    <p class="font-semibold">Este cliente no tiene facturas pendientes.</p>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Modal de Recibos (controlado por el componente) -->
+<app-invoice-receipts-modal *ngIf="selectedInvoiceId" [invoiceId]="selectedInvoiceId"
+    (closeModal)="closeReceiptsModal()"></app-invoice-receipts-modal>

@@ -1,0 +1,338 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20 font-sans">
+    <p-toast></p-toast>
+
+    <!-- CABECERA -->
+    <div class="mb-12">
+        <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            Efectuar Pago
+        </h1>
+        <app-contextual-help
+            class="ml-3 inline-flex align-middle"
+            [title]="help.title"
+            [summary]="help.summary"
+            [helpCenterSlug]="help.slug">
+        </app-contextual-help>
+        <p class="mt-2 text-base text-gray-600">
+            Seleccione el proveedor y las facturas a pagar. Esto generará un Comprobante de Egreso (documento contable de pago).
+        </p>
+    </div>
+
+    <!-- CONTENEDOR DEL FORMULARIO -->
+    <form [formGroup]="expenseReceiptForm" (ngSubmit)="onSubmit()">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-12">
+
+            <!-- Proveedor -->
+            <div class="flex flex-col gap-2">
+                <label for="supplier" class="font-semibold text-[var(--color-primary)]">
+                    Proveedor <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-autoComplete
+                        id="supplier"
+                        formControlName="supplier"
+                        [suggestions]="filteredSuppliers"
+                        (completeMethod)="searchSupplier($event)"
+                        field="name"
+                        placeholder="Buscar proveedor..."
+                        [dropdown]="true"
+                        [emptyMessage]="supplierAutocompleteEmptyMessage"
+                        (onSelect)="onSupplierSelect($event)"
+                        [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('supplier')?.invalid && expenseReceiptForm.get('supplier')?.touched}">
+                    </p-autoComplete>
+                    @if (expenseReceiptForm.get('supplier')?.touched && expenseReceiptForm.get('supplier')?.invalid) {
+                        <small class="p-error error-message">El proveedor es requerido.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Facturas Asociadas - Selección Múltiple -->
+            <div class="flex flex-col gap-2 md:col-span-2">
+                <label class="font-semibold text-[var(--color-primary)]">
+                    Facturas a Pagar <span class="text-red-500">*</span>
+                </label>
+                
+                @if (!expenseReceiptForm.get('supplier')?.value) {
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                        <p class="text-blue-700">
+                            <i class="pi pi-info-circle mr-2"></i>
+                            Primero seleccione un proveedor para ver sus facturas pendientes
+                        </p>
+                    </div>
+                } @else if (availableInvoices.length === 0) {
+                    <div class="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+                        <p class="text-yellow-700">
+                            <i class="pi pi-exclamation-triangle mr-2"></i>
+                            No hay facturas pendientes de pago para este proveedor
+                        </p>
+                    </div>
+                } @else {
+                    <!-- Tabla de selección de facturas -->
+                    <p-card styleClass="shadow-sm">
+                        <p-table 
+                            [value]="availableInvoices" 
+                            [(selection)]="selectedInvoices"
+                            (selectionChange)="onInvoiceSelectionChange()"
+                            dataKey="id"
+                            styleClass="p-datatable-sm">
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th style="width: 3rem">
+                                        <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                                    </th>
+                                    <th>N° factura</th>
+                                    <th>Fecha</th>
+                                    <th class="text-right">Total Factura</th>
+                                    <th class="text-right">Pagado</th>
+                                    <th class="text-right">Saldo Pendiente</th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-invoice>
+                                <tr>
+                                    <td>
+                                        <p-tableCheckbox [value]="invoice"></p-tableCheckbox>
+                                    </td>
+                                    <td>
+                                        <span class="font-mono text-sm font-semibold text-blue-600">
+                                            {{ invoice.billId }}
+                                        </span>
+                                    </td>
+                                    <td>{{ invoice.date | date:'dd/MM/yyyy' }}</td>
+                                    <td class="text-right font-mono">
+                                        {{ invoice.total | currency:'COP':'symbol':'1.0-0' }}
+                                    </td>
+                                    <td class="text-right font-mono text-green-600">
+                                        {{ (invoice.paidAmount || 0) | currency:'COP':'symbol':'1.0-0' }}
+                                    </td>
+                                    <td class="text-right font-mono font-bold text-orange-600">
+                                        {{ invoice.pendingBalance | currency:'COP':'symbol':'1.0-0' }}
+                                    </td>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="summary">
+                                <div class="flex justify-between items-center bg-blue-50 p-3 rounded">
+                                    <span class="font-semibold">
+                                        <i class="pi pi-check-circle mr-2 text-green-600"></i>
+                                        {{ selectedInvoices.length }} factura(s) seleccionada(s)
+                                    </span>
+                                    <span class="font-bold text-lg text-blue-700">
+                                        Total a Pagar: {{ calculateSelectedTotal() | currency:'COP':'symbol':'1.0-0' }}
+                                    </span>
+                                </div>
+                            </ng-template>
+                        </p-table>
+                    </p-card>
+                    @if (selectedInvoices.length === 0) {
+                        <small class="text-red-500 mt-1">Debe seleccionar al menos una factura para continuar</small>
+                    }
+                }
+            </div>
+
+            <!-- Monto Total a Pagar (solo lectura, calculado automáticamente) -->
+            <div class="flex flex-col gap-2">
+                <label for="totalAmountDisplay" class="font-semibold text-[var(--color-primary)]">
+                    Monto Total a Pagar
+                </label>
+                <div class="w-full md:w-2/3">
+                    <div class="p-3 bg-green-50 border-2 border-green-300 rounded-lg">
+                        <p class="text-2xl font-bold text-green-700 font-mono">
+                            {{ calculateSelectedTotal() | currency:'COP':'symbol':'1.0-0' }}
+                        </p>
+                        <small class="text-green-600">Suma de los saldos pendientes seleccionados</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transfer Account (Cuenta de Crédito - Método de Pago) -->
+            <div class="flex flex-col gap-2">
+                <label for="transferAccount" class="font-semibold text-[var(--color-primary)]">
+                    Método de Pago <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-dropdown
+                        id="transferAccount"
+                        formControlName="transferAccount"
+                        [options]="paymentMethodOptions"
+                        optionLabel="label"
+                        optionValue="id"
+                        placeholder="Seleccione método de pago de la empresa"
+                        [styleClass]="'w-full'"
+                        (onChange)="onPaymentMethodChange()"
+                        [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('transferAccount')?.invalid && expenseReceiptForm.get('transferAccount')?.touched}">
+                    </p-dropdown>
+                    @if (expenseReceiptForm.get('transferAccount')?.touched && expenseReceiptForm.get('transferAccount')?.invalid) {
+                        <small class="p-error error-message">El método de pago es requerido.</small>
+                    }
+                    @if (paymentMethodOptions.length === 0) {
+                        <small class="text-orange-600">{{ paymentMethodsHelpMessage }}</small>
+                    }
+                    <small class="text-gray-500">Métodos configurados en maestros de la empresa</small>
+                </div>
+            </div>
+
+            <!-- Cuenta bancaria (solo si el método lo exige) -->
+            @if (requiresBankAccount) {
+                <div class="flex flex-col gap-2">
+                    <label for="bankAccountId" class="font-semibold text-[var(--color-primary)]">
+                        Cuenta Bancaria <span class="text-red-500">*</span>
+                    </label>
+                    <div class="w-full md:w-2/3">
+                        <p-dropdown
+                            id="bankAccountId"
+                            formControlName="bankAccountId"
+                            [options]="bankAccountOptions"
+                            optionLabel="label"
+                            optionValue="id"
+                            placeholder="Seleccione cuenta bancaria"
+                            [styleClass]="'w-full'"
+                            [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('bankAccountId')?.invalid && expenseReceiptForm.get('bankAccountId')?.touched}">
+                        </p-dropdown>
+                        @if (expenseReceiptForm.get('bankAccountId')?.touched && expenseReceiptForm.get('bankAccountId')?.invalid) {
+                            <small class="p-error error-message">La cuenta bancaria es requerida para este método.</small>
+                        }
+                        @if (bankAccountOptions.length === 0) {
+                            <small class="text-orange-600">{{ noAvailableBankAccountsMessage }}</small>
+                        }
+                    </div>
+                </div>
+            }
+
+
+            <!-- Fecha de Elaboración -->
+            <div class="flex flex-col gap-2">
+                <label for="issueDate" class="font-semibold text-[var(--color-primary)]">
+                    Fecha de Elaboración <span class="text-red-500">*</span>
+                </label>
+                <div class="w-full md:w-2/3">
+                    <p-calendar id="issueDate" formControlName="issueDate" dateFormat="dd/mm/yy"
+                        [showIcon]="true" placeholder="dd/mm/yyyy" [styleClass]="'w-full'"
+                        [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('issueDate')?.invalid && expenseReceiptForm.get('issueDate')?.touched}">
+                    </p-calendar>
+                    @if (expenseReceiptForm.get('issueDate')?.touched && expenseReceiptForm.get('issueDate')?.invalid) {
+                        <small class="p-error error-message">La fecha de elaboración es requerida.</small>
+                    }
+                </div>
+            </div>
+
+            <!-- Cuenta Auxiliar (solo para gastos directos) -->
+            @if (expenseReceiptForm.get('receiptTypeOption')?.value === 'direct_expense') {
+                <div class="flex flex-col gap-2">
+                    <label for="auxiliaryAccount" class="font-semibold text-[var(--color-primary)]">
+                        Cuenta de Gasto <span class="text-red-500">*</span>
+                    </label>
+                    <div class="w-full md:w-2/3">
+                        <p-dropdown id="auxiliaryAccount" formControlName="auxiliaryAccount" [options]="auxiliaryAccounts"
+                            optionLabel="label" optionValue="value" placeholder="Seleccione la cuenta"
+                            [styleClass]="'w-full'"
+                            [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('auxiliaryAccount')?.invalid && expenseReceiptForm.get('auxiliaryAccount')?.touched}">
+                        </p-dropdown>
+                        @if (expenseReceiptForm.get('auxiliaryAccount')?.touched && expenseReceiptForm.get('auxiliaryAccount')?.invalid) {
+                            <small class="p-error error-message">La cuenta de gasto es requerida.</small>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Monto Total (solo para gastos directos) -->
+            @if (expenseReceiptForm.get('receiptTypeOption')?.value === 'direct_expense') {
+                <div class="flex flex-col gap-2">
+                    <label for="totalAmount" class="font-semibold text-[var(--color-primary)]">
+                        Monto Total <span class="text-red-500">*</span>
+                    </label>
+                    <div class="w-full md:w-2/3">
+                        <p-inputNumber id="totalAmount" formControlName="totalAmount"
+                            mode="currency" currency="COP" locale="es-CO"
+                            [styleClass]="'w-full'"
+                            [ngClass]="{'ng-invalid ng-dirty': expenseReceiptForm.get('totalAmount')?.invalid && expenseReceiptForm.get('totalAmount')?.touched}"
+                            (onInput)="updateTotalAmount()">
+                        </p-inputNumber>
+                        @if (expenseReceiptForm.get('totalAmount')?.touched && expenseReceiptForm.get('totalAmount')?.invalid) {
+                            <small class="p-error error-message">El monto total es requerido y debe ser mayor a 0.</small>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- OBSERVACIONES -->
+        <div class="mb-12">
+            <label for="observations" class="block font-semibold text-[var(--color-primary)] mb-2">
+                Observaciones
+            </label>
+            <div class="w-full">
+                <textarea
+                    pInputTextarea
+                    id="observations"
+                    formControlName="observations"
+                    rows="3"
+                    placeholder="Ingrese observaciones adicionales..."
+                    class="w-full">
+                </textarea>
+            </div>
+        </div>
+
+        <!-- RESUMEN -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg mb-8 border-2 border-blue-200">
+            <h3 class="text-lg font-semibold text-[var(--color-primary)] mb-4 flex items-center">
+                <i class="pi pi-info-circle mr-2"></i>
+                Resumen del Comprobante de Egreso
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col">
+                    <span class="font-medium text-gray-600 mb-1">Proveedor:</span>
+                    <span class="text-lg font-semibold text-gray-900">
+                        {{ expenseReceiptForm.get('supplier')?.value?.name || 'No seleccionado' }}
+                    </span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-medium text-gray-600 mb-1">Fecha de Pago:</span>
+                    <span class="text-lg text-gray-900">
+                        {{ expenseReceiptForm.get('issueDate')?.value | date:'dd/MM/yyyy' }}
+                    </span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-medium text-gray-600 mb-1">Facturas a Pagar:</span>
+                    <span class="text-lg font-semibold text-blue-600">
+                        {{ selectedInvoices.length }} factura(s)
+                    </span>
+                    @if (selectedInvoices.length > 0) {
+                        <small class="text-gray-600 mt-1">
+                            {{ getSelectedBillIds() }}
+                        </small>
+                    }
+                </div>
+                <div class="flex flex-col bg-green-100 p-4 rounded-lg border-2 border-green-300">
+                    <span class="font-medium text-green-700 mb-1">Monto Total a Pagar:</span>
+                    <span class="text-3xl font-bold text-green-700 font-mono">
+                        {{ calculateSelectedTotal() | currency:'COP':'symbol':'1.0-0' }}
+                    </span>
+                </div>
+            </div>
+            
+            @if (selectedInvoices.length > 0) {
+                <div class="mt-4 pt-4 border-t border-blue-200">
+                    <span class="font-medium text-gray-700">Método de Pago:</span>
+                    <span class="ml-2 text-gray-900">
+                        {{ getPaymentMethodName() || 'No seleccionado' }}
+                    </span>
+                </div>
+            }
+        </div>
+
+        <!-- BOTONES DE ACCIÓN -->
+        <div class="flex justify-center gap-4 pb-8">
+            <p-button
+                type="submit"
+                label="Crear Comprobante"
+                icon="pi pi-check"
+                [disabled]="!isFormValidForSubmission()">
+            </p-button>
+            <p-button
+                type="button"
+                label="Cancelar"
+                icon="pi pi-times"
+                styleClass="p-button-secondary"
+                (onClick)="onCancel()">
+            </p-button>
+        </div>
+    </form>
+</div>

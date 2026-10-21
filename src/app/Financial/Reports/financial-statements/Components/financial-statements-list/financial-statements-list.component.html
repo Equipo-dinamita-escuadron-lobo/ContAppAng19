@@ -1,0 +1,90 @@
+﻿<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <div class="mb-6 flex flex-col">
+    <div class="flex justify-between items-start mb-3">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
+          docs
+        </span>
+        <h1
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary-light underline-offset-4"
+        >
+          Estados Financieros
+        </h1>
+      </div>
+
+      <button
+        pButton
+        pRipple
+        type="button"
+        label="Historial de Estados Financieros"
+        icon="pi pi-history"
+        class="p-button-text"
+        (click)="goToHistory()"
+        *ngIf="isAdmin"
+      ></button>
+    </div>
+
+    <div
+      class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6"
+    >
+      <p
+        class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl flex-1"
+      >
+        Aquí podrás visualizar y generar informes clave del módulo de estados
+        financieros. Consulta reportes contables con criterios configurables,
+        vista previa y exportación.
+      </p>
+
+      <div class="flex-shrink-0 w-full sm:w-auto">
+        <div class="relative max-w-lg text-gray-400 hover:text-gray-600">
+          <input
+            type="text"
+            placeholder="Buscar Estado Financiero"
+            [(ngModel)]="searchTerm"
+            (input)="filterFinancialStatements()"
+            class="w-full pl-6 pr-12 py-3 border border-primary rounded-md focus:outline-none focus:ring-1 focus:ring-light focus:border-transparent text-base bg-white lg:w-[260px]"
+          />
+          <button
+            class="absolute right-3 top-1/2 transform -translate-y-1/2"
+            aria-label="Buscar"
+          >
+            <i class="pi pi-search text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t-2 border-gray-400 opacity-50 mb-10 mt-10 w-full"></div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div
+      *ngFor="let financialStatement of filteredFinancialStatements"
+      class="relative bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 cursor-pointer overflow-hidden group"
+      (click)="goTo(financialStatement.route)"
+    >
+      <div class="flex items-start mb-4">
+        <div class="flex-1">
+          <h3 class="text-lg font-semibold text-primary mb-1 flex items-center">
+            <span class="material-symbols-outlined mr-3">
+              {{ financialStatement.icon }}
+            </span>
+            {{ financialStatement.name }}
+          </h3>
+          <p class="text-sm text-gray-500">
+            {{ financialStatement.description }}
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="absolute inset-0 bg-white/30 backdrop-blur-[5px] text-secondary p-6 flex items-center justify-center text-center translate-y-full group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+      >
+        <p class="text-sm sm:text-base">
+          {{ financialStatement.longDescription }}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+

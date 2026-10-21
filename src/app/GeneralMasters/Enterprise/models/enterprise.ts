@@ -1,4 +1,4 @@
 export interface Enterprise {
-  nombre: string;
+  name: string;
   nit: string;
 }

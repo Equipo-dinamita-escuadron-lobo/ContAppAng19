@@ -10,7 +10,7 @@ export class FilterProductPipe implements PipeTransform {
       return items;
     }
 
-    return items.filter(item => item.itemType.toLowerCase().includes(filterList.toLowerCase())
+    return items.filter(item => item.name.toLowerCase().includes(filterList.toLowerCase())
       || item.code.toLowerCase().includes(filterList.toLowerCase())
       || item.description.toLowerCase().includes(filterList.toLowerCase())
     );

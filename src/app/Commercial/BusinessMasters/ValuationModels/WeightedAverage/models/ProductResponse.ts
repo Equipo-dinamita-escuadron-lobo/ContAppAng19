@@ -1,6 +1,6 @@
 export interface ProductResponse {
   id: number;
-  idProduct: number;
+  productId: number;
   reference: string;
   name: string;
   presentation: string;

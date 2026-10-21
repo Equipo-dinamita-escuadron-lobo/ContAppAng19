@@ -1,1 +1,101 @@
-<p>profile-create works!</p>
+<div class="w-full">
+  <p-toast></p-toast>
+
+  <h1
+    class="text-3xl font-bold text-[var(--color-primary)] underline decoration-[var(--color-secondary)] mt-6 mb-4"
+  >
+    Crear Perfil
+  </h1>
+  <p class="mb-6 text-lg text-gray-700">
+    Complete la información necesaria para crear un nuevo perfil.
+  </p>
+</div>
+
+<div class="mt-6">
+  <form [formGroup]="addForm" (ngSubmit)="onSubmit()" class="mt-4">
+    <div class="w-full">
+      <div class="flex gap-4 mb-4">
+        <!-- Nombre -->
+        <div class="w-1/2">
+          <label for="name" class="block mb-2 font-semibold">
+            Nombre <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            id="name"
+            formControlName="name"
+            placeholder="Ej: Administrador"
+            class="w-full"
+          />
+          <!-- Requerido -->
+          <p-message
+            severity="error"
+            *ngIf="
+              addForm.get('name')?.touched &&
+              addForm.get('name')?.hasError('required')
+            "
+            text="El nombre es requerido"
+          ></p-message>
+          <!-- Solo letras -->
+          <p-message
+            severity="error"
+            *ngIf="
+              addForm.get('name')?.touched &&
+              addForm.get('name')?.hasError('pattern')
+            "
+            text="El nombre solo debe contener letras y espacios."
+          ></p-message>
+        </div>
+
+        <!-- Descripción -->
+        <div class="w-1/2">
+          <label for="description" class="block mb-2 font-semibold">
+            Descripción <span class="text-red-500">*</span>
+          </label>
+          <input
+            pInputText
+            id="description"
+            formControlName="description"
+            placeholder="Ej: Perfil de Administrador"
+            class="w-full"
+          />
+          <!-- Requerido -->
+          <p-message
+            severity="error"
+            *ngIf="
+              addForm.get('description')?.touched &&
+              addForm.get('description')?.hasError('required')
+            "
+            text="La descripción es requerida"
+          ></p-message>
+          <!-- Solo letras -->
+          <p-message
+            severity="error"
+            *ngIf="
+              addForm.get('description')?.touched &&
+              addForm.get('description')?.hasError('pattern')
+            "
+            text="La descripción solo debe contener letras y espacios."
+          ></p-message>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="flex justify-center gap-4 mt-12 pt-40">
+        <p-button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          (onClick)="goBack()"
+        >
+        </p-button>
+        <p-button
+          type="submit"
+          label="Guardar Perfil"
+          [disabled]="addForm.invalid"
+        >
+        </p-button>
+      </div>
+    </div>
+  </form>
+</div>

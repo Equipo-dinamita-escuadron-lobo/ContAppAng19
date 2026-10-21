@@ -1,0 +1,115 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { EditorModule } from 'primeng/editor';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
+import { HelpCenterServiceService } from '../../services/help-center.service';
+import { HelpCenterValidators } from '../../services/help-center-validators.service';
+import katex from 'katex';
+
+(window as any).katex = katex;
+
+@Component({
+  selector: 'app-help-center-creation',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ButtonModule,
+    InputTextModule,
+    SelectModule,
+    EditorModule,
+    ToastModule
+  ],
+  templateUrl: './help-center-creation.component.html',
+  styleUrl: './help-center-creation.component.css'
+})
+export class HelpCenterCreationComponent implements OnInit {
+  modules: any[] = [];
+  form: FormGroup;
+
+  constructor(
+    private readonly fb: FormBuilder,
+    private readonly service: HelpCenterServiceService,
+    private readonly router: Router,
+    private readonly messageService: MessageService
+  ) {
+    this.form = this.fb.group({
+      moduleId: [null as number | null, Validators.required],
+      name: ['', Validators.required],
+      description: ['', HelpCenterValidators.quillEditorRequired],
+      status: [true]
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadModules();
+  }
+
+  private loadModules(): void {
+    this.service.getModules().subscribe({
+      next: (modules) => {
+        this.modules = modules;
+      },
+      error: (error: any) => {
+        console.error('Error al cargar módulos:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudieron cargar los módulos.',
+          life: 5000
+        });
+      }
+    });
+  }
+
+  onSubmit(): void {
+    if (this.form.valid) {
+      this.service.create(this.form.value as any).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: 'Centro de ayuda creado correctamente.'
+          });
+          this.router.navigate(['/gen-masters/help-center/list']);
+        },
+        error: (error: any) => {
+          let errorMessage = 'No se pudo crear el centro de ayuda.';
+          let errorSummary = 'Error';
+          
+          if (error?.error) {
+            if (error.error.code === 'HELP_CENTER_ALREADY_EXISTS') {
+              errorSummary = 'Nombre duplicado';
+              errorMessage = error.error.message;
+            } else if (error.error.message) {
+              errorMessage = error.error.message;
+            }
+          }
+          
+          this.messageService.add({
+            severity: 'error',
+            summary: errorSummary,
+            detail: errorMessage,
+            life: 5000
+          });
+        }
+      });
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Advertencia',
+        detail: 'Por favor, complete todos los campos requeridos.'
+      });
+    }
+  }
+
+  onCancel(): void {
+    this.router.navigate(['/gen-masters/help-center/list']);
+  }
+}

@@ -1,0 +1,102 @@
+<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <p-toast></p-toast>
+
+  <div class="mb-6 flex items-center gap-3">
+    <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
+      receipt_long
+    </span>
+    <h1
+      class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary underline-offset-4"
+    >
+      Detalles del Reporte:
+      {{ getStatementTypeLabel(financialStatementDetails?.type || "") }}
+    </h1>
+  </div>
+
+  <p-card header="Informacion General" styleClass="mb-6">
+    <div
+      *ngIf="financialStatementDetails"
+      class="grid grid-cols-1 gap-4 md:grid-cols-3"
+    >
+      <div>
+        <strong>ID de Registro:</strong>
+        <p>{{ financialStatementDetails.reportId }}</p>
+      </div>
+      <div>
+        <strong>Fecha de Generacion:</strong>
+        <p>
+          {{ financialStatementDetails.createdAt | date : "dd/MM/yyyy hh:mm a" }}
+        </p>
+      </div>
+      <div>
+        <strong>Empresa:</strong>
+        <p>{{ financialStatementDetails.entId }}</p>
+      </div>
+      <div>
+        <strong>Estado Actual:</strong>
+        <p-tag
+          [value]="getStatusLabel(getLastLogStatus())"
+          [severity]="getStatusSeverity(getLastLogStatus())"
+        ></p-tag>
+      </div>
+      <div>
+        <strong>Nivel:</strong>
+        <p>
+          {{
+            getCriteriaLevelLabel(financialStatementDetails.criteria?.criteriaType)
+          }}
+        </p>
+      </div>
+      <div>
+        <strong>Tipo de Reporte:</strong>
+        <p>{{ getStatementTypeLabel(financialStatementDetails.type) }}</p>
+      </div>
+    </div>
+    <div *ngIf="!financialStatementDetails" class="p-4 text-center">
+      Cargando detalles...
+    </div>
+  </p-card>
+
+  <p-card header="Anotaciones" styleClass="mb-6">
+    <div *ngIf="annotations.length; else noAnnotations" class="flex flex-col gap-3">
+      <div
+        *ngFor="let annotation of annotations"
+        class="rounded-lg border border-slate-200 bg-slate-50 p-3"
+      >
+        <p class="m-0 text-slate-800">{{ annotation.text }}</p>
+        <small class="text-slate-500">
+          Actualizada:
+          {{ annotation.updatedAt | date : "dd/MM/yyyy hh:mm a" }}
+        </small>
+      </div>
+    </div>
+    <ng-template #noAnnotations>
+      <p class="m-0 text-slate-500">
+        Este reporte no tiene anotaciones registradas.
+      </p>
+    </ng-template>
+  </p-card>
+
+  <p-card header="Historial de Actividad">
+    <p-timeline [value]="logs" align="alternate" styleClass="customized-timeline">
+      <ng-template pTemplate="marker" let-event>
+        <span
+          class="custom-marker shadow-2"
+          [style.backgroundColor]="resolveEventMarkerColor(event)"
+        >
+          <span class="material-symbols-outlined text-base leading-none text-white">
+            {{ resolveEventMarkerIcon(event) }}
+          </span>
+        </span>
+      </ng-template>
+      <ng-template pTemplate="content" let-event>
+        <p-card
+          [header]="getEventLabel(event.eventType)"
+          [subheader]="(event.createdAt | date : 'dd/MM/yyyy hh:mm:ss a') ?? ''"
+        >
+          <p>{{ getEventMessage(event) }}</p>
+        </p-card>
+      </ng-template>
+    </p-timeline>
+  </p-card>
+</div>

@@ -1,0 +1,115 @@
+<div class="w-full px-4 sm:px-6 lg:px-8 pt-20 font-sans">
+    @if (errorMessage) {
+        <p-message severity="error" [text]="errorMessage"></p-message>
+    }
+
+    <div class="mb-8">
+        <h1 class="font-['Titillium_Web'] font-bold text-3xl text-[var(--color-primary)] border-b-4 border-[var(--color-secondary)] inline-block pb-1">
+            Contabilización del Comprobante
+        </h1>
+        <p class="mt-2 text-base text-gray-600">
+            Asiento contable del comprobante {{ receiptCode }}
+        </p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold text-[var(--color-primary)] mb-4">Información del comprobante</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+            @if (accountingEntryHeader.documentTypeLabel) {
+                <div><span class="font-medium">Origen:</span> <span class="ml-2">{{ accountingEntryHeader.documentTypeLabel }}</span></div>
+            }
+            @if (accountingEntryHeader.voucherNumber || receiptCode) {
+                <div><span class="font-medium">Comprobante:</span> <span class="ml-2">{{ accountingEntryHeader.voucherNumber || receiptCode }}</span></div>
+            }
+            @if (accountingEntryHeader.supplierLabel || supplierName) {
+                <div><span class="font-medium">Proveedor:</span> <span class="ml-2">{{ accountingEntryHeader.supplierLabel || supplierName }}</span></div>
+            }
+            @if (issueDate) {
+                <div><span class="font-medium">Fecha:</span> <span class="ml-2">{{ issueDate | date:'dd/MM/yyyy' }}</span></div>
+            }
+            @if (accountingEntryHeader.entryCode) {
+                <div><span class="font-medium">Asiento:</span> <span class="ml-2">{{ accountingEntryHeader.entryCode }}</span></div>
+            }
+            @if (accountingEntryHeader.entryStatus) {
+                <div><span class="font-medium">Estado:</span> <span class="ml-2">{{ accountingStatusLabel(accountingEntryHeader.entryStatus) }}</span></div>
+            }
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-semibold text-[var(--color-primary)] mb-4">
+            {{ accountingEntryIsVoided ? 'Movimientos históricos del asiento original' : 'Asiento contable' }}
+        </h2>
+
+        @if (accountingEntryIsVoided) {
+            <p-message
+                severity="warn"
+                text="Este comprobante está anulado. Los movimientos se conservan como trazabilidad histórica y su efecto contable fue revertido."
+                styleClass="mb-4 w-full">
+            </p-message>
+        }
+
+        @if (accountingMovements.length && !accountingIsBalanced) {
+            <p-message
+                severity="warn"
+                text="El asiento no está balanceado: el total débito difiere del total crédito."
+                styleClass="mb-4 w-full">
+            </p-message>
+        }
+
+        @if (accountingMovements.length > 0) {
+            <p-table [value]="accountingMovements" [tableStyle]="{'min-width': '50rem'}" styleClass="p-datatable-striped">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Código cuenta</th>
+                        <th>Cuenta</th>
+                        <th>Detalle</th>
+                        <th class="text-right">Débito</th>
+                        <th class="text-right">Crédito</th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-entry>
+                    <tr>
+                        <td class="font-mono">{{ entry.accountCode }}</td>
+                        <td>{{ entry.accountName }}</td>
+                        <td>{{ entry.detail }}</td>
+                        <td class="text-right text-red-600 font-semibold">
+                            {{ entry.debit | currency:'COP':'code':'1.0-2':'es-CO' }}
+                        </td>
+                        <td class="text-right text-green-600 font-semibold">
+                            {{ entry.credit | currency:'COP':'code':'1.0-2':'es-CO' }}
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="summary">
+                    <tr class="font-semibold bg-gray-50">
+                        <td colspan="3" class="text-right">{{ accountingEntryIsVoided ? 'Totales históricos' : 'Totales' }}</td>
+                        <td class="text-right text-red-600">
+                            {{ getTotalDebit() | currency:'COP':'code':'1.0-2':'es-CO' }}
+                        </td>
+                        <td class="text-right text-green-600">
+                            {{ getTotalCredit() | currency:'COP':'code':'1.0-2':'es-CO' }}
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        } @else {
+            <p-message severity="info" text="No se encontraron movimientos contables para este comprobante."></p-message>
+        }
+    </div>
+
+    <div class="flex justify-center gap-4 mb-8">
+        <p-button
+            label="Ver Detalles del Comprobante"
+            icon="pi pi-eye"
+            (onClick)="viewReceiptDetails()">
+        </p-button>
+
+        <p-button
+            label="Volver al Listado"
+            icon="pi pi-arrow-left"
+            styleClass="p-button-secondary"
+            (onClick)="goBackToList()">
+        </p-button>
+    </div>
+</div>

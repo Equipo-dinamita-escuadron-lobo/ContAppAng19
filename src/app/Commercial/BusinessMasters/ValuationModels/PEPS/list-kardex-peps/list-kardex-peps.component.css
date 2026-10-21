@@ -1,0 +1,57 @@
+/* Estilos para la tabla de Kardex PEPS */
+.p-datatable .p-datatable-tbody > tr > td {
+  vertical-align: top;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Estilo para las capas de balance */
+.balance-layer {
+  border-top: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+}
+
+.balance-layer:first-child {
+  border-top: none;
+  background-color: transparent;
+}
+
+/* Estilo para las celdas con rowspan */
+.p-datatable .p-datatable-tbody > tr > td[rowspan] {
+  vertical-align: middle;
+}
+
+/* Estilo para el encabezado de la tabla */
+.p-datatable .p-datatable-thead > tr > th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Estilo para las columnas de saldo */
+.saldo-column {
+  background-color: #fff3cd;
+  border-left: 3px solid #ffc107;
+}
+
+/* Estilo para las columnas de entradas */
+.entradas-column {
+  background-color: #d1ecf1;
+  border-left: 3px solid #17a2b8;
+}
+
+/* Estilo para las columnas de salidas */
+.salidas-column {
+  background-color: #f8d7da;
+  border-left: 3px solid #dc3545;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .p-datatable {
+    font-size: 0.875rem;
+  }
+  
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.5rem;
+  }
+}

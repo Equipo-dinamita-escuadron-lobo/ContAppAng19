@@ -1,0 +1,151 @@
+﻿<div class="h-full w-full rounded-2xl p-4 md:p-6">
+  <p-toast></p-toast>
+
+  <div class="mb-6 flex flex-col">
+    <div class="flex justify-between items-start mb-3">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl md:text-4xl">
+          history
+        </span>
+        <h1
+          class="text-xl md:text-3xl font-bold text-primary underline decoration-secondary underline-offset-4"
+        >
+          Historial de Estados Financieros
+        </h1>
+      </div>
+      <div class="flex gap-2">
+        <button
+          pButton
+          pRipple
+          type="button"
+          label="Refrescar"
+          icon="pi pi-refresh"
+          class="p-button-text"
+          (click)="loadHistory()"
+        ></button>
+      </div>
+    </div>
+
+    <p class="text-gray-600 text-sm md:text-base leading-relaxed max-w-4xl mb-6">
+      Aqui podras visualizar el historial de estados financieros generados,
+      consultar su estado, revisar detalles y exportarlos nuevamente.
+    </p>
+
+    <div class="border-t border-gray-200 my-6"></div>
+
+    <div class="flex justify-start mb-4">
+      <p-iconField iconPosition="left">
+        <p-inputIcon>
+          <i class="pi pi-search"></i>
+        </p-inputIcon>
+        <input
+          pInputText
+          type="text"
+          (input)="applyGlobalFilter($event)"
+          placeholder="Buscar por reporte o usuario..."
+          class="w-full md:w-[30rem]"
+        />
+      </p-iconField>
+    </div>
+  </div>
+
+  <p-table
+    #dt
+    [value]="history"
+    [paginator]="true"
+    [rows]="rows"
+    [totalRecords]="totalRecords"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [first]="first"
+    styleClass="p-datatable-gridlines"
+    [responsiveLayout]="'scroll'"
+    (onPage)="onPageChange($event)"
+    (onSort)="onSort($event)"
+    [lazy]="true"
+    [loading]="isLoading"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>
+          Reporte Generado
+        </th>
+
+        <th pSortableColumn="createdAt">
+          Fechas del Reporte
+          <p-sortIcon field="createdAt"></p-sortIcon>
+        </th>
+
+        <th>
+          Usuario
+        </th>
+
+        <th pSortableColumn="state">
+          Estado <p-sortIcon field="state"></p-sortIcon>
+        </th>
+        <th>Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-item>
+      <tr>
+        <td>{{ item.bookName }}</td>
+
+        <td>
+          <div class="flex flex-col gap-1">
+            <span class="text-sm">{{ item.reportPeriodLabel }}</span>
+            <span class="text-xs text-gray-500">
+              Evento: {{ item.generationDate | date : "dd/MM/yyyy hh:mm a" }}
+            </span>
+          </div>
+        </td>
+
+        <td>{{ item.user }}</td>
+
+        <td>
+          <p-tag
+            [value]="getStatusLabel(item.status)"
+            [severity]="getStatusSeverity(item.status)"
+          ></p-tag>
+        </td>
+        <td>
+          <div class="flex justify-center gap-2">
+            <button
+              pButton
+              pRipple
+              icon="pi pi-download"
+              class="p-button-rounded p-button-success p-button-text"
+              [pTooltip]="isCompletedStatus(item.status) ? 'Descargar' : 'Aun se esta generando'"
+              tooltipPosition="top"
+              [disabled]="isDownloading"
+              (click)="downloadReport(item)"
+            ></button>
+            <button
+              pButton
+              pRipple
+              icon="pi pi-eye"
+              class="p-button-rounded p-button-success p-button-text"
+              pTooltip="Detalles"
+              tooltipPosition="top"
+              (click)="showDetails(item)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr style="height: 200px">
+        <td colspan="5">
+          <div class="flex flex-col items-center justify-center h-full">
+            <p class="text-sm text-gray-600 max-w-md text-center">
+              NO HAY INFORMACION PARA MOSTRAR
+            </p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+
+

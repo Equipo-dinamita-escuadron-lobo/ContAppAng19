@@ -1,0 +1,23 @@
+/* Celdas clickeables de la columna Documento */
+.auxbook-table .doc-cell {
+  cursor: pointer;
+  color: var(--color-primary, #1a1f72);
+  font-weight: 600;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.auxbook-table .doc-cell:hover {
+  background-color: rgba(80, 86, 172, 0.08);
+  text-decoration: underline;
+}
+
+.auxbook-table .doc-cell-disabled {
+  cursor: default;
+  color: inherit;
+  font-weight: inherit;
+}
+
+.auxbook-table .doc-cell-disabled:hover {
+  background-color: transparent;
+  text-decoration: none;
+}

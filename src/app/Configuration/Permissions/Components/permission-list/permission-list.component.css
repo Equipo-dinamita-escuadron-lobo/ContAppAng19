@@ -1,0 +1,21 @@
+/* Título de los módulos (menos intenso que font-bold) */
+.module-title {
+  font-weight: 600; /* semibold */
+  color: #374151; /* gray-800 */
+  margin-bottom: 0.25rem; /* espaciado inferior */
+}
+
+/* Lista de permisos alineada con el módulo */
+.permissions-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: disc;
+  list-style-position: inside;
+  font-size: 0.875rem; /* text-sm */
+  color: #374151; /* text-gray-700 */
+}
+
+/* Espaciado entre cada permiso */
+.permissions-list li {
+  margin: 2px 0;
+}

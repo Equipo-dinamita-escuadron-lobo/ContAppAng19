@@ -1,0 +1,236 @@
+<div class="container-fluid p-4">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-[var(--color-primary)] mb-2 inline-block">
+        Vencimiento por edades
+      </h1>
+      <app-contextual-help
+        class="ml-2 inline-flex align-middle"
+        [title]="help.title"
+        [summary]="help.summary"
+        [helpCenterSlug]="help.slug">
+      </app-contextual-help>
+      <p class="text-gray-600">
+        Obligaciones de proveedores con saldo pendiente, agrupadas por días de mora a la fecha de corte
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <p-button
+        label="Exportar PDF"
+        icon="pi pi-file-pdf"
+        severity="danger"
+        [outlined]="true"
+        [loading]="exportingPdf"
+        [disabled]="!reportData?.lines?.length"
+        (onClick)="exportToPdf()">
+      </p-button>
+      <p-button
+        label="Exportar CSV"
+        icon="pi pi-file-excel"
+        severity="success"
+        [outlined]="true"
+        [loading]="exportingCsv"
+        [disabled]="!reportData?.lines?.length"
+        (onClick)="exportToCsv()">
+      </p-button>
+    </div>
+  </div>
+
+  <p-card header="Filtros" class="mb-4">
+    <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-2">
+        <label for="supplierId" class="font-semibold text-[var(--color-primary)]">Proveedor</label>
+        <p-dropdown
+          id="supplierId"
+          formControlName="supplierId"
+          [options]="supplierOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos los proveedores"
+          [showClear]="true"
+          [filter]="true"
+          filterBy="label"
+          (onChange)="onGenerateReport()"
+          styleClass="w-full">
+        </p-dropdown>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="cutoffDate" class="font-semibold text-[var(--color-primary)]">
+          Fecha de corte <span class="text-red-500">*</span>
+        </label>
+        <p-calendar
+          id="cutoffDate"
+          formControlName="cutoffDate"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          placeholder="dd/mm/aaaa"
+          styleClass="w-full">
+        </p-calendar>
+        <small class="text-gray-500">Fecha contra la que se calculan los días de mora</small>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label class="font-semibold text-[var(--color-primary)]">Detalle por factura</label>
+        <div class="flex items-center gap-3 mt-2">
+          <p-inputSwitch formControlName="includeDocuments"></p-inputSwitch>
+          <span class="text-sm text-gray-600">
+            {{ filterForm.get('includeDocuments')?.value ? 'Mostrar columnas de documento' : 'Solo montos por edad' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2 md:col-span-2">
+        <div class="flex gap-2 justify-end">
+          <p-button
+            label="Generar reporte"
+            icon="pi pi-chart-bar"
+            severity="success"
+            (onClick)="onGenerateReport()"
+            [loading]="loading">
+          </p-button>
+          <p-button
+            label="Limpiar filtros"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="clearFilters()">
+          </p-button>
+        </div>
+      </div>
+    </form>
+  </p-card>
+
+  <p-card header="Reporte de vencimientos" class="mb-4" *ngIf="reportData">
+    <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+      <div class="flex flex-wrap justify-between gap-3 items-center">
+        <div>
+          <span class="font-semibold text-gray-700">Proveedor:</span>
+          <span class="ml-2 text-gray-900">{{ reportData.supplierName }}</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Fecha de corte:</span>
+          <span class="ml-2 text-gray-900">{{ formatDate(reportData.reportDate) }}</span>
+        </div>
+        <div>
+          <span class="font-semibold text-gray-700">Obligaciones:</span>
+          <span class="ml-2 text-gray-900">{{ reportData.lines.length }}</span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="reportData.lines"
+      [loading]="loading"
+      styleClass="p-datatable-striped"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20, 50]"
+      [tableStyle]="{ 'min-width': '1100px' }">
+      <ng-template pTemplate="header">
+        <tr>
+          <th *ngIf="filterForm.get('includeDocuments')?.value">Factura</th>
+          <th *ngIf="filterForm.get('includeDocuments')?.value">Proveedor</th>
+          <th>Cuenta CxP</th>
+          <th *ngIf="filterForm.get('includeDocuments')?.value">Vence</th>
+          <th *ngIf="filterForm.get('includeDocuments')?.value" class="text-right">Días mora</th>
+          <th class="text-right">Total</th>
+          <th class="text-right">Corriente</th>
+          <th class="text-right">1 a 30</th>
+          <th class="text-right">31 a 60</th>
+          <th class="text-right">61 a 90</th>
+          <th class="text-right">Más de 90</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-line>
+        <tr>
+          <td *ngIf="filterForm.get('includeDocuments')?.value">
+            <span class="font-mono font-semibold text-blue-600">{{ line.reference }}</span>
+          </td>
+          <td *ngIf="filterForm.get('includeDocuments')?.value">
+            {{ supplierName(line.supplierId) }}
+          </td>
+          <td>
+            <span class="font-semibold text-gray-800">{{ line.accountDescription }}</span>
+          </td>
+          <td *ngIf="filterForm.get('includeDocuments')?.value">{{ formatDate(line.dueDate) }}</td>
+          <td *ngIf="filterForm.get('includeDocuments')?.value" class="text-right">{{ line.daysOverdue }}</td>
+          <td class="text-right font-semibold text-blue-600">{{ formatCurrency(line.totalDue) }}</td>
+          <td class="text-right" [class.text-green-600]="line.current > 0">{{ formatCurrency(line.current) }}</td>
+          <td class="text-right" [class.text-orange-600]="line.days1to30 > 0">{{ formatCurrency(line.days1to30) }}</td>
+          <td class="text-right" [class.text-red-600]="line.days31to60 > 0">{{ formatCurrency(line.days31to60) }}</td>
+          <td class="text-right" [class.text-red-800]="line.days61to90 > 0">{{ formatCurrency(line.days61to90) }}</td>
+          <td class="text-right" [class.text-purple-700]="line.days91Plus > 0">{{ formatCurrency(line.days91Plus) }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="footer">
+        <tr class="bg-blue-50 font-bold" *ngIf="reportData.lines.length">
+          <td
+            [attr.colspan]="filterForm.get('includeDocuments')?.value ? 5 : 1"
+            class="text-right">
+            TOTALES:
+          </td>
+          <td class="text-right text-blue-700">{{ formatCurrency(reportData.totals.totalDue) }}</td>
+          <td class="text-right text-green-700">{{ formatCurrency(reportData.totals.current) }}</td>
+          <td class="text-right text-orange-700">{{ formatCurrency(reportData.totals.days1to30) }}</td>
+          <td class="text-right text-red-700">{{ formatCurrency(reportData.totals.days31to60) }}</td>
+          <td class="text-right text-red-900">{{ formatCurrency(reportData.totals.days61to90) }}</td>
+          <td class="text-right text-purple-700">{{ formatCurrency(reportData.totals.days91Plus) }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="filterForm.get('includeDocuments')?.value ? 11 : 6" class="text-center py-8">
+            <i class="pi pi-inbox text-4xl text-gray-400 mb-3 block"></i>
+            <p class="text-lg font-semibold text-gray-600 mb-1">{{ emptyFiltersMessage }}</p>
+            <p class="text-gray-500">Ajuste los filtros o genere el reporte con otros criterios</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4" *ngIf="reportData">
+    <p-card>
+      <div class="text-center">
+        <h3 class="text-xl font-bold text-gray-800">{{ formatCurrency(reportData.totals.totalDue) }}</h3>
+        <p class="text-gray-600">Total a pagar</p>
+      </div>
+    </p-card>
+    <p-card>
+      <div class="text-center">
+        <h3 class="text-xl font-bold text-green-700">{{ formatCurrency(reportData.totals.current) }}</h3>
+        <p class="text-gray-600">Corriente</p>
+      </div>
+    </p-card>
+    <p-card>
+      <div class="text-center">
+        <h3 class="text-xl font-bold text-orange-600">{{ formatCurrency(reportData.totals.days1to30) }}</h3>
+        <p class="text-gray-600">1 a 30 días</p>
+      </div>
+    </p-card>
+    <p-card>
+      <div class="text-center">
+        <h3 class="text-xl font-bold text-red-600">{{ formatCurrency(reportData.totals.days31to60) }}</h3>
+        <p class="text-gray-600">31 a 60 días</p>
+      </div>
+    </p-card>
+    <p-card>
+      <div class="text-center">
+        <h3 class="text-xl font-bold text-red-800">{{ formatCurrency(reportData.totals.days61to90) }}</h3>
+        <p class="text-gray-600">61 a 90 días</p>
+      </div>
+    </p-card>
+    <p-card>
+      <div class="text-center">
+        <h3 class="text-xl font-bold text-purple-700">{{ formatCurrency(reportData.totals.days91Plus) }}</h3>
+        <p class="text-gray-600">Más de 90 días</p>
+      </div>
+    </p-card>
+  </div>
+
+  <p-toast></p-toast>
+</div>
