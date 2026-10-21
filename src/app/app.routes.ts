@@ -229,7 +229,7 @@ export const routes: Routes = [
                 },
                 loadComponent: () =>
                   import(
-                    './Configuration/Audit/Components/audit-hub/audit-hub.component'
+                    './Audit/Components/audit-hub/audit-hub.component'
                   ).then((m) => m.AuditHubComponent),
               },
               {
@@ -237,7 +237,7 @@ export const routes: Routes = [
                 data: { breadcrumb: 'Sesiones' },
                 loadComponent: () =>
                   import(
-                    './Configuration/Audit/Components/audit-session/audit-session.component'
+                    './Audit/Components/audit-session/audit-session.component'
                   ).then((m) => m.AuditSessionComponent),
               },
               {
@@ -245,7 +245,7 @@ export const routes: Routes = [
                 data: { breadcrumb: 'Operaciones' },
                 loadComponent: () =>
                   import(
-                    './Configuration/Audit/Components/audit-operations/audit-operations.component'
+                    './Audit/Components/audit-operations/audit-operations.component'
                   ).then((m) => m.AuditOperationsComponent),
               },
               {
@@ -253,7 +253,7 @@ export const routes: Routes = [
                 data: { breadcrumb: 'Documentos Contables' },
                 loadComponent: () =>
                   import(
-                    './Configuration/Audit/Components/audit-accounting-documents/audit-accounting-documents.component'
+                    './Audit/Components/audit-accounting-documents/audit-accounting-documents.component'
                   ).then((m) => m.AuditAccountingDocumentsComponent),
               },
               {
@@ -261,7 +261,7 @@ export const routes: Routes = [
                 data: { breadcrumb: 'Consecutivos' },
                 loadComponent: () =>
                   import(
-                    './Configuration/Audit/Components/audit-consecutive/audit-consecutive.component'
+                    './Audit/Components/audit-consecutive/audit-consecutive.component'
                   ).then((m) => m.AuditConsecutiveComponent),
               },
             ],
@@ -1287,6 +1287,14 @@ export const routes: Routes = [
               ).then((m) =>m.CreateNonCommercialComponent)
           }
         ],
+      },
+      {
+        path: 'billing',
+        data: {
+          breadcrumb: 'Facturación',
+        },
+        loadChildren: () =>
+          import('./routes/billing.routes').then((m) => m.BILLING_ROUTES),
       },
     ],
   },

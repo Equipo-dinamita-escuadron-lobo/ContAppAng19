@@ -37,7 +37,6 @@
                 <span class="input-icon pi pi-envelope"></span>
               </div>
             </div>
-          </div>
           <!-- Contraseña -->
           <div class="form-group">
             <label for="password" class="loginfields">
@@ -47,6 +46,7 @@
               <input [type]="showPassword ? 'text' : 'password'" id="password" placeholder="**********" required formControlName="password" />
               <span class="input-icon" [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" (click)="togglePassword()" style="cursor:pointer"></span>
             </div>
+          </div>
             <!-- Botón ingresar -->
             <div class="form-submit">
               <button type="submit" [disabled]="loginForm.invalid">
