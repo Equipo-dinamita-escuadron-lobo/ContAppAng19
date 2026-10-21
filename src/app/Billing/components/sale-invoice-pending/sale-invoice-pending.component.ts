@@ -1,15 +1,19 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService, SharedModule } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DropdownModule } from 'primeng/dropdown';
 import { TableModule } from 'primeng/table';
 import { firstValueFrom } from 'rxjs';
 import { SaleInvoice, SaleInvoiceLineInput } from '../../models/billing-sale-invoice.model';
+import { DOCUMENT_KIND_CONFIG, DocumentKind, KIND_FILTER_OPTIONS } from '../../models/document-kind';
 import { CopCentsPipe } from '../../pipes/cop-cents.pipe';
 import { BillingSaleInvoiceApi } from '../../services/billing-sale-invoice.api';
 import { calcTotals } from '../../utils/money';
+import { BillingKindTagComponent } from '../billing-kind-tag/billing-kind-tag.component';
 
 const todayIso = (): string => {
   const d = new Date();
@@ -17,10 +21,20 @@ const todayIso = (): string => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
-// Lista solo los borradores para retomarlos, duplicarlos o eliminarlos
+// Lista los borradores de venta y de compra para retomarlos, duplicarlos o eliminarlos
 @Component({
   selector: 'app-sale-invoice-pending',
-  imports: [DatePipe, ButtonModule, TableModule, ConfirmDialogModule, SharedModule, CopCentsPipe],
+  imports: [
+    DatePipe,
+    FormsModule,
+    ButtonModule,
+    DropdownModule,
+    TableModule,
+    ConfirmDialogModule,
+    SharedModule,
+    CopCentsPipe,
+    BillingKindTagComponent,
+  ],
   providers: [ConfirmationService],
   templateUrl: './sale-invoice-pending.component.html',
 })
@@ -33,6 +47,13 @@ export class SaleInvoicePendingComponent implements OnInit {
   drafts = signal<SaleInvoice[]>([]);
   loading = signal(true);
   busy = signal(false);
+  kindFilter = signal<DocumentKind | null>(null);
+  readonly kindOptions = KIND_FILTER_OPTIONS;
+
+  filtered = computed(() => {
+    const kind = this.kindFilter();
+    return kind ? this.drafts().filter((d) => d.kind === kind) : this.drafts();
+  });
 
   ngOnInit(): void {
     this.load();
@@ -49,14 +70,18 @@ export class SaleInvoicePendingComponent implements OnInit {
     return calcTotals(invoice.lines).totalCents;
   }
 
+  counterpartyOf(invoice: SaleInvoice): string {
+    return invoice.clientName ?? `Sin ${DOCUMENT_KIND_CONFIG[invoice.kind].counterpartyLower}`;
+  }
+
   continue(invoice: SaleInvoice): void {
-    this.router.navigate(['/billing/sale', invoice.id]);
+    this.router.navigate([DOCUMENT_KIND_CONFIG[invoice.kind].basePath, invoice.id]);
   }
 
   confirmDuplicate(invoice: SaleInvoice): void {
     this.confirmation.confirm({
       header: 'Duplicar borrador',
-      message: 'Se creará un nuevo borrador con el mismo cliente y las mismas líneas. ¿Continuar?',
+      message: `Se creará un nuevo borrador con el mismo ${DOCUMENT_KIND_CONFIG[invoice.kind].counterpartyLower} y las mismas líneas. ¿Continuar?`,
       acceptLabel: 'Duplicar',
       rejectLabel: 'Cancelar',
       accept: () => this.duplicate(invoice),
@@ -80,13 +105,16 @@ export class SaleInvoicePendingComponent implements OnInit {
 
   // El duplicado es un borrador nuevo (sin id ni número) con fecha de hoy; conserva los valores
   // efectivos de cada línea (precio e IVA editados). Las referencias de catálogo las vuelve a fijar la API.
+  // No copia el N.º de factura del proveedor: cada factura de compra tiene el suyo.
   private async duplicate(invoice: SaleInvoice): Promise<void> {
     this.busy.set(true);
     try {
       const lines: SaleInvoiceLineInput[] = invoice.lines.map(
         ({ precioCatalogoCents, ivaCatalogoPct, ...line }) => line,
       );
-      await firstValueFrom(this.api.saveDraft({ clientId: invoice.clientId, date: todayIso(), lines }));
+      await firstValueFrom(
+        this.api.saveDraft({ kind: invoice.kind, clientId: invoice.clientId, date: todayIso(), lines }),
+      );
       this.toast('success', 'Borrador duplicado', 'Se creó un nuevo borrador con los mismos datos.');
       this.load();
     } catch (e) {

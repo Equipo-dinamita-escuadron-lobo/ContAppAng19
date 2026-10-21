@@ -9,11 +9,14 @@ import { DropdownModule } from 'primeng/dropdown';
 import { TableModule } from 'primeng/table';
 import { firstValueFrom } from 'rxjs';
 import { INVOICE_STATUS_LABEL, InvoiceStatus, SaleInvoice } from '../../models/billing-sale-invoice.model';
+import { DOCUMENT_KIND_CONFIG, DocumentKind, KIND_FILTER_OPTIONS } from '../../models/document-kind';
 import { CopCentsPipe } from '../../pipes/cop-cents.pipe';
 import { BillingSaleInvoiceApi } from '../../services/billing-sale-invoice.api';
 import { calcTotals } from '../../utils/money';
+import { BillingKindTagComponent } from '../billing-kind-tag/billing-kind-tag.component';
 import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-status-badge.component';
 
+// Listado de facturas de venta y de compra (filtro por estado y por tipo)
 @Component({
   selector: 'app-sale-invoice-list',
   imports: [
@@ -24,6 +27,7 @@ import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-sta
     DropdownModule,
     TableModule,
     CopCentsPipe,
+    BillingKindTagComponent,
     BillingStatusBadgeComponent,
   ],
   templateUrl: './sale-invoice-list.component.html',
@@ -36,6 +40,8 @@ export class SaleInvoiceListComponent implements OnInit {
   invoices = signal<SaleInvoice[]>([]);
   loading = signal(true);
   statusFilter = signal<InvoiceStatus | null>(null);
+  kindFilter = signal<DocumentKind | null>(null);
+  readonly kindOptions = KIND_FILTER_OPTIONS;
 
   readonly statusOptions = [
     { label: 'Todos los estados', value: null },
@@ -47,7 +53,8 @@ export class SaleInvoiceListComponent implements OnInit {
 
   filtered = computed(() => {
     const status = this.statusFilter();
-    return status ? this.invoices().filter((i) => i.status === status) : this.invoices();
+    const kind = this.kindFilter();
+    return this.invoices().filter((i) => (!status || i.status === status) && (!kind || i.kind === kind));
   });
 
   // Diálogo de anulación
@@ -63,8 +70,12 @@ export class SaleInvoiceListComponent implements OnInit {
     return calcTotals(invoice.lines).totalCents;
   }
 
+  counterpartyOf(invoice: SaleInvoice): string {
+    return invoice.clientName ?? `Sin ${DOCUMENT_KIND_CONFIG[invoice.kind].counterpartyLower}`;
+  }
+
   view(invoice: SaleInvoice): void {
-    this.router.navigate(['/billing/sale', invoice.id]);
+    this.router.navigate([DOCUMENT_KIND_CONFIG[invoice.kind].basePath, invoice.id]);
   }
 
   goBack(): void {

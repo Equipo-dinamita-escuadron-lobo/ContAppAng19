@@ -19,7 +19,9 @@ import {
   SaleInvoiceLine,
 } from '../../models/billing-sale-invoice.model';
 import { ReturnAvailabilityLine, SaleReturn } from '../../models/billing-sale-return.model';
+import { DOCUMENT_KIND_CONFIG, DocumentKind } from '../../models/document-kind';
 import { CopCentsPipe } from '../../pipes/cop-cents.pipe';
+import { BillingCounterpartyCatalog } from '../../services/billing-counterparty-catalog';
 import { BillingProductCatalog } from '../../services/billing-product-catalog';
 import { BillingSaleInvoiceApi } from '../../services/billing-sale-invoice.api';
 import { BillingSaleReturnApi } from '../../services/billing-sale-return.api';
@@ -40,6 +42,9 @@ const todayIso = (): string => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
+// Formulario de factura de venta Y de compra. El tipo llega por `data.kind` de la ruta
+// (sale/* o purchase/*) y, al cargar una factura existente, prevalece el de la factura.
+// clientId/clientName = contraparte: cliente en ventas, proveedor en compras.
 @Component({
   selector: 'app-sale-invoice-form',
   imports: [
@@ -63,6 +68,7 @@ const todayIso = (): string => {
 export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
   private readonly api = inject(BillingSaleInvoiceApi);
   private readonly catalog = inject(BillingProductCatalog);
+  private readonly counterpartyCatalog = inject(BillingCounterpartyCatalog);
   private readonly returnApi = inject(BillingSaleReturnApi);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -76,10 +82,13 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
   clients = signal<BillingClient[]>([]);
 
   // Estado de la factura
+  kind = signal<DocumentKind>('SALE');
+  cfg = computed(() => DOCUMENT_KIND_CONFIG[this.kind()]);
   invoiceId = signal<string | null>(null);
   number = signal<string | null>(null);
   status = signal<InvoiceStatus>('BORRADOR');
   clientId = signal<string | null>(null);
+  supplierInvoiceNumber = signal<string>(''); // solo compras
   date = signal<string>(todayIso());
   lines = signal<SaleInvoiceLine[]>([]);
   annulReason = signal<string | null>(null);
@@ -116,8 +125,9 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
   private saveChain: Promise<unknown> = Promise.resolve();
 
   ngOnInit(): void {
+    this.kind.set(this.route.snapshot.data['kind'] ?? 'SALE');
     this.loadProducts();
-    this.api.getClients().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((c) => this.clients.set(c));
+    this.loadCounterparties();
 
     this.autosave$
       .pipe(debounceTime(AUTOSAVE_DEBOUNCE_MS), takeUntilDestroyed(this.destroyRef))
@@ -133,6 +143,12 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (invoice) => {
+          // La factura manda: si la ruta no coincide con su tipo, se recargan los catálogos del tipo real
+          if (invoice.kind !== this.kind()) {
+            this.kind.set(invoice.kind);
+            this.loadProducts();
+            this.loadCounterparties();
+          }
           this.applyInvoice(invoice);
           this.loading.set(false);
           if (invoice.status !== 'BORRADOR') this.loadReturns(invoice);
@@ -164,7 +180,7 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
   }
 
   newReturn(): void {
-    this.router.navigate(['/billing/sale', this.invoiceId(), 'return', 'new']);
+    this.router.navigate([this.cfg().basePath, this.invoiceId(), 'return', 'new']);
   }
 
   openReturn(saleReturn: SaleReturn): void {
@@ -187,7 +203,7 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
 
   private loadProducts(): void {
     this.catalog
-      .getProducts()
+      .getProducts(this.kind())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((p) => {
         this.products.set(p);
@@ -195,6 +211,13 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
           this.selectedProductId = null;
         }
       });
+  }
+
+  private loadCounterparties(): void {
+    this.counterpartyCatalog
+      .getCounterparties(this.kind())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((c) => this.clients.set(c));
   }
 
   // Al volver de crear/editar productos (pestaña o ventana recupera el foco) se recarga
@@ -210,7 +233,7 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
     this.busy.set(true);
     try {
       await this.persist(); // vacía el autosave pendiente; no crea borrador si está vacío
-      const returnTo = this.invoiceId() ? `/billing/sale/${this.invoiceId()}` : '/billing/sale/new';
+      const returnTo = `${this.cfg().basePath}/${this.invoiceId() ?? 'new'}`;
       await this.router.navigate(['/gen-masters/inventory/products/list'], {
         queryParams: buildReturnQuery(returnTo),
       });
@@ -225,6 +248,11 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
 
   onClientChange(id: string | null): void {
     this.clientId.set(id);
+    this.markDirty();
+  }
+
+  onSupplierInvoiceNumberChange(value: string): void {
+    this.supplierInvoiceNumber.set(value ?? '');
     this.markDirty();
   }
 
@@ -360,7 +388,10 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
   }
 
   private validateForEmit(): string | null {
-    if (!this.clientId()) return 'Debes seleccionar un cliente.';
+    if (!this.clientId()) return `Debes seleccionar un ${this.cfg().counterpartyLower}.`;
+    if (this.kind() === 'PURCHASE' && !this.supplierInvoiceNumber().trim()) {
+      return 'Debes ingresar el N.º de factura del proveedor.';
+    }
     if (this.lines().length === 0) return 'Agrega al menos una línea a la factura.';
     if (this.lines().some((l) => !(l.cantidad > 0))) return 'Todas las líneas deben tener cantidad mayor a cero.';
     return null;
@@ -380,7 +411,11 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
   /** Encola un guardado del estado ACTUAL del formulario. `force` guarda aunque no haya cambios. */
   private persist(force = false): Promise<SaleInvoice | null> {
     const run = async (): Promise<SaleInvoice | null> => {
-      const hasContent = !!this.invoiceId() || !!this.clientId() || this.lines().length > 0;
+      const hasContent =
+        !!this.invoiceId() ||
+        !!this.clientId() ||
+        !!this.supplierInvoiceNumber().trim() ||
+        this.lines().length > 0;
       if ((!this.dirty && !force) || !hasContent) {
         this.dirty = false;
         this.saveState.set(this.invoiceId() ? 'saved' : 'idle');
@@ -392,15 +427,17 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
         const saved = await firstValueFrom(
           this.api.saveDraft({
             id: this.invoiceId() ?? undefined,
+            kind: this.kind(),
             clientId: this.clientId(),
+            supplierInvoiceNumber: this.supplierInvoiceNumber(),
             date: this.date(),
             lines: this.lines(),
           }),
         );
         if (!this.invoiceId()) {
           this.invoiceId.set(saved.id);
-          // Cambia la URL a /sale/:id sin recrear el componente
-          this.location.replaceState(`/billing/sale/${saved.id}`);
+          // Cambia la URL a /sale/:id (o /purchase/:id) sin recrear el componente
+          this.location.replaceState(`${this.cfg().basePath}/${saved.id}`);
         }
         // Si el usuario siguió editando durante el guardado, queda pendiente
         this.saveState.set(this.dirty ? 'pending' : 'saved');
@@ -421,6 +458,7 @@ export class SaleInvoiceFormComponent implements OnInit, OnDestroy {
     this.number.set(invoice.number);
     this.status.set(invoice.status);
     this.clientId.set(invoice.clientId);
+    this.supplierInvoiceNumber.set(invoice.supplierInvoiceNumber ?? '');
     this.date.set(invoice.date);
     this.lines.set(invoice.lines);
     this.annulReason.set(invoice.annulReason ?? null);

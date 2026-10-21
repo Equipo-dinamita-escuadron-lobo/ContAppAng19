@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, defer, delay, of, switchMap } from 'rxjs';
+import { Observable, defer, delay, forkJoin, of, switchMap } from 'rxjs';
 import {
   BillingClient,
   BillingProduct,
@@ -7,32 +7,29 @@ import {
   SaleInvoice,
   SaleInvoiceDraftInput,
 } from '../models/billing-sale-invoice.model';
+import { DOCUMENT_KIND_CONFIG, DocumentKind } from '../models/document-kind';
+import { BillingCounterpartyCatalog } from './billing-counterparty-catalog';
 import { BillingProductCatalog } from './billing-product-catalog';
 import { BillingSaleInvoiceApi } from './billing-sale-invoice.api';
 import { hasEmittedReturns } from './sale-return-store';
 
 const INVOICES_KEY = 'billing_sale_invoices';
-const SEQUENCE_KEY = 'billing_sale_invoice_seq';
+// Secuencia independiente por tipo (la de venta conserva su clave histórica)
+const SEQUENCE_KEY: Record<DocumentKind, string> = {
+  SALE: 'billing_sale_invoice_seq',
+  PURCHASE: 'billing_purchase_invoice_seq',
+};
 const LATENCY_MS = 200;
-
-const MOCK_CLIENTS: BillingClient[] = [
-  { id: 'c1', name: 'Distribuidora El Dorado S.A.S.', document: 'NIT 900.123.456-7' },
-  { id: 'c2', name: 'Papelería Central Ltda.', document: 'NIT 800.987.654-3' },
-  { id: 'c3', name: 'María Fernanda Ortiz', document: 'CC 1.061.234.567' },
-  { id: 'c4', name: 'Comercializadora Andina S.A.', document: 'NIT 901.555.222-1' },
-];
 
 // Implementación simulada: persiste en localStorage y responde con una latencia pequeña.
 // Las escrituras ocurren de forma síncrona al llamar, así un guardado disparado al
 // destruir el componente no se pierde aunque nadie espere la respuesta.
+// Facturas de venta y de compra comparten almacén; se distinguen por `kind`.
 @Injectable()
 export class MockBillingSaleInvoiceApi extends BillingSaleInvoiceApi {
   // Las referencias de catálogo de cada línea se resuelven con el catálogo real de productos
   private readonly catalog = inject(BillingProductCatalog);
-
-  getClients(): Observable<BillingClient[]> {
-    return of(structuredClone(MOCK_CLIENTS)).pipe(delay(LATENCY_MS));
-  }
+  private readonly counterparties = inject(BillingCounterpartyCatalog);
 
   list(status?: InvoiceStatus): Observable<SaleInvoice[]> {
     return defer(() => {
@@ -48,15 +45,25 @@ export class MockBillingSaleInvoiceApi extends BillingSaleInvoiceApi {
   }
 
   saveDraft(input: SaleInvoiceDraftInput): Observable<SaleInvoice> {
-    const catalog$ = input.lines.length > 0 ? this.catalog.getProducts() : of<BillingProduct[]>([]);
-    return catalog$.pipe(switchMap((catalog) => this.writeDraft(input, catalog)));
+    return defer(() => {
+      // Al actualizar prevalece el kind guardado; los catálogos se piden según ese kind
+      const kind = input.id ? this.findOrThrow(this.readAll(), input.id).kind : input.kind;
+      return forkJoin([
+        input.lines.length > 0 ? this.catalog.getProducts(kind) : of<BillingProduct[]>([]),
+        this.counterparties.getCounterparties(kind),
+      ]).pipe(switchMap(([catalog, counterparties]) => this.writeDraft(input, catalog, counterparties)));
+    });
   }
 
-  private writeDraft(input: SaleInvoiceDraftInput, catalog: BillingProduct[]): Observable<SaleInvoice> {
+  private writeDraft(
+    input: SaleInvoiceDraftInput,
+    catalog: BillingProduct[],
+    counterparties: BillingClient[],
+  ): Observable<SaleInvoice> {
     return defer(() => {
       const all = this.readAll();
       const now = new Date().toISOString();
-      const client = MOCK_CLIENTS.find((c) => c.id === input.clientId);
+      const client = counterparties.find((c) => c.id === input.clientId);
 
       let invoice: SaleInvoice;
       if (input.id) {
@@ -67,6 +74,7 @@ export class MockBillingSaleInvoiceApi extends BillingSaleInvoiceApi {
           id: crypto.randomUUID(),
           number: null,
           status: 'BORRADOR',
+          kind: input.kind,
           clientId: null,
           clientName: null,
           date: input.date,
@@ -79,6 +87,7 @@ export class MockBillingSaleInvoiceApi extends BillingSaleInvoiceApi {
 
       invoice.clientId = client?.id ?? null;
       invoice.clientName = client?.name ?? null;
+      if (invoice.kind === 'PURCHASE') invoice.supplierInvoiceNumber = input.supplierInvoiceNumber?.trim() || null;
       invoice.date = input.date;
       const previousLines = invoice.lines;
       invoice.lines = input.lines.map((l) => {
@@ -124,14 +133,19 @@ export class MockBillingSaleInvoiceApi extends BillingSaleInvoiceApi {
       this.assertDraft(invoice);
 
       // Las mismas reglas que validará el backend real
-      if (!invoice.clientId) throw new Error('Debes seleccionar un cliente.');
+      if (!invoice.clientId) {
+        throw new Error(`Debes seleccionar un ${DOCUMENT_KIND_CONFIG[invoice.kind].counterpartyLower}.`);
+      }
+      if (invoice.kind === 'PURCHASE' && !invoice.supplierInvoiceNumber?.trim()) {
+        throw new Error('Debes ingresar el N.º de factura del proveedor.');
+      }
       if (invoice.lines.length === 0) throw new Error('La factura debe tener al menos una línea.');
       if (invoice.lines.some((l) => !(l.cantidad > 0))) {
         throw new Error('Todas las líneas deben tener cantidad mayor a cero.');
       }
 
       const now = new Date().toISOString();
-      invoice.number = this.nextNumber();
+      invoice.number = this.nextNumber(invoice.kind);
       invoice.status = 'EMITIDA';
       invoice.emittedAt = now;
       invoice.updatedAt = now;
@@ -168,8 +182,10 @@ export class MockBillingSaleInvoiceApi extends BillingSaleInvoiceApi {
   private readAll(): SaleInvoice[] {
     try {
       const invoices = JSON.parse(localStorage.getItem(INVOICES_KEY) ?? '[]') as SaleInvoice[];
-      // Migración: facturas guardadas antes de existir ivaCatalogoPct
       for (const inv of invoices) {
+        // Migración: facturas guardadas antes de existir `kind` son de venta
+        inv.kind ??= 'SALE';
+        // Migración: facturas guardadas antes de existir ivaCatalogoPct
         for (const line of inv.lines) {
           line.ivaCatalogoPct ??= line.ivaPct;
         }
@@ -184,10 +200,11 @@ export class MockBillingSaleInvoiceApi extends BillingSaleInvoiceApi {
     localStorage.setItem(INVOICES_KEY, JSON.stringify(invoices));
   }
 
-  private nextNumber(): string {
-    const next = Number(localStorage.getItem(SEQUENCE_KEY) ?? '0') + 1;
-    localStorage.setItem(SEQUENCE_KEY, String(next));
-    return `FV-${String(next).padStart(6, '0')}`;
+  private nextNumber(kind: DocumentKind): string {
+    const key = SEQUENCE_KEY[kind];
+    const next = Number(localStorage.getItem(key) ?? '0') + 1;
+    localStorage.setItem(key, String(next));
+    return `${DOCUMENT_KIND_CONFIG[kind].invoicePrefix}${String(next).padStart(6, '0')}`;
   }
 
   private findOrThrow(all: SaleInvoice[], id: string): SaleInvoice {

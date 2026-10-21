@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { BillingCounterpartyCatalog } from '../Billing/services/billing-counterparty-catalog';
+import { MockBillingCounterpartyCatalog } from '../Billing/services/mock-billing-counterparty-catalog';
 import { BillingProductCatalog } from '../Billing/services/billing-product-catalog';
 import { MockBillingProductCatalog } from '../Billing/services/mock-billing-product-catalog';
 import { BillingSaleInvoiceApi } from '../Billing/services/billing-sale-invoice.api';
@@ -17,6 +19,8 @@ export const BILLING_ROUTES: Routes = [
       { provide: BillingSaleReturnApi, useClass: MockBillingSaleReturnApi },
       // Catálogo con datos quemados. Para usar los productos reales: InventoryBillingProductCatalog
       { provide: BillingProductCatalog, useClass: MockBillingProductCatalog },
+      // Clientes (venta) y proveedores (compra) con datos quemados
+      { provide: BillingCounterpartyCatalog, useClass: MockBillingCounterpartyCatalog },
     ],
     children: [
       {
@@ -35,17 +39,34 @@ export const BILLING_ROUTES: Routes = [
             (m) => m.SaleInvoicePendingComponent,
           ),
       },
+      // Compra y venta usan los mismos componentes; `data.kind` define el tipo de documento
       {
         path: 'purchase/new',
-        data: { breadcrumb: 'Nueva Factura Compra', title: 'Nueva Factura Compra' },
+        data: { breadcrumb: 'Nueva Factura Compra', title: 'Nueva Factura Compra', kind: 'PURCHASE' },
         loadComponent: () =>
-          import('../Billing/components/billing-placeholder/billing-placeholder.component').then(
-            (m) => m.BillingPlaceholderComponent,
+          import('../Billing/components/sale-invoice-form/sale-invoice-form.component').then(
+            (m) => m.SaleInvoiceFormComponent,
+          ),
+      },
+      {
+        path: 'purchase/:id',
+        data: { breadcrumb: 'Factura Compra', title: 'Factura Compra', kind: 'PURCHASE' },
+        loadComponent: () =>
+          import('../Billing/components/sale-invoice-form/sale-invoice-form.component').then(
+            (m) => m.SaleInvoiceFormComponent,
+          ),
+      },
+      {
+        path: 'purchase/:invoiceId/return/new',
+        data: { breadcrumb: 'Nueva Devolución', title: 'Nueva devolución de compra', kind: 'PURCHASE' },
+        loadComponent: () =>
+          import('../Billing/components/sale-return-form/sale-return-form.component').then(
+            (m) => m.SaleReturnFormComponent,
           ),
       },
       {
         path: 'sale/new',
-        data: { breadcrumb: 'Nueva Factura Venta', title: 'Nueva Factura Venta' },
+        data: { breadcrumb: 'Nueva Factura Venta', title: 'Nueva Factura Venta', kind: 'SALE' },
         loadComponent: () =>
           import('../Billing/components/sale-invoice-form/sale-invoice-form.component').then(
             (m) => m.SaleInvoiceFormComponent,
@@ -53,7 +74,7 @@ export const BILLING_ROUTES: Routes = [
       },
       {
         path: 'sale/:id',
-        data: { breadcrumb: 'Factura Venta', title: 'Factura Venta' },
+        data: { breadcrumb: 'Factura Venta', title: 'Factura Venta', kind: 'SALE' },
         loadComponent: () =>
           import('../Billing/components/sale-invoice-form/sale-invoice-form.component').then(
             (m) => m.SaleInvoiceFormComponent,
@@ -61,7 +82,7 @@ export const BILLING_ROUTES: Routes = [
       },
       {
         path: 'sale/:invoiceId/return/new',
-        data: { breadcrumb: 'Nueva Devolución', title: 'Nueva devolución' },
+        data: { breadcrumb: 'Nueva Devolución', title: 'Nueva devolución', kind: 'SALE' },
         loadComponent: () =>
           import('../Billing/components/sale-return-form/sale-return-form.component').then(
             (m) => m.SaleReturnFormComponent,
@@ -69,6 +90,7 @@ export const BILLING_ROUTES: Routes = [
       },
       {
         path: 'return/:id',
+        // Sirve a ambos tipos: el kind se toma de la devolución guardada
         data: { breadcrumb: 'Devolución', title: 'Devolución' },
         loadComponent: () =>
           import('../Billing/components/sale-return-form/sale-return-form.component').then(

@@ -11,12 +11,14 @@ import { calcTotals } from '../utils/money';
 import { buildAvailability, calcReturnTotals, deriveReturnState } from '../utils/sale-return';
 import { BillingSaleInvoiceApi } from './billing-sale-invoice.api';
 import { BillingSaleReturnApi } from './billing-sale-return.api';
-import { nextSaleReturnNumber, readSaleReturns, writeSaleReturns } from './sale-return-store';
+import { nextReturnNumber, readSaleReturns, writeSaleReturns } from './sale-return-store';
 
 const LATENCY_MS = 200;
 
 // Implementación simulada: persiste en localStorage (clave billing_sale_returns). Los datos de la
 // factura original se leen por BillingSaleInvoiceApi; la factura nunca se modifica desde aquí.
+// Sirve a devoluciones de venta y de compra: las reglas son idénticas, solo cambia el `kind` heredado
+// de la factura original (que define la numeración).
 @Injectable()
 export class MockBillingSaleReturnApi extends BillingSaleReturnApi {
   private readonly invoices = inject(BillingSaleInvoiceApi);
@@ -48,6 +50,8 @@ export class MockBillingSaleReturnApi extends BillingSaleReturnApi {
           summaries.push({
             invoiceId: invoice.id,
             invoiceNumber: invoice.number,
+            kind: invoice.kind,
+            supplierInvoiceNumber: invoice.supplierInvoiceNumber,
             clientName: invoice.clientName,
             invoiceDate: invoice.date,
             invoiceTotalCents: calcTotals(invoice.lines).totalCents,
@@ -86,11 +90,13 @@ export class MockBillingSaleReturnApi extends BillingSaleReturnApi {
           id: crypto.randomUUID(),
           number: null,
           status: 'BORRADOR',
+          kind: invoice.kind,
           invoiceId: invoice.id,
           originalNumber: invoice.number,
           originalDate: invoice.date,
           clientId: invoice.clientId,
           clientName: invoice.clientName,
+          supplierInvoiceNumber: invoice.supplierInvoiceNumber,
           date: input.date,
           reason: '',
           lines: [],
@@ -172,7 +178,7 @@ export class MockBillingSaleReturnApi extends BillingSaleReturnApi {
       }
 
       const now = new Date().toISOString();
-      saleReturn.number = nextSaleReturnNumber();
+      saleReturn.number = nextReturnNumber(saleReturn.kind);
       saleReturn.status = 'EMITIDA';
       saleReturn.emittedAt = now;
       saleReturn.updatedAt = now;

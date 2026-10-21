@@ -5,25 +5,37 @@
         <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
           <span class="border-b-4 border-secondary-light inline-block pb-1">Facturas con devolución</span>
         </h1>
-        <p class="font-family-sans font-normal text-sm mt-12">Facturas de venta que tienen al menos una devolución emitida.</p>
+        <p class="font-family-sans font-normal text-sm mt-12">Facturas de venta y compra que tienen al menos una devolución emitida.</p>
       </div>
-      <!-- Volver al menú de Facturación -->
-      <p-button
-        icon="pi pi-arrow-left"
-        [rounded]="true"
-        [outlined]="true"
-        ariaLabel="Volver"
-        title="Volver"
-        (click)="goBack()"
-      ></p-button>
+      <div class="flex items-center gap-8">
+        <p-dropdown
+          [options]="kindOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="kindFilter()"
+          (ngModelChange)="kindFilter.set($event)"
+          styleClass="w-150"
+          size="small"
+        ></p-dropdown>
+        <!-- Volver al menú de Facturación -->
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [outlined]="true"
+          ariaLabel="Volver"
+          title="Volver"
+          (click)="goBack()"
+        ></p-button>
+      </div>
     </div>
 
     <div class="overflow-x-auto text-sm">
-      <p-table [value]="rows()" [loading]="loading()" [tableStyle]="{ 'min-width': '65rem' }" styleClass="p-datatable-striped">
+      <p-table [value]="filtered()" [loading]="loading()" [tableStyle]="{ 'min-width': '70rem' }" styleClass="p-datatable-striped">
         <ng-template pTemplate="header">
           <tr>
+            <th style="width: 7rem">Tipo</th>
             <th style="width: 9rem">Factura</th>
-            <th>Cliente</th>
+            <th>Cliente / Proveedor</th>
             <th style="width: 9rem">Fecha</th>
             <th style="width: 11rem" class="text-right">Total factura</th>
             <th style="width: 8rem" class="text-center"># Devoluciones</th>
@@ -34,8 +46,14 @@
         </ng-template>
         <ng-template pTemplate="body" let-row>
           <tr>
-            <td class="font-semibold">{{ row.invoiceNumber ?? '—' }}</td>
-            <td>{{ row.clientName ?? 'Sin cliente' }}</td>
+            <td><app-billing-kind-tag [kind]="row.kind" /></td>
+            <td>
+              <p class="font-semibold">{{ row.invoiceNumber ?? '—' }}</p>
+              @if (row.supplierInvoiceNumber) {
+                <p class="text-xs text-gray-500">Fact. proveedor {{ row.supplierInvoiceNumber }}</p>
+              }
+            </td>
+            <td>{{ counterpartyOf(row) }}</td>
             <td>{{ row.invoiceDate | date: 'dd/MM/yyyy' }}</td>
             <td class="text-right">{{ row.invoiceTotalCents | copCents }}</td>
             <td class="text-center">{{ row.returnsCount }}</td>
@@ -56,7 +74,7 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="8" class="text-center p-20">No hay facturas con devoluciones</td>
+            <td colspan="9" class="text-center p-20">No hay facturas con devoluciones</td>
           </tr>
         </ng-template>
       </p-table>

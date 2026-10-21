@@ -6,7 +6,8 @@ import {
   SaleReturnDraftInput,
 } from '../models/billing-sale-return.model';
 
-// Contrato de acceso a datos de devoluciones de venta (token de DI, igual que BillingSaleInvoiceApi).
+// Contrato de acceso a datos de devoluciones de venta y de compra (token de DI, igual que BillingSaleInvoiceApi).
+// El tipo de la devolución es el de su factura original.
 export abstract class BillingSaleReturnApi {
   /** Vendido / ya devuelto / disponible por producto. Solo para facturas EMITIDA. */
   abstract getAvailability(invoiceId: string): Observable<ReturnAvailabilityLine[]>;
@@ -20,7 +21,7 @@ export abstract class BillingSaleReturnApi {
   abstract saveDraft(input: SaleReturnDraftInput): Observable<SaleReturn>;
   abstract deleteDraft(id: string): Observable<void>;
 
-  /** BORRADOR -> EMITIDA: valida y asigna el número NC- consecutivo. */
+  /** BORRADOR -> EMITIDA: valida y asigna el número consecutivo (NC- venta, DC- compra). */
   abstract emit(id: string): Observable<SaleReturn>;
   /** EMITIDA -> ANULADA: requiere motivo. Libera las cantidades devueltas. */
   abstract annul(id: string, reason: string): Observable<SaleReturn>;

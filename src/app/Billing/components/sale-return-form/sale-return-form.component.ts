@@ -12,6 +12,7 @@ import { TableModule } from 'primeng/table';
 import { Subject, debounceTime, firstValueFrom, forkJoin } from 'rxjs';
 import { InvoiceStatus } from '../../models/billing-sale-invoice.model';
 import { ReturnAvailabilityLine, SaleReturn } from '../../models/billing-sale-return.model';
+import { DOCUMENT_KIND_CONFIG, DocumentKind } from '../../models/document-kind';
 import { CopCentsPipe } from '../../pipes/cop-cents.pipe';
 import { BillingSaleInvoiceApi } from '../../services/billing-sale-invoice.api';
 import { BillingSaleReturnApi } from '../../services/billing-sale-return.api';
@@ -31,6 +32,9 @@ const todayIso = (): string => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
+// Formulario de devolución de venta Y de compra (mismas reglas). El tipo llega por `data.kind` en
+// sale|purchase/:invoiceId/return/new; en return/:id (sin data) se toma de la devolución cargada.
+// clientName = contraparte: cliente en ventas, proveedor en compras.
 @Component({
   selector: 'app-sale-return-form',
   imports: [
@@ -59,6 +63,8 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
 
   // Estado de la devolución
+  kind = signal<DocumentKind>('SALE');
+  cfg = computed(() => DOCUMENT_KIND_CONFIG[this.kind()]);
   returnId = signal<string | null>(null);
   invoiceId = signal<string>('');
   number = signal<string | null>(null);
@@ -66,6 +72,7 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
   originalNumber = signal<string | null>(null);
   originalDate = signal<string>('');
   clientName = signal<string | null>(null);
+  supplierInvoiceNumber = signal<string | null>(null); // solo compras
   date = signal<string>(todayIso());
   reason = signal<string>('');
   rows = signal<ReturnRow[]>([]);
@@ -91,6 +98,7 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
   private saveChain: Promise<unknown> = Promise.resolve();
 
   ngOnInit(): void {
+    this.kind.set(this.route.snapshot.data['kind'] ?? 'SALE');
     this.autosave$
       .pipe(debounceTime(AUTOSAVE_DEBOUNCE_MS), takeUntilDestroyed(this.destroyRef))
       .subscribe(() =>
@@ -119,20 +127,22 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ([invoice, availability]) => {
+          this.kind.set(invoice.kind); // la factura manda sobre la ruta
           if (!availability.some((a) => a.available > 0)) {
             this.toast('warn', 'Sin cantidades disponibles', 'Esta factura ya fue devuelta por completo.');
-            this.router.navigate(['/billing/sale', invoiceId]);
+            this.router.navigate([this.cfg().basePath, invoiceId]);
             return;
           }
           this.originalNumber.set(invoice.number);
           this.originalDate.set(invoice.date);
           this.clientName.set(invoice.clientName);
+          this.supplierInvoiceNumber.set(invoice.supplierInvoiceNumber ?? null);
           this.rows.set(availability.map((a) => ({ ...a, cantidadDevuelta: 0 })));
           this.loading.set(false);
         },
         error: (e) => {
           this.toast('error', 'No se puede devolver', this.errorMessage(e));
-          this.router.navigate(['/billing/sale', invoiceId]);
+          this.router.navigate([this.cfg().basePath, invoiceId]);
         },
       });
   }
@@ -164,7 +174,7 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
               },
               error: (e) => {
                 this.toast('error', 'No se pudo cargar la disponibilidad', this.errorMessage(e));
-                this.router.navigate(['/billing/sale', saleReturn.invoiceId]);
+                this.router.navigate([this.cfg().basePath, saleReturn.invoiceId]);
               },
             });
         },
@@ -208,7 +218,7 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
     this.confirmation.confirm({
       header: 'Emitir devolución',
       icon: 'pi pi-exclamation-triangle',
-      message: 'Al emitir se asignará el número de la nota crédito y la devolución ya no podrá modificarse ni eliminarse. ¿Continuar?',
+      message: `Al emitir se asignará el número de la ${this.cfg().noteShort} y la devolución ya no podrá modificarse ni eliminarse. ¿Continuar?`,
       acceptLabel: 'Emitir',
       rejectLabel: 'Cancelar',
       accept: () => this.emit(),
@@ -260,7 +270,7 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
     if (hasAppHistory) {
       this.location.back();
     } else {
-      this.router.navigate(['/billing/sale', this.invoiceId()]);
+      this.router.navigate([this.cfg().basePath, this.invoiceId()]);
     }
   }
 
@@ -287,7 +297,7 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
     try {
       if (id) await firstValueFrom(this.api.deleteDraft(id));
       this.toast('success', 'Borrador eliminado', 'El borrador fue eliminado.');
-      this.router.navigate(['/billing/sale', this.invoiceId()]);
+      this.router.navigate([this.cfg().basePath, this.invoiceId()]);
     } catch (e) {
       this.toast('error', 'No se pudo eliminar', this.errorMessage(e));
     } finally {
@@ -352,6 +362,7 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
   // Aplica el documento. En BORRADOR las filas se construyen aparte (con la disponibilidad);
   // en EMITIDA/ANULADA se muestran las líneas congeladas del documento.
   private applyReturn(saleReturn: SaleReturn): void {
+    this.kind.set(saleReturn.kind);
     this.returnId.set(saleReturn.id);
     this.invoiceId.set(saleReturn.invoiceId);
     this.number.set(saleReturn.number);
@@ -359,6 +370,7 @@ export class SaleReturnFormComponent implements OnInit, OnDestroy {
     this.originalNumber.set(saleReturn.originalNumber);
     this.originalDate.set(saleReturn.originalDate);
     this.clientName.set(saleReturn.clientName);
+    this.supplierInvoiceNumber.set(saleReturn.supplierInvoiceNumber ?? null);
     this.date.set(saleReturn.date);
     this.reason.set(saleReturn.reason);
     this.annulReason.set(saleReturn.annulReason ?? null);

@@ -18,25 +18,37 @@
           <span class="border-b-4 border-secondary-light inline-block pb-1">Continuar factura pendiente</span>
         </h1>
         <p class="font-family-sans font-normal text-sm mt-12 mb-20">
-          Estos son tus borradores. Selecciona uno para continuar editándolo.
+          Estos son tus borradores de venta y compra. Selecciona uno para continuar editándolo.
         </p>
       </div>
-      <!-- Volver al menú de Facturación -->
-      <p-button
-        icon="pi pi-arrow-left"
-        [rounded]="true"
-        [outlined]="true"
-        ariaLabel="Volver"
-        title="Volver"
-        (click)="goBack()"
-      ></p-button>
+      <div class="flex items-center gap-8">
+        <p-dropdown
+          [options]="kindOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="kindFilter()"
+          (ngModelChange)="kindFilter.set($event)"
+          styleClass="w-150"
+          size="small"
+        ></p-dropdown>
+        <!-- Volver al menú de Facturación -->
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [outlined]="true"
+          ariaLabel="Volver"
+          title="Volver"
+          (click)="goBack()"
+        ></p-button>
+      </div>
     </div>
 
     <div class="overflow-x-auto text-sm">
-      <p-table [value]="drafts()" [loading]="loading()" [tableStyle]="{ 'min-width': '45rem' }" styleClass="p-datatable-striped">
+      <p-table [value]="filtered()" [loading]="loading()" [tableStyle]="{ 'min-width': '50rem' }" styleClass="p-datatable-striped">
         <ng-template pTemplate="header">
           <tr>
-            <th>Cliente</th>
+            <th style="width: 7rem">Tipo</th>
+            <th>Cliente / Proveedor</th>
             <th style="width: 9rem">Fecha</th>
             <th style="width: 7rem" class="text-right">Líneas</th>
             <th style="width: 11rem" class="text-right">Total</th>
@@ -46,7 +58,13 @@
         </ng-template>
         <ng-template pTemplate="body" let-draft>
           <tr>
-            <td>{{ draft.clientName ?? 'Sin cliente' }}</td>
+            <td><app-billing-kind-tag [kind]="draft.kind" /></td>
+            <td>
+              {{ counterpartyOf(draft) }}
+              @if (draft.supplierInvoiceNumber) {
+                <p class="text-xs text-gray-500">Fact. proveedor {{ draft.supplierInvoiceNumber }}</p>
+              }
+            </td>
             <td>{{ draft.date | date: 'dd/MM/yyyy' }}</td>
             <td class="text-right">{{ draft.lines.length }}</td>
             <td class="text-right font-semibold">{{ totalOf(draft) | copCents }}</td>
@@ -79,7 +97,7 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6" class="text-center p-20">No tienes facturas pendientes.</td>
+            <td colspan="7" class="text-center p-20">No tienes facturas pendientes.</td>
           </tr>
         </ng-template>
       </p-table>

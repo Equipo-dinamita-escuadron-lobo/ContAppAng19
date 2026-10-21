@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
 import { BillingClient, InvoiceStatus, SaleInvoiceLine } from '../../models/billing-sale-invoice.model';
+import { DOCUMENT_KIND_CONFIG, DocumentKind } from '../../models/document-kind';
 import { CopCentsPipe } from '../../pipes/cop-cents.pipe';
 import { calcTotals, lineSubtotalCents } from '../../utils/money';
 import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-status-badge.component';
@@ -39,7 +40,7 @@ import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-sta
             }
           </div>
           <div class="text-right">
-            <p class="font-bold text-xl tracking-wide">FACTURA DE VENTA</p>
+            <p class="font-bold text-xl tracking-wide">{{ cfg().previewTitle }}</p>
             <p class="mt-4 font-semibold">
               @if (number()) {
                 N.º {{ number() }}
@@ -52,14 +53,17 @@ import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-sta
           </div>
         </div>
 
-        <!-- Cliente -->
+        <!-- Contraparte: cliente (venta) o proveedor (compra) -->
         <div class="mt-16 p-12 border border-gray-200 rounded-md">
-          <p class="text-xs uppercase text-gray-500 mb-4">Cliente</p>
+          <p class="text-xs uppercase text-gray-500 mb-4">{{ cfg().counterparty }}</p>
           @if (client(); as c) {
             <p class="font-semibold">{{ c.name }}</p>
             <p class="text-gray-600">Documento: {{ c.document }}</p>
           } @else {
-            <p class="text-gray-500">Sin cliente seleccionado</p>
+            <p class="text-gray-500">Sin {{ cfg().counterpartyLower }} seleccionado</p>
+          }
+          @if (kind() === 'PURCHASE') {
+            <p class="text-gray-600">N.º factura del proveedor: {{ supplierInvoiceNumber() || '—' }}</p>
           }
         </div>
 
@@ -124,7 +128,7 @@ import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-sta
               Factura anulada.
             }
             @default {
-              Gracias por su compra.
+              {{ cfg().invoiceFooter }}
             }
           }
         </p>
@@ -133,10 +137,12 @@ import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-sta
   `,
 })
 export class SaleInvoicePreviewComponent {
+  kind = input<DocumentKind>('SALE');
   number = input<string | null>(null);
   status = input.required<InvoiceStatus>();
   date = input.required<string>();
-  client = input<BillingClient | null>(null);
+  client = input<BillingClient | null>(null); // contraparte: cliente o proveedor
+  supplierInvoiceNumber = input<string | null>(null); // solo compras
   lines = input.required<SaleInvoiceLine[]>();
 
   private readonly storage = inject(LocalStorageMethods);
@@ -144,6 +150,7 @@ export class SaleInvoicePreviewComponent {
   readonly companyName = this.enterprise?.name || 'Empresa';
   readonly companyNit = this.enterprise?.nit || '';
 
+  cfg = computed(() => DOCUMENT_KIND_CONFIG[this.kind()]);
   totals = computed(() => calcTotals(this.lines()));
   watermark = computed(() => {
     const s = this.status();

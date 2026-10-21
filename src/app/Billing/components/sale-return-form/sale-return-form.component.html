@@ -47,7 +47,7 @@
       <div>
         <h1 class="font-family-titillium font-bold text-3xl/41 text-primary inline-block">
           <span class="border-b-4 border-secondary-light inline-block pb-1">
-            {{ number() ? 'Devolución ' + number() : 'Nueva devolución' }}
+            {{ number() ? cfg().returnTitle + ' ' + number() : cfg().newReturnTitle }}
           </span>
         </h1>
         <p class="font-family-sans font-normal text-sm mt-12">
@@ -97,7 +97,7 @@
       <!-- Referencia a la factura original, estado y fecha -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-16 text-sm mb-24">
         <div class="flex flex-col">
-          <span class="font-normal text-primary mb-4">Factura original:</span>
+          <span class="font-normal text-primary mb-4">{{ cfg().originalInvoiceLabel }}:</span>
           <span class="font-semibold">{{ originalNumber() ?? '—' }}</span>
         </div>
 
@@ -127,9 +127,16 @@
         </div>
 
         <div class="flex flex-col">
-          <span class="font-normal text-primary mb-4">Cliente:</span>
+          <span class="font-normal text-primary mb-4">{{ cfg().counterparty }}:</span>
           <span class="font-semibold">{{ clientName() ?? '—' }}</span>
         </div>
+
+        @if (kind() === 'PURCHASE') {
+          <div class="flex flex-col">
+            <span class="font-normal text-primary mb-4">N.º factura del proveedor:</span>
+            <span class="font-semibold">{{ supplierInvoiceNumber() || '—' }}</span>
+          </div>
+        }
 
         <div class="flex flex-col">
           <span class="font-normal text-primary mb-4">Fecha de la factura:</span>
@@ -169,7 +176,7 @@
               <tr>
                 <th style="width: 3rem">#</th>
                 <th style="min-width: 14rem">Producto</th>
-                <th style="width: 7rem" class="text-right">Vendido</th>
+                <th style="width: 7rem" class="text-right">{{ cfg().soldLabel }}</th>
                 @if (editable()) {
                   <th style="width: 7rem" class="text-right">Ya devuelto</th>
                   <th style="width: 7rem" class="text-right">Disponible</th>

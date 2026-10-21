@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
 import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
 import { SaleReturn } from '../../models/billing-sale-return.model';
+import { DOCUMENT_KIND_CONFIG } from '../../models/document-kind';
 import { CopCentsPipe } from '../../pipes/cop-cents.pipe';
 import { calcReturnTotals, returnLineSubtotalCents } from '../../utils/sale-return';
 import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-status-badge.component';
@@ -40,13 +41,13 @@ import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-sta
           <div class="text-right">
             <p class="font-bold text-xl tracking-wide">
               @if (ordinal(); as n) {
-                DEVOLUCIÓN N.º {{ n }}
+                {{ cfg().returnPreviewTitle }} N.º {{ n }}
               } @else {
-                DEVOLUCIÓN — BORRADOR
+                {{ cfg().returnPreviewTitle }} — BORRADOR
               }
             </p>
             @if (saleReturn().number) {
-              <p class="mt-4 font-semibold">Nota de crédito {{ saleReturn().number }}</p>
+              <p class="mt-4 font-semibold">{{ cfg().noteName }} {{ saleReturn().number }}</p>
             }
             <p class="mt-4 text-gray-600">Fecha: {{ saleReturn().date | date: 'dd/MM/yyyy' }}</p>
             <div class="mt-8"><app-billing-status-badge [status]="saleReturn().status" /></div>
@@ -55,10 +56,13 @@ import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-sta
 
         <!-- Factura original -->
         <div class="mt-16 p-12 border border-gray-200 rounded-md">
-          <p class="text-xs uppercase text-gray-500 mb-4">Factura original</p>
+          <p class="text-xs uppercase text-gray-500 mb-4">{{ cfg().originalInvoiceLabel }}</p>
           <p class="font-semibold">{{ saleReturn().originalNumber ?? '—' }}</p>
+          @if (saleReturn().kind === 'PURCHASE') {
+            <p class="text-gray-600">N.º factura del proveedor: {{ saleReturn().supplierInvoiceNumber || '—' }}</p>
+          }
           <p class="text-gray-600">Fecha: {{ saleReturn().originalDate | date: 'dd/MM/yyyy' }}</p>
-          <p class="text-gray-600">Cliente: {{ saleReturn().clientName || '—' }}</p>
+          <p class="text-gray-600">{{ cfg().counterparty }}: {{ saleReturn().clientName || '—' }}</p>
         </div>
 
         <!-- Motivo -->
@@ -118,13 +122,13 @@ import { BillingStatusBadgeComponent } from '../billing-status-badge/billing-sta
         <p class="mt-32 pt-12 border-t border-gray-200 text-center text-xs text-gray-500">
           @switch (saleReturn().status) {
             @case ('BORRADOR') {
-              Documento de vista previa — no tiene validez como nota crédito.
+              Documento de vista previa — no tiene validez como {{ cfg().noteShort }}.
             }
             @case ('ANULADA') {
               Devolución anulada.
             }
             @default {
-              Nota crédito generada por devolución de mercancía.
+              {{ noteShortCapitalized() }} generada por devolución de mercancía.
             }
           }
         </p>
@@ -142,6 +146,11 @@ export class SaleReturnPreviewComponent {
   readonly companyName = this.enterprise?.name || 'Empresa';
   readonly companyNit = this.enterprise?.nit || '';
 
+  cfg = computed(() => DOCUMENT_KIND_CONFIG[this.saleReturn().kind]);
+  noteShortCapitalized = computed(() => {
+    const note = this.cfg().noteShort;
+    return note.charAt(0).toUpperCase() + note.slice(1);
+  });
   totals = computed(() => calcReturnTotals(this.saleReturn().lines));
   watermark = computed(() => {
     const s = this.saleReturn().status;
