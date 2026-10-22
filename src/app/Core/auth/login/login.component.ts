@@ -16,8 +16,11 @@ import { environment } from '../../../../environments/environment';
   styleUrl: './login.component.css',
 })
 export class LoginComponent {
-  loginFail = false;
-  invalidForm = false;
+  loginFail: boolean = false;
+  invalidForm: boolean = false;
+  showPassword: boolean = false;
+
+  togglePassword() { this.showPassword = !this.showPassword; }
 
   authService: AuthService = inject(AuthService);
 
