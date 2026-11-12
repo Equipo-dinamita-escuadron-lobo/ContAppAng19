@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core'; // agrega OnInit
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core'; // agrega OnInit
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { MenuModule } from 'primeng/menu';
@@ -9,7 +9,7 @@ import { AuthService } from '../../auth/services/auth.service';
 import { InvoicePortfolioService } from '../../../Financial/Wallet/PortfolioManagement/Service/invoice-portfolio.service';
 import { LocalStorageMethods } from '../../../Shared/Methods/local-storage.method';
 import { HelpCenterService } from '../../../Shared/services/help-center.service';
-import { filter, Subscription } from 'rxjs';
+import { filter, Subscription, Subject, debounceTime } from 'rxjs';
 import {
   ExternalNotification,
   NotificationBellComponent,
@@ -23,6 +23,19 @@ import {
   styleUrls: ['./header.component.css'],
 })
 export class HeaderComponent implements OnInit {
+  /**
+   * Muestra el botón que abre/cierra el menú lateral.
+   * Sólo lo enciende el layout principal (MainTemplate): las páginas que
+   * renderizan <app-header> por su cuenta no tienen menú lateral.
+   */
+  @Input() showMenuToggle = false;
+
+  /** Estado actual del menú lateral, para alternar el ícono del botón. */
+  @Input() menuOpen = false;
+
+  /** Emite cuando se hace click en el botón del menú lateral. */
+  @Output() menuToggle = new EventEmitter<void>();
+
   applicationName = 'ContApp';
   companyName = 'Nombre de la empresa';
   userName = 'Nombre completo del usuario';
@@ -38,6 +51,7 @@ export class HeaderComponent implements OnInit {
   showNotifications: boolean = false;
   externalNotifications: ExternalNotification[] = [];
   private routerSubscription: Subscription | undefined;
+  private navigationEndSubject = new Subject<void>();
 
   constructor(
     private router: Router,
@@ -55,8 +69,12 @@ export class HeaderComponent implements OnInit {
         )
       )
       .subscribe(() => {
-        this.checkEnterpriseStatus();
+        this.navigationEndSubject.next();
       });
+
+    this.navigationEndSubject
+      .pipe(debounceTime(1000))
+      .subscribe(() => this.checkEnterpriseStatus());
   }
 
   ngOnInit(): void {

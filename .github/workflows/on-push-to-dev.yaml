@@ -1,0 +1,23 @@
+name: Build Docker image, push to Docker Hub, and Deploy on push to develop branch
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package*.json'
+      - 'angular.json'
+      - 'tsconfig*.json'
+      - '.dockerignore'
+      - 'README.md'
+
+
+jobs:
+
+  build-n-deploy:
+    uses: ContApp-Refactor/workflows/.github/workflows/on-push-to-dev.yaml@main
+    with:
+      repository-name: ${{ github.event.repository.name }}
+    secrets: inherit
